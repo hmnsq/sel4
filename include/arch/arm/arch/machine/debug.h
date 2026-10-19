@@ -114,23 +114,20 @@ static inline void initHDCR(void)
      */
     hdcr |= HDCR_PERFMON_TPM;
 #endif
-#ifdef ARM_HYP_TRAP_CP14_IN_NATIVE_USER_THREADS
-    /* By default at boot, we SET HDCR.TDE to catch and redirect native threads'
-     * PL0 debug exceptions.
-     *
-     * Unfortunately, this is complicated a bit by ARM's strange requirement that
-     * if you set HDCR.TDE, you must also set TDA, TDOSA, and TDRA:
+    /* The kernel does not context switch the self-hosted debug registers, so
+     * trap EL0/EL1 accesses. This also satisfies the requirement that
+     * TDRA, TDOSA, and TDA are all set whenever TDE is set:
      *  ARMv7 archref manual: section B1.8.9:
      *      "When HDCR.TDE is set to 1, the HDCR.{TDRA, TDOSA, TDA} bits must all
      *      be set to 1, otherwise behavior is UNPREDICTABLE"
-     *
-     * Subsequently on calls to vcpu_enable/disable, we will modify HDCR.TDE
-     * as needed, see setHDCRTrapDebugExceptionState().
      */
-    hdcr |= (HDCR_DEBUG_TDE
-             | HDCR_DEBUG_TDA
-             | HDCR_DEBUG_TDRA
-             | HDCR_DEBUG_TDOSA);
+    hdcr |= HDCR_DEBUG_TDA | HDCR_DEBUG_TDRA | HDCR_DEBUG_TDOSA;
+#ifdef ARM_HYP_TRAP_CP14_IN_NATIVE_USER_THREADS
+    /* By default at boot, we SET HDCR.TDE to catch and redirect native threads'
+     * PL0 debug exceptions. Subsequently on calls to vcpu_enable/disable, we
+     * will modify HDCR.TDE as needed, see setHDCRTrapDebugExceptionState().
+     */
+    hdcr |= HDCR_DEBUG_TDE;
 #endif
     setHDCR(hdcr);
 }
@@ -168,16 +165,11 @@ static inline void setHDCRTrapDebugExceptionState(bool_t enable_trapping)
         /* Trap and redirect debug faults that occur in PL0 native threads by
          * setting HDCR.TDE (trap debug exceptions).
          */
-        hdcr |= (HDCR_DEBUG_TDE
-                 | HDCR_DEBUG_TDA
-                 | HDCR_DEBUG_TDRA
-                 | HDCR_DEBUG_TDOSA);
+        hdcr |= HDCR_DEBUG_TDE;
     } else {
-        /* Let the PL1 Guest VM handle debug events on its own */
-        hdcr &= ~(HDCR_DEBUG_TDE
-                  | HDCR_DEBUG_TDA
-                  | HDCR_DEBUG_TDRA
-                  | HDCR_DEBUG_TDOSA);
+        /* Let the PL1 Guest VM handle debug events on its own. Register
+         * accesses stay trapped, see initHDCR(). */
+        hdcr &= ~HDCR_DEBUG_TDE;
     }
     setHDCR(hdcr);
 }
