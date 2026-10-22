@@ -14,12 +14,12 @@ BOOT_CODE bool_t fpsimd_init(void)
 {
     /* Set the FPU to lazy switch mode */
     disableFpu();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    якщо (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         enableFpuEL01();
     }
     /* Non-HYP Kernel assumes FPU is always enabled for EL1: Make sure it is */
     isb();
-    return true;
+    повернути true;
 }
 #endif /* CONFIG_HAVE_FPU */
 
@@ -29,10 +29,10 @@ BOOT_CODE bool_t fpsimd_HWCapTest(void)
 
     /* Check if the hardware has FP and ASIMD support... */
     MRS("id_aa64pfr0_el1", id_aa64pfr0);
-    if (((id_aa64pfr0 >> ID_AA64PFR0_EL1_FP) & MASK(4)) == MASK(4) ||
+    якщо (((id_aa64pfr0 >> ID_AA64PFR0_EL1_FP) & MASK(4)) == MASK(4) ||
         ((id_aa64pfr0 >> ID_AA64PFR0_EL1_ASIMD) & MASK(4)) == MASK(4)) {
-        return false;
+        повернути false;
     }
 
-    return true;
+    повернути true;
 }

@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    якщо (pending == 0) {
+        повернути irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    якщо (irq != INTERRUPT_CORE_GPU) {
+        повернути irq;
     }
 
     /* GPU interrupt */
@@ -49,22 +49,22 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    якщо (pending) {
+        повернути (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    якщо (pending) {
+        повернути (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    якщо (pending) {
+        повернути (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    повернути irqInvalid;
 }
 
 static inline void maskInterrupt(bool_t disable, irq_t irq)
@@ -74,56 +74,56 @@ static inline void maskInterrupt(bool_t disable, irq_t irq)
     case INTERRUPT_CORE_CNTPNSIRQ:
     case INTERRUPT_CORE_CNTHPIRQ :
     case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+        якщо (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } інакше {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        повернути;
     case INTERRUPT_CORE_MAILBOX_0:
     case INTERRUPT_CORE_MAILBOX_1:
     case INTERRUPT_CORE_MAILBOX_2:
     case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        якщо (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } інакше {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        повернути;
     case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        якщо (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } інакше {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
+        повернути;
     case INTERRUPT_CORE_GPU:
     // Not maskable
     case INTERRUPT_CORE_PMU:
     // Not currently handled
     case INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
+        повернути;
     default:
         break;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    якщо (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        повернути;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    якщо (irq < NORMAL_IRQ_OFFSET) {
+        якщо (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } інакше {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } інакше якщо (irq <= maxIRQ) {
+        ціле normal_irq = irq - NORMAL_IRQ_OFFSET;
+        ціле index = normal_irq / 32;
+        якщо (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } інакше {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }

@@ -24,10 +24,10 @@
 
 #define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+#якщо defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
 void uart_drv_putchar(unsigned char c)
 {
-    while (!(*UART_REG(STAT) & STAT_TDRE)) { }
+    поки (!(*UART_REG(STAT) & STAT_TDRE)) { }
     *UART_REG(TRANSMIT) = c;
 }
 #endif
@@ -35,6 +35,6 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    return 0;
+    повернути 0;
 }
 #endif /* CONFIG_DEBUG_BUILD */

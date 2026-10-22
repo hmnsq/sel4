@@ -12,10 +12,10 @@
 
 static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, bool_t trigger)
 {
-    if (config_set(HAVE_SET_TRIGGER)) {
+    якщо (config_set(HAVE_SET_TRIGGER)) {
         setIRQTrigger(irq, trigger);
     }
-    return invokeIRQControl(irq, handlerSlot, controlSlot);
+    повернути invokeIRQControl(irq, handlerSlot, controlSlot);
 }
 
 
@@ -24,7 +24,7 @@ static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *c
 static exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *sgiSlot, cte_t *controlSlot)
 {
     cteInsert(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 #endif
@@ -32,16 +32,16 @@ static exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *s
 exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
                                             cte_t *srcSlot, word_t *buffer)
 {
-    if (invLabel == ARMIRQIssueIRQHandlerTrigger) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    якщо (invLabel == ARMIRQIssueIRQHandlerTrigger) {
+        якщо (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!config_set(HAVE_SET_TRIGGER)) {
+        якщо (!config_set(HAVE_SET_TRIGGER)) {
             userError("This platform does not support setting the IRQ trigger");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         word_t irq_w = getSyscallArg(0, buffer);
@@ -53,55 +53,55 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
         exception_t status = Arch_checkIRQ(irq_w);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        якщо (status != EXCEPTION_NONE) {
+            повернути status;
         }
 
-#if defined ENABLE_SMP_SUPPORT
-        if (IRQ_IS_PPI(irq)) {
+#якщо defined ENABLE_SMP_SUPPORT
+        якщо (IRQ_IS_PPI(irq)) {
             userError("Trying to get a handler on a PPI: use GetTriggerCore.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        if (isIRQActive(irq)) {
+        якщо (isIRQActive(irq)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+            userError("Rejecting request for IRQ %u. Already active.", (ціле)IRQT_TO_IRQ(irq));
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        якщо (lu_ret.status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(buffer, 0), (ціле)IRQT_TO_IRQ(irq));
+            повернути lu_ret.status;
         }
 
         cte_t *destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        якщо (status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(buffer, 0), (ціле)IRQT_TO_IRQ(irq));
+            повернути status;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
+        повернути Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueSGISignal) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    } інакше якщо (invLabel == ARMIRQIssueSGISignal) {
+        якщо (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
             userError("IRQControl: IssueSGISignal: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (wrap_config_set(NUM_SGIS) == 0) {
+        якщо (wrap_config_set(NUM_SGIS) == 0) {
             current_syscall_error.type = seL4_IllegalOperation;
             userError("IRQControl: IssueSGISignal not available on this platform.");
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         word_t irq = getSyscallArg(0, buffer);
@@ -113,41 +113,41 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (irq >= wrap_config_set(NUM_SGIS)) {
+        якщо (irq >= wrap_config_set(NUM_SGIS)) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
             current_syscall_error.rangeErrorMax = NUM_SGIS - 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI IRQ 0x%lx.", irq);
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!plat_SGITargetValid(target)) {
+        якщо (!plat_SGITargetValid(target)) {
             current_syscall_error.type = seL4_InvalidArgument;
             current_syscall_error.invalidArgumentNumber = 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI Target 0x%lx.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        якщо (lu_ret.status != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap invalid: cap %lu.",
                       getExtraCPtr(buffer, 0));
-            return lu_ret.status;
+            повернути lu_ret.status;
         }
         cte_t *destSlot = lu_ret.slot;
 
         exception_t status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        якщо (status != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap not empty: cap %lu.",
                       getExtraCPtr(buffer, 0));
-            return status;
+            повернути status;
         }
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
+        повернути Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
 
 #endif
 #ifdef ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
+    } інакше якщо (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
         word_t irq_w = getSyscallArg(0, buffer);
         bool_t trigger = !!getSyscallArg(1, buffer);
         word_t index = getSyscallArg(2, buffer);
@@ -157,36 +157,36 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
         exception_t status = Arch_checkIRQ(irq_w);
         irq_t irq = CORE_IRQ_TO_IRQT(target, irq_w);
 
-        if (status != EXCEPTION_NONE) {
-            return status;
+        якщо (status != EXCEPTION_NONE) {
+            повернути status;
         }
 
-        if (target >= CONFIG_MAX_NUM_NODES) {
+        якщо (target >= CONFIG_MAX_NUM_NODES) {
             current_syscall_error.type = seL4_InvalidArgument;
             userError("Target core %lu is invalid.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (isIRQActive(irq)) {
+        якщо (isIRQActive(irq)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+            userError("Rejecting request for IRQ %u. Already active.", (ціле)IRQT_TO_IRQ(irq));
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
 
         lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        якщо (lu_ret.status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(buffer, 0), (ціле)IRQT_TO_IRQ(irq));
+            повернути lu_ret.status;
         }
 
         cte_t *destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        якщо (status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(buffer, 0), (ціле)IRQT_TO_IRQ(irq));
+            повернути status;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
@@ -194,14 +194,14 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
         /* If the IRQ is not a private interrupt, then the role of the syscall is to set
          * target core to which the shared interrupt will be physically delivered.
          */
-        if (!IRQ_IS_PPI(irq)) {
+        якщо (!IRQ_IS_PPI(irq)) {
             setIRQTarget(irq, target);
         }
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
+        повернути Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
 #endif /* ENABLE_SMP_SUPPORT */
-    } else {
+    } інакше {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 }
 
@@ -210,7 +210,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
 static exception_t invokeSGISignalGenerate(word_t irq, word_t target)
 {
     plat_sendSGI(irq, target);
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 
@@ -222,6 +222,6 @@ exception_t decodeSGISignalInvocation(word_t invLabel, word_t length,
     word_t target = cap_sgi_signal_cap_get_capSGITarget(cap);
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSGISignalGenerate(irq, target);
+    повернути invokeSGISignalGenerate(irq, target);
 }
 #endif /* !CONFIG_ENABLE_SMP_SUPPORT */

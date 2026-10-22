@@ -14,7 +14,7 @@
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP_EL0];
+    повернути tcb->tcbArch.tcbContext.registers[SP_EL0];
 }
 
 #ifdef CONFIG_PRINTING
@@ -78,7 +78,7 @@ static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN)
     case 0b11:
         printf("RW");
         break;
-#else
+#інакше
     case 0b00:
         break;
     case 0b01:
@@ -92,12 +92,12 @@ static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN)
         break;
     }
 
-    if (!NXN) {
+    якщо (!NXN) {
         printf("X");
     }
 
     /* Only has effect if SMP enabled */
-    if (SH != SMP_TERNARY(SMP_SHARE, 0)) {
+    якщо (SH != SMP_TERNARY(SMP_SHARE, 0)) {
         printf(", uncached");
     }
 
@@ -110,7 +110,7 @@ static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
     lookupPTSlot_ret_t ret = lookupPTSlot(vspace, vptr);
 
     /* Check that the returned slot is a page. */
-    if (!pte_ptr_get_valid(ret.ptSlot) ||
+    якщо (!pte_ptr_get_valid(ret.ptSlot) ||
         (pte_pte_table_ptr_get_present(ret.ptSlot) && ret.ptBitsLeft > PAGE_BITS)) {
         assert(0);
     }
@@ -148,10 +148,10 @@ static void arm64_cap_pt_print_slots(pte_t *pdSlot, vptr_t vptr)
     pte_t *pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pdSlot));
     printf("pt_%p_%04lu {\n", pdSlot, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2)));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i ++) {
+    для (word_t i = 0; i < BIT(PT_INDEX_BITS); i ++) {
         pte_t *ptSlot = pt + i;
 
-        if (pte_4k_page_ptr_get_present(ptSlot)) {
+        якщо (pte_4k_page_ptr_get_present(ptSlot)) {
             // print pte entries
             printf("0x%lx: frame_%p_%04lu", i, ptSlot, i);
             cap_frame_print_attrs_pt(ptSlot);
@@ -165,7 +165,7 @@ static void arm64_cap_pd_print_slots(pte_t *pudSlot, vptr_t vptr)
     printf("pd_%p_%04lu {\n", pudSlot, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1)));
     pte_t *pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pudSlot));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
+    для (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
         pte_t *pdSlot = pd + i;
 
         switch (pte_ptr_get_pte_type(pdSlot)) {
@@ -183,9 +183,9 @@ static void arm64_cap_pd_print_slots(pte_t *pudSlot, vptr_t vptr)
 
     printf("}\n"); /* pd */
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
+    для (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
         pte_t *pdSlot = pd + i;
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
+        якщо (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
             arm64_cap_pt_print_slots(pdSlot, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(2))));
         }
     }
@@ -197,24 +197,24 @@ static void arm64_cap_pud_print_slots(void *pgdSlot_or_vspace, vptr_t vptr)
     pte_t *pud = pgdSlot_or_vspace;
     word_t index_bits = seL4_VSpaceIndexBits;
     printf("%p_pd {\n", pgdSlot_or_vspace);
-#else
+#інакше
     pte_t *pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pgdSlot_or_vspace));
     word_t index_bits = seL4_PageTableIndexBits;
     printf("pud_%p_%04lu {\n", pgdSlot_or_vspace, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0)));
 #endif
 
-    for (word_t i = 0; i < BIT(index_bits); i++) {
+    для (word_t i = 0; i < BIT(index_bits); i++) {
         pte_t *pudSlot = pud + i;
-        if (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
+        якщо (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
             printf("0x%lx: pd_%p_%04lu\n", i, pudSlot, i);
         }
     }
 
     printf("}\n"); /* pgd/pud */
 
-    for (word_t i = 0; i < BIT(index_bits); i++) {
+    для (word_t i = 0; i < BIT(index_bits); i++) {
         pte_t *pudSlot = pud + GET_UPT_INDEX(i, ULVL_FRM_ARM_PT_LVL(1));
-        if (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
+        якщо (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
             arm64_cap_pd_print_slots(pudSlot, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(1))));
         }
     }
@@ -222,7 +222,7 @@ static void arm64_cap_pud_print_slots(void *pgdSlot_or_vspace, vptr_t vptr)
 
 void obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    якщо (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         vspace_root_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
@@ -232,19 +232,19 @@ void obj_vtable_print_slots(tcb_t *tcb)
         */
 #ifdef AARCH64_VSPACE_S2_START_L1
         arm64_cap_pud_print_slots(vspace, 0);
-#else
+#інакше
         printf("%p_pd {\n", vspace);
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
+        для (word_t i = 0; i < PT_INDEX_BITS; i++) {
             pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
+            якщо (pte_pte_table_ptr_get_present(ptSlot)) {
                 printf("0x%lx: pud_%p_%04lu\n", i, ptSlot, i);
             }
         }
         printf("}\n"); /* pd */
 
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
+        для (word_t i = 0; i < PT_INDEX_BITS; i++) {
             pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
+            якщо (pte_pte_table_ptr_get_present(ptSlot)) {
                 arm64_cap_pud_print_slots(ptSlot, i * GET_ULVL_PGSIZE(0));
             }
         }
@@ -272,24 +272,24 @@ void print_cap_arch(cap_t cap)
         pte_t *ptSlot = NULL;
         pte_t *pt = (pte_t *)find_ret.vspace_root;
         word_t level;
-        for (level = 0; level < UPT_LEVELS - 1 && pt != target_pt; level++) {
+        для (level = 0; level < UPT_LEVELS - 1 && pt != target_pt; level++) {
             ptSlot = pt + GET_UPT_INDEX(vptr, level);
-            if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
+            якщо (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
                 /* couldn't find it */
                 break;
             }
             pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
         }
-        if (pt != target_pt) {
+        якщо (pt != target_pt) {
             /* didn't find it */
             break;
         }
 
 
-        if (asid) {
+        якщо (asid) {
             printf("pt_%p_%04lu (asid: %lu)\n",
-                   target_pt, GET_UPT_INDEX(vptr, level), (long unsigned int)asid);
-        } else {
+                   target_pt, GET_UPT_INDEX(vptr, level), (long unsigned ціле)asid);
+        } інакше {
             printf("pt_%p_%04lu\n", target_pt, GET_UPT_INDEX(vptr, level));
         }
         break;
@@ -297,10 +297,10 @@ void print_cap_arch(cap_t cap)
     case cap_vspace_cap: {
         asid_t asid = cap_vspace_cap_get_capVSMappedASID(cap);
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (asid) {
+        якщо (asid) {
             printf("%p_pd (asid: %lu)\n",
-                   find_ret.vspace_root, (long unsigned int)asid);
-        } else {
+                   find_ret.vspace_root, (long unsigned ціле)asid);
+        } інакше {
             printf("%p_pd\n", find_ret.vspace_root);
         }
         break;
@@ -336,7 +336,7 @@ void print_cap_arch(cap_t cap)
     }
 #endif
     default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown cap %lu]\n", (long unsigned ціле)cap_get_capType(cap));
         break;
     }
     }
@@ -372,7 +372,7 @@ void print_object_arch(cap_t cap)
     }
 #endif
     default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown object %lu]\n", (long unsigned ціле)cap_get_capType(cap));
         break;
     }
     }
@@ -402,10 +402,10 @@ void arm64_obj_pt_print_slots(pte_t *pdSlot)
 {
     pte_t *pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pdSlot));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
+    для (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
         pte_t *ptSlot = pt + i;
 
-        if (pte_4k_page_ptr_get_present(ptSlot)) {
+        якщо (pte_4k_page_ptr_get_present(ptSlot)) {
             printf("frame_%p_%04lu = frame ", ptSlot, i);
             obj_frame_print_attrs(ARMSmallPage, pte_page_ptr_get_page_base_address(ptSlot));
         }
@@ -416,15 +416,15 @@ void arm64_obj_pd_print_slots(pte_t *pudSlot)
 {
     pte_t *pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pudSlot));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
+    для (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
         pte_t *pdSlot = pd + i;
 
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_page) {
+        якщо (pte_ptr_get_pte_type(pdSlot) == pte_pte_page) {
             printf("frame_%p_%04lu = frame ", pdSlot, i);
             obj_frame_print_attrs(ARMLargePage, pte_page_ptr_get_page_base_address(pdSlot));
         }
 
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
+        якщо (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
             printf("pt_%p_%04lu = pt\n", pdSlot, i);
             arm64_obj_pt_print_slots(pdSlot);
         }
@@ -436,10 +436,10 @@ void arm64_obj_pud_print_slots(void *pgdSlot_or_vspace)
     pte_t *pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pgdSlot_or_vspace));
 #ifdef AARCH64_VSPACE_S2_START_L1
     word_t index_bits = seL4_VSpaceIndexBits;
-#else
+#інакше
     word_t index_bits = seL4_PageTableIndexBits;
 #endif
-    for (word_t i = 0; i < BIT(index_bits); i++) {
+    для (word_t i = 0; i < BIT(index_bits); i++) {
         pte_t *pudSlot = pud + i;
 
         switch (pte_ptr_get_pte_type(pudSlot)) {
@@ -459,7 +459,7 @@ void arm64_obj_pud_print_slots(void *pgdSlot_or_vspace)
 
 void obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    якщо (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         vspace_root_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
@@ -470,11 +470,11 @@ void obj_tcb_print_vtable(tcb_t *tcb)
 #ifdef AARCH64_VSPACE_S2_START_L1
         printf("%p_pd = pud\n", vspace);
         arm64_obj_pud_print_slots(vspace);
-#else
+#інакше
         printf("%p_pd = pgd\n", vspace);
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
+        для (word_t i = 0; i < PT_INDEX_BITS; i++) {
             pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
+            якщо (pte_pte_table_ptr_get_present(ptSlot)) {
                 printf("pud_%p_%04lu = pud\n", ptSlot, i);
                 arm64_obj_pud_print_slots(ptSlot);
             }

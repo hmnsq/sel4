@@ -17,7 +17,7 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
+    якщо (clh_is_ipi_pending(getCurrentCPUIndex())) {
         switch (call) {
         case IpiRemoteCall_Stall:
             ipiStallCoreCallback(irqPath);
@@ -48,13 +48,13 @@ void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 irq_t ipi_get_irq(void)
 {
     assert(!(ipiIrq[getCurrentCPUIndex()] == irqInvalid && clh_is_ipi_pending(getCurrentCPUIndex())));
-    return ipiIrq[getCurrentCPUIndex()];
+    повернути ipiIrq[getCurrentCPUIndex()];
 }
 
 void ipi_clear_irq(irq_t irq)
 {
     ipiIrq[getCurrentCPUIndex()] = irqInvalid;
-    return;
+    повернути;
 }
 
 /* this function is called with a single hart id. */

@@ -33,9 +33,9 @@ void VISIBLE NORETURN c_handle_undefined_instruction(void)
 #elif CONFIG_ARCH_AARCH64
     word_t esr = getESR();
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+    якщо (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
+    } інакше
 #endif
     {
         handleUserLevelFault(esr, 0);
@@ -67,7 +67,7 @@ static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# інакше
     handleVMFaultEvent(type);
     restore_user_context();
 #endif
@@ -101,7 +101,7 @@ void VISIBLE NORETURN c_handle_interrupt(void)
 
 void NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    якщо (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
         /* ksKernelEntry.word word is already set to syscall */
@@ -110,7 +110,7 @@ void NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } інакше {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -172,7 +172,7 @@ void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
 ALIGN(L1_CACHE_LINE_SIZE)
 #ifdef CONFIG_KERNEL_MCS
 void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
+#інакше
 void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 {
@@ -186,7 +186,7 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #ifdef CONFIG_KERNEL_MCS
     fastpath_reply_recv(cptr, msgInfo, reply);
-#else
+#інакше
     fastpath_reply_recv(cptr, msgInfo);
 #endif
     UNREACHABLE();

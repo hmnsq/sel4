@@ -20,7 +20,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    поки (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
 #endif /* CONFIG_PRINTING */
@@ -28,6 +28,6 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    return -1;
+    повернути -1;
 }
 #endif /* CONFIG_DEBUG_BUILD */

@@ -26,7 +26,7 @@ BOOT_CODE void initTimer(void)
     /* use the arm generic timer, backed by the mct */
     /* enable the timer */
     mct->global.tcon = GTCON_EN;
-    while (mct->global.wstat != GWSTAT_TCON);
+    поки (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 
     initGenericTimer();

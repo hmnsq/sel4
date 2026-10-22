@@ -16,7 +16,7 @@ void handleFault(tcb_t *tptr)
 {
     cap_t faultHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap;
     bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
+    якщо (!hasFaultHandler) {
         handleNoFaultHandler(tptr);
     }
 }
@@ -30,11 +30,11 @@ void handleTimeout(tcb_t *tptr)
 
 bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 {
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap) {
+    якщо (cap_get_capType(handlerCap) == cap_endpoint_cap) {
         assert(validFaultHandler(handlerCap));
 
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        якщо (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = current_lookup_fault;
         }
         sendIPC(true, false,
@@ -44,13 +44,13 @@ bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
                 can_donate, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return true;
-    } else {
+        повернути true;
+    } інакше {
         assert(cap_get_capType(handlerCap) == cap_null_cap);
-        return false;
+        повернути false;
     }
 }
-#else
+#інакше
 
 void handleFault(tcb_t *tptr)
 {
@@ -58,7 +58,7 @@ void handleFault(tcb_t *tptr)
     seL4_Fault_t fault = current_fault;
 
     status = sendFaultIPC(tptr);
-    if (status != EXCEPTION_NONE) {
+    якщо (status != EXCEPTION_NONE) {
         handleDoubleFault(tptr, fault);
     }
 }
@@ -74,18 +74,18 @@ exception_t sendFaultIPC(tcb_t *tptr)
 
     handlerCPtr = tptr->tcbFaultHandler;
     lu_ret = lookupCap(tptr, handlerCPtr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    якщо (lu_ret.status != EXCEPTION_NONE) {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-        return EXCEPTION_FAULT;
+        повернути EXCEPTION_FAULT;
     }
     handlerCap = lu_ret.cap;
 
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
+    якщо (cap_get_capType(handlerCap) == cap_endpoint_cap &&
         cap_endpoint_cap_get_capCanSend(handlerCap) &&
         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
          cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        якщо (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = original_lookup_fault;
         }
         sendIPC(true, true,
@@ -93,12 +93,12 @@ exception_t sendFaultIPC(tcb_t *tptr)
                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return EXCEPTION_NONE;
-    } else {
+        повернути EXCEPTION_NONE;
+    } інакше {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
         current_lookup_fault = lookup_fault_missing_capability_new(0);
 
-        return EXCEPTION_FAULT;
+        повернути EXCEPTION_FAULT;
     }
 }
 #endif
@@ -132,7 +132,7 @@ static void print_fault(seL4_Fault_t f)
         break;
 #ifdef CONFIG_KERNEL_MCS
     case seL4_Fault_Timeout:
-        printf("Timeout fault for 0x%x\n", (unsigned int) seL4_Fault_Timeout_get_badge(f));
+        printf("Timeout fault for 0x%x\n", (unsigned ціле) seL4_Fault_Timeout_get_badge(f));
         break;
 #endif
     default:
@@ -144,7 +144,7 @@ static void print_fault(seL4_Fault_t f)
 
 #ifdef CONFIG_KERNEL_MCS
 void handleNoFaultHandler(tcb_t *tptr)
-#else
+#інакше
 /* The second fault, ex2, is stored in the global current_fault */
 void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #endif
@@ -153,7 +153,7 @@ void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #ifdef CONFIG_KERNEL_MCS
     printf("Found thread has no fault handler while trying to handle:\n");
     print_fault(current_fault);
-#else
+#інакше
     seL4_Fault_t ex2 = current_fault;
     printf("Caught ");
     print_fault(ex2);

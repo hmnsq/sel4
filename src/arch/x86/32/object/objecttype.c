@@ -24,11 +24,11 @@ bool_t Arch_isFrameType(word_t type)
 {
     switch (type) {
     case seL4_X86_4K:
-        return true;
+        повернути true;
     case seL4_X86_LargePageObject:
-        return true;
+        повернути true;
     default:
-        return false;
+        повернути false;
     }
 }
 
@@ -41,7 +41,7 @@ deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
         ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
         ret.status = EXCEPTION_NONE;
-        return ret;
+        повернути ret;
 
     default:
         /* This assert has no equivalent in haskell,
@@ -57,7 +57,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
     switch (cap_get_capType(cap)) {
 
     case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
+        якщо (cap_frame_cap_get_capFMappedASID(cap)) {
             switch (cap_frame_cap_get_capFMapType(cap)) {
 #ifdef CONFIG_VTX
             case X86_MappingEPT:
@@ -75,14 +75,14 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
                 /* If the last cap to the user-level log buffer frame is being revoked,
                  * reset the ksLog so that the kernel doesn't log anymore
                  */
-                if (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
-                    if (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
+                якщо (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
+                    якщо (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
                         ksUserLogBuffer = 0;
 
                         /* Invalidate log page table entries */
                         clearMemory(ia32KSGlobalLogPT, seL4_PageTableBits);
 
-                        for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
+                        для (ціле idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
                             invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
                         }
 
@@ -116,25 +116,25 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    повернути fc_ret;
 }
 
 bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    return false;
+    повернути false;
 }
 
 word_t Mode_getObjectSize(word_t t)
 {
     fail("Invalid object type");
-    return 0;
+    повернути 0;
 }
 
 cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
 {
     switch (t) {
     case seL4_X86_4K:
-        return cap_frame_cap_new(
+        повернути cap_frame_cap_new(
                    X86_SmallPage,          /* capFSize             */
                    ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
@@ -146,7 +146,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_X86_LargePageObject:
-        return cap_frame_cap_new(
+        повернути cap_frame_cap_new(
                    X86_LargePage,          /* capFSize             */
                    ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
@@ -158,7 +158,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_X86_PageTableObject:
-        return cap_page_table_cap_new(
+        повернути cap_page_table_cap_new(
                    0,                  /* capPTIsMapped        */
                    asidInvalid,        /* capPTMappedASID      */
                    0,                  /* capPTMappedAddress   */
@@ -167,7 +167,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 
     case seL4_X86_PageDirectoryObject:
         copyGlobalMappings(regionBase);
-        return cap_page_directory_cap_new(
+        повернути cap_page_directory_cap_new(
                    0,                  /* capPDIsMapped      */
                    asidInvalid,        /* capPDMappedASID    */
                    0,                  /* capPDMappedAddress */
@@ -176,7 +176,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 
 #ifdef CONFIG_IOMMU
     case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+        повернути cap_io_page_table_cap_new(
                    0,  /* capIOPTIsMapped      */
                    0,  /* capIOPTLevel         */
                    0,  /* capIOPTMappedAddress */
@@ -204,10 +204,10 @@ exception_t Mode_decodeInvocation(
     case cap_page_directory_cap:
     case cap_page_table_cap:
     case cap_frame_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+        повернути decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
     default:
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 }

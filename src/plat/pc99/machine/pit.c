@@ -34,7 +34,7 @@ BOOT_CODE void pit_wait_wraparound(void)
     count |= (in8(PIT_CH0) << 8);
     count_old = count;
 
-    while (count <= count_old) {
+    поки (count <= count_old) {
         count_old = count;
         out8(PIT_MODE, 0x00);
         count = in8(PIT_CH0);

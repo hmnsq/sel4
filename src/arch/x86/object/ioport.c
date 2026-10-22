@@ -14,20 +14,20 @@
 
 static inline void apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set)
 {
-    if (set) {
+    якщо (set) {
         *w |= pattern;
-    } else {
+    } інакше {
         *w &= ~pattern;
     }
 }
 
-static inline word_t make_pattern(int start, int end)
+static inline word_t make_pattern(ціле start, ціле end)
 {
     // number of bits we want to have set
-    int num_bits = end - start;
+    ціле num_bits = end - start;
     // shift down to cut off the bits we don't want, then shift up to put the
     // bits into position
-    return (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
+    повернути (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
 }
 
 static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
@@ -38,15 +38,15 @@ static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, ui
     assert(first_allowed <= last_allowed);
     assert(start_port <= end_port);
 
-    if ((start_port < first_allowed) || (end_port > last_allowed)) {
+    якщо ((start_port < first_allowed) || (end_port > last_allowed)) {
         userError("IOPort: Ports %d--%d fall outside permitted range %d--%d.",
-                  (int)start_port, (int)end_port,
-                  (int)first_allowed, (int)last_allowed);
+                  (ціле)start_port, (ціле)end_port,
+                  (ціле)first_allowed, (ціле)last_allowed);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 void freeIOPortRange(uint16_t first_port, uint16_t last_port)
@@ -56,35 +56,35 @@ void freeIOPortRange(uint16_t first_port, uint16_t last_port)
 
 static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
 {
-    int low_word = first_port >> wordRadix;
-    int high_word = last_port >> wordRadix;
-    int low_index = first_port & MASK(wordRadix);
-    int high_index = last_port & MASK(wordRadix);
+    ціле low_word = first_port >> wordRadix;
+    ціле high_word = last_port >> wordRadix;
+    ціле low_index = first_port & MASK(wordRadix);
+    ціле high_index = last_port & MASK(wordRadix);
 
     // check if we are operating on a partial word
-    if (low_word == high_word) {
-        if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
-            return false;
+    якщо (low_word == high_word) {
+        якщо ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
+            повернути false;
         }
-        return true;
+        повернути true;
     }
     // check the starting word
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
-        return false;
+    якщо ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
+        повернути false;
     }
     low_word++;
     // check the rest of the whole words
-    while (low_word < high_word) {
-        if (x86KSAllocatedIOPorts[low_word] != 0) {
-            return false;
+    поки (low_word < high_word) {
+        якщо (x86KSAllocatedIOPorts[low_word] != 0) {
+            повернути false;
         }
         low_word++;
     }
     // check any trailing bits
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
-        return false;
+    якщо ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
+        повернути false;
     }
-    return true;
+    повернути true;
 }
 
 static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
@@ -97,7 +97,7 @@ static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port,
                                  ),
               controlSlot, ioportSlot);
 
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 exception_t decodeX86PortControlInvocation(
@@ -117,16 +117,16 @@ exception_t decodeX86PortControlInvocation(
     lookupSlot_ret_t lu_ret;
     exception_t status;
 
-    if (invLabel != X86IOPortControlIssue) {
+    якщо (invLabel != X86IOPortControlIssue) {
         userError("IOPortControl: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    якщо (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
         userError("IOPortControl: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 
     first_port = getSyscallArg(0, buffer) & 0xffff;
@@ -136,34 +136,34 @@ exception_t decodeX86PortControlInvocation(
 
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (last_port < first_port) {
+    якщо (last_port < first_port) {
         userError("IOPortControl: Last port must be > first port.");
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!isIOPortRangeFree(first_port, last_port)) {
+    якщо (!isIOPortRangeFree(first_port, last_port)) {
         userError("IOPortControl: Some ports in range already in use.");
         current_syscall_error.type = seL4_RevokeFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 
     lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    якщо (lu_ret.status != EXCEPTION_NONE) {
         userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(buffer, 0));
-        return lu_ret.status;
+        повернути lu_ret.status;
     }
     destSlot = lu_ret.slot;
 
     status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
+    якщо (status != EXCEPTION_NONE) {
         userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(buffer, 0));
-        return status;
+        повернути status;
     }
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeX86PortControl(first_port, last_port, destSlot, slot);
+    повернути invokeX86PortControl(first_port, last_port, destSlot, slot);
 }
 
 static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
@@ -184,15 +184,15 @@ static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
         break;
     }
 
-    if (call) {
+    якщо (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, res);
+        unsigned ціле length = setMR(thread, ipcBuffer, 0, res);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 static exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t data)
@@ -209,7 +209,7 @@ static exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t dat
         break;
     }
 
-    return EXCEPTION_NONE;
+    повернути EXCEPTION_NONE;
 }
 
 exception_t decodeX86PortInvocation(
@@ -224,11 +224,11 @@ exception_t decodeX86PortInvocation(
 {
     exception_t ret = EXCEPTION_NONE;
 
-    if (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
-        if (length < 1) {
+    якщо (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
+        якщо (length < 1) {
             userError("IOPort: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to read from. */
         uint16_t port = getSyscallArg(0, buffer) & 0xffff;
@@ -243,17 +243,17 @@ exception_t decodeX86PortInvocation(
             ret = ensurePortOperationAllowed(cap, port, 4);
             break;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        якщо (ret != EXCEPTION_NONE) {
+            повернути ret;
         }
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortIn(invLabel, port, call);
-    } else if (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
+        повернути invokeX86PortIn(invLabel, port, call);
+    } інакше якщо (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
         /* Ensure the incoming message is long enough for the write. */
-        if (length < 2) {
+        якщо (length < 2) {
             userError("IOPort Out: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            повернути EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to write to. */
         uint16_t port = getSyscallArg(0, buffer) & 0xffff;
@@ -279,15 +279,15 @@ exception_t decodeX86PortInvocation(
             data = raw_data & 0xffffffff;
             break;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        якщо (ret != EXCEPTION_NONE) {
+            повернути ret;
         }
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortOut(invLabel, port, data);
-    } else {
+        повернути invokeX86PortOut(invLabel, port, data);
+    } інакше {
         userError("IOPort: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        повернути EXCEPTION_SYSCALL_ERROR;
     }
 }
 
@@ -296,21 +296,21 @@ void setIOPortMask(void *ioport_bitmap, uint16_t low, uint16_t high, bool_t set)
     //get an aliasing pointer
     word_t_may_alias *bitmap = ioport_bitmap;
 
-    int low_word = low >> wordRadix;
-    int high_word = high >> wordRadix;
-    int low_index = low & MASK(wordRadix);
-    int high_index = high & MASK(wordRadix);
+    ціле low_word = low >> wordRadix;
+    ціле high_word = high >> wordRadix;
+    ціле low_index = low & MASK(wordRadix);
+    ціле high_index = high & MASK(wordRadix);
 
     // see if we are just manipulating bits inside a single word. handling this
     // specially makes reasoning easier
-    if (low_word == high_word) {
+    якщо (low_word == high_word) {
         apply_pattern(bitmap + low_word, make_pattern(low_index, high_index + 1), set);
-    } else {
+    } інакше {
         // operate on the potentially partial first word
         apply_pattern(bitmap + low_word, make_pattern(low_index, CONFIG_WORD_SIZE), set);
         low_word++;
         // iterate over the whole words
-        while (low_word < high_word) {
+        поки (low_word < high_word) {
             apply_pattern(bitmap + low_word, ~(word_t)0, set);
             low_word++;
         }

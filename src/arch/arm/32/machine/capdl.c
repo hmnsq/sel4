@@ -18,7 +18,7 @@
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    повернути tcb->tcbArch.tcbContext.registers[SP];
 }
 
 #ifdef CONFIG_PRINTING
@@ -53,7 +53,7 @@ static void cap_frame_print_attrs_pt(pte_t *pte)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         AP = pte_pte_small_ptr_get_HAP(pte);
         TEX = pte_pte_small_ptr_get_MemAttr(pte);
-#else
+#інакше
         AP = pte_pte_small_ptr_get_AP(pte);
         TEX = pte_pte_small_ptr_get_TEX(pte);
 #endif
@@ -79,7 +79,7 @@ static void cap_frame_print_attrs_pd(pde_t *pde)
     cap_frame_print_attrs_impl(pde_pde_section_ptr_get_HAP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_MemAttr(pde));
-#else
+#інакше
     cap_frame_print_attrs_impl(pde_pde_section_ptr_get_AP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_TEX(pde));
@@ -104,11 +104,11 @@ static void cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX)
         break;
     }
 
-    if (!XN) {
+    якщо (!XN) {
         printf("X");
     }
 
-    if (!TEX) {
+    якщо (!TEX) {
         printf(", uncached");
     }
 
@@ -119,17 +119,17 @@ static void arm32_cap_pt_print_slots(pte_t *pt)
 {
     vm_page_size_t page_size;
     word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    поки (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
         switch (pte_ptr_get_pteType(pte)) {
         case pte_pte_small: {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+            якщо (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 page_size = ARMLargePage;
-            } else {
+            } інакше {
                 page_size = ARMSmallPage;
             }
-#else
+#інакше
             page_size = ARMSmallPage;
 #endif
             printf("0x%lx: frame_%p_%04lu ", PT_INDEX(i), pte, PT_INDEX(i));
@@ -153,7 +153,7 @@ static void arm32_cap_pt_print_slots(pte_t *pt)
 
 void obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    якщо (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         vm_page_size_t page_size;
@@ -161,20 +161,20 @@ void obj_vtable_print_slots(tcb_t *tcb)
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
         word_t i = 0;
-        while (i < MAX_UL) {
+        поки (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
             switch (pde_ptr_get_pdeType(pde)) {
             case pde_pde_section: {
 #ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
+                якщо (pde_pde_section_ptr_get_size(pde)) {
                     page_size = ARMSuperSection;
-                } else {
+                } інакше {
                     page_size = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#інакше
+                якщо (pde_pde_section_ptr_get_contiguous_hint(pde)) {
                     page_size = ARMSuperSection;
-                } else {
+                } інакше {
                     page_size = ARMSection;
                 }
 #endif
@@ -193,7 +193,7 @@ void obj_vtable_print_slots(tcb_t *tcb)
                 break;
             }
             i += (1 << pageBitsForSize(page_size));
-            if (i < (1 << pageBitsForSize(page_size))) {
+            якщо (i < (1 << pageBitsForSize(page_size))) {
                 break; /* overflowed */
             }
         }
@@ -201,16 +201,16 @@ void obj_vtable_print_slots(tcb_t *tcb)
 
         i = 0;
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
-        while (i < MAX_UL) {
+        поки (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            if (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
+            якщо (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
                 pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
                 printf("pt_%p_%04lu {\n", pde, PD_INDEX(i));
                 arm32_cap_pt_print_slots(pt);
                 printf("}\n"); /* pt */
             }
             i += (1 << pageBitsForSize(ARMSection));
-            if (i < (1 << pageBitsForSize(ARMSection))) {
+            якщо (i < (1 << pageBitsForSize(ARMSection))) {
                 break; /* overflowed */
             }
         }
@@ -271,10 +271,10 @@ void print_cap_arch(cap_t cap)
         asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
         findPDForASID_ret_t find_ret = findPDForASID(asid);
         vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        if (asid) {
+        якщо (asid) {
             printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr), (long unsigned int)asid);
-        } else {
+                   lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr), (long unsigned ціле)asid);
+        } інакше {
             printf("pt_%p_%04lu\n", lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr));
         }
         break;
@@ -282,10 +282,10 @@ void print_cap_arch(cap_t cap)
     case cap_page_directory_cap: {
         asid_t asid = cap_page_directory_cap_get_capPDMappedASID(cap);
         findPDForASID_ret_t find_ret = findPDForASID(asid);
-        if (asid) {
+        якщо (asid) {
             printf("%p_pd (asid: %lu)\n",
-                   find_ret.pd, (long unsigned int)asid);
-        } else {
+                   find_ret.pd, (long unsigned ціле)asid);
+        } інакше {
             printf("%p_pd\n", find_ret.pd);
         }
         break;
@@ -385,7 +385,7 @@ static void obj_frame_print_attrs(resolve_ret_t ret)
     case ARMSuperSection:
         printf("32M");
         break;
-#else
+#інакше
     case ARMSection:
         printf("1M");
         break;
@@ -408,21 +408,21 @@ static void arm32_obj_pt_print_slots(pte_t *pt)
 {
     resolve_ret_t ret;
     word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    поки (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
         switch (pte_ptr_get_pteType(pte)) {
         case pte_pte_small: {
             ret.frameBase = pte_pte_small_ptr_get_address(pte);
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+            якщо (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 /* Entries are represented as 16 contiguous small frames. We need to mask
                    to get the large frame base */
                 ret.frameBase &= ~MASK(pageBitsForSize(ARMLargePage));
                 ret.frameSize = ARMLargePage;
-            } else {
+            } інакше {
                 ret.frameSize = ARMSmallPage;
             }
-#else
+#інакше
             ret.frameSize = ARMSmallPage;
 #endif
             printf("frame_%p_%04lu = frame ", pte, PT_INDEX(i));
@@ -447,7 +447,7 @@ static void arm32_obj_pt_print_slots(pte_t *pt)
 
 void obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    якщо (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         resolve_ret_t ret = {};
@@ -455,24 +455,24 @@ void obj_tcb_print_vtable(tcb_t *tcb)
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
         word_t i = 0;
-        while (i < MAX_UL) {
+        поки (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
             switch (pde_ptr_get_pdeType(pde)) {
             case pde_pde_section: {
                 ret.frameBase = pde_pde_section_ptr_get_address(pde);
 #ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
+                якщо (pde_pde_section_ptr_get_size(pde)) {
                     ret.frameSize = ARMSuperSection;
-                } else {
+                } інакше {
                     ret.frameSize = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#інакше
+                якщо (pde_pde_section_ptr_get_contiguous_hint(pde)) {
                     /* Entries are represented as 16 contiguous sections. We need to mask
                     to get the super section frame base */
                     ret.frameBase &= ~MASK(pageBitsForSize(ARMSuperSection));
                     ret.frameSize = ARMSuperSection;
-                } else {
+                } інакше {
                     ret.frameSize = ARMSection;
                 }
 #endif
@@ -493,7 +493,7 @@ void obj_tcb_print_vtable(tcb_t *tcb)
                 break;
             }
             i += (1 << pageBitsForSize(ret.frameSize));
-            if (i < (1 << pageBitsForSize(ret.frameSize))) {
+            якщо (i < (1 << pageBitsForSize(ret.frameSize))) {
                 break; /* overflowed */
             }
         }
