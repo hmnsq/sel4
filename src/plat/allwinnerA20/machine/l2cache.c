@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine.h>
 
-static inline word_t readACR(void)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ word_t readACR(ଶୂନ୍ୟ)
 {
     word_t ACR;
-    asm volatile("mrc p15,0,%0,c1,c0,1" : "=r"(ACR));
-    return ACR;
+    asm ଅସ୍ଥିର("mrc p15,0,%0,c1,c0,1" : "=r"(ACR));
+    ଫେରନ୍ତୁ ACR;
 }
 
-static inline void writeACR(word_t ACR)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ writeACR(word_t ACR)
 {
-    asm volatile("mcr p15,0,%0,c1,c0,1" : : "r"(ACR));
+    asm ଅସ୍ଥିର("mcr p15,0,%0,c1,c0,1" : : "r"(ACR));
 }
 
-void initL2Cache(void)
+ଶୂନ୍ୟ initL2Cache(ଶୂନ୍ୟ)
 {
     cleanInvalidateL1Caches();
 
@@ -34,7 +34,7 @@ void initL2Cache(void)
     cleanInvalidateL1Caches();
 }
 
-void plat_cleanL2Range(paddr_t start, paddr_t end) {}
-void plat_invalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Cache(void) {}
+ଶୂନ୍ୟ plat_cleanL2Range(paddr_t start, paddr_t end) {}
+ଶୂନ୍ୟ plat_invalidateL2Range(paddr_t start, paddr_t end) {}
+ଶୂନ୍ୟ plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
+ଶୂନ୍ୟ plat_cleanInvalidateL2Cache(ଶୂନ୍ୟ) {}

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/types.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <util.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <api/types.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/hardware.h>
+#ଅନ୍ତର୍ଭାଵ <util.h>
 
 /* Prototyped here as this is referenced from assembly */
-void arm_errata(void);
+ଶୂନ୍ୟ arm_errata(ଶୂନ୍ୟ);
 
 #ifdef CONFIG_ARM_ERRATA_773022
 /*
@@ -19,7 +19,7 @@ void arm_errata(void);
  * may deliver incorrect instructions. The work around is to disable
  * the loop buffer. Errata is number 773022.
  */
-BOOT_CODE static void errata_armA15_773022(void)
+BOOT_CODE ସ୍ଥିର ଶୂନ୍ୟ errata_armA15_773022(ଶୂନ୍ୟ)
 {
     /* Fetch the processor primary part number. */
     uint32_t proc_id = getProcessorID();
@@ -28,7 +28,7 @@ BOOT_CODE static void errata_armA15_773022(void)
     uint32_t part = (proc_id >> 4) & MASK(12);
 
     /* Check that we are running A15 and a revision upto r0p4. */
-    if (part == 0xc0f && variant == 0 && revision <= 4) {
+    ଯଦି (part == 0xc0f && variant == 0 && revision <= 4) {
         /* Disable loop buffer in the auxiliary control register */
         writeAuxiliaryControlRegister(
             readAuxiliaryControlRegister() | BIT(1));
@@ -36,7 +36,7 @@ BOOT_CODE static void errata_armA15_773022(void)
 }
 #endif
 
-BOOT_CODE void VISIBLE arm_errata(void)
+BOOT_CODE ଶୂନ୍ୟ VISIBLE arm_errata(ଶୂନ୍ୟ)
 {
 #ifdef CONFIG_ARM_ERRATA_773022
     errata_armA15_773022();

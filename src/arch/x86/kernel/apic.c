@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/io.h>
-#include <arch/machine.h>
-#include <arch/kernel/apic.h>
-#include <linker.h>
-#include <plat/machine/devices.h>
-#include <plat/machine/pit.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <machine/io.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine.h>
+#ଅନ୍ତର୍ଭାଵ <arch/kernel/apic.h>
+#ଅନ୍ତର୍ଭାଵ <linker.h>
+#ଅନ୍ତର୍ଭାଵ <plat/machine/devices.h>
+#ଅନ୍ତର୍ଭାଵ <plat/machine/pit.h>
 
 #define CPUID_TSC_DEADLINE_BIT 24u
 #define APIC_TIMER_MODE_ONE_SHOT 0
 #define APIC_TIMER_MODE_TSC_DEADLINE  2
 
-static BOOT_CODE uint32_t apic_measure_freq(void)
+ସ୍ଥିର BOOT_CODE uint32_t apic_measure_freq(ଶୂନ୍ୟ)
 {
     pit_init();
     /* wait for 1st PIT wraparound */
@@ -24,31 +24,31 @@ static BOOT_CODE uint32_t apic_measure_freq(void)
 
     /* start APIC timer countdown */
     apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
-    apic_write_reg(APIC_TIMER_COUNT, 0xffffffff);
+    apic_write_reg(APIC_TIMER_ଗଣନା, 0xffffffff);
 
     /* wait for 2nd PIT wraparound */
     pit_wait_wraparound();
 
     /* calculate APIC/bus cycles per ms = frequency in kHz */
-    return (0xffffffff - apic_read_reg(APIC_TIMER_CURRENT)) / PIT_WRAPAROUND_MS;
+    ଫେରନ୍ତୁ (0xffffffff - apic_read_reg(APIC_TIMER_CURRENT)) / PIT_WRAPAROUND_MS;
 }
 
-BOOT_CODE paddr_t apic_get_base_paddr(void)
+BOOT_CODE paddr_t apic_get_base_paddr(ଶୂନ୍ୟ)
 {
     apic_base_msr_t apic_base_msr;
 
-    apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
-    return apic_base_msr_get_base_addr(apic_base_msr);
+    apic_base_msr.ଶବ୍ଦଗୁଡ଼ିକ[0] = x86_rdmsr_ତଳ(IA32_APIC_BASE_MSR);
+    ଫେରନ୍ତୁ apic_base_msr_get_base_addr(apic_base_msr);
 }
 
 BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 {
     apic_version_t apic_version;
-    uint32_t num_lvt_entries;
+    uint32_t ଅଙ୍କ_lvt_entries;
     uint32_t apic_khz;
 
-    if (!apic_enable()) {
-        return false;
+    ଯଦି (!apic_enable()) {
+        ଫେରନ୍ତୁ false;
     }
 
 #ifdef CONFIG_KERNEL_MCS
@@ -57,44 +57,44 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 
     /* can we use tsc deadline mode? */
     uint32_t cpuid = x86_cpuid_ecx(0x1, 0x0);
-    if (!(cpuid & BIT(CPUID_TSC_DEADLINE_BIT))) {
+    ଯଦି (!(cpuid & BIT(CPUID_TSC_DEADLINE_BIT))) {
         apic_khz = apic_measure_freq();
         x86KSapicRatio = div64((uint64_t)x86KStscMhz * 1000llu, apic_khz);
         printf("Apic Khz %lu, TSC Mhz %lu, ratio %lu\n", (long) apic_khz, (long) x86KStscMhz, (long) x86KSapicRatio);
-    } else {
+    } ଅନ୍ୟଥା {
         // use tsc deadline mode
         x86KSapicRatio = 0;
     }
-#else
+#ଅନ୍ୟଥା
     apic_khz = apic_measure_freq();
 #endif
-    apic_version.words[0] = apic_read_reg(APIC_VERSION);
+    apic_version.ଶବ୍ଦଗୁଡ଼ିକ[0] = apic_read_reg(APIC_VERSION);
 
     /* check for correct version (both APIC and x2APIC): 0x1X */
-    if (apic_version_get_version(apic_version) >> 4 != 1) {
+    ଯଦି (apic_version_get_version(apic_version) >> 4 != 1) {
         printf("APIC: apic_version must be 0x1X\n");
-        return false;
+        ଫେରନ୍ତୁ false;
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    if (x86KSapicRatio != 0) {
+    ଯଦି (x86KSapicRatio != 0) {
         /* initialise APIC timer */
         apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
     }
 #endif
 
     /* check for correct number of LVT entries */
-    num_lvt_entries = apic_version_get_max_lvt_entry(apic_version) + 1;
-    if (num_lvt_entries < 3) {
-        printf("APIC: number of LVT entries: %d\n", num_lvt_entries);
+    ଅଙ୍କ_lvt_entries = apic_version_get_max_lvt_entry(apic_version) + 1;
+    ଯଦି (ଅଙ୍କ_lvt_entries < 3) {
+        printf("APIC: number of LVT entries: %d\n", ଅଙ୍କ_lvt_entries);
         printf("APIC: number of LVT entries must be >= 3\n");
-        return false;
+        ଫେରନ୍ତୁ false;
     }
 
 #ifndef CONFIG_KERNEL_MCS
     /* initialise APIC timer */
     apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
-    apic_write_reg(APIC_TIMER_COUNT, apic_khz * CONFIG_TIMER_TICK_MS);
+    apic_write_reg(APIC_TIMER_ଗଣନା, apic_khz * CONFIG_TIMER_TICK_MS);
 #endif
 
     /* enable APIC using SVR register */
@@ -104,7 +104,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,           /* focus_processor_chk */
             1,           /* enabled             */
             int_spurious /* spurious_vector     */
-        ).words[0]
+        ).ଶବ୍ଦଗୁଡ଼ିକ[0]
     );
 
     /* mask/unmask LINT0 (used for legacy IRQ delivery) */
@@ -119,7 +119,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,                /* delivery_status */
             7,                /* delivery_mode   */
             0                 /* vector          */
-        ).words[0]
+        ).ଶବ୍ଦଗୁଡ଼ିକ[0]
     );
 
     /* mask LINT1 (used for NMI delivery) */
@@ -134,14 +134,14 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,  /* delivery_status */
             0,  /* delivery_mode   */
             0   /* vector          */
-        ).words[0]
+        ).ଶବ୍ଦଗୁଡ଼ିକ[0]
     );
 
     /* initialise timer */
 #ifdef CONFIG_KERNEL_MCS
     uint32_t timer_mode = x86KSapicRatio == 0 ? APIC_TIMER_MODE_TSC_DEADLINE :
                           APIC_TIMER_MODE_ONE_SHOT;
-#else
+#ଅନ୍ୟଥା
     uint32_t timer_mode = 1;
 #endif
     apic_write_reg(
@@ -155,7 +155,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,        /* delivery_status */
             0,        /* delivery_mode   */
             int_timer /* vector          */
-        ).words[0]
+        ).ଶବ୍ଦଗୁଡ଼ିକ[0]
     );
 
     /*
@@ -168,10 +168,10 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
     printf("APIC: LVT_PERF_CNTR=0x%x\n", apic_read_reg(APIC_LVT_PERF_CNTR));
     printf("APIC: LVT_THERMAL=0x%x\n", apic_read_reg(APIC_LVT_THERMAL));
     */
-    return true;
+    ଫେରନ୍ତୁ true;
 }
 
-void apic_ack_active_interrupt(void)
+ଶୂନ୍ୟ apic_ack_active_interrupt(ଶୂନ୍ୟ)
 {
     apic_write_reg(APIC_EOI, 0);
 }

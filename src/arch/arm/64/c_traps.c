@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <model/statedata.h>
+#ଅନ୍ତର୍ଭାଵ <arch/fastpath/fastpath.h>
+#ଅନ୍ତର୍ଭାଵ <arch/kernel/traps.h>
+#ଅନ୍ତର୍ଭାଵ <api/syscall.h>
+#ଅନ୍ତର୍ଭାଵ <linker.h>
+#ଅନ୍ତର୍ଭାଵ <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#ଅନ୍ତର୍ଭାଵ <benchmark/benchmark_track.h>
+#ଅନ୍ତର୍ଭାଵ <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+ଶୂନ୍ୟ VISIBLE NORETURN restore_user_context(ଶୂନ୍ୟ)
 {
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(ଗଣ୍ଠି_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    ଗଣ୍ଠି_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm ଅସ୍ଥିର(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#ଅନ୍ୟଥା
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
 #endif
@@ -59,56 +59,56 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(ଗଣ୍ଠି_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#ଯଦି defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED ସ୍ଥିର ଅଚଳ ଅକ୍ଷର *vect_offset_to_name(word_t vect_offset)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    ବାଛ (vect_offset) {
+    ସ୍ଥିତି 0x000:
+        ଫେରନ୍ତୁ "Synchronous EL1t/EL2t";
+    ସ୍ଥିତି 0x080:
+        ଫେରନ୍ତୁ "IRQ EL1t/EL2t";
+    ସ୍ଥିତି 0x100:
+        ଫେରନ୍ତୁ "FIQ EL1t/EL2t";
+    ସ୍ଥିତି 0x180:
+        ଫେରନ୍ତୁ "SError EL1t/EL2t";
+    ସ୍ଥିତି 0x200:
+        ଫେରନ୍ତୁ "Synchronous Current EL";
+    ସ୍ଥିତି 0x280:
+        ଫେରନ୍ତୁ "IRQ Current EL";
+    ସ୍ଥିତି 0x300:
+        ଫେରନ୍ତୁ "FIQ Current EL";
+    ସ୍ଥିତି 0x380:
+        ଫେରନ୍ତୁ "SError Current EL";
+    ସ୍ଥିତି 0x400:
+        ଫେରନ୍ତୁ "Synchronous 64-bit EL0/EL1";
+    ସ୍ଥିତି 0x480:
+        ଫେରନ୍ତୁ "IRQ 64-bit EL0/EL1";
+    ସ୍ଥିତି 0x500:
+        ଫେରନ୍ତୁ "FIQ 64-bit EL0/EL1";
+    ସ୍ଥିତି 0x580:
+        ଫେରନ୍ତୁ "SError 64-bit EL0/EL1";
+    ସ୍ଥିତି 0x600:
+        ଫେରନ୍ତୁ "Synchronous 32-bit EL0/EL1";
+    ସ୍ଥିତି 0x680:
+        ଫେରନ୍ତୁ "IRQ 32-bit EL0/EL1";
+    ସ୍ଥିତି 0x700:
+        ଫେରନ୍ତୁ "FIQ 32-bit EL0/EL1";
+    ସ୍ଥିତି 0x780:
+        ଫେରନ୍ତୁ "SError 32-bit EL0/EL1";
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+ଶୂନ୍ୟ VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
 {
     printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
     printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));

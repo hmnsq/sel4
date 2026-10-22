@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/io.h>
-#include <arch/sbi.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <machine/io.h>
+#ଅନ୍ତର୍ଭାଵ <arch/sbi.h>
 
 #ifdef CONFIG_PRINTING
-void kernel_putDebugChar(unsigned char c)
+ଶୂନ୍ୟ kernel_putDebugChar(unsigned ଅକ୍ଷର c)
 {
     /* Don't use any UART driver, but write to the SBI console. It depends on
      * the SBI implementation if printing a '\r' (CR) before any '\n' (LF) is
@@ -23,9 +23,9 @@ void kernel_putDebugChar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+unsigned ଅକ୍ଷର kernel_getDebugChar(ଶୂନ୍ୟ)
 {
     /* Don't use UART, but read from the SBI console. */
-    return sbi_console_getchar();
+    ଫେରନ୍ତୁ sbi_console_getchar();
 }
 #endif /* CONFIG_DEBUG_BUILD */

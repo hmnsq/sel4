@@ -4,57 +4,57 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <arch/object/objecttype.h>
-#include <machine/io.h>
-#include <object/objecttype.h>
-#include <object/structures.h>
-#include <object/notification.h>
-#include <object/endpoint.h>
-#include <object/cnode.h>
-#include <object/interrupt.h>
+#ଅନ୍ତର୍ଭାଵ <assert.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <types.h>
+#ଅନ୍ତର୍ଭାଵ <api/failures.h>
+#ଅନ୍ତର୍ଭାଵ <api/syscall.h>
+#ଅନ୍ତର୍ଭାଵ <arch/object/objecttype.h>
+#ଅନ୍ତର୍ଭାଵ <machine/io.h>
+#ଅନ୍ତର୍ଭାଵ <object/objecttype.h>
+#ଅନ୍ତର୍ଭାଵ <object/structures.h>
+#ଅନ୍ତର୍ଭାଵ <object/notification.h>
+#ଅନ୍ତର୍ଭାଵ <object/endpoint.h>
+#ଅନ୍ତର୍ଭାଵ <object/cnode.h>
+#ଅନ୍ତର୍ଭାଵ <object/interrupt.h>
 #ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#include <object/schedcontrol.h>
+#ଅନ୍ତର୍ଭାଵ <object/schedcontext.h>
+#ଅନ୍ତର୍ଭାଵ <object/schedcontrol.h>
 #endif
-#include <object/tcb.h>
-#include <object/untyped.h>
-#include <model/statedata.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <machine.h>
-#include <util.h>
-#include <string.h>
+#ଅନ୍ତର୍ଭାଵ <object/tcb.h>
+#ଅନ୍ତର୍ଭାଵ <object/untyped.h>
+#ଅନ୍ତର୍ଭାଵ <model/statedata.h>
+#ଅନ୍ତର୍ଭାଵ <kernel/thread.h>
+#ଅନ୍ତର୍ଭାଵ <kernel/vspace.h>
+#ଅନ୍ତର୍ଭାଵ <machine.h>
+#ଅନ୍ତର୍ଭାଵ <util.h>
+#ଅନ୍ତର୍ଭାଵ <string.h>
 
 word_t getObjectSize(word_t t, word_t userObjSize)
 {
-    if (t >= seL4_NonArchObjectTypeCount) {
-        return Arch_getObjectSize(t);
-    } else {
-        switch (t) {
-        case seL4_TCBObject:
-            return seL4_TCBBits;
-        case seL4_EndpointObject:
-            return seL4_EndpointBits;
-        case seL4_NotificationObject:
-            return seL4_NotificationBits;
-        case seL4_CapTableObject:
-            return seL4_SlotBits + userObjSize;
-        case seL4_UntypedObject:
-            return userObjSize;
+    ଯଦି (t >= se_L4_Non_Arch_Object_Type_ଗଣନା) {
+        ଫେରନ୍ତୁ Arch_getObjectSize(t);
+    } ଅନ୍ୟଥା {
+        ବାଛ (t) {
+        ସ୍ଥିତି seL4_TCBObject:
+            ଫେରନ୍ତୁ seL4_TCBBits;
+        ସ୍ଥିତି seL4_EndpointObject:
+            ଫେରନ୍ତୁ seL4_EndpointBits;
+        ସ୍ଥିତି seL4_NotificationObject:
+            ଫେରନ୍ତୁ seL4_NotificationBits;
+        ସ୍ଥିତି seL4_CapTableObject:
+            ଫେରନ୍ତୁ seL4_SlotBits + userObjSize;
+        ସ୍ଥିତି seL4_UntypedObject:
+            ଫେରନ୍ତୁ userObjSize;
 #ifdef CONFIG_KERNEL_MCS
-        case seL4_SchedContextObject:
-            return userObjSize;
-        case seL4_ReplyObject:
-            return seL4_ReplyBits;
+        ସ୍ଥିତି seL4_SchedContextObject:
+            ଫେରନ୍ତୁ userObjSize;
+        ସ୍ଥିତି seL4_ReplyObject:
+            ଫେରନ୍ତୁ seL4_ReplyBits;
 #endif
-        default:
+        ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
             fail("Invalid object type");
-            return 0;
+            ଫେରନ୍ତୁ 0;
         }
     }
 }
@@ -63,64 +63,64 @@ deriveCap_ret_t deriveCap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    if (isArchCap(cap)) {
-        return Arch_deriveCap(slot, cap);
+    ଯଦି (isArchCap(cap)) {
+        ଫେରନ୍ତୁ Arch_deriveCap(slot, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_zombie_cap:
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_zombie_cap:
         ret.status = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_irq_control_cap:
+    ସ୍ଥିତି cap_irq_control_cap:
         ret.status = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_untyped_cap:
+    ସ୍ଥିତି cap_untyped_cap:
         ret.status = ensureNoChildren(slot);
-        if (ret.status != EXCEPTION_NONE) {
+        ଯଦି (ret.status != EXCEPTION_NONE) {
             ret.cap = cap_null_cap_new();
-        } else {
+        } ଅନ୍ୟଥା {
             ret.cap = cap;
         }
-        break;
+        ଭାଙ୍ଗ;
 
 #ifndef CONFIG_KERNEL_MCS
-    case cap_reply_cap:
+    ସ୍ଥିତି cap_reply_cap:
         ret.status = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
+        ଭାଙ୍ଗ;
 #endif
-    default:
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         ret.status = EXCEPTION_NONE;
         ret.cap = cap;
     }
 
-    return ret;
+    ଫେରନ୍ତୁ ret;
 }
 
 finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
 {
     finaliseCap_ret_t fc_ret;
 
-    if (isArchCap(cap)) {
-        return Arch_finaliseCap(cap, final);
+    ଯଦି (isArchCap(cap)) {
+        ଫେରନ୍ତୁ Arch_finaliseCap(cap, final);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        if (final) {
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଯଦି (final) {
             cancelAllIPC(EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)));
         }
 
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        ଫେରନ୍ତୁ fc_ret;
 
-    case cap_notification_cap:
-        if (final) {
+    ସ୍ଥିତି cap_notification_cap:
+        ଯଦି (final) {
             notification_t *ntfn = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 #ifdef CONFIG_KERNEL_MCS
             schedContextMaybeUnbindNtfn(ntfn);
@@ -130,44 +130,44 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        ଫେରନ୍ତୁ fc_ret;
 
-    case cap_reply_cap:
+    ସ୍ଥିତି cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (final) {
+        ଯଦି (final) {
             reply_t *reply = REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-            if (reply && reply->replyTCB) {
+            ଯଦି (reply && reply->replyTCB) {
                 tcb_t *tcb = reply->replyTCB;
-                switch (thread_state_get_tsType(tcb->tcbState)) {
-                case ThreadState_BlockedOnReply:
+                ବାଛ (thread_state_get_tsType(tcb->tcbState)) {
+                ସ୍ଥିତି ThreadState_BlockedOnReply:
                     reply_remove(reply, tcb);
-                    break;
-                case ThreadState_BlockedOnReceive:
+                    ଭାଙ୍ଗ;
+                ସ୍ଥିତି ThreadState_BlockedOnReceive:
                     cancelIPC(tcb);
-                    break;
-                default:
+                    ଭାଙ୍ଗ;
+                ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
                     fail("Invalid tcb state");
                 }
             }
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        ଫେରନ୍ତୁ fc_ret;
 #endif
-    case cap_null_cap:
-    case cap_domain_cap:
+    ସ୍ଥିତି cap_null_cap:
+    ସ୍ଥିତି cap_domain_cap:
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        ଫେରନ୍ତୁ fc_ret;
     }
 
-    if (exposed) {
+    ଯଦି (exposed) {
         fail("finaliseCap: failed to finalise immediately.");
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_cnode_cap: {
-        if (final) {
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_cnode_cap: {
+        ଯଦି (final) {
             fc_ret.remainder =
                 Zombie_new(
                     1ul << cap_cnode_cap_get_capCNodeRadix(cap),
@@ -175,13 +175,13 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     cap_cnode_cap_get_capCNodePtr(cap)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            ଫେରନ୍ତୁ fc_ret;
         }
-        break;
+        ଭାଙ୍ଗ;
     }
 
-    case cap_thread_cap: {
-        if (final) {
+    ସ୍ଥିତି cap_thread_cap: {
+        ଯଦି (final) {
             tcb_t *tcb;
             cte_t *cte_ptr;
 
@@ -191,9 +191,9 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
             unbindNotification(tcb);
 #ifdef CONFIG_KERNEL_MCS
             sched_context_t *sc = SC_PTR(tcb->tcbSchedContext);
-            if (sc) {
+            ଯଦି (sc) {
                 schedContext_unbindTCB(sc);
-                if (sc->scYieldFrom) {
+                ଯଦି (sc->scYieldFrom) {
                     schedContext_completeYieldTo(sc->scYieldFrom);
                 }
             }
@@ -210,19 +210,19 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     CTE_REF(cte_ptr)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            ଫେରନ୍ତୁ fc_ret;
         }
-        break;
+        ଭାଙ୍ଗ;
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        if (final) {
+    ସ୍ଥିତି cap_sched_context_cap:
+        ଯଦି (final) {
             sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
             schedContext_unbindAllTCBs(sc);
             schedContext_unbindNtfn(sc);
             schedContext_unbindReply(sc);
-            if (sc->scYieldFrom) {
+            ଯଦି (sc->scYieldFrom) {
                 schedContext_completeYieldTo(sc->scYieldFrom);
             }
             /* mark the sc as no longer valid */
@@ -230,198 +230,198 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
             sc->scSporadic = false;
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            ଫେରନ୍ତୁ fc_ret;
         }
-        break;
+        ଭାଙ୍ଗ;
 #endif
 
-    case cap_zombie_cap:
+    ସ୍ଥିତି cap_zombie_cap:
         fc_ret.remainder = cap;
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        ଫେରନ୍ତୁ fc_ret;
 
-    case cap_irq_handler_cap:
-        if (final) {
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଯଦି (final) {
             irq_t irq = IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap));
 
             deletingIRQHandler(irq);
 
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap;
-            return fc_ret;
+            ଫେରନ୍ତୁ fc_ret;
         }
-        break;
+        ଭାଙ୍ଗ;
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    ଫେରନ୍ତୁ fc_ret;
 }
 
 bool_t CONST hasCancelSendRights(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        return cap_endpoint_cap_get_capCanSend(cap) &&
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଫେରନ୍ତୁ cap_endpoint_cap_get_capCanSend(cap) &&
                cap_endpoint_cap_get_capCanReceive(cap) &&
                cap_endpoint_cap_get_capCanGrantReply(cap) &&
                cap_endpoint_cap_get_capCanGrant(cap);
 
-    default:
-        return false;
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ false;
     }
 }
 
 bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_untyped_cap:
-        if (cap_get_capIsPhysical(cap_b)) {
-            word_t aBase, bBase, aTop, bTop;
+    ବାଛ (cap_get_capType(cap_a)) {
+    ସ୍ଥିତି cap_untyped_cap:
+        ଯଦି (cap_get_capIsPhysical(cap_b)) {
+            word_t aBase, bBase, a_ଶୀର୍ଷ, b_ଶୀର୍ଷ;
 
             aBase = (word_t)WORD_PTR(cap_untyped_cap_get_capPtr(cap_a));
             bBase = (word_t)cap_get_capPtr(cap_b);
 
-            aTop = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
-            bTop = bBase + MASK(cap_get_capSizeBits(cap_b));
+            a_ଶୀର୍ଷ = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
+            b_ଶୀର୍ଷ = bBase + MASK(cap_get_capSizeBits(cap_b));
 
-            return (aBase <= bBase) && (bTop <= aTop) && (bBase <= bTop);
+            ଫେରନ୍ତୁ (aBase <= bBase) && (b_ଶୀର୍ଷ <= a_ଶୀର୍ଷ) && (bBase <= b_ଶୀର୍ଷ);
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_endpoint_cap:
-        if (cap_get_capType(cap_b) == cap_endpoint_cap) {
-            return cap_endpoint_cap_get_capEPPtr(cap_a) ==
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_endpoint_cap) {
+            ଫେରନ୍ତୁ cap_endpoint_cap_get_capEPPtr(cap_a) ==
                    cap_endpoint_cap_get_capEPPtr(cap_b);
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_notification_cap:
-        if (cap_get_capType(cap_b) == cap_notification_cap) {
-            return cap_notification_cap_get_capNtfnPtr(cap_a) ==
+    ସ୍ଥିତି cap_notification_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_notification_cap) {
+            ଫେରନ୍ତୁ cap_notification_cap_get_capNtfnPtr(cap_a) ==
                    cap_notification_cap_get_capNtfnPtr(cap_b);
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_cnode_cap:
-        if (cap_get_capType(cap_b) == cap_cnode_cap) {
-            return (cap_cnode_cap_get_capCNodePtr(cap_a) ==
+    ସ୍ଥିତି cap_cnode_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_cnode_cap) {
+            ଫେରନ୍ତୁ (cap_cnode_cap_get_capCNodePtr(cap_a) ==
                     cap_cnode_cap_get_capCNodePtr(cap_b)) &&
                    (cap_cnode_cap_get_capCNodeRadix(cap_a) ==
                     cap_cnode_cap_get_capCNodeRadix(cap_b));
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_thread_cap:
-        if (cap_get_capType(cap_b) == cap_thread_cap) {
-            return cap_thread_cap_get_capTCBPtr(cap_a) ==
+    ସ୍ଥିତି cap_thread_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_thread_cap) {
+            ଫେରନ୍ତୁ cap_thread_cap_get_capTCBPtr(cap_a) ==
                    cap_thread_cap_get_capTCBPtr(cap_b);
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_reply_cap:
-        if (cap_get_capType(cap_b) == cap_reply_cap) {
+    ସ୍ଥିତି cap_reply_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_reply_cap) {
 #ifdef CONFIG_KERNEL_MCS
-            return cap_reply_cap_get_capReplyPtr(cap_a) ==
+            ଫେରନ୍ତୁ cap_reply_cap_get_capReplyPtr(cap_a) ==
                    cap_reply_cap_get_capReplyPtr(cap_b);
-#else
-            return cap_reply_cap_get_capTCBPtr(cap_a) ==
+#ଅନ୍ୟଥା
+            ଫେରନ୍ତୁ cap_reply_cap_get_capTCBPtr(cap_a) ==
                    cap_reply_cap_get_capTCBPtr(cap_b);
 #endif
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_domain_cap:
-        if (cap_get_capType(cap_b) == cap_domain_cap) {
-            return true;
+    ସ୍ଥିତି cap_domain_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_domain_cap) {
+            ଫେରନ୍ତୁ true;
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_irq_control_cap:
-        if (cap_get_capType(cap_b) == cap_irq_control_cap ||
+    ସ୍ଥିତି cap_irq_control_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_irq_control_cap ||
             cap_get_capType(cap_b) == cap_irq_handler_cap ||
             Arch_isIRQControlDescendant(cap_b)) {
-            return true;
+            ଫେରନ୍ତୁ true;
         }
-        break;
+        ଭାଙ୍ଗ;
 
-    case cap_irq_handler_cap:
-        if (cap_get_capType(cap_b) == cap_irq_handler_cap) {
-            return (word_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_irq_handler_cap) {
+            ଫେରନ୍ତୁ (word_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
                    (word_t)cap_irq_handler_cap_get_capIRQ(cap_b);
         }
-        break;
+        ଭାଙ୍ଗ;
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        if (cap_get_capType(cap_b) == cap_sched_context_cap) {
-            return (cap_sched_context_cap_get_capSCPtr(cap_a) ==
+    ସ୍ଥିତି cap_sched_context_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_sched_context_cap) {
+            ଫେରନ୍ତୁ (cap_sched_context_cap_get_capSCPtr(cap_a) ==
                     cap_sched_context_cap_get_capSCPtr(cap_b)) &&
                    (cap_sched_context_cap_get_capSCSizeBits(cap_a) ==
                     cap_sched_context_cap_get_capSCSizeBits(cap_b));
         }
-        break;
-    case cap_sched_control_cap:
-        if (cap_get_capType(cap_b) == cap_sched_control_cap) {
-            return true;
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି cap_sched_control_cap:
+        ଯଦି (cap_get_capType(cap_b) == cap_sched_control_cap) {
+            ଫେରନ୍ତୁ true;
         }
-        break;
+        ଭାଙ୍ଗ;
 #endif
-    default:
-        if (isArchCap(cap_a) &&
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଯଦି (isArchCap(cap_a) &&
             isArchCap(cap_b)) {
-            return Arch_sameRegionAs(cap_a, cap_b);
+            ଫେରନ୍ତୁ Arch_sameRegionAs(cap_a, cap_b);
         }
-        break;
+        ଭାଙ୍ଗ;
     }
 
-    return false;
+    ଫେରନ୍ତୁ false;
 }
 
 bool_t CONST sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_untyped_cap) {
-        return false;
+    ଯଦି (cap_get_capType(cap_a) == cap_untyped_cap) {
+        ଫେରନ୍ତୁ false;
     }
-    if (cap_get_capType(cap_a) == cap_irq_control_cap) {
-        return false;
+    ଯଦି (cap_get_capType(cap_a) == cap_irq_control_cap) {
+        ଫେରନ୍ତୁ false;
     }
-    if (isArchCap(cap_a) && isArchCap(cap_b)) {
-        return Arch_sameObjectAs(cap_a, cap_b);
+    ଯଦି (isArchCap(cap_a) && isArchCap(cap_b)) {
+        ଫେରନ୍ତୁ Arch_sameObjectAs(cap_a, cap_b);
     }
-    return sameRegionAs(cap_a, cap_b);
+    ଫେରନ୍ତୁ sameRegionAs(cap_a, cap_b);
 }
 
 cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_updateCapData(preserve, newData, cap);
+    ଯଦି (isArchCap(cap)) {
+        ଫେରନ୍ତୁ Arch_updateCapData(preserve, newData, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        if (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
-            return cap_endpoint_cap_set_capEPBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଯଦି (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
+            ଫେରନ୍ତୁ cap_endpoint_cap_set_capEPBadge(cap, newData);
+        } ଅନ୍ୟଥା {
+            ଫେରନ୍ତୁ cap_null_cap_new();
         }
 
-    case cap_notification_cap:
-        if (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
-            return cap_notification_cap_set_capNtfnBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+    ସ୍ଥିତି cap_notification_cap:
+        ଯଦି (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
+            ଫେରନ୍ତୁ cap_notification_cap_set_capNtfnBadge(cap, newData);
+        } ଅନ୍ୟଥା {
+            ଫେରନ୍ତୁ cap_null_cap_new();
         }
 
-    case cap_cnode_cap: {
+    ସ୍ଥିତି cap_cnode_cap: {
         word_t guard, guardSize;
-        seL4_CNode_CapData_t w = { .words = { newData } };
+        seL4_CNode_CapData_t w = { .ଶବ୍ଦଗୁଡ଼ିକ = { newData } };
 
         guardSize = seL4_CNode_CapData_get_guardSize(w);
 
-        if (guardSize + cap_cnode_cap_get_capCNodeRadix(cap) > wordBits) {
-            return cap_null_cap_new();
-        } else {
+        ଯଦି (guardSize + cap_cnode_cap_get_capCNodeRadix(cap) > wordBits) {
+            ଫେରନ୍ତୁ cap_null_cap_new();
+        } ଅନ୍ୟଥା {
             cap_t new_cap;
 
             guard = seL4_CNode_CapData_get_guard(w) & MASK(guardSize);
@@ -429,37 +429,37 @@ cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
             new_cap = cap_cnode_cap_set_capCNodeGuardSize(new_cap,
                                                           guardSize);
 
-            return new_cap;
+            ଫେରନ୍ତୁ new_cap;
         }
     }
 
-    default:
-        return cap;
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ cap;
     }
 }
 
 cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_maskCapRights(cap_rights, cap);
+    ଯଦି (isArchCap(cap)) {
+        ଫେରନ୍ତୁ Arch_maskCapRights(cap_rights, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-    case cap_domain_cap:
-    case cap_cnode_cap:
-    case cap_untyped_cap:
-    case cap_irq_control_cap:
-    case cap_irq_handler_cap:
-    case cap_zombie_cap:
-    case cap_thread_cap:
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_null_cap:
+    ସ୍ଥିତି cap_domain_cap:
+    ସ୍ଥିତି cap_cnode_cap:
+    ସ୍ଥିତି cap_untyped_cap:
+    ସ୍ଥିତି cap_irq_control_cap:
+    ସ୍ଥିତି cap_irq_handler_cap:
+    ସ୍ଥିତି cap_zombie_cap:
+    ସ୍ଥିତି cap_thread_cap:
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-    case cap_sched_control_cap:
+    ସ୍ଥିତି cap_sched_context_cap:
+    ସ୍ଥିତି cap_sched_control_cap:
 #endif
-        return cap;
+        ଫେରନ୍ତୁ cap;
 
-    case cap_endpoint_cap: {
+    ସ୍ଥିତି cap_endpoint_cap: {
         cap_t new_cap;
 
         new_cap = cap_endpoint_cap_set_capCanSend(
@@ -475,10 +475,10 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
                       new_cap, cap_endpoint_cap_get_capCanGrantReply(cap) &
                       seL4_CapRights_get_capAllowGrantReply(cap_rights));
 
-        return new_cap;
+        ଫେରନ୍ତୁ new_cap;
     }
 
-    case cap_notification_cap: {
+    ସ୍ଥିତି cap_notification_cap: {
         cap_t new_cap;
 
         new_cap = cap_notification_cap_set_capNtfnCanSend(
@@ -488,33 +488,33 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
                                                              cap_notification_cap_get_capNtfnCanReceive(cap) &
                                                              seL4_CapRights_get_capAllowRead(cap_rights));
 
-        return new_cap;
+        ଫେରନ୍ତୁ new_cap;
     }
-    case cap_reply_cap: {
+    ସ୍ଥିତି cap_reply_cap: {
         cap_t new_cap;
 
         new_cap = cap_reply_cap_set_capReplyCanGrant(
                       cap, cap_reply_cap_get_capReplyCanGrant(cap) &
                       seL4_CapRights_get_capAllowGrant(cap_rights));
-        return new_cap;
+        ଫେରନ୍ତୁ new_cap;
     }
 
 
-    default:
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         fail("Invalid cap type"); /* Sentinel for invalid enums */
     }
 }
 
-cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t createObject(object_t t, ଶୂନ୍ୟ *regionBase, word_t userSize, bool_t deviceMemory)
 {
     /* Handle architecture-specific objects. */
-    if (t >= (object_t) seL4_NonArchObjectTypeCount) {
-        return Arch_createObject(t, regionBase, userSize, deviceMemory);
+    ଯଦି (t >= (object_t) se_L4_Non_Arch_Object_Type_ଗଣନା) {
+        ଫେରନ୍ତୁ Arch_createObject(t, regionBase, userSize, deviceMemory);
     }
 
     /* Create objects. */
-    switch ((api_object_t)t) {
-    case seL4_TCBObject: {
+    ବାଛ ((api_object_t)t) {
+    ସ୍ଥିତି seL4_TCBObject: {
         tcb_t *tcb;
         tcb = TCB_PTR((word_t)regionBase + TCB_OFFSET);
         /** AUXUPD: "(True, ptr_retyps 1
@@ -534,43 +534,43 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
 #endif
 #ifdef CONFIG_DEBUG_BUILD
         strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "child of: '", TCB_NAME_LENGTH);
-        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(NODE_STATE(ksCurThread))->tcbName, TCB_NAME_LENGTH);
+        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(ଗଣ୍ଠି_STATE(ksCurThread))->tcbName, TCB_NAME_LENGTH);
         strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "'", TCB_NAME_LENGTH);
         tcbDebugAppend(tcb);
 #endif /* CONFIG_DEBUG_BUILD */
 
-        return cap_thread_cap_new(TCB_REF(tcb));
+        ଫେରନ୍ତୁ cap_thread_cap_new(TCB_REF(tcb));
     }
 
-    case seL4_EndpointObject:
+    ସ୍ଥିତି seL4_EndpointObject:
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: endpoint_C ptr))" */
-        return cap_endpoint_cap_new(0, true, true, true, true,
+        ଫେରନ୍ତୁ cap_endpoint_cap_new(0, true, true, true, true,
                                     EP_REF(regionBase));
 
-    case seL4_NotificationObject:
+    ସ୍ଥିତି seL4_NotificationObject:
         /** AUXUPD: "(True, ptr_retyp
               (Ptr (ptr_val \<acute>regionBase) :: notification_C ptr))" */
-        return cap_notification_cap_new(0, true, true,
+        ଫେରନ୍ତୁ cap_notification_cap_new(0, true, true,
                                         NTFN_REF(regionBase));
 
-    case seL4_CapTableObject:
+    ସ୍ଥିତି seL4_CapTableObject:
         /** AUXUPD: "(True, ptr_arr_retyps (2 ^ (unat \<acute>userSize))
           (Ptr (ptr_val \<acute>regionBase) :: cte_C ptr))" */
         /** GHOSTUPD: "(True, gs_new_cnodes (unat \<acute>userSize)
                                 (ptr_val \<acute>regionBase)
                                 (4 + unat \<acute>userSize))" */
-        return cap_cnode_cap_new(userSize, 0, 0, CTE_REF(regionBase));
+        ଫେରନ୍ତୁ cap_cnode_cap_new(userSize, 0, 0, CTE_REF(regionBase));
 
-    case seL4_UntypedObject:
+    ସ୍ଥିତି seL4_UntypedObject:
         /*
          * No objects need to be created; instead, just insert caps into
          * the destination slots.
          */
-        return cap_untyped_cap_new(0, !!deviceMemory, userSize, WORD_REF(regionBase));
+        ଫେରନ୍ତୁ cap_untyped_cap_new(0, !!deviceMemory, userSize, WORD_REF(regionBase));
 
 #ifdef CONFIG_KERNEL_MCS
-    case seL4_SchedContextObject:
+    ସ୍ଥିତି seL4_SchedContextObject:
         /** AUXUPD:
             "(True,
               ptr_arr_retyps (refills_len (unat \<acute>userSize)
@@ -580,24 +580,24 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
                                    word_of_nat (size_of TYPE(sched_context_C))) :: refill_C ptr)
               \<circ> ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: sched_context_C ptr))" */
         /** GHOSTUPD: "(True, gs_new_sc_size (ptr_val \<acute>regionBase) (unat \<acute>userSize))" */
-        return cap_sched_context_cap_new(SC_REF(regionBase), userSize);
+        ଫେରନ୍ତୁ cap_sched_context_cap_new(SC_REF(regionBase), userSize);
 
-    case seL4_ReplyObject:
+    ସ୍ଥିତି seL4_ReplyObject:
         /** AUXUPD: "(True, ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: reply_C ptr))" */
-        return cap_reply_cap_new(REPLY_REF(regionBase), true);
+        ଫେରନ୍ତୁ cap_reply_cap_new(REPLY_REF(regionBase), true);
 #endif
 
-    default:
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         fail("Invalid object type");
     }
 }
 
-void createNewObjects(object_t t, cte_t *parent,
+ଶୂନ୍ୟ createNewObjects(object_t t, cte_t *parent,
                       cte_t *destCNode, word_t destOffset, word_t destLength,
-                      void *regionBase, word_t userSize, bool_t deviceMemory)
+                      ଶୂନ୍ୟ *regionBase, word_t userSize, bool_t deviceMemory)
 {
     word_t objectSize;
-    void *nextFreeArea;
+    ଶୂନ୍ୟ *nextFreeArea;
     word_t i;
     word_t totalObjectSize UNUSED;
 
@@ -609,13 +609,13 @@ void createNewObjects(object_t t, cte_t *parent,
 
     /* Create the objects. */
     nextFreeArea = regionBase;
-    for (i = 0; i < destLength; i++) {
+    ପାଇଁ (i = 0; i < destLength; i++) {
         /* Create the object. */
         /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute> nextFreeArea + ((\<acute> i) << unat (\<acute> objectSize))) (unat (\<acute> objectSize)))" */
-        cap_t cap = createObject(t, (void *)((word_t)nextFreeArea + (i << objectSize)), userSize, deviceMemory);
+        cap_t cap = createObject(t, (ଶୂନ୍ୟ *)((word_t)nextFreeArea + (i << objectSize)), userSize, deviceMemory);
 
         /* Insert the cap into the user's cspace. */
-        insertNewCap(parent, &destCNode[destOffset + i], cap);
+        ଭର୍ତ୍ତି_New_Cap(parent, &destCNode[destOffset + i], cap);
 
         /* Move along to the next region of memory. been merged into a formula of i */
     }
@@ -626,158 +626,158 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
                              cptr_t capIndex, cte_t *slot, cap_t cap,
                              bool_t block, bool_t call,
                              bool_t canDonate, bool_t firstPhase, word_t *buffer)
-#else
+#ଅନ୍ୟଥା
 exception_t decodeInvocation(word_t invLabel, word_t length,
                              cptr_t capIndex, cte_t *slot, cap_t cap,
                              bool_t block, bool_t call,
                              word_t *buffer)
 #endif
 {
-    if (isArchCap(cap)) {
-        return Arch_decodeInvocation(invLabel, length, capIndex,
+    ଯଦି (isArchCap(cap)) {
+        ଫେରନ୍ତୁ Arch_decodeInvocation(invLabel, length, capIndex,
                                      slot, cap, call, buffer);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
+    ବାଛ (cap_get_capType(cap)) {
+    ସ୍ଥିତି cap_null_cap:
         userError("Attempted to invoke a null cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+        ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
 
-    case cap_zombie_cap:
+    ସ୍ଥିତି cap_zombie_cap:
         userError("Attempted to invoke a zombie cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+        ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
 
-    case cap_endpoint_cap:
-        if (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଯଦି (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
             userError("Attempted to invoke a read-only endpoint cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(ଗଣ୍ଠି_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
-        return performInvocation_Endpoint(
+        ଫେରନ୍ତୁ performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
                    cap_endpoint_cap_get_capCanGrantReply(cap), block, call, canDonate);
-#else
-        return performInvocation_Endpoint(
+#ଅନ୍ୟଥା
+        ଫେରନ୍ତୁ performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
                    cap_endpoint_cap_get_capCanGrantReply(cap), block, call);
 #endif
 
-    case cap_notification_cap: {
-        if (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
+    ସ୍ଥିତି cap_notification_cap: {
+        ଯଦି (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
             userError("Attempted to invoke a read-only notification cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Notification(
+        setThreadState(ଗଣ୍ଠି_STATE(ksCurThread), ThreadState_Restart);
+        ଫେରନ୍ତୁ performInvocation_Notification(
                    NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)),
                    cap_notification_cap_get_capNtfnBadge(cap));
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
-                   NODE_STATE(ksCurThread),
+    ସ୍ଥିତି cap_reply_cap:
+        setThreadState(ଗଣ୍ଠି_STATE(ksCurThread), ThreadState_Restart);
+        ଫେରନ୍ତୁ performInvocation_Reply(
+                   ଗଣ୍ଠି_STATE(ksCurThread),
                    REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap)),
                    cap_reply_cap_get_capReplyCanGrant(cap));
-#else
-    case cap_reply_cap:
-        if (unlikely(cap_reply_cap_get_capReplyMaster(cap))) {
+#ଅନ୍ୟଥା
+    ସ୍ଥିତି cap_reply_cap:
+        ଯଦି (unlikely(cap_reply_cap_get_capReplyMaster(cap))) {
             userError("Attempted to invoke an invalid reply cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
+        setThreadState(ଗଣ୍ଠି_STATE(ksCurThread), ThreadState_Restart);
+        ଫେରନ୍ତୁ performInvocation_Reply(
                    TCB_PTR(cap_reply_cap_get_capTCBPtr(cap)), slot,
                    cap_reply_cap_get_capReplyCanGrant(cap));
 
 #endif
 
-    case cap_thread_cap:
+    ସ୍ଥିତି cap_thread_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        ଯଦି (unlikely(firstPhase)) {
             userError("Cannot invoke thread capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeTCBInvocation(invLabel, length, cap, slot, call, buffer);
+        ଫେରନ୍ତୁ decodeTCBInvocation(invLabel, length, cap, slot, call, buffer);
 
-    case cap_domain_cap:
+    ସ୍ଥିତି cap_domain_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        ଯଦି (unlikely(firstPhase)) {
             userError("Cannot invoke domain capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeDomainInvocation(invLabel, length, buffer);
+        ଫେରନ୍ତୁ decodeDomainInvocation(invLabel, length, buffer);
 
-    case cap_cnode_cap:
+    ସ୍ଥିତି cap_cnode_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        ଯଦି (unlikely(firstPhase)) {
             userError("Cannot invoke cnode capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeCNodeInvocation(invLabel, length, cap, buffer);
+        ଫେରନ୍ତୁ decodeCNodeInvocation(invLabel, length, cap, buffer);
 
-    case cap_untyped_cap:
-        return decodeUntypedInvocation(invLabel, length, slot, cap, call, buffer);
+    ସ୍ଥିତି cap_untyped_cap:
+        ଫେରନ୍ତୁ decodeUntypedInvocation(invLabel, length, slot, cap, call, buffer);
 
-    case cap_irq_control_cap:
-        return decodeIRQControlInvocation(invLabel, length, slot, buffer);
+    ସ୍ଥିତି cap_irq_control_cap:
+        ଫେରନ୍ତୁ decodeIRQControlInvocation(invLabel, length, slot, buffer);
 
-    case cap_irq_handler_cap:
-        return decodeIRQHandlerInvocation(invLabel,
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଫେରନ୍ତୁ decodeIRQHandlerInvocation(invLabel,
                                           IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap)));
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
-        if (unlikely(firstPhase)) {
+    ସ୍ଥିତି cap_sched_control_cap:
+        ଯଦି (unlikely(firstPhase)) {
             userError("Cannot invoke sched control capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
-        return decodeSchedControlInvocation(invLabel, cap, length, buffer);
+        ଫେରନ୍ତୁ decodeSchedControlInvocation(invLabel, cap, length, buffer);
 
-    case cap_sched_context_cap:
-        if (unlikely(firstPhase)) {
+    ସ୍ଥିତି cap_sched_context_cap:
+        ଯଦି (unlikely(firstPhase)) {
             userError("Cannot invoke sched context capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ସଂଖ୍ୟା = 0;
+            ଫେରନ୍ତୁ EXCEPTION_SYSCALL_ERROR;
         }
         sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
-        return decodeSchedContextInvocation(invLabel, sc, call);
+        ଫେରନ୍ତୁ decodeSchedContextInvocation(invLabel, sc, call);
 #endif
-    default:
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         fail("Invalid cap type");
     }
 }
@@ -787,18 +787,18 @@ exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
                                        bool_t canGrant, bool_t canGrantReply,
                                        bool_t block, bool_t call, bool_t canDonate)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, NODE_STATE(ksCurThread), ep);
+    sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, ଗଣ୍ଠି_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    ଫେରନ୍ତୁ EXCEPTION_NONE;
 }
-#else
+#ଅନ୍ୟଥା
 exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
                                        bool_t canGrant, bool_t canGrantReply,
                                        bool_t block, bool_t call)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, NODE_STATE(ksCurThread), ep);
+    sendIPC(block, call, badge, canGrant, canGrantReply, ଗଣ୍ଠି_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    ଫେରନ୍ତୁ EXCEPTION_NONE;
 }
 #endif
 
@@ -806,20 +806,20 @@ exception_t performInvocation_Notification(notification_t *ntfn, word_t badge)
 {
     sendSignal(ntfn, badge);
 
-    return EXCEPTION_NONE;
+    ଫେରନ୍ତୁ EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 exception_t performInvocation_Reply(tcb_t *thread, reply_t *reply, bool_t canGrant)
 {
     doReplyTransfer(thread, reply, canGrant);
-    return EXCEPTION_NONE;
+    ଫେରନ୍ତୁ EXCEPTION_NONE;
 }
-#else
+#ଅନ୍ୟଥା
 exception_t performInvocation_Reply(tcb_t *thread, cte_t *slot, bool_t canGrant)
 {
-    doReplyTransfer(NODE_STATE(ksCurThread), thread, slot, canGrant);
-    return EXCEPTION_NONE;
+    doReplyTransfer(ଗଣ୍ଠି_STATE(ksCurThread), thread, slot, canGrant);
+    ଫେରନ୍ତୁ EXCEPTION_NONE;
 }
 #endif
 
@@ -830,59 +830,59 @@ word_t CONST cap_get_capSizeBits(cap_t cap)
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return cap_untyped_cap_get_capBlockSize(cap);
+    ବାଛ (ctag) {
+    ସ୍ଥିତି cap_untyped_cap:
+        ଫେରନ୍ତୁ cap_untyped_cap_get_capBlockSize(cap);
 
-    case cap_endpoint_cap:
-        return seL4_EndpointBits;
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଫେରନ୍ତୁ seL4_EndpointBits;
 
-    case cap_notification_cap:
-        return seL4_NotificationBits;
+    ସ୍ଥିତି cap_notification_cap:
+        ଫେରନ୍ତୁ seL4_NotificationBits;
 
-    case cap_cnode_cap:
-        return cap_cnode_cap_get_capCNodeRadix(cap) + seL4_SlotBits;
+    ସ୍ଥିତି cap_cnode_cap:
+        ଫେରନ୍ତୁ cap_cnode_cap_get_capCNodeRadix(cap) + seL4_SlotBits;
 
-    case cap_thread_cap:
-        return seL4_TCBBits;
+    ସ୍ଥିତି cap_thread_cap:
+        ଫେରନ୍ତୁ seL4_TCBBits;
 
-    case cap_zombie_cap: {
+    ସ୍ଥିତି cap_zombie_cap: {
         word_t type = cap_zombie_cap_get_capZombieType(cap);
-        if (type == ZombieType_ZombieTCB) {
-            return seL4_TCBBits;
+        ଯଦି (type == ZombieType_ZombieTCB) {
+            ଫେରନ୍ତୁ seL4_TCBBits;
         }
-        return ZombieType_ZombieCNode(type) + seL4_SlotBits;
+        ଫେରନ୍ତୁ ZombieType_ZombieCNode(type) + seL4_SlotBits;
     }
 
-    case cap_null_cap:
-        return 0;
+    ସ୍ଥିତି cap_null_cap:
+        ଫେରନ୍ତୁ 0;
 
-    case cap_domain_cap:
-        return 0;
+    ସ୍ଥିତି cap_domain_cap:
+        ଫେରନ୍ତୁ 0;
 
-    case cap_reply_cap:
+    ସ୍ଥିତି cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return seL4_ReplyBits;
-#else
-        return 0;
+        ଫେରନ୍ତୁ seL4_ReplyBits;
+#ଅନ୍ୟଥା
+        ଫେରନ୍ତୁ 0;
 #endif
 
-    case cap_irq_control_cap:
+    ସ୍ଥିତି cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
+    ସ୍ଥିତି cap_sched_control_cap:
 #endif
-        return 0;
+        ଫେରନ୍ତୁ 0;
 
-    case cap_irq_handler_cap:
-        return 0;
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଫେରନ୍ତୁ 0;
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        return cap_sched_context_cap_get_capSCSizeBits(cap);
+    ସ୍ଥିତି cap_sched_context_cap:
+        ଫେରନ୍ତୁ cap_sched_context_cap_get_capSCSizeBits(cap);
 #endif
 
-    default:
-        return cap_get_archCapSizeBits(cap);
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ cap_get_archCapSizeBits(cap);
     }
 
 }
@@ -896,129 +896,129 @@ bool_t CONST cap_get_capIsPhysical(cap_t cap)
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return true;
+    ବାଛ (ctag) {
+    ସ୍ଥିତି cap_untyped_cap:
+        ଫେରନ୍ତୁ true;
 
-    case cap_endpoint_cap:
-        return true;
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଫେରନ୍ତୁ true;
 
-    case cap_notification_cap:
-        return true;
+    ସ୍ଥିତି cap_notification_cap:
+        ଫେରନ୍ତୁ true;
 
-    case cap_cnode_cap:
-        return true;
+    ସ୍ଥିତି cap_cnode_cap:
+        ଫେରନ୍ତୁ true;
 
-    case cap_thread_cap:
+    ସ୍ଥିତି cap_thread_cap:
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
+    ସ୍ଥିତି cap_sched_context_cap:
 #endif
-        return true;
+        ଫେରନ୍ତୁ true;
 
-    case cap_zombie_cap:
-        return true;
+    ସ୍ଥିତି cap_zombie_cap:
+        ଫେରନ୍ତୁ true;
 
-    case cap_domain_cap:
-        return false;
+    ସ୍ଥିତି cap_domain_cap:
+        ଫେରନ୍ତୁ false;
 
-    case cap_reply_cap:
+    ସ୍ଥିତି cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return true;
-#else
-        return false;
+        ଫେରନ୍ତୁ true;
+#ଅନ୍ୟଥା
+        ଫେରନ୍ତୁ false;
 #endif
 
-    case cap_irq_control_cap:
+    ସ୍ଥିତି cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
+    ସ୍ଥିତି cap_sched_control_cap:
 #endif
-        return false;
+        ଫେରନ୍ତୁ false;
 
-    case cap_irq_handler_cap:
-        return false;
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଫେରନ୍ତୁ false;
 
-    default:
-        return cap_get_archCapIsPhysical(cap);
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ cap_get_archCapIsPhysical(cap);
     }
 }
 
-void *CONST cap_get_capPtr(cap_t cap)
+ଶୂନ୍ୟ *CONST cap_get_capPtr(cap_t cap)
 {
     cap_tag_t ctag;
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return WORD_PTR(cap_untyped_cap_get_capPtr(cap));
+    ବାଛ (ctag) {
+    ସ୍ଥିତି cap_untyped_cap:
+        ଫେରନ୍ତୁ WORD_PTR(cap_untyped_cap_get_capPtr(cap));
 
-    case cap_endpoint_cap:
-        return EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଫେରନ୍ତୁ EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
 
-    case cap_notification_cap:
-        return NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
+    ସ୍ଥିତି cap_notification_cap:
+        ଫେରନ୍ତୁ NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 
-    case cap_cnode_cap:
-        return CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
+    ସ୍ଥିତି cap_cnode_cap:
+        ଫେରନ୍ତୁ CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
 
-    case cap_thread_cap:
-        return TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
+    ସ୍ଥିତି cap_thread_cap:
+        ଫେରନ୍ତୁ TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
 
-    case cap_zombie_cap:
-        return CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
+    ସ୍ଥିତି cap_zombie_cap:
+        ଫେରନ୍ତୁ CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
 
-    case cap_domain_cap:
-        return NULL;
+    ସ୍ଥିତି cap_domain_cap:
+        ଫେରନ୍ତୁ ଖାଲି;
 
-    case cap_reply_cap:
+    ସ୍ଥିତି cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-#else
-        return NULL;
+        ଫେରନ୍ତୁ REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
+#ଅନ୍ୟଥା
+        ଫେରନ୍ତୁ ଖାଲି;
 #endif
 
-    case cap_irq_control_cap:
+    ସ୍ଥିତି cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
+    ସ୍ଥିତି cap_sched_control_cap:
 #endif
-        return NULL;
+        ଫେରନ୍ତୁ ଖାଲି;
 
-    case cap_irq_handler_cap:
-        return NULL;
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଫେରନ୍ତୁ ଖାଲି;
 
 #ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        return SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
+    ସ୍ଥିତି cap_sched_context_cap:
+        ଫେରନ୍ତୁ SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
 #endif
 
-    default:
-        return cap_get_archCapPtr(cap);
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ cap_get_archCapPtr(cap);
 
     }
 }
 
 bool_t CONST isCapRevocable(cap_t derivedCap, cap_t srcCap)
 {
-    if (isArchCap(derivedCap)) {
-        return Arch_isCapRevocable(derivedCap, srcCap);
+    ଯଦି (isArchCap(derivedCap)) {
+        ଫେରନ୍ତୁ Arch_isCapRevocable(derivedCap, srcCap);
     }
-    switch (cap_get_capType(derivedCap)) {
-    case cap_endpoint_cap:
-        return (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
+    ବାଛ (cap_get_capType(derivedCap)) {
+    ସ୍ଥିତି cap_endpoint_cap:
+        ଫେରନ୍ତୁ (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
                 cap_endpoint_cap_get_capEPBadge(srcCap));
 
-    case cap_notification_cap:
-        return (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
+    ସ୍ଥିତି cap_notification_cap:
+        ଫେରନ୍ତୁ (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
                 cap_notification_cap_get_capNtfnBadge(srcCap));
 
-    case cap_irq_handler_cap:
-        return (cap_get_capType(srcCap) ==
+    ସ୍ଥିତି cap_irq_handler_cap:
+        ଫେରନ୍ତୁ (cap_get_capType(srcCap) ==
                 cap_irq_control_cap);
 
-    case cap_untyped_cap:
-        return true;
+    ସ୍ଥିତି cap_untyped_cap:
+        ଫେରନ୍ତୁ true;
 
-    default:
-        return false;
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
+        ଫେରନ୍ତୁ false;
     }
 }

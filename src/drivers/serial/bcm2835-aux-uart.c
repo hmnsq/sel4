@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <stdint.h>
+#ଅନ୍ତର୍ଭାଵ <util.h>
+#ଅନ୍ତର୍ଭାଵ <machine/io.h>
 
 /* When DLAB=1, MU_IO is a baud rate register.
  * Otherwise, write to TX, read to RX */
@@ -34,20 +34,20 @@
 #define MU_LCR_BREAK     BIT(6)
 #define MU_LCR_DATASIZE  BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ଅସ୍ଥିର uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+ଶୂନ୍ୟ uart_drv_putchar(unsigned ଅକ୍ଷର c)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
+    ଯେତେବେଳେ (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
     *UART_REG(MU_IO) = (c & 0xff);
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned ଅକ୍ଷର uart_drv_getchar(ଶୂନ୍ୟ)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
-    return *UART_REG(MU_IO);
+    ଯେତେବେଳେ (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
+    ଫେରନ୍ତୁ *UART_REG(MU_IO);
 }
 #endif /* CONFIG_DEBUG_BUILD */

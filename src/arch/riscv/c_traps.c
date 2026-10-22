@@ -5,38 +5,38 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <machine/debug.h>
-#include <api/syscall.h>
-#include <util.h>
-#include <arch/machine/hardware.h>
-#include <machine/fpu.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <model/statedata.h>
+#ଅନ୍ତର୍ଭାଵ <arch/fastpath/fastpath.h>
+#ଅନ୍ତର୍ଭାଵ <arch/kernel/traps.h>
+#ଅନ୍ତର୍ଭାଵ <machine/debug.h>
+#ଅନ୍ତର୍ଭାଵ <api/syscall.h>
+#ଅନ୍ତର୍ଭାଵ <util.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/hardware.h>
+#ଅନ୍ତର୍ଭାଵ <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#ଅନ୍ତର୍ଭାଵ <benchmark/benchmark_track.h>
+#ଅନ୍ତର୍ଭାଵ <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+ଶୂନ୍ୟ VISIBLE NORETURN restore_user_context(ଶୂନ୍ୟ)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers;
+    word_t cur_thread_reg = (word_t) ଗଣ୍ଠି_STATE(ksCurThread)->tcbArch.tcbContext.registers;
     c_exit_hook();
 
 #ifdef ENABLE_SMP_SUPPORT
     word_t sp = read_sscratch();
-    sp -= sizeof(word_t);
+    sp -= ଆକାର(word_t);
     *((word_t *)sp) = cur_thread_reg;
 #endif
 
 #ifdef CONFIG_HAVE_FPU
-    set_tcb_fs_state(NODE_STATE(ksCurThread), isFpuEnable());
+    set_tcb_fs_state(ଗଣ୍ଠି_STATE(ksCurThread), isFpuEnable());
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    ଗଣ୍ଠି_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm ଅସ୍ଥିର(
         "mv t0, %[cur_thread]       \n"
         LOAD_S " ra, (0*%[REGSIZE])(t0)  \n"
         LOAD_S "  sp, (1*%[REGSIZE])(t0)  \n"
@@ -85,7 +85,7 @@ void VISIBLE NORETURN restore_user_context(void)
         LOAD_S "  t0, (4*%[REGSIZE])(t0) \n"
         "sret"
         : /* no output */
-        : [REGSIZE] "i"(sizeof(word_t)),
+        : [REGSIZE] "i"(ଆକାର(word_t)),
         [cur_thread] "r"(cur_thread_reg)
         : "memory"
     );
@@ -93,9 +93,9 @@ void VISIBLE NORETURN restore_user_context(void)
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+ଶୂନ୍ୟ VISIBLE NORETURN c_handle_interrupt(ଶୂନ୍ୟ)
 {
-    NODE_LOCK_IRQ_IF(getActiveIRQ() != irq_remote_call_ipi);
+    ଗଣ୍ଠି_LOCK_IRQ_IF(getActiveIRQ() != irq_remote_call_ipi);
 
     c_entry_hook();
 
@@ -105,11 +105,11 @@ void VISIBLE NORETURN c_handle_interrupt(void)
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_exception(void)
+ଶୂନ୍ୟ VISIBLE NORETURN c_handle_exception(ଶୂନ୍ୟ)
 {
     /* Any exception from S-mode is a kernel fault, not a user fault.
      * Kernel faults should not exist, so print potential debug info and halt. */
-    if (read_sstatus() & SSTATUS_SPP) {
+    ଯଦି (read_sstatus() & SSTATUS_SPP) {
 #ifdef CONFIG_DEBUG_BUILD
         printf("\n\nKERNEL ABORT (exception within s-mode)!\n");
         printf("scause: 0x%"SEL4_PRIx_word", stval: 0x%"SEL4_PRIx_word"\n",
@@ -118,32 +118,32 @@ void VISIBLE NORETURN c_handle_exception(void)
         halt();
     }
 
-    NODE_LOCK_SYS;
+    ଗଣ୍ଠି_LOCK_SYS;
 
     c_entry_hook();
 
     word_t scause = read_scause();
-    switch (scause) {
-    case RISCVInstructionAccessFault:
-    case RISCVLoadAccessFault:
-    case RISCVStoreAccessFault:
-    case RISCVLoadPageFault:
-    case RISCVStorePageFault:
-    case RISCVInstructionPageFault:
+    ବାଛ (scause) {
+    ସ୍ଥିତି RISCVInstructionAccessFault:
+    ସ୍ଥିତି RISCVLoadAccessFault:
+    ସ୍ଥିତି RISCVStoreAccessFault:
+    ସ୍ଥିତି RISCVLoadPageFault:
+    ସ୍ଥିତି RISCVStorePageFault:
+    ସ୍ଥିତି RISCVInstructionPageFault:
         handleVMFaultEvent(scause);
-        break;
-    default:
+        ଭାଙ୍ଗ;
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         handleUserLevelFault(scause, 0);
-        break;
+        ଭାଙ୍ଗ;
     }
 
     restore_user_context();
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN slowpath(syscall_t syscall)
+ଶୂନ୍ୟ VISIBLE NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    ଯଦି (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
 #endif /* TRACK_KERNEL_ENTRIES */
@@ -151,7 +151,7 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } ଅନ୍ୟଥା {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -163,52 +163,52 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
 }
 
 #ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
+ALIGN(L1_CACHE_ଧାଡ଼ି_SIZE)
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
+ଶୂନ୍ୟ VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t ସନ୍ଦେଶ_Info, word_t reply)
+#ଅନ୍ୟଥା
+ଶୂନ୍ୟ VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t ସନ୍ଦେଶ_Info)
 #endif
 {
-    NODE_LOCK_SYS;
+    ଗଣ୍ଠି_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
+    benchmark_debug_syscall_start(cptr, ସନ୍ଦେଶ_Info, SysReplyRecv);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 #ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
+    fastpath_reply_recv(cptr, ସନ୍ଦେଶ_Info, reply);
+#ଅନ୍ୟଥା
+    fastpath_reply_recv(cptr, ସନ୍ଦେଶ_Info);
 #endif
     UNREACHABLE();
 }
 
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_ଧାଡ଼ି_SIZE)
+ଶୂନ୍ୟ VISIBLE c_handle_fastpath_call(word_t cptr, word_t ସନ୍ଦେଶ_Info)
 {
-    NODE_LOCK_SYS;
+    ଗଣ୍ଠି_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, ସନ୍ଦେଶ_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, ସନ୍ଦେଶ_Info);
 
     UNREACHABLE();
 }
 #endif
 
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+ଶୂନ୍ୟ VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t ସନ୍ଦେଶ_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    ଗଣ୍ଠି_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, ସନ୍ଦେଶ_Info, syscall);
     ksKernelEntry.is_fastpath = 0;
 #endif /* DEBUG */
     slowpath(syscall);

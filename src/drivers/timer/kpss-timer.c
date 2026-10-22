@@ -6,18 +6,18 @@
 
 /* @AUTHOR(akroh@ertos.nicta.com.au) */
 
-#include <plat/machine/hardware.h>
+#ଅନ୍ତର୍ଭାଵ <plat/machine/hardware.h>
 
 #define DGT_TIMER_PPTR (TIMER_PPTR + 0x024)
 
-struct timer {
+ସଂରଚନା timer {
     uint32_t mtch;        /* +0x024 */
     uint32_t cnt;         /* +0x028 */
     uint32_t en;          /* +0x02C */
     uint32_t clr;         /* +0x030 */
     uint32_t clk_ctl;     /* +0x034 */
 };
-typedef volatile struct timer timer_t;
+ପ୍ରକାରବ୍ୟାଖ୍ୟା ଅସ୍ଥିର ସଂରଚନା timer timer_t;
 timer_t *dgt_tmr = (timer_t *) DGT_TIMER_PPTR;
 
 #define DGTTMR_EN_CLR_ON_MTCH_EN    (1U << 1)
@@ -34,7 +34,7 @@ timer_t *dgt_tmr = (timer_t *) DGT_TIMER_PPTR;
 
 #define TIMER_MATCH_VAL  (TIMER_RELOAD / PRESCALE_VAL)
 
-BOOT_CODE void initTimer(void)
+BOOT_CODE ଶୂନ୍ୟ initTimer(ଶୂନ୍ୟ)
 {
     /* Stop the timer */
     dgt_tmr->en = 0;

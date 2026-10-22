@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
 #ifdef CONFIG_HARDWARE_DEBUG_API
 
-#include <string.h>
-#include <util.h>
-#include <arch/model/statedata.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <arch/kernel/vspace.h>
-#include <arch/machine/registerset.h>
-#include <armv/debug.h>
-#include <mode/machine/debug.h>
-#include <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
+#ଅନ୍ତର୍ଭାଵ <string.h>
+#ଅନ୍ତର୍ଭାଵ <util.h>
+#ଅନ୍ତର୍ଭାଵ <arch/model/statedata.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/debug.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/debug_conf.h>
+#ଅନ୍ତର୍ଭାଵ <arch/kernel/vspace.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/registerset.h>
+#ଅନ୍ତର୍ଭାଵ <armv/debug.h>
+#ଅନ୍ତର୍ଭାଵ <mode/machine/debug.h>
+#ଅନ୍ତର୍ଭାଵ <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
 
 #define DBGDSCR_MDBGEN                (BIT(15))
 #define DBGDSCR_HDBGEN                (BIT(14))
@@ -25,9 +25,9 @@
 /* This bit is always RAO */
 #define DBGLSR_LOCK_IMPLEMENTED       (BIT(0))
 #define DBGLSR_LOCK_ENABLED           (BIT(1))
-#define DBGLAR_UNLOCK_VALUE           (0xC5ACCE55u)
+#define DBGLAR_UNLOCK_ମୂଲ୍ୟ           (0xC5ACCE55u)
 
-#define DBGOSLAR_LOCK_VALUE           (0xC5ACCE55u)
+#define DBGOSLAR_LOCK_ମୂଲ୍ୟ           (0xC5ACCE55u)
 
 #define DBGOSLSR_GET_OSLOCK_MODEL(v)  ((((v) >> 2u) & 0x2u) | ((v) & 0x1u))
 #define DBGOSLSR_LOCK_MODEL_NO_OSLOCK (0u)
@@ -70,7 +70,7 @@
  * is being context-switched to, so the code in this file always executes on
  * the target CPU. MP adaptation should come with few surprises.
  */
-typedef struct debug_state {
+ପ୍ରକାରବ୍ୟାଖ୍ୟା ସଂରଚନା debug_state {
     bool_t is_available, coprocessor_is_baseline_only, watchpoint_8b_supported,
            non_secure_invasive_unavailable, secure_invasive_unavailable,
            cpu_is_in_secure_mode, single_step_supported, breakpoints_supported,
@@ -78,11 +78,11 @@ typedef struct debug_state {
     uint8_t debug_armv;
     uint8_t didr_version, oem_variant, oem_revision;
 } debug_state_t;
-static debug_state_t dbg;
+ସ୍ଥିର debug_state_t dbg;
 
-bool_t byte8WatchpointsSupported(void)
+bool_t byte8WatchpointsSupported(ଶୂନ୍ୟ)
 {
-    return dbg.watchpoint_8b_supported;
+    ଫେରନ୍ତୁ dbg.watchpoint_8b_supported;
 }
 
 #define SCR "p15, 0, %0, c1, c1, 0"
@@ -134,12 +134,12 @@ bool_t byte8WatchpointsSupported(void)
  *
  * Used to determine what type of debug exception has occurred.
  */
-static inline word_t getMethodOfEntry(void)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ word_t getMethodOfEntry(ଶୂନ୍ୟ)
 {
     dbg_dscr_t dscr;
 
-    dscr.words[0] = readDscrCp();
-    return dbg_dscr_get_methodOfEntry(dscr);
+    dscr.ଶବ୍ଦଗୁଡ଼ିକ[0] = readDscrCp();
+    ଫେରନ୍ତୁ dbg_dscr_get_methodOfEntry(dscr);
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -149,15 +149,15 @@ static inline word_t getMethodOfEntry(void)
  * @param n_instr The number of instructions to step over.
  */
 bool_t configureSingleStepping(tcb_t *t,
-                               uint16_t bp_num,
+                               uint16_t bp_ଅଙ୍କ,
                                word_t n_instr,
                                bool_t is_reply)
 {
 
-    if (is_reply) {
-        bp_num = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num;
-    } else {
-        bp_num = convertBpNumToArch(bp_num);
+    ଯଦି (is_reply) {
+        bp_ଅଙ୍କ = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_ଅଙ୍କ;
+    } ଅନ୍ୟଥା {
+        bp_ଅଙ୍କ = convert_Bp_ଅଙ୍କ_To_Arch(bp_ଅଙ୍କ);
     }
 
     /* On ARM single-stepping is emulated using breakpoint mismatches. So you
@@ -172,15 +172,15 @@ bool_t configureSingleStepping(tcb_t *t,
      */
     dbg_bcr_t bcr;
 
-    bcr.words[0] = readBcrContext(t, bp_num);
+    bcr.ଶବ୍ଦଗୁଡ଼ିକ[0] = readBcrContext(t, bp_ଅଙ୍କ);
 
     /* If the user calls us with n_instr == 0, allow them to configure, but
      * leave it disabled.
      */
-    if (n_instr > 0) {
+    ଯଦି (n_instr > 0) {
         bcr = dbg_bcr_set_enabled(bcr, 1);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+    } ଅନ୍ୟଥା {
         bcr = dbg_bcr_set_enabled(bcr, 0);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
     }
@@ -192,12 +192,12 @@ bool_t configureSingleStepping(tcb_t *t,
     bcr = dbg_bcr_set_bas(bcr, convertSizeToArch(1));
     bcr = Arch_setupBcr(bcr, false);
 
-    writeBvrContext(t, bp_num, t->tcbArch.tcbContext.registers[FaultIP]);
-    writeBcrContext(t, bp_num, bcr.words[0]);
+    writeBvrContext(t, bp_ଅଙ୍କ, t->tcbArch.tcbContext.registers[FaultIP]);
+    writeBcrContext(t, bp_ଅଙ୍କ, bcr.ଶବ୍ଦଗୁଡ଼ିକ[0]);
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num = bp_num;
-    return true;
+    t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_ଅଙ୍କ = bp_ଅଙ୍କ;
+    ଫେରନ୍ତୁ true;
 }
 
 /** Using the DBGDIDR register, detects the debug architecture version, and
@@ -211,11 +211,11 @@ bool_t configureSingleStepping(tcb_t *t,
  * different across different CPUs and platforms, so genericity is fairly
  * challenging.
  */
-BOOT_CODE static void initVersionInfo(void)
+BOOT_CODE ସ୍ଥିର ଶୂନ୍ୟ initVersionInfo(ଶୂନ୍ୟ)
 {
     dbg_didr_t didr;
 
-    didr.words[0] = getDIDR();
+    didr.ଶବ୍ଦଗୁଡ଼ିକ[0] = getDIDR();
     dbg.oem_revision = dbg_didr_get_revision(didr);
     dbg.oem_variant = dbg_didr_get_variant(didr);
     dbg.didr_version = dbg_didr_get_version(didr);
@@ -223,33 +223,33 @@ BOOT_CODE static void initVersionInfo(void)
     dbg.breakpoints_supported = dbg.watchpoints_supported =
                                     dbg.single_step_supported = true;
 
-    switch (dbg.didr_version) {
-    case 0x1:
+    ବାଛ (dbg.didr_version) {
+    ସ୍ଥିତି 0x1:
         dbg.debug_armv = 0x60;
         dbg.single_step_supported = false;
-        break;
-    case 0x2:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି 0x2:
         dbg.debug_armv = 0x61;
-        break;
-    case 0x3:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି 0x3:
         dbg.debug_armv = 0x70;
         dbg.coprocessor_is_baseline_only = false;
-        break;
-    case 0x4:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି 0x4:
         dbg.debug_armv = 0x70;
-        break;
-    case 0x5:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି 0x5:
         dbg.debug_armv = 0x71;
         dbg.coprocessor_is_baseline_only = false;
-        break;
-    case 0x6:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି 0x6:
         dbg.debug_armv = 0x80;
         dbg.coprocessor_is_baseline_only = false;
-        break;
-    default:
+        ଭାଙ୍ଗ;
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ:
         dbg.is_available = false;
         dbg.debug_armv = 0;
-        return;
+        ଫେରନ୍ତୁ;
     }
 
     dbg.is_available = true;
@@ -280,7 +280,7 @@ BOOT_CODE static void initVersionInfo(void)
  * nothing more, you're told so, and that basically means you can't do anything
  * with it because you have no reliable access to the debug registers.
  */
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_CODE bool_t Arch_initHardwareBreakpoints(ଶୂନ୍ୟ)
 {
     word_t dbgosdlr, dbgoslsr;
 
@@ -294,22 +294,22 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * exceptions. The other modes cause a break into "debug mode" or ignore
      * debug events.
      */
-    memset(&dbg, 0, sizeof(dbg));
+    memset(&dbg, 0, ଆକାର(dbg));
 
     initVersionInfo();
-    if (dbg.is_available == false) {
+    ଯଦି (dbg.is_available == false) {
         printf("Debug architecture not implemented.\n");
-        return false;
+        ଫେରନ୍ତୁ false;
     }
 
     printf("DIDRv: %x, armv %x, coproc baseline only? %s.\n",
            dbg.didr_version, dbg.debug_armv,
            ((dbg.coprocessor_is_baseline_only) ? "yes" : "no"));
 
-    if (dbg.debug_armv > 0x61) {
-        if (dbg.coprocessor_is_baseline_only) {
+    ଯଦି (dbg.debug_armv > 0x61) {
+        ଯଦି (dbg.coprocessor_is_baseline_only) {
             printf("ARMDBG: No reliable access to DBG regs.\n");
-            return dbg.is_available = false;
+            ଫେରନ୍ତୁ dbg.is_available = false;
         }
 
         /* Interestingly, since the debug features have so many bits that
@@ -319,7 +319,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          * this feature.
          */
         dbg.cpu_is_in_secure_mode = !(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED);
-        if (dbg.cpu_is_in_secure_mode) {
+        ଯଦି (dbg.cpu_is_in_secure_mode) {
             word_t sder;
 
             printf("CPU is in secure mode. Enabling debugging in secure user mode.\n");
@@ -329,13 +329,13 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
         }
 
         /* Deal with OS Double-lock: */
-        if (dbg.debug_armv == 0x71) {
+        ଯଦି (dbg.debug_armv == 0x71) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7.1 Debug, this register is required in all implementations."
              */
             MRC(DBGOSDLR, dbgosdlr);
             MCR(DBGOSDLR, dbgosdlr & ~DBGOSDLR_LOCK_ENABLE);
-        } else if (dbg.debug_armv == 0x70) {
+        } ଅନ୍ୟଥା ଯଦି (dbg.debug_armv == 0x70) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7 Debug, this register is not implemented."
              *
@@ -349,18 +349,18 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          *   not implemented the read of DBGOSLSR.OSLM returns zero."
          */
         MRC(DBGOSLSR, dbgoslsr);
-        if (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
-            MCR(DBGOSLAR, ~DBGOSLAR_LOCK_VALUE);
+        ଯଦି (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
+            MCR(DBGOSLAR, ~DBGOSLAR_LOCK_ମୂଲ୍ୟ);
         }
 
         disableAllBpsAndWps();
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ଯଦି (!enableMonitorMode()) {
+            ଫେରନ୍ତୁ dbg.is_available = false;
         }
-    } else {
+    } ଅନ୍ୟଥା {
         /* On v6 you have to enable monitor mode first. */
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ଯଦି (!enableMonitorMode()) {
+            ଫେରନ୍ତୁ dbg.is_available = false;
         }
         disableAllBpsAndWps();
     }
@@ -369,15 +369,15 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    ପାଇଁ (ପୂର୍ଣ୍ଣସଂଖ୍ୟା i = 0; i < se_L4_ଅଙ୍କ_Exclusive_Breakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    ପାଇଁ (ପୂର୍ଣ୍ଣସଂଖ୍ୟା i = 0; i < se_L4_ଅଙ୍କ_Exclusive_Watchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
     dbg.watchpoint_8b_supported = watchpoint8bSupported();
-    return true;
+    ଫେରନ୍ତୁ true;
 }
 
 /** Abstract wrapper around the IFSR/DFSR fault status values.
@@ -385,12 +385,12 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
  * Format of the FSR bits is different for long and short descriptors, so
  * extract the FSR bits and accompany them with a boolean.
  */
-typedef struct fault_status {
+ପ୍ରକାରବ୍ୟାଖ୍ୟା ସଂରଚନା fault_status {
     uint8_t status;
     bool_t is_long_desc_format;
 } fault_status_t;
 
-static fault_status_t getFaultStatus(word_t hsr_or_fsr)
+ସ୍ଥିର fault_status_t getFaultStatus(word_t hsr_or_fsr)
 {
     fault_status_t ret;
 
@@ -400,13 +400,13 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     ret.is_long_desc_format = true;
     /* FSR[5:0]. */
     ret.status = hsr_or_fsr & 0x3F;
-#else
+#ଅନ୍ୟଥା
     /* Non-hyp uses IFSR/DFSR */
-    if (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
+    ଯଦି (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
         ret.is_long_desc_format = true;
         /* FSR[5:0] */
         ret.status = hsr_or_fsr & 0x3F;
-    } else {
+    } ଅନ୍ୟଥା {
         ret.is_long_desc_format = false;
         /* FSR[10] | FSR[3:0]. */
         ret.status = (hsr_or_fsr & BIT(FSR_STATUS_BIT4_SHIFT)) >> FSR_STATUS_BIT4_SHIFT;
@@ -415,7 +415,7 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     }
 #endif
 
-    return ret;
+    ଫେରନ୍ତୁ ret;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -435,21 +435,21 @@ bool_t isDebugFault(word_t hsr_or_fsr)
     fault_status_t fs;
 
     fs = getFaultStatus(hsr_or_fsr);
-    if (fs.is_long_desc_format) {
-        if (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    ଯଦି (fs.is_long_desc_format) {
+        ଯଦି (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
+            ଫେରନ୍ତୁ true;
         }
-    } else {
-        if (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    } ଅନ୍ୟଥା {
+        ଯଦି (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
+            ଫେରନ୍ତୁ true;
         }
     }
 
-    if (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
+    ଯଦି (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
         userError("Debug: Watchpoint delivered as async abort.");
-        return true;
+        ଫେରନ୍ତୁ true;
     }
-    return false;
+    ଫେରନ୍ତୁ false;
 }
 
 /** Called to process a debug exception.
@@ -476,12 +476,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
 #endif
 
     word_t method_of_entry = getMethodOfEntry();
-    int active_bp;
+    ପୂର୍ଣ୍ଣସଂଖ୍ୟା active_bp;
     seL4_Fault_t ret;
     word_t bp_reason, bp_vaddr;
 
-    switch (method_of_entry) {
-    case DEBUG_ENTRY_BREAKPOINT:
+    ବାଛ (method_of_entry) {
+    ସ୍ଥିତି DEBUG_ENTRY_BREAKPOINT:
         bp_reason = seL4_InstructionBreakpoint;
         bp_vaddr = fault_vaddr;
 
@@ -495,63 +495,63 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
          * breakpoint value register used for this is mismatched with the
          * current faultIP
          */
-        tcb_t *curr_thread = NODE_STATE(ksCurThread);
+        tcb_t *curr_thread = ଗଣ୍ଠି_STATE(ksCurThread);
         user_context_t *context = &curr_thread->tcbArch.tcbContext;
 
-        if (context->breakpointState.single_step_enabled) {
+        ଯଦି (context->breakpointState.single_step_enabled) {
             word_t bvr;
-            word_t bp_num = context->breakpointState.single_step_hw_bp_num;
+            word_t bp_ଅଙ୍କ = context->breakpointState.single_step_hw_bp_ଅଙ୍କ;
 
-            bvr = readBvrCp(bp_num);
-            if (bvr != context->registers[FaultIP]) {
+            bvr = readBvrCp(bp_ଅଙ୍କ);
+            ଯଦି (bvr != context->registers[FaultIP]) {
                 bp_reason = seL4_SingleStep;
-                active_bp = bp_num;
+                active_bp = bp_ଅଙ୍କ;
                 /* Update the BVR so it doesn't fault on the same address
                  * again (in the case of stepping through multiple instructions)
                  */
                 writeBvrContext(curr_thread, active_bp, context->registers[FaultIP]);
             }
         }
-        break;
-    case DEBUG_ENTRY_SYNC_WATCHPOINT:
+        ଭାଙ୍ଗ;
+    ସ୍ଥିତି DEBUG_ENTRY_SYNC_WATCHPOINT:
         bp_reason = seL4_DataBreakpoint;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Sync watchpoint sets the BP vaddr in HDFAR. */
         bp_vaddr = getHDFAR();
-#else
+#ଅନ୍ୟଥା
         bp_vaddr = getFAR();
 #endif
-        break;
+        ଭାଙ୍ଗ;
 
-    case DEBUG_ENTRY_ASYNC_WATCHPOINT:
+    ସ୍ଥିତି DEBUG_ENTRY_ASYNC_WATCHPOINT:
         bp_reason = seL4_DataBreakpoint;
         /* Async WP sets the WP vaddr in DBGWFAR for both hyp and non-hyp. */
         bp_vaddr = getWFAR();
-        break;
+        ଭାଙ୍ଗ;
 
-    default: /* EXPLICIT_BKPT: BKPT instruction */
-        assert(method_of_entry == DEBUG_ENTRY_EXPLICIT_BKPT);
+    ପୂର୍ବନିର୍ଦ୍ଧାରିତ: /* EXPLICIT_BKPT: BKPT instruction */
+        ପ୍ରତିଜ୍ଞା(method_of_entry == DEBUG_ENTRY_EXPLICIT_BKPT);
         bp_reason = seL4_SoftwareBreakRequest;
         bp_vaddr = fault_vaddr;
         active_bp = 0;
     }
 
-    if (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
+    ଯଦି (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
         && bp_reason != seL4_SingleStep) {
         active_bp = getAndResetActiveBreakpoint(bp_vaddr,
                                                 bp_reason);
-        assert(active_bp >= 0);
+        ପ୍ରତିଜ୍ଞା(active_bp >= 0);
     }
 
     /* There is no hardware register associated with BKPT instruction
      * triggers.
      */
-    if (bp_reason != seL4_SoftwareBreakRequest) {
+    ଯଦି (bp_reason != seL4_SoftwareBreakRequest) {
         /* Convert the hardware BP num back into an API-ID */
-        active_bp = getBpNumFromType(active_bp, bp_reason);
+        active_bp = get_Bp_ଅଙ୍କ_From_Type(active_bp, bp_reason);
     }
     ret = seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
-    return ret;
+    ଫେରନ୍ତୁ ret;
 }
 
 #endif /* CONFIG_HARDWARE_DEBUG_API */

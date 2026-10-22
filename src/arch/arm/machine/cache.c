@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/types.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <arch/machine/l2c_310.h>
+#ଅନ୍ତର୍ଭାଵ <api/types.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/hardware.h>
+#ଅନ୍ତର୍ଭାଵ <arch/machine/l2c_310.h>
 
-#define LINE_START(a) ROUND_DOWN(a, L1_CACHE_LINE_SIZE_BITS)
-#define LINE_INDEX(a) (LINE_START(a)>>L1_CACHE_LINE_SIZE_BITS)
+#define ଧାଡ଼ି_START(a) ROUND_DOWN(a, L1_CACHE_ଧାଡ଼ି_SIZE_BITS)
+#define ଧାଡ଼ି_INDEX(a) (ଧାଡ଼ି_START(a)>>L1_CACHE_ଧାଡ଼ି_SIZE_BITS)
 
-static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
+ସ୍ଥିର ଶୂନ୍ୟ cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t ଧାଡ଼ି;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        cleanByVA(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
 }
 
-void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t ଧାଡ଼ି;
     word_t index;
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -44,15 +44,15 @@ void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanInvalByVA(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        cleanInvalByVA(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
     /* ensure clean and invalidate complete */
     dsb();
 }
 
-void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -74,9 +74,9 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
     plat_cleanL2Range(pstart, pstart + (end - start));
 }
 
-void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t ଧାଡ଼ି;
     word_t index;
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -84,15 +84,15 @@ void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA_PoU(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        cleanByVA_PoU(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
 }
 
-void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t ଧାଡ଼ି;
     word_t index;
 
     /* If the start and end are not aligned to a cache line boundary
@@ -100,12 +100,12 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
+    ଯଦି (start != ଧାଡ଼ି_START(start)) {
         cleanCacheRange_RAM(start, start, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
-        line = LINE_START(end);
-        cleanCacheRange_RAM(line, line, pstart + (line - start));
+    ଯଦି (end + 1 != ଧାଡ଼ି_START(end + 1)) {
+        ଧାଡ଼ି = ଧାଡ଼ି_START(end);
+        cleanCacheRange_RAM(ଧାଡ଼ି, ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -124,17 +124,17 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        invalidateByVA(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
     /* Ensure invalidate completes */
     dsb();
 }
 
-void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
 {
-#if defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
+#ଯଦି defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     /* In cases where the hypervisor is supported, the virtual address passed
      * to this function are kernel aliases for the underlying physical memory
      * rather than the virtual address in the actual vspace. This works fine
@@ -145,29 +145,29 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      * case
      */
     invalidate_I_PoU();
-#else
-    vptr_t line;
+#ଅନ୍ୟଥା
+    vptr_t ଧାଡ଼ି;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA_I(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        invalidateByVA_I(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
 #endif
 }
 
-void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
+ଶୂନ୍ୟ branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t ଧାଡ଼ି;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        branchFlush(line, pstart + (line - start));
+    ପାଇଁ (index = ଧାଡ଼ି_INDEX(start); index < ଧାଡ଼ି_INDEX(end) + 1; index++) {
+        ଧାଡ଼ି = index << L1_CACHE_ଧାଡ଼ି_SIZE_BITS;
+        branchFlush(ଧାଡ଼ି, pstart + (ଧାଡ଼ି - start));
     }
 }
 
-void cleanCaches_PoU(void)
+ଶୂନ୍ୟ cleanCaches_PoU(ଶୂନ୍ୟ)
 {
     dsb();
     clean_D_PoU();
@@ -176,7 +176,7 @@ void cleanCaches_PoU(void)
     dsb();
 }
 
-void cleanInvalidateL1Caches(void)
+ଶୂନ୍ୟ cleanInvalidateL1Caches(ଶୂନ୍ୟ)
 {
     dsb();
     cleanInvalidate_D_PoC();
@@ -185,7 +185,7 @@ void cleanInvalidateL1Caches(void)
     dsb();
 }
 
-void arch_clean_invalidate_caches(void)
+ଶୂନ୍ୟ arch_clean_invalidate_caches(ଶୂନ୍ୟ)
 {
     cleanCaches_PoU();
     plat_cleanInvalidateL2Cache();
@@ -193,14 +193,14 @@ void arch_clean_invalidate_caches(void)
     isb();
 }
 
-void arch_clean_invalidate_L1_caches(word_t type)
+ଶୂନ୍ୟ arch_clean_invalidate_L1_caches(word_t type)
 {
     dsb();
-    if (type & BIT(1)) {
+    ଯଦି (type & BIT(1)) {
         cleanInvalidate_L1D();
         dsb();
     }
-    if (type & BIT(0)) {
+    ଯଦି (type & BIT(0)) {
         invalidate_I_PoU();
         dsb();
         isb();

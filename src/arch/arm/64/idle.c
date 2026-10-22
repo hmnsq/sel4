@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/machine.h>
-#include <api/debug.h>
+#ଅନ୍ତର୍ଭାଵ <config.h>
+#ଅନ୍ତର୍ଭାଵ <mode/machine.h>
+#ଅନ୍ତର୍ଭାଵ <api/debug.h>
 
 /** DONT_TRANSLATE */
-void NORETURN NO_INLINE VISIBLE halt(void)
+ଶୂନ୍ୟ NORETURN NO_INLINE VISIBLE halt(ଶୂନ୍ୟ)
 {
     /* halt is actually, idle thread without the interrupts */
     MSR("daif", (DAIF_DEBUG | DAIF_SERROR | DAIF_IRQ | DAIF_FIRQ));
