@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <arch/fastpath/fastpath.h>
+#अन्तर्भाव <arch/kernel/traps.h>
+#अन्तर्भाव <arch/machine/debug.h>
+#अन्तर्भाव <arch/machine/debug_conf.h>
+#अन्तर्भाव <api/syscall.h>
+#अन्तर्भाव <linker.h>
+#अन्तर्भाव <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#अन्तर्भाव <benchmark/benchmark_track.h>
+#अन्तर्भाव <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+शून्य VISIBLE NORETURN restore_user_context(शून्य)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread);
+    word_t cur_thread_reg = (word_t) ग्रन्थिः_STATE(ksCurThread);
 
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(ग्रन्थिः_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    ग्रन्थिः_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        asm volatile(
+    सचे (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        asm चञ्चल(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
             /* Pop user registers */
@@ -53,12 +53,12 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
-        asm volatile("mov sp, %[cur_thread] \n\
+    } अञ्ञथा {
+        asm चञ्चल("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"
                      : /* no output */
-                     : [cur_thread] "r"(cur_thread_reg + NextIP * sizeof(word_t))
+                     : [cur_thread] "r"(cur_thread_reg + NextIP * परिमाण(word_t))
                     );
     }
     UNREACHABLE();

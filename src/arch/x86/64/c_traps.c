@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <machine/fpu.h>
-#include <kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <kernel/stack.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <machine/fpu.h>
+#अन्तर्भाव <kernel/traps.h>
+#अन्तर्भाव <arch/machine/debug.h>
+#अन्तर्भाव <kernel/stack.h>
 
-#include <api/syscall.h>
+#अन्तर्भाव <api/syscall.h>
 
 #ifdef CONFIG_VTX
-static void NORETURN USED vmlaunch_failed(word_t failInvalid, word_t failValid)
+स्थिर शून्य NORETURN USED vmlaunch_failed(word_t failInvalid, word_t failValid)
 {
-    NODE_LOCK_SYS;
+    ग्रन्थिः_LOCK_SYS;
 
     c_entry_hook();
 
-    if (failInvalid) {
+    सचे (failInvalid) {
         userError("current VMCS pointer is not valid");
     }
-    if (failValid) {
-        userError("vmlaunch/vmresume error %d", (int)vmread(VMX_DATA_INSTRUCTION_ERROR));
+    सचे (failValid) {
+        userError("vmlaunch/vmresume error %d", (पूर्णाङ्क)vmread(VMX_DATA_INSTRUCTION_ERROR));
     }
 
     handleVmEntryFail();
     restore_user_context();
 }
 
-static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
+स्थिर शून्य NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 {
     restoreVMCS();
 #ifdef CONFIG_HARDWARE_DEBUG_API
@@ -43,7 +43,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
     /* attempt to do a vmlaunch/vmresume */
-    asm volatile(
+    asm चञ्चल(
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
         // Save host's GS, Shadow GS, and FS
         "mov $0xC0000101, %%ecx\n"
@@ -86,7 +86,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "shr $0x20,%%rdx\n"
         "wrmsr\n"
         "movq %[guest_regs], %%rsp\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#अञ्ञथा /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
         // Set our stack pointer to the top of the tcb so we can efficiently pop
         "movq %[guest_regs], %%rsp\n"
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
@@ -108,7 +108,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%r13\n"
         "popq %%r14\n"
         "popq %%r15\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#अञ्ञथा /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
 #ifdef ENABLE_SMP_SUPPORT
         "swapgs\n"
 #endif
@@ -133,7 +133,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%r13\n"
         "popq %%r14\n"
         "popq %%r15\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#अञ्ञथा /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
 #ifdef ENABLE_SMP_SUPPORT
         "swapgs\n"
 #endif
@@ -166,11 +166,11 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "shr $0x20, %%rdx\n"
         "wrmsr\n" // FS
 
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#अञ्ञथा /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
 #ifdef ENABLE_SMP_SUPPORT
         "swapgs\n"
         "movq %%gs:%c[stack_offset], %%rsp\n"
-#else
+#अञ्ञथा
         "leaq kernel_stack_alloc + %c[stack_size], %%rsp\n"
 #endif
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
@@ -180,13 +180,13 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         : [guest_regs]"r"(vcpu->gp_registers),
         [launched]"r"(&vcpu->launched),
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS)),
+        [राशिः_size]"i"(BIT(CONFIG_KERNEL_राशिः_BITS)),
         [guest_msr]"r"(vcpu->guest_msr_registers),
         [host_msr]"r"(&vcpu->host_msr_registers[n_vcpu_msr_register])
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS))
+#अञ्ञथा /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+        [राशिः_size]"i"(BIT(CONFIG_KERNEL_राशिः_BITS))
 #ifdef ENABLE_SMP_SUPPORT
-        , [stack_offset]"i"(OFFSETOF(nodeInfo_t, stackTop))
+        , [राशिः_offset]"i"(OFFSETOF(ग्रन्थिः_Info_t, राशिः_शिखरम्_2))
 #endif
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         // Clobber memory so the compiler is forced to complete all stores
@@ -198,38 +198,38 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 }
 #endif
 
-void VISIBLE NORETURN restore_user_context(void)
+शून्य VISIBLE NORETURN restore_user_context(शून्य)
 {
     c_exit_hook();
 
-    NODE_UNLOCK_IF_HELD;
+    ग्रन्थिः_UNLOCK_IF_HELD;
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    सचे (ARCH_ग्रन्थिः_STATE(x86KSPendingInterrupt) != int_invalid) {
         interrupt_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
-        asm volatile(
+        asm चञ्चल(
             "movq %[stack_top], %%rsp\n"
             "movq %[syscall], %%rsi\n"
             "movq %[irq], %%rdi\n"
             "call c_handle_interrupt"
             :
-            : [stack_top] "r"(&(kernel_stack_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_STACK_BITS)])),
+            : [राशिः_शिखरम्] "r"(&(kernel_राशिः_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_राशिः_BITS)])),
             [syscall] "i"(0), /* syscall is unused for irq path */
             [irq] "r"((seL4_Word)irq)
             : "memory");
         UNREACHABLE();
     }
 
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
+    tcb_t *cur_thread = ग्रन्थिः_STATE(ksCurThread);
     word_t *irqstack = x64KSIRQStack[CURRENT_CPU_INDEX()];
 #ifdef CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
-    if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
+    सचे (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
         vcpu_fpu_to_guest(cur_thread, vcpu);
         restore_vmx(cur_thread, vcpu);
-    } else if (vcpu) {
+    } अञ्ञथा सचे (vcpu) {
         vcpu_fpu_to_host(cur_thread, vcpu);
     }
 #endif
@@ -240,22 +240,22 @@ void VISIBLE NORETURN restore_user_context(void)
 
 #ifdef ENABLE_SMP_SUPPORT
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
-    word_t user_cr3 = MODE_NODE_STATE(x64KSCurrentUserCR3);
+    word_t user_cr3 = MODE_ग्रन्थिः_STATE(x64KSCurrentUserCR3);
 #endif /* CONFIG_KERNEL_SKIM_WINDOW */
     swapgs();
 #endif /* ENABLE_SMP_SUPPORT */
 
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    सचे (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_disable_ibrs();
     }
 
     // Check if we are returning from a syscall/sysenter or from an interrupt
     // There is a special case where if we would be returning from a sysenter,
     // but are current singlestepping, do a full return like an interrupt
-    if (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1) &&
+    सचे (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1) &&
         (!config_set(CONFIG_SYSENTER) || !config_set(CONFIG_HARDWARE_DEBUG_API)
          || ((cur_thread->tcbArch.tcbContext.registers[FLAGS] & FLAGS_TF) == 0))) {
-        if (config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
+        सचे (config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
             /* if we are using the SKIM window then we are trying to hide kernel state from
              * the user in the case of Meltdown where the kernel region is effectively readable
              * by the user. To prevent a storage channel across threads through the irq stack,
@@ -271,12 +271,12 @@ void VISIBLE NORETURN restore_user_context(void)
             irqstack[4] = 0;
             irqstack[5] = 0;
         }
-        if (config_set(CONFIG_SYSENTER)) {
+        सचे (config_set(CONFIG_SYSENTER)) {
             cur_thread->tcbArch.tcbContext.registers[FLAGS] &= ~FLAGS_IF;
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
-            register word_t user_cr3_r11 asm("r11") = user_cr3;
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+            पञ्जिका word_t user_cr3_r11 asm("r11") = user_cr3;
 #endif
-            asm volatile(
+            asm चञ्चल(
                 // Set our stack pointer to the top of the tcb so we can efficiently pop
                 "movq %0, %%rsp\n"
                 "popq %%rdi\n"
@@ -305,11 +305,11 @@ void VISIBLE NORETURN restore_user_context(void)
                 "popq %%rcx\n"
                 // Skip FaultIP
                 "addq $8, %%rsp\n"
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
                 "popq %%rsp\n"
                 "movq %%r11, %%cr3\n"
                 "movq %%rsp, %%r11\n"
-#else
+#अञ्ञथा
                 "popq %%r11\n"
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
                 "movq (x64KSCurrentUserCR3), %%rsp\n"
@@ -322,7 +322,7 @@ void VISIBLE NORETURN restore_user_context(void)
                 SYSEXITQ "\n"
                 :
                 : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI]),
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
                 "r"(user_cr3_r11),
 #endif
                 [IF] "i"(FLAGS_IF)
@@ -330,8 +330,8 @@ void VISIBLE NORETURN restore_user_context(void)
                 // before running this assembler
                 : "memory"
             );
-        } else {
-            asm volatile(
+        } अञ्ञथा {
+            asm चञ्चल(
                 // Set our stack pointer to the top of the tcb so we can efficiently pop
                 "movq %0, %%rsp\n"
                 "popq %%rdi\n"
@@ -350,11 +350,11 @@ void VISIBLE NORETURN restore_user_context(void)
                 //restore RFLAGS
                 "popq %%r11\n"
                 // Restore NextIP
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
                 "popq %%rsp\n"
                 "movq %%rcx, %%cr3\n"
                 "movq %%rsp, %%rcx\n"
-#else
+#अञ्ञथा
                 "popq %%rcx\n"
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
                 "movq (x64KSCurrentUserCR3), %%rsp\n"
@@ -368,7 +368,7 @@ void VISIBLE NORETURN restore_user_context(void)
                 "sysretq\n"
                 :
                 : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI])
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
                 , "c"(user_cr3)
 #endif
                 // Clobber memory so the compiler is forced to complete all stores
@@ -376,7 +376,7 @@ void VISIBLE NORETURN restore_user_context(void)
                 : "memory"
             );
         }
-    } else {
+    } अञ्ञथा {
         /* construct our return from interrupt frame */
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
         /* Have to zero this to prevent storage channel */
@@ -387,7 +387,7 @@ void VISIBLE NORETURN restore_user_context(void)
         irqstack[3] = getRegister(cur_thread, FLAGS);
         irqstack[4] = getRegister(cur_thread, RSP);
         irqstack[5] = getRegister(cur_thread, SS);
-        asm volatile(
+        asm चञ्चल(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movq %0, %%rsp\n"
             "popq %%rdi\n"
@@ -407,11 +407,11 @@ void VISIBLE NORETURN restore_user_context(void)
             "addq $40, %%rsp\n"
             "popq %%r11\n"
 
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
             /* pop into rsp as we're done with the stack for now and we need to
              * preserve our rcx value as it has our next cr3 value */
             "popq %%rsp\n"
-#else
+#अञ्ञथा
             "popq %%rcx\n"
 #endif /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
 
@@ -434,7 +434,7 @@ void VISIBLE NORETURN restore_user_context(void)
             "addq $8, %%rsp\n"
             // Switch to the user GS value
             "swapgs\n"
-#else /* !ENABLE_SMP_SUPPORT */
+#अञ्ञथा /* !ENABLE_SMP_SUPPORT */
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
             "movq (x64KSCurrentUserCR3), %%rsp\n"
             "movq %%rsp, %%cr3\n"
@@ -444,9 +444,9 @@ void VISIBLE NORETURN restore_user_context(void)
             "iretq\n"
             :
             : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI])
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#सचे defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
             , "c"(user_cr3)
-            , [scratch_offset] "i"(nodeSkimScratchOffset)
+            , [scratch_offset] "i"(ग्रन्थिः_Skim_Scratch_Offset)
 #endif
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
@@ -456,22 +456,22 @@ void VISIBLE NORETURN restore_user_context(void)
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_x64_handle_interrupt(int irq, int syscall);
-void VISIBLE NORETURN c_x64_handle_interrupt(int irq, int syscall)
+शून्य VISIBLE NORETURN c_x64_handle_interrupt(पूर्णाङ्क irq, पूर्णाङ्क syscall);
+शून्य VISIBLE NORETURN c_x64_handle_interrupt(पूर्णाङ्क irq, पूर्णाङ्क syscall)
 {
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    सचे (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_enable_ibrs();
     }
-    word_t *irq_stack = x64KSIRQStack[CURRENT_CPU_INDEX()];
-    setRegister(NODE_STATE(ksCurThread), Error, irq_stack[0]);
+    word_t *irq_राशिः = x64KSIRQStack[CURRENT_CPU_INDEX()];
+    setRegister(ग्रन्थिः_STATE(ksCurThread), Error, irq_राशिः[0]);
     /* In the case of an interrupt the NextIP and the FaultIP should be the same value,
      * i.e. the address of the instruction the CPU was about to execute before the
      * interrupt. This is the 5th value pushed on by the hardware, so indexing from
      * the bottom is x64KSIRQStack[1] */
-    setRegister(NODE_STATE(ksCurThread), NextIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FaultIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FLAGS, irq_stack[3]);
-    setRegister(NODE_STATE(ksCurThread), RSP, irq_stack[4]);
+    setRegister(ग्रन्थिः_STATE(ksCurThread), NextIP, irq_राशिः[1]);
+    setRegister(ग्रन्थिः_STATE(ksCurThread), FaultIP, irq_राशिः[1]);
+    setRegister(ग्रन्थिः_STATE(ksCurThread), FLAGS, irq_राशिः[3]);
+    setRegister(ग्रन्थिः_STATE(ksCurThread), RSP, irq_राशिः[4]);
     c_handle_interrupt(irq, syscall);
     UNREACHABLE();
 }

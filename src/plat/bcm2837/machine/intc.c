@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <stdint.h>
-#include <plat/machine.h>
-BOOT_CODE void initIRQController(void)
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <plat/machine.h>
+BOOT_CODE शून्य initIRQController(शून्य)
 {
     /* Disable all interrupts */
     intc_regs->bfDisableIRQs[0] = 0xffffffff;
@@ -22,9 +22,9 @@ BOOT_CODE void initIRQController(void)
     core_regs->coreTimerPrescaler = 0x80000000;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_CODE शून्य cpu_initLocalIRQController(शून्य) {}
 
-static inline irq_t getActiveIRQ(void)
+स्थिर अन्तःस्थ irq_t getActiveIRQ(शून्य)
 {
     uint32_t pending;
     uint32_t irq;
@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    सचे (pending == 0) {
+        पटिनिवत्त irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    सचे (irq != INTERRUPT_CORE_GPU) {
+        पटिनिवत्त irq;
     }
 
     /* GPU interrupt */
@@ -49,81 +49,81 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    सचे (pending) {
+        पटिनिवत्त (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    सचे (pending) {
+        पटिनिवत्त (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    सचे (pending) {
+        पटिनिवत्त (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    पटिनिवत्त irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+स्थिर अन्तःस्थ शून्य maskInterrupt(bool_t disable, irq_t irq)
 {
-    switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+    विकल्प (irq) {
+    पक्ष INTERRUPT_CORE_CNTPSIRQ :
+    पक्ष INTERRUPT_CORE_CNTPNSIRQ:
+    पक्ष INTERRUPT_CORE_CNTHPIRQ :
+    पक्ष INTERRUPT_CORE_CNTVIRQ  :
+        सचे (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } अञ्ञथा {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        पटिनिवत्त;
+    पक्ष INTERRUPT_CORE_MAILBOX_0:
+    पक्ष INTERRUPT_CORE_MAILBOX_1:
+    पक्ष INTERRUPT_CORE_MAILBOX_2:
+    पक्ष INTERRUPT_CORE_MAILBOX_3:
+        सचे (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } अञ्ञथा {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        पटिनिवत्त;
+    पक्ष INTERRUPT_CORE_LOCAL_TIMER:
+        सचे (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } अञ्ञथा {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        पटिनिवत्त;
+    पक्ष INTERRUPT_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    पक्ष INTERRUPT_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    पक्ष INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
-    default:
-        break;
+        पटिनिवत्त;
+    स्वभाव:
+        भङ्ग;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    सचे (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        पटिनिवत्त;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    सचे (irq < NORMAL_IRQ_OFFSET) {
+        सचे (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } अञ्ञथा {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } अञ्ञथा सचे (irq <= maxIRQ) {
+        पूर्णाङ्क normal_irq = irq - NORMAL_IRQ_OFFSET;
+        पूर्णाङ्क index = normal_irq / 32;
+        सचे (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } अञ्ञथा {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }

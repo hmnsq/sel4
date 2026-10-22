@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <arch/fastpath/fastpath.h>
+#अन्तर्भाव <arch/kernel/traps.h>
+#अन्तर्भाव <api/syscall.h>
+#अन्तर्भाव <linker.h>
+#अन्तर्भाव <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#अन्तर्भाव <benchmark/benchmark_track.h>
+#अन्तर्भाव <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+शून्य VISIBLE NORETURN restore_user_context(शून्य)
 {
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(ग्रन्थिः_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    ग्रन्थिः_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm चञ्चल(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#अञ्ञथा
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
 #endif
@@ -59,56 +59,56 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(ग्रन्थिः_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#सचे defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED स्थिर ध्रुव वर्ण *vect_offset_to_name(word_t vect_offset)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    विकल्प (vect_offset) {
+    पक्ष 0x000:
+        पटिनिवत्त "Synchronous EL1t/EL2t";
+    पक्ष 0x080:
+        पटिनिवत्त "IRQ EL1t/EL2t";
+    पक्ष 0x100:
+        पटिनिवत्त "FIQ EL1t/EL2t";
+    पक्ष 0x180:
+        पटिनिवत्त "SError EL1t/EL2t";
+    पक्ष 0x200:
+        पटिनिवत्त "Synchronous Current EL";
+    पक्ष 0x280:
+        पटिनिवत्त "IRQ Current EL";
+    पक्ष 0x300:
+        पटिनिवत्त "FIQ Current EL";
+    पक्ष 0x380:
+        पटिनिवत्त "SError Current EL";
+    पक्ष 0x400:
+        पटिनिवत्त "Synchronous 64-bit EL0/EL1";
+    पक्ष 0x480:
+        पटिनिवत्त "IRQ 64-bit EL0/EL1";
+    पक्ष 0x500:
+        पटिनिवत्त "FIQ 64-bit EL0/EL1";
+    पक्ष 0x580:
+        पटिनिवत्त "SError 64-bit EL0/EL1";
+    पक्ष 0x600:
+        पटिनिवत्त "Synchronous 32-bit EL0/EL1";
+    पक्ष 0x680:
+        पटिनिवत्त "IRQ 32-bit EL0/EL1";
+    पक्ष 0x700:
+        पटिनिवत्त "FIQ 32-bit EL0/EL1";
+    पक्ष 0x780:
+        पटिनिवत्त "SError 32-bit EL0/EL1";
+    स्वभाव:
+        पटिनिवत्त "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+शून्य VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
 {
     printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
     printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));

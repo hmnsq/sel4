@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/model/statedata.h>
-#include <machine/io.h>
-#include <plat/machine/io.h>
-#include <drivers/uart.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <arch/kernel/boot_sys.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <plat/machine/io.h>
+#अन्तर्भाव <drivers/uart.h>
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void serial_init(uint16_t port)
+#सचे defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+शून्य serial_init(uint16_t port)
 {
-    while (!(in8(port + 5) & 0x60)); /* wait until not busy */
+    याव (!(in8(port + 5) & 0x60)); /* wait until not busy */
 
     out8(port + 1, 0x00); /* disable generating interrupts */
     out8(port + 3, 0x80); /* line control register: command: set divisor */
@@ -34,14 +34,14 @@ void serial_init(uint16_t port)
 /* there is no UART driver at drivers/serial/... for the pc99 platform, but we
  * implement parts of the API here, so we can reuse the generic code.
  */
-void uart_drv_putchar(
-    unsigned char c)
+शून्य uart_drv_putchar(
+    unsigned वर्ण c)
 {
-    while (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
+    याव (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
     out8(x86KSdebugPort, c);
 }
 
-void kernel_putDebugChar(unsigned char c)
+शून्य kernel_putDebugChar(unsigned वर्ण c)
 {
     /* this will take care of CR/LF handling and call uart_drv_putchar() */
     uart_console_putchar(c);
@@ -50,9 +50,9 @@ void kernel_putDebugChar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+unsigned वर्ण kernel_getDebugChar(शून्य)
 {
-    while ((in8(x86KSdebugPort + 5) & 1) == 0);
-    return in8(x86KSdebugPort);
+    याव ((in8(x86KSdebugPort + 5) & 1) == 0);
+    पटिनिवत्त in8(x86KSdebugPort);
 }
 #endif /* CONFIG_DEBUG_BUILD */

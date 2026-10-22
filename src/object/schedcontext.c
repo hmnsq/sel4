@@ -4,188 +4,188 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <machine/timer.h>
-#include <kernel/sporadic.h>
-#include <kernel/thread.h>
-#include <object/structures.h>
-#include <object/schedcontext.h>
+#अन्तर्भाव <machine/timer.h>
+#अन्तर्भाव <kernel/sporadic.h>
+#अन्तर्भाव <kernel/thread.h>
+#अन्तर्भाव <object/structures.h>
+#अन्तर्भाव <object/schedcontext.h>
 
-static exception_t invokeSchedContext_UnbindObject(sched_context_t *sc, cap_t cap)
+स्थिर exception_t invokeSchedContext_UnbindObject(sched_context_t *sc, cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_thread_cap:
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_thread_cap:
         schedContext_unbindTCB(sc);
-        break;
-    case cap_notification_cap:
+        भङ्ग;
+    पक्ष cap_notification_cap:
         schedContext_unbindNtfn(sc);
-        break;
-    default:
+        भङ्ग;
+    स्वभाव:
         fail("invalid cap type");
     }
 
-    return EXCEPTION_NONE;
+    पटिनिवत्त EXCEPTION_NONE;
 }
 
-static exception_t decodeSchedContext_UnbindObject(sched_context_t *sc)
+स्थिर exception_t decodeSchedContext_UnbindObject(sched_context_t *sc)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    सचे (current_extra_caps.excaprefs[0] == रिक्त) {
         userError("SchedContext_Unbind: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
     cap_t cap = current_extra_caps.excaprefs[0]->cap;
-    switch (cap_get_capType(cap)) {
-    case cap_thread_cap:
-        if (sc->scTcb != TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))) {
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_thread_cap:
+        सचे (sc->scTcb != TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))) {
             userError("SchedContext UnbindObject: object not bound");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
-        if (sc->scTcb == NODE_STATE(ksCurThread)) {
+        सचे (sc->scTcb == ग्रन्थिः_STATE(ksCurThread)) {
             userError("SchedContext UnbindObject: cannot unbind sc of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    case cap_notification_cap:
-        if (sc->scNotification != NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap))) {
+        भङ्ग;
+    पक्ष cap_notification_cap:
+        सचे (sc->scNotification != NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap))) {
             userError("SchedContext UnbindObject: object not bound");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
-        break;
+        भङ्ग;
 
-    default:
+    स्वभाव:
         userError("SchedContext_Unbind: invalid cap");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_सङ्ख्या = 1;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
 
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSchedContext_UnbindObject(sc, cap);
+    setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+    पटिनिवत्त invokeSchedContext_UnbindObject(sc, cap);
 }
 
-static exception_t invokeSchedContext_Bind(sched_context_t *sc, cap_t cap)
+स्थिर exception_t invokeSchedContext_Bind(sched_context_t *sc, cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_thread_cap:
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_thread_cap:
         schedContext_bindTCB(sc, TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
-        break;
-    case cap_notification_cap:
+        भङ्ग;
+    पक्ष cap_notification_cap:
         schedContext_bindNtfn(sc, NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)));
-        break;
-    default:
+        भङ्ग;
+    स्वभाव:
         fail("invalid cap type");
     }
 
-    return EXCEPTION_NONE;
+    पटिनिवत्त EXCEPTION_NONE;
 }
 
-static exception_t decodeSchedContext_Bind(sched_context_t *sc)
+स्थिर exception_t decodeSchedContext_Bind(sched_context_t *sc)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    सचे (current_extra_caps.excaprefs[0] == रिक्त) {
         userError("SchedContext_Bind: Truncated Message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
     cap_t cap = current_extra_caps.excaprefs[0]->cap;
 
-    switch (cap_get_capType(cap)) {
-    case cap_thread_cap:
-        if (sc->scTcb != NULL) {
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_thread_cap:
+        सचे (sc->scTcb != रिक्त) {
             userError("SchedContext_Bind: sched context already bound.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))->tcbSchedContext != NULL) {
+        सचे (TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))->tcbSchedContext != रिक्त) {
             userError("SchedContext_Bind: tcb already bound.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (isBlocked(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))) && !sc_released(sc)) {
+        सचे (isBlocked(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap))) && !sc_released(sc)) {
             userError("SchedContext_Bind: tcb blocked and scheduling context not schedulable.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
 
-        break;
-    case cap_notification_cap:
-        if (sc->scNotification != NULL) {
+        भङ्ग;
+    पक्ष cap_notification_cap:
+        सचे (sc->scNotification != रिक्त) {
             userError("SchedContext_Bind: sched context already bound.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (notification_ptr_get_ntfnSchedContext(NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)))) {
+        सचे (notification_ptr_get_ntfnSchedContext(NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)))) {
             userError("SchedContext_Bind: notification already bound");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    default:
+        भङ्ग;
+    स्वभाव:
         userError("SchedContext_Bind: invalid cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_सङ्ख्या = 1;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSchedContext_Bind(sc, cap);
+    setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+    पटिनिवत्त invokeSchedContext_Bind(sc, cap);
 }
 
-static exception_t invokeSchedContext_Unbind(sched_context_t *sc)
+स्थिर exception_t invokeSchedContext_Unbind(sched_context_t *sc)
 {
     schedContext_unbindAllTCBs(sc);
     schedContext_unbindNtfn(sc);
     schedContext_unbindReply(sc);
-    return EXCEPTION_NONE;
+    पटिनिवत्त EXCEPTION_NONE;
 }
 
 #ifdef ENABLE_SMP_SUPPORT
-static inline void maybeStallSC(sched_context_t *sc)
+स्थिर अन्तःस्थ शून्य maybeStallSC(sched_context_t *sc)
 {
-    if (sc->scTcb) {
+    सचे (sc->scTcb) {
         remoteTCBStall(sc->scTcb);
     }
 }
 #endif
 
-static inline void replyFromKernel_consumed(tcb_t *thread, time_t consumed)
+स्थिर अन्तःस्थ शून्य replyFromKernel_consumed(tcb_t *thread, time_t consumed)
 {
     word_t *buffer = lookupIPCBuffer(true, thread);
     setRegister(thread, badgeRegister, 0);
     word_t length = mode_setTimeArg(0, consumed, buffer, thread);
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, length)));
+    setRegister(thread, सन्देशः_Info_Register, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, length)));
 }
 
-static inline void setConsumed(sched_context_t *sc, tcb_t *thread, bool_t write_msg)
+स्थिर अन्तःस्थ शून्य setConsumed(sched_context_t *sc, tcb_t *thread, bool_t write_सन्देशः)
 {
     time_t consumed = schedContext_updateConsumed(sc);
 
-    if (write_msg) {
+    सचे (write_सन्देशः) {
         replyFromKernel_consumed(thread, consumed);
     }
 }
 
-static exception_t invokeSchedContext_Consumed(sched_context_t *sc, bool_t call)
+स्थिर exception_t invokeSchedContext_Consumed(sched_context_t *sc, bool_t call)
 {
-    setConsumed(sc, NODE_STATE(ksCurThread), call);
+    setConsumed(sc, ग्रन्थिः_STATE(ksCurThread), call);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Running);
+    पटिनिवत्त EXCEPTION_NONE;
 }
 
-static exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
+स्थिर exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
 {
-    if (sc->scYieldFrom) {
+    सचे (sc->scYieldFrom) {
         schedContext_completeYieldTo(sc->scYieldFrom);
-        assert(sc->scYieldFrom == NULL);
+        प्रतिज्ञा(sc->scYieldFrom == रिक्त);
     }
 
     /* if the tcb is in the scheduler, it's ready and sufficient.
@@ -197,17 +197,17 @@ static exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
     tcb_t *tcb = sc->scTcb;
 
     bool_t return_now;
-    if (isSchedulable(tcb)) {
-        if (SMP_COND_STATEMENT(sc->scCore != getCurrentCPUIndex() ||)
-            tcb->tcbPriority < NODE_STATE(ksCurThread)->tcbPriority) {
+    सचे (isSchedulable(tcb)) {
+        सचे (SMP_COND_STATEMENT(sc->scCore != getCurrentCPUIndex() ||)
+            tcb->tcbPriority < ग्रन्थिः_STATE(ksCurThread)->tcbPriority) {
             tcbSchedDequeue(tcb);
             SCHED_ENQUEUE(tcb);
             return_now = true;
-        } else {
-            NODE_STATE(ksCurThread)->tcbYieldTo = sc;
-            sc->scYieldFrom = NODE_STATE(ksCurThread);
+        } अञ्ञथा {
+            ग्रन्थिः_STATE(ksCurThread)->tcbYieldTo = sc;
+            sc->scYieldFrom = ग्रन्थिः_STATE(ksCurThread);
             tcbSchedDequeue(tcb);
-            tcbSchedEnqueue(NODE_STATE(ksCurThread));
+            tcbSchedEnqueue(ग्रन्थिः_STATE(ksCurThread));
             tcbSchedEnqueue(tcb);
             rescheduleRequired();
 
@@ -216,114 +216,114 @@ static exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
              * until the caller is scheduled again */
             return_now = false;
         }
-    } else {
+    } अञ्ञथा {
         return_now = true;
     }
 
-    if (return_now) {
-        setConsumed(sc, NODE_STATE(ksCurThread), call);
+    सचे (return_now) {
+        setConsumed(sc, ग्रन्थिः_STATE(ksCurThread), call);
         /* Only set to Running if there is a kernel reply message for the user.
            Restart will create a default empty success message. */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+        setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Running);
     }
 
-    return EXCEPTION_NONE;
+    पटिनिवत्त EXCEPTION_NONE;
 }
 
-static exception_t decodeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
+स्थिर exception_t decodeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
 {
-    if (sc->scTcb == NULL) {
+    सचे (sc->scTcb == रिक्त) {
         userError("SchedContext_YieldTo: cannot yield to an inactive sched context");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *tcb = sc->scTcb;
 
-    if (tcb == NODE_STATE(ksCurThread)) {
+    सचे (tcb == ग्रन्थिः_STATE(ksCurThread)) {
         userError("SchedContext_YieldTo: cannot seL4_SchedContext_YieldTo on self");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (tcb->tcbPriority > NODE_STATE(ksCurThread)->tcbMCP) {
+    सचे (tcb->tcbPriority > ग्रन्थिः_STATE(ksCurThread)->tcbMCP) {
         userError("SchedContext_YieldTo: insufficient mcp (%lu) to yield to a thread with prio (%lu)",
-                  NODE_STATE(ksCurThread)->tcbMCP, tcb->tcbPriority);
+                  ग्रन्थिः_STATE(ksCurThread)->tcbMCP, tcb->tcbPriority);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
     // This should not be possible as the currently running thread
     // should never have a non-null yieldTo, however verifying this
     // invariant is being left to future work.
-    assert(NODE_STATE(ksCurThread)->tcbYieldTo == NULL);
-    if (NODE_STATE(ksCurThread)->tcbYieldTo != NULL) {
+    प्रतिज्ञा(ग्रन्थिः_STATE(ksCurThread)->tcbYieldTo == रिक्त);
+    सचे (ग्रन्थिः_STATE(ksCurThread)->tcbYieldTo != रिक्त) {
         userError("SchedContext_YieldTo: cannot seL4_SchedContext_YieldTo to more than on SC at a time");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSchedContext_YieldTo(sc, call);
+    setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+    पटिनिवत्त invokeSchedContext_YieldTo(sc, call);
 }
 
 exception_t decodeSchedContextInvocation(word_t label, sched_context_t *sc, bool_t call)
 {
     SMP_COND_STATEMENT((maybeStallSC(sc));)
 
-    switch (label) {
-    case SchedContextConsumed:
+    विकल्प (label) {
+    पक्ष SchedContextConsumed:
         /* no decode */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeSchedContext_Consumed(sc, call);
-    case SchedContextBind:
-        return decodeSchedContext_Bind(sc);
-    case SchedContextUnbindObject:
-        return decodeSchedContext_UnbindObject(sc);
-    case SchedContextUnbind:
+        setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+        पटिनिवत्त invokeSchedContext_Consumed(sc, call);
+    पक्ष SchedContextBind:
+        पटिनिवत्त decodeSchedContext_Bind(sc);
+    पक्ष SchedContextUnbindObject:
+        पटिनिवत्त decodeSchedContext_UnbindObject(sc);
+    पक्ष SchedContextUnbind:
         /* no decode */
-        if (sc->scTcb == NODE_STATE(ksCurThread)) {
+        सचे (sc->scTcb == ग्रन्थिः_STATE(ksCurThread)) {
             userError("SchedContext UnbindObject: cannot unbind sc of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeSchedContext_Unbind(sc);
-    case SchedContextYieldTo:
-        return decodeSchedContext_YieldTo(sc, call);
-    default:
+        setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+        पटिनिवत्त invokeSchedContext_Unbind(sc);
+    पक्ष SchedContextYieldTo:
+        पटिनिवत्त decodeSchedContext_YieldTo(sc, call);
+    स्वभाव:
         userError("SchedContext invocation: Illegal operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        पटिनिवत्त EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void schedContext_resume(sched_context_t *sc)
+शून्य schedContext_resume(sched_context_t *sc)
 {
-    assert(!sc || sc->scTcb != NULL);
-    if (likely(sc) && isSchedulable(sc->scTcb)) {
-        if (!(refill_ready(sc) && refill_sufficient(sc, 0))) {
-            assert(!thread_state_get_tcbQueued(sc->scTcb->tcbState));
+    प्रतिज्ञा(!sc || sc->scTcb != रिक्त);
+    सचे (likely(sc) && isSchedulable(sc->scTcb)) {
+        सचे (!(refill_ready(sc) && refill_sufficient(sc, 0))) {
+            प्रतिज्ञा(!thread_state_get_tcbQueued(sc->scTcb->tcbState));
             postpone(sc);
         }
     }
 }
 
-void schedContext_bindTCB(sched_context_t *sc, tcb_t *tcb)
+शून्य schedContext_bindTCB(sched_context_t *sc, tcb_t *tcb)
 {
-    assert(sc->scTcb == NULL);
-    assert(tcb->tcbSchedContext == NULL);
+    प्रतिज्ञा(sc->scTcb == रिक्त);
+    प्रतिज्ञा(tcb->tcbSchedContext == रिक्त);
 
     tcb->tcbSchedContext = sc;
     sc->scTcb = tcb;
 
     SMP_COND_STATEMENT(migrateTCB(tcb, sc->scCore));
 
-    if (sc_sporadic(sc) && sc_active(sc) && sc != NODE_STATE(ksCurSC)) {
+    सचे (sc_sporadic(sc) && sc_active(sc) && sc != ग्रन्थिः_STATE(ksCurSC)) {
         refill_unblock_check(sc);
     }
     schedContext_resume(sc);
-    if (isSchedulable(tcb)) {
+    सचे (isSchedulable(tcb)) {
         SCHED_ENQUEUE(tcb);
         rescheduleRequired();
         // TODO -- at some stage we should take this call out of any TCB invocations that
@@ -334,44 +334,44 @@ void schedContext_bindTCB(sched_context_t *sc, tcb_t *tcb)
     }
 }
 
-void schedContext_unbindTCB(sched_context_t *sc)
+शून्य schedContext_unbindTCB(sched_context_t *sc)
 {
     tcb_t *tcb = sc->scTcb;
-    assert(tcb != NULL);
+    प्रतिज्ञा(tcb != रिक्त);
 
     /* tcb must already be stalled at this point */
-    if (tcb == NODE_STATE(ksCurThread)) {
+    सचे (tcb == ग्रन्थिः_STATE(ksCurThread)) {
         rescheduleRequired();
     }
 
     tcbSchedDequeue(tcb);
     tcbReleaseRemove(tcb);
 
-    tcb->tcbSchedContext = NULL;
-    sc->scTcb = NULL;
+    tcb->tcbSchedContext = रिक्त;
+    sc->scTcb = रिक्त;
 }
 
-void schedContext_unbindAllTCBs(sched_context_t *sc)
+शून्य schedContext_unbindAllTCBs(sched_context_t *sc)
 {
-    if (sc->scTcb) {
+    सचे (sc->scTcb) {
         SMP_COND_STATEMENT(remoteTCBStall(sc->scTcb));
         schedContext_unbindTCB(sc);
     }
 }
 
-void schedContext_donate(sched_context_t *sc, tcb_t *to)
+शून्य schedContext_donate(sched_context_t *sc, tcb_t *to)
 {
-    assert(sc != NULL);
-    assert(to != NULL);
-    assert(to->tcbSchedContext == NULL);
+    प्रतिज्ञा(sc != रिक्त);
+    प्रतिज्ञा(to != रिक्त);
+    प्रतिज्ञा(to->tcbSchedContext == रिक्त);
 
     tcb_t *from = sc->scTcb;
-    if (from) {
+    सचे (from) {
         SMP_COND_STATEMENT(remoteTCBStall(from));
         tcbSchedDequeue(from);
         tcbReleaseRemove(from);
-        from->tcbSchedContext = NULL;
-        if (from == NODE_STATE(ksCurThread) || from == NODE_STATE(ksSchedulerAction)) {
+        from->tcbSchedContext = रिक्त;
+        सचे (from == ग्रन्थिः_STATE(ksCurThread) || from == ग्रन्थिः_STATE(ksSchedulerAction)) {
             rescheduleRequired();
         }
     }
@@ -381,61 +381,61 @@ void schedContext_donate(sched_context_t *sc, tcb_t *to)
     SMP_COND_STATEMENT(migrateTCB(to, sc->scCore));
 }
 
-void schedContext_bindNtfn(sched_context_t *sc, notification_t *ntfn)
+शून्य schedContext_bindNtfn(sched_context_t *sc, notification_t *ntfn)
 {
     notification_ptr_set_ntfnSchedContext(ntfn, SC_REF(sc));
     sc->scNotification = ntfn;
 }
 
-void schedContext_unbindNtfn(sched_context_t *sc)
+शून्य schedContext_unbindNtfn(sched_context_t *sc)
 {
-    if (sc && sc->scNotification) {
+    सचे (sc && sc->scNotification) {
         notification_ptr_set_ntfnSchedContext(sc->scNotification, SC_REF(0));
-        sc->scNotification = NULL;
+        sc->scNotification = रिक्त;
     }
 }
 
-void schedContextMaybeUnbindNtfn(notification_t *ntfnPtr)
+शून्य schedContextMaybeUnbindNtfn(notification_t *ntfnPtr)
 {
     sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
 
-    if (sc) {
+    सचे (sc) {
         schedContext_unbindNtfn(sc);
     }
 }
 
-void schedContext_unbindReply(sched_context_t *sc)
+शून्य schedContext_unbindReply(sched_context_t *sc)
 {
-    if (sc && sc->scReply) {
-        assert(call_stack_get_isHead(sc->scReply->replyNext));
-        sc->scReply->replyNext = call_stack_new(0, false);
-        sc->scReply = NULL;
+    सचे (sc && sc->scReply) {
+        प्रतिज्ञा(call_राशिः_get_is_Head(sc->scReply->replyNext));
+        sc->scReply->replyNext = call_राशिः_new(0, false);
+        sc->scReply = रिक्त;
     }
 }
 
 time_t schedContext_updateConsumed(sched_context_t *sc)
 {
     ticks_t consumed = sc->scConsumed;
-    if (consumed >= getMaxTicksToUs()) {
+    सचे (consumed >= getMaxTicksToUs()) {
         sc->scConsumed -= getMaxTicksToUs();
-        return ticksToUs(getMaxTicksToUs());
-    } else {
+        पटिनिवत्त ticksToUs(getMaxTicksToUs());
+    } अञ्ञथा {
         sc->scConsumed = 0;
-        return ticksToUs(consumed);
+        पटिनिवत्त ticksToUs(consumed);
     }
 }
 
-void schedContext_cancelYieldTo(tcb_t *tcb)
+शून्य schedContext_cancelYieldTo(tcb_t *tcb)
 {
-    if (tcb && tcb->tcbYieldTo) {
-        tcb->tcbYieldTo->scYieldFrom = NULL;
-        tcb->tcbYieldTo = NULL;
+    सचे (tcb && tcb->tcbYieldTo) {
+        tcb->tcbYieldTo->scYieldFrom = रिक्त;
+        tcb->tcbYieldTo = रिक्त;
     }
 }
 
-void schedContext_completeYieldTo(tcb_t *yielder)
+शून्य schedContext_completeYieldTo(tcb_t *yielder)
 {
-    if (yielder && yielder->tcbYieldTo) {
+    सचे (yielder && yielder->tcbYieldTo) {
         /* FIXME: this should only be true here if the original
                   invocation we are completing was Call. */
         setConsumed(yielder->tcbYieldTo, yielder, true);
