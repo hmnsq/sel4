@@ -5,63 +5,63 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <object.h>
+#अन्तर्भाव <machine.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <arch/kernel/vspace.h>
+#अन्तर्भाव <arch/kernel/thread.h>
+#अन्तर्भाव <linker.h>
 
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+बाह्य वर्ण kernel_थाक_alloc[CONFIG_MAX_अङ्क_NODES][BIT(CONFIG_KERNEL_थाक_BITS)];
 
-void Arch_switchToThread(tcb_t *tcb)
+शून्य Arch_switchToThread(tcb_t *tcb)
 {
     setVMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE शून्य Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, NextIP, (word_t)&idle_thread);
 
     /* Enable interrupts and keep working in supervisor mode */
     setRegister(tcb, SSTATUS, (word_t) SSTATUS_SPP | SSTATUS_SPIE);
 #ifdef ENABLE_SMP_SUPPORT
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        if (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
-            setRegister(tcb, SP, (word_t)kernel_stack_alloc + (i + 1) * BIT(CONFIG_KERNEL_STACK_BITS));
-            break;
+    लागि (पूर्णाङ्क i = 0; i < CONFIG_MAX_अङ्क_NODES; i++) {
+        यदि (गाँठो_STATE_ON_CORE(ksIdleThread, i) == tcb) {
+            setRegister(tcb, SP, (word_t)kernel_थाक_alloc + (i + 1) * BIT(CONFIG_KERNEL_थाक_BITS));
+            रोक;
         }
     }
-#else
-    setRegister(tcb, SP, (word_t)kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS));
+#अन्यथा
+    setRegister(tcb, SP, (word_t)kernel_थाक_alloc + BIT(CONFIG_KERNEL_थाक_BITS));
 #endif
 }
 
-void Arch_switchToIdleThread(void)
+शून्य Arch_switchToIdleThread(शून्य)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = गाँठो_STATE(ksIdleThread);
 
     /* Force the idle thread to run on kernel page table */
     setVMRoot(tcb);
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+शून्य Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Arch_postModifyRegisters(tcb_t *tptr)
+शून्य Arch_postModifyRegisters(tcb_t *tptr)
 {
     /* Nothing to do */
 }
 
-void Arch_prepareNextDomain(void)
+शून्य Arch_prepareNextDomain(शून्य)
 {
     /* Don't need to do anything */
 }
 
-void Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
+शून्य Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
 {
     /* Don't need to do anything */
 }
