@@ -6,52 +6,52 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <benchmark/benchmark.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <kernel/boot.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <object/tcb.h>
-#include <machine/io.h>
-#include <model/preemption.h>
-#include <model/statedata.h>
-#include <object/cnode.h>
-#include <object/untyped.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <arch/machine.h>
-#include <plat/machine/hardware.h>
-#include <kernel/stack.h>
-#include <util.h>
+#અન્તર્ભાવ <types.h>
+#અન્તર્ભાવ <benchmark/benchmark.h>
+#અન્તર્ભાવ <api/failures.h>
+#અન્તર્ભાવ <api/syscall.h>
+#અન્તર્ભાવ <kernel/boot.h>
+#અન્તર્ભાવ <kernel/cspace.h>
+#અન્તર્ભાવ <kernel/thread.h>
+#અન્તર્ભાવ <object/tcb.h>
+#અન્તર્ભાવ <machine/io.h>
+#અન્તર્ભાવ <model/preemption.h>
+#અન્તર્ભાવ <model/statedata.h>
+#અન્તર્ભાવ <object/cnode.h>
+#અન્તર્ભાવ <object/untyped.h>
+#અન્તર્ભાવ <arch/api/invocation.h>
+#અન્તર્ભાવ <arch/kernel/vspace.h>
+#અન્તર્ભાવ <linker.h>
+#અન્તર્ભાવ <arch/machine.h>
+#અન્તર્ભાવ <plat/machine/hardware.h>
+#અન્તર્ભાવ <kernel/stack.h>
+#અન્તર્ભાવ <util.h>
 
-struct resolve_ret {
+સંરચના resolve_ret {
     paddr_t frameBase;
     vm_page_size_t frameSize;
     bool_t valid;
 };
-typedef struct resolve_ret resolve_ret_t;
+પ્રકારવ્યાખ્યા સંરચના resolve_ret resolve_ret_t;
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call);
+સ્થિર exception_t performPageGetAddress(શૂન્ય *vbase_ptr, bool_t call);
 
-static word_t CONST RISCVGetWriteFromVMRights(vm_rights_t vm_rights)
+સ્થિર word_t CONST RISCVGetWriteFromVMRights(vm_rights_t vm_rights)
 {
     /* Write-only frame cap rights not currently supported. */
-    return vm_rights == VMReadWrite;
+    પાછા vm_rights == VMReadWrite;
 }
 
-static inline word_t CONST RISCVGetReadFromVMRights(vm_rights_t vm_rights)
+સ્થિર અંતઃરેખ word_t CONST RISCVGetReadFromVMRights(vm_rights_t vm_rights)
 {
     /* Write-only frame cap rights not currently supported.
      * Kernel-only conveys no user rights. */
-    return vm_rights != VMKernelOnly;
+    પાછા vm_rights != VMKernelOnly;
 }
 
-static inline bool_t isPTEPageTable(pte_t *pte)
+સ્થિર અંતઃરેખ bool_t isPTEPageTable(pte_t *pte)
 {
-    return pte_ptr_get_valid(pte) &&
+    પાછા pte_ptr_get_valid(pte) &&
            !(pte_ptr_get_read(pte) || pte_ptr_get_write(pte) || pte_ptr_get_execute(pte));
 }
 
@@ -60,94 +60,94 @@ static inline bool_t isPTEPageTable(pte_t *pte)
  *
  * Maps all pages with full RWX and supervisor perms by default.
  */
-static pte_t pte_next(word_t phys_addr, bool_t is_leaf)
+સ્થિર pte_t pte_next(word_t phys_addr, bool_t is_leaf)
 {
     word_t ppn = (word_t)(phys_addr >> 12);
 
-    uint8_t read = is_leaf ? 1 : 0;
-    uint8_t write = read;
-    uint8_t exec = read;
+    uint8_t પઠ = is_leaf ? 1 : 0;
+    uint8_t લિખ = પઠ;
+    uint8_t exec = પઠ;
 
-    return pte_new(ppn,
+    પાછા pte_new(ppn,
                    0,     /* sw */
                    is_leaf ? 1 : 0,     /* dirty (leaf)/reserved (non-leaf) */
                    is_leaf ? 1 : 0,     /* accessed (leaf)/reserved (non-leaf) */
                    1,     /* global */
                    is_leaf ? 0 : 0,     /* user (leaf)/reserved (non-leaf) */
                    exec,  /* execute */
-                   write, /* write */
-                   read,  /* read */
+                   લિખ, /* write */
+                   પઠ,  /* read */
                    1      /* valid */
                   );
 }
 
 /* ==================== BOOT CODE STARTS HERE ==================== */
 
-BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights)
+BOOT_CODE શૂન્ય map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights)
 {
-#if __riscv_xlen == 32
+#જો __riscv_xlen == 32
     paddr = ROUND_DOWN(paddr, RISCV_GET_LVL_PGSIZE_BITS(0));
-    assert((paddr % RISCV_GET_LVL_PGSIZE(0)) == 0);
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(vaddr, 0)] = pte_next(paddr, true);
-#else
-    if (vaddr >= KDEV_BASE) {
+    પ્રતિજ્ઞા((paddr % RISCV_GET_LVL_PGSIZE(0)) == 0);
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(vaddr, 0)] = pte_next(paddr, true);
+#નહીંતર
+    જો (vaddr >= KDEV_BASE) {
         /* Map devices in level 1 page table */
         paddr = ROUND_DOWN(paddr, RISCV_GET_LVL_PGSIZE_BITS(1));
-        assert((paddr % RISCV_GET_LVL_PGSIZE(1)) == 0);
+        પ્રતિજ્ઞા((paddr % RISCV_GET_LVL_PGSIZE(1)) == 0);
         kernel_image_level1_dev_pt[RISCV_GET_PT_INDEX(vaddr, 1)] = pte_next(paddr, true);
-    } else {
+    } નહીંતર {
         paddr = ROUND_DOWN(paddr, RISCV_GET_LVL_PGSIZE_BITS(0));
-        assert((paddr % RISCV_GET_LVL_PGSIZE(0)) == 0);
-        kernel_root_pageTable[RISCV_GET_PT_INDEX(vaddr, 0)] = pte_next(paddr, true);
+        પ્રતિજ્ઞા((paddr % RISCV_GET_LVL_PGSIZE(0)) == 0);
+        kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(vaddr, 0)] = pte_next(paddr, true);
     }
 #endif
 }
 
-BOOT_CODE VISIBLE void map_kernel_window(void)
+BOOT_CODE VISIBLE શૂન્ય map_kernel_window(શૂન્ય)
 {
     /* mapping of KERNEL_ELF_BASE (virtual address) to kernel's
      * KERNEL_ELF_PHYS_BASE  */
-    assert(CONFIG_PT_LEVELS > 1 && CONFIG_PT_LEVELS <= 4);
+    પ્રતિજ્ઞા(CONFIG_PT_LEVELS > 1 && CONFIG_PT_LEVELS <= 4);
     /* Kernel image finishes before KDEV_BASE */
-    assert(KERNEL_ELF_TOP <= KDEV_BASE);
+    પ્રતિજ્ઞા(KERNEL_ELF_ટોચ <= KDEV_BASE);
 
     /* kernel window starts at PPTR_BASE */
     word_t pptr = PPTR_BASE;
 
     /* first we map in memory from PADDR_BASE */
     word_t paddr = PADDR_BASE;
-    while (pptr < PPTR_TOP) {
-        assert(IS_ALIGNED(pptr, RISCV_GET_LVL_PGSIZE_BITS(0)));
-        assert(IS_ALIGNED(paddr, RISCV_GET_LVL_PGSIZE_BITS(0)));
+    જ્યારે (pptr < PPTR_ટોચ) {
+        પ્રતિજ્ઞા(IS_ALIGNED(pptr, RISCV_GET_LVL_PGSIZE_BITS(0)));
+        પ્રતિજ્ઞા(IS_ALIGNED(paddr, RISCV_GET_LVL_PGSIZE_BITS(0)));
 
-        kernel_root_pageTable[RISCV_GET_PT_INDEX(pptr, 0)] = pte_next(paddr, true);
+        kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(pptr, 0)] = pte_next(paddr, true);
 
         pptr += RISCV_GET_LVL_PGSIZE(0);
         paddr += RISCV_GET_LVL_PGSIZE(0);
     }
     /* now map KERNEL_ELF_BASE to KERNEL_ELF_PADDR_BASE */
-    assert(pptr == PPTR_TOP);
+    પ્રતિજ્ઞા(pptr == PPTR_ટોચ);
     pptr = ROUND_DOWN(KERNEL_ELF_BASE, RISCV_GET_LVL_PGSIZE_BITS(0));
     paddr = ROUND_DOWN(KERNEL_ELF_PADDR_BASE, RISCV_GET_LVL_PGSIZE_BITS(0));
 
-#if __riscv_xlen == 32
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(pptr, 0)] = pte_next(paddr, true);
+#જો __riscv_xlen == 32
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(pptr, 0)] = pte_next(paddr, true);
     pptr += RISCV_GET_LVL_PGSIZE(0);
     paddr += RISCV_GET_LVL_PGSIZE(0);
 #ifdef CONFIG_KERNEL_LOG_BUFFER
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(KS_LOG_PPTR, 0)] =
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(KS_LOG_PPTR, 0)] =
         pte_next(kpptr_to_paddr(kernel_image_level1_log_buffer_pt), false);
 #endif
-#else
+#નહીંતર
     word_t index = 0;
     /* The kernel image is mapped twice, locating the two indexes in the
      * root page table, pointing them to the same level 1 page table.
      */
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(KERNEL_ELF_PADDR_BASE + PPTR_BASE_OFFSET, 0)] =
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(KERNEL_ELF_PADDR_BASE + PPTR_BASE_OFFSET, 0)] =
         pte_next(kpptr_to_paddr(kernel_image_level1_pt), false);
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(pptr, 0)] =
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(pptr, 0)] =
         pte_next(kpptr_to_paddr(kernel_image_level1_pt), false);
-    while (pptr < PPTR_TOP + RISCV_GET_LVL_PGSIZE(0)) {
+    જ્યારે (pptr < PPTR_ટોચ + RISCV_GET_LVL_PGSIZE(0)) {
         kernel_image_level1_pt[index] = pte_next(paddr, true);
         index++;
         pptr += RISCV_GET_LVL_PGSIZE(1);
@@ -155,16 +155,16 @@ BOOT_CODE VISIBLE void map_kernel_window(void)
     }
 
     /* Map kernel device page table */
-    kernel_root_pageTable[RISCV_GET_PT_INDEX(KDEV_BASE, 0)] =
+    kernel_મૂળ_page_Table[RISCV_GET_PT_INDEX(KDEV_BASE, 0)] =
         pte_next(kpptr_to_paddr(kernel_image_level1_dev_pt), false);
 #endif
 
     /* There should be free space where we put device mapping */
-    assert(pptr == UINTPTR_MAX - RISCV_GET_LVL_PGSIZE(0) + 1);
+    પ્રતિજ્ઞા(pptr == UINTPTR_MAX - RISCV_GET_LVL_PGSIZE(0) + 1);
     map_kernel_devices();
 }
 
-BOOT_CODE void map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
+BOOT_CODE શૂન્ય map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
 {
     lookupPTSlot_ret_t pt_ret;
     pte_t *targetSlot;
@@ -194,7 +194,7 @@ BOOT_CODE void map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
     sfence();
 }
 
-BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap)
+BOOT_CODE શૂન્ય map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap)
 {
     pte_t *lvl1pt   = PTE_PTR(pptr_of_cap(vspace_cap));
     pte_t *frame_pptr   = PTE_PTR(pptr_of_cap(frame_cap));
@@ -202,7 +202,7 @@ BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap)
 
     /* We deal with a frame as 4KiB */
     lookupPTSlot_ret_t lu_ret = lookupPTSlot(lvl1pt, frame_vptr);
-    assert(lu_ret.ptBitsLeft == seL4_PageBits);
+    પ્રતિજ્ઞા(lu_ret.pt_Bits_ડાબું == seL4_PageBits);
 
     pte_t *targetSlot = lu_ret.ptSlot;
 
@@ -232,11 +232,11 @@ BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
                     0                                /* capFMappedAddress    */
                 );
 
-    return cap;
+    પાછા cap;
 }
 
 /* Create a page table for the initial thread */
-static BOOT_CODE cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+સ્થિર BOOT_CODE cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
     cap = cap_page_table_cap_new(
@@ -247,21 +247,21 @@ static BOOT_CODE cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vp
           );
 
     map_it_pt_cap(vspace_cap, cap);
-    return cap;
+    પાછા cap;
 }
 
 BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 {
     word_t n = 0;
-    for (int i = 0; i < CONFIG_PT_LEVELS - 1; i++) {
+    માટે (પૂર્ણાંક i = 0; i < CONFIG_PT_LEVELS - 1; i++) {
         n += get_n_paging(it_v_reg, RISCV_GET_LVL_PGSIZE_BITS(i));
     }
-    return n;
+    પાછા n;
 }
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_CODE cap_t create_it_address_space(cap_t મૂળ_cnode_cap, v_region_t it_v_reg)
 {
     cap_t      lvl1pt_cap;
     vptr_t     pt_vptr;
@@ -277,18 +277,18 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
         );
 
     seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), lvl1pt_cap);
+    write_slot(SLOT_PTR(pptr_of_cap(મૂળ_cnode_cap), seL4_CapInitThreadVSpace), lvl1pt_cap);
 
     /* create all n level PT caps necessary to cover userland image in 4KiB pages */
-    for (int i = 0; i < CONFIG_PT_LEVELS - 1; i++) {
+    માટે (પૂર્ણાંક i = 0; i < CONFIG_PT_LEVELS - 1; i++) {
 
-        for (pt_vptr = ROUND_DOWN(it_v_reg.start, RISCV_GET_LVL_PGSIZE_BITS(i));
+        માટે (pt_vptr = ROUND_DOWN(it_v_reg.start, RISCV_GET_LVL_PGSIZE_BITS(i));
              pt_vptr < it_v_reg.end;
              pt_vptr += RISCV_GET_LVL_PGSIZE(i)) {
-            if (!provide_cap(root_cnode_cap,
+            જો (!provide_cap(મૂળ_cnode_cap,
                              create_it_pt_cap(lvl1pt_cap, it_alloc_paging(), pt_vptr, IT_ASID))
                ) {
-                return cap_null_cap_new();
+                પાછા cap_null_cap_new();
             }
         }
 
@@ -299,58 +299,58 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
         slot_pos_before, slot_pos_after
     };
 
-    return lvl1pt_cap;
+    પાછા lvl1pt_cap;
 }
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_CODE શૂન્ય activate_kernel_vspace(શૂન્ય)
 {
-    setVSpaceRoot(kpptr_to_paddr(&kernel_root_pageTable), 0);
+    set_VSpace_મૂળ(kpptr_to_paddr(&kernel_મૂળ_page_Table), 0);
 }
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_lvl1pt_cap)
+BOOT_CODE શૂન્ય write_it_asid_pool(cap_t it_ap_cap, cap_t it_lvl1pt_cap)
 {
     asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
-    ap->array[ASID_LOW(IT_ASID)] = PTE_PTR(pptr_of_cap(it_lvl1pt_cap));
-    riscvKSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    ap->array[ASID_નીચલું(IT_ASID)] = PTE_PTR(pptr_of_cap(it_lvl1pt_cap));
+    riscvKSASIDTable[ASID_ઉપલું(IT_ASID)] = ap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
-static findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
+સ્થિર findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
 {
     findVSpaceForASID_ret_t ret;
     asid_pool_t        *poolPtr;
-    pte_t     *vspace_root;
+    pte_t     *vspace_મૂળ;
 
-    poolPtr = riscvKSASIDTable[ASID_HIGH(asid)];
-    if (!poolPtr) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    poolPtr = riscvKSASIDTable[ASID_ઉપલું(asid)];
+    જો (!poolPtr) {
+        current_lookup_fault = lookup_fault_invalid_મૂળ_new();
 
-        ret.vspace_root = NULL;
+        ret.vspace_મૂળ = ખાલી;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        પાછા ret;
     }
 
-    vspace_root = poolPtr->array[ASID_LOW(asid)];
-    if (!vspace_root) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    vspace_મૂળ = poolPtr->array[ASID_નીચલું(asid)];
+    જો (!vspace_મૂળ) {
+        current_lookup_fault = lookup_fault_invalid_મૂળ_new();
 
-        ret.vspace_root = NULL;
+        ret.vspace_મૂળ = ખાલી;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        પાછા ret;
     }
 
-    ret.vspace_root = vspace_root;
+    ret.vspace_મૂળ = vspace_મૂળ;
     ret.status = EXCEPTION_NONE;
-    return ret;
+    પાછા ret;
 }
 
-void copyGlobalMappings(pte_t *newLvl1pt)
+શૂન્ય copyGlobalMappings(pte_t *newLvl1pt)
 {
     unsigned long i;
-    pte_t *global_kernel_vspace = kernel_root_pageTable;
+    pte_t *global_kernel_vspace = kernel_મૂળ_page_Table;
 
-    for (i = RISCV_GET_PT_INDEX(PPTR_BASE, 0); i < BIT(PT_INDEX_BITS); i++) {
+    માટે (i = RISCV_GET_PT_INDEX(PPTR_BASE, 0); i < BIT(PT_INDEX_BITS); i++) {
         newLvl1pt[i] = global_kernel_vspace[i];
     }
 }
@@ -364,29 +364,29 @@ word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
     w_bufferPtr = thread->tcbIPCBuffer;
     bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
 
-    if (unlikely(cap_get_capType(bufferCap) != cap_frame_cap)) {
-        return NULL;
+    જો (unlikely(cap_get_capType(bufferCap) != cap_frame_cap)) {
+        પાછા ખાલી;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    જો (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
+        પાછા ખાલી;
     }
 
     vm_rights = cap_frame_cap_get_capFVMRights(bufferCap);
-    if (likely(vm_rights == VMReadWrite ||
+    જો (likely(vm_rights == VMReadWrite ||
                (!isReceiver && vm_rights == VMReadOnly))) {
         word_t basePtr, pageBits;
 
         basePtr = cap_frame_cap_get_capFBasePtr(bufferCap);
         pageBits = pageBitsForSize(cap_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        પાછા (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
+    } નહીંતર {
+        પાછા ખાલી;
     }
 }
 
-static inline pte_t *getPPtrFromHWPTE(pte_t *pte)
+સ્થિર અંતઃરેખ pte_t *getPPtrFromHWPTE(pte_t *pte)
 {
-    return PTE_PTR(ptrFromPAddr(pte_ptr_get_ppn(pte) << seL4_PageTableBits));
+    પાછા PTE_PTR(ptrFromPAddr(pte_ptr_get_ppn(pte) << seL4_PageTableBits));
 }
 
 lookupPTSlot_ret_t lookupPTSlot(pte_t *lvl1pt, vptr_t vptr)
@@ -401,17 +401,17 @@ lookupPTSlot_ret_t lookupPTSlot(pte_t *lvl1pt, vptr_t vptr)
      * final value of this after the walk is the size of the frame that can be inserted,
      * or already exists, in ret.ptSlot. The following formulation is an invariant of
      * the loop: */
-    ret.ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
-    ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
+    ret.pt_Bits_ડાબું = PT_INDEX_BITS * level + seL4_PageBits;
+    ret.ptSlot = pt + ((vptr >> ret.pt_Bits_ડાબું) & MASK(PT_INDEX_BITS));
 
-    while (isPTEPageTable(ret.ptSlot) && likely(0 < level)) {
+    જ્યારે (isPTEPageTable(ret.ptSlot) && likely(0 < level)) {
         level--;
-        ret.ptBitsLeft -= PT_INDEX_BITS;
+        ret.pt_Bits_ડાબું -= PT_INDEX_BITS;
         pt = getPPtrFromHWPTE(ret.ptSlot);
-        ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
+        ret.ptSlot = pt + ((vptr >> ret.pt_Bits_ડાબું) & MASK(PT_INDEX_BITS));
     }
 
-    return ret;
+    પાછા ret;
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
@@ -420,37 +420,37 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 
     addr = read_stval();
 
-    switch (vm_faultType) {
-    case RISCVLoadPageFault:
-    case RISCVLoadAccessFault:
+    પસંદગી (vm_faultType) {
+    સ્થિતિ RISCVLoadPageFault:
+    સ્થિતિ RISCVLoadAccessFault:
         current_fault = seL4_Fault_VMFault_new(addr, RISCVLoadAccessFault, false);
-        return EXCEPTION_FAULT;
-    case RISCVStorePageFault:
-    case RISCVStoreAccessFault:
+        પાછા EXCEPTION_FAULT;
+    સ્થિતિ RISCVStorePageFault:
+    સ્થિતિ RISCVStoreAccessFault:
         current_fault = seL4_Fault_VMFault_new(addr, RISCVStoreAccessFault, false);
-        return EXCEPTION_FAULT;
-    case RISCVInstructionPageFault:
-    case RISCVInstructionAccessFault:
+        પાછા EXCEPTION_FAULT;
+    સ્થિતિ RISCVInstructionPageFault:
+    સ્થિતિ RISCVInstructionAccessFault:
         current_fault = seL4_Fault_VMFault_new(addr, RISCVInstructionAccessFault, true);
-        return EXCEPTION_FAULT;
+        પાછા EXCEPTION_FAULT;
 
-    default:
+    મૂળભૂત:
         fail("Invalid VM fault type");
     }
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+શૂન્ય deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
 {
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert(IS_ALIGNED(asid_base, asidLowBits));
+    પ્રતિજ્ઞા(IS_ALIGNED(asid_base, asid_નીચલું_Bits));
 
-    if (riscvKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        riscvKSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+    જો (riscvKSASIDTable[ASID_ઉપલું(asid_base)] == pool) {
+        riscvKSASIDTable[ASID_ઉપલું(asid_base)] = ખાલી;
+        setVMRoot(ગાંઠ_STATE(ksCurThread));
     }
 }
 
-static exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
+સ્થિર exception_t performASIDControlInvocation(શૂન્ય *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
 {
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
@@ -460,7 +460,7 @@ static exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t 
     memzero(frame, BIT(pageBitsForSize(RISCV_4K_Page)));
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(
+    cte_ઉમેરો(
         cap_asid_pool_cap_new(
             asid_base,          /* capASIDBase  */
             WORD_REF(frame)     /* capASIDPool  */
@@ -469,13 +469,13 @@ static exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t 
         slot
     );
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    riscvKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    પ્રતિજ્ઞા((asid_base & MASK(asid_નીચલું_Bits)) == 0);
+    riscvKSASIDTable[ASID_ઉપલું(asid_base)] = (asid_pool_t *)frame;
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
-static exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr, cte_t *vspaceCapSlot)
+સ્થિર exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr, cte_t *vspaceCapSlot)
 {
     cap_t cap = vspaceCapSlot->cap;
     pte_t *regionBase = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
@@ -486,50 +486,50 @@ static exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr, 
 
     copyGlobalMappings(regionBase);
 
-    poolPtr->array[ASID_LOW(asid)] = regionBase;
+    poolPtr->array[ASID_નીચલું(asid)] = regionBase;
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
-void deleteASID(asid_t asid, pte_t *vspace)
+શૂન્ય deleteASID(asid_t asid, pte_t *vspace)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = riscvKSASIDTable[ASID_HIGH(asid)];
-    if (poolPtr != NULL && poolPtr->array[ASID_LOW(asid)] == vspace) {
+    poolPtr = riscvKSASIDTable[ASID_ઉપલું(asid)];
+    જો (poolPtr != ખાલી && poolPtr->array[ASID_નીચલું(asid)] == vspace) {
         hwASIDFlush(asid);
-        poolPtr->array[ASID_LOW(asid)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        poolPtr->array[ASID_નીચલું(asid)] = ખાલી;
+        setVMRoot(ગાંઠ_STATE(ksCurThread));
     }
 }
 
-void unmapPageTable(asid_t asid, vptr_t vptr, pte_t *target_pt)
+શૂન્ય unmapPageTable(asid_t asid, vptr_t vptr, pte_t *target_pt)
 {
     findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    જો (unlikely(find_ret.status != EXCEPTION_NONE)) {
         /* nothing to do */
-        return;
+        પાછા;
     }
     /* We won't ever unmap a top level page table */
-    assert(find_ret.vspace_root != target_pt);
-    pte_t *ptSlot = NULL;
-    pte_t *pt = find_ret.vspace_root;
+    પ્રતિજ્ઞા(find_ret.vspace_મૂળ != target_pt);
+    pte_t *ptSlot = ખાલી;
+    pte_t *pt = find_ret.vspace_મૂળ;
 
-    for (word_t i = 0; i < CONFIG_PT_LEVELS - 1 && pt != target_pt; i++) {
+    માટે (word_t i = 0; i < CONFIG_PT_LEVELS - 1 && pt != target_pt; i++) {
         ptSlot = pt + RISCV_GET_PT_INDEX(vptr, i);
-        if (unlikely(!isPTEPageTable(ptSlot))) {
+        જો (unlikely(!isPTEPageTable(ptSlot))) {
             /* couldn't find it */
-            return;
+            પાછા;
         }
         pt = getPPtrFromHWPTE(ptSlot);
     }
 
-    if (pt != target_pt) {
+    જો (pt != target_pt) {
         /* didn't find it */
-        return;
+        પાછા;
     }
     /* If we found a pt then ptSlot won't be null */
-    assert(ptSlot != NULL);
+    પ્રતિજ્ઞા(ptSlot != ખાલી);
     *ptSlot = pte_new(
                   0,  /* phy_address */
                   0,  /* sw */
@@ -545,122 +545,122 @@ void unmapPageTable(asid_t asid, vptr_t vptr, pte_t *target_pt)
     sfence();
 }
 
-static pte_t pte_pte_invalid_new(void)
+સ્થિર pte_t pte_pte_invalid_new(શૂન્ય)
 {
-    return (pte_t) {
+    પાછા (pte_t) {
         0
     };
 }
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
+શૂન્ય unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
 {
     findVSpaceForASID_ret_t find_ret;
     lookupPTSlot_ret_t  lu_ret;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    જો (find_ret.status != EXCEPTION_NONE) {
+        પાછા;
     }
 
-    lu_ret = lookupPTSlot(find_ret.vspace_root, vptr);
-    if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(page_size))) {
-        return;
+    lu_ret = lookupPTSlot(find_ret.vspace_મૂળ, vptr);
+    જો (unlikely(lu_ret.pt_Bits_ડાબું != pageBitsForSize(page_size))) {
+        પાછા;
     }
-    if (!pte_ptr_get_valid(lu_ret.ptSlot) || isPTEPageTable(lu_ret.ptSlot)
-        || (pte_ptr_get_ppn(lu_ret.ptSlot) << seL4_PageBits) != pptr_to_paddr((void *)pptr)) {
-        return;
+    જો (!pte_ptr_get_valid(lu_ret.ptSlot) || isPTEPageTable(lu_ret.ptSlot)
+        || (pte_ptr_get_ppn(lu_ret.ptSlot) << seL4_PageBits) != pptr_to_paddr((શૂન્ય *)pptr)) {
+        પાછા;
     }
 
     lu_ret.ptSlot[0] = pte_pte_invalid_new();
     sfence();
 }
 
-void setVMRoot(tcb_t *tcb)
+શૂન્ય setVMRoot(tcb_t *tcb)
 {
-    cap_t threadRoot;
+    cap_t thread_મૂળ;
     asid_t asid;
     pte_t *lvl1pt;
     findVSpaceForASID_ret_t  find_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_મૂળ = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) != cap_page_table_cap) {
-        setVSpaceRoot(kpptr_to_paddr(&kernel_root_pageTable), 0);
-        return;
+    જો (cap_get_capType(thread_મૂળ) != cap_page_table_cap) {
+        set_VSpace_મૂળ(kpptr_to_paddr(&kernel_મૂળ_page_Table), 0);
+        પાછા;
     }
 
-    lvl1pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(threadRoot));
+    lvl1pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(thread_મૂળ));
 
-    asid = cap_page_table_cap_get_capPTMappedASID(threadRoot);
+    asid = cap_page_table_cap_get_capPTMappedASID(thread_મૂળ);
     find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != lvl1pt)) {
-        setVSpaceRoot(kpptr_to_paddr(&kernel_root_pageTable), 0);
-        return;
+    જો (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.vspace_મૂળ != lvl1pt)) {
+        set_VSpace_મૂળ(kpptr_to_paddr(&kernel_મૂળ_page_Table), 0);
+        પાછા;
     }
 
-    setVSpaceRoot(addrFromPPtr(lvl1pt), asid);
+    set_VSpace_મૂળ(addrFromPPtr(lvl1pt), asid);
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_મૂળ(cap_t cap)
 {
-    return (cap_get_capType(cap) == cap_page_table_cap &&
+    પાછા (cap_get_capType(cap) == cap_page_table_cap &&
             cap_page_table_cap_get_capPTIsMapped(cap));
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (unlikely(cap_get_capType(cap) != cap_frame_cap)) {
+    જો (unlikely(cap_get_capType(cap) != cap_frame_cap)) {
         userError("Requested IPC Buffer is not a frame cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
+    જો (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits))) {
+    જો (unlikely(!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits))) {
         userError("Requested IPC Buffer location 0x%x is not aligned.",
-                  (int)vptr);
+                  (પૂર્ણાંક)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
 {
-    if (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    જો (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        પાછા VMReadOnly;
     }
-    if (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    જો (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        જો (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+            પાછા VMReadOnly;
+        } નહીંતર {
+            પાછા VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
+    જો (vm_rights == VMReadWrite &&
         !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
         seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    પાછા VMKernelOnly;
 }
 
 /* The rest of the file implements the RISCV object invocations */
 
-static pte_t CONST makeUserPTE(paddr_t paddr, bool_t executable, vm_rights_t vm_rights)
+સ્થિર pte_t CONST makeUserPTE(paddr_t paddr, bool_t executable, vm_rights_t vm_rights)
 {
-    word_t write = RISCVGetWriteFromVMRights(vm_rights);
-    word_t read = RISCVGetReadFromVMRights(vm_rights);
-    if (unlikely(!read && !write && !executable)) {
-        return pte_pte_invalid_new();
-    } else {
-        return pte_new(
+    word_t લિખ = RISCVGetWriteFromVMRights(vm_rights);
+    word_t પઠ = RISCVGetReadFromVMRights(vm_rights);
+    જો (unlikely(!પઠ && !લિખ && !executable)) {
+        પાછા pte_pte_invalid_new();
+    } નહીંતર {
+        પાછા pte_new(
                    paddr >> seL4_PageBits,
                    0, /* sw */
                    1, /* dirty (leaf) */
@@ -675,91 +675,91 @@ static pte_t CONST makeUserPTE(paddr_t paddr, bool_t executable, vm_rights_t vm_
     }
 }
 
-static inline bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
+સ્થિર અંતઃરેખ bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
 {
-    return (w & MASK(pageBitsForSize(sz))) == 0;
+    પાછા (w & MASK(pageBitsForSize(sz))) == 0;
 }
 
-static exception_t decodeRISCVPageTableInvocation(word_t label, word_t length,
+સ્થિર exception_t decodeRISCVPageTableInvocation(word_t label, word_t length,
                                                   cte_t *cte, cap_t cap, word_t *buffer)
 {
-    if (label == RISCVPageTableUnmap) {
-        if (unlikely(!isFinalCapability(cte))) {
+    જો (label == RISCVPageTableUnmap) {
+        જો (unlikely(!isFinalCapability(cte))) {
             userError("RISCVPageTableUnmap: cannot unmap if more than once cap exists");
             current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
         /* Ensure that if the page table is mapped, it is not a top level table */
-        if (likely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+        જો (likely(cap_page_table_cap_get_capPTIsMapped(cap))) {
             asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
             findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
             pte_t *pte = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-            if (unlikely(find_ret.status == EXCEPTION_NONE &&
-                         find_ret.vspace_root == pte)) {
+            જો (unlikely(find_ret.status == EXCEPTION_NONE &&
+                         find_ret.vspace_મૂળ == pte)) {
                 userError("RISCVPageTableUnmap: cannot call unmap on top level PageTable");
                 current_syscall_error.type = seL4_RevokeFirst;
-                return EXCEPTION_SYSCALL_ERROR;
+                પાછા EXCEPTION_SYSCALL_ERROR;
             }
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageTableInvocationUnmap(cap, cte);
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performPageTableInvocationUnmap(cap, cte);
     }
 
-    if (unlikely((label != RISCVPageTableMap))) {
+    જો (unlikely((label != RISCVPageTableMap))) {
         userError("RISCVPageTable: Illegal Operation");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
+    જો (unlikely(length < 2 || current_extra_caps.excaprefs[0] == ખાલી)) {
         userError("RISCVPageTable: truncated message");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
-    if (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+    જો (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
         userError("RISCVPageTable: PageTable is already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_સંખ્યા = 0;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     word_t vaddr = getSyscallArg(0, buffer);
     cap_t lvl1ptCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (unlikely(cap_get_capType(lvl1ptCap) != cap_page_table_cap ||
+    જો (unlikely(cap_get_capType(lvl1ptCap) != cap_page_table_cap ||
                  cap_page_table_cap_get_capPTIsMapped(lvl1ptCap) == asidInvalid)) {
         userError("RISCVPageTableMap: Invalid top-level PageTable.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_સંખ્યા = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     pte_t *lvl1pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(lvl1ptCap));
     asid_t asid = cap_page_table_cap_get_capPTMappedASID(lvl1ptCap);
 
-    if (unlikely(vaddr >= USER_TOP)) {
+    જો (unlikely(vaddr >= USER_ટોચ)) {
         userError("RISCVPageTableMap: Virtual address cannot be in kernel window.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_સંખ્યા = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    જો (unlikely(find_ret.status != EXCEPTION_NONE)) {
         userError("RISCVPageTableMap: ASID lookup failed");
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(find_ret.vspace_root != lvl1pt)) {
+    જો (unlikely(find_ret.vspace_મૂળ != lvl1pt)) {
         userError("RISCVPageTableMap: ASID lookup failed");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_સંખ્યા = 1;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     lookupPTSlot_ret_t lu_ret = lookupPTSlot(lvl1pt, vaddr);
@@ -767,10 +767,10 @@ static exception_t decodeRISCVPageTableInvocation(word_t label, word_t length,
     /* if there is already something mapped (valid is set) or we have traversed far enough
      * that a page table is not valid to map then tell the user that they have to delete
      * something before they can put a PT here */
-    if (lu_ret.ptBitsLeft == seL4_PageBits || pte_ptr_get_valid(lu_ret.ptSlot)) {
+    જો (lu_ret.pt_Bits_ડાબું == seL4_PageBits || pte_ptr_get_valid(lu_ret.ptSlot)) {
         userError("RISCVPageTableMap: All objects mapped at this address");
         current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Get the slot to install the PT in */
@@ -792,21 +792,21 @@ static exception_t decodeRISCVPageTableInvocation(word_t label, word_t length,
 
     cap = cap_page_table_cap_set_capPTIsMapped(cap, 1);
     cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
-    cap = cap_page_table_cap_set_capPTMappedAddress(cap, (vaddr & ~MASK(lu_ret.ptBitsLeft)));
+    cap = cap_page_table_cap_set_capPTMappedAddress(cap, (vaddr & ~MASK(lu_ret.pt_Bits_ડાબું)));
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performPageTableInvocationMap(cap, cte, pte, ptSlot);
+    setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+    પાછા performPageTableInvocationMap(cap, cte, pte, ptSlot);
 }
 
-static exception_t decodeRISCVFrameInvocation(word_t label, word_t length,
+સ્થિર exception_t decodeRISCVFrameInvocation(word_t label, word_t length,
                                               cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
 {
-    switch (label) {
-    case RISCVPageMap: {
-        if (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
+    પસંદગી (label) {
+    સ્થિતિ RISCVPageMap: {
+        જો (unlikely(length < 3 || current_extra_caps.excaprefs[0] == ખાલી)) {
             userError("RISCVPageMap: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         word_t vaddr = getSyscallArg(0, buffer);
@@ -817,115 +817,115 @@ static exception_t decodeRISCVFrameInvocation(word_t label, word_t length,
         vm_page_size_t frameSize = cap_frame_cap_get_capFSize(cap);
         vm_rights_t capVMRights = cap_frame_cap_get_capFVMRights(cap);
 
-        if (unlikely(cap_get_capType(lvl1ptCap) != cap_page_table_cap ||
+        જો (unlikely(cap_get_capType(lvl1ptCap) != cap_page_table_cap ||
                      !cap_page_table_cap_get_capPTIsMapped(lvl1ptCap))) {
             userError("RISCVPageMap: Bad PageTable cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_સંખ્યા = 1;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         pte_t *lvl1pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(lvl1ptCap));
         asid_t asid = cap_page_table_cap_get_capPTMappedASID(lvl1ptCap);
 
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        જો (unlikely(find_ret.status != EXCEPTION_NONE)) {
             userError("RISCVPageMap: No PageTable for ASID");
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.vspace_root != lvl1pt)) {
+        જો (unlikely(find_ret.vspace_મૂળ != lvl1pt)) {
             userError("RISCVPageMap: ASID lookup failed");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_સંખ્યા = 1;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         /* check the vaddr is valid */
         word_t vtop = vaddr + BIT(pageBitsForSize(frameSize)) - 1;
-        if (unlikely(vtop >= USER_TOP)) {
+        જો (unlikely(vtop >= USER_ટોચ)) {
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Argument_સંખ્યા = 0;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
-        if (unlikely(!checkVPAlignment(frameSize, vaddr))) {
+        જો (unlikely(!checkVPAlignment(frameSize, vaddr))) {
             current_syscall_error.type = seL4_AlignmentError;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Check if this page is already mapped */
         lookupPTSlot_ret_t lu_ret = lookupPTSlot(lvl1pt, vaddr);
-        if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(frameSize))) {
-            current_lookup_fault = lookup_fault_missing_capability_new(lu_ret.ptBitsLeft);
+        જો (unlikely(lu_ret.pt_Bits_ડાબું != pageBitsForSize(frameSize))) {
+            current_lookup_fault = lookup_fault_missing_capability_new(lu_ret.pt_Bits_ડાબું);
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         asid_t frame_asid = cap_frame_cap_get_capFMappedASID(cap);
-        if (unlikely(frame_asid != asidInvalid)) {
+        જો (unlikely(frame_asid != asidInvalid)) {
             /* this frame is already mapped */
-            if (frame_asid != asid) {
+            જો (frame_asid != asid) {
                 userError("RISCVPageMap: Attempting to remap a frame that does not belong to the passed address space");
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.invalid_Cap_સંખ્યા = 1;
+                પાછા EXCEPTION_SYSCALL_ERROR;
             }
             word_t mapped_vaddr = cap_frame_cap_get_capFMappedAddress(cap);
-            if (unlikely(mapped_vaddr != vaddr)) {
+            જો (unlikely(mapped_vaddr != vaddr)) {
                 userError("RISCVPageMap: attempting to map frame into multiple addresses");
                 current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.invalid_Argument_સંખ્યા = 0;
+                પાછા EXCEPTION_SYSCALL_ERROR;
             }
             /* this check is redundant, as lookupPTSlot does not stop on a page
              * table PTE */
-            if (unlikely(isPTEPageTable(lu_ret.ptSlot))) {
+            જો (unlikely(isPTEPageTable(lu_ret.ptSlot))) {
                 userError("RISCVPageMap: no mapping to remap.");
                 current_syscall_error.type = seL4_DeleteFirst;
-                return EXCEPTION_SYSCALL_ERROR;
+                પાછા EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
+        } નહીંતર {
             /* check this vaddr isn't already mapped */
-            if (unlikely(pte_ptr_get_valid(lu_ret.ptSlot))) {
+            જો (unlikely(pte_ptr_get_valid(lu_ret.ptSlot))) {
                 userError("Virtual address (0x%"SEL4_PRIx_word") already mapped", vaddr);
                 current_syscall_error.type = seL4_DeleteFirst;
-                return EXCEPTION_SYSCALL_ERROR;
+                પાછા EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         vm_rights_t vmRights = maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
-        paddr_t frame_paddr = addrFromPPtr((void *) cap_frame_cap_get_capFBasePtr(cap));
+        paddr_t frame_paddr = addrFromPPtr((શૂન્ય *) cap_frame_cap_get_capFBasePtr(cap));
         cap = cap_frame_cap_set_capFMappedASID(cap, asid);
         cap = cap_frame_cap_set_capFMappedAddress(cap,  vaddr);
 
         bool_t executable = !vm_attributes_get_riscvExecuteNever(attr);
         pte_t pte = makeUserPTE(frame_paddr, executable, vmRights);
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationMapPTE(cap, cte, pte, lu_ret.ptSlot);
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performPageInvocationMapPTE(cap, cte, pte, lu_ret.ptSlot);
     }
 
-    case RISCVPageUnmap: {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationUnmap(cap, cte);
+    સ્થિતિ RISCVPageUnmap: {
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performPageInvocationUnmap(cap, cte);
     }
 
-    case RISCVPageGetAddress: {
+    સ્થિતિ RISCVPageGetAddress: {
 
         /* Check that there are enough message registers */
-        assert(n_msgRegisters >= 1);
+        પ્રતિજ્ઞા(n_સંદેશ_Registers >= 1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress((void *)cap_frame_cap_get_capFBasePtr(cap), call);
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performPageGetAddress((શૂન્ય *)cap_frame_cap_get_capFBasePtr(cap), call);
     }
 
-    default:
+    મૂળભૂત:
         userError("RISCVPage: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
 }
@@ -933,149 +933,149 @@ static exception_t decodeRISCVFrameInvocation(word_t label, word_t length,
 exception_t decodeRISCVMMUInvocation(word_t label, word_t length, cptr_t cptr,
                                      cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
 {
-    switch (cap_get_capType(cap)) {
+    પસંદગી (cap_get_capType(cap)) {
 
-    case cap_page_table_cap:
-        return decodeRISCVPageTableInvocation(label, length, cte, cap, buffer);
+    સ્થિતિ cap_page_table_cap:
+        પાછા decodeRISCVPageTableInvocation(label, length, cte, cap, buffer);
 
-    case cap_frame_cap:
-        return decodeRISCVFrameInvocation(label, length, cte, cap, call, buffer);
+    સ્થિતિ cap_frame_cap:
+        પાછા decodeRISCVFrameInvocation(label, length, cte, cap, call, buffer);
 
-    case cap_asid_control_cap: {
+    સ્થિતિ cap_asid_control_cap: {
         word_t     i;
         asid_t           asid_base;
         word_t           index;
         word_t           depth;
         cap_t            untyped;
-        cap_t            root;
+        cap_t            મૂળ;
         cte_t           *parentSlot;
         cte_t           *destSlot;
         lookupSlot_ret_t lu_ret;
-        void            *frame;
+        શૂન્ય            *frame;
         exception_t      status;
 
-        if (label != RISCVASIDControlMakePool) {
+        જો (label != RISCVASIDControlMakePool) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
+        જો (length < 2 || current_extra_caps.excaprefs[0] == ખાલી
+            || current_extra_caps.excaprefs[1] == ખાલી) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         index = getSyscallArg(0, buffer);
         depth = getSyscallArg(1, buffer);
         parentSlot = current_extra_caps.excaprefs[0];
         untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        મૂળ = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && riscvKSASIDTable[i]; i++);
+        માટે (i = 0; i < nASIDPools && riscvKSASIDTable[i]; i++);
 
-        if (i == nASIDPools) {
+        જો (i == nASIDPools) {
             userError("ASIDControlMakePool: No unallocated pools found.");
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_base = i << asid_નીચલું_Bits;
 
-        if (cap_get_capType(untyped) != cap_untyped_cap ||
+        જો (cap_get_capType(untyped) != cap_untyped_cap ||
             cap_untyped_cap_get_capBlockSize(untyped) != seL4_ASIDPoolBits ||
             cap_untyped_cap_get_capIsDevice(untyped)) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_સંખ્યા = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         status = ensureNoChildren(parentSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        જો (status != EXCEPTION_NONE) {
+            પાછા status;
         }
 
         frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookupTargetSlot(મૂળ, index, depth);
+        જો (lu_ret.status != EXCEPTION_NONE) {
+            પાછા lu_ret.status;
         }
         destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        જો (status != EXCEPTION_NONE) {
+            પાછા status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
     }
 
-    case cap_asid_pool_cap: {
+    સ્થિતિ cap_asid_pool_cap: {
         cap_t        vspaceCap;
         cte_t       *vspaceCapSlot;
         asid_pool_t *pool;
         word_t i;
         asid_t       asid;
 
-        if (label != RISCVASIDPoolAssign) {
+        જો (label != RISCVASIDPoolAssign) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
-        if (current_extra_caps.excaprefs[0] == NULL) {
+        જો (current_extra_caps.excaprefs[0] == ખાલી) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         vspaceCapSlot = current_extra_caps.excaprefs[0];
         vspaceCap = vspaceCapSlot->cap;
 
-        if (unlikely(
+        જો (unlikely(
                 cap_get_capType(vspaceCap) != cap_page_table_cap ||
                 cap_page_table_cap_get_capPTIsMapped(vspaceCap))) {
             userError("RISCVASIDPool: Invalid vspace root.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_સંખ્યા = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = riscvKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
-        if (!pool) {
+        pool = riscvKSASIDTable[ASID_ઉપલું(cap_asid_pool_cap_get_capASIDBase(cap))];
+        જો (!pool) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
-            return EXCEPTION_SYSCALL_ERROR;
+            current_lookup_fault = lookup_fault_invalid_મૂળ_new();
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
+        જો (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_સંખ્યા = 0;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < BIT(asidLowBits) && (asid + i == 0 || pool->array[i]); i++);
+        માટે (i = 0; i < BIT(asid_નીચલું_Bits) && (asid + i == 0 || pool->array[i]); i++);
 
-        if (i == BIT(asidLowBits)) {
+        જો (i == BIT(asid_નીચલું_Bits)) {
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, vspaceCapSlot);
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા performASIDPoolInvocation(asid, pool, vspaceCapSlot);
     }
-    default:
+    મૂળભૂત:
         fail("Invalid arch cap type");
     }
 }
@@ -1087,61 +1087,61 @@ exception_t performPageTableInvocationMap(cap_t cap, cte_t *ctSlot,
     *ptSlot = pte;
     sfence();
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    જો (cap_page_table_cap_get_capPTIsMapped(cap)) {
         pte_t *pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
         unmapPageTable(
             cap_page_table_cap_get_capPTMappedASID(cap),
             cap_page_table_cap_get_capPTMappedAddress(cap),
             pt
         );
-        clearMemory((void *)pt, seL4_PageTableBits);
+        clearMemory((શૂન્ય *)pt, seL4_PageTableBits);
     }
     cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
+સ્થિર exception_t performPageGetAddress(શૂન્ય *vbase_ptr, bool_t call)
 {
     /* Get the physical address of this frame. */
     paddr_t capFBasePtr;
     capFBasePtr = addrFromPPtr(vbase_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    if (call) {
+    thread = ગાંઠ_STATE(ksCurThread);
+    જો (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        unsigned પૂર્ણાંક length = setMR(thread, ipcBuffer, 0, capFBasePtr);
+        setRegister(thread, સંદેશ_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Running);
+    પાછા EXCEPTION_NONE;
 }
 
-static exception_t updatePTE(pte_t pte, pte_t *base)
+સ્થિર exception_t updatePTE(pte_t pte, pte_t *base)
 {
     *base = pte;
     sfence();
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 exception_t performPageInvocationMapPTE(cap_t cap, cte_t *ctSlot,
                                         pte_t pte, pte_t *base)
 {
     ctSlot->cap = cap;
-    return updatePTE(pte, base);
+    પાછા updatePTE(pte, base);
 }
 
 exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+    જો (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
         unmapPage(cap_frame_cap_get_capFSize(cap),
                   cap_frame_cap_get_capFMappedASID(cap),
                   cap_frame_cap_get_capFMappedAddress(cap),
@@ -1154,33 +1154,33 @@ exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
     slotCap = cap_frame_cap_set_capFMappedASID(slotCap, asidInvalid);
     ctSlot->cap = slotCap;
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_PRINTING
-void Arch_userStackTrace(tcb_t *tptr)
+શૂન્ય Arch_user_ઢગલો_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
-    if (!isValidVTableRoot(threadRoot)) {
+    cap_t thread_મૂળ = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    જો (!is_Valid_VTable_મૂળ(thread_મૂળ)) {
         printf("Invalid vspace\n");
-        return;
+        પાછા;
     }
 
     word_t sp = getRegister(tptr, SP);
-    if (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
-        printf("SP %p not aligned", (void *) sp);
-        return;
+    જો (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
+        printf("SP %p not aligned", (શૂન્ય *) sp);
+        પાછા;
     }
 
-    pte_t *vspace_root = PTE_PTR(pptr_of_cap(threadRoot));
-    for (int i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
-        word_t address = sp + (i * sizeof(word_t));
-        lookupPTSlot_ret_t ret = lookupPTSlot(vspace_root, address);
-        if (address < USER_TOP && pte_ptr_get_valid(ret.ptSlot) && !isPTEPageTable(ret.ptSlot)) {
+    pte_t *vspace_મૂળ = PTE_PTR(pptr_of_cap(thread_મૂળ));
+    માટે (પૂર્ણાંક i = 0; i < CONFIG_USER_ઢગલો_TRACE_LENGTH; i++) {
+        word_t address = sp + (i * કદ(word_t));
+        lookupPTSlot_ret_t ret = lookupPTSlot(vspace_મૂળ, address);
+        જો (address < USER_ટોચ && pte_ptr_get_valid(ret.ptSlot) && !isPTEPageTable(ret.ptSlot)) {
             pptr_t pptr = (pptr_t)(getPPtrFromHWPTE(ret.ptSlot));
-            word_t *value = (word_t *)((word_t)pptr + (address & MASK(ret.ptBitsLeft)));
-            printf("0x%lx: 0x%lx\n", (long) address, (long) *value);
-        } else {
+            word_t *કિંમત = (word_t *)((word_t)pptr + (address & MASK(ret.pt_Bits_ડાબું)));
+            printf("0x%lx: 0x%lx\n", (long) address, (long) *કિંમત);
+        } નહીંતર {
             printf("0x%lx: INVALID\n", (long) address);
         }
     }
@@ -1195,48 +1195,48 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     pptr_t  frame_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookupCapAndSlot(ગાંઠ_STATE(ksCurThread), frame_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    જો (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invalid cap #%lu.", frame_cptr);
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    જો (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     frameSize = cap_frame_cap_get_capFSize(lu_ret.cap);
 
-    if (frameSize != RISCV_Mega_Page) {
+    જો (frameSize != RISCV_Mega_Page) {
         userError("Invalid frame size. The kernel expects large page log buffer");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     frame_pptr = cap_frame_cap_get_capFBasePtr(lu_ret.cap);
 
-    ksUserLogBuffer = pptr_to_paddr((void *) frame_pptr);
+    ksUserLogBuffer = pptr_to_paddr((શૂન્ય *) frame_pptr);
 
-#if __riscv_xlen == 32
+#જો __riscv_xlen == 32
     paddr_t physical_address = ksUserLogBuffer;
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i += 1) {
+    માટે (word_t i = 0; i < BIT(PT_INDEX_BITS); i += 1) {
         kernel_image_level1_log_buffer_pt[i] = pte_next(physical_address, true);
         physical_address += BIT(PAGE_BITS);
     }
-    assert(physical_address - ksUserLogBuffer == BIT(seL4_LargePageBits));
-#else
+    પ્રતિજ્ઞા(physical_address - ksUserLogBuffer == BIT(seL4_LargePageBits));
+#નહીંતર
     kernel_image_level1_dev_pt[RISCV_GET_PT_INDEX(KS_LOG_PPTR, 1)] = pte_next(ksUserLogBuffer, true);
 #endif
 
     sfence();
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 #endif /* CONFIG_KERNEL_LOG_BUFFER */

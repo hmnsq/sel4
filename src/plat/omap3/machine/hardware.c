@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <types.h>
+#અન્તર્ભાવ <machine/io.h>
+#અન્તર્ભાવ <kernel/vspace.h>
+#અન્તર્ભાવ <arch/machine.h>
+#અન્તર્ભાવ <arch/kernel/vspace.h>
+#અન્તર્ભાવ <plat/machine.h>
+#અન્તર્ભાવ <linker.h>
+#અન્તર્ભાવ <plat/machine/devices_gen.h>
+#અન્તર્ભાવ <plat/machine/hardware.h>
 
 #define INTCPS_SYSCONFIG_SOFTRESET BIT(1)
 #define INTCPS_SYSSTATUS_RESETDONE BIT(0)
 
-BOOT_CODE void initIRQController(void)
+BOOT_CODE શૂન્ય initIRQController(શૂન્ય)
 {
     intc->intcps_sysconfig = INTCPS_SYSCONFIG_SOFTRESET;
-    while (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
+    જ્યારે (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_CODE શૂન્ય cpu_initLocalIRQController(શૂન્ય) {}

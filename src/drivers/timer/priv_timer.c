@@ -5,11 +5,11 @@
  */
 
 /* A9 MPCORE private timer */
-#include <machine/timer.h>
-#include <arch/machine/timer.h>
-#include <drivers/timer/arm_priv.h>
+#અન્તર્ભાવ <machine/timer.h>
+#અન્તર્ભાવ <arch/machine/timer.h>
+#અન્તર્ભાવ <drivers/timer/arm_priv.h>
 
-timer_t *const priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
+timer_t *અચલ priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
 
 #define TMR_CTRL_ENABLE      BIT(0)
 #define TMR_CTRL_AUTORELOAD  BIT(1)
@@ -17,12 +17,12 @@ timer_t *const priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
 #define TMR_CTRL_PRESCALE    8
 
 #define TIMER_INTERVAL_MS    (CONFIG_TIMER_TICK_MS)
-#define TIMER_COUNT_BITS 32
+#define TIMER_ગણતરી_BITS 32
 
-#define PRESCALE ((TIMER_RELOAD) >> TIMER_COUNT_BITS)
+#define PRESCALE ((TIMER_RELOAD) >> TIMER_ગણતરી_BITS)
 #define TMR_LOAD ((TIMER_RELOAD) / (PRESCALE + 1))
 
-BOOT_CODE void initTimer(void)
+BOOT_CODE શૂન્ય initTimer(શૂન્ય)
 {
     /* reset */
     priv_timer->ctrl = 0;

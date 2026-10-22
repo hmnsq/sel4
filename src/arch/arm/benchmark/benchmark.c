@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <benchmark/benchmark.h>
-#include <arch/benchmark.h>
+#અન્તર્ભાવ <benchmark/benchmark.h>
+#અન્તર્ભાવ <arch/benchmark.h>
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
-bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
+#જો CONFIG_MAX_અંક_TRACE_POINTS > 0
+timestamp_t ksEntries[CONFIG_MAX_અંક_TRACE_POINTS];
+bool_t ksStarted[CONFIG_MAX_અંક_TRACE_POINTS];
 timestamp_t ksExit;
 seL4_Word ksLogIndex = 0;
 seL4_Word ksLogIndexFinalized = 0;
 #endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 
 #ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-UP_STATE_DEFINE(uint64_t, ccnt_num_overflows);
+UP_STATE_DEFINE(uint64_t, ccnt_અંક_overflows);
 #endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 
 #ifdef CONFIG_ENABLE_BENCHMARKS
-void arm_init_ccnt(void)
+શૂન્ય arm_init_ccnt(શૂન્ય)
 {
 
     uint32_t val = (BIT(PMCR_ENABLE) | BIT(PMCR_CCNT_RESET) | BIT(PMCR_ECNT_RESET));

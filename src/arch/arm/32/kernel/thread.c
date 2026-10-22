@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <object.h>
+#અન્તર્ભાવ <machine.h>
+#અન્તર્ભાવ <arch/model/statedata.h>
+#અન્તર્ભાવ <arch/kernel/vspace.h>
+#અન્તર્ભાવ <arch/kernel/thread.h>
+#અન્તર્ભાવ <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+શૂન્ય Arch_switchToThread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    જો (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
 
@@ -22,23 +22,23 @@ void Arch_switchToThread(tcb_t *tcb)
     clearExMonitor();
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE શૂન્ય Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, CPSR, CPSR_IDLETHREAD);
     setRegister(tcb, NextIP, (word_t)&idle_thread);
 }
 
-void Arch_switchToIdleThread(void)
+શૂન્ય Arch_switchToIdleThread(શૂન્ય)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
+    જો (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        vcpu_switch(ખાલી);
     }
 
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    setVMRoot(ગાંઠ_STATE(ksIdleThread));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+શૂન્ય Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }

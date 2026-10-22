@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <machine/fpu.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <machine/debug.h>
-#include <arch/object/vcpu.h>
-#include <api/syscall.h>
-#include <sel4/arch/vmenter.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <model/statedata.h>
+#અન્તર્ભાવ <machine/fpu.h>
+#અન્તર્ભાવ <arch/fastpath/fastpath.h>
+#અન્તર્ભાવ <arch/kernel/traps.h>
+#અન્તર્ભાવ <machine/debug.h>
+#અન્તર્ભાવ <arch/object/vcpu.h>
+#અન્તર્ભાવ <api/syscall.h>
+#અન્તર્ભાવ <sel4/arch/vmenter.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#અન્તર્ભાવ <benchmark/benchmark_track.h>
+#અન્તર્ભાવ <benchmark/benchmark_utilisation.h>
 
-void VISIBLE c_nested_interrupt(int irq)
+શૂન્ય VISIBLE c_nested_interrupt(પૂર્ણાંક irq)
 {
     /* This is not a real entry point, so we do not grab locks or
      * run c_entry/exit_hooks, since this occurs only if we're already
      * running inside the kernel. Just record the irq and return */
-    assert(ARCH_NODE_STATE(x86KSPendingInterrupt) == int_invalid);
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = irq;
+    પ્રતિજ્ઞા(ARCH_ગાંઠ_STATE(x86KSPendingInterrupt) == int_invalid);
+    ARCH_ગાંઠ_STATE(x86KSPendingInterrupt) = irq;
 }
 
-void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
+શૂન્ય VISIBLE NORETURN c_handle_interrupt(પૂર્ણાંક irq, પૂર્ણાંક syscall)
 {
     /* need to run this first as the NODE_LOCK code might end up as a function call
      * with a return, and we need to make sure returns are not exploitable yet
      * on x64 this code ran already */
-    if (config_set(CONFIG_ARCH_IA32) && config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    જો (config_set(CONFIG_ARCH_IA32) && config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_enable_ibrs();
     }
 
     /* Only grab the lock if we are not handling 'int_remote_call_ipi' interrupt
      * also flag this lock as IRQ lock if handling the irq interrupts. */
-    NODE_LOCK_IF(irq != int_remote_call_ipi,
+    ગાંઠ_LOCK_IF(irq != int_remote_call_ipi,
                  irq >= int_irq_min && irq <= int_irq_max);
 
     c_entry_hook();
 
-    if (irq == int_page_fault) {
+    જો (irq == int_page_fault) {
         /* Error code is in Error. Pull out bit 5, which is whether it was instruction or data */
-        vm_fault_type_t type = (NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error] >> 4u) & 1u;
+        vm_fault_type_t type = (ગાંઠ_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error] >> 4u) & 1u;
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_VMFault;
         ksKernelEntry.word = type;
 #endif
         handleVMFaultEvent(type);
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    } else if (irq == int_debug || irq == int_software_break_request) {
+    } નહીંતર જો (irq == int_debug || irq == int_software_break_request) {
         /* Debug exception */
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_DebugFault;
-        ksKernelEntry.word = NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP];
+        ksKernelEntry.word = ગાંઠ_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP];
 #endif
         handleUserLevelDebugException(irq);
 #endif /* CONFIG_HARDWARE_DEBUG_API */
-    } else if (irq < int_irq_min) {
+    } નહીંતર જો (irq < int_irq_min) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UserLevelFault;
         ksKernelEntry.word = irq;
 #endif
-        handleUserLevelFault(irq, NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error]);
-    } else if (likely(irq < int_trap_min)) {
-        ARCH_NODE_STATE(x86KScurInterrupt) = irq;
+        handleUserLevelFault(irq, ગાંઠ_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error]);
+    } નહીંતર જો (likely(irq < int_trap_min)) {
+        ARCH_ગાંઠ_STATE(x86KScurInterrupt) = irq;
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_Interrupt;
         ksKernelEntry.word = irq;
@@ -74,48 +74,48 @@ void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
         handleInterruptEntry();
         /* check for other pending interrupts */
         receivePendingIRQ();
-    } else if (irq == int_spurious) {
+    } નહીંતર જો (irq == int_spurious) {
         /* fall through to restore_user_context and do nothing */
-    } else {
+    } નહીંતર {
         /* Interpret a trap as an unknown syscall */
         /* Adjust FaultIP to point to trapping INT
          * instruction by subtracting 2 */
-        int sys_num;
-        NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP] -= 2;
+        પૂર્ણાંક sys_અંક;
+        ગાંઠ_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP] -= 2;
         /* trap number is MSBs of the syscall number and the LSBS of EAX */
-        sys_num = (irq << 24) | (syscall & 0x00ffffff);
+        sys_અંક = (irq << 24) | (syscall & 0x00ffffff);
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
-        ksKernelEntry.word = sys_num;
+        ksKernelEntry.word = sys_અંક;
 #endif
-        handleUnknownSyscall(sys_num);
+        handleUnknownSyscall(sys_અંક);
     }
     restore_user_context();
     UNREACHABLE();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+શૂન્ય NORETURN slowpath(syscall_t syscall)
 {
 
 #ifdef CONFIG_VTX
-    if (syscall == SysVMEnter && NODE_STATE(ksCurThread)->tcbArch.tcbVCPU) {
-        vcpu_update_state_sysvmenter(NODE_STATE(ksCurThread)->tcbArch.tcbVCPU);
-        if (NODE_STATE(ksCurThread)->tcbBoundNotification
-            && notification_ptr_get_state(NODE_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active) {
-            completeSignal(NODE_STATE(ksCurThread)->tcbBoundNotification, NODE_STATE(ksCurThread));
-            setRegister(NODE_STATE(ksCurThread), msgInfoRegister, SEL4_VMENTER_RESULT_NOTIF);
+    જો (syscall == SysVMEnter && ગાંઠ_STATE(ksCurThread)->tcbArch.tcbVCPU) {
+        vcpu_update_state_sysvmenter(ગાંઠ_STATE(ksCurThread)->tcbArch.tcbVCPU);
+        જો (ગાંઠ_STATE(ksCurThread)->tcbBoundNotification
+            && notification_ptr_get_state(ગાંઠ_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active) {
+            completeSignal(ગાંઠ_STATE(ksCurThread)->tcbBoundNotification, ગાંઠ_STATE(ksCurThread));
+            setRegister(ગાંઠ_STATE(ksCurThread), સંદેશ_Info_Register, SEL4_VMENTER_RESULT_NOTIF);
             /* Any guest state that we should return is in the same
              * register position as sent to us, so we can just return
              * and let the user pick up the values they put in */
             restore_user_context();
-        } else {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_RunningVM);
+        } નહીંતર {
+            setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_RunningVM);
             restore_user_context();
         }
     }
 #endif
     /* check for undefined syscall */
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    જો (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
         /* ksKernelEntry.word word is already set to syscall */
@@ -124,7 +124,7 @@ void NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } નહીંતર {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -136,45 +136,45 @@ void NORETURN slowpath(syscall_t syscall)
 }
 
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall, word_t reply)
-#else
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+શૂન્ય VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t સંદેશ_Info, syscall_t syscall, word_t reply)
+#નહીંતર
+શૂન્ય VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t સંદેશ_Info, syscall_t syscall)
 #endif
 {
     /* need to run this first as the NODE_LOCK code might end up as a function call
      * with a return, and we need to make sure returns are not exploitable yet */
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    જો (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_enable_ibrs();
     }
 
     /* Must happen before NODE_LOCK_SYS so that lock exit via IPI stall restores
        the correct program counter. */
-    if (config_set(CONFIG_SYSENTER)) {
+    જો (config_set(CONFIG_SYSENTER)) {
         /* increment NextIP to skip sysenter */
-        NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[NextIP] += 2;
-    } else {
+        ગાંઠ_STATE(ksCurThread)->tcbArch.tcbContext.registers[NextIP] += 2;
+    } નહીંતર {
         /* set FaultIP */
-        setRegister(NODE_STATE(ksCurThread), FaultIP, getRegister(NODE_STATE(ksCurThread), NextIP) - 2);
+        setRegister(ગાંઠ_STATE(ksCurThread), FaultIP, getRegister(ગાંઠ_STATE(ksCurThread), NextIP) - 2);
     }
 
-    NODE_LOCK_SYS;
+    ગાંઠ_LOCK_SYS;
 
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, સંદેશ_Info, syscall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* TRACK_KERNEL_ENTRIES */
 
 #ifdef CONFIG_FASTPATH
-    if (syscall == (syscall_t)SysCall) {
-        fastpath_call(cptr, msgInfo);
+    જો (syscall == (syscall_t)SysCall) {
+        fastpath_call(cptr, સંદેશ_Info);
         UNREACHABLE();
-    } else if (syscall == (syscall_t)SysReplyRecv) {
+    } નહીંતર જો (syscall == (syscall_t)SysReplyRecv) {
 #ifdef CONFIG_KERNEL_MCS
-        fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-        fastpath_reply_recv(cptr, msgInfo);
+        fastpath_reply_recv(cptr, સંદેશ_Info, reply);
+#નહીંતર
+        fastpath_reply_recv(cptr, સંદેશ_Info);
 #endif
         UNREACHABLE();
     }
@@ -184,7 +184,7 @@ void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t sy
 }
 
 #ifdef CONFIG_VTX
-void VISIBLE NORETURN c_handle_vmexit(void)
+શૂન્ય VISIBLE NORETURN c_handle_vmexit(શૂન્ય)
 {
 #ifdef TRACK_KERNEL_ENTRIES
     ksKernelEntry.path = Entry_VMExit;
@@ -206,9 +206,9 @@ void VISIBLE NORETURN c_handle_vmexit(void)
      * restore the registers without having a means to determine whether
      * they may have been dirtied by a VM exit. */
 #ifndef CONFIG_X86_64_VTX_64BIT_GUESTS
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-    ARCH_NODE_STATE(x86KSCurrentGSBase) = -(word_t)1;
-    ARCH_NODE_STATE(x86KSCurrentFSBase) = -(word_t)1;
+    tcb_t *cur_thread = ગાંઠ_STATE(ksCurThread);
+    ARCH_ગાંઠ_STATE(x86KSCurrentGSBase) = -(word_t)1;
+    ARCH_ગાંઠ_STATE(x86KSCurrentFSBase) = -(word_t)1;
     x86_load_fsgs_base(cur_thread, CURRENT_CPU_INDEX());
 #endif
 

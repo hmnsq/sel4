@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <stdint.h>
+#અન્તર્ભાવ <util.h>
+#અન્તર્ભાવ <machine/io.h>
 
 #define ULCON       0x0000 /* line control */
 #define UCON        0x0004 /* control */
@@ -30,23 +30,23 @@
 #define TXBUF_EMPTY     BIT(1)
 #define RXBUF_READY     BIT(0)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#define UART_REG(X) ((અસ્થિર uint32_t *)(UART_PPTR + (X)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+શૂન્ય uart_drv_putchar(unsigned અક્ષર c)
 {
-    while ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
+    જ્યારે ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
     *UART_REG(UTXH) = (c & 0xff);
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned અક્ષર uart_drv_getchar(શૂન્ય)
 {
-    if ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
-        return (unsigned char) * UART_REG(URXH);
-    } else {
-        return -1;
+    જો ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
+        પાછા (unsigned અક્ષર) * UART_REG(URXH);
+    } નહીંતર {
+        પાછા -1;
     }
 }
 #endif /* CONFIG_DEBUG_BUILD */

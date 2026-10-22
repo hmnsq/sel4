@@ -66,7 +66,7 @@ BEGIN_FUNC(arm_swi_syscall)
     /* Load the kernel's real stack pointer */
     mrc p15, 0, sp, c13, c0, 4
 
-    /* Load system call number as a c_handle_syscall argument. r0 and r1 are passed
+    /* Load system બોલાવો number as a c_handle_syscall argument. r0 and r1 are passed
      * unmodified (cptr and msgInfo) respectively.  On MCS configurations we also
      * pass the reply cptr in r2 for fastpath_reply_recv.
      */
@@ -104,7 +104,7 @@ BEGIN_FUNC(arm_prefetch_abort_exception)
 
     bne     kernel_prefetch_fault
 
-    /* Store faulting address in TCB and call handleVMFaultEvent. */
+    /* Store faulting address in TCB and બોલાવો handleVMFaultEvent. */
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
 
     mrc p15, 0, sp, c13, c0, 4
@@ -123,7 +123,7 @@ kernel_prefetch_fault:
      * - r8 will contain the faulting address.
      * - r9 will contain the IFSR register.
      * - lr might contain something useful too if we followed a function
-     *   call.
+     *   બોલાવો.
      * - the original values of r8 and r9 will be obliterated.
      */
     mrc p15, 0, r9, c5, c0, 1    /* Get ISFR. */
@@ -151,7 +151,7 @@ BEGIN_FUNC(arm_data_abort_exception)
 
     bne     kernel_data_fault
 
-    /* Store faulting address in TCB and call handleVMFaultEvent. */
+    /* Store faulting address in TCB and બોલાવો handleVMFaultEvent. */
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
     mrc p15, 0, sp, c13, c0, 4
 

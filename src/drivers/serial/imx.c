@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <stdint.h>
+#અન્તર્ભાવ <util.h>
+#અન્તર્ભાવ <machine/io.h>
+#અન્તર્ભાવ <plat/machine/devices_gen.h>
 
 #define URXD  0x00 /* UART Receiver Register */
 #define UTXD  0x40 /* UART Transmitter Register */
@@ -32,20 +32,20 @@
 #define UART_SR2_TXFIFO_EMPTY BIT(14)
 #define UART_SR2_RXFIFO_RDR   BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((અસ્થિર uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+શૂન્ય uart_drv_putchar(unsigned અક્ષર c)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
+    જ્યારે (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
     *UART_REG(UTXD) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned અક્ષર uart_drv_getchar(શૂન્ય)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
-    return *UART_REG(URXD);
+    જ્યારે (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
+    પાછા *UART_REG(URXD);
 }
 #endif /* CONFIG_DEBUG_BUILD */

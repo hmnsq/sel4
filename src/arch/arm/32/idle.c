@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/machine.h>
-#include <api/debug.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <mode/machine.h>
+#અન્તર્ભાવ <api/debug.h>
 
 /** DONT_TRANSLATE */
-void NORETURN NO_INLINE VISIBLE halt(void)
+શૂન્ય NORETURN NO_INLINE VISIBLE halt(શૂન્ય)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cpsid iaf");
+    asm અસ્થિર("cpsid iaf");
 
 #ifdef CONFIG_PRINTING
     printf("halting...");

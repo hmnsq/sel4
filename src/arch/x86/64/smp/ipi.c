@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <mode/kernel/tlb.h>
+#અન્તર્ભાવ <config.h>
+#અન્તર્ભાવ <mode/smp/ipi.h>
+#અન્તર્ભાવ <mode/kernel/tlb.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-void Mode_handleRemoteCall(IpiModeRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2)
+શૂન્ય Mode_handleRemoteCall(IpiModeRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2)
 {
-    switch (call) {
-    case IpiRemoteCall_InvalidatePCID:
-        invalidateLocalPCID(arg0, (void *)arg1, arg2);
-        break;
+    પસંદગી (call) {
+    સ્થિતિ IpiRemoteCall_InvalidatePCID:
+        invalidateLocalPCID(arg0, (શૂન્ય *)arg1, arg2);
+        તોડો;
 
-    case IpiRemoteCall_InvalidateASID:
-        invalidateLocalASID((vspace_root_t *)arg0, arg1);
-        break;
+    સ્થિતિ IpiRemoteCall_InvalidateASID:
+        invalidateLocalASID((vspace_મૂળ_t *)arg0, arg1);
+        તોડો;
 
-    default:
+    મૂળભૂત:
         fail("Invalid remote call");
     }
 }

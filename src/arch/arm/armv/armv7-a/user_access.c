@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <plat/machine/hardware.h>
-#include <arch/user_access.h>
-#include <mode/machine/debug.h>
+#અન્તર્ભાવ <plat/machine/hardware.h>
+#અન્તર્ભાવ <arch/user_access.h>
+#અન્તર્ભાવ <mode/machine/debug.h>
 
 #define PMUSERENR_ENABLE BIT(0)
 
@@ -29,20 +29,20 @@
 #define HSTR_TJDBX BIT(17)
 
 
-static void disable_jazelle_user_access(void)
+સ્થિર શૂન્ય disable_jazelle_user_access(શૂન્ય)
 {
     uint32_t v;
     word_t UNUSED hstr_bits = 0;  /* Only read in CONFIG_ARM_HYPERVISOR_SUPPORT */
 
     MRC(ID_PFR0, v);
-    if (v & ID_PFR0_JAZELLE_MASK) {
+    જો (v & ID_PFR0_JAZELLE_MASK) {
         /* When JOSCR.CD == 0, JMCR is readable and writable for user space.
          * Clear, disable, and trap access. */
         MCR(JMCR, 0);
         MCR(JOSCR, JOSCR_CD);
         hstr_bits |= HSTR_TJDBX;
     }
-    if (v & ID_PFR0_THUMBEE_MASK) {
+    જો (v & ID_PFR0_THUMBEE_MASK) {
         /* Same as above, but for TEECR.XED == 0 and TEEHBR */
         MCR(TEEHBR, 0);
         MCR(TEECR, TEECR_XED);
@@ -55,9 +55,9 @@ static void disable_jazelle_user_access(void)
 }
 
 
-static void check_export_pmu(void)
+સ્થિર શૂન્ય check_export_pmu(શૂન્ય)
 {
-#if defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
+#જો defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
     /* Export performance counters */
     uint32_t v;
     MRC(PMUSERENR, v);
@@ -65,7 +65,7 @@ static void check_export_pmu(void)
     MCR(PMUSERENR, v);
 
     /* enable user-level pmu event counter if we're in secure mode */
-    if (!(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED)) {
+    જો (!(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED)) {
         MRC(DBGSDER, v);
         v |= DBGSDER_ENABLE_SECURE_USER_NON_INVASIVE_DEBUG;
         MCR(DBGSDER, v);
@@ -74,7 +74,7 @@ static void check_export_pmu(void)
 }
 
 
-static void check_export_arch_timer(void)
+સ્થિર શૂન્ય check_export_arch_timer(શૂન્ય)
 {
     uint32_t v = 0;
 #ifdef CONFIG_EXPORT_PCNT_USER
@@ -93,7 +93,7 @@ static void check_export_arch_timer(void)
 }
 
 
-void armv_init_user_access(void)
+શૂન્ય armv_init_user_access(શૂન્ય)
 {
     uint32_t v;
 
@@ -101,12 +101,12 @@ void armv_init_user_access(void)
     disable_jazelle_user_access();
     /* Performance Monitoring Unit */
     MRC(ID_DFR0, v);
-    if ((v & ID_DFR0_PMU_MASK) != ID_DFR0_PMU_NONE) {
+    જો ((v & ID_DFR0_PMU_MASK) != ID_DFR0_PMU_NONE) {
         check_export_pmu();
     }
     /* Arch timers */
     MRC(ID_PFR1, v);
-    if (v & ID_PFR1_GENERIC_TIMER) {
+    જો (v & ID_PFR1_GENERIC_TIMER) {
         check_export_arch_timer();
     }
 }

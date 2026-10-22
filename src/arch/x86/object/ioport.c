@@ -4,100 +4,100 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <arch/object/ioport.h>
-#include <arch/api/invocation.h>
-#include <plat/machine/io.h>
+#અન્તર્ભાવ <kernel/thread.h>
+#અન્તર્ભાવ <api/failures.h>
+#અન્તર્ભાવ <api/syscall.h>
+#અન્તર્ભાવ <machine/io.h>
+#અન્તર્ભાવ <arch/object/ioport.h>
+#અન્તર્ભાવ <arch/api/invocation.h>
+#અન્તર્ભાવ <plat/machine/io.h>
 
-static inline void apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set)
+સ્થિર અંતઃરેખ શૂન્ય apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set)
 {
-    if (set) {
+    જો (set) {
         *w |= pattern;
-    } else {
+    } નહીંતર {
         *w &= ~pattern;
     }
 }
 
-static inline word_t make_pattern(int start, int end)
+સ્થિર અંતઃરેખ word_t make_pattern(પૂર્ણાંક start, પૂર્ણાંક end)
 {
     // number of bits we want to have set
-    int num_bits = end - start;
+    પૂર્ણાંક અંક_bits = end - start;
     // shift down to cut off the bits we don't want, then shift up to put the
     // bits into position
-    return (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
+    પાછા (~(word_t)0) >> (CONFIG_WORD_SIZE - અંક_bits) << start;
 }
 
-static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
+સ્થિર exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
 {
     uint32_t first_allowed = cap_io_port_cap_get_capIOPortFirstPort(cap);
     uint32_t last_allowed = cap_io_port_cap_get_capIOPortLastPort(cap);
     uint32_t end_port = start_port + size - 1;
-    assert(first_allowed <= last_allowed);
-    assert(start_port <= end_port);
+    પ્રતિજ્ઞા(first_allowed <= last_allowed);
+    પ્રતિજ્ઞા(start_port <= end_port);
 
-    if ((start_port < first_allowed) || (end_port > last_allowed)) {
+    જો ((start_port < first_allowed) || (end_port > last_allowed)) {
         userError("IOPort: Ports %d--%d fall outside permitted range %d--%d.",
-                  (int)start_port, (int)end_port,
-                  (int)first_allowed, (int)last_allowed);
+                  (પૂર્ણાંક)start_port, (પૂર્ણાંક)end_port,
+                  (પૂર્ણાંક)first_allowed, (પૂર્ણાંક)last_allowed);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
-void freeIOPortRange(uint16_t first_port, uint16_t last_port)
+શૂન્ય freeIOPortRange(uint16_t first_port, uint16_t last_port)
 {
     setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, false);
 }
 
-static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
+સ્થિર bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
 {
-    int low_word = first_port >> wordRadix;
-    int high_word = last_port >> wordRadix;
-    int low_index = first_port & MASK(wordRadix);
-    int high_index = last_port & MASK(wordRadix);
+    પૂર્ણાંક નીચલું_word = first_port >> wordRadix;
+    પૂર્ણાંક ઉપલું_word = last_port >> wordRadix;
+    પૂર્ણાંક નીચલું_index = first_port & MASK(wordRadix);
+    પૂર્ણાંક ઉપલું_index = last_port & MASK(wordRadix);
 
     // check if we are operating on a partial word
-    if (low_word == high_word) {
-        if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
-            return false;
+    જો (નીચલું_word == ઉપલું_word) {
+        જો ((x86KSAllocatedIOPorts[નીચલું_word] & make_pattern(નીચલું_index, ઉપલું_index + 1)) != 0) {
+            પાછા false;
         }
-        return true;
+        પાછા true;
     }
     // check the starting word
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
-        return false;
+    જો ((x86KSAllocatedIOPorts[નીચલું_word] & make_pattern(નીચલું_index, CONFIG_WORD_SIZE)) != 0) {
+        પાછા false;
     }
-    low_word++;
+    નીચલું_word++;
     // check the rest of the whole words
-    while (low_word < high_word) {
-        if (x86KSAllocatedIOPorts[low_word] != 0) {
-            return false;
+    જ્યારે (નીચલું_word < ઉપલું_word) {
+        જો (x86KSAllocatedIOPorts[નીચલું_word] != 0) {
+            પાછા false;
         }
-        low_word++;
+        નીચલું_word++;
     }
     // check any trailing bits
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
-        return false;
+    જો ((x86KSAllocatedIOPorts[નીચલું_word] & make_pattern(0, ઉપલું_index + 1)) != 0) {
+        પાછા false;
     }
-    return true;
+    પાછા true;
 }
 
-static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
+સ્થિર exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
 {
     setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, true);
-    cteInsert(cap_io_port_cap_new(first_port, last_port
+    cte_ઉમેરો(cap_io_port_cap_new(first_port, last_port
 #ifdef CONFIG_VTX
                                   , VPID_INVALID
 #endif
                                  ),
               controlSlot, ioportSlot);
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 exception_t decodeX86PortControlInvocation(
@@ -117,16 +117,16 @@ exception_t decodeX86PortControlInvocation(
     lookupSlot_ret_t lu_ret;
     exception_t status;
 
-    if (invLabel != X86IOPortControlIssue) {
+    જો (invLabel != X86IOPortControlIssue) {
         userError("IOPortControl: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    જો (length < 4 || current_extra_caps.excaprefs[0] == ખાલી) {
         userError("IOPortControl: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     first_port = getSyscallArg(0, buffer) & 0xffff;
@@ -136,80 +136,80 @@ exception_t decodeX86PortControlInvocation(
 
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (last_port < first_port) {
+    જો (last_port < first_port) {
         userError("IOPortControl: Last port must be > first port.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Argument_સંખ્યા = 1;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!isIOPortRangeFree(first_port, last_port)) {
+    જો (!isIOPortRangeFree(first_port, last_port)) {
         userError("IOPortControl: Some ports in range already in use.");
         current_syscall_error.type = seL4_RevokeFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 
     lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    જો (lu_ret.status != EXCEPTION_NONE) {
         userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(buffer, 0));
-        return lu_ret.status;
+        પાછા lu_ret.status;
     }
     destSlot = lu_ret.slot;
 
     status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
+    જો (status != EXCEPTION_NONE) {
         userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(buffer, 0));
-        return status;
+        પાછા status;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeX86PortControl(first_port, last_port, destSlot, slot);
+    setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+    પાછા invokeX86PortControl(first_port, last_port, destSlot, slot);
 }
 
-static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
+સ્થિર exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
 {
     uint32_t res;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = ગાંઠ_STATE(ksCurThread);
 
-    switch (invLabel) {
-    case X86IOPortIn8:
+    પસંદગી (invLabel) {
+    સ્થિતિ X86IOPortIn8:
         res = in8(port);
-        break;
-    case X86IOPortIn16:
+        તોડો;
+    સ્થિતિ X86IOPortIn16:
         res = in16(port);
-        break;
-    case X86IOPortIn32:
+        તોડો;
+    સ્થિતિ X86IOPortIn32:
         res = in32(port);
-        break;
+        તોડો;
     }
 
-    if (call) {
+    જો (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, res);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        unsigned પૂર્ણાંક length = setMR(thread, ipcBuffer, 0, res);
+        setRegister(thread, સંદેશ_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Running);
+    પાછા EXCEPTION_NONE;
 }
 
-static exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t data)
+સ્થિર exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t data)
 {
-    switch (invLabel) {
-    case X86IOPortOut8:
+    પસંદગી (invLabel) {
+    સ્થિતિ X86IOPortOut8:
         out8(port, data);
-        break;
-    case X86IOPortOut16:
+        તોડો;
+    સ્થિતિ X86IOPortOut16:
         out16(port, data);
-        break;
-    case X86IOPortOut32:
+        તોડો;
+    સ્થિતિ X86IOPortOut32:
         out32(port, data);
-        break;
+        તોડો;
     }
 
-    return EXCEPTION_NONE;
+    પાછા EXCEPTION_NONE;
 }
 
 exception_t decodeX86PortInvocation(
@@ -224,36 +224,36 @@ exception_t decodeX86PortInvocation(
 {
     exception_t ret = EXCEPTION_NONE;
 
-    if (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
-        if (length < 1) {
+    જો (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
+        જો (length < 1) {
             userError("IOPort: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to read from. */
         uint16_t port = getSyscallArg(0, buffer) & 0xffff;
-        switch (invLabel) {
-        case X86IOPortIn8:
+        પસંદગી (invLabel) {
+        સ્થિતિ X86IOPortIn8:
             ret = ensurePortOperationAllowed(cap, port, 1);
-            break;
-        case X86IOPortIn16:
+            તોડો;
+        સ્થિતિ X86IOPortIn16:
             ret = ensurePortOperationAllowed(cap, port, 2);
-            break;
-        case X86IOPortIn32:
+            તોડો;
+        સ્થિતિ X86IOPortIn32:
             ret = ensurePortOperationAllowed(cap, port, 4);
-            break;
+            તોડો;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        જો (ret != EXCEPTION_NONE) {
+            પાછા ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortIn(invLabel, port, call);
-    } else if (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા invokeX86PortIn(invLabel, port, call);
+    } નહીંતર જો (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
         /* Ensure the incoming message is long enough for the write. */
-        if (length < 2) {
+        જો (length < 2) {
             userError("IOPort Out: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            પાછા EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to write to. */
         uint16_t port = getSyscallArg(0, buffer) & 0xffff;
@@ -265,56 +265,56 @@ exception_t decodeX86PortInvocation(
            for verification */
         uint32_t data = 0;
 
-        switch (invLabel) {
-        case X86IOPortOut8:
+        પસંદગી (invLabel) {
+        સ્થિતિ X86IOPortOut8:
             ret = ensurePortOperationAllowed(cap, port, 1);
             data = raw_data & 0xff;
-            break;
-        case X86IOPortOut16:
+            તોડો;
+        સ્થિતિ X86IOPortOut16:
             ret = ensurePortOperationAllowed(cap, port, 2);
             data = raw_data & 0xffff;
-            break;
-        case X86IOPortOut32:
+            તોડો;
+        સ્થિતિ X86IOPortOut32:
             ret = ensurePortOperationAllowed(cap, port, 4);
             data = raw_data & 0xffffffff;
-            break;
+            તોડો;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        જો (ret != EXCEPTION_NONE) {
+            પાછા ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortOut(invLabel, port, data);
-    } else {
+        setThreadState(ગાંઠ_STATE(ksCurThread), ThreadState_Restart);
+        પાછા invokeX86PortOut(invLabel, port, data);
+    } નહીંતર {
         userError("IOPort: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        પાછા EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void setIOPortMask(void *ioport_bitmap, uint16_t low, uint16_t high, bool_t set)
+શૂન્ય setIOPortMask(શૂન્ય *ioport_bitmap, uint16_t નીચલું, uint16_t ઉપલું, bool_t set)
 {
     //get an aliasing pointer
     word_t_may_alias *bitmap = ioport_bitmap;
 
-    int low_word = low >> wordRadix;
-    int high_word = high >> wordRadix;
-    int low_index = low & MASK(wordRadix);
-    int high_index = high & MASK(wordRadix);
+    પૂર્ણાંક નીચલું_word = નીચલું >> wordRadix;
+    પૂર્ણાંક ઉપલું_word = ઉપલું >> wordRadix;
+    પૂર્ણાંક નીચલું_index = નીચલું & MASK(wordRadix);
+    પૂર્ણાંક ઉપલું_index = ઉપલું & MASK(wordRadix);
 
     // see if we are just manipulating bits inside a single word. handling this
     // specially makes reasoning easier
-    if (low_word == high_word) {
-        apply_pattern(bitmap + low_word, make_pattern(low_index, high_index + 1), set);
-    } else {
+    જો (નીચલું_word == ઉપલું_word) {
+        apply_pattern(bitmap + નીચલું_word, make_pattern(નીચલું_index, ઉપલું_index + 1), set);
+    } નહીંતર {
         // operate on the potentially partial first word
-        apply_pattern(bitmap + low_word, make_pattern(low_index, CONFIG_WORD_SIZE), set);
-        low_word++;
+        apply_pattern(bitmap + નીચલું_word, make_pattern(નીચલું_index, CONFIG_WORD_SIZE), set);
+        નીચલું_word++;
         // iterate over the whole words
-        while (low_word < high_word) {
-            apply_pattern(bitmap + low_word, ~(word_t)0, set);
-            low_word++;
+        જ્યારે (નીચલું_word < ઉપલું_word) {
+            apply_pattern(bitmap + નીચલું_word, ~(word_t)0, set);
+            નીચલું_word++;
         }
         // apply to any remaining bits
-        apply_pattern(bitmap + low_word, make_pattern(0, high_index + 1), set);
+        apply_pattern(bitmap + નીચલું_word, make_pattern(0, ઉપલું_index + 1), set);
     }
 }
