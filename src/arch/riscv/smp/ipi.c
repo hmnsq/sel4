@@ -4,67 +4,67 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/lock.h>
-#include <util.h>
+#অন্তর্ভাৱ <config.h>
+#অন্তর্ভাৱ <mode/smp/ipi.h>
+#অন্তর্ভাৱ <smp/lock.h>
+#অন্তর্ভাৱ <util.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-static volatile irq_t ipiIrq[CONFIG_MAX_NUM_NODES];
+স্থির চঞ্চল irq_t ipiIrq[CONFIG_MAX_অঙ্ক_NODES];
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+শূন্য handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
+    যদি (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        ৱিকল্প (call) {
+        পক্ষ IpiRemoteCall_Stall:
             ipiStallCoreCallback(irqPath);
-            break;
+            ভঙ্গ;
 
 #ifdef CONFIG_HAVE_FPU
-        case IpiRemoteCall_switchFpuOwner:
+        পক্ষ IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
+            ভঙ্গ;
 #endif /* CONFIG_HAVE_FPU */
 
-        default:
+        স্ৱভাৱ:
             fail("Invalid remote call");
-            break;
+            ভঙ্গ;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_lock.গ্ৰন্থি[getCurrentCPUIndex()].ipi = 0;
         ipiIrq[getCurrentCPUIndex()] = irqInvalid;
         ipi_wait();
     }
 }
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+শূন্য ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 {
     generic_ipi_send_mask(ipi, mask, isBlocking);
 }
 
-irq_t ipi_get_irq(void)
+irq_t ipi_get_irq(শূন্য)
 {
-    assert(!(ipiIrq[getCurrentCPUIndex()] == irqInvalid && clh_is_ipi_pending(getCurrentCPUIndex())));
-    return ipiIrq[getCurrentCPUIndex()];
+    প্রতিজ্ঞা(!(ipiIrq[getCurrentCPUIndex()] == irqInvalid && clh_is_ipi_pending(getCurrentCPUIndex())));
+    ঘূৰাই ipiIrq[getCurrentCPUIndex()];
 }
 
-void ipi_clear_irq(irq_t irq)
+শূন্য ipi_clear_irq(irq_t irq)
 {
     ipiIrq[getCurrentCPUIndex()] = irqInvalid;
-    return;
+    ঘূৰাই;
 }
 
 /* this function is called with a single hart id. */
-void ipi_send_target(irq_t irq, word_t hart_id)
+শূন্য ipi_send_target(irq_t irq, word_t hart_id)
 {
     word_t hart_mask = BIT(hart_id);
     word_t core_id = hartIDToCoreID(hart_id);
-    assert(core_id < CONFIG_MAX_NUM_NODES);
+    প্রতিজ্ঞা(core_id < CONFIG_MAX_অঙ্ক_NODES);
 
-    assert((ipiIrq[core_id] == irqInvalid) || (ipiIrq[core_id] == irq_reschedule_ipi) ||
+    প্রতিজ্ঞা((ipiIrq[core_id] == irqInvalid) || (ipiIrq[core_id] == irq_reschedule_ipi) ||
            (ipiIrq[core_id] == irq_remote_call_ipi && !clh_is_ipi_pending(core_id)));
 
     ipiIrq[core_id] = irq;

@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
+#অন্তর্ভাৱ <kernel/thread.h>
 
-void Arch_postModifyRegisters(tcb_t *tptr)
+শূন্য Arch_postModifyRegisters(tcb_t *tptr)
 {
     /* Nothing to do */
 }
 
-void Arch_prepareNextDomain(void)
+শূন্য Arch_prepareNextDomain(শূন্য)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    যদি (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_flush();
     }
 }
 
-void Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
+শূন্য Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    যদি (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_flush_if_current(tptr);
     }
 }

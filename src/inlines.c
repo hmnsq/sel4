@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
+#অন্তর্ভাৱ <types.h>
+#অন্তর্ভাৱ <api/failures.h>
 
 lookup_fault_t current_lookup_fault;
 seL4_Fault_t current_fault;

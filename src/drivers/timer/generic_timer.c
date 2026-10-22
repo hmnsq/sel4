@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <drivers/timer/arm_generic.h>
+#অন্তর্ভাৱ <drivers/timer/arm_generic.h>
 
-BOOT_CODE void initGenericTimer(void)
+BOOT_CODE শূন্য initGenericTimer(শূন্য)
 {
-    if (config_set(CONFIG_DEBUG_BUILD)) {
+    যদি (config_set(CONFIG_DEBUG_BUILD)) {
         /* check the frequency is correct */
         word_t gpt_cntfrq = 0;
         SYSTEM_READ_WORD(CNTFRQ, gpt_cntfrq);
         /* The CNTFRQ register is a 32-bit register, its value can safely be
          * compared with TIMER_CLOCK_HZ.
          */
-        if ((gpt_cntfrq != 0) && (gpt_cntfrq != TIMER_CLOCK_HZ)) {
+        যদি ((gpt_cntfrq != 0) && (gpt_cntfrq != TIMER_CLOCK_HZ)) {
             /* TIMER_CLOCK_HZ is defined as a unsigned long long constant on
              * every architecture. */
             printf("Warning:  gpt_cntfrq %"SEL4_PRIu_word", expected %llu\n",
@@ -26,7 +26,7 @@ BOOT_CODE void initGenericTimer(void)
 #ifdef CONFIG_KERNEL_MCS
     /* this sets the irq to UINT64_MAX */
     ackDeadlineIRQ();
-#else /* CONFIG_KERNEL_MCS */
+#অন্যথা /* CONFIG_KERNEL_MCS */
     resetTimer();
 #endif /* !CONFIG_KERNEL_MCS */
     SYSTEM_WRITE_WORD(CNT_CTL, BIT(0));
@@ -41,7 +41,7 @@ BOOT_CODE void initGenericTimer(void)
  * to ifdef'ing out this initTimer definition for exynos5 platforms.
  */
 #ifndef CONFIG_PLAT_EXYNOS5
-BOOT_CODE void initTimer(void)
+BOOT_CODE শূন্য initTimer(শূন্য)
 {
     initGenericTimer();
 }
@@ -49,19 +49,19 @@ BOOT_CODE void initTimer(void)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 
-#include <arch/object/vcpu.h>
-#include <armv/vcpu.h>
+#অন্তর্ভাৱ <arch/object/vcpu.h>
+#অন্তর্ভাৱ <armv/vcpu.h>
 
 /** MODIFIES: */
 /** DONT_TRANSLATE */
-static inline uint64_t read_cntpct(void)
+স্থির অন্তঃস্থ uint64_t read_cntpct(শূন্য)
 {
     uint64_t val;
     SYSTEM_READ_64(CNTPCT, val);
-    return val;
+    ঘূৰাই val;
 }
 
-static void save_virt_timer(vcpu_t *vcpu)
+স্থির শূন্য save_virt_timer(vcpu_t *vcpu)
 {
     /* Save control register */
     vcpu_save_reg(vcpu, seL4_VCPUReg_CNTV_CTL);
@@ -71,7 +71,7 @@ static void save_virt_timer(vcpu_t *vcpu)
     vcpu_save_reg(vcpu, seL4_VCPUReg_CNTV_CVAL);
     vcpu_save_reg(vcpu, seL4_VCPUReg_CNTVOFF);
     vcpu_save_reg(vcpu, seL4_VCPUReg_CNTKCTL_EL1);
-#else
+#অন্যথা
     uint64_t cval = get_cntv_cval_64();
     uint64_t cntvoff = get_cntv_off_64();
     vcpu_write_reg(vcpu, seL4_VCPUReg_CNTV_CVALhigh, (word_t)(cval >> 32));
@@ -87,16 +87,16 @@ static void save_virt_timer(vcpu_t *vcpu)
 #endif
 }
 
-static void restore_virt_timer(vcpu_t *vcpu)
+স্থির শূন্য restore_virt_timer(vcpu_t *vcpu)
 {
     /* Restore virtual timer state */
 #ifdef CONFIG_ARCH_AARCH64
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTV_CVAL);
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTKCTL_EL1);
-#else
-    uint32_t cval_high = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALhigh);
-    uint32_t cval_low = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALlow);
-    uint64_t cval = ((uint64_t)cval_high << 32) | (uint64_t) cval_low;
+#অন্যথা
+    uint32_t cval_উপৰেৰ = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALhigh);
+    uint32_t cval_নিচেৰ = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALlow);
+    uint64_t cval = ((uint64_t)cval_উপৰেৰ << 32) | (uint64_t) cval_নিচেৰ;
     set_cntv_cval_64(cval);
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTKCTL);
 #endif
@@ -114,10 +114,10 @@ static void restore_virt_timer(vcpu_t *vcpu)
     vcpu_write_reg(vcpu, seL4_VCPUReg_CNTVOFF, offset);
 #endif
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTVOFF);
-#else
-    uint32_t offset_high = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh);
-    uint32_t offset_low = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFlow);
-    uint64_t offset = ((uint64_t)offset_high << 32) | (uint64_t) offset_low;
+#অন্যথা
+    uint32_t offset_উপৰেৰ = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh);
+    uint32_t offset_নিচেৰ = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFlow);
+    uint64_t offset = ((uint64_t)offset_উপৰেৰ << 32) | (uint64_t) offset_নিচেৰ;
 #ifdef CONFIG_VTIMER_UPDATE_VOFFSET
     offset += pcount_delta;
     vcpu_write_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh, (word_t)(offset >> 32));
@@ -129,7 +129,7 @@ static void restore_virt_timer(vcpu_t *vcpu)
      * the virtual timer should never get disabled, but the knowledge is not
      * available at this point */
     /* Restore interrupt mask state */
-    if (likely(isIRQActive(CORE_IRQ_TO_IRQT(CURRENT_CPU_INDEX(), INTERRUPT_VTIMER_EVENT)))) {
+    যদি (likely(isIRQActive(CORE_IRQ_TO_IRQT(CURRENT_CPU_INDEX(), INTERRUPT_VTIMER_EVENT)))) {
         maskInterrupt(vcpu->vppi_masked[irqVPPIEventIndex(CORE_IRQ_TO_IRQT(CURRENT_CPU_INDEX(), INTERRUPT_VTIMER_EVENT))],
                       CORE_IRQ_TO_IRQT(CURRENT_CPU_INDEX(), INTERRUPT_VTIMER_EVENT));
     }
