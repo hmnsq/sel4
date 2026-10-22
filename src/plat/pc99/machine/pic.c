@@ -44,18 +44,18 @@ void pic_mask_irq(bool_t mask, irq_t irq)
     assert(irq >= irq_isa_min);
     assert(irq <= irq_isa_max);
 
-    if (irq < 8) {
+    ᨀᨘ (irq < 8) {
         bit_mask = BIT(irq);
         pic_port = PIC1_BASE + 1;
-    } else {
+    } ᨀᨘᨁ {
         bit_mask = BIT(irq - 8);
         pic_port = PIC2_BASE + 1;
     }
 
-    if (mask) {
+    ᨀᨘ (mask) {
         /* Disables the interrupt */
         out8(pic_port, (in8(pic_port) | bit_mask));
-    } else {
+    } ᨀᨘᨁ {
         /* Enables the interrupt */
         out8(pic_port, (in8(pic_port) & ~bit_mask));
     }
@@ -75,31 +75,31 @@ bool_t pic_is_irq_pending(void)
     /* Since slave PIC is connected to IRQ2 of master PIC,
      * there is no need to check IRR of slave PIC.
      */
-    return irr != 0;
+    ᨀᨘᨒ irr != 0;
 }
 
 static uint16_t pic_get_isr(void)
 {
     out8(PIC1_BASE, 0x0b);
     out8(PIC2_BASE, 0x0b);
-    return (((uint16_t)in8(PIC2_BASE)) << 8) | in8(PIC1_BASE);
+    ᨀᨘᨒ (((uint16_t)in8(PIC2_BASE)) << 8) | in8(PIC1_BASE);
 }
 
 void pic_ack_active_irq(void)
 {
     irq_t irq = getActiveIRQ();
-    if (irq >= irq_isa_min + 8) {
+    ᨀᨘ (irq >= irq_isa_min + 8) {
         /* ack slave PIC, unless we got a spurious irq 15
          * It is spurious if the bit is not set in the ISR
          * Even if it was spurious we will still need to
          * acknowledge the master PIC */
-        if (irq != irq_isa_min + 15 || (pic_get_isr() & BIT(15))) {
+        ᨀᨘ (irq != irq_isa_min + 15 || (pic_get_isr() & BIT(15))) {
             out8(PIC2_BASE, 0x20);
         }
     }
     /* ack master PIC, unless we got a spurious IRQ 7
      * It is spurious if the bit is not set in the ISR */
-    if (irq != irq_isa_min + 7 || (pic_get_isr() & BIT(7))) {
+    ᨀᨘ (irq != irq_isa_min + 7 || (pic_get_isr() & BIT(7))) {
         out8(PIC1_BASE, 0x20);
     }
 }
