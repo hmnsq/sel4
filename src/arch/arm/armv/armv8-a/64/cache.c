@@ -6,21 +6,21 @@
 
 #include <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+static anta_hstha void cleanByWSL(word_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm ca_ncala("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+static anta_hstha void cleanInvalidateByWSL(word_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm ca_ncala("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+static anta_hstha word_t readCLID(void)
 {
     word_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    ལོག CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -28,13 +28,13 @@ static inline word_t readCLID(void)
 #define LOUIS(x)   (((x) >> 21)        & MASK(3))
 #define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
 
-enum arm_cache_type {
+ga_nanaa arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+static anta_hstha word_t readCacheSize(ཧྲིལ level, bool_t instruction)
 {
     word_t size, csselr_old;
     /* Save CSSELR */
@@ -45,7 +45,7 @@ static inline word_t readCacheSize(int level, bool_t instruction)
     MRS("ccsidr_el1", size);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    ལོག size;
 }
 
 #define LINEBITS(s)     (((s) & MASK(3)) + 4)
@@ -54,18 +54,18 @@ static inline word_t readCacheSize(int level, bool_t instruction)
 
 void clean_D_PoU(void)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    ཧྲིལ clid = readCLID();
+    ཧྲིལ lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    དོན་ལུ (ཧྲིལ l = 0; l < lou; l++) {
+        གལ་སྲིད (CTYPE(clid, l) > ARMCacheI) {
             word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
+            ཧྲིལ lbits = LINEBITS(lsize);
+            ཧྲིལ assoc = ASSOC(lsize);
+            ཧྲིལ assoc_bits = wordBits - clzl(assoc - 1);
+            ཧྲིལ nsets = NSETS(lsize);
+            དོན་ལུ (ཧྲིལ w = 0; w < assoc; w++) {
+                དོན་ལུ (ཧྲིལ s = 0; s < nsets; s++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (s << lbits) | (l << 1));
                 }
@@ -74,16 +74,16 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+static anta_hstha void cleanInvalidate_D_by_level(ཧྲིལ l)
 {
     word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    ཧྲིལ lbits = LINEBITS(lsize);
+    ཧྲིལ assoc = ASSOC(lsize);
+    ཧྲིལ assoc_bits = wordBits - clzl(assoc - 1);
+    ཧྲིལ nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
+    དོན་ལུ (ཧྲིལ w = 0; w < assoc; w++) {
+        དོན་ལུ (ཧྲིལ s = 0; s < nsets; s++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (s << lbits) | (l << 1));
         }
@@ -92,11 +92,11 @@ static inline void cleanInvalidate_D_by_level(int l)
 
 void cleanInvalidate_D_PoC(void)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    ཧྲིལ clid = readCLID();
+    ཧྲིལ loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    དོན་ལུ (ཧྲིལ l = 0; l < loc; l++) {
+        གལ་སྲིད (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }

@@ -13,7 +13,7 @@ const register_t msgRegisters[] = {
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    parimaa_na(msgRegisters) / parimaa_na(msgRegisters[0]) == n_msgRegisters
 );
 
 const register_t frameRegisters[] = {
@@ -22,7 +22,7 @@ const register_t frameRegisters[] = {
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    parimaa_na(frameRegisters) / parimaa_na(frameRegisters[0]) == n_frameRegisters
 );
 
 const register_t gpRegisters[] = {
@@ -32,12 +32,12 @@ const register_t gpRegisters[] = {
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    parimaa_na(gpRegisters) / parimaa_na(gpRegisters[0]) == n_gpRegisters
 );
 
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ལོག getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

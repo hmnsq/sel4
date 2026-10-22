@@ -12,7 +12,7 @@
 void NORETURN NO_INLINE VISIBLE halt(void)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cpsid iaf");
+    asm ca_ncala("cpsid iaf");
 
 #ifdef CONFIG_PRINTING
     printf("halting...");
