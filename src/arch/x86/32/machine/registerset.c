@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <sel4/arch/constants.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
-#include <machine/debug.h>
+#அந்தர்பாவ <assert.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <sel4/arch/constants.h>
+#அந்தர்பாவ <arch/machine/registerset.h>
+#அந்தர்பாவ <machine/fpu.h>
+#அந்தர்பாவ <arch/object/structures.h>
+#அந்தர்பாவ <machine/debug.h>
 
-const register_t msgRegisters[] = {
+மாறிலி register_t செய்தி_Registers[] = {
     EDI,
 #ifndef CONFIG_KERNEL_MCS
     EBP
@@ -20,26 +20,26 @@ const register_t msgRegisters[] = {
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    அளவு(செய்தி_Registers) / அளவு(செய்தி_Registers[0]) == n_செய்தி_Registers
 );
 
-const register_t frameRegisters[] = {
+மாறிலி register_t frameRegisters[] = {
     FaultIP, ESP, FLAGS, EAX, EBX, ECX, EDX, ESI, EDI, EBP
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    அளவு(frameRegisters) / அளவு(frameRegisters[0]) == n_frameRegisters
 );
 
-const register_t gpRegisters[] = {
+மாறிலி register_t gpRegisters[] = {
     FS_BASE, GS_BASE
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    அளவு(gpRegisters) / அளவு(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+வெறுமை Mode_initContext(user_context_t *context)
 {
     context->registers[EAX] = 0;
     context->registers[EBX] = 0;
@@ -53,17 +53,17 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    return v;
+    திரும்பு v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+word_t getNBSendRecvDest(வெறுமை)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, முனை_STATE(ksCurThread));
+    எனில் (buffer != வெற்று) {
+        திரும்பு buffer->userData;
+    } இல்லையெனில் {
+        திரும்பு 0;
     }
 }
 #endif

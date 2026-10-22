@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/smp.h>
-#include <object/tcb.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <model/smp.h>
+#அந்தர்பாவ <object/tcb.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-void migrateTCB(tcb_t *tcb, word_t new_core)
+வெறுமை migrateTCB(tcb_t *tcb, word_t new_core)
 {
-    if (new_core == tcb->tcbAffinity) {
-        return;
+    எனில் (new_core == tcb->tcbAffinity) {
+        திரும்பு;
     }
 #ifdef CONFIG_DEBUG_BUILD
     tcbDebugRemove(tcb);

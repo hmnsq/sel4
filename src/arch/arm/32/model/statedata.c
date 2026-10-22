@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <arch/machine/debug_conf.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <util.h>
+#அந்தர்பாவ <api/types.h>
+#அந்தர்பாவ <arch/types.h>
+#அந்தர்பாவ <arch/model/statedata.h>
+#அந்தர்பாவ <arch/object/structures.h>
+#அந்தர்பாவ <arch/machine/debug_conf.h>
+#அந்தர்பாவ <linker.h>
+#அந்தர்பாவ <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
 asid_pool_t *armKSASIDTable[nASIDPools];
@@ -32,7 +32,7 @@ pte_t armKSGlobalPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 pte_t armKSGlobalLogPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 #endif /* CONFIG_KERNEL_LOG_BUFFER */
 
-#else
+#இல்லையெனில்
 /* The global, hypervisor, level 1 page table */
 pdeS1_t  armHSGlobalPGD[BIT(PGD_INDEX_BITS)] ALIGN_BSS(BIT(PGD_SIZE_BITS));
 /* The global, hypervisor, level 2 page table */
@@ -59,5 +59,5 @@ user_breakpoint_state_t armKSNullBreakpointState;
 #endif
 
 #ifdef CONFIG_ARM_HAS_TLB_LOCK
-word_t armKSTlbLockCount = 0;
+word_t arm_KSTlb_Lock_மொத்தம் = 0;
 #endif /* CONFIG_ARM_HAS_TLB_LOCK */

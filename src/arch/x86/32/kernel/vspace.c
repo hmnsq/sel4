@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <kernel/boot.h>
-#include <model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/api/invocation.h>
-#include <benchmark/benchmark_track.h>
-#include <arch/kernel/tlb_bitmap.h>
-#include <mode/kernel/tlb.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <api/syscall.h>
+#அந்தர்பாவ <machine/io.h>
+#அந்தர்பாவ <kernel/boot.h>
+#அந்தர்பாவ <model/statedata.h>
+#அந்தர்பாவ <arch/kernel/vspace.h>
+#அந்தர்பாவ <arch/kernel/boot.h>
+#அந்தர்பாவ <arch/kernel/boot_sys.h>
+#அந்தர்பாவ <arch/api/invocation.h>
+#அந்தர்பாவ <benchmark/benchmark_track.h>
+#அந்தர்பாவ <arch/kernel/tlb_bitmap.h>
+#அந்தர்பாவ <mode/kernel/tlb.h>
 
 /* 'gdt_idt_ptr' is declared globally because of a C-subset restriction.
  * It is only used in init_drts(), which therefore is non-reentrant.
@@ -24,10 +24,10 @@ gdt_idt_ptr_t gdt_idt_ptr;
 
 /* initialise the Task State Segment (TSS) */
 
-BOOT_CODE void init_tss(tss_t *tss)
+BOOT_CODE வெறுமை init_tss(tss_t *tss)
 {
     *tss = tss_new(
-               sizeof(*tss),   /* io_map_base  */
+               அளவு(*tss),   /* io_map_base  */
                0,              /* trap         */
                SEL_NULL,       /* sel_ldt      */
                SEL_NULL,       /* gs           */
@@ -56,11 +56,11 @@ BOOT_CODE void init_tss(tss_t *tss)
                0               /* prev_task    */
            );
     memset(&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.io_map[0], 0xff,
-           sizeof(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.io_map));
+           அளவு(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.io_map));
 }
 /* initialise Global Descriptor Table (GDT) */
 
-BOOT_CODE void init_gdt(gdt_entry_t *gdt, tss_t *tss)
+BOOT_CODE வெறுமை init_gdt(gdt_entry_t *gdt, tss_t *tss)
 {
     uint32_t tss_addr = (uint32_t)tss;
 
@@ -143,7 +143,7 @@ BOOT_CODE void init_gdt(gdt_entry_t *gdt, tss_t *tss)
                        1,                           /* always_true          */
                        (tss_addr >> 16) & 0xff,     /* base_mid 8 bits      */
                        (tss_addr & 0xffff),         /* base_low 16 bits     */
-                       sizeof(tss_io_t) - 1         /* limit_low 16 bits    */
+                       அளவு(tss_io_t) - 1         /* limit_low 16 bits    */
                    );
 
     gdt[GDT_FS] = gdt_entry_gdt_data_new(
@@ -179,12 +179,12 @@ BOOT_CODE void init_gdt(gdt_entry_t *gdt, tss_t *tss)
 
 /* initialise the Interrupt Descriptor Table (IDT) */
 
-BOOT_CODE void init_idt_entry(idt_entry_t *idt, interrupt_t interrupt, void(*handler)(void))
+BOOT_CODE வெறுமை init_idt_entry(idt_entry_t *idt, interrupt_t interrupt, வெறுமை(*handler)(வெறுமை))
 {
     uint32_t handler_addr = (uint32_t)handler;
     uint32_t dpl = 3;
 
-    if (interrupt < int_trap_min && interrupt != int_software_break_request) {
+    எனில் (interrupt < int_trap_min && interrupt != int_software_break_request) {
         dpl = 0;
     }
 
@@ -199,9 +199,9 @@ BOOT_CODE void init_idt_entry(idt_entry_t *idt, interrupt_t interrupt, void(*han
 }
 
 BOOT_CODE bool_t map_kernel_window(
-    uint32_t num_ioapic,
+    uint32_t இலக்கம்_ioapic,
     paddr_t   *ioapic_paddrs,
-    uint32_t   num_drhu,
+    uint32_t   இலக்கம்_drhu,
     paddr_t   *drhu_list
 )
 {
@@ -209,7 +209,7 @@ BOOT_CODE bool_t map_kernel_window(
     uint32_t idx;
     pde_t    pde;
     pte_t    pte;
-    unsigned int UNUSED i;
+    unsigned முழு UNUSED i;
 
     /* Mapping of PPTR_BASE (virtual address) to kernel's PADDR_BASE
      * up to end of virtual address space except for the last large page.
@@ -220,7 +220,7 @@ BOOT_CODE bool_t map_kernel_window(
     /* PPTR_TOP differs whether CONFIG_KERNEL_LOG_BUFFER
      * is enabled or not.
      */
-    while (idx < (PPTR_TOP >> LARGE_PAGE_BITS)) {
+    போது (idx < (PPTR_உச்சி >> LARGE_PAGE_BITS)) {
         pde = pde_pde_large_new(
                   phys,   /* page_base_address    */
                   0,      /* pat                  */
@@ -240,7 +240,7 @@ BOOT_CODE bool_t map_kernel_window(
     }
 
     /* crosscheck whether we have mapped correctly so far */
-    assert(phys == PADDR_TOP);
+    ப்ரதிஜ்ஞா(phys == PADDR_உச்சி);
 
 #ifdef CONFIG_KERNEL_LOG_BUFFER
     /* Map global page table for the log buffer */
@@ -257,7 +257,7 @@ BOOT_CODE bool_t map_kernel_window(
 
     ia32KSGlobalPD[idx] = pde;
     phys += BIT(LARGE_PAGE_BITS);
-    assert(idx == (KS_LOG_PPTR >> LARGE_PAGE_BITS));
+    ப்ரதிஜ்ஞா(idx == (KS_LOG_PPTR >> LARGE_PAGE_BITS));
     idx++;
 #endif /* CONFIG_KERNEL_LOG_BUFFER */
 
@@ -266,7 +266,7 @@ BOOT_CODE bool_t map_kernel_window(
     tlb_bitmap_init(ia32KSGlobalPD);
 
     phys += TLBBITMAP_PD_RESERVED;
-    idx += TLBBITMAP_ROOT_ENTRIES;
+    idx += TLBBITMAP_வேர்_ENTRIES;
 #endif /* ENABLE_SMP_SUPPORT */
 
     /* map page table of last 4M of virtual address space to page directory */
@@ -302,7 +302,7 @@ BOOT_CODE bool_t map_kernel_window(
 
     /* null mappings up to KDEV_BASE */
 
-    while (idx < (KDEV_BASE &MASK(LARGE_PAGE_BITS)) >> PAGE_BITS) {
+    போது (idx < (KDEV_BASE &MASK(LARGE_PAGE_BITS)) >> PAGE_BITS) {
         pte = pte_new(
                   0,      /* page_base_address    */
                   0,      /* avl                  */
@@ -321,27 +321,27 @@ BOOT_CODE bool_t map_kernel_window(
     }
 
     /* map kernel devices (devices only used by the kernel) */
-    if (!map_kernel_window_devices(ia32KSGlobalPT, num_ioapic, ioapic_paddrs, num_drhu, drhu_list)) {
-        return false;
+    எனில் (!map_kernel_window_devices(ia32KSGlobalPT, இலக்கம்_ioapic, ioapic_paddrs, இலக்கம்_drhu, drhu_list)) {
+        திரும்பு false;
     }
 
     invalidateLocalPageStructureCache();
-    return true;
+    திரும்பு true;
 }
 
 /* Note: this function will invalidate any pointers previously returned from this function */
-BOOT_CODE void *map_temp_boot_page(void *entry, uint32_t large_pages)
+BOOT_CODE வெறுமை *map_temp_boot_page(வெறுமை *entry, uint32_t large_pages)
 {
-    void *replacement_vaddr;
-    unsigned int i;
-    unsigned int offset_in_page;
+    வெறுமை *replacement_vaddr;
+    unsigned முழு i;
+    unsigned முழு offset_in_page;
 
-    unsigned int phys_pg_start = (unsigned int)(entry) & ~MASK(LARGE_PAGE_BITS);
-    unsigned int virt_pd_start = (PPTR_BASE >> LARGE_PAGE_BITS) - large_pages;
-    unsigned int virt_pg_start = PPTR_BASE - (large_pages << LARGE_PAGE_BITS);
+    unsigned முழு phys_pg_start = (unsigned முழு)(entry) & ~MASK(LARGE_PAGE_BITS);
+    unsigned முழு virt_pd_start = (PPTR_BASE >> LARGE_PAGE_BITS) - large_pages;
+    unsigned முழு virt_pg_start = PPTR_BASE - (large_pages << LARGE_PAGE_BITS);
 
-    for (i = 0; i < large_pages; i++) {
-        unsigned int pg_offset = i << LARGE_PAGE_BITS; // num pages since start * page size
+    க்கு (i = 0; i < large_pages; i++) {
+        unsigned முழு pg_offset = i << LARGE_PAGE_BITS; // num pages since start * page size
 
         *(get_boot_pd() + virt_pd_start + i) = pde_pde_large_new(
                                                    phys_pg_start + pg_offset, /* physical address */
@@ -360,25 +360,25 @@ BOOT_CODE void *map_temp_boot_page(void *entry, uint32_t large_pages)
     }
 
     // assign replacement virtual addresses page
-    offset_in_page = (unsigned int)(entry) & MASK(LARGE_PAGE_BITS);
-    replacement_vaddr = (void *)(virt_pg_start + offset_in_page);
+    offset_in_page = (unsigned முழு)(entry) & MASK(LARGE_PAGE_BITS);
+    replacement_vaddr = (வெறுமை *)(virt_pg_start + offset_in_page);
 
     invalidateLocalPageStructureCache();
 
-    return replacement_vaddr;
+    திரும்பு replacement_vaddr;
 }
 
 /* initialise CPU's descriptor table registers (GDTR, IDTR, LDTR, TR) */
 
-BOOT_CODE void init_dtrs(void)
+BOOT_CODE வெறுமை init_dtrs(வெறுமை)
 {
     /* setup the GDT pointer and limit and load into GDTR */
-    gdt_idt_ptr.limit = (sizeof(gdt_entry_t) * GDT_ENTRIES) - 1;
+    gdt_idt_ptr.limit = (அளவு(gdt_entry_t) * GDT_ENTRIES) - 1;
     gdt_idt_ptr.base = (uint32_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSgdt;
     ia32_install_gdt(&gdt_idt_ptr);
 
     /* setup the IDT pointer and limit and load into IDTR */
-    gdt_idt_ptr.limit = (sizeof(idt_entry_t) * (int_max + 1)) - 1;
+    gdt_idt_ptr.limit = (அளவு(idt_entry_t) * (int_max + 1)) - 1;
     gdt_idt_ptr.base = (uint32_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt;
     ia32_install_idt(&gdt_idt_ptr);
 
@@ -389,7 +389,7 @@ BOOT_CODE void init_dtrs(void)
     ia32_install_tss(SEL_TSS);
 }
 
-static BOOT_CODE cap_t create_it_page_table_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+நிலையான BOOT_CODE cap_t create_it_page_table_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
     cap = cap_page_table_cap_new(
@@ -398,13 +398,13 @@ static BOOT_CODE cap_t create_it_page_table_cap(cap_t vspace_cap, pptr_t pptr, v
               vptr, /* capPTMappedAddress */
               pptr  /* capPTBasePtr       */
           );
-    if (asid != asidInvalid) {
+    எனில் (asid != asidInvalid) {
         map_it_pt_cap(vspace_cap, cap);
     }
-    return cap;
+    திரும்பு cap;
 }
 
-static BOOT_CODE cap_t create_it_page_directory_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+நிலையான BOOT_CODE cap_t create_it_page_directory_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
     cap = cap_page_directory_cap_new(
@@ -413,10 +413,10 @@ static BOOT_CODE cap_t create_it_page_directory_cap(cap_t vspace_cap, pptr_t ppt
               vptr,    /* capPDMappedAddress */
               pptr  /* capPDBasePtr    */
           );
-    if (asid != asidInvalid && cap_get_capType(vspace_cap) != cap_null_cap) {
+    எனில் (asid != asidInvalid && cap_get_capType(vspace_cap) != cap_null_cap) {
         map_it_pd_cap(vspace_cap, cap);
     }
-    return cap;
+    திரும்பு cap;
 }
 
 BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
@@ -425,12 +425,12 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 #ifdef CONFIG_IOMMU
     n += vtd_get_n_paging(&boot_state.rmrr_list);
 #endif
-    return n;
+    திரும்பு n;
 }
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_CODE cap_t create_it_address_space(cap_t வேர்_cnode_cap, v_region_t it_v_reg)
 {
     cap_t      vspace_cap;
     vptr_t     vptr;
@@ -438,20 +438,20 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
     seL4_SlotPos slot_pos_after;
 
     slot_pos_before = ndks_boot.slot_pos_cur;
-    copyGlobalMappings((vspace_root_t *)rootserver.vspace);
+    copyGlobalMappings((vspace_வேர்_t *)rootserver.vspace);
     cap_t pd_cap = create_it_page_directory_cap(cap_null_cap_new(), rootserver.vspace, 0, IT_ASID);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
+    write_slot(SLOT_PTR(pptr_of_cap(வேர்_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
     vspace_cap = pd_cap;
 
     /* create all PT objs and caps necessary to cover userland image */
 
-    for (vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
+    க்கு (vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
          vptr < it_v_reg.end;
          vptr += BIT(PT_INDEX_BITS + PAGE_BITS)) {
-        if (!provide_cap(root_cnode_cap,
+        எனில் (!provide_cap(வேர்_cnode_cap,
                          create_it_page_table_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))
            ) {
-            return cap_null_cap_new();
+            திரும்பு cap_null_cap_new();
         }
     }
 
@@ -460,28 +460,28 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
         slot_pos_before, slot_pos_after
     };
 
-    return vspace_cap;
+    திரும்பு vspace_cap;
 }
 
-static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
+நிலையான BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
                                            vm_page_map_type_t map_type)
 {
     vm_page_size_t frame_size;
 
-    if (use_large) {
+    எனில் (use_large) {
         frame_size = X86_LargePage;
-    } else {
+    } இல்லையெனில் {
         frame_size = X86_SmallPage;
     }
 
-    return
+    திரும்பு
         cap_frame_cap_new(
             frame_size,                    /* capFSize           */
-            ASID_LOW(asid),                /* capFMappedASIDLow  */
+            ASID_கீழ்(asid),                /* capFMappedASIDLow  */
             vptr,                          /* capFMappedAddress  */
             map_type,                      /* capFMapType        */
             false,                         /* capFIsDevice       */
-            ASID_HIGH(asid),               /* capFMappedASIDHigh */
+            ASID_உயர்வு(asid),               /* capFMappedASIDHigh */
             wordFromVMRights(VMReadWrite), /* capFVMRights       */
             pptr                           /* capFBasePtr        */
         );
@@ -489,7 +489,7 @@ static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid
 
 BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
 {
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large, X86_MappingNone);
+    திரும்பு create_it_frame_cap(pptr, 0, asidInvalid, use_large, X86_MappingNone);
 }
 
 BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
@@ -497,14 +497,14 @@ BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t vspace_cap, pptr_t pptr, vptr_t
 {
     cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large, X86_MappingVSpace);
     map_it_frame_cap(vspace_cap, cap);
-    return cap;
+    திரும்பு cap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
 pde_t CONST makeUserPDELargePage(paddr_t paddr, vm_attributes_t vm_attr, vm_rights_t vm_rights)
 {
-    return pde_pde_large_new(
+    திரும்பு pde_pde_large_new(
                paddr,                                          /* page_base_address    */
                vm_attributes_get_x86PATBit(vm_attr),           /* pat                  */
                0,                                              /* avl                  */
@@ -521,7 +521,7 @@ pde_t CONST makeUserPDELargePage(paddr_t paddr, vm_attributes_t vm_attr, vm_righ
 
 pde_t CONST makeUserPDEPageTable(paddr_t paddr, vm_attributes_t vm_attr)
 {
-    return pde_pde_pt_new(
+    திரும்பு pde_pde_pt_new(
                paddr,                                      /* pt_base_address  */
                0,                                          /* avl              */
                0,                                          /* accessed         */
@@ -533,12 +533,12 @@ pde_t CONST makeUserPDEPageTable(paddr_t paddr, vm_attributes_t vm_attr)
            );
 }
 
-pde_t CONST makeUserPDEInvalid(void)
+pde_t CONST makeUserPDEInvalid(வெறுமை)
 {
     /* The bitfield only declares two kinds of PDE entries (page tables or large pages)
      * and an invalid entry should really be a third type, but we can simulate it by
      * creating an invalid (present bit 0) entry of either of the defined types */
-    return pde_pde_pt_new(
+    திரும்பு pde_pde_pt_new(
                0,  /* pt_base_address  */
                0,  /* avl              */
                0,  /* accessed         */
@@ -552,7 +552,7 @@ pde_t CONST makeUserPDEInvalid(void)
 
 pte_t CONST makeUserPTE(paddr_t paddr, vm_attributes_t vm_attr, vm_rights_t vm_rights)
 {
-    return pte_new(
+    திரும்பு pte_new(
                paddr,                                          /* page_base_address    */
                0,                                              /* avl                  */
                0,                                              /* global               */
@@ -568,9 +568,9 @@ pte_t CONST makeUserPTE(paddr_t paddr, vm_attributes_t vm_attr, vm_rights_t vm_r
 }
 
 
-pte_t CONST makeUserPTEInvalid(void)
+pte_t CONST makeUserPTEInvalid(வெறுமை)
 {
-    return pte_new(
+    திரும்பு pte_new(
                0,                   /* page_base_address    */
                0,                   /* avl                  */
                0,                   /* global               */
@@ -585,43 +585,43 @@ pte_t CONST makeUserPTEInvalid(void)
            );
 }
 
-void setVMRoot(tcb_t *tcb)
+வெறுமை setVMRoot(tcb_t *tcb)
 {
-    cap_t               threadRoot;
-    vspace_root_t *vspace_root;
+    cap_t               thread_வேர்;
+    vspace_வேர்_t *vspace_வேர்;
     asid_t              asid;
     findVSpaceForASID_ret_t find_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_வேர் = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    vspace_root = getValidNativeRoot(threadRoot);
-    if (!vspace_root) {
+    vspace_வேர் = get_Valid_Native_வேர்(thread_வேர்);
+    எனில் (!vspace_வேர்) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
         setCurrentPD(kpptr_to_paddr(ia32KSGlobalPD));
-        return;
+        திரும்பு;
     }
 
-    asid = cap_get_capMappedASID(threadRoot);
+    asid = cap_get_capMappedASID(thread_வேர்);
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != vspace_root) {
+    எனில் (find_ret.status != EXCEPTION_NONE || find_ret.vspace_வேர் != vspace_வேர்) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
         setCurrentPD(kpptr_to_paddr(ia32KSGlobalPD));
-        return;
+        திரும்பு;
     }
 
     /* only set PD if we change it, otherwise we flush the TLB needlessly */
-    if (getCurrentPD() != pptr_to_paddr(vspace_root)) {
+    எனில் (getCurrentPD() != pptr_to_paddr(vspace_வேர்)) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
-        SMP_COND_STATEMENT(tlb_bitmap_set(vspace_root, getCurrentCPUIndex());)
+        SMP_COND_STATEMENT(tlb_bitmap_set(vspace_வேர், getCurrentCPUIndex());)
 
-        setCurrentPD(pptr_to_paddr(vspace_root));
+        setCurrentPD(pptr_to_paddr(vspace_வேர்));
     }
 }
 
-void hwASIDInvalidate(asid_t asid, vspace_root_t *vspace)
+வெறுமை hwASIDInvalidate(asid_t asid, vspace_வேர்_t *vspace)
 {
     /* 32-bit does not have PCID */
-    return;
+    திரும்பு;
 }
 
 exception_t decodeX86ModeMMUInvocation(
@@ -634,24 +634,24 @@ exception_t decodeX86ModeMMUInvocation(
     word_t *buffer
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-        return decodeIA32PageDirectoryInvocation(invLabel, length, cte, cap, call, buffer);
+    தேர்வு (cap_get_capType(cap)) {
+    நிலை cap_page_directory_cap:
+        திரும்பு decodeIA32PageDirectoryInvocation(invLabel, length, cte, cap, call, buffer);
 
-    default:
+    இயல்பு:
         fail("Invalid arch cap type");
     }
 }
 
 
-bool_t modeUnmapPage(vm_page_size_t page_size, vspace_root_t *vroot, vptr_t vaddr, void *pptr)
+bool_t modeUnmapPage(vm_page_size_t page_size, vspace_வேர்_t *vroot, vptr_t vaddr, வெறுமை *pptr)
 {
     fail("Invalid page type");
-    return false;
+    திரும்பு false;
 }
 
 exception_t decodeX86ModeMapPage(word_t invLabel, vm_page_size_t page_size, cte_t *cte, cap_t cap,
-                                 vspace_root_t *vroot, vptr_t vaddr, paddr_t paddr, vm_rights_t vm_rights, vm_attributes_t vm_attr)
+                                 vspace_வேர்_t *vroot, vptr_t vaddr, paddr_t paddr, vm_rights_t vm_rights, vm_attributes_t vm_attr)
 {
     fail("Invalid Page type");
 }
@@ -664,37 +664,37 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     pptr_t frame_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookupCapAndSlot(முனை_STATE(ksCurThread), frame_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    எனில் (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invalid cap #%lu.", frame_cptr);
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        திரும்பு EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    எனில் (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        திரும்பு EXCEPTION_SYSCALL_ERROR;
     }
 
     frameSize = cap_frame_cap_get_capFSize(lu_ret.cap);
 
-    if (frameSize != X86_LargePage) {
+    எனில் (frameSize != X86_LargePage) {
         userError("Invalid size for log Buffer. The kernel expects at least 1M log buffer");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        திரும்பு EXCEPTION_SYSCALL_ERROR;
     }
 
     frame_pptr = cap_frame_cap_get_capFBasePtr(lu_ret.cap);
 
-    ksUserLogBuffer = pptr_to_paddr((void *) frame_pptr);
+    ksUserLogBuffer = pptr_to_paddr((வெறுமை *) frame_pptr);
 
     /* fill global log page table with mappings */
-    for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
+    க்கு (முழு idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
         paddr_t physical_address = ksUserLogBuffer + (idx << seL4_PageBits);
 
         pte_t pte = pte_new(
@@ -712,9 +712,9 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
                     );
 
         ia32KSGlobalLogPT[idx] = pte;
-        invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+        invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ks_இலக்கம்_CPUs));
     }
 
-    return EXCEPTION_NONE;
+    திரும்பு EXCEPTION_NONE;
 }
 #endif /* CONFIG_KERNEL_LOG_BUFFER */

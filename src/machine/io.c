@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <machine/io.h>
 
 #ifdef CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#அந்தர்பாவ <stdarg.h>
+#அந்தர்பாவ <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,15 +24,15 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+வகைவரை கட்டமைப்பு _out_wrap_t  out_wrap_t;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+வகைவரை வெறுமை (*out_write_fn)(out_wrap_t *out, மாறிலி எழுத்து *buf, word_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
+கட்டமைப்பு _out_wrap_t {
+    மாறிலி out_write_fn லிக;
+    எழுத்து *மாறிலி buf;
+    மாறிலி word_t maxlen;
     word_t used;
 };
 
@@ -40,23 +40,23 @@ struct _out_wrap_t {
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+நிலையான வெறுமை out(out_wrap_t *out_wrap, மாறிலி எழுத்து *buf, word_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    எனில் (out_wrap) {
+        out_wrap->லிக(out_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
+நிலையான வெறுமை do_output_to_putchar(
     UNUSED out_wrap_t *out,
-    const char *buf,
+    மாறிலி எழுத்து *buf,
     word_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
+    எனில் (buf) {
+        போது (len-- > 0) {
             putchar(*buf++);
         }
     }
@@ -65,18 +65,18 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
+நிலையான வெறுமை do_output_to_buffer(
     out_wrap_t *out,
-    const char *buf,
+    மாறிலி எழுத்து *buf,
     word_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    எனில் (buf && (out->used < out->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        word_t விடுவி = out->maxlen - out->used;
+        எனில் (len > விடுவி) {
+            len = விடுவி;
         }
         memcpy(&out->buf[out->used], buf, len);
         out->used += len;
@@ -89,9 +89,9 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+நிலையான உள்வரி bool_t isdigit(எழுத்து c)
 {
-    return c >= '0' &&
+    திரும்பு c >= '0' &&
            c <= '9';
 }
 
@@ -102,18 +102,18 @@ static inline bool_t isdigit(char c)
 
 #define ALT_FORM     (1U<<('#'-' '))
 #define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
+#define இடது_ADJ     (1U<<('-'-' '))
 #define PAD_POS      (1U<<(' '-' '))
 #define MARK_POS     (1U<<('+'-' '))
 #define GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#define FLAGMASK (ALT_FORM|ZERO_PAD|இடது_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+எண்ணிக்கை {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -131,7 +131,7 @@ enum {
 
 #define S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+நிலையான மாறிலி unsigned எழுத்து states[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -177,92 +177,92 @@ static const unsigned char states[]['z' - 'A' + 1] = {
 #define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
 #define DIGIT(c) (c - '0')
 
-union arg {
+ஒன்றிப்பு arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    long இரட்டை f;
+    வெறுமை *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+நிலையான வெறுமை எடு_arg(ஒன்றிப்பு arg *arg, முழு type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
+    தேர்வு (type) {
+    நிலை PTR:
+        arg->p = va_arg(*ap, வெறுமை *);
+        நிறுத்து;
+    நிலை INT:
+        arg->i = va_arg(*ap, முழு);
+        நிறுத்து;
+    நிலை UINT:
+        arg->i = va_arg(*ap, unsigned முழு);
+        நிறுத்து;
+    நிலை LONG:
         arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
+        நிறுத்து;
+    நிலை ULONG:
         arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
+        நிறுத்து;
+    நிலை LLONG:
         arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
+        நிறுத்து;
+    நிலை ULLONG:
         arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
+        நிறுத்து;
+    நிலை SHORT:
+        arg->i = (short)va_arg(*ap, முழு);
+        நிறுத்து;
+    நிலை USHORT:
+        arg->i = (unsigned short)va_arg(*ap, முழு);
+        நிறுத்து;
+    நிலை CHAR:
+        arg->i = (signed எழுத்து)va_arg(*ap, முழு);
+        நிறுத்து;
+    நிலை UCHAR:
+        arg->i = (unsigned எழுத்து)va_arg(*ap, முழு);
+        நிறுத்து;
+    நிலை WORDT:
         arg->i = va_arg(*ap, word_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+நிலையான வெறுமை pad(out_wrap_t *f, எழுத்து c, முழு w, முழு l, முழு fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    எழுத்து pad[32]; /* good enough for what the kernel prints */
+    எனில் (fl & (இடது_ADJ | ZERO_PAD) || l >= w) {
+        திரும்பு;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > அளவு(pad) ? அளவு(pad) : l);
+    க்கு (; l >= அளவு(pad); l -= அளவு(pad)) {
+        out(f, pad, அளவு(pad));
     }
     out(f, pad, l);
 }
 
-static const char xdigits[16] = {
+நிலையான மாறிலி எழுத்து xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+நிலையான எழுத்து *fmt_x(uintmax_t x, எழுத்து *s, முழு lower)
 {
-    for (; x; x >>= 4) {
+    க்கு (; x; x >>= 4) {
         *--s = xdigits[(x & 15)] | lower;
     }
-    return s;
+    திரும்பு s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+நிலையான எழுத்து *fmt_o(uintmax_t x, எழுத்து *s)
 {
-    for (; x; x >>= 3) {
+    க்கு (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    திரும்பு s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+நிலையான எழுத்து *fmt_u(uintmax_t x, எழுத்து *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    போது (0 != x) {
+#எனில் defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,20 +277,20 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        unsigned முழு rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        எனில் (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            ப்ரதிஜ்ஞா(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#இல்லையெனில்
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
+        unsigned முழு rem = x % 10;
 #endif
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    திரும்பு s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
@@ -300,261 +300,261 @@ static char *fmt_u(uintmax_t x, char *s)
 
 #define NL_ARGMAX 9
 
-static int getint(char **s)
+நிலையான முழு getint(எழுத்து **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    முழு i;
+    க்கு (i = 0; isdigit(**s); (*s)++) {
+        எனில் (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } இல்லையெனில் {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    திரும்பு i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+நிலையான முழு printf_core(out_wrap_t *f, மாறிலி எழுத்து *fmt, va_list *ap, ஒன்றிப்பு arg *nl_arg, முழு *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
+    எழுத்து *a, *z, *s = (எழுத்து *)fmt;
     unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
+    முழு w, p, xp;
+    ஒன்றிப்பு arg arg;
+    முழு argpos;
     unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    முழு cnt = 0, l = 0;
+    எழுத்து buf[அளவு(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    மாறிலி எழுத்து *prefix;
+    முழு t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    க்கு (;;) {
+        எனில் (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            திரும்பு -1; /* overflow */
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        எனில் (!*s) {
+            நிறுத்து;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        க்கு (a = s; *s && *s != '%'; s++);
+        க்கு (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        எனில் (z - a > INTMAX_MAX - cnt) {
+            திரும்பு -1; /* overflow */
         }
         l = z - a;
         out(f, a, l);
-        if (l) {
-            continue;
+        எனில் (l) {
+            தொடர்;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        எனில் (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } இல்லையெனில் {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
+        க்கு (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
             fl |= MASK_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        எனில் (*s == '*') {
+            எனில் (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } இல்லையெனில் எனில் (!l10n) {
+                w = f ? va_arg(*ap, முழு) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } இல்லையெனில் {
+                திரும்பு -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            எனில் (w < 0) {
+                fl |= இடது_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } இல்லையெனில் எனில் ((w = getint(&s)) < 0) {
+            திரும்பு -1; /* overflow */
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        எனில் (*s == '.' && s[1] == '*') {
+            எனில் (isdigit(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } இல்லையெனில் எனில் (!l10n) {
+                p = f ? va_arg(*ap, முழு) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } இல்லையெனில் {
+                திரும்பு -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } இல்லையெனில் எனில் (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } இல்லையெனில் {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        செய் {
+            எனில் (OOB(*s)) {
+                திரும்பு -1; /* invalid */
             }
             ps = st;
             st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+        } போது (st - 1 < STOP);
+        எனில் (!st) {
+            திரும்பு -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        எனில் (st == NOARG) {
+            எனில் (argpos >= 0) {
+                திரும்பு -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } இல்லையெனில் {
+            எனில் (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } இல்லையெனில் எனில் (f) {
+                எடு_arg(&arg, st, ap);
+            } இல்லையெனில் {
+                திரும்பு 0;
             }
         }
 
-        if (!f) {
-            continue;
+        எனில் (!f) {
+            தொடர்;
         }
 
-        z = buf + sizeof(buf);
+        z = buf + அளவு(buf);
         prefix = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        எனில் (fl & இடது_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        எனில் (t == 'n') {
+            எனில் (!arg.p) {
+                தொடர்;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
+            தேர்வு (ps) {
+            நிலை BARE:
+                *(முழு *)arg.p = cnt;
+                நிறுத்து;
+            நிலை LPRE:
                 *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
+                நிறுத்து;
+            நிலை LLPRE:
                 *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
+                நிறுத்து;
+            நிலை HPRE:
                 *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
+                நிறுத்து;
+            நிலை HHPRE:
+                *(unsigned எழுத்து *)arg.p = cnt;
+                நிறுத்து;
+            நிலை ZTPRE:
                 *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
+                நிறுத்து;
+            நிலை JPRE:
                 *(word_t *)arg.p = cnt;
-                break;
+                நிறுத்து;
             }
-            continue;
-        } else if (t == 'c') {
+            தொடர்;
+        } இல்லையெனில் எனில் (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } இல்லையெனில் எனில் (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            எனில் (p < 0 && *z) {
+                திரும்பு -1; /* overflow */
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } இல்லையெனில் {
+            தேர்வு (t) {
+            நிலை 'p':
+                p = MAX(p, 2 * அளவு(வெறுமை *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            நிலை 'x':
+            நிலை 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
+                எனில் (arg.i && (fl & ALT_FORM)) {
                     prefix += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                நிறுத்து;
+            நிலை 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                எனில் ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                நிறுத்து;
+            நிலை 'd':
+            நிலை 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                எனில் (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
+                } இல்லையெனில் எனில் (fl & MARK_POS) {
                     prefix++;
-                } else if (fl & PAD_POS) {
+                } இல்லையெனில் எனில் (fl & PAD_POS) {
                     prefix += 2;
-                } else {
+                } இல்லையெனில் {
                     pl = 0;
                 }
-            case 'u':
+            நிலை 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                நிறுத்து;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            எனில் (xp && p < 0) {
+                திரும்பு -1; /* overflow */
             }
-            if (xp) {
+            எனில் (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            எனில் (!arg.i && !p) {
                 a = z;
-            } else {
+            } இல்லையெனில் {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        எனில் (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        எனில் (p > INTMAX_MAX - pl) {
+            திரும்பு -1; /* overflow */
         }
-        if (w < pl + p) {
+        எனில் (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        எனில் (w > INTMAX_MAX - cnt) {
+            திரும்பு -1; /* overflow */
         }
 
         pad(f, ' ', w, pl + p, fl);
@@ -562,47 +562,47 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
         out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        pad(f, ' ', w, pl + p, fl ^ இடது_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    எனில் (f) {
+        திரும்பு cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    எனில் (!l10n) {
+        திரும்பு 0;
     }
 
-    return 1;
+    முழு i;
+    க்கு (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        எடு_arg(nl_arg + i, nl_type[i], ap);
+    }
+    க்கு (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    எனில் (i <= NL_ARGMAX) {
+        திரும்பு -1; /* invalid */
+    }
+
+    திரும்பு 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+நிலையான முழு vprintf(out_wrap_t *out, மாறிலி எழுத்து *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    முழு nl_type[NL_ARGMAX + 1] = {0};
+    ஒன்றிப்பு arg nl_arg[NL_ARGMAX + 1];
+    முழு ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
+    எனில் (printf_core(வெற்று, fmt, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
-        return -1;
+        திரும்பு -1;
     }
 
     ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
     va_end(ap2);
-    return ret;
+    திரும்பு ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+முழு impl_kvprintf(மாறிலி எழுத்து *format, va_list ap)
 {
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+        .லிக  = do_output_to_putchar,
+        .buf    = வெற்று,
         .maxlen = 0,
         .used   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    திரும்பு vprintf(&out_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+முழு impl_ksnvprintf(எழுத்து *str, word_t size, மாறிலி எழுத்து *format, va_list ap)
 {
-    if (!str) {
+    எனில் (!str) {
         size = 0;
     }
 
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+        .லிக  = do_output_to_buffer,
         .buf    = str,
         .maxlen = size,
         .used   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    முழு ret = vprintf(&out_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
+    எனில் ((ret > 0) && (size > 0)) {
         str[(ret < size) ? ret : size - 1] = '\0';
     }
 
-    return ret;
+    திரும்பு ret;
 }
 
 #endif /* CONFIG_PRINTING */

@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#அந்தர்பாவ <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+நிலையான உள்வரி வெறுமை cleanByWSL(word_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm நிலையற்ற("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+நிலையான உள்வரி வெறுமை cleanInvalidateByWSL(word_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm நிலையற்ற("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+நிலையான உள்வரி word_t readCLID(வெறுமை)
 {
     word_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    திரும்பு CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -28,13 +28,13 @@ static inline word_t readCLID(void)
 #define LOUIS(x)   (((x) >> 21)        & MASK(3))
 #define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
 
-enum arm_cache_type {
+எண்ணிக்கை arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+நிலையான உள்வரி word_t readCacheSize(முழு level, bool_t instruction)
 {
     word_t size, csselr_old;
     /* Save CSSELR */
@@ -45,27 +45,27 @@ static inline word_t readCacheSize(int level, bool_t instruction)
     MRS("ccsidr_el1", size);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    திரும்பு size;
 }
 
 #define LINEBITS(s)     (((s) & MASK(3)) + 4)
 #define ASSOC(s)        ((((s) >> 3) & MASK(10)) + 1)
 #define NSETS(s)        ((((s) >> 13) & MASK(15)) + 1)
 
-void clean_D_PoU(void)
+வெறுமை clean_D_PoU(வெறுமை)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    முழு clid = readCLID();
+    முழு lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    க்கு (முழு l = 0; l < lou; l++) {
+        எனில் (CTYPE(clid, l) > ARMCacheI) {
             word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
+            முழு lbits = LINEBITS(lsize);
+            முழு assoc = ASSOC(lsize);
+            முழு assoc_bits = wordBits - clzl(assoc - 1);
+            முழு nsets = NSETS(lsize);
+            க்கு (முழு w = 0; w < assoc; w++) {
+                க்கு (முழு s = 0; s < nsets; s++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (s << lbits) | (l << 1));
                 }
@@ -74,35 +74,35 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+நிலையான உள்வரி வெறுமை cleanInvalidate_D_by_level(முழு l)
 {
     word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    முழு lbits = LINEBITS(lsize);
+    முழு assoc = ASSOC(lsize);
+    முழு assoc_bits = wordBits - clzl(assoc - 1);
+    முழு nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
+    க்கு (முழு w = 0; w < assoc; w++) {
+        க்கு (முழு s = 0; s < nsets; s++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (s << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+வெறுமை cleanInvalidate_D_PoC(வெறுமை)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    முழு clid = readCLID();
+    முழு loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    க்கு (முழு l = 0; l < loc; l++) {
+        எனில் (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+வெறுமை cleanInvalidate_L1D(வெறுமை)
 {
     cleanInvalidate_D_by_level(0);
 }

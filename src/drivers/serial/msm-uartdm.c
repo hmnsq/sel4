@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <stdint.h>
+#அந்தர்பாவ <util.h>
+#அந்தர்பாவ <machine/io.h>
 
 #define USR                   0x08
 #define UTF                   0x70
@@ -18,12 +18,12 @@
 #define USR_TXRDY             BIT(2)
 #define USR_TXEMP             BIT(3)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#define UART_REG(X) ((நிலையற்ற uint32_t *)(UART_PPTR + (X)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+வெறுமை uart_drv_putchar(unsigned எழுத்து c)
 {
-    while ((*UART_REG(USR) & USR_TXEMP) == 0);
+    போது ((*UART_REG(USR) & USR_TXEMP) == 0);
     /* Tell the peripheral how many characters to send */
     *UART_REG(UNTX) = 1;
     /* Write the character into the FIFO */
@@ -32,10 +32,10 @@ void uart_drv_putchar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned எழுத்து uart_drv_getchar(வெறுமை)
 {
-    while ((*UART_REG(USR) & USR_RXRDY) == 0);
+    போது ((*UART_REG(USR) & USR_RXRDY) == 0);
 
-    return *UART_REG(UTF) & 0xff;
+    திரும்பு *UART_REG(UTF) & 0xff;
 }
 #endif /* CONFIG_DEBUG_BUILD */

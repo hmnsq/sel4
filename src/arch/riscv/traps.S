@@ -106,7 +106,7 @@ BEGIN_FUNC(trap_entry)
   bne  s0, s4, exception
 
 handle_syscall:
-  /* Set the return address to sepc + 4 in the case of a system/environment call */
+  /* Set the return address to sepc + 4 in the case of a system/environment அழை */
   addi x1, x1, 4
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)

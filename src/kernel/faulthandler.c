@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/failures.h>
-#include <kernel/cspace.h>
-#include <kernel/faulthandler.h>
-#include <kernel/thread.h>
-#include <machine/io.h>
-#include <arch/machine.h>
+#அந்தர்பாவ <api/failures.h>
+#அந்தர்பாவ <kernel/cspace.h>
+#அந்தர்பாவ <kernel/faulthandler.h>
+#அந்தர்பாவ <kernel/thread.h>
+#அந்தர்பாவ <machine/io.h>
+#அந்தர்பாவ <arch/machine.h>
 
 #ifdef CONFIG_KERNEL_MCS
-void handleFault(tcb_t *tptr)
+வெறுமை handleFault(tcb_t *tptr)
 {
     cap_t faultHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap;
-    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
+    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != வெற்று);
+    எனில் (!hasFaultHandler) {
         handleNoFaultHandler(tptr);
     }
 }
 
-void handleTimeout(tcb_t *tptr)
+வெறுமை handleTimeout(tcb_t *tptr)
 {
-    assert(validTimeoutHandler(tptr));
+    ப்ரதிஜ்ஞா(validTimeoutHandler(tptr));
     cap_t timeoutHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbTimeoutHandler)->cap;
     sendFaultIPC(tptr, timeoutHandlerCap, false);
 }
 
 bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 {
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap) {
-        assert(validFaultHandler(handlerCap));
+    எனில் (cap_get_capType(handlerCap) == cap_endpoint_cap) {
+        ப்ரதிஜ்ஞா(validFaultHandler(handlerCap));
 
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        எனில் (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = current_lookup_fault;
         }
         sendIPC(true, false,
@@ -44,21 +44,21 @@ bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
                 can_donate, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return true;
-    } else {
-        assert(cap_get_capType(handlerCap) == cap_null_cap);
-        return false;
+        திரும்பு true;
+    } இல்லையெனில் {
+        ப்ரதிஜ்ஞா(cap_get_capType(handlerCap) == cap_null_cap);
+        திரும்பு false;
     }
 }
-#else
+#இல்லையெனில்
 
-void handleFault(tcb_t *tptr)
+வெறுமை handleFault(tcb_t *tptr)
 {
     exception_t status;
     seL4_Fault_t fault = current_fault;
 
     status = sendFaultIPC(tptr);
-    if (status != EXCEPTION_NONE) {
+    எனில் (status != EXCEPTION_NONE) {
         handleDoubleFault(tptr, fault);
     }
 }
@@ -74,18 +74,18 @@ exception_t sendFaultIPC(tcb_t *tptr)
 
     handlerCPtr = tptr->tcbFaultHandler;
     lu_ret = lookupCap(tptr, handlerCPtr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    எனில் (lu_ret.status != EXCEPTION_NONE) {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-        return EXCEPTION_FAULT;
+        திரும்பு EXCEPTION_FAULT;
     }
     handlerCap = lu_ret.cap;
 
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
+    எனில் (cap_get_capType(handlerCap) == cap_endpoint_cap &&
         cap_endpoint_cap_get_capCanSend(handlerCap) &&
         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
          cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        எனில் (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = original_lookup_fault;
         }
         sendIPC(true, true,
@@ -93,67 +93,67 @@ exception_t sendFaultIPC(tcb_t *tptr)
                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return EXCEPTION_NONE;
-    } else {
+        திரும்பு EXCEPTION_NONE;
+    } இல்லையெனில் {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
         current_lookup_fault = lookup_fault_missing_capability_new(0);
 
-        return EXCEPTION_FAULT;
+        திரும்பு EXCEPTION_FAULT;
     }
 }
 #endif
 
 #ifdef CONFIG_PRINTING
-static void print_fault(seL4_Fault_t f)
+நிலையான வெறுமை print_fault(seL4_Fault_t f)
 {
-    switch (seL4_Fault_get_seL4_FaultType(f)) {
-    case seL4_Fault_NullFault:
+    தேர்வு (seL4_Fault_get_seL4_FaultType(f)) {
+    நிலை seL4_Fault_NullFault:
         printf("null fault");
-        break;
-    case seL4_Fault_CapFault:
+        நிறுத்து;
+    நிலை seL4_Fault_CapFault:
         printf("cap fault in %s phase at address %p",
                seL4_Fault_CapFault_get_inReceivePhase(f) ? "receive" : "send",
-               (void *)seL4_Fault_CapFault_get_address(f));
-        break;
-    case seL4_Fault_VMFault:
+               (வெறுமை *)seL4_Fault_CapFault_get_address(f));
+        நிறுத்து;
+    நிலை seL4_Fault_VMFault:
         printf("vm fault on %s at address %p with status %p",
                seL4_Fault_VMFault_get_instructionFault(f) ? "code" : "data",
-               (void *)seL4_Fault_VMFault_get_address(f),
-               (void *)seL4_Fault_VMFault_get_FSR(f));
-        break;
-    case seL4_Fault_UnknownSyscall:
+               (வெறுமை *)seL4_Fault_VMFault_get_address(f),
+               (வெறுமை *)seL4_Fault_VMFault_get_FSR(f));
+        நிறுத்து;
+    நிலை seL4_Fault_UnknownSyscall:
         printf("unknown syscall %p",
-               (void *)seL4_Fault_UnknownSyscall_get_syscallNumber(f));
-        break;
-    case seL4_Fault_UserException:
+               (வெறுமை *)se_L4_Fault_Unknown_Syscall_get_syscall_எண்(f));
+        நிறுத்து;
+    நிலை seL4_Fault_UserException:
         printf("user exception %p code %p",
-               (void *)seL4_Fault_UserException_get_number(f),
-               (void *)seL4_Fault_UserException_get_code(f));
-        break;
+               (வெறுமை *)se_L4_Fault_User_Exception_get_எண்(f),
+               (வெறுமை *)seL4_Fault_UserException_get_code(f));
+        நிறுத்து;
 #ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        printf("Timeout fault for 0x%x\n", (unsigned int) seL4_Fault_Timeout_get_badge(f));
-        break;
+    நிலை seL4_Fault_Timeout:
+        printf("Timeout fault for 0x%x\n", (unsigned முழு) seL4_Fault_Timeout_get_badge(f));
+        நிறுத்து;
 #endif
-    default:
+    இயல்பு:
         printf("unknown fault");
-        break;
+        நிறுத்து;
     }
 }
 #endif
 
 #ifdef CONFIG_KERNEL_MCS
-void handleNoFaultHandler(tcb_t *tptr)
-#else
+வெறுமை handleNoFaultHandler(tcb_t *tptr)
+#இல்லையெனில்
 /* The second fault, ex2, is stored in the global current_fault */
-void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
+வெறுமை handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #endif
 {
 #ifdef CONFIG_PRINTING
 #ifdef CONFIG_KERNEL_MCS
     printf("Found thread has no fault handler while trying to handle:\n");
     print_fault(current_fault);
-#else
+#இல்லையெனில்
     seL4_Fault_t ex2 = current_fault;
     printf("Caught ");
     print_fault(ex2);
@@ -164,9 +164,9 @@ void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
     printf("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
 #endif /* CONFIG_DEBUG_BUILD */
 
-    printf("at address %p\n", (void *)getRestartPC(tptr));
+    printf("at address %p\n", (வெறுமை *)getRestartPC(tptr));
     printf("With stack:\n");
-    Arch_userStackTrace(tptr);
+    Arch_user_அடுக்கு_Trace(tptr);
 #endif
 
     setThreadState(tptr, ThreadState_Inactive);

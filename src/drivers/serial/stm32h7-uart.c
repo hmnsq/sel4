@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <stdint.h>
+#அந்தர்பாவ <util.h>
+#அந்தர்பாவ <machine/io.h>
+#அந்தர்பாவ <plat/machine/devices_gen.h>
 
 #define USART_ISR               0x1C
 #define USART_TDR               0x28
 
 #define USART_ISR_TXE           0x80U
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((நிலையற்ற uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+வெறுமை uart_drv_putchar(unsigned எழுத்து c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    போது (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned எழுத்து uart_drv_getchar(வெறுமை)
 {
-    return -1;
+    திரும்பு -1;
 }
 #endif /* CONFIG_DEBUG_BUILD */

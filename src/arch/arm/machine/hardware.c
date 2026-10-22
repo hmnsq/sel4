@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/registerset.h>
-#include <arch/machine.h>
-#include <plat/machine/hardware.h>
+#அந்தர்பாவ <types.h>
+#அந்தர்பாவ <machine/registerset.h>
+#அந்தர்பாவ <arch/machine.h>
+#அந்தர்பாவ <plat/machine/hardware.h>
 
 word_t PURE getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    திரும்பு getRegister(thread, FaultIP);
 }
 
-void setNextPC(tcb_t *thread, word_t v)
+வெறுமை setNextPC(tcb_t *thread, word_t v)
 {
     setRegister(thread, NEXT_PC_REG, v);
 }
 
-BOOT_CODE void map_kernel_devices(void)
+BOOT_CODE வெறுமை map_kernel_devices(வெறுமை)
 {
     /* If there are no kernel device frames at all, then kernel_device_frames is
      * NULL. Thus we can't use ARRAY_SIZE(kernel_device_frames) here directly,
      * but have to use NUM_KERNEL_DEVICE_FRAMES that is defined accordingly.
      */
-    for (int i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
-        const kernel_frame_t *frame = &kernel_device_frames[i];
+    க்கு (முழு i = 0; i < இலக்கம்_KERNEL_DEVICE_FRAMES; i++) {
+        மாறிலி kernel_frame_t *frame = &kernel_device_frames[i];
         /* all frames are supposed to describe device memory, so they should
          * never be marked as executable.
          */
-        assert(frame->armExecuteNever);
+        ப்ரதிஜ்ஞா(frame->armExecuteNever);
         map_kernel_frame(frame->paddr, frame->pptr, VMKernelOnly,
                          vm_attributes_new(frame->armExecuteNever, false,
                                            false));
-        if (!frame->userAvailable) {
+        எனில் (!frame->userAvailable) {
             reserve_region((p_region_t) {
                 .start = frame->paddr,
                 .end   = frame->paddr + BIT(PAGE_BITS)

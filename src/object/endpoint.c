@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <string.h>
-#include <sel4/constants.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <machine/registerset.h>
-#include <model/statedata.h>
-#include <object/notification.h>
-#include <object/cnode.h>
-#include <object/endpoint.h>
-#include <object/tcb.h>
+#அந்தர்பாவ <types.h>
+#அந்தர்பாவ <string.h>
+#அந்தர்பாவ <sel4/constants.h>
+#அந்தர்பாவ <kernel/thread.h>
+#அந்தர்பாவ <kernel/vspace.h>
+#அந்தர்பாவ <machine/registerset.h>
+#அந்தர்பாவ <model/statedata.h>
+#அந்தர்பாவ <object/notification.h>
+#அந்தர்பாவ <object/cnode.h>
+#அந்தர்பாவ <object/endpoint.h>
+#அந்தர்பாவ <object/tcb.h>
 
 #ifdef CONFIG_KERNEL_MCS
-void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
+வெறுமை sendIPC(bool_t blocking, bool_t do_call, word_t badge,
              bool_t canGrant, bool_t canGrantReply, bool_t canDonate, tcb_t *thread, endpoint_t *epptr)
-#else
-void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
+#இல்லையெனில்
+வெறுமை sendIPC(bool_t blocking, bool_t do_call, word_t badge,
              bool_t canGrant, bool_t canGrantReply, tcb_t *thread, endpoint_t *epptr)
 #endif
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Send:
-        if (blocking) {
+    தேர்வு (endpoint_ptr_get_state(epptr)) {
+    நிலை EPState_Idle:
+    நிலை EPState_Send:
+        எனில் (blocking) {
 
             /* Set thread state to BlockedOnSend */
             thread_state_ptr_set_tsType(&thread->tcbState,
@@ -48,7 +48,7 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
             /* Place calling thread in endpoint queue */
 #ifdef CONFIG_KERNEL_MCS
             tcbEPAppend(thread, epptr, EPState_Send);
-#else
+#இல்லையெனில்
             tcb_queue_t queue;
             queue = ep_ptr_get_queue(epptr);
             queue = tcbEPAppend(thread, queue);
@@ -57,9 +57,9 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
 #endif /* CONFIG_KERNEL_MCS */
 
         }
-        break;
+        நிறுத்து;
 
-    case EPState_Recv: {
+    நிலை EPState_Recv: {
         tcb_queue_t queue;
         tcb_t *dest;
 
@@ -68,16 +68,16 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
         dest = queue.head;
 
         /* Haskell error "Receive endpoint queue must not be empty" */
-        assert(dest);
+        ப்ரதிஜ்ஞா(dest);
 
         /* Dequeue the first TCB */
 #ifdef CONFIG_KERNEL_MCS
         tcbEPDequeue(dest, epptr);
-#else
+#இல்லையெனில்
         queue = tcbEPDequeue(dest, queue);
         ep_ptr_set_queue(epptr, queue);
 
-        if (!queue.head) {
+        எனில் (!queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Idle);
         }
 #endif /* CONFIG_KERNEL_MCS */
@@ -87,69 +87,69 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
 
 #ifdef CONFIG_KERNEL_MCS
         reply_t *reply = REPLY_PTR(thread_state_get_replyObject(dest->tcbState));
-        if (reply) {
+        எனில் (reply) {
             reply_unlink(reply, dest);
         }
 
-        if (do_call ||
+        எனில் (do_call ||
             seL4_Fault_ptr_get_seL4_FaultType(&thread->tcbFault) != seL4_Fault_NullFault) {
-            if (reply != NULL && (canGrant || canGrantReply)) {
-                reply_push(thread, dest, reply, canDonate);
-            } else {
+            எனில் (reply != வெற்று && (canGrant || canGrantReply)) {
+                reply_தள்ளு(thread, dest, reply, canDonate);
+            } இல்லையெனில் {
                 setThreadState(thread, ThreadState_Inactive);
             }
-        } else if (canDonate && dest->tcbSchedContext == NULL) {
+        } இல்லையெனில் எனில் (canDonate && dest->tcbSchedContext == வெற்று) {
             schedContext_donate(thread->tcbSchedContext, dest);
         }
 
         setThreadState(dest, ThreadState_Running);
         sched_context_t *dest_sc = dest->tcbSchedContext;
         /* blocked threads should have enough budget to get out of the kernel */
-        assert(dest_sc == NULL || refill_sufficient(dest_sc, 0));
-        assert(dest_sc == NULL || refill_ready(dest_sc));
-        if (sc_sporadic(dest_sc) && dest_sc != NODE_STATE(ksCurSC)) {
+        ப்ரதிஜ்ஞா(dest_sc == வெற்று || refill_sufficient(dest_sc, 0));
+        ப்ரதிஜ்ஞா(dest_sc == வெற்று || refill_ready(dest_sc));
+        எனில் (sc_sporadic(dest_sc) && dest_sc != முனை_STATE(ksCurSC)) {
             refill_unblock_check(dest_sc);
         }
         possibleSwitchTo(dest);
-#else
+#இல்லையெனில்
         bool_t replyCanGrant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
 
         setThreadState(dest, ThreadState_Running);
         possibleSwitchTo(dest);
 
-        if (do_call) {
-            if (canGrant || canGrantReply) {
+        எனில் (do_call) {
+            எனில் (canGrant || canGrantReply) {
                 setupCallerCap(thread, dest, replyCanGrant);
-            } else {
+            } இல்லையெனில் {
                 setThreadState(thread, ThreadState_Inactive);
             }
         }
 #endif
-        break;
+        நிறுத்து;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking, cap_t replyCap)
-#else
-void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
+வெறுமை receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking, cap_t replyCap)
+#இல்லையெனில்
+வெறுமை receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 #endif
 {
     endpoint_t *epptr;
     notification_t *ntfnPtr;
 
     /* Haskell error "receiveIPC: invalid cap" */
-    assert(cap_get_capType(cap) == cap_endpoint_cap);
+    ப்ரதிஜ்ஞா(cap_get_capType(cap) == cap_endpoint_cap);
 
     epptr = EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
 
 #ifdef CONFIG_KERNEL_MCS
-    reply_t *replyPtr = NULL;
-    if (cap_get_capType(replyCap) == cap_reply_cap) {
+    reply_t *replyPtr = வெற்று;
+    எனில் (cap_get_capType(replyCap) == cap_reply_cap) {
         replyPtr = REPLY_PTR(cap_reply_cap_get_capReplyPtr(replyCap));
         tcb_t *reply_tcb = replyPtr->replyTCB;
-        if (unlikely(reply_tcb != NULL && reply_tcb != thread)) {
+        எனில் (unlikely(reply_tcb != வெற்று && reply_tcb != thread)) {
             userError("Reply object already has unexecuted reply!");
             cancelIPC(reply_tcb);
         }
@@ -158,24 +158,24 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 
     /* Check for anything waiting in the notification */
     ntfnPtr = thread->tcbBoundNotification;
-    if (ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
+    எனில் (ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
         completeSignal(ntfnPtr, thread);
-    } else {
+    } இல்லையெனில் {
 #ifdef CONFIG_KERNEL_MCS
         /* If this is a blocking recv and we didn't have a pending notification,
          * then if we are running on an SC from a bound notification, then we
          * need to return it so that we can passively wait on the EP for potentially
          * SC donations from client threads.
          */
-        if (ntfnPtr && isBlocking) {
+        எனில் (ntfnPtr && isBlocking) {
             maybeReturnSchedContext(ntfnPtr, thread);
         }
 #endif
-        switch (endpoint_ptr_get_state(epptr)) {
-        case EPState_Idle:
-        case EPState_Recv: {
+        தேர்வு (endpoint_ptr_get_state(epptr)) {
+        நிலை EPState_Idle:
+        நிலை EPState_Recv: {
 
-            if (isBlocking) {
+            எனில் (isBlocking) {
                 /* Set thread state to BlockedOnReceive */
                 thread_state_ptr_set_tsType(&thread->tcbState,
                                             ThreadState_BlockedOnReceive);
@@ -183,13 +183,13 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                     &thread->tcbState, EP_REF(epptr));
 #ifdef CONFIG_KERNEL_MCS
                 thread_state_ptr_set_replyObject(&thread->tcbState, REPLY_REF(replyPtr));
-#else
+#இல்லையெனில்
                 thread_state_ptr_set_blockingIPCCanGrant(
                     &thread->tcbState, cap_endpoint_cap_get_capCanGrant(cap));
 #endif
                 scheduleTCB(thread);
 #ifdef CONFIG_KERNEL_MCS
-                if (replyPtr) {
+                எனில் (replyPtr) {
                     replyPtr->replyTCB = thread;
                 }
 #endif
@@ -197,20 +197,20 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                 /* Place calling thread in endpoint queue */
 #ifdef CONFIG_KERNEL_MCS
                 tcbEPAppend(thread, epptr, EPState_Recv);
-#else
+#இல்லையெனில்
                 tcb_queue_t queue;
                 queue = ep_ptr_get_queue(epptr);
                 queue = tcbEPAppend(thread, queue);
                 endpoint_ptr_set_state(epptr, EPState_Recv);
                 ep_ptr_set_queue(epptr, queue);
 #endif /* CONFIG_KERNEL_MCS */
-            } else {
+            } இல்லையெனில் {
                 doNBRecvFailedTransfer(thread);
             }
-            break;
+            நிறுத்து;
         }
 
-        case EPState_Send: {
+        நிலை EPState_Send: {
             tcb_queue_t queue;
             tcb_t *sender;
             word_t badge;
@@ -223,16 +223,16 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
             sender = queue.head;
 
             /* Haskell error "Send endpoint queue must not be empty" */
-            assert(sender);
+            ப்ரதிஜ்ஞா(sender);
 
             /* Dequeue the first TCB */
 #ifdef CONFIG_KERNEL_MCS
             tcbEPDequeue(sender, epptr);
-#else
+#இல்லையெனில்
             queue = tcbEPDequeue(sender, queue);
             ep_ptr_set_queue(epptr, queue);
 
-            if (!queue.head) {
+            எனில் (!queue.head) {
                 endpoint_ptr_set_state(epptr, EPState_Idle);
             }
 #endif /* CONFIG_KERNEL_MCS */
@@ -251,52 +251,52 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
             do_call = thread_state_ptr_get_blockingIPCIsCall(&sender->tcbState);
 
 #ifdef CONFIG_KERNEL_MCS
-            if (sc_sporadic(sender->tcbSchedContext)) {
+            எனில் (sc_sporadic(sender->tcbSchedContext)) {
                 /* We know that the sender can't have the current SC as
                  * its own SC as this point as it should still be
                  * associated with the current thread, no thread, or a
                  * thread that isn't blocked. This check is added here
                  * to reduce the cost of proving this to be true as a
                  * short-term stop-gap. */
-                assert(sender->tcbSchedContext != NODE_STATE(ksCurSC));
-                if (sender->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                ப்ரதிஜ்ஞா(sender->tcbSchedContext != முனை_STATE(ksCurSC));
+                எனில் (sender->tcbSchedContext != முனை_STATE(ksCurSC)) {
                     refill_unblock_check(sender->tcbSchedContext);
                 }
             }
 
-            if (do_call ||
+            எனில் (do_call ||
                 seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_NullFault) {
-                if ((canGrant || canGrantReply) && replyPtr != NULL) {
-                    bool_t canDonate = sender->tcbSchedContext != NULL
+                எனில் ((canGrant || canGrantReply) && replyPtr != வெற்று) {
+                    bool_t canDonate = sender->tcbSchedContext != வெற்று
                                        && seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_Timeout;
-                    reply_push(sender, thread, replyPtr, canDonate);
-                } else {
+                    reply_தள்ளு(sender, thread, replyPtr, canDonate);
+                } இல்லையெனில் {
                     setThreadState(sender, ThreadState_Inactive);
                 }
-            } else {
+            } இல்லையெனில் {
                 setThreadState(sender, ThreadState_Running);
                 possibleSwitchTo(sender);
-                assert(sender->tcbSchedContext == NULL || refill_sufficient(sender->tcbSchedContext, 0));
+                ப்ரதிஜ்ஞா(sender->tcbSchedContext == வெற்று || refill_sufficient(sender->tcbSchedContext, 0));
             }
-#else
-            if (do_call) {
-                if (canGrant || canGrantReply) {
+#இல்லையெனில்
+            எனில் (do_call) {
+                எனில் (canGrant || canGrantReply) {
                     setupCallerCap(sender, thread, cap_endpoint_cap_get_capCanGrant(cap));
-                } else {
+                } இல்லையெனில் {
                     setThreadState(sender, ThreadState_Inactive);
                 }
-            } else {
+            } இல்லையெனில் {
                 setThreadState(sender, ThreadState_Running);
                 possibleSwitchTo(sender);
             }
 #endif
-            break;
+            நிறுத்து;
         }
         }
     }
 }
 
-void replyFromKernel_error(tcb_t *thread)
+வெறுமை replyFromKernel_error(tcb_t *thread)
 {
     word_t len;
     word_t *ipcBuffer;
@@ -306,25 +306,25 @@ void replyFromKernel_error(tcb_t *thread)
     len = setMRs_syscall_error(thread, ipcBuffer);
 
 #ifdef CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
-    char *debugBuffer = (char *)(ipcBuffer + DEBUG_MESSAGE_START + 1);
-    word_t add = strlcpy(debugBuffer, (char *)current_debug_error.errorMessage,
-                         DEBUG_MESSAGE_MAXLEN * sizeof(word_t));
+    எழுத்து *debugBuffer = (எழுத்து *)(ipcBuffer + DEBUG_MESSAGE_START + 1);
+    word_t add = strlcpy(debugBuffer, (எழுத்து *)current_debug_error.errorMessage,
+                         DEBUG_MESSAGE_MAXLEN * அளவு(word_t));
 
-    len += (add / sizeof(word_t)) + 1;
+    len += (add / அளவு(word_t)) + 1;
 #endif
 
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+    setRegister(thread, செய்தி_Info_Register, wordFromMessageInfo(
                     seL4_MessageInfo_new(current_syscall_error.type, 0, 0, len)));
 }
 
-void replyFromKernel_success_empty(tcb_t *thread)
+வெறுமை replyFromKernel_success_empty(tcb_t *thread)
 {
     setRegister(thread, badgeRegister, 0);
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+    setRegister(thread, செய்தி_Info_Register, wordFromMessageInfo(
                     seL4_MessageInfo_new(0, 0, 0, 0)));
 }
 
-void cancelIPC(tcb_t *tptr)
+வெறுமை cancelIPC(tcb_t *tptr)
 {
     thread_state_t *state = &tptr->tcbState;
 
@@ -333,52 +333,52 @@ void cancelIPC(tcb_t *tptr)
     tptr->tcbFault = seL4_Fault_NullFault_new();
 #endif
 
-    switch (thread_state_ptr_get_tsType(state)) {
-    case ThreadState_BlockedOnSend:
-    case ThreadState_BlockedOnReceive: {
+    தேர்வு (thread_state_ptr_get_tsType(state)) {
+    நிலை ThreadState_BlockedOnSend:
+    நிலை ThreadState_BlockedOnReceive: {
         /* blockedIPCCancel state */
         endpoint_t *epptr;
 
         epptr = EP_PTR(thread_state_ptr_get_blockingObject(state));
 
         /* Haskell error "blockedIPCCancel: endpoint must not be idle" */
-        assert(endpoint_ptr_get_state(epptr) != EPState_Idle);
+        ப்ரதிஜ்ஞா(endpoint_ptr_get_state(epptr) != EPState_Idle);
 
         /* Dequeue TCB */
 #ifdef CONFIG_KERNEL_MCS
         tcbEPDequeue(tptr, epptr);
-#else
+#இல்லையெனில்
         tcb_queue_t queue;
         queue = ep_ptr_get_queue(epptr);
         queue = tcbEPDequeue(tptr, queue);
         ep_ptr_set_queue(epptr, queue);
 
-        if (!queue.head) {
+        எனில் (!queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Idle);
         }
 #endif /* CONFIG_KERNEL_MCS */
 
 #ifdef CONFIG_KERNEL_MCS
-        if (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
+        எனில் (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
             reply_t *reply = REPLY_PTR(thread_state_ptr_get_replyObject(state));
-            if (reply != NULL) {
+            எனில் (reply != வெற்று) {
                 reply_unlink(reply, tptr);
             }
         }
 #endif
         setThreadState(tptr, ThreadState_Inactive);
-        break;
+        நிறுத்து;
     }
 
-    case ThreadState_BlockedOnNotification:
+    நிலை ThreadState_BlockedOnNotification:
         cancelSignal(tptr,
                      NTFN_PTR(thread_state_ptr_get_blockingObject(state)));
-        break;
+        நிறுத்து;
 
-    case ThreadState_BlockedOnReply: {
+    நிலை ThreadState_BlockedOnReply: {
 #ifdef CONFIG_KERNEL_MCS
         reply_remove_tcb(tptr);
-#else
+#இல்லையெனில்
         cte_t *slot, *callerCap;
 
         tptr->tcbFault = seL4_Fault_NullFault_new();
@@ -386,47 +386,47 @@ void cancelIPC(tcb_t *tptr)
         /* Get the reply cap slot */
         slot = TCB_PTR_CTE_PTR(tptr, tcbReply);
 
-        callerCap = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (callerCap) {
+        callerCap = CTE_PTR(mdb_முனை_get_mdb_Next(slot->cteMDBNode));
+        எனில் (callerCap) {
             /** GHOSTUPD: "(True,
                 gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
             cteDeleteOne(callerCap);
         }
 #endif
 
-        break;
+        நிறுத்து;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void restart_thread_if_no_fault(tcb_t *thread)
+நிலையான உள்வரி வெறுமை restart_thread_if_no_fault(tcb_t *thread)
 {
-    if (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
+    எனில் (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
         setThreadState(thread, ThreadState_Restart);
-        if (sc_sporadic(thread->tcbSchedContext)) {
+        எனில் (sc_sporadic(thread->tcbSchedContext)) {
             /* We know that the thread can't have the current SC
              * as its own SC as this point as it should still be
              * associated with the current thread, or no thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            ப்ரதிஜ்ஞா(thread->tcbSchedContext != முனை_STATE(ksCurSC));
+            எனில் (thread->tcbSchedContext != முனை_STATE(ksCurSC)) {
                 refill_unblock_check(thread->tcbSchedContext);
             }
         }
         possibleSwitchTo(thread);
-    } else {
+    } இல்லையெனில் {
         setThreadState(thread, ThreadState_Inactive);
     }
 }
 
-static inline void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
+நிலையான உள்வரி வெறுமை removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
 {
     tcbEPDequeue(thread, epptr);
-    if (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
+    எனில் (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
         reply_t *reply = REPLY_PTR(thread_state_get_replyObject(thread->tcbState));
-        if (reply != NULL) {
+        எனில் (reply != வெற்று) {
             reply_unlink(reply, thread);
         }
     }
@@ -434,13 +434,13 @@ static inline void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epp
 }
 #endif
 
-void cancelAllIPC(endpoint_t *epptr)
+வெறுமை cancelAllIPC(endpoint_t *epptr)
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-        break;
+    தேர்வு (endpoint_ptr_get_state(epptr)) {
+    நிலை EPState_Idle:
+        நிறுத்து;
 
-    default: {
+    இயல்பு: {
         /* Clear the queue and set all blocked threads to restart */
 #ifdef CONFIG_KERNEL_MCS
         tcb_queue_t queue;
@@ -448,11 +448,11 @@ void cancelAllIPC(endpoint_t *epptr)
 
         queue = ep_ptr_get_queue(epptr);
 
-        for (thread = queue.head; thread; thread = next) {
+        க்கு (thread = queue.head; thread; thread = next) {
             next = thread->tcbSchedNext;
             removeAndRestartEPQueuedThread(thread, epptr);
         }
-#else
+#இல்லையெனில்
         tcb_t *thread = TCB_PTR(endpoint_ptr_get_epQueue_head(epptr));
 
         /* Make endpoint idle */
@@ -460,49 +460,49 @@ void cancelAllIPC(endpoint_t *epptr)
         endpoint_ptr_set_epQueue_head(epptr, 0);
         endpoint_ptr_set_epQueue_tail(epptr, 0);
 
-        for (; thread; thread = thread->tcbEPNext) {
+        க்கு (; thread; thread = thread->tcbEPNext) {
             setThreadState(thread, ThreadState_Restart);
             SCHED_ENQUEUE(thread);
         }
 #endif
 
         rescheduleRequired();
-        break;
+        நிறுத்து;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, word_t badge)
+நிலையான உள்வரி வெறுமை removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, word_t badge)
 {
     word_t b = thread_state_ptr_get_blockingIPCBadge(&thread->tcbState);
 
     /* senders do not have reply objects in their state, and we are only cancelling sends */
-    assert(thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnSend);
-    if (b == badge) {
+    ப்ரதிஜ்ஞா(thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnSend);
+    எனில் (b == badge) {
         tcbEPDequeue(thread, epptr);
         restart_thread_if_no_fault(thread);
     }
 }
 #endif
 
-void cancelBadgedSends(endpoint_t *epptr, word_t badge)
+வெறுமை cancelBadgedSends(endpoint_t *epptr, word_t badge)
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Recv:
-        break;
+    தேர்வு (endpoint_ptr_get_state(epptr)) {
+    நிலை EPState_Idle:
+    நிலை EPState_Recv:
+        நிறுத்து;
 
-    case EPState_Send: {
+    நிலை EPState_Send: {
         tcb_t *thread, *next;
         tcb_queue_t queue = ep_ptr_get_queue(epptr);
 
 #ifdef CONFIG_KERNEL_MCS
-        for (thread = queue.head; thread; thread = next) {
+        க்கு (thread = queue.head; thread; thread = next) {
             next = thread->tcbSchedNext;
             removeAndRestartBadgedThread(thread, epptr, badge);
         }
-#else
+#இல்லையெனில்
         /* this is a de-optimisation for verification
          * reasons. it allows the contents of the endpoint
          * queue to be ignored during the for loop. */
@@ -510,12 +510,12 @@ void cancelBadgedSends(endpoint_t *epptr, word_t badge)
         endpoint_ptr_set_epQueue_head(epptr, 0);
         endpoint_ptr_set_epQueue_tail(epptr, 0);
 
-        for (thread = queue.head; thread; thread = next) {
+        க்கு (thread = queue.head; thread; thread = next) {
             word_t b = thread_state_ptr_get_blockingIPCBadge(
                            &thread->tcbState);
             next = thread->tcbEPNext;
 
-            if (b == badge) {
+            எனில் (b == badge) {
                 setThreadState(thread, ThreadState_Restart);
                 SCHED_ENQUEUE(thread);
                 queue = tcbEPDequeue(thread, queue);
@@ -524,22 +524,22 @@ void cancelBadgedSends(endpoint_t *epptr, word_t badge)
         }
         ep_ptr_set_queue(epptr, queue);
 
-        if (queue.head) {
+        எனில் (queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Send);
         }
 #endif /* CONFIG_KERNEL_MCS */
         rescheduleRequired();
 
-        break;
+        நிறுத்து;
     }
 
-    default:
+    இயல்பு:
         fail("invalid EP state");
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-void tcbEPAppend(tcb_t *thread, endpoint_t *epptr, endpoint_state_t ep_state)
+வெறுமை tcbEPAppend(tcb_t *thread, endpoint_t *epptr, endpoint_state_t ep_state)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
@@ -553,7 +553,7 @@ void tcbEPAppend(tcb_t *thread, endpoint_t *epptr, endpoint_state_t ep_state)
     endpoint_ptr_set_state(epptr, ep_state);
 }
 
-void tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
+வெறுமை tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
@@ -562,12 +562,12 @@ void tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
     new_queue = tcb_queue_remove(queue, thread);
     ep_ptr_set_queue(epptr, new_queue);
 
-    if (tcb_queue_empty(new_queue)) {
+    எனில் (tcb_queue_empty(new_queue)) {
         endpoint_ptr_set_state(epptr, EPState_Idle);
     }
 }
 
-void reorderEP(endpoint_t *epptr, tcb_t *thread)
+வெறுமை reorderEP(endpoint_t *epptr, tcb_t *thread)
 {
     tcb_queue_t queue = ep_ptr_get_queue(epptr);
     queue = tcb_queue_remove(queue, thread);

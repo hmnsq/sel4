@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <stdint.h>
+#அந்தர்பாவ <util.h>
+#அந்தர்பாவ <machine/io.h>
+#அந்தர்பாவ <plat/machine/devices_gen.h>
 
 #define UTHR        0x0
 #define ULSR        0x14
@@ -16,22 +16,22 @@
 #define ULSR_THRE   BIT(5)
 #define ULSR_RDR    BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((நிலையற்ற uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+வெறுமை uart_drv_putchar(unsigned எழுத்து c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    போது ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned எழுத்து uart_drv_getchar(வெறுமை)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    போது ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    திரும்பு *UART_REG(UTHR);
 }
 #endif /* CONFIG_DEBUG_BUILD */

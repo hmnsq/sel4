@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <model/statedata.h>
+#அந்தர்பாவ <arch/fastpath/fastpath.h>
+#அந்தர்பாவ <arch/kernel/traps.h>
+#அந்தர்பாவ <api/syscall.h>
+#அந்தர்பாவ <linker.h>
+#அந்தர்பாவ <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#அந்தர்பாவ <benchmark/benchmark_track.h>
+#அந்தர்பாவ <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+வெறுமை VISIBLE NORETURN restore_user_context(வெறுமை)
 {
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(முனை_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    முனை_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm நிலையற்ற(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#இல்லையெனில்
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
 #endif
@@ -59,56 +59,56 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(முனை_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#எனில் defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED நிலையான மாறிலி எழுத்து *vect_offset_to_name(word_t vect_offset)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    தேர்வு (vect_offset) {
+    நிலை 0x000:
+        திரும்பு "Synchronous EL1t/EL2t";
+    நிலை 0x080:
+        திரும்பு "IRQ EL1t/EL2t";
+    நிலை 0x100:
+        திரும்பு "FIQ EL1t/EL2t";
+    நிலை 0x180:
+        திரும்பு "SError EL1t/EL2t";
+    நிலை 0x200:
+        திரும்பு "Synchronous Current EL";
+    நிலை 0x280:
+        திரும்பு "IRQ Current EL";
+    நிலை 0x300:
+        திரும்பு "FIQ Current EL";
+    நிலை 0x380:
+        திரும்பு "SError Current EL";
+    நிலை 0x400:
+        திரும்பு "Synchronous 64-bit EL0/EL1";
+    நிலை 0x480:
+        திரும்பு "IRQ 64-bit EL0/EL1";
+    நிலை 0x500:
+        திரும்பு "FIQ 64-bit EL0/EL1";
+    நிலை 0x580:
+        திரும்பு "SError 64-bit EL0/EL1";
+    நிலை 0x600:
+        திரும்பு "Synchronous 32-bit EL0/EL1";
+    நிலை 0x680:
+        திரும்பு "IRQ 32-bit EL0/EL1";
+    நிலை 0x700:
+        திரும்பு "FIQ 32-bit EL0/EL1";
+    நிலை 0x780:
+        திரும்பு "SError 32-bit EL0/EL1";
+    இயல்பு:
+        திரும்பு "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+வெறுமை VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
 {
     printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
     printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));

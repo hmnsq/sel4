@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#அந்தர்பாவ <config.h>
+#அந்தர்பாவ <util.h>
+#அந்தர்பாவ <api/types.h>
+#அந்தர்பாவ <arch/types.h>
+#அந்தர்பாவ <arch/model/statedata.h>
+#அந்தர்பாவ <arch/object/structures.h>
+#அந்தர்பாவ <linker.h>
+#அந்தர்பாவ <plat/machine/hardware.h>
 
 #ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
+#அந்தர்பாவ <arch/object/smmu.h>
 #endif
 
 
@@ -82,7 +82,7 @@ asid_pool_t *armKSASIDTable[nASIDPools];
  * applies.
  */
 
-vspace_root_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
+vspace_வேர்_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
 pte_t armKSGlobalKernelPGD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
 pte_t armKSGlobalKernelPUD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
@@ -114,13 +114,13 @@ hw_asid_t armKSNextASID = hwASIDMin;
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
 cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+compile_assert(smmuStateSIDCNodeSize, அளவு(smmuStateSIDNode) >= ((SMMU_MAX_SID) * அளவு(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
 cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+compile_assert(smmuStateCBCNodeSize, அளவு(smmuStateCBNode) >= ((SMMU_MAX_CB) * அளவு(cte_t)));
 /*recording the context bank to ASID relationship*/
 asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
 #endif

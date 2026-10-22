@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
-#include <arch/kernel/thread.h>
+#அந்தர்பாவ <kernel/thread.h>
+#அந்தர்பாவ <arch/kernel/thread.h>
 
-void Arch_postModifyRegisters(tcb_t *tptr)
+வெறுமை Arch_postModifyRegisters(tcb_t *tptr)
 {
     Mode_postModifyRegisters(tptr);
 }
 
-void Arch_prepareNextDomain(void)
+வெறுமை Arch_prepareNextDomain(வெறுமை)
 {
     /* Don't need to do anything */
 }
 
-void Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
+வெறுமை Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
 {
     /* Don't need to do anything */
 }
