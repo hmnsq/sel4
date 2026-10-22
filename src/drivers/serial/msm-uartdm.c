@@ -4,38 +4,38 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
 
-#define USR                   0x08
-#define UTF                   0x70
-#define UNTX                  0x40
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ USR                   0x08
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UTF                   0x70
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UNTX                  0x40
 
-#define USR_RXRDY             BIT(0)
-#define USR_RXFUL             BIT(1)
-#define USR_TXRDY             BIT(2)
-#define USR_TXEMP             BIT(3)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ USR_RXRDY             ਦੋਆਧਾਰੀ_ਅੰਕ(0)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ USR_RXFUL             ਦੋਆਧਾਰੀ_ਅੰਕ(1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ USR_TXRDY             ਦੋਆਧਾਰੀ_ਅੰਕ(2)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ USR_TXEMP             ਦੋਆਧਾਰੀ_ਅੰਕ(3)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_REG(X) ((ਅਸਥਿਰ uint32_t *)(UART_PPTR + (X)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_PRINTING
+ਖਾਲੀ uart_drv_putchar(ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ c)
 {
-    while ((*UART_REG(USR) & USR_TXEMP) == 0);
+    ਜਦੋਂ ((*UART_REG(USR) & USR_TXEMP) == 0);
     /* Tell the peripheral how many characters to send */
     *UART_REG(UNTX) = 1;
     /* Write the character into the FIFO */
     *UART_REG(UTF) = c & 0xff;
 }
-#endif /* CONFIG_PRINTING */
+#ਜੇ_ਅੰਤ /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ uart_drv_getchar(ਖਾਲੀ)
 {
-    while ((*UART_REG(USR) & USR_RXRDY) == 0);
+    ਜਦੋਂ ((*UART_REG(USR) & USR_RXRDY) == 0);
 
-    return *UART_REG(UTF) & 0xff;
+    ਵਾਪਸ *UART_REG(UTF) & 0xff;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */

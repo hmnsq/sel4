@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
 
-#include <mode/smp/ipi.h>
-#include <smp/ipi.h>
-#include <smp/lock.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/smp/ipi.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <smp/ipi.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <smp/lock.h>
 
 /* This function switches the core it is called on to the idle thread,
  * in order to avoid IPI storms. If the core is waiting on the lock, the actual
@@ -19,200 +19,200 @@
 
  * The core who triggered the store is responsible for triggering a reschedule,
  * or this call will idle forever */
-void ipiStallCoreCallback(bool_t irqPath)
+ਖਾਲੀ ipiStallCoreCallback(bool_t irq_ਰਸਤਾ)
 {
-    word_t cpu = getCurrentCPUIndex();
-    clh_node_t *node = &big_kernel_lock.node[cpu];
+    ਸ਼ਬਦ_t cpu = getCurrentCPUIndex();
+    clh_ਗੰਢ_t *ਗੰਢ = &big_kernel_ਤਾਲਾ.ਗੰਢ[cpu];
 
-    if (clh_is_self_in_queue() && !irqPath) {
+    ਜੇ (clh_is_self_ਵਿੱਚ_ਕਤਾਰ() && !irq_ਰਸਤਾ) {
         /* The current thread is running as we would replace this thread with an idle thread
          *
          * The instruction should be re-executed if we are in kernel to handle syscalls.
          * Also, thread in 'ThreadState_RunningVM' should remain in same state.
          * Note that, 'ThreadState_Restart' does not always result in regenerating exception
          * if we are in kernel to handle them, e.g. hardware single step exception. */
-        if (thread_state_ptr_get_tsType(&NODE_STATE(ksCurThread)->tcbState) == ThreadState_Running) {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        ਜੇ (thread_state_ptr_get_tsType(&ਗੰਢ_STATE(ksCurThread)->tcbState) == ThreadState_Running) {
+            ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
         }
 
-        SCHED_ENQUEUE_CURRENT_TCB;
-        switchToIdleThread();
-#ifdef CONFIG_KERNEL_MCS
-        commitTime();
-        NODE_STATE(ksCurSC) = NODE_STATE(ksIdleThread)->tcbSchedContext;
-#endif
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+        SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ_CURRENT_TCB;
+        switch_ਮੰਜ਼ਿਲ_Idle_Thread();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        commit_ਸਮਾਂ();
+        ਗੰਢ_STATE(ksCurSC) = ਗੰਢ_STATE(ksIdleThread)->tcbSchedContext;
+#ਜੇ_ਅੰਤ
+        ਗੰਢ_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
 
         /* Let the cpu requesting this IPI continue while we wait on the lock */
-        node->ipi = 0;
-#ifdef CONFIG_ARCH_RISCV
+        ਗੰਢ->ipi = 0;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_RISCV
         ipi_clear_irq(irq_remote_call_ipi);
-#endif
+#ਜੇ_ਅੰਤ
         ipi_wait();
 
         /* Continue waiting on lock */
-        while (node->watch->state != CLHState_Granted) {
+        ਜਦੋਂ (ਗੰਢ->watch->state != CLHState_Granted) {
             __atomic_thread_fence(__ATOMIC_ACQUIRE);
-            if (clh_is_ipi_pending(cpu)) {
+            ਜੇ (clh_is_ipi_pending(cpu)) {
                 /* Multiple calls for similar reason could result in stack overflow */
-                assert(big_kernel_lock.ipi.remoteCall != IpiRemoteCall_Stall);
-                handleIPI(CORE_IRQ_TO_IRQT(cpu, irq_remote_call_ipi), irqPath);
+                ਪ੍ਰਤਿਜ੍ਞਾ(big_kernel_ਤਾਲਾ.ipi.remoteCall != IpiRemoteCall_Stall);
+                handleIPI(CORE_IRQ_ਮੰਜ਼ਿਲ_IRQT(cpu, irq_remote_call_ipi), irq_ਰਸਤਾ);
             }
             arch_pause();
         }
 
         /* make sure no resource access passes from this point */
-        asm volatile("" ::: "memory");
+        asm ਅਸਥਿਰ("" ::: "memory");
 
         /* Start idle thread to capture the pending IPI */
         activateThread();
         restore_user_context();
-    } else {
+    } ਨਹੀਂਤਾਂ {
         /* We get here either without grabbing the lock from normal interrupt path or from
          * inside the lock while waiting to grab the lock for handling pending interrupt.
          * In latter case, we return to the 'clh_lock_acquire' to grab the lock and
          * handle the pending interrupt. Its valid as interrupts are async events! */
-        SCHED_ENQUEUE_CURRENT_TCB;
-        switchToIdleThread();
-#ifdef CONFIG_KERNEL_MCS
-        commitTime();
-        NODE_STATE(ksCurSC) = NODE_STATE(ksIdleThread)->tcbSchedContext;
-#endif
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+        SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ_CURRENT_TCB;
+        switch_ਮੰਜ਼ਿਲ_Idle_Thread();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        commit_ਸਮਾਂ();
+        ਗੰਢ_STATE(ksCurSC) = ਗੰਢ_STATE(ksIdleThread)->tcbSchedContext;
+#ਜੇ_ਅੰਤ
+        ਗੰਢ_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
     }
 }
 
-void ipi_wait(void)
+ਖਾਲੀ ipi_wait(ਖਾਲੀ)
 {
-    ipi_state_t *ipi = &big_kernel_lock.ipi;
-    word_t cores = ipi->totalCoreBarrier;
-    word_t localsense = ipi->globalsense;
-    word_t *count = &ipi->count;
+    ipi_state_t *ipi = &big_kernel_ਤਾਲਾ.ipi;
+    ਸ਼ਬਦ_t cores = ipi->ਕੁੱਲ_Core_Barrier;
+    ਸ਼ਬਦ_t localsense = ipi->globalsense;
+    ਸ਼ਬਦ_t *ਗਿਣਤੀ_2 = &ipi->ਗਿਣਤੀ_2;
 
-    if (__atomic_fetch_add(count, 1, __ATOMIC_ACQ_REL) == cores) {
-        *count = 0;
+    ਜੇ (__atomic_fetch_add(ਗਿਣਤੀ_2, 1, __ATOMIC_ACQ_REL) == cores) {
+        *ਗਿਣਤੀ_2 = 0;
         ipi->globalsense++;
         __atomic_thread_fence(__ATOMIC_RELEASE);
     }
     /* Check globalsense instead of count to protect against a race where
      * a new IPI started before this core saw that the old one finished. */
-    while (localsense == ipi->globalsense) {
+    ਜਦੋਂ (localsense == ipi->globalsense) {
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
         arch_pause();
     }
 }
 
-static inline void init_ipi_args(IpiRemoteCall_t func,
-                                 word_t data1, word_t data2, word_t data3,
-                                 word_t mask)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ init_ipi_ਦਲੀਲਾਂ(IpiRemoteCall_t func,
+                                 ਸ਼ਬਦ_t data1, ਸ਼ਬਦ_t data2, ਸ਼ਬਦ_t data3,
+                                 ਸ਼ਬਦ_t ਨਕਾਬ_2)
 {
-    ipi_state_t *ipi = &big_kernel_lock.ipi;
+    ipi_state_t *ipi = &big_kernel_ਤਾਲਾ.ipi;
 
     ipi->remoteCall = func;
-    ipi->args[0] = data1;
-    ipi->args[1] = data2;
-    ipi->args[2] = data3;
+    ipi->ਦਲੀਲਾਂ[0] = data1;
+    ipi->ਦਲੀਲਾਂ[1] = data2;
+    ipi->ਦਲੀਲਾਂ[2] = data3;
 
     /* get number of cores involved in this IPI */
-    ipi->totalCoreBarrier = popcountl(mask);
+    ipi->ਕੁੱਲ_Core_Barrier = popcountl(ਨਕਾਬ_2);
 }
 
-void handleIPI(irq_t irq, bool_t irqPath)
+ਖਾਲੀ handleIPI(irq_t irq, bool_t irq_ਰਸਤਾ)
 {
-    ipi_state_t *ipi = &big_kernel_lock.ipi;
+    ipi_state_t *ipi = &big_kernel_ਤਾਲਾ.ipi;
 
-    if (IRQT_TO_IRQ(irq) == irq_remote_call_ipi) {
-        handleRemoteCall(ipi->remoteCall, ipi->args[0], ipi->args[1], ipi->args[2], irqPath);
-    } else if (IRQT_TO_IRQ(irq) == irq_reschedule_ipi) {
+    ਜੇ (IRQT_ਮੰਜ਼ਿਲ_IRQ(irq) == irq_remote_call_ipi) {
+        handleRemoteCall(ipi->remoteCall, ipi->ਦਲੀਲਾਂ[0], ipi->ਦਲੀਲਾਂ[1], ipi->ਦਲੀਲਾਂ[2], irq_ਰਸਤਾ);
+    } ਨਹੀਂਤਾਂ ਜੇ (IRQT_ਮੰਜ਼ਿਲ_IRQ(irq) == irq_reschedule_ipi) {
         rescheduleRequired();
-#ifdef CONFIG_ARCH_RISCV
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_RISCV
         ifence_local();
-#endif
-    } else {
+#ਜੇ_ਅੰਤ
+    } ਨਹੀਂਤਾਂ {
         fail("Invalid IPI");
     }
 }
 
-void doRemoteMaskOp(IpiRemoteCall_t func, word_t data1, word_t data2, word_t data3, word_t mask)
+ਖਾਲੀ do_Remote_ਨਕਾਬ_Op(IpiRemoteCall_t func, ਸ਼ਬਦ_t data1, ਸ਼ਬਦ_t data2, ਸ਼ਬਦ_t data3, ਸ਼ਬਦ_t ਨਕਾਬ_2)
 {
     /* make sure the current core is not set in the mask */
-    mask &= ~BIT(getCurrentCPUIndex());
+    ਨਕਾਬ_2 &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(getCurrentCPUIndex());
 
     /* this may happen, e.g. the caller tries to map a pagetable in
      * newly created PD which has not been run yet. Guard against them! */
-    if (mask != 0) {
-        init_ipi_args(func, data1, data2, data3, mask);
+    ਜੇ (ਨਕਾਬ_2 != 0) {
+        init_ipi_ਦਲੀਲਾਂ(func, data1, data2, data3, ਨਕਾਬ_2);
 
         /* make sure no resource access passes from this point */
-        asm volatile("" ::: "memory");
-        ipi_send_mask(CORE_IRQ_TO_IRQT(0, irq_remote_call_ipi), mask, true);
+        asm ਅਸਥਿਰ("" ::: "memory");
+        ipi_send_ਨਕਾਬ(CORE_IRQ_ਮੰਜ਼ਿਲ_IRQT(0, irq_remote_call_ipi), ਨਕਾਬ_2, true);
         ipi_wait();
     }
 }
 
-void doMaskReschedule(word_t mask)
+ਖਾਲੀ do_ਨਕਾਬ_Reschedule(ਸ਼ਬਦ_t ਨਕਾਬ_2)
 {
     /* make sure the current core is not set in the mask */
-    mask &= ~BIT(getCurrentCPUIndex());
-    if (mask != 0) {
-        ipi_send_mask(CORE_IRQ_TO_IRQT(0, irq_reschedule_ipi), mask, false);
+    ਨਕਾਬ_2 &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(getCurrentCPUIndex());
+    ਜੇ (ਨਕਾਬ_2 != 0) {
+        ipi_send_ਨਕਾਬ(CORE_IRQ_ਮੰਜ਼ਿਲ_IRQT(0, irq_reschedule_ipi), ਨਕਾਬ_2, false);
     }
 }
 
-void generic_ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+ਖਾਲੀ generic_ipi_send_ਨਕਾਬ(irq_t ipi, ਸ਼ਬਦ_t ਨਕਾਬ_2, bool_t isBlocking)
 {
-    word_t nr_target_cores = 0;
-    uint16_t target_cores[CONFIG_MAX_NUM_NODES];
+    ਸ਼ਬਦ_t nr_ਨਿਸ਼ਾਨਾ_cores = 0;
+    uint16_t ਨਿਸ਼ਾਨਾ_cores[CONFIG_MAX_ਅੰਕ_NODES];
 
-    while (mask) {
-        int index = wordBits - 1 - clzl(mask);
-        if (isBlocking) {
+    ਜਦੋਂ (ਨਕਾਬ_2) {
+        ਪੂਰਨ ਸੂਚਕਾਂਕ = ਸ਼ਬਦ_ਬਿੱਟ - 1 - clzl(ਨਕਾਬ_2);
+        ਜੇ (isBlocking) {
             /*
              * All writes before setting ipi to 1 must be observed,
              * as other cores may check the ipi flag at any moment.
              * IPI_MEM_BARRIER is too late to prevent reordering
              * between IPI data and flag reads.
              */
-            __atomic_store_n(&big_kernel_lock.node[index].ipi, 1, __ATOMIC_RELEASE);
-            target_cores[nr_target_cores] = index;
-            nr_target_cores++;
-        } else {
+            __atomic_store_n(&big_kernel_ਤਾਲਾ.ਗੰਢ[ਸੂਚਕਾਂਕ].ipi, 1, __ATOMIC_RELEASE);
+            ਨਿਸ਼ਾਨਾ_cores[nr_ਨਿਸ਼ਾਨਾ_cores] = ਸੂਚਕਾਂਕ;
+            nr_ਨਿਸ਼ਾਨਾ_cores++;
+        } ਨਹੀਂਤਾਂ {
             IPI_MEM_BARRIER;
-            ipi_send_target(ipi, cpuIndexToID(index));
+            ipi_send_ਨਿਸ਼ਾਨਾ(ipi, cpu_ਸੂਚਕਾਂਕ_ਮੰਜ਼ਿਲ_ID(ਸੂਚਕਾਂਕ));
         }
-        mask &= ~BIT(index);
+        ਨਕਾਬ_2 &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(ਸੂਚਕਾਂਕ);
     }
 
-    if (nr_target_cores > 0) {
+    ਜੇ (nr_ਨਿਸ਼ਾਨਾ_cores > 0) {
         /* sending IPIs... */
         IPI_MEM_BARRIER;
-        for (int i = 0; i < nr_target_cores; i++) {
-            ipi_send_target(ipi, cpuIndexToID(target_cores[i]));
+        ਲਈ (ਪੂਰਨ i = 0; i < nr_ਨਿਸ਼ਾਨਾ_cores; i++) {
+            ipi_send_ਨਿਸ਼ਾਨਾ(ipi, cpu_ਸੂਚਕਾਂਕ_ਮੰਜ਼ਿਲ_ID(ਨਿਸ਼ਾਨਾ_cores[i]));
         }
     }
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-exception_t handle_SysDebugSendIPI(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+exception_t handle_SysDebugSendIPI(ਖਾਲੀ)
 {
-#ifdef CONFIG_ARCH_ARM
-    word_t target = getRegister(NODE_STATE(ksCurThread), capRegister);
-    word_t irq = getRegister(NODE_STATE(ksCurThread), msgInfoRegister);
-    if (target > CONFIG_MAX_NUM_NODES) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_ARM
+    ਸ਼ਬਦ_t ਨਿਸ਼ਾਨਾ = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ);
+    ਸ਼ਬਦ_t irq = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ);
+    ਜੇ (ਨਿਸ਼ਾਨਾ > CONFIG_MAX_ਅੰਕ_NODES) {
         userError("SysDebugSendIPI: Invalid target, halting");
         halt();
     }
-    if (irq > 15) {
+    ਜੇ (irq > 15) {
         userError("SysDebugSendIPI: Invalid IRQ, not a SGI, halting");
         halt();
     }
-    ipi_send_target(CORE_IRQ_TO_IRQT(0, irq), BIT(target));
-    return EXCEPTION_NONE;
-#else /* not CONFIG_ARCH_ARM */
+    ipi_send_ਨਿਸ਼ਾਨਾ(CORE_IRQ_ਮੰਜ਼ਿਲ_IRQT(0, irq), ਦੋਆਧਾਰੀ_ਅੰਕ(ਨਿਸ਼ਾਨਾ));
+    ਵਾਪਸ EXCEPTION_NONE;
+#ਨਹੀਂਤਾਂ /* not CONFIG_ARCH_ARM */
     userError("SysDebugSendIPI: not supported on this architecture");
     halt();
-#endif  /* [not] CONFIG_ARCH_ARM */
+#ਜੇ_ਅੰਤ  /* [not] CONFIG_ARCH_ARM */
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */
 
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */

@@ -4,128 +4,128 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <kernel/boot.h>
-#include <kernel/thread.h>
-#include <machine/io.h>
-#include <machine/registerset.h>
-#include <model/statedata.h>
-#include <object/domain.h>
-#include <arch/machine.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <hardware.h>
-#include <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <assert.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/boot.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/domain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/boot.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <hardware.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
 
 /* (node-local) state accessed only during bootstrapping */
 BOOT_BSS ndks_boot_t ndks_boot;
 
 BOOT_BSS rootserver_mem_t rootserver;
-BOOT_BSS static region_t rootserver_mem;
+BOOT_BSS ਸਥਿਰ region_t rootserver_mem;
 
 /* Returns the physical region of the kernel image boot part, which is the part
  * that is no longer needed once booting is finished. */
-extern char ki_boot_end[1];
-BOOT_CODE p_region_t get_p_reg_kernel_img_boot(void)
+ਬਾਹਰੀ ਅੱਖਰ ki_boot_ਸਿਰਾ[1];
+BOOT_ਕੋਡ p_region_t get_p_reg_kernel_img_boot(ਖਾਲੀ)
 {
-    return (p_region_t) {
-        .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
-        .end   = kpptr_to_paddr(ki_boot_end)
+    ਵਾਪਸ (p_region_t) {
+        .ਸ਼ੁਰੂ = kpptr_ਮੰਜ਼ਿਲ_paddr((ਅਚਲ ਖਾਲੀ *)KERNEL_ELF_ਅਧਾਰ),
+        .ਸਿਰਾ   = kpptr_ਮੰਜ਼ਿਲ_paddr(ki_boot_ਸਿਰਾ)
     };
 }
 
 /* Returns the physical region of the kernel image. */
-BOOT_CODE p_region_t get_p_reg_kernel_img(void)
+BOOT_ਕੋਡ p_region_t get_p_reg_kernel_img(ਖਾਲੀ)
 {
-    return (p_region_t) {
-        .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
-        .end   = kpptr_to_paddr((const void *)KERNEL_ELF_TOP)
+    ਵਾਪਸ (p_region_t) {
+        .ਸ਼ੁਰੂ = kpptr_ਮੰਜ਼ਿਲ_paddr((ਅਚਲ ਖਾਲੀ *)KERNEL_ELF_ਅਧਾਰ),
+        .ਸਿਰਾ   = kpptr_ਮੰਜ਼ਿਲ_paddr((ਅਚਲ ਖਾਲੀ *)KERNEL_ELF_ਸਿਖਰ)
     };
 }
 
-BOOT_CODE static void merge_regions(void)
+BOOT_ਕੋਡ ਸਥਿਰ ਖਾਲੀ ਮਿਲਾਓ_regions(ਖਾਲੀ)
 {
     /* Walk through reserved regions and see if any can be merged */
-    word_t top = 0;
-    for (word_t i = 1; i < ndks_boot.resv_count; i++) {
-        if (ndks_boot.reserved[top].end == ndks_boot.reserved[i].start) {
+    ਸ਼ਬਦ_t ਸਿਖਰ = 0;
+    ਲਈ (ਸ਼ਬਦ_t i = 1; i < ndks_boot.resv_ਗਿਣਤੀ; i++) {
+        ਜੇ (ndks_boot.reserved[ਸਿਖਰ].ਸਿਰਾ == ndks_boot.reserved[i].ਸ਼ੁਰੂ) {
             /* extend earlier region */
-            ndks_boot.reserved[top].end = ndks_boot.reserved[i].end;
-        } else {
+            ndks_boot.reserved[ਸਿਖਰ].ਸਿਰਾ = ndks_boot.reserved[i].ਸਿਰਾ;
+        } ਨਹੀਂਤਾਂ {
             /* add region */
-            top++;
-            ndks_boot.reserved[top] = ndks_boot.reserved[i];
+            ਸਿਖਰ++;
+            ndks_boot.reserved[ਸਿਖਰ] = ndks_boot.reserved[i];
         }
     }
-    ndks_boot.resv_count = ndks_boot.resv_count > 0 ? top + 1 : 0;
+    ndks_boot.resv_ਗਿਣਤੀ = ndks_boot.resv_ਗਿਣਤੀ > 0 ? ਸਿਖਰ + 1 : 0;
 }
 
-BOOT_CODE bool_t reserve_region(p_region_t reg)
+BOOT_ਕੋਡ bool_t reserve_region(p_region_t reg)
 {
-    word_t i;
-    assert(reg.start <= reg.end);
-    if (reg.start == reg.end) {
-        return true;
+    ਸ਼ਬਦ_t i;
+    ਪ੍ਰਤਿਜ੍ਞਾ(reg.ਸ਼ੁਰੂ <= reg.ਸਿਰਾ);
+    ਜੇ (reg.ਸ਼ੁਰੂ == reg.ਸਿਰਾ) {
+        ਵਾਪਸ true;
     }
 
     /* keep the regions in order */
-    for (i = 0; i < ndks_boot.resv_count; i++) {
+    ਲਈ (i = 0; i < ndks_boot.resv_ਗਿਣਤੀ; i++) {
         /* Try and merge the region to an existing one, if possible */
-        if (ndks_boot.reserved[i].start == reg.end) {
-            ndks_boot.reserved[i].start = reg.start;
-            merge_regions();
-            return true;
+        ਜੇ (ndks_boot.reserved[i].ਸ਼ੁਰੂ == reg.ਸਿਰਾ) {
+            ndks_boot.reserved[i].ਸ਼ੁਰੂ = reg.ਸ਼ੁਰੂ;
+            ਮਿਲਾਓ_regions();
+            ਵਾਪਸ true;
         }
-        if (ndks_boot.reserved[i].end == reg.start) {
-            ndks_boot.reserved[i].end = reg.end;
-            merge_regions();
-            return true;
+        ਜੇ (ndks_boot.reserved[i].ਸਿਰਾ == reg.ਸ਼ੁਰੂ) {
+            ndks_boot.reserved[i].ਸਿਰਾ = reg.ਸਿਰਾ;
+            ਮਿਲਾਓ_regions();
+            ਵਾਪਸ true;
         }
         /* Otherwise figure out where it should go. */
-        if (ndks_boot.reserved[i].start > reg.end) {
+        ਜੇ (ndks_boot.reserved[i].ਸ਼ੁਰੂ > reg.ਸਿਰਾ) {
             /* move regions down, making sure there's enough room */
-            if (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
-                printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
+            ਜੇ (ndks_boot.resv_ਗਿਣਤੀ + 1 >= MAX_ਅੰਕ_RESV_REG) {
+                ਲਿਖੋ("Can't mark region 0x%"SEL4_PRIx_ਸ਼ਬਦ"-0x%"SEL4_PRIx_ਸ਼ਬਦ
                        " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-                       reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-                return false;
+                       reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ, (ਪੂਰਨ)MAX_ਅੰਕ_RESV_REG);
+                ਵਾਪਸ false;
             }
-            for (word_t j = ndks_boot.resv_count; j > i; j--) {
+            ਲਈ (ਸ਼ਬਦ_t j = ndks_boot.resv_ਗਿਣਤੀ; j > i; j--) {
                 ndks_boot.reserved[j] = ndks_boot.reserved[j - 1];
             }
             /* insert the new region */
             ndks_boot.reserved[i] = reg;
-            ndks_boot.resv_count++;
-            return true;
+            ndks_boot.resv_ਗਿਣਤੀ++;
+            ਵਾਪਸ true;
         }
     }
 
-    if (i + 1 == MAX_NUM_RESV_REG) {
-        printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
+    ਜੇ (i + 1 == MAX_ਅੰਕ_RESV_REG) {
+        ਲਿਖੋ("Can't mark region 0x%"SEL4_PRIx_ਸ਼ਬਦ"-0x%"SEL4_PRIx_ਸ਼ਬਦ
                " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-               reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-        return false;
+               reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ, (ਪੂਰਨ)MAX_ਅੰਕ_RESV_REG);
+        ਵਾਪਸ false;
     }
 
     ndks_boot.reserved[i] = reg;
-    ndks_boot.resv_count++;
+    ndks_boot.resv_ਗਿਣਤੀ++;
 
-    return true;
+    ਵਾਪਸ true;
 }
 
-BOOT_CODE static bool_t insert_region(region_t reg)
+BOOT_ਕੋਡ ਸਥਿਰ bool_t ਪਾਓ_region(region_t reg)
 {
-    assert(reg.start <= reg.end);
-    if (is_reg_empty(reg)) {
-        return true;
+    ਪ੍ਰਤਿਜ੍ਞਾ(reg.ਸ਼ੁਰੂ <= reg.ਸਿਰਾ);
+    ਜੇ (is_reg_ਖਾਲੀ_ਥਾਵਾਂ(reg)) {
+        ਵਾਪਸ true;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
-        if (is_reg_empty(ndks_boot.freemem[i])) {
-            reserve_region(pptr_to_paddr_reg(reg));
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < ARRAY_ਮਾਪ(ndks_boot.freemem); i++) {
+        ਜੇ (is_reg_ਖਾਲੀ_ਥਾਵਾਂ(ndks_boot.freemem[i])) {
+            reserve_region(pptr_ਮੰਜ਼ਿਲ_paddr_reg(reg));
             ndks_boot.freemem[i] = reg;
-            return true;
+            ਵਾਪਸ true;
         }
     }
 
@@ -138,184 +138,184 @@ BOOT_CODE static bool_t insert_region(region_t reg)
      * don't stop the boot process here, but return an error. The caller should
      * decide how bad this is.
      */
-    printf("no free memory slot left for [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
+    ਲਿਖੋ("no free memory slot left for [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ"),"
            " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
-           reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
+           reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ, (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)MAX_ਅੰਕ_FREEMEM_REG);
 
     /* For debug builds we consider this a fatal error. Rationale is, that the
      * caller does not check the error code at the moment, but just ignores any
      * failures silently. */
-    assert(0);
+    ਪ੍ਰਤਿਜ੍ਞਾ(0);
 
-    return false;
+    ਵਾਪਸ false;
 }
 
-BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
+BOOT_ਕੋਡ ਸਥਿਰ pptr_t alloc_rootserver_obj(ਸ਼ਬਦ_t ਮਾਪ_ਬਿੱਟ, ਸ਼ਬਦ_t n)
 {
-    pptr_t allocated = rootserver_mem.start;
+    pptr_t allocated = rootserver_mem.ਸ਼ੁਰੂ;
     /* allocated memory must be aligned */
-    assert(allocated % BIT(size_bits) == 0);
-    rootserver_mem.start += (n * BIT(size_bits));
+    ਪ੍ਰਤਿਜ੍ਞਾ(allocated % ਦੋਆਧਾਰੀ_ਅੰਕ(ਮਾਪ_ਬਿੱਟ) == 0);
+    rootserver_mem.ਸ਼ੁਰੂ += (n * ਦੋਆਧਾਰੀ_ਅੰਕ(ਮਾਪ_ਬਿੱਟ));
     /* we must not have run out of memory */
-    assert(rootserver_mem.start <= rootserver_mem.end);
-    memzero((void *) allocated, n * BIT(size_bits));
-    return allocated;
+    ਪ੍ਰਤਿਜ੍ਞਾ(rootserver_mem.ਸ਼ੁਰੂ <= rootserver_mem.ਸਿਰਾ);
+    memzero((ਖਾਲੀ *) allocated, n * ਦੋਆਧਾਰੀ_ਅੰਕ(ਮਾਪ_ਬਿੱਟ));
+    ਵਾਪਸ allocated;
 }
 
-BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
+BOOT_ਕੋਡ ਸਥਿਰ ਸ਼ਬਦ_t rootserver_max_ਮਾਪ_ਬਿੱਟ(ਸ਼ਬਦ_t extra_bi_ਮਾਪ_ਬਿੱਟ)
 {
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
-    word_t max = MAX(cnode_size_bits, seL4_VSpaceBits);
-    return MAX(max, extra_bi_size_bits);
+    ਸ਼ਬਦ_t cnode_ਮਾਪ_ਬਿੱਟ = CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ + se_L4_ਥਾਂ_ਬਿੱਟ;
+    ਸ਼ਬਦ_t max = MAX(cnode_ਮਾਪ_ਬਿੱਟ, se_L4_VSpace_ਬਿੱਟ);
+    ਵਾਪਸ MAX(max, extra_bi_ਮਾਪ_ਬਿੱਟ);
 }
 
-BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits)
+BOOT_ਕੋਡ ਸਥਿਰ ਸ਼ਬਦ_t calculate_rootserver_ਮਾਪ(v_region_t it_v_reg, ਸ਼ਬਦ_t extra_bi_ਮਾਪ_ਬਿੱਟ)
 {
     /* work out how much memory we need for root server objects */
-    word_t size = BIT(CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits);
-    size += BIT(seL4_TCBBits); // root thread tcb
-    size += BIT(seL4_PageBits); // ipc buf
-    size += BIT(seL4_BootInfoFrameBits); // boot info
-    size += BIT(seL4_ASIDPoolBits);
-    size += extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0;
-    size += BIT(seL4_VSpaceBits); // root vspace
-#ifdef CONFIG_KERNEL_MCS
-    size += BIT(seL4_MinSchedContextBits); // root sched context
-#endif
+    ਸ਼ਬਦ_t ਮਾਪ = ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ + se_L4_ਥਾਂ_ਬਿੱਟ);
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(seL4_TCBBits); // root thread tcb
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਬਿੱਟ); // ipc buf
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_Boot_Info_ਚੌਖਟਾ_ਬਿੱਟ); // boot info
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ASIDPool_ਬਿੱਟ);
+    ਮਾਪ += extra_bi_ਮਾਪ_ਬਿੱਟ > 0 ? ਦੋਆਧਾਰੀ_ਅੰਕ(extra_bi_ਮਾਪ_ਬਿੱਟ) : 0;
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_VSpace_ਬਿੱਟ); // root vspace
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਮਾਪ += ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_Min_Sched_Context_ਬਿੱਟ); // root sched context
+#ਜੇ_ਅੰਤ
     /* for all archs, seL4_PageTable Bits is the size of all non top-level paging structures */
-    return size + arch_get_n_paging(it_v_reg) * BIT(seL4_PageTableBits);
+    ਵਾਪਸ ਮਾਪ + arch_get_n_paging(it_v_reg) * ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ);
 }
 
-BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi_size_bits)
+BOOT_ਕੋਡ ਸਥਿਰ ਖਾਲੀ maybe_alloc_extra_bi(ਸ਼ਬਦ_t cmp_ਮਾਪ_ਬਿੱਟ, ਸ਼ਬਦ_t extra_bi_ਮਾਪ_ਬਿੱਟ)
 {
-    if (extra_bi_size_bits >= cmp_size_bits && rootserver.extra_bi == 0) {
-        rootserver.extra_bi = alloc_rootserver_obj(extra_bi_size_bits, 1);
+    ਜੇ (extra_bi_ਮਾਪ_ਬਿੱਟ >= cmp_ਮਾਪ_ਬਿੱਟ && rootserver.extra_bi == 0) {
+        rootserver.extra_bi = alloc_rootserver_obj(extra_bi_ਮਾਪ_ਬਿੱਟ, 1);
     }
 }
 
 /* Create pptrs for all root server objects, starting at a give start address,
  * to cover the virtual memory region v_reg, and any extra boot info.
  */
-BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_reg,
-                                                word_t extra_bi_size_bits)
+BOOT_ਕੋਡ ਸਥਿਰ ਖਾਲੀ create_rootserver_objects(pptr_t ਸ਼ੁਰੂ, v_region_t it_v_reg,
+                                                ਸ਼ਬਦ_t extra_bi_ਮਾਪ_ਬਿੱਟ)
 {
     /* the largest object the PD, the root cnode, or the extra boot info */
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
-    word_t max = rootserver_max_size_bits(extra_bi_size_bits);
+    ਸ਼ਬਦ_t cnode_ਮਾਪ_ਬਿੱਟ = CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ + se_L4_ਥਾਂ_ਬਿੱਟ;
+    ਸ਼ਬਦ_t max = rootserver_max_ਮਾਪ_ਬਿੱਟ(extra_bi_ਮਾਪ_ਬਿੱਟ);
 
-    word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
-    rootserver_mem.start = start;
-    rootserver_mem.end = start + size;
+    ਸ਼ਬਦ_t ਮਾਪ = calculate_rootserver_ਮਾਪ(it_v_reg, extra_bi_ਮਾਪ_ਬਿੱਟ);
+    rootserver_mem.ਸ਼ੁਰੂ = ਸ਼ੁਰੂ;
+    rootserver_mem.ਸਿਰਾ = ਸ਼ੁਰੂ + ਮਾਪ;
 
-    maybe_alloc_extra_bi(max, extra_bi_size_bits);
+    maybe_alloc_extra_bi(max, extra_bi_ਮਾਪ_ਬਿੱਟ);
 
     /* the root cnode is at least 4k, so it could be larger or smaller than a pd. */
-#if (CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
-    rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
-    maybe_alloc_extra_bi(seL4_VSpaceBits, extra_bi_size_bits);
-    rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
-#else
-    rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
-    maybe_alloc_extra_bi(cnode_size_bits, extra_bi_size_bits);
-    rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
-#endif
+#ਜੇ (CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ + se_L4_ਥਾਂ_ਬਿੱਟ) > se_L4_VSpace_ਬਿੱਟ
+    rootserver.cnode = alloc_rootserver_obj(cnode_ਮਾਪ_ਬਿੱਟ, 1);
+    maybe_alloc_extra_bi(se_L4_VSpace_ਬਿੱਟ, extra_bi_ਮਾਪ_ਬਿੱਟ);
+    rootserver.vspace = alloc_rootserver_obj(se_L4_VSpace_ਬਿੱਟ, 1);
+#ਨਹੀਂਤਾਂ
+    rootserver.vspace = alloc_rootserver_obj(se_L4_VSpace_ਬਿੱਟ, 1);
+    maybe_alloc_extra_bi(cnode_ਮਾਪ_ਬਿੱਟ, extra_bi_ਮਾਪ_ਬਿੱਟ);
+    rootserver.cnode = alloc_rootserver_obj(cnode_ਮਾਪ_ਬਿੱਟ, 1);
+#ਜੇ_ਅੰਤ
 
     /* at this point we are up to creating 4k objects - which is the min size of
      * extra_bi so this is the last chance to allocate it */
-    maybe_alloc_extra_bi(seL4_PageBits, extra_bi_size_bits);
-    compile_assert(invalid_seL4_ASIDPoolBits, seL4_ASIDPoolBits == seL4_PageBits);
-    rootserver.asid_pool = alloc_rootserver_obj(seL4_ASIDPoolBits, 1);
-    rootserver.ipc_buf = alloc_rootserver_obj(seL4_PageBits, 1);
+    maybe_alloc_extra_bi(se_L4_ਪੰਨਾ_ਬਿੱਟ, extra_bi_ਮਾਪ_ਬਿੱਟ);
+    compile_assert(invalid_se_L4_ASIDPool_ਬਿੱਟ, se_L4_ASIDPool_ਬਿੱਟ == se_L4_ਪੰਨਾ_ਬਿੱਟ);
+    rootserver.asid_pool = alloc_rootserver_obj(se_L4_ASIDPool_ਬਿੱਟ, 1);
+    rootserver.ipc_buf = alloc_rootserver_obj(se_L4_ਪੰਨਾ_ਬਿੱਟ, 1);
     /* The boot info size must be at least one page. Due to the hard-coded order
      * of allocations used in the current implementation here, it can't be any
      * bigger.
      */
-    compile_assert(invalid_seL4_BootInfoFrameBits, seL4_BootInfoFrameBits == seL4_PageBits);
-    rootserver.boot_info = alloc_rootserver_obj(seL4_BootInfoFrameBits, 1);
+    compile_assert(invalid_se_L4_Boot_Info_ਚੌਖਟਾ_ਬਿੱਟ, se_L4_Boot_Info_ਚੌਖਟਾ_ਬਿੱਟ == se_L4_ਪੰਨਾ_ਬਿੱਟ);
+    rootserver.boot_info = alloc_rootserver_obj(se_L4_Boot_Info_ਚੌਖਟਾ_ਬਿੱਟ, 1);
 
     /* TCBs on aarch32 can be larger than page tables in certain configs */
-#if seL4_TCBBits >= seL4_PageTableBits
+#ਜੇ seL4_TCBBits >= se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
-#endif
+#ਜੇ_ਅੰਤ
 
     /* paging structures are 4k on every arch except aarch32 (1k) */
-    word_t n = arch_get_n_paging(it_v_reg);
-    rootserver.paging.start = alloc_rootserver_obj(seL4_PageTableBits, n);
-    rootserver.paging.end = rootserver.paging.start + n * BIT(seL4_PageTableBits);
+    ਸ਼ਬਦ_t n = arch_get_n_paging(it_v_reg);
+    rootserver.paging.ਸ਼ੁਰੂ = alloc_rootserver_obj(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ, n);
+    rootserver.paging.ਸਿਰਾ = rootserver.paging.ਸ਼ੁਰੂ + n * ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ);
 
     /* for most archs, TCBs are smaller than page tables */
-#if seL4_TCBBits < seL4_PageTableBits
+#ਜੇ seL4_TCBBits < se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_KERNEL_MCS
-    rootserver.sc = alloc_rootserver_obj(seL4_MinSchedContextBits, 1);
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    rootserver.sc = alloc_rootserver_obj(se_L4_Min_Sched_Context_ਬਿੱਟ, 1);
+#ਜੇ_ਅੰਤ
     /* we should have allocated all our memory */
-    assert(rootserver_mem.start == rootserver_mem.end);
+    ਪ੍ਰਤਿਜ੍ਞਾ(rootserver_mem.ਸ਼ੁਰੂ == rootserver_mem.ਸਿਰਾ);
 }
 
-BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap)
+BOOT_ਕੋਡ ਖਾਲੀ write_ਥਾਂ(ਥਾਂ_ptr_t ਥਾਂ_ptr, cap_t cap)
 {
-    slot_ptr->cap = cap;
+    ਥਾਂ_ptr->cap = cap;
 
-    slot_ptr->cteMDBNode = nullMDBNode;
-    mdb_node_ptr_set_mdbRevocable(&slot_ptr->cteMDBNode, true);
-    mdb_node_ptr_set_mdbFirstBadged(&slot_ptr->cteMDBNode, true);
+    ਥਾਂ_ptr->cteMDBNode = nullMDBNode;
+    mdb_ਗੰਢ_ptr_ਸੈੱਟ_mdb_Revocable(&ਥਾਂ_ptr->cteMDBNode, true);
+    mdb_ਗੰਢ_ptr_ਸੈੱਟ_mdb_ਪਹਿਲਾ_Badged(&ਥਾਂ_ptr->cteMDBNode, true);
 }
 
 /* Our root CNode needs to be able to fit all the initial caps and not
  * cover all of memory.
  */
-compile_assert(root_cnode_size_valid,
-               CONFIG_ROOT_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= seL4_NumInitialCaps &&
-               CONFIG_ROOT_CNODE_SIZE_BITS >= (seL4_PageBits - seL4_SlotBits))
+compile_assert(ਜੜ੍ਹ_cnode_ਮਾਪ_valid,
+               CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ < 32 - se_L4_ਥਾਂ_ਬਿੱਟ &&
+               ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ) >= se_L4_ਅੰਕ_Initial_Caps &&
+               CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ >= (se_L4_ਪੰਨਾ_ਬਿੱਟ - se_L4_ਥਾਂ_ਬਿੱਟ))
 
-BOOT_CODE cap_t
-create_root_cnode(void)
+BOOT_ਕੋਡ cap_t
+create_ਜੜ੍ਹ_cnode(ਖਾਲੀ)
 {
     cap_t cap = cap_cnode_cap_new(
-                    CONFIG_ROOT_CNODE_SIZE_BITS, /* radix */
-                    wordBits - CONFIG_ROOT_CNODE_SIZE_BITS, /* guard size */
+                    CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ, /* radix */
+                    ਸ਼ਬਦ_ਬਿੱਟ - CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ, /* guard size */
                     0, /* guard */
                     rootserver.cnode); /* pptr */
 
     /* write the root CNode cap into the root CNode */
-    write_slot(SLOT_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
+    write_ਥਾਂ(ਥਾਂ_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
 
-    return cap;
+    ਵਾਪਸ cap;
 }
 
 /* Check domain scheduler assumptions. */
-compile_assert(num_domains_valid,
-               CONFIG_NUM_DOMAINS >= 1 && CONFIG_NUM_DOMAINS <= 256)
-compile_assert(num_priorities_valid,
-               CONFIG_NUM_PRIORITIES >= 1 && CONFIG_NUM_PRIORITIES <= 256)
+compile_assert(ਅੰਕ_domains_valid,
+               CONFIG_ਅੰਕ_DOMAINS >= 1 && CONFIG_ਅੰਕ_DOMAINS <= 256)
+compile_assert(ਅੰਕ_priorities_valid,
+               CONFIG_ਅੰਕ_PRIORITIES >= 1 && CONFIG_ਅੰਕ_PRIORITIES <= 256)
 
-BOOT_CODE void
-create_domain_cap(cap_t root_cnode_cap)
+BOOT_ਕੋਡ ਖਾਲੀ
+create_domain_cap(cap_t ਜੜ੍ਹ_cnode_cap)
 {
     cap_t cap = cap_domain_cap_new();
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapDomain), cap);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapDomain), cap);
 }
 
-BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_ਕੋਡ cap_t create_ipcbuf_ਚੌਖਟਾ_cap(cap_t ਜੜ੍ਹ_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
-    clearMemory((void *)rootserver.ipc_buf, PAGE_BITS);
+    clear_ਸਮ੍ਰਿਤੀ((ਖਾਲੀ *)rootserver.ipc_buf, ਪੰਨਾ_ਬਿੱਟ);
 
     /* create a cap of it and write it into the root CNode */
-    cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
+    cap_t cap = create_mapped_it_ਚੌਖਟਾ_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
 
-    return cap;
+    ਵਾਪਸ cap;
 }
 
-BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_ਕੋਡ ਖਾਲੀ create_bi_ਚੌਖਟਾ_cap(cap_t ਜੜ੍ਹ_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
     /* create a cap of it and write it into the root CNode */
-    cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapBootInfoFrame), cap);
+    cap_t cap = create_mapped_it_ਚੌਖਟਾ_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), se_L4_Cap_Boot_Info_ਚੌਖਟਾ), cap);
 }
 
 /**
@@ -327,311 +327,311 @@ BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vp
  *
  * which handles the 0-size case.
  */
-BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
+BOOT_ਕੋਡ ਸ਼ਬਦ_t calculate_extra_bi_ਮਾਪ_ਬਿੱਟ(ਸ਼ਬਦ_t extra_ਮਾਪ)
 {
-    if (extra_size == 0) {
-        return 0;
+    ਜੇ (extra_ਮਾਪ == 0) {
+        ਵਾਪਸ 0;
     }
 
-    word_t clzl_ret = clzl(ROUND_UP(extra_size, seL4_PageBits));
-    word_t msb = seL4_WordBits - 1 - clzl_ret;
+    ਸ਼ਬਦ_t clzl_ret = clzl(ਗੇੜਾ_ਉੱਪਰ(extra_ਮਾਪ, se_L4_ਪੰਨਾ_ਬਿੱਟ));
+    ਸ਼ਬਦ_t msb = se_L4_ਸ਼ਬਦ_ਬਿੱਟ - 1 - clzl_ret;
     /* If region is bigger than a page, make sure we overallocate rather than
      * underallocate
      */
-    if (extra_size > BIT(msb)) {
+    ਜੇ (extra_ਮਾਪ > ਦੋਆਧਾਰੀ_ਅੰਕ(msb)) {
         msb++;
     }
-    return msb;
+    ਵਾਪਸ msb;
 }
 
-BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
-                                 vptr_t ipcbuf_vptr, word_t extra_bi_size)
+BOOT_ਕੋਡ ਖਾਲੀ populate_bi_ਚੌਖਟਾ(ਗੰਢ_id_t ਗੰਢ_id, ਸ਼ਬਦ_t ਅੰਕ_nodes,
+                                 vptr_t ipcbuf_vptr, ਸ਼ਬਦ_t extra_bi_ਮਾਪ)
 {
     /* clear boot info memory */
-    clearMemory((void *)rootserver.boot_info, seL4_BootInfoFrameBits);
-    if (extra_bi_size) {
-        clearMemory((void *)rootserver.extra_bi,
-                    calculate_extra_bi_size_bits(extra_bi_size));
+    clear_ਸਮ੍ਰਿਤੀ((ਖਾਲੀ *)rootserver.boot_info, se_L4_Boot_Info_ਚੌਖਟਾ_ਬਿੱਟ);
+    ਜੇ (extra_bi_ਮਾਪ) {
+        clear_ਸਮ੍ਰਿਤੀ((ਖਾਲੀ *)rootserver.extra_bi,
+                    calculate_extra_bi_ਮਾਪ_ਬਿੱਟ(extra_bi_ਮਾਪ));
     }
 
     /* initialise bootinfo-related global state */
     seL4_BootInfo *bi = BI_PTR(rootserver.boot_info);
-    bi->nodeID = node_id;
-    bi->numNodes = num_nodes;
-    bi->numIOPTLevels = 0;
-    bi->ipcBuffer = (seL4_IPCBuffer *)ipcbuf_vptr;
-    bi->initThreadCNodeSizeBits = CONFIG_ROOT_CNODE_SIZE_BITS;
+    bi->ਗੰਢ_ID = ਗੰਢ_id;
+    bi->ਅੰਕ_Nodes = ਅੰਕ_nodes;
+    bi->ਅੰਕ_IOPTLevels = 0;
+    bi->ipc_ਬਫਰ = (seL4_IPCBuffer *)ipcbuf_vptr;
+    bi->init_Thread_CNode_ਮਾਪ_ਬਿੱਟ = CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ;
     bi->initThreadDomain = 0;
-    bi->extraLen = extra_bi_size;
+    bi->extraLen = extra_bi_ਮਾਪ;
 
-    ndks_boot.bi_frame = bi;
-    ndks_boot.slot_pos_cur = seL4_NumInitialCaps;
+    ndks_boot.bi_ਚੌਖਟਾ = bi;
+    ndks_boot.ਥਾਂ_pos_cur = se_L4_ਅੰਕ_Initial_Caps;
 }
 
-BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap)
+BOOT_ਕੋਡ bool_t provide_cap(cap_t ਜੜ੍ਹ_cnode_cap, cap_t cap)
 {
-    if (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
-        printf("ERROR: can't add another cap, all %"SEL4_PRIu_word
+    ਜੇ (ndks_boot.ਥਾਂ_pos_cur >= ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ)) {
+        ਲਿਖੋ("ERROR: can't add another cap, all %"SEL4_PRIu_ਸ਼ਬਦ
                " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
-        return false;
+               ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ));
+        ਵਾਪਸ false;
     }
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), ndks_boot.slot_pos_cur), cap);
-    ndks_boot.slot_pos_cur++;
-    return true;
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), ndks_boot.ਥਾਂ_pos_cur), cap);
+    ndks_boot.ਥਾਂ_pos_cur++;
+    ਵਾਪਸ true;
 }
 
-BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
-    cap_t    root_cnode_cap,
+BOOT_ਕੋਡ create_ਚੌਖਟੇ_ਦਾ_region_ret_t create_ਚੌਖਟੇ_ਦਾ_region(
+    cap_t    ਜੜ੍ਹ_cnode_cap,
     cap_t    pd_cap,
     region_t reg,
     bool_t   do_map,
-    sword_t  pv_offset
+    sword_t  pv_ਵਿੱਥ
 )
 {
     pptr_t     f;
-    cap_t      frame_cap;
-    seL4_SlotPos slot_pos_before;
-    seL4_SlotPos slot_pos_after;
+    cap_t      ਚੌਖਟਾ_cap;
+    se_L4_ਥਾਂ_Pos ਥਾਂ_pos_before;
+    se_L4_ਥਾਂ_Pos ਥਾਂ_pos_after;
 
-    slot_pos_before = ndks_boot.slot_pos_cur;
+    ਥਾਂ_pos_before = ndks_boot.ਥਾਂ_pos_cur;
 
-    for (f = reg.start; f < reg.end; f += BIT(PAGE_BITS)) {
-        if (do_map) {
-            frame_cap = create_mapped_it_frame_cap(pd_cap, f, pptr_to_paddr((void *)(f - pv_offset)), IT_ASID, false, true);
-        } else {
-            frame_cap = create_unmapped_it_frame_cap(f, false);
+    ਲਈ (f = reg.ਸ਼ੁਰੂ; f < reg.ਸਿਰਾ; f += ਦੋਆਧਾਰੀ_ਅੰਕ(ਪੰਨਾ_ਬਿੱਟ)) {
+        ਜੇ (do_map) {
+            ਚੌਖਟਾ_cap = create_mapped_it_ਚੌਖਟਾ_cap(pd_cap, f, pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)(f - pv_ਵਿੱਥ)), IT_ASID, false, true);
+        } ਨਹੀਂਤਾਂ {
+            ਚੌਖਟਾ_cap = create_unmapped_it_ਚੌਖਟਾ_cap(f, false);
         }
-        if (!provide_cap(root_cnode_cap, frame_cap)) {
-            return (create_frames_of_region_ret_t) {
-                .region  = S_REG_EMPTY,
+        ਜੇ (!provide_cap(ਜੜ੍ਹ_cnode_cap, ਚੌਖਟਾ_cap)) {
+            ਵਾਪਸ (create_ਚੌਖਟੇ_ਦਾ_region_ret_t) {
+                .region  = S_REG_ਖਾਲੀ_ਥਾਵਾਂ,
                 .success = false
             };
         }
     }
 
-    slot_pos_after = ndks_boot.slot_pos_cur;
+    ਥਾਂ_pos_after = ndks_boot.ਥਾਂ_pos_cur;
 
-    return (create_frames_of_region_ret_t) {
-        .region = (seL4_SlotRegion) {
-            .start = slot_pos_before,
-            .end   = slot_pos_after
+    ਵਾਪਸ (create_ਚੌਖਟੇ_ਦਾ_region_ret_t) {
+        .region = (se_L4_ਥਾਂ_Region) {
+            .ਸ਼ੁਰੂ = ਥਾਂ_pos_before,
+            .ਸਿਰਾ   = ਥਾਂ_pos_after
         },
         .success = true
     };
 }
 
-BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
+BOOT_ਕੋਡ cap_t create_it_asid_pool(cap_t ਜੜ੍ਹ_cnode_cap)
 {
-    cap_t ap_cap = cap_asid_pool_cap_new(ASID_HIGH(IT_ASID) << asidLowBits, rootserver.asid_pool);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
+    cap_t ap_cap = cap_asid_pool_cap_new(ASID_ਉੱਚਾ(IT_ASID) << asid_ਨੀਵਾਂ_ਬਿੱਟ, rootserver.asid_pool);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
 
     /* create ASID control cap */
-    write_slot(
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapASIDControl),
+    write_ਥਾਂ(
+        ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapASIDControl),
         cap_asid_control_cap_new()
     );
 
-    return ap_cap;
+    ਵਾਪਸ ap_cap;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+BOOT_ਕੋਡ ਸਥਿਰ ਖਾਲੀ configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
 {
     tcb->tcbSchedContext = sc_pptr;
     refill_new(tcb->tcbSchedContext, MIN_REFILLS, timeslice, 0);
     tcb->tcbSchedContext->scTcb = tcb;
 }
 
-BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
+BOOT_ਕੋਡ bool_t init_sched_control(cap_t ਜੜ੍ਹ_cnode_cap, ਸ਼ਬਦ_t ਅੰਕ_nodes)
 {
-    seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
+    se_L4_ਥਾਂ_Pos ਥਾਂ_pos_before = ndks_boot.ਥਾਂ_pos_cur;
 
     /* create a sched control cap for each core */
-    for (unsigned int i = 0; i < num_nodes; i++) {
-        if (!provide_cap(root_cnode_cap, cap_sched_control_cap_new(i))) {
-            printf("can't init sched_control for node %u, provide_cap() failed\n", i);
-            return false;
+    ਲਈ (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ i = 0; i < ਅੰਕ_nodes; i++) {
+        ਜੇ (!provide_cap(ਜੜ੍ਹ_cnode_cap, cap_sched_control_cap_new(i))) {
+            ਲਿਖੋ("can't init sched_control for node %u, provide_cap() failed\n", i);
+            ਵਾਪਸ false;
         }
     }
 
     /* update boot info with slot region for sched control caps */
-    ndks_boot.bi_frame->schedcontrol = (seL4_SlotRegion) {
-        .start = slot_pos_before,
-        .end = ndks_boot.slot_pos_cur
+    ndks_boot.bi_ਚੌਖਟਾ->schedcontrol = (se_L4_ਥਾਂ_Region) {
+        .ਸ਼ੁਰੂ = ਥਾਂ_pos_before,
+        .ਸਿਰਾ = ndks_boot.ਥਾਂ_pos_cur
     };
 
-    return true;
+    ਵਾਪਸ true;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-BOOT_CODE void create_idle_thread(void)
+BOOT_ਕੋਡ ਖਾਲੀ create_idle_thread(ਖਾਲੀ)
 {
     pptr_t pptr;
 
-#ifdef ENABLE_SMP_SUPPORT
-    for (unsigned int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    ਲਈ (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ i = 0; i < CONFIG_MAX_ਅੰਕ_NODES; i++) {
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
         pptr = (pptr_t) &ksIdleThreadTCB[SMP_TERNARY(i, 0)];
-        NODE_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
-        configureIdleThread(NODE_STATE_ON_CORE(ksIdleThread, i));
-#ifdef CONFIG_DEBUG_BUILD
-        setThreadName(NODE_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
-#endif
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
-#ifdef CONFIG_KERNEL_MCS
-        configure_sched_context(NODE_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
+        ਗੰਢ_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_ਵਿੱਥ);
+        configureIdleThread(ਗੰਢ_STATE_ON_CORE(ksIdleThread, i));
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+        ਸੈੱਟ_Thread_Name(ਗੰਢ_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
+#ਜੇ_ਅੰਤ
+        SMP_COND_STATEMENT(ਗੰਢ_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        configure_sched_context(ਗੰਢ_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
                                 MAX_PERIOD_TICKS);
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
-        NODE_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
-#endif
-#ifdef ENABLE_SMP_SUPPORT
+        SMP_COND_STATEMENT(ਗੰਢ_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
+        ਗੰਢ_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
     }
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
 }
 
-BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
+BOOT_ਕੋਡ tcb_t *create_initial_thread(cap_t ਜੜ੍ਹ_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_ਇੰਦਰਾਜ, vptr_t bi_ਚੌਖਟਾ_vptr,
                                        vptr_t ipcbuf_vptr, cap_t ipcbuf_cap)
 {
-    tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_OFFSET);
-#ifndef CONFIG_KERNEL_MCS
-    tcb->tcbTimeSlice = CONFIG_TIME_SLICE;
-#endif
+    tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_ਵਿੱਥ);
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    tcb->tcb_ਸਮਾਂ_ਟੁਕੜਾ = CONFIG_ਸਮਾਂ_ਟੁਕੜਾ;
+#ਜੇ_ਅੰਤ
 
     Arch_initContext(&tcb->tcbArch.tcbContext);
 
     /* derive a copy of the IPC buffer cap for inserting */
-    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        printf("Failed to derive copy of IPC Buffer\n");
-        return NULL;
+    deriveCap_ret_t dc_ret = deriveCap(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
+    ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        ਲਿਖੋ("Failed to derive copy of IPC Buffer\n");
+        ਵਾਪਸ ਨਿਰਾ;
     }
 
     /* initialise TCB (corresponds directly to abstract specification) */
-    cteInsert(
-        root_cnode_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
-        SLOT_PTR(rootserver.tcb, tcbCTable)
+    cte_ਪਾਓ(
+        ਜੜ੍ਹ_cnode_cap,
+        ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadCNode),
+        ਥਾਂ_PTR(rootserver.tcb, tcbCTable)
     );
-    cteInsert(
+    cte_ਪਾਓ(
         it_pd_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
-        SLOT_PTR(rootserver.tcb, tcbVTable)
+        ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadVSpace),
+        ਥਾਂ_PTR(rootserver.tcb, tcbVTable)
     );
-    cteInsert(
+    cte_ਪਾਓ(
         dc_ret.cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
-        SLOT_PTR(rootserver.tcb, tcbBuffer)
+        ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadIPCBuffer),
+        ਥਾਂ_PTR(rootserver.tcb, tcb_ਬਫਰ)
     );
     tcb->tcbIPCBuffer = ipcbuf_vptr;
 
-    setRegister(tcb, capRegister, bi_frame_vptr);
-    setNextPC(tcb, ui_v_entry);
+    ਸੈੱਟ_ਰਜਿਸਟਰ(tcb, cap_ਰਜਿਸਟਰ, bi_ਚੌਖਟਾ_vptr);
+    ਸੈੱਟ_ਅਗਲਾ_PC(tcb, ui_v_ਇੰਦਰਾਜ);
 
     /* initialise TCB */
-#ifdef CONFIG_KERNEL_MCS
-    configure_sched_context(tcb, SC_PTR(rootserver.sc), usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    configure_sched_context(tcb, SC_PTR(rootserver.sc), us_ਮੰਜ਼ਿਲ_Ticks(CONFIG_BOOT_THREAD_ਸਮਾਂ_ਟੁਕੜਾ * US_ਵਿੱਚ_MS));
+#ਜੇ_ਅੰਤ
 
-    tcb->tcbPriority = seL4_MaxPrio;
+    tcb->tcb_ਤਰਜੀਹ = seL4_MaxPrio;
     tcb->tcbMCP = seL4_MaxPrio;
     tcb->tcbDomain = 0;
-#ifndef CONFIG_KERNEL_MCS
-    setupReplyMaster(tcb);
-#endif
-    setThreadState(tcb, ThreadState_Running);
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਤਿਆਰੀ_ਜਵਾਬ_Master(tcb);
+#ਜੇ_ਅੰਤ
+    ਸੈੱਟ_Thread_State(tcb, ThreadState_Running);
 
-#ifndef CONFIG_KERNEL_MCS
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     SMP_COND_STATEMENT(tcb->tcbAffinity = 0);
-#endif
+#ਜੇ_ਅੰਤ
 
     /* create initial thread's TCB cap */
     cap_t cap = cap_thread_cap_new(TCB_REF(tcb));
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadTCB), cap);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadTCB), cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), seL4_MinSchedContextBits);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadSC), cap);
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    setThreadName(tcb, "rootserver");
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), se_L4_Min_Sched_Context_ਬਿੱਟ);
+    write_ਥਾਂ(ਥਾਂ_PTR(pptr_ਦਾ_cap(ਜੜ੍ਹ_cnode_cap), seL4_CapInitThreadSC), cap);
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+    ਸੈੱਟ_Thread_Name(tcb, "rootserver");
+#ਜੇ_ਅੰਤ
 
-    return tcb;
+    ਵਾਪਸ tcb;
 }
 
-#ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-BOOT_CODE static bool_t hypervisor_present(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
+BOOT_ਕੋਡ ਸਥਿਰ bool_t hypervisor_present(ਖਾਲੀ)
 {
-#ifdef CONFIG_ARCH_X86
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_X86
     uint32_t ebx = x86_cpuid_ebx(KVM_CPUID_SIGNATURE, 0);
     uint32_t ecx = x86_cpuid_ecx(KVM_CPUID_SIGNATURE, 0);
     uint32_t edx = x86_cpuid_edx(KVM_CPUID_SIGNATURE, 0);
 
-    if ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
+    ਜੇ ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
         || (ebx == CPUID_TCG_EBX && ecx == CPUID_TCG_ECX && edx == CPUID_TCG_EDX)) {
-        return true;
+        ਵਾਪਸ true;
     }
-#endif
-    return false;
+#ਜੇ_ਅੰਤ
+    ਵਾਪਸ false;
 }
 
-BOOT_CODE void clock_sync_test(void)
+BOOT_ਕੋਡ ਖਾਲੀ clock_sync_test(ਖਾਲੀ)
 {
     ticks_t t, t0;
-    ticks_t margin = usToTicks(CLOCK_SYNC_DELTA) + getTimerPrecision();
+    ticks_t margin = us_ਮੰਜ਼ਿਲ_Ticks(CLOCK_SYNC_DELTA) + getTimerPrecision();
 
-    assert(getCurrentCPUIndex() != 0);
-    t = NODE_STATE_ON_CORE(ksCurTime, 0);
-    do {
+    ਪ੍ਰਤਿਜ੍ਞਾ(getCurrentCPUIndex() != 0);
+    t = ਗੰਢ_STATE_ON_CORE(ks_Cur_ਸਮਾਂ, 0);
+    ਕਰੋ {
         /* perform a memory acquire to get new values of ksCurTime */
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
-        t0 = NODE_STATE_ON_CORE(ksCurTime, 0);
-    } while (t0 == t);
-    t = getCurrentTime();
-    printf("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
-           (int)getCurrentCPUIndex(), t0, t, t - t0);
+        t0 = ਗੰਢ_STATE_ON_CORE(ks_Cur_ਸਮਾਂ, 0);
+    } ਜਦੋਂ (t0 == t);
+    t = get_Current_ਸਮਾਂ();
+    ਲਿਖੋ("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
+           (ਪੂਰਨ)getCurrentCPUIndex(), t0, t, t - t0);
     /*
      * The test does not consistently work if we are in a virtual machine (e.g
      * within QEMU) because the measurement cannot distinguish between
      * interrupted clock reads and out-of-sync clocks.
      */
-    if (hypervisor_present()) {
-        printf("clock_sync_test[%d]: disabled, detected running as VM\n", (int)getCurrentCPUIndex());
-    } else {
-        assert(t0 <= margin + t && t <= t0 + margin);
+    ਜੇ (hypervisor_present()) {
+        ਲਿਖੋ("clock_sync_test[%d]: disabled, detected running as VM\n", (ਪੂਰਨ)getCurrentCPUIndex());
+    } ਨਹੀਂਤਾਂ {
+        ਪ੍ਰਤਿਜ੍ਞਾ(t0 <= margin + t && t <= t0 + margin);
     }
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-BOOT_CODE void init_core_state(tcb_t *scheduler_action)
+BOOT_ਕੋਡ ਖਾਲੀ init_core_state(tcb_t *scheduler_action)
 {
-#ifdef CONFIG_HAVE_FPU
-    NODE_STATE(ksCurFPUOwner) = NULL;
-#endif
-#ifdef CONFIG_DEBUG_BUILD
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
+    ਗੰਢ_STATE(ksCurFPUOwner) = ਨਿਰਾ;
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
     /* add initial threads to the debug queue */
-    NODE_STATE(ksDebugTCBs) = NULL;
-    if (scheduler_action != SchedulerAction_ResumeCurrentThread &&
-        scheduler_action != SchedulerAction_ChooseNewThread) {
+    ਗੰਢ_STATE(ksDebugTCBs) = ਨਿਰਾ;
+    ਜੇ (scheduler_action != SchedulerAction_ResumeCurrentThread &&
+        scheduler_action != Scheduler_Action_ਚੁਣੋ_New_Thread) {
         tcbDebugAppend(scheduler_action);
     }
-    tcbDebugAppend(NODE_STATE(ksIdleThread));
-#endif
-    NODE_STATE(ksSchedulerAction) = scheduler_action;
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread->tcbSchedContext);
-    NODE_STATE(ksConsumed) = 0;
-    NODE_STATE(ksReprogram) = true;
-    NODE_STATE(ksReleaseQueue.head) = NULL;
-    NODE_STATE(ksReleaseQueue.end) = NULL;
-    NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+    tcbDebugAppend(ਗੰਢ_STATE(ksIdleThread));
+#ਜੇ_ਅੰਤ
+    ਗੰਢ_STATE(ksSchedulerAction) = scheduler_action;
+    ਗੰਢ_STATE(ksCurThread) = ਗੰਢ_STATE(ksIdleThread);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਗੰਢ_STATE(ksCurSC) = ਗੰਢ_STATE(ksCurThread->tcbSchedContext);
+    ਗੰਢ_STATE(ksConsumed) = 0;
+    ਗੰਢ_STATE(ksReprogram) = true;
+    ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ) = ਨਿਰਾ;
+    ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰਾ) = ਨਿਰਾ;
+    ਗੰਢ_STATE(ks_Cur_ਸਮਾਂ) = get_Current_ਸਮਾਂ();
+#ਜੇ_ਅੰਤ
     /* No need for NODE_STATE() as there is no SMP support for domains */
     ksCurDomain = 0;
-    ksDomainTime = DSCHED_MAX_DURATION;
-    ksDomSchedule[0] = dschedule_make(0, DSCHED_MAX_DURATION);
+    ks_Domain_ਸਮਾਂ = DSCHED_MAX_DURATION;
+    ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ[0] = dschedule_make(0, DSCHED_MAX_DURATION);
 }
 
 /**
@@ -645,9 +645,9 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
  * @return false if the pointer is definitely not in the kernel window, true
  *         otherwise.
  */
-BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
+BOOT_ਕੋਡ ਸਥਿਰ bool_t pptr_ਵਿੱਚ_kernel_ਖਿੜਕੀ(pptr_t pptr)
 {
-    return pptr >= PPTR_BASE && pptr < PPTR_TOP;
+    ਵਾਪਸ pptr >= PPTR_ਅਧਾਰ && pptr < PPTR_ਸਿਖਰ;
 }
 
 /**
@@ -663,12 +663,12 @@ BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
  * @param first_untyped_slot next available slot in the boot info structure
  * @return true on success, false on failure
  */
-BOOT_CODE static bool_t provide_untyped_cap(
-    cap_t      root_cnode_cap,
-    bool_t     device_memory,
+BOOT_ਕੋਡ ਸਥਿਰ bool_t provide_untyped_cap(
+    cap_t      ਜੜ੍ਹ_cnode_cap,
+    bool_t     device_ਸਮ੍ਰਿਤੀ_2,
     pptr_t     pptr,
-    word_t     size_bits,
-    seL4_SlotPos first_untyped_slot
+    ਸ਼ਬਦ_t     ਮਾਪ_ਬਿੱਟ,
+    se_L4_ਥਾਂ_Pos ਪਹਿਲਾ_untyped_ਥਾਂ
 )
 {
     bool_t ret;
@@ -678,49 +678,49 @@ BOOT_CODE static bool_t provide_untyped_cap(
        return failure if anything unexpected happens. */
 
     /* Bounds check for size parameter */
-    if (size_bits > seL4_MaxUntypedBits || size_bits < seL4_MinUntypedBits) {
-        printf("Kernel init: Invalid untyped size %"SEL4_PRIu_word"\n", size_bits);
-        return false;
+    ਜੇ (ਮਾਪ_ਬਿੱਟ > se_L4_Max_Untyped_ਬਿੱਟ || ਮਾਪ_ਬਿੱਟ < se_L4_Min_Untyped_ਬਿੱਟ) {
+        ਲਿਖੋ("Kernel init: Invalid untyped size %"SEL4_PRIu_ਸ਼ਬਦ"\n", ਮਾਪ_ਬਿੱਟ);
+        ਵਾਪਸ false;
     }
 
     /* All cap ptrs must be aligned to object size */
-    if (!IS_ALIGNED(pptr, size_bits)) {
-        printf("Kernel init: Unaligned untyped pptr %p (alignment %"SEL4_PRIu_word")\n", (void *)pptr, size_bits);
-        return false;
+    ਜੇ (!IS_ALIGNED(pptr, ਮਾਪ_ਬਿੱਟ)) {
+        ਲਿਖੋ("Kernel init: Unaligned untyped pptr %p (alignment %"SEL4_PRIu_ਸ਼ਬਦ")\n", (ਖਾਲੀ *)pptr, ਮਾਪ_ਬਿੱਟ);
+        ਵਾਪਸ false;
     }
 
     /* All cap ptrs apart from device untypeds must be in the kernel window. */
-    if (!device_memory && !pptr_in_kernel_window(pptr)) {
-        printf("Kernel init: Non-device untyped pptr %p outside kernel window\n",
-               (void *)pptr);
-        return false;
+    ਜੇ (!device_ਸਮ੍ਰਿਤੀ_2 && !pptr_ਵਿੱਚ_kernel_ਖਿੜਕੀ(pptr)) {
+        ਲਿਖੋ("Kernel init: Non-device untyped pptr %p outside kernel window\n",
+               (ਖਾਲੀ *)pptr);
+        ਵਾਪਸ false;
     }
 
     /* Check that the end of the region is also in the kernel window, so we don't
        need to assume that the kernel window is aligned up to potentially
        seL4_MaxUntypedBits. */
-    if (!device_memory && !pptr_in_kernel_window(pptr + MASK(size_bits))) {
-        printf("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_word")\n",
-               (void *)pptr, size_bits);
-        return false;
+    ਜੇ (!device_ਸਮ੍ਰਿਤੀ_2 && !pptr_ਵਿੱਚ_kernel_ਖਿੜਕੀ(pptr + ਨਕਾਬ(ਮਾਪ_ਬਿੱਟ))) {
+        ਲਿਖੋ("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_ਸ਼ਬਦ")\n",
+               (ਖਾਲੀ *)pptr, ਮਾਪ_ਬਿੱਟ);
+        ਵਾਪਸ false;
     }
 
-    word_t i = ndks_boot.slot_pos_cur - first_untyped_slot;
-    if (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
-        ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc) {
-            .paddr    = pptr_to_paddr((void *)pptr),
-            .sizeBits = size_bits,
-            .isDevice = device_memory,
+    ਸ਼ਬਦ_t i = ndks_boot.ਥਾਂ_pos_cur - ਪਹਿਲਾ_untyped_ਥਾਂ;
+    ਜੇ (i < CONFIG_MAX_ਅੰਕ_BOOTINFO_UNTYPED_CAPS) {
+        ndks_boot.bi_ਚੌਖਟਾ->untypedList[i] = (seL4_UntypedDesc) {
+            .paddr    = pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)pptr),
+            .ਮਾਪ_ਬਿੱਟ_2 = ਮਾਪ_ਬਿੱਟ,
+            .isDevice = device_ਸਮ੍ਰਿਤੀ_2,
             .padding  = {0}
         };
-        ut_cap = cap_untyped_cap_new(MAX_FREE_INDEX(size_bits),
-                                     device_memory, size_bits, pptr);
-        ret = provide_cap(root_cnode_cap, ut_cap);
-    } else {
-        printf("Kernel init: Too many untyped regions for boot info\n");
+        ut_cap = cap_untyped_cap_new(MAX_FREE_ਸੂਚਕਾਂਕ(ਮਾਪ_ਬਿੱਟ),
+                                     device_ਸਮ੍ਰਿਤੀ_2, ਮਾਪ_ਬਿੱਟ, pptr);
+        ret = provide_cap(ਜੜ੍ਹ_cnode_cap, ut_cap);
+    } ਨਹੀਂਤਾਂ {
+        ਲਿਖੋ("Kernel init: Too many untyped regions for boot info\n");
         ret = true;
     }
-    return ret;
+    ਵਾਪਸ ret;
 }
 
 /**
@@ -738,11 +738,11 @@ BOOT_CODE static bool_t provide_untyped_cap(
  * @param first_untyped_slot First available untyped boot info slot.
  * @return true on success, false on failure.
  */
-BOOT_CODE static bool_t create_untypeds_for_region(
-    cap_t      root_cnode_cap,
-    bool_t     device_memory,
+BOOT_ਕੋਡ ਸਥਿਰ bool_t create_untypeds_for_region(
+    cap_t      ਜੜ੍ਹ_cnode_cap,
+    bool_t     device_ਸਮ੍ਰਿਤੀ_2,
     region_t   reg,
-    seL4_SlotPos first_untyped_slot
+    se_L4_ਥਾਂ_Pos ਪਹਿਲਾ_untyped_ਥਾਂ
 )
 {
     /* This code works with regions that wrap (where end < start), because the loop cuts up the
@@ -751,72 +751,72 @@ BOOT_CODE static bool_t create_untypeds_for_region(
        [0..end) is not necessarily part of the kernel window (depending on the value of PPTR_BASE).
        This is fine for device untypeds. For normal untypeds, the region is assumed to be fully in
        the kernel window. This is not checked here. */
-    while (!is_reg_empty(reg)) {
+    ਜਦੋਂ (!is_reg_ਖਾਲੀ_ਥਾਵਾਂ(reg)) {
 
         /* Calculate the bit size of the region. This is also correct for end < start: it will
            return the correct size of the set [start..-1] union [0..end). This will then be too
            large for alignment, so the code further down will reduce the size. */
-        unsigned int size_bits = seL4_WordBits - 1 - clzl(reg.end - reg.start);
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਮਾਪ_ਬਿੱਟ = se_L4_ਸ਼ਬਦ_ਬਿੱਟ - 1 - clzl(reg.ਸਿਰਾ - reg.ਸ਼ੁਰੂ);
         /* The size can't exceed the largest possible untyped size. */
-        if (size_bits > seL4_MaxUntypedBits) {
-            size_bits = seL4_MaxUntypedBits;
+        ਜੇ (ਮਾਪ_ਬਿੱਟ > se_L4_Max_Untyped_ਬਿੱਟ) {
+            ਮਾਪ_ਬਿੱਟ = se_L4_Max_Untyped_ਬਿੱਟ;
         }
         /* The start address 0 satisfies any alignment needs, otherwise ensure
          * the region's bit size does not exceed the alignment of the region.
          */
-        if (0 != reg.start) {
-            unsigned int align_bits = ctzl(reg.start);
-            if (size_bits > align_bits) {
-                size_bits = align_bits;
+        ਜੇ (0 != reg.ਸ਼ੁਰੂ) {
+            ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ align_ਬਿੱਟ = ctzl(reg.ਸ਼ੁਰੂ);
+            ਜੇ (ਮਾਪ_ਬਿੱਟ > align_ਬਿੱਟ) {
+                ਮਾਪ_ਬਿੱਟ = align_ਬਿੱਟ;
             }
         }
         /* Provide an untyped capability for the region only if it is large
          * enough to be retyped into objects later. Otherwise the region can't
          * be used anyway.
          */
-        if (size_bits >= seL4_MinUntypedBits) {
-            if (!provide_untyped_cap(root_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
-                return false;
+        ਜੇ (ਮਾਪ_ਬਿੱਟ >= se_L4_Min_Untyped_ਬਿੱਟ) {
+            ਜੇ (!provide_untyped_cap(ਜੜ੍ਹ_cnode_cap, device_ਸਮ੍ਰਿਤੀ_2, reg.ਸ਼ੁਰੂ, ਮਾਪ_ਬਿੱਟ, ਪਹਿਲਾ_untyped_ਥਾਂ)) {
+                ਵਾਪਸ false;
             }
         }
-        reg.start += BIT(size_bits);
+        reg.ਸ਼ੁਰੂ += ਦੋਆਧਾਰੀ_ਅੰਕ(ਮਾਪ_ਬਿੱਟ);
     }
-    return true;
+    ਵਾਪਸ true;
 }
 
-BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
+BOOT_ਕੋਡ bool_t create_untypeds(cap_t ਜੜ੍ਹ_cnode_cap)
 {
-    seL4_SlotPos first_untyped_slot = ndks_boot.slot_pos_cur;
+    se_L4_ਥਾਂ_Pos ਪਹਿਲਾ_untyped_ਥਾਂ = ndks_boot.ਥਾਂ_pos_cur;
 
-    paddr_t start = 0;
-    for (word_t i = 0; i < ndks_boot.resv_count; i++) {
-        if (start < ndks_boot.reserved[i].start) {
-            region_t reg = paddr_to_pptr_reg((p_region_t) {
-                start, ndks_boot.reserved[i].start
+    paddr_t ਸ਼ੁਰੂ = 0;
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < ndks_boot.resv_ਗਿਣਤੀ; i++) {
+        ਜੇ (ਸ਼ੁਰੂ < ndks_boot.reserved[i].ਸ਼ੁਰੂ) {
+            region_t reg = paddr_ਮੰਜ਼ਿਲ_pptr_reg((p_region_t) {
+                ਸ਼ੁਰੂ, ndks_boot.reserved[i].ਸ਼ੁਰੂ
             });
-            if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
-                printf("ERROR: creation of untypeds for device region #%u at"
-                       " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                       (unsigned int)i, reg.start, reg.end);
-                return false;
+            ਜੇ (!create_untypeds_for_region(ਜੜ੍ਹ_cnode_cap, true, reg, ਪਹਿਲਾ_untyped_ਥਾਂ)) {
+                ਲਿਖੋ("ERROR: creation of untypeds for device region #%u at"
+                       " [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ") failed\n",
+                       (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)i, reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ);
+                ਵਾਪਸ false;
             }
         }
 
-        start = ndks_boot.reserved[i].end;
+        ਸ਼ੁਰੂ = ndks_boot.reserved[i].ਸਿਰਾ;
     }
 
-    if (start <= CONFIG_PADDR_USER_DEVICE_TOP - 1) {
-        region_t reg = paddr_to_pptr_reg((p_region_t) {
+    ਜੇ (ਸ਼ੁਰੂ <= CONFIG_PADDR_USER_DEVICE_ਸਿਖਰ - 1) {
+        region_t reg = paddr_ਮੰਜ਼ਿਲ_pptr_reg((p_region_t) {
             /* CONFIG_PADDR_USER_DEVICE_TOP cast to paddr_t can be 0.
              * create_untypeds_for_region() can deal with that correctly. */
-            start, (paddr_t) CONFIG_PADDR_USER_DEVICE_TOP
+            ਸ਼ੁਰੂ, (paddr_t) CONFIG_PADDR_USER_DEVICE_ਸਿਖਰ
         });
 
-        if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
-            printf("ERROR: creation of untypeds for top device region"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                   reg.start, reg.end);
-            return false;
+        ਜੇ (!create_untypeds_for_region(ਜੜ੍ਹ_cnode_cap, true, reg, ਪਹਿਲਾ_untyped_ਥਾਂ)) {
+            ਲਿਖੋ("ERROR: creation of untypeds for top device region"
+                   " [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ") failed\n",
+                   reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ);
+            ਵਾਪਸ false;
         }
     }
 
@@ -824,90 +824,90 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
      * boot process. We can create UT objects for these frames, so the memory
      * can be reused.
      */
-    region_t boot_mem_reuse_reg = paddr_to_pptr_reg(get_p_reg_kernel_img_boot());
-    if (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
-        printf("ERROR: creation of untypeds for recycled boot memory"
-               " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-               boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
-        return false;
+    region_t boot_mem_reuse_reg = paddr_ਮੰਜ਼ਿਲ_pptr_reg(get_p_reg_kernel_img_boot());
+    ਜੇ (!create_untypeds_for_region(ਜੜ੍ਹ_cnode_cap, false, boot_mem_reuse_reg, ਪਹਿਲਾ_untyped_ਥਾਂ)) {
+        ਲਿਖੋ("ERROR: creation of untypeds for recycled boot memory"
+               " [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ"] failed\n",
+               boot_mem_reuse_reg.ਸ਼ੁਰੂ, boot_mem_reuse_reg.ਸਿਰਾ);
+        ਵਾਪਸ false;
     }
 
     /* convert remaining freemem into UT objects and provide the caps */
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < ARRAY_ਮਾਪ(ndks_boot.freemem); i++) {
         region_t reg = ndks_boot.freemem[i];
-        ndks_boot.freemem[i] = REG_EMPTY;
-        if (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
-            printf("ERROR: creation of untypeds for free memory region #%u at"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                   (unsigned int)i, reg.start, reg.end);
-            return false;
+        ndks_boot.freemem[i] = REG_ਖਾਲੀ_ਥਾਵਾਂ;
+        ਜੇ (!create_untypeds_for_region(ਜੜ੍ਹ_cnode_cap, false, reg, ਪਹਿਲਾ_untyped_ਥਾਂ)) {
+            ਲਿਖੋ("ERROR: creation of untypeds for free memory region #%u at"
+                   " [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ") failed\n",
+                   (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)i, reg.ਸ਼ੁਰੂ, reg.ਸਿਰਾ);
+            ਵਾਪਸ false;
         }
     }
 
-    ndks_boot.bi_frame->untyped = (seL4_SlotRegion) {
-        .start = first_untyped_slot,
-        .end   = ndks_boot.slot_pos_cur
+    ndks_boot.bi_ਚੌਖਟਾ->untyped = (se_L4_ਥਾਂ_Region) {
+        .ਸ਼ੁਰੂ = ਪਹਿਲਾ_untyped_ਥਾਂ,
+        .ਸਿਰਾ   = ndks_boot.ਥਾਂ_pos_cur
     };
 
-    return true;
+    ਵਾਪਸ true;
 }
 
-BOOT_CODE void bi_finalise(void)
+BOOT_ਕੋਡ ਖਾਲੀ bi_finalise(ਖਾਲੀ)
 {
 
-    if (rootserver.paging.start != rootserver.paging.end) {
-        printf("WARNING: internal book keeping error. Less pagetables allocated than predicted: "
-               "%ld page tables allocated but not used.\n", (rootserver.paging.end - rootserver.paging.start) >> seL4_PageTableBits);
+    ਜੇ (rootserver.paging.ਸ਼ੁਰੂ != rootserver.paging.ਸਿਰਾ) {
+        ਲਿਖੋ("WARNING: internal book keeping error. Less pagetables allocated than predicted: "
+               "%ld page tables allocated but not used.\n", (rootserver.paging.ਸਿਰਾ - rootserver.paging.ਸ਼ੁਰੂ) >> se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ);
     }
 
-    ndks_boot.bi_frame->empty = (seL4_SlotRegion) {
-        .start = ndks_boot.slot_pos_cur,
-        .end   = BIT(CONFIG_ROOT_CNODE_SIZE_BITS)
+    ndks_boot.bi_ਚੌਖਟਾ->ਖਾਲੀ_ਥਾਵਾਂ = (se_L4_ਥਾਂ_Region) {
+        .ਸ਼ੁਰੂ = ndks_boot.ਥਾਂ_pos_cur,
+        .ਸਿਰਾ   = ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_ਜੜ੍ਹ_CNODE_ਮਾਪ_ਬਿੱਟ)
     };
 }
 
-BOOT_CODE static bool_t check_available_memory(word_t n_available,
-                                               const p_region_t *available)
+BOOT_ਕੋਡ ਸਥਿਰ bool_t check_ਉਪਲਬਧ_ਸਮ੍ਰਿਤੀ(ਸ਼ਬਦ_t n_ਉਪਲਬਧ,
+                                               ਅਚਲ p_region_t *ਉਪਲਬਧ)
 {
     /* The system configuration is broken if no region is available. */
-    if (0 == n_available) {
-        printf("ERROR: no memory regions available\n");
-        return false;
+    ਜੇ (0 == n_ਉਪਲਬਧ) {
+        ਲਿਖੋ("ERROR: no memory regions available\n");
+        ਵਾਪਸ false;
     }
 
-    printf("Available phys memory regions: %"SEL4_PRIu_word"\n", n_available);
+    ਲਿਖੋ("Available phys memory regions: %"SEL4_PRIu_ਸ਼ਬਦ"\n", n_ਉਪਲਬਧ);
     /* Force ordering and exclusivity of available regions. */
-    for (word_t i = 0; i < n_available; i++) {
-        const p_region_t *r = &available[i];
-        printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < n_ਉਪਲਬਧ; i++) {
+        ਅਚਲ p_region_t *r = &ਉਪਲਬਧ[i];
+        ਲਿਖੋ("  [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ")\n", r->ਸ਼ੁਰੂ, r->ਸਿਰਾ);
 
         /* Available regions must not wrap */
-        if (r->start > r->end) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+        ਜੇ (r->ਸ਼ੁਰੂ > r->ਸਿਰਾ) {
+            ਲਿਖੋ("ERROR: memory region %"SEL4_PRIu_ਸ਼ਬਦ" has start > end\n", i);
+            ਵਾਪਸ false;
         }
 
         /* Available regions must be non-empty. */
-        if (r->start == r->end) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" empty\n", i);
-            return false;
+        ਜੇ (r->ਸ਼ੁਰੂ == r->ਸਿਰਾ) {
+            ਲਿਖੋ("ERROR: memory region %"SEL4_PRIu_ਸ਼ਬਦ" empty\n", i);
+            ਵਾਪਸ false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
          * so the '==' case is fine. Directly adjacent regions are allowed.
          */
-        if ((i > 0) && (r->start < available[i - 1].end)) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+        ਜੇ ((i > 0) && (r->ਸ਼ੁਰੂ < ਉਪਲਬਧ[i - 1].ਸਿਰਾ)) {
+            ਲਿਖੋ("ERROR: memory region %"SEL4_PRIu_ਸ਼ਬਦ" in wrong order\n", i);
+            ਵਾਪਸ false;
         }
     }
 
-    return true;
+    ਵਾਪਸ true;
 }
 
 /* We can't declare arrays on the stack, so this is space for init_avail_reg()
  * below to populate and init_freemem() to consume. */
-BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
+BOOT_BSS ਸਥਿਰ region_t avail_reg[MAX_ਅੰਕ_FREEMEM_REG];
 
 /**
  * Initialise avail_reg with the parts of the available memory regions that are
@@ -920,211 +920,211 @@ BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
  * check_available_memory(). Returns the number of entries populated in
  * avail_reg.
  */
-BOOT_CODE static word_t init_avail_reg(word_t n_available,
-                                       const p_region_t *available)
+BOOT_ਕੋਡ ਸਥਿਰ ਸ਼ਬਦ_t init_avail_reg(ਸ਼ਬਦ_t n_ਉਪਲਬਧ,
+                                       ਅਚਲ p_region_t *ਉਪਲਬਧ)
 {
-    word_t cnt = 0;
-    for (word_t i = 0; i < n_available; i++) {
-        const p_region_t *r = &available[i];
+    ਸ਼ਬਦ_t cnt = 0;
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < n_ਉਪਲਬਧ; i++) {
+        ਅਚਲ p_region_t *r = &ਉਪਲਬਧ[i];
 
-        if ((r->start >= PADDR_TOP) || (r->end <= PADDR_BASE)) {
-            printf("  region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") is outside the kernel"
-                   " window, only potentially available as device untypeds\n", r->start, r->end);
-        } else {
+        ਜੇ ((r->ਸ਼ੁਰੂ >= PADDR_ਸਿਖਰ) || (r->ਸਿਰਾ <= PADDR_ਅਧਾਰ)) {
+            ਲਿਖੋ("  region [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ") is outside the kernel"
+                   " window, only potentially available as device untypeds\n", r->ਸ਼ੁਰੂ, r->ਸਿਰਾ);
+        } ਨਹੀਂਤਾਂ {
             p_region_t usable_reg = {
-                .start = MAX(r->start, PADDR_BASE),
-                .end   = MIN(r->end, PADDR_TOP)
+                .ਸ਼ੁਰੂ = MAX(r->ਸ਼ੁਰੂ, PADDR_ਅਧਾਰ),
+                .ਸਿਰਾ   = MIN(r->ਸਿਰਾ, PADDR_ਸਿਖਰ)
             };
 
-            if (cnt >= ARRAY_SIZE(avail_reg)) {
+            ਜੇ (cnt >= ARRAY_ਮਾਪ(avail_reg)) {
                 /* No space left in the array, seems MAX_NUM_FREEMEM_REG should
                  * be increased. Debug builds raise an assert here because this
                  * is likely a porting issue that should be looked into. Release
                  * builds will continue booting, but can't use this memory
                  * region. This might still be sufficient to run.
                  */
-                printf("  WARNING: cannot use region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
-                       " avail_reg[] is full\n", r->start, r->end);
-                assert(0);
-            } else {
-                avail_reg[cnt] = paddr_to_pptr_reg(usable_reg);
+                ਲਿਖੋ("  WARNING: cannot use region [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ"),"
+                       " avail_reg[] is full\n", r->ਸ਼ੁਰੂ, r->ਸਿਰਾ);
+                ਪ੍ਰਤਿਜ੍ਞਾ(0);
+            } ਨਹੀਂਤਾਂ {
+                avail_reg[cnt] = paddr_ਮੰਜ਼ਿਲ_pptr_reg(usable_reg);
                 cnt++;
             }
         }
     }
-    return cnt;
+    ਵਾਪਸ cnt;
 }
 
 
-BOOT_CODE static bool_t check_reserved_memory(word_t n_reserved,
-                                              const region_t *reserved)
+BOOT_ਕੋਡ ਸਥਿਰ bool_t check_reserved_ਸਮ੍ਰਿਤੀ(ਸ਼ਬਦ_t n_reserved,
+                                              ਅਚਲ region_t *reserved)
 {
-    printf("Reserved virt address space regions: %"SEL4_PRIu_word"\n",
+    ਲਿਖੋ("Reserved virt address space regions: %"SEL4_PRIu_ਸ਼ਬਦ"\n",
            n_reserved);
     /* Force ordering and exclusivity of reserved regions. */
-    for (word_t i = 0; i < n_reserved; i++) {
-        const region_t *r = &reserved[i];
-        printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < n_reserved; i++) {
+        ਅਚਲ region_t *r = &reserved[i];
+        ਲਿਖੋ("  [%"SEL4_PRIx_ਸ਼ਬਦ"..%"SEL4_PRIx_ਸ਼ਬਦ")\n", r->ਸ਼ੁਰੂ, r->ਸਿਰਾ);
 
         /* Reserved regions must be sane, the size is allowed to be zero. */
-        if (r->start > r->end) {
-            printf("ERROR: reserved region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+        ਜੇ (r->ਸ਼ੁਰੂ > r->ਸਿਰਾ) {
+            ਲਿਖੋ("ERROR: reserved region %"SEL4_PRIu_ਸ਼ਬਦ" has start > end\n", i);
+            ਵਾਪਸ false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
            so the == case is fine. Directly adjacent regions are allowed. */
-        if ((i > 0) && (r->start < reserved[i - 1].end)) {
-            printf("ERROR: reserved region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+        ਜੇ ((i > 0) && (r->ਸ਼ੁਰੂ < reserved[i - 1].ਸਿਰਾ)) {
+            ਲਿਖੋ("ERROR: reserved region %"SEL4_PRIu_ਸ਼ਬਦ" in wrong order\n", i);
+            ਵਾਪਸ false;
         }
     }
 
-    return true;
+    ਵਾਪਸ true;
 }
 
 /**
  * Dynamically initialise the available memory on the platform.
  * A region represents an area of memory.
  */
-BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
-                              word_t n_reserved, const region_t *reserved,
-                              v_region_t it_v_reg, word_t extra_bi_size_bits)
+BOOT_ਕੋਡ bool_t init_freemem(ਸ਼ਬਦ_t n_ਉਪਲਬਧ, ਅਚਲ p_region_t *ਉਪਲਬਧ,
+                              ਸ਼ਬਦ_t n_reserved, ਅਚਲ region_t *reserved,
+                              v_region_t it_v_reg, ਸ਼ਬਦ_t extra_bi_ਮਾਪ_ਬਿੱਟ)
 {
-    if (!check_available_memory(n_available, available)) {
-        return false;
+    ਜੇ (!check_ਉਪਲਬਧ_ਸਮ੍ਰਿਤੀ(n_ਉਪਲਬਧ, ਉਪਲਬਧ)) {
+        ਵਾਪਸ false;
     }
 
     /* After here, avail_reg[0..n_available) are all regions within the kernel window. */
-    n_available = init_avail_reg(n_available, available);
-    if (0 == n_available) {
-        printf("ERROR: no available memory within the kernel window\n");
-        return false;
+    n_ਉਪਲਬਧ = init_avail_reg(n_ਉਪਲਬਧ, ਉਪਲਬਧ);
+    ਜੇ (0 == n_ਉਪਲਬਧ) {
+        ਲਿਖੋ("ERROR: no available memory within the kernel window\n");
+        ਵਾਪਸ false;
     }
 
-    if (!check_reserved_memory(n_reserved, reserved)) {
-        return false;
+    ਜੇ (!check_reserved_ਸਮ੍ਰਿਤੀ(n_reserved, reserved)) {
+        ਵਾਪਸ false;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
-        ndks_boot.freemem[i] = REG_EMPTY;
+    ਲਈ (ਸ਼ਬਦ_t i = 0; i < ARRAY_ਮਾਪ(ndks_boot.freemem); i++) {
+        ndks_boot.freemem[i] = REG_ਖਾਲੀ_ਥਾਵਾਂ;
     }
 
-    word_t a = 0;
-    word_t r = 0;
+    ਸ਼ਬਦ_t a = 0;
+    ਸ਼ਬਦ_t r = 0;
     /* Now iterate through the available regions, removing any reserved regions. */
-    while (a < n_available && r < n_reserved) {
-        if (reserved[r].start == reserved[r].end) {
+    ਜਦੋਂ (a < n_ਉਪਲਬਧ && r < n_reserved) {
+        ਜੇ (reserved[r].ਸ਼ੁਰੂ == reserved[r].ਸਿਰਾ) {
             /* reserved region is empty - skip it */
             r++;
-        } else if (avail_reg[a].start >= avail_reg[a].end) {
+        } ਨਹੀਂਤਾਂ ਜੇ (avail_reg[a].ਸ਼ੁਰੂ >= avail_reg[a].ਸਿਰਾ) {
             /* skip the entire region - it's empty now after trimming */
             a++;
-        } else if (reserved[r].end <= avail_reg[a].start) {
+        } ਨਹੀਂਤਾਂ ਜੇ (reserved[r].ਸਿਰਾ <= avail_reg[a].ਸ਼ੁਰੂ) {
             /* the reserved region is below the available region - skip it */
-            reserve_region(pptr_to_paddr_reg(reserved[r]));
+            reserve_region(pptr_ਮੰਜ਼ਿਲ_paddr_reg(reserved[r]));
             r++;
-        } else if (reserved[r].start >= avail_reg[a].end) {
+        } ਨਹੀਂਤਾਂ ਜੇ (reserved[r].ਸ਼ੁਰੂ >= avail_reg[a].ਸਿਰਾ) {
             /* the reserved region is above the available region - take the whole thing */
-            insert_region(avail_reg[a]);
+            ਪਾਓ_region(avail_reg[a]);
             a++;
-        } else {
+        } ਨਹੀਂਤਾਂ {
             /* the reserved region overlaps with the available region */
-            if (reserved[r].start <= avail_reg[a].start) {
+            ਜੇ (reserved[r].ਸ਼ੁਰੂ <= avail_reg[a].ਸ਼ੁਰੂ) {
                 /* the region overlaps with the start of the available region.
                  * trim start of the available region */
-                avail_reg[a].start = MIN(avail_reg[a].end, reserved[r].end);
+                avail_reg[a].ਸ਼ੁਰੂ = MIN(avail_reg[a].ਸਿਰਾ, reserved[r].ਸਿਰਾ);
                 /* do not increment reserved index here - there could be more overlapping regions */
-            } else {
-                assert(reserved[r].start < avail_reg[a].end);
+            } ਨਹੀਂਤਾਂ {
+                ਪ੍ਰਤਿਜ੍ਞਾ(reserved[r].ਸ਼ੁਰੂ < avail_reg[a].ਸਿਰਾ);
                 /* take the first chunk of the available region and move
                  * the start to the end of the reserved region */
                 region_t m = avail_reg[a];
-                m.end = reserved[r].start;
-                insert_region(m);
-                if (avail_reg[a].end > reserved[r].end) {
-                    avail_reg[a].start = reserved[r].end;
+                m.ਸਿਰਾ = reserved[r].ਸ਼ੁਰੂ;
+                ਪਾਓ_region(m);
+                ਜੇ (avail_reg[a].ਸਿਰਾ > reserved[r].ਸਿਰਾ) {
+                    avail_reg[a].ਸ਼ੁਰੂ = reserved[r].ਸਿਰਾ;
                     /* we could increment reserved index here, but it's more consistent with the
                      * other overlapping case if we don't */
-                } else {
+                } ਨਹੀਂਤਾਂ {
                     a++;
                 }
             }
         }
     }
 
-    for (; r < n_reserved; r++) {
-        if (reserved[r].start < reserved[r].end) {
-            reserve_region(pptr_to_paddr_reg(reserved[r]));
+    ਲਈ (; r < n_reserved; r++) {
+        ਜੇ (reserved[r].ਸ਼ੁਰੂ < reserved[r].ਸਿਰਾ) {
+            reserve_region(pptr_ਮੰਜ਼ਿਲ_paddr_reg(reserved[r]));
         }
     }
 
     /* no more reserved regions - add the rest */
-    for (; a < n_available; a++) {
-        if (avail_reg[a].start < avail_reg[a].end) {
-            insert_region(avail_reg[a]);
+    ਲਈ (; a < n_ਉਪਲਬਧ; a++) {
+        ਜੇ (avail_reg[a].ਸ਼ੁਰੂ < avail_reg[a].ਸਿਰਾ) {
+            ਪਾਓ_region(avail_reg[a]);
         }
     }
 
     /* now try to fit the root server objects into a region */
-    int i = ARRAY_SIZE(ndks_boot.freemem) - 1;
-    if (!is_reg_empty(ndks_boot.freemem[i])) {
-        printf("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
-               (unsigned int)MAX_NUM_FREEMEM_REG);
-        return false;
+    ਪੂਰਨ i = ARRAY_ਮਾਪ(ndks_boot.freemem) - 1;
+    ਜੇ (!is_reg_ਖਾਲੀ_ਥਾਵਾਂ(ndks_boot.freemem[i])) {
+        ਲਿਖੋ("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
+               (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)MAX_ਅੰਕ_FREEMEM_REG);
+        ਵਾਪਸ false;
     }
     /* skip any empty regions */
-    for (; i >= 0 && is_reg_empty(ndks_boot.freemem[i]); i--);
+    ਲਈ (; i >= 0 && is_reg_ਖਾਲੀ_ਥਾਵਾਂ(ndks_boot.freemem[i]); i--);
 
     /* try to grab the last available p region to create the root server objects
      * from. If possible, retain any left over memory as an extra p region */
-    word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
-    word_t max = rootserver_max_size_bits(extra_bi_size_bits);
-    for (; i >= 0; i--) {
+    ਸ਼ਬਦ_t ਮਾਪ = calculate_rootserver_ਮਾਪ(it_v_reg, extra_bi_ਮਾਪ_ਬਿੱਟ);
+    ਸ਼ਬਦ_t max = rootserver_max_ਮਾਪ_ਬਿੱਟ(extra_bi_ਮਾਪ_ਬਿੱਟ);
+    ਲਈ (; i >= 0; i--) {
         /* Invariant: both i and (i + 1) are valid indices in ndks_boot.freemem. */
-        assert(i < ARRAY_SIZE(ndks_boot.freemem) - 1);
+        ਪ੍ਰਤਿਜ੍ਞਾ(i < ARRAY_ਮਾਪ(ndks_boot.freemem) - 1);
         /* Invariant; the region at index i is the current candidate.
          * Invariant: regions 0 up to (i - 1), if any, are additional candidates.
          * Invariant: region (i + 1) is empty. */
-        assert(is_reg_empty(ndks_boot.freemem[i + 1]));
+        ਪ੍ਰਤਿਜ੍ਞਾ(is_reg_ਖਾਲੀ_ਥਾਵਾਂ(ndks_boot.freemem[i + 1]));
         /* Invariant: regions above (i + 1), if any, are empty or too small to use.
          * Invariant: all non-empty regions are ordered, disjoint and unallocated. */
 
         /* We make a fresh variable to index the known-empty region, because the
          * SimplExportAndRefine verification test has poor support for array
          * indices that are sums of variables and small constants. */
-        int empty_index = i + 1;
+        ਪੂਰਨ ਖਾਲੀ_ਥਾਵਾਂ_ਸੂਚਕਾਂਕ = i + 1;
 
         /* Try to take the top-most suitably sized and aligned chunk. */
-        pptr_t unaligned_start = ndks_boot.freemem[i].end - size;
-        pptr_t start = ROUND_DOWN(unaligned_start, max);
+        pptr_t unaligned_ਸ਼ੁਰੂ = ndks_boot.freemem[i].ਸਿਰਾ - ਮਾਪ;
+        pptr_t ਸ਼ੁਰੂ = ਗੇੜਾ_ਥੱਲੇ(unaligned_ਸ਼ੁਰੂ, max);
         /* if unaligned_start didn't underflow, and start fits in the region,
          * then we've found a region that fits the root server objects. */
-        if (unaligned_start <= ndks_boot.freemem[i].end
-            && start >= ndks_boot.freemem[i].start) {
-            create_rootserver_objects(start, it_v_reg, extra_bi_size_bits);
+        ਜੇ (unaligned_ਸ਼ੁਰੂ <= ndks_boot.freemem[i].ਸਿਰਾ
+            && ਸ਼ੁਰੂ >= ndks_boot.freemem[i].ਸ਼ੁਰੂ) {
+            create_rootserver_objects(ਸ਼ੁਰੂ, it_v_reg, extra_bi_ਮਾਪ_ਬਿੱਟ);
             /* There may be leftovers before and after the memory we used. */
             /* Shuffle the after leftover up to the empty slot (i + 1). */
-            ndks_boot.freemem[empty_index] = (region_t) {
-                .start = start + size,
-                .end = ndks_boot.freemem[i].end
+            ndks_boot.freemem[ਖਾਲੀ_ਥਾਵਾਂ_ਸੂਚਕਾਂਕ] = (region_t) {
+                .ਸ਼ੁਰੂ = ਸ਼ੁਰੂ + ਮਾਪ,
+                .ਸਿਰਾ = ndks_boot.freemem[i].ਸਿਰਾ
             };
             /* Leave the before leftover in current slot i. */
-            ndks_boot.freemem[i].end = start;
+            ndks_boot.freemem[i].ਸਿਰਾ = ਸ਼ੁਰੂ;
             /* Regions i and (i + 1) are now well defined, ordered, disjoint,
              * and unallocated, so we can return successfully. */
-            return true;
+            ਵਾਪਸ true;
         }
         /* Region i isn't big enough, so shuffle it up to slot (i + 1),
          * which we know is unused. */
-        ndks_boot.freemem[empty_index] = ndks_boot.freemem[i];
+        ndks_boot.freemem[ਖਾਲੀ_ਥਾਵਾਂ_ਸੂਚਕਾਂਕ] = ndks_boot.freemem[i];
         /* Now region i is unused, so make it empty to reestablish the invariant
          * for the next iteration (when it will be slot i + 1). */
-        ndks_boot.freemem[i] = REG_EMPTY;
+        ndks_boot.freemem[i] = REG_ਖਾਲੀ_ਥਾਵਾਂ;
     }
 
     /* We didn't find a big enough region. */
-    printf("ERROR: no free memory region is big enough for root server "
-           "objects, need size/alignment of 2^%"SEL4_PRIu_word"\n", max);
-    return false;
+    ਲਿਖੋ("ERROR: no free memory region is big enough for root server "
+           "objects, need size/alignment of 2^%"SEL4_PRIu_ਸ਼ਬਦ"\n", max);
+    ਵਾਪਸ false;
 }

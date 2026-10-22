@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <mode/machine.h>
-#include <arch/machine/fpu.h>
-#include <mode/model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/fpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/model/statedata.h>
 
-#ifdef CONFIG_HAVE_FPU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
 /* Initialise the FP/SIMD for this machine. */
-BOOT_CODE bool_t fpsimd_init(void)
+BOOT_ਕੋਡ bool_t fpsimd_init(ਖਾਲੀ)
 {
     /* Set the FPU to lazy switch mode */
     disableFpu();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ਜੇ (config_ਸੈੱਟ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         enableFpuEL01();
     }
     /* Non-HYP Kernel assumes FPU is always enabled for EL1: Make sure it is */
     isb();
-    return true;
+    ਵਾਪਸ true;
 }
-#endif /* CONFIG_HAVE_FPU */
+#ਜੇ_ਅੰਤ /* CONFIG_HAVE_FPU */
 
-BOOT_CODE bool_t fpsimd_HWCapTest(void)
+BOOT_ਕੋਡ bool_t fpsimd_HWCapTest(ਖਾਲੀ)
 {
-    word_t id_aa64pfr0;
+    ਸ਼ਬਦ_t id_aa64pfr0;
 
     /* Check if the hardware has FP and ASIMD support... */
     MRS("id_aa64pfr0_el1", id_aa64pfr0);
-    if (((id_aa64pfr0 >> ID_AA64PFR0_EL1_FP) & MASK(4)) == MASK(4) ||
-        ((id_aa64pfr0 >> ID_AA64PFR0_EL1_ASIMD) & MASK(4)) == MASK(4)) {
-        return false;
+    ਜੇ (((id_aa64pfr0 >> ID_AA64PFR0_EL1_FP) & ਨਕਾਬ(4)) == ਨਕਾਬ(4) ||
+        ((id_aa64pfr0 >> ID_AA64PFR0_EL1_ASIMD) & ਨਕਾਬ(4)) == ਨਕਾਬ(4)) {
+        ਵਾਪਸ false;
     }
 
-    return true;
+    ਵਾਪਸ true;
 }

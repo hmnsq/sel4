@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <machine/timer.h>
-#include <mode/api/ipc_buffer.h>
-#include <object/schedcontext.h>
-#include <object/schedcontrol.h>
-#include <kernel/sporadic.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/timer.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/api/ipc_buffer.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/schedcontext.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/schedcontrol.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/sporadic.h>
 
-static exception_t invokeSchedControl_ConfigureFlags(sched_context_t *target, word_t core, ticks_t budget,
-                                                     ticks_t period, word_t max_refills, word_t badge, word_t flags)
+ਸਥਿਰ exception_t invokeSchedControl_ConfigureFlags(sched_context_t *ਨਿਸ਼ਾਨਾ, ਸ਼ਬਦ_t core, ticks_t budget,
+                                                     ticks_t period, ਸ਼ਬਦ_t max_refills, ਸ਼ਬਦ_t badge, ਸ਼ਬਦ_t flags)
 {
-    tcb_t *thread = target->scTcb;
+    tcb_t *thread = ਨਿਸ਼ਾਨਾ->scTcb;
 
     /* don't modify parameters of thread while it is in a sorted queue */
-    if (thread) {
+    ਜੇ (thread) {
         /* possibly stall a remote core */
         SMP_COND_STATEMENT(remoteTCBStall(thread));
         /* remove from scheduler */
         tcbReleaseRemove(thread);
-        tcbSchedDequeue(thread);
+        tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(thread);
         /* bill the current consumed amount before adjusting the params */
-        if (NODE_STATE(ksCurSC) == target) {
+        ਜੇ (ਗੰਢ_STATE(ksCurSC) == ਨਿਸ਼ਾਨਾ) {
             /* This could potentially mutate state but if it returns
              * true no state was modified, thus removing it should
              * be the same. */
-            assert(checkBudget());
-            commitTime();
+            ਪ੍ਰਤਿਜ੍ਞਾ(checkBudget());
+            commit_ਸਮਾਂ();
         }
     }
 
-    if (budget == period) {
+    ਜੇ (budget == period) {
         /* this is a cool hack: for round robin, we set the
          * period to 0, which means that the budget will always be ready to be refilled
          * and avoids some special casing.
          */
-        refill_new(target, MIN_REFILLS, budget, 0);
-    } else if (SMP_COND_STATEMENT(core == target->scCore &&) sc_active(target) && thread
+        refill_new(ਨਿਸ਼ਾਨਾ, MIN_REFILLS, budget, 0);
+    } ਨਹੀਂਤਾਂ ਜੇ (SMP_COND_STATEMENT(core == ਨਿਸ਼ਾਨਾ->scCore &&) sc_ਸਰਗਰਮ(ਨਿਸ਼ਾਨਾ) && thread
                && isRunnable(thread)) {
         /* the scheduling context is active - it can be used, so
          * we need to preserve the bandwidth */
-        refill_update(target, period, budget, max_refills);
-    } else {
+        refill_update(ਨਿਸ਼ਾਨਾ, period, budget, max_refills);
+    } ਨਹੀਂਤਾਂ {
         /* the scheduling context isn't active - it's budget is not being used, so
          * we can just populate the parameters from now */
-        refill_new(target, max_refills, budget, period);
+        refill_new(ਨਿਸ਼ਾਨਾ, max_refills, budget, period);
     }
 
-#ifdef ENABLE_SMP_SUPPORT
-    target->scCore = core;
-    if (thread) {
-        migrateTCB(thread, target->scCore);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    ਨਿਸ਼ਾਨਾ->scCore = core;
+    ਜੇ (thread) {
+        migrateTCB(thread, ਨਿਸ਼ਾਨਾ->scCore);
     }
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
 
-    assert(sc_active(target));
-    if (thread) {
-        schedContext_resume(target);
-        if (SMP_TERNARY(core == CURRENT_CPU_INDEX(), true)) {
-            if (isRunnable(thread) && thread != NODE_STATE(ksCurThread)) {
-                possibleSwitchTo(thread);
+    ਪ੍ਰਤਿਜ੍ਞਾ(sc_ਸਰਗਰਮ(ਨਿਸ਼ਾਨਾ));
+    ਜੇ (thread) {
+        schedContext_resume(ਨਿਸ਼ਾਨਾ);
+        ਜੇ (SMP_TERNARY(core == CURRENT_CPU_ਸੂਚਕਾਂਕ(), true)) {
+            ਜੇ (isRunnable(thread) && thread != ਗੰਢ_STATE(ksCurThread)) {
+                possible_Switch_ਮੰਜ਼ਿਲ(thread);
             }
-        } else if (isRunnable(thread)) {
-            SCHED_ENQUEUE(thread);
+        } ਨਹੀਂਤਾਂ ਜੇ (isRunnable(thread)) {
+            SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(thread);
         }
-        if (thread == NODE_STATE(ksCurThread)) {
+        ਜੇ (thread == ਗੰਢ_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    target->scBadge = badge;
-    target->scSporadic = (flags & seL4_SchedContext_Sporadic) != 0;
+    ਨਿਸ਼ਾਨਾ->scBadge = badge;
+    ਨਿਸ਼ਾਨਾ->scSporadic = (flags & seL4_SchedContext_Sporadic) != 0;
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, word_t *buffer)
+ਸਥਿਰ exception_t decodeSchedControl_ConfigureFlags(ਸ਼ਬਦ_t ਲੰਮਾਈ, cap_t cap, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("SchedControl_ConfigureFlags: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < (TIME_ARG_SIZE * 2) + 3) {
+    ਜੇ (ਲੰਮਾਈ < (ਸਮਾਂ_ARG_ਮਾਪ * 2) + 3) {
         userError("SchedControl_configureFlags: truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    time_t budget_us = mode_parseTimeArg(0, buffer);
+    ਸਮਾਂ_t budget_us = ਬਹੁਲਕ_parse_ਸਮਾਂ_Arg(0, ਬਫਰ);
 
-    if (budget_us > MAX_PERIOD_US) {
+    ਜੇ (budget_us > MAX_PERIOD_US) {
         userError("SchedControl_ConfigureFlags: budget out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    ticks_t budget_ticks = usToTicks(budget_us);
+    ticks_t budget_ticks = us_ਮੰਜ਼ਿਲ_Ticks(budget_us);
 
-    time_t period_us = mode_parseTimeArg(TIME_ARG_SIZE, buffer);
+    ਸਮਾਂ_t period_us = ਬਹੁਲਕ_parse_ਸਮਾਂ_Arg(ਸਮਾਂ_ARG_ਮਾਪ, ਬਫਰ);
 
-    if (period_us > MAX_PERIOD_US) {
+    ਜੇ (period_us > MAX_PERIOD_US) {
         userError("SchedControl_ConfigureFlags: period out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    ticks_t period_ticks = usToTicks(period_us);
+    ticks_t period_ticks = us_ਮੰਜ਼ਿਲ_Ticks(period_us);
 
-    if (budget_ticks < MIN_BUDGET) {
+    ਜੇ (budget_ticks < MIN_BUDGET) {
         userError("SchedControl_ConfigureFlags: budget out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (period_ticks < MIN_BUDGET) {
+    ਜੇ (period_ticks < MIN_BUDGET) {
         userError("SchedControl_ConfigureFlags: period out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (budget_ticks > period_ticks) {
+    ਜੇ (budget_ticks > period_ticks) {
         userError("SchedControl_ConfigureFlags: budget must be <= period");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = period_us;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cap_t targetCap = current_extra_caps.excaprefs[0]->cap;
-    if (unlikely(cap_get_capType(targetCap) != cap_sched_context_cap)) {
+    cap_t ਨਿਸ਼ਾਨਾ_Cap = current_extra_caps.excaprefs[0]->cap;
+    ਜੇ (unlikely(cap_get_capType(ਨਿਸ਼ਾਨਾ_Cap) != cap_sched_context_cap)) {
         userError("SchedControl_ConfigureFlags: target cap not a scheduling context cap");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t extra_refills = getSyscallArg(TIME_ARG_SIZE * 2, buffer);
-    word_t max_refills = refill_absolute_max(targetCap);
+    ਸ਼ਬਦ_t extra_refills = getSyscallArg(ਸਮਾਂ_ARG_ਮਾਪ * 2, ਬਫਰ);
+    ਸ਼ਬਦ_t max_refills = refill_absolute_max(ਨਿਸ਼ਾਨਾ_Cap);
 
-    if (extra_refills > max_refills - MIN_REFILLS) {
+    ਜੇ (extra_refills > max_refills - MIN_REFILLS) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = max_refills - MIN_REFILLS;
         userError("Max refills invalid, got %lu, max %lu",
                   extra_refills,
                   current_syscall_error.rangeErrorMax);
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t badge = getSyscallArg(TIME_ARG_SIZE * 2 + 1, buffer);
-    word_t flags = getSyscallArg(TIME_ARG_SIZE * 2 + 2, buffer);
+    ਸ਼ਬਦ_t badge = getSyscallArg(ਸਮਾਂ_ARG_ਮਾਪ * 2 + 1, ਬਫਰ);
+    ਸ਼ਬਦ_t flags = getSyscallArg(ਸਮਾਂ_ARG_ਮਾਪ * 2 + 2, ਬਫਰ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSchedControl_ConfigureFlags(SC_PTR(cap_sched_context_cap_get_capSCPtr(targetCap)),
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeSchedControl_ConfigureFlags(SC_PTR(cap_sched_context_cap_get_capSCPtr(ਨਿਸ਼ਾਨਾ_Cap)),
                                              cap_sched_control_cap_get_core(cap),
                                              budget_ticks,
                                              period_ticks,
@@ -173,14 +173,14 @@ static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, w
                                              flags);
 }
 
-exception_t decodeSchedControlInvocation(word_t label, cap_t cap, word_t length, word_t *buffer)
+exception_t decodeSchedControlInvocation(ਸ਼ਬਦ_t label, cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    switch (label) {
-    case SchedControlConfigureFlags:
-        return  decodeSchedControl_ConfigureFlags(length, cap, buffer);
-    default:
+    ਚੋਣ (label) {
+    ਹਾਲਤ SchedControlConfigureFlags:
+        ਵਾਪਸ  decodeSchedControl_ConfigureFlags(ਲੰਮਾਈ, cap, ਬਫਰ);
+    ਮੂਲ:
         userError("SchedControl invocation: Illegal operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }

@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <sel4/arch/constants.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
-#include <machine/debug.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <assert.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <sel4/arch/constants.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/fpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/debug.h>
 
-const register_t msgRegisters[] = {
+ਅਚਲ ਰਜਿਸਟਰ_t ਸੁਨੇਹਾ_Registers[] = {
     EDI,
-#ifndef CONFIG_KERNEL_MCS
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     EBP
-#endif
+#ਜੇ_ਅੰਤ
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_ਸੁਨੇਹਾ_registers,
+    ਆਕਾਰ(ਸੁਨੇਹਾ_Registers) / ਆਕਾਰ(ਸੁਨੇਹਾ_Registers[0]) == n_ਸੁਨੇਹਾ_Registers
 );
 
-const register_t frameRegisters[] = {
+ਅਚਲ ਰਜਿਸਟਰ_t ਚੌਖਟਾ_Registers[] = {
     FaultIP, ESP, FLAGS, EAX, EBX, ECX, EDX, ESI, EDI, EBP
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_ਚੌਖਟਾ_registers,
+    ਆਕਾਰ(ਚੌਖਟਾ_Registers) / ਆਕਾਰ(ਚੌਖਟਾ_Registers[0]) == n_ਚੌਖਟਾ_Registers
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+ਅਚਲ ਰਜਿਸਟਰ_t gpRegisters[] = {
+    FS_ਅਧਾਰ, GS_ਅਧਾਰ
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    ਆਕਾਰ(gpRegisters) / ਆਕਾਰ(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+ਖਾਲੀ ਬਹੁਲਕ_init_Context(user_context_t *context)
 {
     context->registers[EAX] = 0;
     context->registers[EBX] = 0;
@@ -51,19 +51,19 @@ void Mode_initContext(user_context_t *context)
     context->registers[ESP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+ਸ਼ਬਦ_t ਬਹੁਲਕ_sanitise_ਰਜਿਸਟਰ(ਰਜਿਸਟਰ_t reg, ਸ਼ਬਦ_t v)
 {
-    return v;
+    ਵਾਪਸ v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਸ਼ਬਦ_t getNBSendRecvDest(ਖਾਲੀ)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    seL4_IPCBuffer *ਬਫਰ = (seL4_IPCBuffer *) lookupIPCBuffer(false, ਗੰਢ_STATE(ksCurThread));
+    ਜੇ (ਬਫਰ != ਨਿਰਾ) {
+        ਵਾਪਸ ਬਫਰ->user_ਅੰਕੜੇ;
+    } ਨਹੀਂਤਾਂ {
+        ਵਾਪਸ 0;
     }
 }
-#endif
+#ਜੇ_ਅੰਤ

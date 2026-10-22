@@ -4,317 +4,317 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <arch/object/ioport.h>
-#include <arch/api/invocation.h>
-#include <plat/machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/failures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/ioport.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/api/invocation.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/io.h>
 
-static inline void apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ apply_ਨਮੂਨਾ(ਸ਼ਬਦ_t_may_alias *w, ਸ਼ਬਦ_t ਨਮੂਨਾ, bool_t ਸੈੱਟ)
 {
-    if (set) {
-        *w |= pattern;
-    } else {
-        *w &= ~pattern;
+    ਜੇ (ਸੈੱਟ) {
+        *w |= ਨਮੂਨਾ;
+    } ਨਹੀਂਤਾਂ {
+        *w &= ~ਨਮੂਨਾ;
     }
 }
 
-static inline word_t make_pattern(int start, int end)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t make_ਨਮੂਨਾ(ਪੂਰਨ ਸ਼ੁਰੂ, ਪੂਰਨ ਸਿਰਾ)
 {
     // number of bits we want to have set
-    int num_bits = end - start;
+    ਪੂਰਨ ਅੰਕ_ਬਿੱਟ = ਸਿਰਾ - ਸ਼ੁਰੂ;
     // shift down to cut off the bits we don't want, then shift up to put the
     // bits into position
-    return (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
+    ਵਾਪਸ (~(ਸ਼ਬਦ_t)0) >> (CONFIG_ਸ਼ਬਦ_ਮਾਪ - ਅੰਕ_ਬਿੱਟ) << ਸ਼ੁਰੂ;
 }
 
-static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
+ਸਥਿਰ exception_t ensure_ਪੋਰਟ_Operation_Allowed(cap_t cap, uint32_t ਸ਼ੁਰੂ_ਪੋਰਟ, uint32_t ਮਾਪ)
 {
-    uint32_t first_allowed = cap_io_port_cap_get_capIOPortFirstPort(cap);
-    uint32_t last_allowed = cap_io_port_cap_get_capIOPortLastPort(cap);
-    uint32_t end_port = start_port + size - 1;
-    assert(first_allowed <= last_allowed);
-    assert(start_port <= end_port);
+    uint32_t ਪਹਿਲਾ_allowed = cap_io_ਪੋਰਟ_cap_get_cap_IOPort_ਪਹਿਲਾ_ਪੋਰਟ(cap);
+    uint32_t ਆਖਰੀ_allowed = cap_io_ਪੋਰਟ_cap_get_cap_IOPort_ਆਖਰੀ_ਪੋਰਟ(cap);
+    uint32_t ਸਿਰਾ_ਪੋਰਟ = ਸ਼ੁਰੂ_ਪੋਰਟ + ਮਾਪ - 1;
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਪਹਿਲਾ_allowed <= ਆਖਰੀ_allowed);
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਸ਼ੁਰੂ_ਪੋਰਟ <= ਸਿਰਾ_ਪੋਰਟ);
 
-    if ((start_port < first_allowed) || (end_port > last_allowed)) {
+    ਜੇ ((ਸ਼ੁਰੂ_ਪੋਰਟ < ਪਹਿਲਾ_allowed) || (ਸਿਰਾ_ਪੋਰਟ > ਆਖਰੀ_allowed)) {
         userError("IOPort: Ports %d--%d fall outside permitted range %d--%d.",
-                  (int)start_port, (int)end_port,
-                  (int)first_allowed, (int)last_allowed);
+                  (ਪੂਰਨ)ਸ਼ੁਰੂ_ਪੋਰਟ, (ਪੂਰਨ)ਸਿਰਾ_ਪੋਰਟ,
+                  (ਪੂਰਨ)ਪਹਿਲਾ_allowed, (ਪੂਰਨ)ਆਖਰੀ_allowed);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-void freeIOPortRange(uint16_t first_port, uint16_t last_port)
+ਖਾਲੀ freeIOPortRange(uint16_t ਪਹਿਲਾ_ਪੋਰਟ, uint16_t ਆਖਰੀ_ਪੋਰਟ)
 {
-    setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, false);
+    ਸੈੱਟ_IOPort_ਨਕਾਬ(x86KSAllocatedIOPorts, ਪਹਿਲਾ_ਪੋਰਟ, ਆਖਰੀ_ਪੋਰਟ, false);
 }
 
-static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
+ਸਥਿਰ bool_t isIOPortRangeFree(uint16_t ਪਹਿਲਾ_ਪੋਰਟ, uint16_t ਆਖਰੀ_ਪੋਰਟ)
 {
-    int low_word = first_port >> wordRadix;
-    int high_word = last_port >> wordRadix;
-    int low_index = first_port & MASK(wordRadix);
-    int high_index = last_port & MASK(wordRadix);
+    ਪੂਰਨ ਨੀਵਾਂ_ਸ਼ਬਦ = ਪਹਿਲਾ_ਪੋਰਟ >> ਸ਼ਬਦ_Radix;
+    ਪੂਰਨ ਉੱਚਾ_ਸ਼ਬਦ = ਆਖਰੀ_ਪੋਰਟ >> ਸ਼ਬਦ_Radix;
+    ਪੂਰਨ ਨੀਵਾਂ_ਸੂਚਕਾਂਕ = ਪਹਿਲਾ_ਪੋਰਟ & ਨਕਾਬ(ਸ਼ਬਦ_Radix);
+    ਪੂਰਨ ਉੱਚਾ_ਸੂਚਕਾਂਕ = ਆਖਰੀ_ਪੋਰਟ & ਨਕਾਬ(ਸ਼ਬਦ_Radix);
 
     // check if we are operating on a partial word
-    if (low_word == high_word) {
-        if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
-            return false;
+    ਜੇ (ਨੀਵਾਂ_ਸ਼ਬਦ == ਉੱਚਾ_ਸ਼ਬਦ) {
+        ਜੇ ((x86KSAllocatedIOPorts[ਨੀਵਾਂ_ਸ਼ਬਦ] & make_ਨਮੂਨਾ(ਨੀਵਾਂ_ਸੂਚਕਾਂਕ, ਉੱਚਾ_ਸੂਚਕਾਂਕ + 1)) != 0) {
+            ਵਾਪਸ false;
         }
-        return true;
+        ਵਾਪਸ true;
     }
     // check the starting word
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
-        return false;
+    ਜੇ ((x86KSAllocatedIOPorts[ਨੀਵਾਂ_ਸ਼ਬਦ] & make_ਨਮੂਨਾ(ਨੀਵਾਂ_ਸੂਚਕਾਂਕ, CONFIG_ਸ਼ਬਦ_ਮਾਪ)) != 0) {
+        ਵਾਪਸ false;
     }
-    low_word++;
+    ਨੀਵਾਂ_ਸ਼ਬਦ++;
     // check the rest of the whole words
-    while (low_word < high_word) {
-        if (x86KSAllocatedIOPorts[low_word] != 0) {
-            return false;
+    ਜਦੋਂ (ਨੀਵਾਂ_ਸ਼ਬਦ < ਉੱਚਾ_ਸ਼ਬਦ) {
+        ਜੇ (x86KSAllocatedIOPorts[ਨੀਵਾਂ_ਸ਼ਬਦ] != 0) {
+            ਵਾਪਸ false;
         }
-        low_word++;
+        ਨੀਵਾਂ_ਸ਼ਬਦ++;
     }
     // check any trailing bits
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
-        return false;
+    ਜੇ ((x86KSAllocatedIOPorts[ਨੀਵਾਂ_ਸ਼ਬਦ] & make_ਨਮੂਨਾ(0, ਉੱਚਾ_ਸੂਚਕਾਂਕ + 1)) != 0) {
+        ਵਾਪਸ false;
     }
-    return true;
+    ਵਾਪਸ true;
 }
 
-static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
+ਸਥਿਰ exception_t invoke_X86_ਪੋਰਟ_Control(uint16_t ਪਹਿਲਾ_ਪੋਰਟ, uint16_t ਆਖਰੀ_ਪੋਰਟ, cte_t *ioport_ਥਾਂ, cte_t *control_ਥਾਂ)
 {
-    setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, true);
-    cteInsert(cap_io_port_cap_new(first_port, last_port
-#ifdef CONFIG_VTX
+    ਸੈੱਟ_IOPort_ਨਕਾਬ(x86KSAllocatedIOPorts, ਪਹਿਲਾ_ਪੋਰਟ, ਆਖਰੀ_ਪੋਰਟ, true);
+    cte_ਪਾਓ(cap_io_ਪੋਰਟ_cap_new(ਪਹਿਲਾ_ਪੋਰਟ, ਆਖਰੀ_ਪੋਰਟ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_VTX
                                   , VPID_INVALID
-#endif
+#ਜੇ_ਅੰਤ
                                  ),
-              controlSlot, ioportSlot);
+              control_ਥਾਂ, ioport_ਥਾਂ);
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeX86PortControlInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t decode_X86_ਪੋਰਟ_Control_Invocation(
+    ਸ਼ਬਦ_t invLabel,
+    ਸ਼ਬਦ_t ਲੰਮਾਈ,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *ਥਾਂ,
     cap_t cap,
-    word_t *buffer
+    ਸ਼ਬਦ_t *ਬਫਰ
 )
 {
-    uint16_t first_port;
-    uint16_t last_port;
-    word_t index, depth;
+    uint16_t ਪਹਿਲਾ_ਪੋਰਟ;
+    uint16_t ਆਖਰੀ_ਪੋਰਟ;
+    ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ;
     cap_t cnodeCap;
-    cte_t *destSlot;
-    lookupSlot_ret_t lu_ret;
-    exception_t status;
+    cte_t *dest_ਥਾਂ;
+    lookup_ਥਾਂ_ret_t lu_ret;
+    exception_t ਸਥਿਤੀ;
 
-    if (invLabel != X86IOPortControlIssue) {
+    ਜੇ (invLabel != X86IOPortControlIssue) {
         userError("IOPortControl: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (ਲੰਮਾਈ < 4 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("IOPortControl: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    first_port = getSyscallArg(0, buffer) & 0xffff;
-    last_port = getSyscallArg(1, buffer) & 0xffff;
-    index = getSyscallArg(2, buffer);
-    depth = getSyscallArg(3, buffer);
+    ਪਹਿਲਾ_ਪੋਰਟ = getSyscallArg(0, ਬਫਰ) & 0xffff;
+    ਆਖਰੀ_ਪੋਰਟ = getSyscallArg(1, ਬਫਰ) & 0xffff;
+    ਸੂਚਕਾਂਕ = getSyscallArg(2, ਬਫਰ);
+    ਡੂੰਘਾਈ = getSyscallArg(3, ਬਫਰ);
 
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (last_port < first_port) {
+    ਜੇ (ਆਖਰੀ_ਪੋਰਟ < ਪਹਿਲਾ_ਪੋਰਟ) {
         userError("IOPortControl: Last port must be > first port.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!isIOPortRangeFree(first_port, last_port)) {
+    ਜੇ (!isIOPortRangeFree(ਪਹਿਲਾ_ਪੋਰਟ, ਆਖਰੀ_ਪੋਰਟ)) {
         userError("IOPortControl: Some ports in range already in use.");
-        current_syscall_error.type = seL4_RevokeFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Revoke_ਪਹਿਲਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(buffer, 0));
-        return lu_ret.status;
+    lu_ret = lookup_ਨਿਸ਼ਾਨਾ_ਥਾਂ(cnodeCap, ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ);
+    ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(ਬਫਰ, 0));
+        ਵਾਪਸ lu_ret.ਸਥਿਤੀ;
     }
-    destSlot = lu_ret.slot;
+    dest_ਥਾਂ = lu_ret.ਥਾਂ;
 
-    status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
-        userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(buffer, 0));
-        return status;
+    ਸਥਿਤੀ = ensure_ਖਾਲੀ_ਥਾਵਾਂ_ਥਾਂ(dest_ਥਾਂ);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
+        userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(ਬਫਰ, 0));
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeX86PortControl(first_port, last_port, destSlot, slot);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invoke_X86_ਪੋਰਟ_Control(ਪਹਿਲਾ_ਪੋਰਟ, ਆਖਰੀ_ਪੋਰਟ, dest_ਥਾਂ, ਥਾਂ);
 }
 
-static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
+ਸਥਿਰ exception_t invoke_X86_ਪੋਰਟ_ਵਿੱਚ(ਸ਼ਬਦ_t invLabel, uint16_t ਪੋਰਟ, bool_t call)
 {
     uint32_t res;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = ਗੰਢ_STATE(ksCurThread);
 
-    switch (invLabel) {
-    case X86IOPortIn8:
-        res = in8(port);
-        break;
-    case X86IOPortIn16:
-        res = in16(port);
-        break;
-    case X86IOPortIn32:
-        res = in32(port);
-        break;
+    ਚੋਣ (invLabel) {
+    ਹਾਲਤ X86IOPortIn8:
+        res = in8(ਪੋਰਟ);
+        ਰੋਕੋ;
+    ਹਾਲਤ X86IOPortIn16:
+        res = in16(ਪੋਰਟ);
+        ਰੋਕੋ;
+    ਹਾਲਤ X86IOPortIn32:
+        res = in32(ਪੋਰਟ);
+        ਰੋਕੋ;
     }
 
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, res);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    ਜੇ (call) {
+        ਸ਼ਬਦ_t *ipc_ਬਫਰ = lookupIPCBuffer(true, thread);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਲੰਮਾਈ = ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 0, res);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                        se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, ਲੰਮਾਈ)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t data)
+ਸਥਿਰ exception_t invoke_X86_ਪੋਰਟ_ਬਾਹਰਲਾ(ਸ਼ਬਦ_t invLabel, uint16_t ਪੋਰਟ, uint32_t ਅੰਕੜੇ)
 {
-    switch (invLabel) {
-    case X86IOPortOut8:
-        out8(port, data);
-        break;
-    case X86IOPortOut16:
-        out16(port, data);
-        break;
-    case X86IOPortOut32:
-        out32(port, data);
-        break;
+    ਚੋਣ (invLabel) {
+    ਹਾਲਤ X86IOPortOut8:
+        out8(ਪੋਰਟ, ਅੰਕੜੇ);
+        ਰੋਕੋ;
+    ਹਾਲਤ X86IOPortOut16:
+        out16(ਪੋਰਟ, ਅੰਕੜੇ);
+        ਰੋਕੋ;
+    ਹਾਲਤ X86IOPortOut32:
+        out32(ਪੋਰਟ, ਅੰਕੜੇ);
+        ਰੋਕੋ;
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeX86PortInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t decode_X86_ਪੋਰਟ_Invocation(
+    ਸ਼ਬਦ_t invLabel,
+    ਸ਼ਬਦ_t ਲੰਮਾਈ,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *ਥਾਂ,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    ਸ਼ਬਦ_t *ਬਫਰ
 )
 {
     exception_t ret = EXCEPTION_NONE;
 
-    if (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
-        if (length < 1) {
+    ਜੇ (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
+        ਜੇ (ਲੰਮਾਈ < 1) {
             userError("IOPort: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to read from. */
-        uint16_t port = getSyscallArg(0, buffer) & 0xffff;
-        switch (invLabel) {
-        case X86IOPortIn8:
-            ret = ensurePortOperationAllowed(cap, port, 1);
-            break;
-        case X86IOPortIn16:
-            ret = ensurePortOperationAllowed(cap, port, 2);
-            break;
-        case X86IOPortIn32:
-            ret = ensurePortOperationAllowed(cap, port, 4);
-            break;
+        uint16_t ਪੋਰਟ = getSyscallArg(0, ਬਫਰ) & 0xffff;
+        ਚੋਣ (invLabel) {
+        ਹਾਲਤ X86IOPortIn8:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 1);
+            ਰੋਕੋ;
+        ਹਾਲਤ X86IOPortIn16:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 2);
+            ਰੋਕੋ;
+        ਹਾਲਤ X86IOPortIn32:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 4);
+            ਰੋਕੋ;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        ਜੇ (ret != EXCEPTION_NONE) {
+            ਵਾਪਸ ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortIn(invLabel, port, call);
-    } else if (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ invoke_X86_ਪੋਰਟ_ਵਿੱਚ(invLabel, ਪੋਰਟ, call);
+    } ਨਹੀਂਤਾਂ ਜੇ (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
         /* Ensure the incoming message is long enough for the write. */
-        if (length < 2) {
+        ਜੇ (ਲੰਮਾਈ < 2) {
             userError("IOPort Out: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to write to. */
-        uint16_t port = getSyscallArg(0, buffer) & 0xffff;
-        seL4_Word raw_data = getSyscallArg(1, buffer);
+        uint16_t ਪੋਰਟ = getSyscallArg(0, ਬਫਰ) & 0xffff;
+        se_L4_ਸ਼ਬਦ raw_ਅੰਕੜੇ = getSyscallArg(1, ਬਫਰ);
         /* We construct the value for data from raw_data based on the actual size of the port
            operation. This ensures that there is no 'random' user data left over in the value
            passed to invokeX86PortOut. Whilst invokeX86PortOut will ignore any extra data and
            cast down to the correct word size removing the extra here is currently relied upon
            for verification */
-        uint32_t data = 0;
+        uint32_t ਅੰਕੜੇ = 0;
 
-        switch (invLabel) {
-        case X86IOPortOut8:
-            ret = ensurePortOperationAllowed(cap, port, 1);
-            data = raw_data & 0xff;
-            break;
-        case X86IOPortOut16:
-            ret = ensurePortOperationAllowed(cap, port, 2);
-            data = raw_data & 0xffff;
-            break;
-        case X86IOPortOut32:
-            ret = ensurePortOperationAllowed(cap, port, 4);
-            data = raw_data & 0xffffffff;
-            break;
+        ਚੋਣ (invLabel) {
+        ਹਾਲਤ X86IOPortOut8:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 1);
+            ਅੰਕੜੇ = raw_ਅੰਕੜੇ & 0xff;
+            ਰੋਕੋ;
+        ਹਾਲਤ X86IOPortOut16:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 2);
+            ਅੰਕੜੇ = raw_ਅੰਕੜੇ & 0xffff;
+            ਰੋਕੋ;
+        ਹਾਲਤ X86IOPortOut32:
+            ret = ensure_ਪੋਰਟ_Operation_Allowed(cap, ਪੋਰਟ, 4);
+            ਅੰਕੜੇ = raw_ਅੰਕੜੇ & 0xffffffff;
+            ਰੋਕੋ;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        ਜੇ (ret != EXCEPTION_NONE) {
+            ਵਾਪਸ ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortOut(invLabel, port, data);
-    } else {
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ invoke_X86_ਪੋਰਟ_ਬਾਹਰਲਾ(invLabel, ਪੋਰਟ, ਅੰਕੜੇ);
+    } ਨਹੀਂਤਾਂ {
         userError("IOPort: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void setIOPortMask(void *ioport_bitmap, uint16_t low, uint16_t high, bool_t set)
+ਖਾਲੀ ਸੈੱਟ_IOPort_ਨਕਾਬ(ਖਾਲੀ *ioport_bitmap, uint16_t ਨੀਵਾਂ, uint16_t ਉੱਚਾ, bool_t ਸੈੱਟ)
 {
     //get an aliasing pointer
-    word_t_may_alias *bitmap = ioport_bitmap;
+    ਸ਼ਬਦ_t_may_alias *bitmap = ioport_bitmap;
 
-    int low_word = low >> wordRadix;
-    int high_word = high >> wordRadix;
-    int low_index = low & MASK(wordRadix);
-    int high_index = high & MASK(wordRadix);
+    ਪੂਰਨ ਨੀਵਾਂ_ਸ਼ਬਦ = ਨੀਵਾਂ >> ਸ਼ਬਦ_Radix;
+    ਪੂਰਨ ਉੱਚਾ_ਸ਼ਬਦ = ਉੱਚਾ >> ਸ਼ਬਦ_Radix;
+    ਪੂਰਨ ਨੀਵਾਂ_ਸੂਚਕਾਂਕ = ਨੀਵਾਂ & ਨਕਾਬ(ਸ਼ਬਦ_Radix);
+    ਪੂਰਨ ਉੱਚਾ_ਸੂਚਕਾਂਕ = ਉੱਚਾ & ਨਕਾਬ(ਸ਼ਬਦ_Radix);
 
     // see if we are just manipulating bits inside a single word. handling this
     // specially makes reasoning easier
-    if (low_word == high_word) {
-        apply_pattern(bitmap + low_word, make_pattern(low_index, high_index + 1), set);
-    } else {
+    ਜੇ (ਨੀਵਾਂ_ਸ਼ਬਦ == ਉੱਚਾ_ਸ਼ਬਦ) {
+        apply_ਨਮੂਨਾ(bitmap + ਨੀਵਾਂ_ਸ਼ਬਦ, make_ਨਮੂਨਾ(ਨੀਵਾਂ_ਸੂਚਕਾਂਕ, ਉੱਚਾ_ਸੂਚਕਾਂਕ + 1), ਸੈੱਟ);
+    } ਨਹੀਂਤਾਂ {
         // operate on the potentially partial first word
-        apply_pattern(bitmap + low_word, make_pattern(low_index, CONFIG_WORD_SIZE), set);
-        low_word++;
+        apply_ਨਮੂਨਾ(bitmap + ਨੀਵਾਂ_ਸ਼ਬਦ, make_ਨਮੂਨਾ(ਨੀਵਾਂ_ਸੂਚਕਾਂਕ, CONFIG_ਸ਼ਬਦ_ਮਾਪ), ਸੈੱਟ);
+        ਨੀਵਾਂ_ਸ਼ਬਦ++;
         // iterate over the whole words
-        while (low_word < high_word) {
-            apply_pattern(bitmap + low_word, ~(word_t)0, set);
-            low_word++;
+        ਜਦੋਂ (ਨੀਵਾਂ_ਸ਼ਬਦ < ਉੱਚਾ_ਸ਼ਬਦ) {
+            apply_ਨਮੂਨਾ(bitmap + ਨੀਵਾਂ_ਸ਼ਬਦ, ~(ਸ਼ਬਦ_t)0, ਸੈੱਟ);
+            ਨੀਵਾਂ_ਸ਼ਬਦ++;
         }
         // apply to any remaining bits
-        apply_pattern(bitmap + low_word, make_pattern(0, high_index + 1), set);
+        apply_ਨਮੂਨਾ(bitmap + ਨੀਵਾਂ_ਸ਼ਬਦ, make_ਨਮੂਨਾ(0, ਉੱਚਾ_ਸੂਚਕਾਂਕ + 1), ਸੈੱਟ);
     }
 }

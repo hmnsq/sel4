@@ -5,63 +5,63 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
 
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+ਬਾਹਰੀ ਅੱਖਰ kernel_ਢੇਰ_alloc[CONFIG_MAX_ਅੰਕ_NODES][ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_KERNEL_ਢੇਰ_ਬਿੱਟ)];
 
-void Arch_switchToThread(tcb_t *tcb)
+ਖਾਲੀ Arch_switch_ਮੰਜ਼ਿਲ_Thread(tcb_t *tcb)
 {
-    setVMRoot(tcb);
+    ਸੈੱਟ_VMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_ਕੋਡ ਖਾਲੀ Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
+    ਸੈੱਟ_ਰਜਿਸਟਰ(tcb, ਅਗਲਾ_IP, (ਸ਼ਬਦ_t)&idle_thread);
 
     /* Enable interrupts and keep working in supervisor mode */
-    setRegister(tcb, SSTATUS, (word_t) SSTATUS_SPP | SSTATUS_SPIE);
-#ifdef ENABLE_SMP_SUPPORT
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        if (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
-            setRegister(tcb, SP, (word_t)kernel_stack_alloc + (i + 1) * BIT(CONFIG_KERNEL_STACK_BITS));
-            break;
+    ਸੈੱਟ_ਰਜਿਸਟਰ(tcb, SSTATUS, (ਸ਼ਬਦ_t) SSTATUS_SPP | SSTATUS_SPIE);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    ਲਈ (ਪੂਰਨ i = 0; i < CONFIG_MAX_ਅੰਕ_NODES; i++) {
+        ਜੇ (ਗੰਢ_STATE_ON_CORE(ksIdleThread, i) == tcb) {
+            ਸੈੱਟ_ਰਜਿਸਟਰ(tcb, SP, (ਸ਼ਬਦ_t)kernel_ਢੇਰ_alloc + (i + 1) * ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_KERNEL_ਢੇਰ_ਬਿੱਟ));
+            ਰੋਕੋ;
         }
     }
-#else
-    setRegister(tcb, SP, (word_t)kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS));
-#endif
+#ਨਹੀਂਤਾਂ
+    ਸੈੱਟ_ਰਜਿਸਟਰ(tcb, SP, (ਸ਼ਬਦ_t)kernel_ਢੇਰ_alloc + ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_KERNEL_ਢੇਰ_ਬਿੱਟ));
+#ਜੇ_ਅੰਤ
 }
 
-void Arch_switchToIdleThread(void)
+ਖਾਲੀ Arch_switch_ਮੰਜ਼ਿਲ_Idle_Thread(ਖਾਲੀ)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = ਗੰਢ_STATE(ksIdleThread);
 
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(tcb);
+    ਸੈੱਟ_VMRoot(tcb);
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+ਖਾਲੀ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Arch_postModifyRegisters(tcb_t *tptr)
+ਖਾਲੀ Arch_postModifyRegisters(tcb_t *tptr)
 {
     /* Nothing to do */
 }
 
-void Arch_prepareNextDomain(void)
+ਖਾਲੀ Arch_prepare_ਅਗਲਾ_Domain(ਖਾਲੀ)
 {
     /* Don't need to do anything */
 }
 
-void Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
+ਖਾਲੀ Arch_prepare_ਸੈੱਟ_Domain(tcb_t *tptr, dom_t dom)
 {
     /* Don't need to do anything */
 }

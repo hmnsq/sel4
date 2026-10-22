@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/devices_gen.h>
 
-#define UARTDR                    0x000
-#define UARTFR                    0x018
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UARTDR                    0x000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UARTFR                    0x018
 
-#define PL011_UARTFR_TXFF         BIT(5)
-#define PL011_UARTFR_RXFE         BIT(4)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PL011_UARTFR_TXFF         ਦੋਆਧਾਰੀ_ਅੰਕ(5)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PL011_UARTFR_RXFE         ਦੋਆਧਾਰੀ_ਅੰਕ(4)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_REG(x) ((ਅਸਥਿਰ uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_PRINTING
+ਖਾਲੀ uart_drv_putchar(ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ c)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
+    ਜਦੋਂ ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
 
     *UART_REG(UARTDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#ਜੇ_ਅੰਤ /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ uart_drv_getchar(ਖਾਲੀ)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
+    ਜਦੋਂ ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
 
-    return *UART_REG(UARTDR);
+    ਵਾਪਸ *UART_REG(UARTDR);
 }
-#endif  /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ  /* CONFIG_DEBUG_BUILD */

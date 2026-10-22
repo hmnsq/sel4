@@ -4,92 +4,92 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/kernel/elf.h>
-#include <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/elf.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
 
 /* minimal ELF functionality for loading GRUB boot module */
 
-BOOT_CODE bool_t elf_checkFile(Elf_Header_t *elfFile, word_t max_length)
+BOOT_ਕੋਡ bool_t elf_checkFile(Elf_ਸਿਰਲੇਖ_t *elfFile, ਸ਼ਬਦ_t max_ਲੰਮਾਈ)
 {
     Elf_Phdr_t *phdr;
     uint32_t    i;
-    word_t      phdr_table_size;
+    ਸ਼ਬਦ_t      phdr_ਸਾਰਣੀ_ਮਾਪ;
 
-    if (max_length < sizeof(Elf_Header_t) ||
+    ਜੇ (max_ਲੰਮਾਈ < ਆਕਾਰ(Elf_ਸਿਰਲੇਖ_t) ||
         elfFile->e_ident[0] != '\177' || elfFile->e_ident[1] != 'E' ||
         elfFile->e_ident[2] != 'L'    || elfFile->e_ident[3] != 'F' ||
         elfFile->e_ident[4] != ELF_EXPECTED_CLASS ||
         elfFile->e_machine != ELF_EXPECTED_MACHINE ||
         (elfFile->e_type != ET_EXEC && elfFile->e_type != ET_DYN) ||
-        elfFile->e_phentsize != sizeof(Elf_Phdr_t) || elfFile->e_phnum == 0) {
-        return false;
+        elfFile->e_phentsize != ਆਕਾਰ(Elf_Phdr_t) || elfFile->e_phnum == 0) {
+        ਵਾਪਸ false;
     }
     /* Overflow-safe check that the program table fits within the file. */
-    phdr_table_size = elfFile->e_phnum * sizeof(Elf_Phdr_t);
-    if (elfFile->e_phoff > max_length || phdr_table_size > max_length - elfFile->e_phoff) {
-        return false;
+    phdr_ਸਾਰਣੀ_ਮਾਪ = elfFile->e_phnum * ਆਕਾਰ(Elf_Phdr_t);
+    ਜੇ (elfFile->e_phoff > max_ਲੰਮਾਈ || phdr_ਸਾਰਣੀ_ਮਾਪ > max_ਲੰਮਾਈ - elfFile->e_phoff) {
+        ਵਾਪਸ false;
     }
     /* Overflow-safe checks that the segments are contained within the
      * file, and that p_vaddr + p_memsz doesn't overflow. */
     phdr = (Elf_Phdr_t *)((paddr_t)elfFile + elfFile->e_phoff);
-    for (i = 0; i < elfFile->e_phnum; i++) {
-        if (phdr[i].p_type != PT_LOAD) {
-            continue;
+    ਲਈ (i = 0; i < elfFile->e_phnum; i++) {
+        ਜੇ (phdr[i].p_type != PT_ਲੱਦੋ) {
+            ਜਾਰੀ;
         }
-        if (phdr[i].p_offset > max_length || phdr[i].p_filesz > phdr[i].p_memsz ||
-            phdr[i].p_filesz > max_length - phdr[i].p_offset ||
+        ਜੇ (phdr[i].p_ਵਿੱਥ > max_ਲੰਮਾਈ || phdr[i].p_filesz > phdr[i].p_memsz ||
+            phdr[i].p_filesz > max_ਲੰਮਾਈ - phdr[i].p_ਵਿੱਥ ||
             phdr[i].p_memsz > ~0UL - phdr[i].p_vaddr) {
-            return false;
+            ਵਾਪਸ false;
         }
     }
-    return true;
+    ਵਾਪਸ true;
 }
 
-BOOT_CODE v_region_t elf_getMemoryBounds(Elf_Header_t *elfFile)
+BOOT_ਕੋਡ v_region_t elf_get_ਸਮ੍ਰਿਤੀ_Bounds(Elf_ਸਿਰਲੇਖ_t *elfFile)
 {
     Elf_Phdr_t *phdr = (Elf_Phdr_t *)((paddr_t)elfFile + elfFile->e_phoff);
     v_region_t elf_reg;
-    vptr_t     sect_start;
-    vptr_t     sect_end;
+    vptr_t     sect_ਸ਼ੁਰੂ;
+    vptr_t     sect_ਸਿਰਾ;
     uint32_t   i;
 
-    elf_reg.start = ~0UL;
-    elf_reg.end = 0;
+    elf_reg.ਸ਼ੁਰੂ = ~0UL;
+    elf_reg.ਸਿਰਾ = 0;
 
     /* Loop through all loadable segments and record start/end address. */
-    for (i = 0; i < elfFile->e_phnum; i++) {
-        if (phdr[i].p_type == PT_LOAD && phdr[i].p_memsz > 0) {
-            sect_start = phdr[i].p_vaddr;
-            sect_end = sect_start + phdr[i].p_memsz;
-            if (sect_start < elf_reg.start) {
-                elf_reg.start = sect_start;
+    ਲਈ (i = 0; i < elfFile->e_phnum; i++) {
+        ਜੇ (phdr[i].p_type == PT_ਲੱਦੋ && phdr[i].p_memsz > 0) {
+            sect_ਸ਼ੁਰੂ = phdr[i].p_vaddr;
+            sect_ਸਿਰਾ = sect_ਸ਼ੁਰੂ + phdr[i].p_memsz;
+            ਜੇ (sect_ਸ਼ੁਰੂ < elf_reg.ਸ਼ੁਰੂ) {
+                elf_reg.ਸ਼ੁਰੂ = sect_ਸ਼ੁਰੂ;
             }
-            if (sect_end > elf_reg.end) {
-                elf_reg.end = sect_end;
+            ਜੇ (sect_ਸਿਰਾ > elf_reg.ਸਿਰਾ) {
+                elf_reg.ਸਿਰਾ = sect_ਸਿਰਾ;
             }
         }
     }
-    return elf_reg;
+    ਵਾਪਸ elf_reg;
 }
 
-BOOT_CODE void elf_load(Elf_Header_t *elfFile, seL4_Word offset)
+BOOT_ਕੋਡ ਖਾਲੀ elf_ਲੱਦੋ(Elf_ਸਿਰਲੇਖ_t *elfFile, se_L4_ਸ਼ਬਦ ਵਿੱਥ)
 {
     Elf_Phdr_t *phdr = (Elf_Phdr_t *)((paddr_t)elfFile + elfFile->e_phoff);
     paddr_t    src;
     paddr_t    dst;
-    word_t     len;
+    ਸ਼ਬਦ_t     len;
     uint32_t   i;
 
     /* Loop through all segments and load them. Relies on the caller
      * having already zeroed the destination memory (load_boot_module()
      * does, via memzero()). */
-    for (i = 0; i < elfFile->e_phnum; i++) {
-        if (phdr[i].p_type != PT_LOAD || phdr[i].p_memsz == 0) {
-            continue;
+    ਲਈ (i = 0; i < elfFile->e_phnum; i++) {
+        ਜੇ (phdr[i].p_type != PT_ਲੱਦੋ || phdr[i].p_memsz == 0) {
+            ਜਾਰੀ;
         }
-        src = (paddr_t)elfFile + phdr[i].p_offset;
-        dst = phdr[i].p_vaddr + offset;
+        src = (paddr_t)elfFile + phdr[i].p_ਵਿੱਥ;
+        dst = phdr[i].p_vaddr + ਵਿੱਥ;
         len = phdr[i].p_filesz;
-        memcpy((void *)dst, (char *)src, len);
+        ਸਮ੍ਰਿਤੀ_ਨਕਲ((ਖਾਲੀ *)dst, (ਅੱਖਰ *)src, len);
     }
 }

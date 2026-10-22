@@ -4,458 +4,458 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <sel4/shared_types.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#endif
-#include <object/tcb.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <model/statedata.h>
-#include <util.h>
-#include <string.h>
-#include <stdint.h>
-#include <arch/smp/ipi_inline.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/failures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/invocation.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <sel4/shared_types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/objecttype.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/cnode.h>
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/schedcontext.h>
+#ਜੇ_ਅੰਤ
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/tcb.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/cspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <string.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/smp/ipi_inline.h>
 
-#define NULL_PRIO 0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ NULL_PRIO 0
 
-static exception_t checkPrio(prio_t prio, tcb_t *auth)
+ਸਥਿਰ exception_t checkPrio(prio_t prio, tcb_t *auth)
 {
     prio_t mcp;
 
     mcp = auth->tcbMCP;
 
     /* system invariant: existing MCPs are bounded */
-    assert(mcp <= seL4_MaxPrio);
+    ਪ੍ਰਤਿਜ੍ਞਾ(mcp <= seL4_MaxPrio);
 
     /* can't assign a priority greater than our own mcp */
-    if (prio > mcp) {
+    ਜੇ (prio > mcp) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = seL4_MinPrio;
         current_syscall_error.rangeErrorMax = mcp;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static inline void addToBitmap(word_t cpu, word_t dom, word_t prio)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ ਜੋੜੋ_ਮੰਜ਼ਿਲ_Bitmap(ਸ਼ਬਦ_t cpu, ਸ਼ਬਦ_t dom, ਸ਼ਬਦ_t prio)
 {
-    word_t l1index;
-    word_t l1index_inverted;
+    ਸ਼ਬਦ_t l1index;
+    ਸ਼ਬਦ_t l1index_inverted;
 
-    l1index = prio_to_l1index(prio);
+    l1index = prio_ਮੰਜ਼ਿਲ_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
 
-    NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= BIT(l1index);
+    ਗੰਢ_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= ਦੋਆਧਾਰੀ_ਅੰਕ(l1index);
     /* we invert the l1 index when accessed the 2nd level of the bitmap in
        order to increase the likelihood that high prio threads l2 index word will
        be on the same cache line as the l1 index word - this makes sure the
        fastpath is fastest for high prio threads */
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= BIT(prio & MASK(wordRadix));
+    ਗੰਢ_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= ਦੋਆਧਾਰੀ_ਅੰਕ(prio & ਨਕਾਬ(ਸ਼ਬਦ_Radix));
 }
 
-static inline void removeFromBitmap(word_t cpu, word_t dom, word_t prio)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ removeFromBitmap(ਸ਼ਬਦ_t cpu, ਸ਼ਬਦ_t dom, ਸ਼ਬਦ_t prio)
 {
-    word_t l1index;
-    word_t l1index_inverted;
+    ਸ਼ਬਦ_t l1index;
+    ਸ਼ਬਦ_t l1index_inverted;
 
-    l1index = prio_to_l1index(prio);
+    l1index = prio_ਮੰਜ਼ਿਲ_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~BIT(prio & MASK(wordRadix));
-    if (unlikely(!NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
-        NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~BIT(l1index);
+    ਗੰਢ_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(prio & ਨਕਾਬ(ਸ਼ਬਦ_Radix));
+    ਜੇ (unlikely(!ਗੰਢ_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
+        ਗੰਢ_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(l1index);
     }
 }
 
-tcb_queue_t tcb_queue_remove(tcb_queue_t queue, tcb_t *tcb)
+tcb_ਕਤਾਰ_t tcb_ਕਤਾਰ_remove(tcb_ਕਤਾਰ_t ਕਤਾਰ, tcb_t *tcb)
 {
     tcb_t *before;
     tcb_t *after;
 
     before = tcb->tcbSchedPrev;
-    after = tcb->tcbSchedNext;
+    after = tcb->tcb_Sched_ਅਗਲਾ;
 
-    if (queue.head == tcb && queue.end == tcb) {
-        queue.head = NULL;
-        queue.end = NULL;
-    } else {
-        if (queue.head == tcb) {
-            after->tcbSchedPrev = NULL;
-            tcb->tcbSchedNext = NULL;
-            queue.head = after;
-        } else {
-            if (queue.end == tcb) {
-                before->tcbSchedNext = NULL;
-                tcb->tcbSchedPrev = NULL;
-                queue.end = before;
-            } else {
-                before->tcbSchedNext = after;
+    ਜੇ (ਕਤਾਰ.ਸਿਰ == tcb && ਕਤਾਰ.ਸਿਰਾ == tcb) {
+        ਕਤਾਰ.ਸਿਰ = ਨਿਰਾ;
+        ਕਤਾਰ.ਸਿਰਾ = ਨਿਰਾ;
+    } ਨਹੀਂਤਾਂ {
+        ਜੇ (ਕਤਾਰ.ਸਿਰ == tcb) {
+            after->tcbSchedPrev = ਨਿਰਾ;
+            tcb->tcb_Sched_ਅਗਲਾ = ਨਿਰਾ;
+            ਕਤਾਰ.ਸਿਰ = after;
+        } ਨਹੀਂਤਾਂ {
+            ਜੇ (ਕਤਾਰ.ਸਿਰਾ == tcb) {
+                before->tcb_Sched_ਅਗਲਾ = ਨਿਰਾ;
+                tcb->tcbSchedPrev = ਨਿਰਾ;
+                ਕਤਾਰ.ਸਿਰਾ = before;
+            } ਨਹੀਂਤਾਂ {
+                before->tcb_Sched_ਅਗਲਾ = after;
                 after->tcbSchedPrev = before;
-                tcb->tcbSchedPrev = NULL;
-                tcb->tcbSchedNext = NULL;
+                tcb->tcbSchedPrev = ਨਿਰਾ;
+                tcb->tcb_Sched_ਅਗਲਾ = ਨਿਰਾ;
             }
         }
     }
 
-    return queue;
+    ਵਾਪਸ ਕਤਾਰ;
 }
 
 /* Add TCB to the head of a scheduler queue */
-void tcbSchedEnqueue(tcb_t *tcb)
+ਖਾਲੀ tcb_Sched_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(tcb_t *tcb)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(isSchedulable(tcb));
-    assert(refill_sufficient(tcb->tcbSchedContext, 0));
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਪ੍ਰਤਿਜ੍ਞਾ(isSchedulable(tcb));
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(tcb->tcbSchedContext, 0));
+#ਜੇ_ਅੰਤ
 
-    if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
+    ਜੇ (!thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_ਕਤਾਰ_t ਕਤਾਰ;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        ਸ਼ਬਦ_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ਤਰਜੀਹ;
+        idx = ready_queues_ਸੂਚਕਾਂਕ(dom, prio);
+        ਕਤਾਰ = ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        if (tcb_queue_empty(queue)) {
-            addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
+        ਜੇ (tcb_ਕਤਾਰ_ਖਾਲੀ_ਥਾਵਾਂ(ਕਤਾਰ)) {
+            ਜੋੜੋ_ਮੰਜ਼ਿਲ_Bitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
+        ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_ਕਤਾਰ_prepend(ਕਤਾਰ, tcb);
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
+        thread_state_ptr_ਸੈੱਟ_tcb_Queued(&tcb->tcbState, true);
     }
 }
 
 /* Add TCB to the end of a scheduler queue */
-void tcbSchedAppend(tcb_t *tcb)
+ਖਾਲੀ tcbSchedAppend(tcb_t *tcb)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(isSchedulable(tcb));
-    assert(refill_sufficient(tcb->tcbSchedContext, 0));
-    assert(refill_ready(tcb->tcbSchedContext));
-#endif
-    if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਪ੍ਰਤਿਜ੍ਞਾ(isSchedulable(tcb));
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(tcb->tcbSchedContext, 0));
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_ready(tcb->tcbSchedContext));
+#ਜੇ_ਅੰਤ
+    ਜੇ (!thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_ਕਤਾਰ_t ਕਤਾਰ;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        ਸ਼ਬਦ_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ਤਰਜੀਹ;
+        idx = ready_queues_ਸੂਚਕਾਂਕ(dom, prio);
+        ਕਤਾਰ = ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        if (tcb_queue_empty(queue)) {
-            addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
+        ਜੇ (tcb_ਕਤਾਰ_ਖਾਲੀ_ਥਾਵਾਂ(ਕਤਾਰ)) {
+            ਜੋੜੋ_ਮੰਜ਼ਿਲ_Bitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
+        ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_ਕਤਾਰ_append(ਕਤਾਰ, tcb);
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
+        thread_state_ptr_ਸੈੱਟ_tcb_Queued(&tcb->tcbState, true);
     }
 }
 
 /* Remove TCB from a scheduler queue */
-void tcbSchedDequeue(tcb_t *tcb)
+ਖਾਲੀ tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(tcb_t *tcb)
 {
-    if (thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
-        tcb_queue_t new_queue;
+    ਜੇ (thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_ਕਤਾਰ_t ਕਤਾਰ;
+        tcb_ਕਤਾਰ_t new_ਕਤਾਰ;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        ਸ਼ਬਦ_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ਤਰਜੀਹ;
+        idx = ready_queues_ਸੂਚਕਾਂਕ(dom, prio);
+        ਕਤਾਰ = ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        new_queue = tcb_queue_remove(queue, tcb);
+        new_ਕਤਾਰ = tcb_ਕਤਾਰ_remove(ਕਤਾਰ, tcb);
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_queue;
+        ਗੰਢ_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_ਕਤਾਰ;
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, false);
+        thread_state_ptr_ਸੈੱਟ_tcb_Queued(&tcb->tcbState, false);
 
-        if (likely(tcb_queue_empty(new_queue))) {
+        ਜੇ (likely(tcb_ਕਤਾਰ_ਖਾਲੀ_ਥਾਵਾਂ(new_ਕਤਾਰ))) {
             removeFromBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
     }
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-void tcbDebugAppend(tcb_t *tcb)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+ਖਾਲੀ tcbDebugAppend(tcb_t *tcb)
 {
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
     /* prepend to the list */
-    debug_tcb->tcbDebugPrev = NULL;
+    debug_tcb->tcbDebugPrev = ਨਿਰਾ;
 
-    debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
+    debug_tcb->tcb_Debug_ਅਗਲਾ = ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
 
-    if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
+    ਜੇ (ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        TCB_PTR_DEBUG_PTR(ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
     }
 
-    NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
+    ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
 }
 
-void tcbDebugRemove(tcb_t *tcb)
+ਖਾਲੀ tcbDebugRemove(tcb_t *tcb)
 {
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
 
-    assert(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != NULL);
-    if (tcb == NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs,
-                                                                                                 tcb->tcbAffinity))->tcbDebugNext;
-    } else {
-        assert(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugPrev)->tcbDebugNext = debug_tcb->tcbDebugNext;
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != ਨਿਰਾ);
+    ਜੇ (tcb == ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        ਗੰਢ_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(ਗੰਢ_STATE_ON_CORE(ksDebugTCBs,
+                                                                                                 tcb->tcbAffinity))->tcb_Debug_ਅਗਲਾ;
+    } ਨਹੀਂਤਾਂ {
+        ਪ੍ਰਤਿਜ੍ਞਾ(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
+        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugPrev)->tcb_Debug_ਅਗਲਾ = debug_tcb->tcb_Debug_ਅਗਲਾ;
     }
 
-    if (debug_tcb->tcbDebugNext) {
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugNext)->tcbDebugPrev = debug_tcb->tcbDebugPrev;
+    ਜੇ (debug_tcb->tcb_Debug_ਅਗਲਾ) {
+        TCB_PTR_DEBUG_PTR(debug_tcb->tcb_Debug_ਅਗਲਾ)->tcbDebugPrev = debug_tcb->tcbDebugPrev;
     }
 
-    debug_tcb->tcbDebugPrev = NULL;
-    debug_tcb->tcbDebugNext = NULL;
+    debug_tcb->tcbDebugPrev = ਨਿਰਾ;
+    debug_tcb->tcb_Debug_ਅਗਲਾ = ਨਿਰਾ;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */
 
-#ifndef CONFIG_KERNEL_MCS
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
 /* Add TCB to the end of an endpoint queue */
-tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
+tcb_ਕਤਾਰ_t tcbEPAppend(tcb_t *tcb, tcb_ਕਤਾਰ_t ਕਤਾਰ)
 {
-    if (!queue.head) { /* Empty list */
-        queue.head = tcb;
-    } else {
-        queue.end->tcbEPNext = tcb;
+    ਜੇ (!ਕਤਾਰ.ਸਿਰ) { /* Empty list */
+        ਕਤਾਰ.ਸਿਰ = tcb;
+    } ਨਹੀਂਤਾਂ {
+        ਕਤਾਰ.ਸਿਰਾ->tcbEPNext = tcb;
     }
-    tcb->tcbEPPrev = queue.end;
-    tcb->tcbEPNext = NULL;
-    queue.end = tcb;
+    tcb->tcbEPPrev = ਕਤਾਰ.ਸਿਰਾ;
+    tcb->tcbEPNext = ਨਿਰਾ;
+    ਕਤਾਰ.ਸਿਰਾ = tcb;
 
-    return queue;
+    ਵਾਪਸ ਕਤਾਰ;
 }
 
 /* Remove TCB from an endpoint queue */
-tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
+tcb_ਕਤਾਰ_t tcbEPDequeue(tcb_t *tcb, tcb_ਕਤਾਰ_t ਕਤਾਰ)
 {
-    if (tcb->tcbEPPrev) {
+    ਜੇ (tcb->tcbEPPrev) {
         tcb->tcbEPPrev->tcbEPNext = tcb->tcbEPNext;
-    } else {
-        queue.head = tcb->tcbEPNext;
+    } ਨਹੀਂਤਾਂ {
+        ਕਤਾਰ.ਸਿਰ = tcb->tcbEPNext;
     }
 
-    if (tcb->tcbEPNext) {
+    ਜੇ (tcb->tcbEPNext) {
         tcb->tcbEPNext->tcbEPPrev = tcb->tcbEPPrev;
-    } else {
-        queue.end = tcb->tcbEPPrev;
+    } ਨਹੀਂਤਾਂ {
+        ਕਤਾਰ.ਸਿਰਾ = tcb->tcbEPPrev;
     }
 
-    return queue;
+    ਵਾਪਸ ਕਤਾਰ;
 }
-#endif /* CONFIG_KERNEL_MCS */
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_MCS */
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
 
-void tcbReleaseRemove(tcb_t *tcb)
+ਖਾਲੀ tcbReleaseRemove(tcb_t *tcb)
 {
-    if (likely(thread_state_get_tcbInReleaseQueue(tcb->tcbState))) {
-        tcb_queue_t queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
+    ਜੇ (likely(thread_state_get_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(tcb->tcbState))) {
+        tcb_ਕਤਾਰ_t ਕਤਾਰ = ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity);
 
-        if (queue.head == tcb) {
-            NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+        ਜੇ (ਕਤਾਰ.ਸਿਰ == tcb) {
+            ਗੰਢ_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
         }
 
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_remove(queue, tcb);
+        ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity) = tcb_ਕਤਾਰ_remove(ਕਤਾਰ, tcb);
 
-        thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, false);
+        thread_state_ptr_ਸੈੱਟ_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(&tcb->tcbState, false);
     }
 }
 
-static inline ticks_t PURE tcbReadyTime(tcb_t *tcb)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ticks_t ਸ਼ੁੱਧ tcb_Ready_ਸਮਾਂ(tcb_t *tcb)
 {
-    return refill_head(tcb->tcbSchedContext)->rTime;
+    ਵਾਪਸ refill_ਸਿਰ(tcb->tcbSchedContext)->r_ਸਮਾਂ;
 }
 
-static inline bool_t PURE time_after(tcb_t *tcb, ticks_t new_time)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool_t ਸ਼ੁੱਧ ਸਮਾਂ_after(tcb_t *tcb, ticks_t new_ਸਮਾਂ)
 {
-    return tcb != NULL && new_time >= tcbReadyTime(tcb);
+    ਵਾਪਸ tcb != ਨਿਰਾ && new_ਸਮਾਂ >= tcb_Ready_ਸਮਾਂ(tcb);
 }
 
-static tcb_t *find_time_after(tcb_t *tcb, ticks_t new_time)
+ਸਥਿਰ tcb_t *ਲੱਭੋ_ਸਮਾਂ_after(tcb_t *tcb, ticks_t new_ਸਮਾਂ)
 {
     tcb_t *after = tcb;
 
-    while (time_after(after, new_time)) {
-        after = after->tcbSchedNext;
+    ਜਦੋਂ (ਸਮਾਂ_after(after, new_ਸਮਾਂ)) {
+        after = after->tcb_Sched_ਅਗਲਾ;
     }
 
-    return after;
+    ਵਾਪਸ after;
 }
 
-void tcbReleaseEnqueue(tcb_t *tcb)
+ਖਾਲੀ tcb_Release_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(tcb_t *tcb)
 {
-    assert(thread_state_get_tcbInReleaseQueue(tcb->tcbState) == false);
-    assert(thread_state_get_tcbQueued(tcb->tcbState) == false);
+    ਪ੍ਰਤਿਜ੍ਞਾ(thread_state_get_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(tcb->tcbState) == false);
+    ਪ੍ਰਤਿਜ੍ਞਾ(thread_state_get_tcbQueued(tcb->tcbState) == false);
 
-    ticks_t new_time;
-    tcb_queue_t queue;
+    ticks_t new_ਸਮਾਂ;
+    tcb_ਕਤਾਰ_t ਕਤਾਰ;
 
-    queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
-    new_time = tcbReadyTime(tcb);
+    ਕਤਾਰ = ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity);
+    new_ਸਮਾਂ = tcb_Ready_ਸਮਾਂ(tcb);
 
-    if (tcb_queue_empty(queue) || new_time < tcbReadyTime(queue.head)) {
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
-    } else {
-        if (tcbReadyTime(queue.end) <= new_time) {
-            NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
-        } else {
+    ਜੇ (tcb_ਕਤਾਰ_ਖਾਲੀ_ਥਾਵਾਂ(ਕਤਾਰ) || new_ਸਮਾਂ < tcb_Ready_ਸਮਾਂ(ਕਤਾਰ.ਸਿਰ)) {
+        ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity) = tcb_ਕਤਾਰ_prepend(ਕਤਾਰ, tcb);
+    } ਨਹੀਂਤਾਂ {
+        ਜੇ (tcb_Ready_ਸਮਾਂ(ਕਤਾਰ.ਸਿਰਾ) <= new_ਸਮਾਂ) {
+            ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity) = tcb_ਕਤਾਰ_append(ਕਤਾਰ, tcb);
+        } ਨਹੀਂਤਾਂ {
             tcb_t *after;
-            after = find_time_after(queue.head, new_time);
-            tcb_queue_insert(tcb, after);
+            after = ਲੱਭੋ_ਸਮਾਂ_after(ਕਤਾਰ.ਸਿਰ, new_ਸਮਾਂ);
+            tcb_ਕਤਾਰ_ਪਾਓ(tcb, after);
         }
     }
 
-    thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, true);
+    thread_state_ptr_ਸੈੱਟ_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(&tcb->tcbState, true);
 
-    if (queue.head != NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity).head) {
-        NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+    ਜੇ (ਕਤਾਰ.ਸਿਰ != ਗੰਢ_STATE_ON_CORE(ks_Release_ਕਤਾਰ, tcb->tcbAffinity).ਸਿਰ) {
+        ਗੰਢ_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
     }
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-cptr_t PURE getExtraCPtr(word_t *bufferPtr, word_t i)
+cptr_t ਸ਼ੁੱਧ getExtraCPtr(ਸ਼ਬਦ_t *ਬਫਰ_Ptr, ਸ਼ਬਦ_t i)
 {
-    return (cptr_t)bufferPtr[seL4_MsgMaxLength + 2 + i];
+    ਵਾਪਸ (cptr_t)ਬਫਰ_Ptr[se_L4_ਸੁਨੇਹਾ_Max_ਲੰਮਾਈ + 2 + i];
 }
 
-void setExtraBadge(word_t *bufferPtr, word_t badge,
-                   word_t i)
+ਖਾਲੀ ਸੈੱਟ_Extra_Badge(ਸ਼ਬਦ_t *ਬਫਰ_Ptr, ਸ਼ਬਦ_t badge,
+                   ਸ਼ਬਦ_t i)
 {
-    bufferPtr[seL4_MsgMaxLength + 2 + i] = badge;
+    ਬਫਰ_Ptr[se_L4_ਸੁਨੇਹਾ_Max_ਲੰਮਾਈ + 2 + i] = badge;
 }
 
-#ifndef CONFIG_KERNEL_MCS
-void setupCallerCap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਖਾਲੀ ਤਿਆਰੀ_Caller_Cap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
 {
-    cte_t *replySlot, *callerSlot;
-    cap_t masterCap UNUSED, callerCap UNUSED;
+    cte_t *ਜਵਾਬ_ਥਾਂ, *caller_ਥਾਂ;
+    cap_t masterCap ਅਣਵਰਤਿਆ, callerCap ਅਣਵਰਤਿਆ;
 
-    setThreadState(sender, ThreadState_BlockedOnReply);
-    replySlot = TCB_PTR_CTE_PTR(sender, tcbReply);
-    masterCap = replySlot->cap;
+    ਸੈੱਟ_Thread_State(sender, Thread_State_Blocked_On_ਜਵਾਬ);
+    ਜਵਾਬ_ਥਾਂ = TCB_PTR_CTE_PTR(sender, tcb_ਜਵਾਬ);
+    masterCap = ਜਵਾਬ_ਥਾਂ->cap;
     /* Haskell error: "Sender must have a valid master reply cap" */
-    assert(cap_get_capType(masterCap) == cap_reply_cap);
-    assert(cap_reply_cap_get_capReplyMaster(masterCap));
-    assert(cap_reply_cap_get_capReplyCanGrant(masterCap));
-    assert(TCB_PTR(cap_reply_cap_get_capTCBPtr(masterCap)) == sender);
-    callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
-    callerCap = callerSlot->cap;
+    ਪ੍ਰਤਿਜ੍ਞਾ(cap_get_capType(masterCap) == cap_ਜਵਾਬ_cap);
+    ਪ੍ਰਤਿਜ੍ਞਾ(cap_ਜਵਾਬ_cap_get_cap_ਜਵਾਬ_Master(masterCap));
+    ਪ੍ਰਤਿਜ੍ਞਾ(cap_ਜਵਾਬ_cap_get_cap_ਜਵਾਬ_Can_Grant(masterCap));
+    ਪ੍ਰਤਿਜ੍ਞਾ(TCB_PTR(cap_ਜਵਾਬ_cap_get_cap_TCBPtr(masterCap)) == sender);
+    caller_ਥਾਂ = TCB_PTR_CTE_PTR(receiver, tcbCaller);
+    callerCap = caller_ਥਾਂ->cap;
     /* Haskell error: "Caller cap must not already exist" */
-    assert(cap_get_capType(callerCap) == cap_null_cap);
-    cteInsert(cap_reply_cap_new(canGrant, false, TCB_REF(sender)),
-              replySlot, callerSlot);
+    ਪ੍ਰਤਿਜ੍ਞਾ(cap_get_capType(callerCap) == cap_null_cap);
+    cte_ਪਾਓ(cap_ਜਵਾਬ_cap_new(canGrant, false, TCB_REF(sender)),
+              ਜਵਾਬ_ਥਾਂ, caller_ਥਾਂ);
 }
 
-void deleteCallerCap(tcb_t *receiver)
+ਖਾਲੀ deleteCallerCap(tcb_t *receiver)
 {
-    cte_t *callerSlot;
+    cte_t *caller_ਥਾਂ;
 
-    callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
+    caller_ਥਾਂ = TCB_PTR_CTE_PTR(receiver, tcbCaller);
     /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-    cteDeleteOne(callerSlot);
+    cteDeleteOne(caller_ਥਾਂ);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
 extra_caps_t current_extra_caps;
 
-exception_t lookupExtraCaps(tcb_t *thread, word_t *bufferPtr, seL4_MessageInfo_t info)
+exception_t lookupExtraCaps(tcb_t *thread, ਸ਼ਬਦ_t *ਬਫਰ_Ptr, se_L4_ਸੁਨੇਹਾ_Info_t info)
 {
-    lookupSlot_raw_ret_t lu_ret;
+    lookup_ਥਾਂ_raw_ret_t lu_ret;
     cptr_t cptr;
-    word_t i, length;
+    ਸ਼ਬਦ_t i, ਲੰਮਾਈ;
 
-    if (!bufferPtr) {
-        current_extra_caps.excaprefs[0] = NULL;
-        return EXCEPTION_NONE;
+    ਜੇ (!ਬਫਰ_Ptr) {
+        current_extra_caps.excaprefs[0] = ਨਿਰਾ;
+        ਵਾਪਸ EXCEPTION_NONE;
     }
 
-    length = seL4_MessageInfo_get_extraCaps(info);
+    ਲੰਮਾਈ = se_L4_ਸੁਨੇਹਾ_Info_get_extra_Caps(info);
 
-    for (i = 0; i < length; i++) {
-        cptr = getExtraCPtr(bufferPtr, i);
+    ਲਈ (i = 0; i < ਲੰਮਾਈ; i++) {
+        cptr = getExtraCPtr(ਬਫਰ_Ptr, i);
 
-        lu_ret = lookupSlot(thread, cptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lu_ret = lookup_ਥਾਂ(thread, cptr);
+        ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
             current_fault = seL4_Fault_CapFault_new(cptr, false);
-            return lu_ret.status;
+            ਵਾਪਸ lu_ret.ਸਥਿਤੀ;
         }
 
-        current_extra_caps.excaprefs[i] = lu_ret.slot;
+        current_extra_caps.excaprefs[i] = lu_ret.ਥਾਂ;
     }
-    if (i < seL4_MsgMaxExtraCaps) {
-        current_extra_caps.excaprefs[i] = NULL;
+    ਜੇ (i < se_L4_ਸੁਨੇਹਾ_Max_Extra_Caps) {
+        current_extra_caps.excaprefs[i] = ਨਿਰਾ;
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 /* Copy IPC MRs from one thread to another */
-word_t copyMRs(tcb_t *sender, word_t *sendBuf, tcb_t *receiver,
-               word_t *recvBuf, word_t n)
+ਸ਼ਬਦ_t copyMRs(tcb_t *sender, ਸ਼ਬਦ_t *sendBuf, tcb_t *receiver,
+               ਸ਼ਬਦ_t *recvBuf, ਸ਼ਬਦ_t n)
 {
-    word_t i;
+    ਸ਼ਬਦ_t i;
 
     /* Copy inline words */
-    for (i = 0; i < n && i < n_msgRegisters; i++) {
-        setRegister(receiver, msgRegisters[i],
-                    getRegister(sender, msgRegisters[i]));
+    ਲਈ (i = 0; i < n && i < n_ਸੁਨੇਹਾ_Registers; i++) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, ਸੁਨੇਹਾ_Registers[i],
+                    get_ਰਜਿਸਟਰ(sender, ਸੁਨੇਹਾ_Registers[i]));
     }
 
-    if (!recvBuf || !sendBuf) {
-        return i;
+    ਜੇ (!recvBuf || !sendBuf) {
+        ਵਾਪਸ i;
     }
 
     /* Copy out-of-line words */
-    for (; i < n; i++) {
+    ਲਈ (; i < n; i++) {
         recvBuf[i + 1] = sendBuf[i + 1];
     }
 
-    return i;
+    ਵਾਪਸ i;
 }
 
-#ifdef ENABLE_SMP_SUPPORT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
 /* This checks if the current updated to scheduler queue is changing the previous scheduling
  * decision made by the scheduler. If its a case, an `irq_reschedule_ipi` is sent */
-void remoteQueueUpdate(tcb_t *tcb)
+ਖਾਲੀ remote_ਕਤਾਰ_Update(tcb_t *tcb)
 {
     /* only ipi if the target is for the current domain */
-    if (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain) {
-        tcb_t *targetCurThread = NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
+    ਜੇ (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain) {
+        tcb_t *ਨਿਸ਼ਾਨਾ_Cur_Thread = ਗੰਢ_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
 
         /* reschedule if the target core is idle or we are waking a higher priority thread (or
          * if a new irq would need to be set on MCS) */
-        if (targetCurThread == NODE_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
-            tcb->tcbPriority > targetCurThread->tcbPriority
-#ifdef CONFIG_KERNEL_MCS
-            || NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
-#endif
+        ਜੇ (ਨਿਸ਼ਾਨਾ_Cur_Thread == ਗੰਢ_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
+            tcb->tcb_ਤਰਜੀਹ > ਨਿਸ਼ਾਨਾ_Cur_Thread->tcb_ਤਰਜੀਹ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+            || ਗੰਢ_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
+#ਜੇ_ਅੰਤ
            ) {
-            ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+            ARCH_ਗੰਢ_STATE(ipiReschedulePending) |= ਦੋਆਧਾਰੀ_ਅੰਕ(tcb->tcbAffinity);
         }
     }
 }
@@ -463,212 +463,212 @@ void remoteQueueUpdate(tcb_t *tcb)
 /* This makes sure the the TCB is not being run on other core.
  * It would request 'IpiRemoteCall_Stall' to switch the core from this TCB
  * We also request the 'irq_reschedule_ipi' to restore the state of target core */
-void remoteTCBStall(tcb_t *tcb)
+ਖਾਲੀ remoteTCBStall(tcb_t *tcb)
 {
 
-    if (
-#ifdef CONFIG_KERNEL_MCS
+    ਜੇ (
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
         tcb->tcbSchedContext &&
-#endif
+#ਜੇ_ਅੰਤ
         tcb->tcbAffinity != getCurrentCPUIndex() &&
-        NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
+        ਗੰਢ_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
         doRemoteStall(tcb->tcbAffinity);
-        ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+        ARCH_ਗੰਢ_STATE(ipiReschedulePending) |= ਦੋਆਧਾਰੀ_ਅੰਕ(tcb->tcbAffinity);
     }
 }
 
-#ifndef CONFIG_KERNEL_MCS
-static exception_t invokeTCB_SetAffinity(tcb_t *thread, word_t affinity)
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਸਥਿਰ exception_t invoke_TCB_ਸੈੱਟ_Affinity(tcb_t *thread, ਸ਼ਬਦ_t affinity)
 {
     /* remove the tcb from scheduler queue in case it is already in one
      * and add it to new queue if required */
-    tcbSchedDequeue(thread);
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(thread);
     migrateTCB(thread, affinity);
-    if (isRunnable(thread)) {
+    ਜੇ (isRunnable(thread)) {
         SCHED_APPEND(thread);
     }
     /* reschedule current cpu if tcb moves itself */
-    if (thread == NODE_STATE(ksCurThread)) {
+    ਜੇ (thread == ਗੰਢ_STATE(ksCurThread)) {
         rescheduleRequired();
     }
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
+ਸਥਿਰ exception_t decode_ਸੈੱਟ_Affinity(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     tcb_t *tcb;
-    word_t affinity;
+    ਸ਼ਬਦ_t affinity;
 
-    if (length < 1) {
+    ਜੇ (ਲੰਮਾਈ < 1) {
         userError("TCB SetAffinity: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    affinity = getSyscallArg(0, buffer);
-    if (affinity >= ksNumCPUs) {
+    affinity = getSyscallArg(0, ਬਫਰ);
+    ਜੇ (affinity >= ks_ਅੰਕ_CPUs) {
         userError("TCB SetAffinity: Requested CPU does not exist.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_SetAffinity(tcb, affinity);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invoke_TCB_ਸੈੱਟ_Affinity(tcb, affinity);
 }
-#endif
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-static exception_t invokeConfigureSingleStepping(bool_t call, word_t *buffer, tcb_t *t,
-                                                 uint16_t bp_num, word_t n_instrs)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
+ਸਥਿਰ exception_t invokeConfigureSingleStepping(bool_t call, ਸ਼ਬਦ_t *ਬਫਰ, tcb_t *t,
+                                                 uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t n_instrs)
 {
     bool_t bp_was_consumed;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    word_t value;
+    thread = ਗੰਢ_STATE(ksCurThread);
+    ਸ਼ਬਦ_t ਮੁੱਲ;
 
-    bp_was_consumed = configureSingleStepping(t, bp_num, n_instrs, false);
-    if (n_instrs == 0) {
-#ifndef CONFIG_ARCH_AARCH64
-        unsetBreakpointUsedFlag(t, bp_num);
-#endif /* CONFIG_ARCH_AARCH64 */
-        value = false;
-    } else {
-#ifndef CONFIG_ARCH_AARCH64
-        setBreakpointUsedFlag(t, bp_num);
-#endif /* CONFIG_ARCH_AARCH64 */
-        value = bp_was_consumed;
+    bp_was_consumed = configureSingleStepping(t, bp_ਅੰਕ, n_instrs, false);
+    ਜੇ (n_instrs == 0) {
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_AARCH64
+        unset_Breakpoint_ਵਰਤਿਆ_Flag(t, bp_ਅੰਕ);
+#ਜੇ_ਅੰਤ /* CONFIG_ARCH_AARCH64 */
+        ਮੁੱਲ = false;
+    } ਨਹੀਂਤਾਂ {
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_AARCH64
+        ਸੈੱਟ_Breakpoint_ਵਰਤਿਆ_Flag(t, bp_ਅੰਕ);
+#ਜੇ_ਅੰਤ /* CONFIG_ARCH_AARCH64 */
+        ਮੁੱਲ = bp_was_consumed;
     }
 
-    if (call) {
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    ਜੇ (call) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਲੰਮਾਈ = ਸੈੱਟ_MR(thread, ਬਫਰ, 0, ਮੁੱਲ);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                        se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, ਲੰਮਾਈ)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeConfigureSingleStepping(cap_t cap, bool_t call, word_t *buffer)
+ਸਥਿਰ exception_t decodeConfigureSingleStepping(cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    uint16_t bp_num;
-    word_t n_instrs;
+    uint16_t bp_ਅੰਕ;
+    ਸ਼ਬਦ_t n_instrs;
     tcb_t *tcb;
     syscall_error_t syserr;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    bp_num = getSyscallArg(0, buffer);
-    n_instrs = getSyscallArg(1, buffer);
+    bp_ਅੰਕ = getSyscallArg(0, ਬਫਰ);
+    n_instrs = getSyscallArg(1, ਬਫਰ);
 
-    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_num, n_instrs, false);
-    if (syserr.type != seL4_NoError) {
+    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_ਅੰਕ, n_instrs, false);
+    ਜੇ (syserr.type != seL4_NoError) {
         current_syscall_error = syserr;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeConfigureSingleStepping(call, buffer, tcb, bp_num, n_instrs);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeConfigureSingleStepping(call, ਬਫਰ, tcb, bp_ਅੰਕ, n_instrs);
 }
 
-static exception_t invokeSetBreakpoint(tcb_t *tcb, uint16_t bp_num,
-                                       word_t vaddr, word_t type, word_t size, word_t rw)
+ਸਥਿਰ exception_t invoke_ਸੈੱਟ_Breakpoint(tcb_t *tcb, uint16_t bp_ਅੰਕ,
+                                       ਸ਼ਬਦ_t vaddr, ਸ਼ਬਦ_t type, ਸ਼ਬਦ_t ਮਾਪ, ਸ਼ਬਦ_t rw)
 {
-    setBreakpoint(tcb, bp_num, vaddr, type, size, rw);
+    ਸੈੱਟ_Breakpoint(tcb, bp_ਅੰਕ, vaddr, type, ਮਾਪ, rw);
     /* Signal restore_user_context() to pop the breakpoint context on return. */
-    setBreakpointUsedFlag(tcb, bp_num);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Breakpoint_ਵਰਤਿਆ_Flag(tcb, bp_ਅੰਕ);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
+ਸਥਿਰ exception_t decode_ਸੈੱਟ_Breakpoint(cap_t cap, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    uint16_t bp_num;
-    word_t vaddr, type, size, rw;
+    uint16_t bp_ਅੰਕ;
+    ਸ਼ਬਦ_t vaddr, type, ਮਾਪ, rw;
     tcb_t *tcb;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
-    vaddr = getSyscallArg(1, buffer);
-    type = getSyscallArg(2, buffer);
-    size = getSyscallArg(3, buffer);
-    rw = getSyscallArg(4, buffer);
+    bp_ਅੰਕ = getSyscallArg(0, ਬਫਰ);
+    vaddr = getSyscallArg(1, ਬਫਰ);
+    type = getSyscallArg(2, ਬਫਰ);
+    ਮਾਪ = getSyscallArg(3, ਬਫਰ);
+    rw = getSyscallArg(4, ਬਫਰ);
 
     /* We disallow the user to set breakpoint addresses that are in the kernel
      * vaddr range.
      */
-    if (vaddr >= (word_t)USER_TOP) {
+    ਜੇ (vaddr >= (ਸ਼ਬਦ_t)USER_ਸਿਖਰ) {
         userError("Debug: Invalid address %lx: bp addresses must be userspace "
                   "addresses.",
                   vaddr);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (type != seL4_InstructionBreakpoint && type != seL4_DataBreakpoint) {
+    ਜੇ (type != seL4_InstructionBreakpoint && type != se_L4_ਅੰਕੜੇ_Breakpoint) {
         userError("Debug: Unknown breakpoint type %lx.", type);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
-    } else if (type == seL4_InstructionBreakpoint) {
-        if (size != 0) {
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
+    } ਨਹੀਂਤਾਂ ਜੇ (type == seL4_InstructionBreakpoint) {
+        ਜੇ (ਮਾਪ != 0) {
             userError("Debug: Instruction bps must have size of 0.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 3;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        if (rw != seL4_BreakOnRead) {
+        ਜੇ (rw != seL4_BreakOnRead) {
             userError("Debug: Instruction bps must be break-on-read.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 4;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 4;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        if ((seL4_FirstWatchpoint == -1 || bp_num >= seL4_FirstWatchpoint)
-            && seL4_FirstBreakpoint != seL4_FirstWatchpoint) {
+        ਜੇ ((se_L4_ਪਹਿਲਾ_Watchpoint == -1 || bp_ਅੰਕ >= se_L4_ਪਹਿਲਾ_Watchpoint)
+            && se_L4_ਪਹਿਲਾ_Breakpoint != se_L4_ਪਹਿਲਾ_Watchpoint) {
             userError("Debug: Can't specify a watchpoint ID with type seL4_InstructionBreakpoint.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-    } else if (type == seL4_DataBreakpoint) {
-        if (size == 0) {
+    } ਨਹੀਂਤਾਂ ਜੇ (type == se_L4_ਅੰਕੜੇ_Breakpoint) {
+        ਜੇ (ਮਾਪ == 0) {
             userError("Debug: Data bps cannot have size of 0.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 3;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        if (seL4_FirstWatchpoint != -1 && bp_num < seL4_FirstWatchpoint) {
+        ਜੇ (se_L4_ਪਹਿਲਾ_Watchpoint != -1 && bp_ਅੰਕ < se_L4_ਪਹਿਲਾ_Watchpoint) {
             userError("Debug: Data watchpoints cannot specify non-data watchpoint ID.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-    } else if (type == seL4_SoftwareBreakRequest) {
+    } ਨਹੀਂਤਾਂ ਜੇ (type == seL4_SoftwareBreakRequest) {
         userError("Debug: Use a software breakpoint instruction to trigger a "
                   "software breakpoint.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (rw != seL4_BreakOnRead && rw != seL4_BreakOnWrite
+    ਜੇ (rw != seL4_BreakOnRead && rw != seL4_BreakOnWrite
         && rw != seL4_BreakOnReadWrite) {
         userError("Debug: Unknown access-type %lu.", rw);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 3;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (size != 0 && size != 1 && size != 2 && size != 4 && size != 8) {
-        userError("Debug: Invalid size %lu.", size);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (ਮਾਪ != 0 && ਮਾਪ != 1 && ਮਾਪ != 2 && ਮਾਪ != 4 && ਮਾਪ != 8) {
+        userError("Debug: Invalid size %lu.", ਮਾਪ);
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 3;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (size > 0 && vaddr & (size - 1)) {
+    ਜੇ (ਮਾਪ > 0 && vaddr & (ਮਾਪ - 1)) {
         /* Just Don't allow unaligned watchpoints. They are undefined
          * both ARM and x86.
          *
@@ -683,942 +683,942 @@ static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
          */
         userError("Debug: Unaligned data watchpoint address %lx (size %lx) "
                   "rejected.\n",
-                  vaddr, size);
+                  vaddr, ਮਾਪ);
 
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    error = Arch_decodeSetBreakpoint(tcb, bp_num, vaddr, type, size, rw);
-    if (error.type != seL4_NoError) {
+    error = Arch_decode_ਸੈੱਟ_Breakpoint(tcb, bp_ਅੰਕ, vaddr, type, ਮਾਪ, rw);
+    ਜੇ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSetBreakpoint(tcb, bp_num,
-                               vaddr, type, size, rw);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invoke_ਸੈੱਟ_Breakpoint(tcb, bp_ਅੰਕ,
+                               vaddr, type, ਮਾਪ, rw);
 }
 
-static exception_t invokeGetBreakpoint(bool_t call, word_t *buffer, tcb_t *tcb, uint16_t bp_num)
+ਸਥਿਰ exception_t invokeGetBreakpoint(bool_t call, ਸ਼ਬਦ_t *ਬਫਰ, tcb_t *tcb, uint16_t bp_ਅੰਕ)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = ਗੰਢ_STATE(ksCurThread);
     getBreakpoint_t res;
-    res = getBreakpoint(tcb, bp_num);
-    if (call) {
-        setRegister(thread, badgeRegister, 0);
-        setMR(NODE_STATE(ksCurThread), buffer, 0, res.vaddr);
-        setMR(NODE_STATE(ksCurThread), buffer, 1, res.type);
-        setMR(NODE_STATE(ksCurThread), buffer, 2, res.size);
-        setMR(NODE_STATE(ksCurThread), buffer, 3, res.rw);
-        setMR(NODE_STATE(ksCurThread), buffer, 4, res.is_enabled);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, 5)));
+    res = getBreakpoint(tcb, bp_ਅੰਕ);
+    ਜੇ (call) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
+        ਸੈੱਟ_MR(ਗੰਢ_STATE(ksCurThread), ਬਫਰ, 0, res.vaddr);
+        ਸੈੱਟ_MR(ਗੰਢ_STATE(ksCurThread), ਬਫਰ, 1, res.type);
+        ਸੈੱਟ_MR(ਗੰਢ_STATE(ksCurThread), ਬਫਰ, 2, res.ਮਾਪ);
+        ਸੈੱਟ_MR(ਗੰਢ_STATE(ksCurThread), ਬਫਰ, 3, res.rw);
+        ਸੈੱਟ_MR(ਗੰਢ_STATE(ksCurThread), ਬਫਰ, 4, res.is_enabled);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                        se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, 5)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeGetBreakpoint(cap_t cap, bool_t call, word_t *buffer)
+ਸਥਿਰ exception_t decodeGetBreakpoint(cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_ਅੰਕ;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_ਅੰਕ = getSyscallArg(0, ਬਫਰ);
 
-    error = Arch_decodeGetBreakpoint(tcb, bp_num);
-    if (error.type != seL4_NoError) {
+    error = Arch_decodeGetBreakpoint(tcb, bp_ਅੰਕ);
+    ਜੇ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeGetBreakpoint(call, buffer, tcb, bp_num);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeGetBreakpoint(call, ਬਫਰ, tcb, bp_ਅੰਕ);
 }
 
-static exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_num)
+ਸਥਿਰ exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_ਅੰਕ)
 {
     /* Maintain the bitfield of in-use breakpoints. */
-    unsetBreakpoint(tcb, bp_num);
-    unsetBreakpointUsedFlag(tcb, bp_num);
-    return EXCEPTION_NONE;
+    unsetBreakpoint(tcb, bp_ਅੰਕ);
+    unset_Breakpoint_ਵਰਤਿਆ_Flag(tcb, bp_ਅੰਕ);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeUnsetBreakpoint(cap_t cap, word_t *buffer)
+ਸਥਿਰ exception_t decodeUnsetBreakpoint(cap_t cap, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_ਅੰਕ;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_ਅੰਕ = getSyscallArg(0, ਬਫਰ);
 
-    error = Arch_decodeUnsetBreakpoint(tcb, bp_num);
-    if (error.type != seL4_NoError) {
+    error = Arch_decodeUnsetBreakpoint(tcb, bp_ਅੰਕ);
+    ਜੇ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeUnsetBreakpoint(tcb, bp_num);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeUnsetBreakpoint(tcb, bp_ਅੰਕ);
 }
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#ਜੇ_ਅੰਤ /* CONFIG_HARDWARE_DEBUG_API */
 
-static exception_t invokeSetTLSBase(tcb_t *thread, word_t tls_base)
+ਸਥਿਰ exception_t invoke_ਸੈੱਟ_TLSBase(tcb_t *thread, ਸ਼ਬਦ_t tls_ਅਧਾਰ)
 {
-    setRegister(thread, TLS_BASE, tls_base);
-    if (thread == NODE_STATE(ksCurThread)) {
+    ਸੈੱਟ_ਰਜਿਸਟਰ(thread, TLS_ਅਧਾਰ, tls_ਅਧਾਰ);
+    ਜੇ (thread == ਗੰਢ_STATE(ksCurThread)) {
         /* If this is the current thread force a reschedule to ensure that any changes
          * to the TLS_BASE are realized */
         rescheduleRequired();
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t decodeSetTLSBase(cap_t cap, word_t length, word_t *buffer)
+ਸਥਿਰ exception_t decode_ਸੈੱਟ_TLSBase(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t tls_base;
+    ਸ਼ਬਦ_t tls_ਅਧਾਰ;
 
-    if (length < 1) {
+    ਜੇ (ਲੰਮਾਈ < 1) {
         userError("TCB SetTLSBase: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    tls_base = getSyscallArg(0, buffer);
+    tls_ਅਧਾਰ = getSyscallArg(0, ਬਫਰ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSetTLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_base);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invoke_ਸੈੱਟ_TLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_ਅਧਾਰ);
 }
 
-static void invokeSetFlags(tcb_t *thread, word_t clear, word_t set, bool_t call)
+ਸਥਿਰ ਖਾਲੀ invoke_ਸੈੱਟ_Flags(tcb_t *thread, ਸ਼ਬਦ_t clear, ਸ਼ਬਦ_t ਸੈੱਟ, bool_t call)
 {
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-    word_t flags = thread->tcbFlags;
+    tcb_t *cur_thread = ਗੰਢ_STATE(ksCurThread);
+    ਸ਼ਬਦ_t flags = thread->tcbFlags;
 
     flags &= ~clear;
-    flags |= set & seL4_TCBFlag_MASK;
+    flags |= ਸੈੱਟ & se_L4_TCBFlag_ਨਕਾਬ;
     thread->tcbFlags = flags;
 
-#ifdef CONFIG_HAVE_FPU
-    if (flags & seL4_TCBFlag_fpuDisabled) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
+    ਜੇ (flags & seL4_TCBFlag_fpuDisabled) {
         /* Save current FPU state before disabling FPU: */
         fpuRelease(thread);
-    } else if (thread == cur_thread) {
+    } ਨਹੀਂਤਾਂ ਜੇ (thread == cur_thread) {
         /* Restore FPU here as switchToThread() won't be called: */
         lazyFPURestore(thread);
     }
-#endif
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, cur_thread);
-        setRegister(cur_thread, badgeRegister, 0);
-        unsigned int length = setMR(cur_thread, ipcBuffer, 0, flags);
-        setRegister(cur_thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+#ਜੇ_ਅੰਤ
+    ਜੇ (call) {
+        ਸ਼ਬਦ_t *ipc_ਬਫਰ = lookupIPCBuffer(true, cur_thread);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(cur_thread, badge_ਰਜਿਸਟਰ, 0);
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਲੰਮਾਈ = ਸੈੱਟ_MR(cur_thread, ipc_ਬਫਰ, 0, flags);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(cur_thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                        se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, ਲੰਮਾਈ)));
     }
-    setThreadState(cur_thread, ThreadState_Running);
+    ਸੈੱਟ_Thread_State(cur_thread, ThreadState_Running);
 }
 
-static exception_t decodeSetFlags(cap_t cap, word_t length, bool_t call, word_t *buffer)
+ਸਥਿਰ exception_t decode_ਸੈੱਟ_Flags(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     tcb_t *thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (length < 2) {
+    ਜੇ (ਲੰਮਾਈ < 2) {
         userError("TCB SetFlags: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t clear = getSyscallArg(0, buffer);
-    word_t set   = getSyscallArg(1, buffer);
+    ਸ਼ਬਦ_t clear = getSyscallArg(0, ਬਫਰ);
+    ਸ਼ਬਦ_t ਸੈੱਟ   = getSyscallArg(1, ਬਫਰ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    invokeSetFlags(thread, clear, set, call);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    invoke_ਸੈੱਟ_Flags(thread, clear, ਸੈੱਟ, call);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 /* The following functions sit in the syscall error monad, but include the
  * exception cases for the preemptible bottom end, as they call the invoke
  * functions directly.  This is a significant deviation from the Haskell
  * spec. */
-exception_t decodeTCBInvocation(word_t invLabel, word_t length, cap_t cap,
-                                cte_t *slot, bool_t call, word_t *buffer)
+exception_t decodeTCBInvocation(ਸ਼ਬਦ_t invLabel, ਸ਼ਬਦ_t ਲੰਮਾਈ, cap_t cap,
+                                cte_t *ਥਾਂ, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     /* Stall the core if we are operating on a remote TCB that is currently running */
     SMP_COND_STATEMENT(remoteTCBStall(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));)
 
-    switch (invLabel) {
-    case TCBReadRegisters:
+    ਚੋਣ (invLabel) {
+    ਹਾਲਤ TCBReadRegisters:
         /* Second level of decoding */
-        return decodeReadRegisters(cap, length, call, buffer);
+        ਵਾਪਸ decodeReadRegisters(cap, ਲੰਮਾਈ, call, ਬਫਰ);
 
-    case TCBWriteRegisters:
-        return decodeWriteRegisters(cap, length, buffer);
+    ਹਾਲਤ TCBWriteRegisters:
+        ਵਾਪਸ decodeWriteRegisters(cap, ਲੰਮਾਈ, ਬਫਰ);
 
-    case TCBCopyRegisters:
-        return decodeCopyRegisters(cap, length, buffer);
+    ਹਾਲਤ TCBCopyRegisters:
+        ਵਾਪਸ decodeCopyRegisters(cap, ਲੰਮਾਈ, ਬਫਰ);
 
-    case TCBSuspend:
+    ਹਾਲਤ TCBSuspend:
         /* Jump straight to the invoke */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeTCB_Suspend(
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ invokeTCB_Suspend(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
-    case TCBResume:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeTCB_Resume(
+    ਹਾਲਤ TCBResume:
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ invokeTCB_Resume(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
-    case TCBConfigure:
-        return decodeTCBConfigure(cap, length, slot, buffer);
+    ਹਾਲਤ TCBConfigure:
+        ਵਾਪਸ decodeTCBConfigure(cap, ਲੰਮਾਈ, ਥਾਂ, ਬਫਰ);
 
-    case TCBSetPriority:
-        return decodeSetPriority(cap, length, buffer);
+    ਹਾਲਤ TCBSet_ਤਰਜੀਹ:
+        ਵਾਪਸ decode_ਸੈੱਟ_ਤਰਜੀਹ(cap, ਲੰਮਾਈ, ਬਫਰ);
 
-    case TCBSetMCPriority:
-        return decodeSetMCPriority(cap, length, buffer);
+    ਹਾਲਤ TCBSetMCPriority:
+        ਵਾਪਸ decode_ਸੈੱਟ_MCPriority(cap, ਲੰਮਾਈ, ਬਫਰ);
 
-    case TCBSetSchedParams:
-#ifdef CONFIG_KERNEL_MCS
-        return decodeSetSchedParams(cap, length, slot, buffer);
-#else
-        return decodeSetSchedParams(cap, length, buffer);
-#endif
+    ਹਾਲਤ TCBSetSchedParams:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        ਵਾਪਸ decode_ਸੈੱਟ_Sched_Params(cap, ਲੰਮਾਈ, ਥਾਂ, ਬਫਰ);
+#ਨਹੀਂਤਾਂ
+        ਵਾਪਸ decode_ਸੈੱਟ_Sched_Params(cap, ਲੰਮਾਈ, ਬਫਰ);
+#ਜੇ_ਅੰਤ
 
-    case TCBSetIPCBuffer:
-        return decodeSetIPCBuffer(cap, length, slot, buffer);
+    ਹਾਲਤ TCBSetIPCBuffer:
+        ਵਾਪਸ decode_ਸੈੱਟ_IPCBuffer(cap, ਲੰਮਾਈ, ਥਾਂ, ਬਫਰ);
 
-    case TCBSetSpace:
-        return decodeSetSpace(cap, length, slot, buffer);
+    ਹਾਲਤ TCBSetSpace:
+        ਵਾਪਸ decode_ਸੈੱਟ_Space(cap, ਲੰਮਾਈ, ਥਾਂ, ਬਫਰ);
 
-    case TCBBindNotification:
-        return decodeBindNotification(cap);
+    ਹਾਲਤ TCBBindNotification:
+        ਵਾਪਸ decodeBindNotification(cap);
 
-    case TCBUnbindNotification:
-        return decodeUnbindNotification(cap);
+    ਹਾਲਤ TCBUnbindNotification:
+        ਵਾਪਸ decodeUnbindNotification(cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    case TCBSetTimeoutEndpoint:
-        return decodeSetTimeoutEndpoint(cap, slot);
-#else
-#ifdef ENABLE_SMP_SUPPORT
-    case TCBSetAffinity:
-        return decodeSetAffinity(cap, length, buffer);
-#endif /* ENABLE_SMP_SUPPORT */
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਹਾਲਤ TCBSetTimeoutEndpoint:
+        ਵਾਪਸ decode_ਸੈੱਟ_Timeout_Endpoint(cap, ਥਾਂ);
+#ਨਹੀਂਤਾਂ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    ਹਾਲਤ TCBSetAffinity:
+        ਵਾਪਸ decode_ਸੈੱਟ_Affinity(cap, ਲੰਮਾਈ, ਬਫਰ);
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ
 
         /* There is no notion of arch specific TCB invocations so this needs to go here */
-#ifdef CONFIG_VTX
-    case TCBSetEPTRoot:
-        return decodeSetEPTRoot(cap);
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_VTX
+    ਹਾਲਤ TCBSetEPTRoot:
+        ਵਾਪਸ decode_ਸੈੱਟ_EPTRoot(cap);
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case TCBConfigureSingleStepping:
-        return decodeConfigureSingleStepping(cap, call, buffer);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
+    ਹਾਲਤ TCBConfigureSingleStepping:
+        ਵਾਪਸ decodeConfigureSingleStepping(cap, call, ਬਫਰ);
 
-    case TCBSetBreakpoint:
-        return decodeSetBreakpoint(cap, buffer);
+    ਹਾਲਤ TCBSetBreakpoint:
+        ਵਾਪਸ decode_ਸੈੱਟ_Breakpoint(cap, ਬਫਰ);
 
-    case TCBGetBreakpoint:
-        return decodeGetBreakpoint(cap, call, buffer);
+    ਹਾਲਤ TCBGetBreakpoint:
+        ਵਾਪਸ decodeGetBreakpoint(cap, call, ਬਫਰ);
 
-    case TCBUnsetBreakpoint:
-        return decodeUnsetBreakpoint(cap, buffer);
-#endif
+    ਹਾਲਤ TCBUnsetBreakpoint:
+        ਵਾਪਸ decodeUnsetBreakpoint(cap, ਬਫਰ);
+#ਜੇ_ਅੰਤ
 
-    case TCBSetTLSBase:
-        return decodeSetTLSBase(cap, length, buffer);
+    ਹਾਲਤ TCBSetTLSBase:
+        ਵਾਪਸ decode_ਸੈੱਟ_TLSBase(cap, ਲੰਮਾਈ, ਬਫਰ);
 
-    case TCBSetFlags:
-        return decodeSetFlags(cap, length, call, buffer);
+    ਹਾਲਤ TCBSetFlags:
+        ਵਾਪਸ decode_ਸੈੱਟ_Flags(cap, ਲੰਮਾਈ, call, ਬਫਰ);
 
-    default:
+    ਮੂਲ:
         /* Haskell: "throw IllegalOperation" */
         userError("TCB: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-enum CopyRegistersFlags {
-    CopyRegisters_suspendSource = 0,
-    CopyRegisters_resumeTarget = 1,
-    CopyRegisters_transferFrame = 2,
+ਗਿਣਤੀ CopyRegistersFlags {
+    Copy_Registers_suspend_ਸਰੋਤ = 0,
+    Copy_Registers_resume_ਨਿਸ਼ਾਨਾ = 1,
+    Copy_Registers_transfer_ਚੌਖਟਾ = 2,
     CopyRegisters_transferInteger = 3
 };
 
-exception_t decodeCopyRegisters(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeCopyRegisters(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t transferArch;
+    ਸ਼ਬਦ_t transferArch;
     tcb_t *srcTCB;
-    cap_t source_cap;
-    word_t flags;
+    cap_t ਸਰੋਤ_cap;
+    ਸ਼ਬਦ_t flags;
 
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (ਲੰਮਾਈ < 1 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB CopyRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
+    flags = getSyscallArg(0, ਬਫਰ);
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
-    source_cap = current_extra_caps.excaprefs[0]->cap;
+    ਸਰੋਤ_cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(source_cap) == cap_thread_cap) {
-        srcTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(source_cap));
-    } else {
+    ਜੇ (cap_get_capType(ਸਰੋਤ_cap) == cap_thread_cap) {
+        srcTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(ਸਰੋਤ_cap));
+    } ਨਹੀਂਤਾਂ {
         userError("TCB CopyRegisters: Invalid source TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_CopyRegisters(
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_CopyRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), srcTCB,
-               flags & BIT(CopyRegisters_suspendSource),
-               flags & BIT(CopyRegisters_resumeTarget),
-               flags & BIT(CopyRegisters_transferFrame),
-               flags & BIT(CopyRegisters_transferInteger),
+               flags & ਦੋਆਧਾਰੀ_ਅੰਕ(Copy_Registers_suspend_ਸਰੋਤ),
+               flags & ਦੋਆਧਾਰੀ_ਅੰਕ(Copy_Registers_resume_ਨਿਸ਼ਾਨਾ),
+               flags & ਦੋਆਧਾਰੀ_ਅੰਕ(Copy_Registers_transfer_ਚੌਖਟਾ),
+               flags & ਦੋਆਧਾਰੀ_ਅੰਕ(CopyRegisters_transferInteger),
                transferArch);
 
 }
 
-enum ReadRegistersFlags {
+ਗਿਣਤੀ ReadRegistersFlags {
     ReadRegisters_suspend = 0
 };
 
-exception_t decodeReadRegisters(cap_t cap, word_t length, bool_t call,
-                                word_t *buffer)
+exception_t decodeReadRegisters(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, bool_t call,
+                                ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t transferArch, flags, n;
+    ਸ਼ਬਦ_t transferArch, flags, n;
     tcb_t *thread;
 
-    if (length < 2) {
+    ਜੇ (ਲੰਮਾਈ < 2) {
         userError("TCB ReadRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
-    n     = getSyscallArg(1, buffer);
+    flags = getSyscallArg(0, ਬਫਰ);
+    n     = getSyscallArg(1, ਬਫਰ);
 
-    if (n < 1 || n > n_frameRegisters + n_gpRegisters) {
+    ਜੇ (n < 1 || n > n_ਚੌਖਟਾ_Registers + n_gpRegisters) {
         userError("TCB ReadRegisters: Attempted to read an invalid number of registers (%d).",
-                  (int)n);
+                  (ਪੂਰਨ)n);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = n_frameRegisters +
+        current_syscall_error.rangeErrorMax = n_ਚੌਖਟਾ_Registers +
                                               n_gpRegisters;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    ਜੇ (thread == ਗੰਢ_STATE(ksCurThread)) {
         userError("TCB ReadRegisters: Attempted to read our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_ReadRegisters(
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_ReadRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)),
-               flags & BIT(ReadRegisters_suspend),
+               flags & ਦੋਆਧਾਰੀ_ਅੰਕ(ReadRegisters_suspend),
                n, transferArch, call);
 }
 
-enum WriteRegistersFlags {
+ਗਿਣਤੀ WriteRegistersFlags {
     WriteRegisters_resume = 0
 };
 
-exception_t decodeWriteRegisters(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeWriteRegisters(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t flags, w;
-    word_t transferArch;
+    ਸ਼ਬਦ_t flags, w;
+    ਸ਼ਬਦ_t transferArch;
     tcb_t *thread;
 
-    if (length < 2) {
+    ਜੇ (ਲੰਮਾਈ < 2) {
         userError("TCB WriteRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
-    w     = getSyscallArg(1, buffer);
+    flags = getSyscallArg(0, ਬਫਰ);
+    w     = getSyscallArg(1, ਬਫਰ);
 
-    if (length - 2 < w) {
+    ਜੇ (ਲੰਮਾਈ - 2 < w) {
         userError("TCB WriteRegisters: Message too short for requested write size (%d/%d).",
-                  (int)(length - 2), (int)w);
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+                  (ਪੂਰਨ)(ਲੰਮਾਈ - 2), (ਪੂਰਨ)w);
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    ਜੇ (thread == ਗੰਢ_STATE(ksCurThread)) {
         userError("TCB WriteRegisters: Attempted to write our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_WriteRegisters(thread,
-                                    flags & BIT(WriteRegisters_resume),
-                                    w, transferArch, buffer);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_WriteRegisters(thread,
+                                    flags & ਦੋਆਧਾਰੀ_ਅੰਕ(WriteRegisters_resume),
+                                    w, transferArch, ਬਫਰ);
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
 bool_t validFaultHandler(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        return (cap_endpoint_cap_get_capCanSend(cap) &&
+    ਚੋਣ (cap_get_capType(cap)) {
+    ਹਾਲਤ cap_endpoint_cap:
+        ਵਾਪਸ (cap_endpoint_cap_get_capCanSend(cap) &&
                 (cap_endpoint_cap_get_capCanGrant(cap) ||
-                 cap_endpoint_cap_get_capCanGrantReply(cap)));
-    case cap_null_cap:
+                 cap_endpoint_cap_get_cap_Can_Grant_ਜਵਾਬ(cap)));
+    ਹਾਲਤ cap_null_cap:
         /* just has no fault endpoint */
-        return true;
-    default:
-        return false;
+        ਵਾਪਸ true;
+    ਮੂਲ:
+        ਵਾਪਸ false;
     }
 }
-#endif
+#ਜੇ_ਅੰਤ
 
 /* TCBConfigure batches SetIPCBuffer and parts of SetSpace. */
-exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+exception_t decodeTCBConfigure(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, cte_t *ਥਾਂ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    cte_t *bufferSlot, *cRootSlot, *vRootSlot;
-    cap_t bufferCap, cRootCap, vRootCap;
+    cte_t *ਬਫਰ_ਥਾਂ, *c_ਜੜ੍ਹ_ਥਾਂ, *v_ਜੜ੍ਹ_ਥਾਂ;
+    cap_t ਬਫਰ_Cap, c_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_Cap;
     deriveCap_ret_t dc_ret;
-    word_t cRootData, vRootData, bufferAddr;
-#ifdef CONFIG_KERNEL_MCS
-#define TCBCONFIGURE_ARGS 3
-#else
-#define TCBCONFIGURE_ARGS 4
-#endif
-    if (length < TCBCONFIGURE_ARGS || current_extra_caps.excaprefs[0] == NULL
-        || current_extra_caps.excaprefs[1] == NULL
-        || current_extra_caps.excaprefs[2] == NULL) {
+    ਸ਼ਬਦ_t c_ਜੜ੍ਹ_ਅੰਕੜੇ, v_ਜੜ੍ਹ_ਅੰਕੜੇ, ਬਫਰ_Addr;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TCBCONFIGURE_ਦਲੀਲਾਂ 3
+#ਨਹੀਂਤਾਂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TCBCONFIGURE_ਦਲੀਲਾਂ 4
+#ਜੇ_ਅੰਤ
+    ਜੇ (ਲੰਮਾਈ < TCBCONFIGURE_ਦਲੀਲਾਂ || current_extra_caps.excaprefs[0] == ਨਿਰਾ
+        || current_extra_caps.excaprefs[1] == ਨਿਰਾ
+        || current_extra_caps.excaprefs[2] == ਨਿਰਾ) {
         userError("TCB Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    cRootData     = getSyscallArg(0, buffer);
-    vRootData     = getSyscallArg(1, buffer);
-    bufferAddr    = getSyscallArg(2, buffer);
-#else
-    cptr_t faultEP       = getSyscallArg(0, buffer);
-    cRootData     = getSyscallArg(1, buffer);
-    vRootData     = getSyscallArg(2, buffer);
-    bufferAddr    = getSyscallArg(3, buffer);
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    c_ਜੜ੍ਹ_ਅੰਕੜੇ     = getSyscallArg(0, ਬਫਰ);
+    v_ਜੜ੍ਹ_ਅੰਕੜੇ     = getSyscallArg(1, ਬਫਰ);
+    ਬਫਰ_Addr    = getSyscallArg(2, ਬਫਰ);
+#ਨਹੀਂਤਾਂ
+    cptr_t faultEP       = getSyscallArg(0, ਬਫਰ);
+    c_ਜੜ੍ਹ_ਅੰਕੜੇ     = getSyscallArg(1, ਬਫਰ);
+    v_ਜੜ੍ਹ_ਅੰਕੜੇ     = getSyscallArg(2, ਬਫਰ);
+    ਬਫਰ_Addr    = getSyscallArg(3, ਬਫਰ);
+#ਜੇ_ਅੰਤ
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
-    bufferSlot = current_extra_caps.excaprefs[2];
-    bufferCap  = current_extra_caps.excaprefs[2]->cap;
+    c_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[0];
+    c_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[1];
+    v_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[1]->cap;
+    ਬਫਰ_ਥਾਂ = current_extra_caps.excaprefs[2];
+    ਬਫਰ_Cap  = current_extra_caps.excaprefs[2]->cap;
 
-    if (bufferAddr == 0) {
-        bufferSlot = NULL;
-    } else {
-        dc_ret = deriveCap(bufferSlot, bufferCap);
-        if (dc_ret.status != EXCEPTION_NONE) {
-            return dc_ret.status;
+    ਜੇ (ਬਫਰ_Addr == 0) {
+        ਬਫਰ_ਥਾਂ = ਨਿਰਾ;
+    } ਨਹੀਂਤਾਂ {
+        dc_ret = deriveCap(ਬਫਰ_ਥਾਂ, ਬਫਰ_Cap);
+        ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+            ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
         }
-        bufferCap = dc_ret.cap;
+        ਬਫਰ_Cap = dc_ret.cap;
 
-        exception_t e = checkValidIPCBuffer(bufferAddr, bufferCap);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        exception_t e = checkValidIPCBuffer(ਬਫਰ_Addr, ਬਫਰ_Cap);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
     }
 
-    if (slotCapLongRunningDelete(
+    ਜੇ (ਥਾਂ_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-        slotCapLongRunningDelete(
+        ਥਾਂ_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable))) {
         userError("TCB Configure: CSpace or VSpace currently being deleted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    ਜੇ (c_ਜੜ੍ਹ_ਅੰਕੜੇ != 0) {
+        c_ਜੜ੍ਹ_Cap = update_Cap_ਅੰਕੜੇ(false, c_ਜੜ੍ਹ_ਅੰਕੜੇ, c_ਜੜ੍ਹ_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(c_ਜੜ੍ਹ_ਥਾਂ, c_ਜੜ੍ਹ_Cap);
+    ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
     }
-    cRootCap = dc_ret.cap;
+    c_ਜੜ੍ਹ_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    ਜੇ (cap_get_capType(c_ਜੜ੍ਹ_Cap) != cap_cnode_cap) {
         userError("TCB Configure: CSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    ਜੇ (v_ਜੜ੍ਹ_ਅੰਕੜੇ != 0) {
+        v_ਜੜ੍ਹ_Cap = update_Cap_ਅੰਕੜੇ(false, v_ਜੜ੍ਹ_ਅੰਕੜੇ, v_ਜੜ੍ਹ_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(v_ਜੜ੍ਹ_ਥਾਂ, v_ਜੜ੍ਹ_Cap);
+    ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
     }
-    vRootCap = dc_ret.cap;
+    v_ਜੜ੍ਹ_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    ਜੇ (!is_Valid_VTable_ਜੜ੍ਹ(v_ਜੜ੍ਹ_Cap)) {
         userError("TCB Configure: VSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               bufferAddr, bufferCap,
-               bufferSlot, thread_control_caps_update_space |
-               thread_control_caps_update_ipc_buffer);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               c_ਜੜ੍ਹ_Cap, c_ਜੜ੍ਹ_ਥਾਂ,
+               v_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_ਥਾਂ,
+               ਬਫਰ_Addr, ਬਫਰ_Cap,
+               ਬਫਰ_ਥਾਂ, thread_control_caps_update_space |
+               thread_control_caps_update_ipc_ਬਫਰ);
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
                faultEP, NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               bufferAddr, bufferCap,
-               bufferSlot, thread_control_update_space |
-               thread_control_update_ipc_buffer);
-#endif
+               c_ਜੜ੍ਹ_Cap, c_ਜੜ੍ਹ_ਥਾਂ,
+               v_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_ਥਾਂ,
+               ਬਫਰ_Addr, ਬਫਰ_Cap,
+               ਬਫਰ_ਥਾਂ, thread_control_update_space |
+               thread_control_update_ipc_ਬਫਰ);
+#ਜੇ_ਅੰਤ
 }
 
-exception_t decodeSetPriority(cap_t cap, word_t length, word_t *buffer)
+exception_t decode_ਸੈੱਟ_ਤਰਜੀਹ(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (ਲੰਮਾਈ < 1 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB SetPriority: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newPrio = getSyscallArg(0, buffer);
+    prio_t newPrio = getSyscallArg(0, ਬਫਰ);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ਜੇ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("Set priority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newPrio, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t ਸਥਿਤੀ = checkPrio(newPrio, authTCB);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("TCB SetPriority: Requested priority %lu too high (max %lu).",
-                  (unsigned long) newPrio, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) newPrio, (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) authTCB->tcbMCP);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-               cap_null_cap_new(), NULL,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
                NULL_PRIO, newPrio,
-               NULL, thread_control_sched_update_priority);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+               ਨਿਰਾ, thread_control_sched_update_ਤਰਜੀਹ);
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਨਿਰਾ,
                0, NULL_PRIO, newPrio,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_priority);
-#endif
+               ਨਿਰਾ, thread_control_update_ਤਰਜੀਹ);
+#ਜੇ_ਅੰਤ
 }
 
-exception_t decodeSetMCPriority(cap_t cap, word_t length, word_t *buffer)
+exception_t decode_ਸੈੱਟ_MCPriority(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (ਲੰਮਾਈ < 1 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB SetMCPriority: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newMcp = getSyscallArg(0, buffer);
+    prio_t newMcp = getSyscallArg(0, ਬਫਰ);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ਜੇ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetMCPriority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newMcp, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t ਸਥਿਤੀ = checkPrio(newMcp, authTCB);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("TCB SetMCPriority: Requested maximum controlled priority %lu too high (max %lu).",
-                  (unsigned long) newMcp, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) newMcp, (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) authTCB->tcbMCP);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-               cap_null_cap_new(), NULL,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
                newMcp, NULL_PRIO,
-               NULL, thread_control_sched_update_mcp);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+               ਨਿਰਾ, thread_control_sched_update_mcp);
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਨਿਰਾ,
                0, newMcp, NULL_PRIO,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_mcp);
-#endif
+               ਨਿਰਾ, thread_control_update_mcp);
+#ਜੇ_ਅੰਤ
 }
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t decodeSetTimeoutEndpoint(cap_t cap, cte_t *slot)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+exception_t decode_ਸੈੱਟ_Timeout_Endpoint(cap_t cap, cte_t *ਥਾਂ)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB SetTimeoutEndpoint: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cte_t *thSlot = current_extra_caps.excaprefs[0];
+    cte_t *th_ਥਾਂ = current_extra_caps.excaprefs[0];
     cap_t thCap   = current_extra_caps.excaprefs[0]->cap;
 
     /* timeout handler */
-    if (!validFaultHandler(thCap)) {
+    ਜੇ (!validFaultHandler(thCap)) {
         userError("TCB SetTimeoutEndpoint: timeout endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               thCap, thSlot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               0, cap_null_cap_new(), NULL,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               thCap, th_ਥਾਂ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               0, cap_null_cap_new(), ਨਿਰਾ,
                thread_control_caps_update_timeout);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t decodeSetSchedParams(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
-#else
-exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+exception_t decode_ਸੈੱਟ_Sched_Params(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, cte_t *ਥਾਂ, ਸ਼ਬਦ_t *ਬਫਰ)
+#ਨਹੀਂਤਾਂ
+exception_t decode_ਸੈੱਟ_Sched_Params(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
+#ਜੇ_ਅੰਤ
 {
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-#ifdef CONFIG_KERNEL_MCS
-        || current_extra_caps.excaprefs[1] == NULL || current_extra_caps.excaprefs[2] == NULL
-#endif
+    ਜੇ (ਲੰਮਾਈ < 2 || current_extra_caps.excaprefs[0] == ਨਿਰਾ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        || current_extra_caps.excaprefs[1] == ਨਿਰਾ || current_extra_caps.excaprefs[2] == ਨਿਰਾ
+#ਜੇ_ਅੰਤ
        ) {
         userError("TCB SetSchedParams: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newMcp = getSyscallArg(0, buffer);
-    prio_t newPrio = getSyscallArg(1, buffer);
+    prio_t newMcp = getSyscallArg(0, ਬਫਰ);
+    prio_t newPrio = getSyscallArg(1, ਬਫਰ);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     cap_t scCap   = current_extra_caps.excaprefs[1]->cap;
-    cte_t *fhSlot = current_extra_caps.excaprefs[2];
+    cte_t *fh_ਥਾਂ = current_extra_caps.excaprefs[2];
     cap_t fhCap   = current_extra_caps.excaprefs[2]->cap;
-#endif
+#ਜੇ_ਅੰਤ
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ਜੇ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetSchedParams: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newMcp, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t ਸਥਿਤੀ = checkPrio(newMcp, authTCB);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("TCB SetSchedParams: Requested maximum controlled priority %lu too high (max %lu).",
-                  (unsigned long) newMcp, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) newMcp, (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) authTCB->tcbMCP);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-    status = checkPrio(newPrio, authTCB);
-    if (status != EXCEPTION_NONE) {
+    ਸਥਿਤੀ = checkPrio(newPrio, authTCB);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("TCB SetSchedParams: Requested priority %lu too high (max %lu).",
-                  (unsigned long) newPrio, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) newPrio, (ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) authTCB->tcbMCP);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    sched_context_t *sc = NULL;
+    sched_context_t *sc = ਨਿਰਾ;
     thread_control_flag_t update_flags = thread_control_sched_update_mcp |
-                                         thread_control_sched_update_priority |
+                                         thread_control_sched_update_ਤਰਜੀਹ |
                                          thread_control_sched_update_fault;
-    switch (cap_get_capType(scCap)) {
-    case cap_sched_context_cap:
+    ਚੋਣ (cap_get_capType(scCap)) {
+    ਹਾਲਤ cap_sched_context_cap:
         sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(scCap));
-        if (tcb->tcbSchedContext != sc) {
-            if (tcb->tcbSchedContext) {
+        ਜੇ (tcb->tcbSchedContext != sc) {
+            ਜੇ (tcb->tcbSchedContext) {
                 userError("TCB Configure: tcb already has a scheduling context.");
                 current_syscall_error.type = seL4_IllegalOperation;
-                return EXCEPTION_SYSCALL_ERROR;
+                ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
             }
-            if (sc->scTcb) {
+            ਜੇ (sc->scTcb) {
                 userError("TCB Configure: sched context already bound.");
                 current_syscall_error.type = seL4_IllegalOperation;
-                return EXCEPTION_SYSCALL_ERROR;
+                ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
             }
         }
-        if (isBlocked(tcb) && !sc_released(sc)) {
+        ਜੇ (isBlocked(tcb) && !sc_released(sc)) {
             userError("TCB Configure: tcb blocked and scheduling context not schedulable.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    case cap_null_cap:
-        if (tcb == NODE_STATE(ksCurThread)) {
+        ਰੋਕੋ;
+    ਹਾਲਤ cap_null_cap:
+        ਜੇ (tcb == ਗੰਢ_STATE(ksCurThread)) {
             userError("TCB SetSchedParams: Cannot change sched_context of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    default:
+        ਰੋਕੋ;
+    ਮੂਲ:
         userError("TCB Configure: sched context cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 2;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If we are setting or unsetting the scheduling context, update the flags */
-    if (tcb->tcbSchedContext != sc) {
+    ਜੇ (tcb->tcbSchedContext != sc) {
         update_flags |= thread_control_sched_update_sc;
     }
 
-    if (!validFaultHandler(fhCap)) {
+    ਜੇ (!validFaultHandler(fhCap)) {
         userError("TCB Configure: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 3;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-#endif
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               fhCap, fhSlot,
+#ਜੇ_ਅੰਤ
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
+               fhCap, fh_ਥਾਂ,
                newMcp, newPrio,
                sc, update_flags);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਨਿਰਾ,
                0, newMcp, newPrio,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_mcp |
-               thread_control_update_priority);
-#endif
+               ਨਿਰਾ, thread_control_update_mcp |
+               thread_control_update_ਤਰਜੀਹ);
+#ਜੇ_ਅੰਤ
 }
 
 
-exception_t decodeSetIPCBuffer(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+exception_t decode_ਸੈੱਟ_IPCBuffer(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, cte_t *ਥਾਂ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    cptr_t cptr_bufferPtr;
-    cap_t bufferCap;
-    cte_t *bufferSlot;
+    cptr_t cptr_ਬਫਰ_Ptr;
+    cap_t ਬਫਰ_Cap;
+    cte_t *ਬਫਰ_ਥਾਂ;
 
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (ਲੰਮਾਈ < 1 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB SetIPCBuffer: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cptr_bufferPtr  = getSyscallArg(0, buffer);
-    bufferSlot = current_extra_caps.excaprefs[0];
-    bufferCap  = current_extra_caps.excaprefs[0]->cap;
+    cptr_ਬਫਰ_Ptr  = getSyscallArg(0, ਬਫਰ);
+    ਬਫਰ_ਥਾਂ = current_extra_caps.excaprefs[0];
+    ਬਫਰ_Cap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cptr_bufferPtr == 0) {
-        bufferSlot = NULL;
-    } else {
+    ਜੇ (cptr_ਬਫਰ_Ptr == 0) {
+        ਬਫਰ_ਥਾਂ = ਨਿਰਾ;
+    } ਨਹੀਂਤਾਂ {
         exception_t e;
         deriveCap_ret_t dc_ret;
 
-        dc_ret = deriveCap(bufferSlot, bufferCap);
-        if (dc_ret.status != EXCEPTION_NONE) {
-            return dc_ret.status;
+        dc_ret = deriveCap(ਬਫਰ_ਥਾਂ, ਬਫਰ_Cap);
+        ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+            ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
         }
-        bufferCap = dc_ret.cap;
-        e = checkValidIPCBuffer(cptr_bufferPtr, bufferCap);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        ਬਫਰ_Cap = dc_ret.cap;
+        e = checkValidIPCBuffer(cptr_ਬਫਰ_Ptr, ਬਫਰ_Cap);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cptr_bufferPtr, bufferCap,
-               bufferSlot, thread_control_caps_update_ipc_buffer);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cptr_ਬਫਰ_Ptr, ਬਫਰ_Cap,
+               ਬਫਰ_ਥਾਂ, thread_control_caps_update_ipc_ਬਫਰ);
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
                0, NULL_PRIO, NULL_PRIO,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cptr_bufferPtr, bufferCap,
-               bufferSlot, thread_control_update_ipc_buffer);
+               cap_null_cap_new(), ਨਿਰਾ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               cptr_ਬਫਰ_Ptr, ਬਫਰ_Cap,
+               ਬਫਰ_ਥਾਂ, thread_control_update_ipc_ਬਫਰ);
 
-#endif
+#ਜੇ_ਅੰਤ
 }
 
-#ifdef CONFIG_KERNEL_MCS
-#define DECODE_SET_SPACE_PARAMS 2
-#else
-#define DECODE_SET_SPACE_PARAMS 3
-#endif
-exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ DECODE_ਸੈੱਟ_SPACE_PARAMS 2
+#ਨਹੀਂਤਾਂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ DECODE_ਸੈੱਟ_SPACE_PARAMS 3
+#ਜੇ_ਅੰਤ
+exception_t decode_ਸੈੱਟ_Space(cap_t cap, ਸ਼ਬਦ_t ਲੰਮਾਈ, cte_t *ਥਾਂ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t cRootData, vRootData;
-    cte_t *cRootSlot, *vRootSlot;
-    cap_t cRootCap, vRootCap;
+    ਸ਼ਬਦ_t c_ਜੜ੍ਹ_ਅੰਕੜੇ, v_ਜੜ੍ਹ_ਅੰਕੜੇ;
+    cte_t *c_ਜੜ੍ਹ_ਥਾਂ, *v_ਜੜ੍ਹ_ਥਾਂ;
+    cap_t c_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_Cap;
     deriveCap_ret_t dc_ret;
 
-    if (length < DECODE_SET_SPACE_PARAMS || current_extra_caps.excaprefs[0] == NULL
-        || current_extra_caps.excaprefs[1] == NULL
-#ifdef CONFIG_KERNEL_MCS
-        || current_extra_caps.excaprefs[2] == NULL
-#endif
+    ਜੇ (ਲੰਮਾਈ < DECODE_ਸੈੱਟ_SPACE_PARAMS || current_extra_caps.excaprefs[0] == ਨਿਰਾ
+        || current_extra_caps.excaprefs[1] == ਨਿਰਾ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        || current_extra_caps.excaprefs[2] == ਨਿਰਾ
+#ਜੇ_ਅੰਤ
        ) {
         userError("TCB SetSpace: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    cRootData = getSyscallArg(0, buffer);
-    vRootData = getSyscallArg(1, buffer);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    c_ਜੜ੍ਹ_ਅੰਕੜੇ = getSyscallArg(0, ਬਫਰ);
+    v_ਜੜ੍ਹ_ਅੰਕੜੇ = getSyscallArg(1, ਬਫਰ);
 
-    cte_t *fhSlot     = current_extra_caps.excaprefs[0];
+    cte_t *fh_ਥਾਂ     = current_extra_caps.excaprefs[0];
     cap_t fhCap      = current_extra_caps.excaprefs[0]->cap;
-    cRootSlot  = current_extra_caps.excaprefs[1];
-    cRootCap   = current_extra_caps.excaprefs[1]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[2];
-    vRootCap   = current_extra_caps.excaprefs[2]->cap;
-#else
-    cptr_t faultEP   = getSyscallArg(0, buffer);
-    cRootData = getSyscallArg(1, buffer);
-    vRootData = getSyscallArg(2, buffer);
+    c_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[1];
+    c_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[1]->cap;
+    v_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[2];
+    v_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[2]->cap;
+#ਨਹੀਂਤਾਂ
+    cptr_t faultEP   = getSyscallArg(0, ਬਫਰ);
+    c_ਜੜ੍ਹ_ਅੰਕੜੇ = getSyscallArg(1, ਬਫਰ);
+    v_ਜੜ੍ਹ_ਅੰਕੜੇ = getSyscallArg(2, ਬਫਰ);
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
-#endif
+    c_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[0];
+    c_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_ਜੜ੍ਹ_ਥਾਂ  = current_extra_caps.excaprefs[1];
+    v_ਜੜ੍ਹ_Cap   = current_extra_caps.excaprefs[1]->cap;
+#ਜੇ_ਅੰਤ
 
-    if (slotCapLongRunningDelete(
+    ਜੇ (ਥਾਂ_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-        slotCapLongRunningDelete(
+        ਥਾਂ_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable))) {
         userError("TCB SetSpace: CSpace or VSpace currently being deleted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    ਜੇ (c_ਜੜ੍ਹ_ਅੰਕੜੇ != 0) {
+        c_ਜੜ੍ਹ_Cap = update_Cap_ਅੰਕੜੇ(false, c_ਜੜ੍ਹ_ਅੰਕੜੇ, c_ਜੜ੍ਹ_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(c_ਜੜ੍ਹ_ਥਾਂ, c_ਜੜ੍ਹ_Cap);
+    ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
     }
-    cRootCap = dc_ret.cap;
+    c_ਜੜ੍ਹ_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    ਜੇ (cap_get_capType(c_ਜੜ੍ਹ_Cap) != cap_cnode_cap) {
         userError("TCB SetSpace: Invalid CNode cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    ਜੇ (v_ਜੜ੍ਹ_ਅੰਕੜੇ != 0) {
+        v_ਜੜ੍ਹ_Cap = update_Cap_ਅੰਕੜੇ(false, v_ਜੜ੍ਹ_ਅੰਕੜੇ, v_ਜੜ੍ਹ_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(v_ਜੜ੍ਹ_ਥਾਂ, v_ਜੜ੍ਹ_Cap);
+    ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+        ਵਾਪਸ dc_ret.ਸਥਿਤੀ;
     }
-    vRootCap = dc_ret.cap;
+    v_ਜੜ੍ਹ_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    ਜੇ (!is_Valid_VTable_ਜੜ੍ਹ(v_ਜੜ੍ਹ_Cap)) {
         userError("TCB SetSpace: Invalid VSpace cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     /* fault handler */
-    if (!validFaultHandler(fhCap)) {
+    ਜੇ (!validFaultHandler(fhCap)) {
         userError("TCB SetSpace: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-#endif
+#ਜੇ_ਅੰਤ
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               fhCap, fhSlot,
-               cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               0, cap_null_cap_new(), NULL, thread_control_caps_update_space | thread_control_caps_update_fault);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਵਾਪਸ invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
+               fhCap, fh_ਥਾਂ,
+               cap_null_cap_new(), ਨਿਰਾ,
+               c_ਜੜ੍ਹ_Cap, c_ਜੜ੍ਹ_ਥਾਂ,
+               v_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_ਥਾਂ,
+               0, cap_null_cap_new(), ਨਿਰਾ, thread_control_caps_update_space | thread_control_caps_update_fault);
+#ਨਹੀਂਤਾਂ
+    ਵਾਪਸ invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ਥਾਂ,
                faultEP,
                NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               0, cap_null_cap_new(), NULL, thread_control_update_space);
-#endif
+               c_ਜੜ੍ਹ_Cap, c_ਜੜ੍ਹ_ਥਾਂ,
+               v_ਜੜ੍ਹ_Cap, v_ਜੜ੍ਹ_ਥਾਂ,
+               0, cap_null_cap_new(), ਨਿਰਾ, thread_control_update_space);
+#ਜੇ_ਅੰਤ
 }
 
 exception_t decodeBindNotification(cap_t cap)
@@ -1627,46 +1627,46 @@ exception_t decodeBindNotification(cap_t cap)
     tcb_t *tcb;
     cap_t ntfn_cap;
 
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ਜੇ (current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
         userError("TCB BindNotification: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (tcb->tcbBoundNotification) {
+    ਜੇ (tcb->tcbBoundNotification) {
         userError("TCB BindNotification: TCB already has a bound notification.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     ntfn_cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(ntfn_cap) == cap_notification_cap) {
+    ਜੇ (cap_get_capType(ntfn_cap) == cap_notification_cap) {
         ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(ntfn_cap));
-    } else {
+    } ਨਹੀਂਤਾਂ {
         userError("TCB BindNotification: Notification is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!cap_notification_cap_get_capNtfnCanReceive(ntfn_cap)) {
+    ਜੇ (!cap_notification_cap_get_capNtfnCanReceive(ntfn_cap)) {
         userError("TCB BindNotification: Insufficient access rights");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if ((tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr)
+    ਜੇ ((tcb_t *)notification_ptr_get_ntfn_ਕਤਾਰ_ਸਿਰ(ntfnPtr)
         || (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr)) {
         userError("TCB BindNotification: Notification cannot be bound.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_NotificationControl(tcb, ntfnPtr);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_NotificationControl(tcb, ntfnPtr);
 }
 
 exception_t decodeUnbindNotification(cap_t cap)
@@ -1675,14 +1675,14 @@ exception_t decodeUnbindNotification(cap_t cap)
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (!tcb->tcbBoundNotification) {
+    ਜੇ (!tcb->tcbBoundNotification) {
         userError("TCB UnbindNotification: TCB already has no bound Notification.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_NotificationControl(tcb, NULL);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ invokeTCB_NotificationControl(tcb, ਨਿਰਾ);
 }
 
 /* The following functions sit in the preemption monad and implement the
@@ -1690,255 +1690,255 @@ exception_t decodeUnbindNotification(cap_t cap)
 exception_t invokeTCB_Suspend(tcb_t *thread)
 {
     suspend(thread);
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 exception_t invokeTCB_Resume(tcb_t *thread)
 {
     restart(thread);
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
-                                        tcb_cnode_index_t index, cap_t newCap, cte_t *srcSlot)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਸਥਿਰ ਸਤਰਅੰਦਰ exception_t installTCBCap(tcb_t *ਨਿਸ਼ਾਨਾ, cap_t tCap, cte_t *ਥਾਂ,
+                                        tcb_cnode_ਸੂਚਕਾਂਕ_t ਸੂਚਕਾਂਕ, cap_t newCap, cte_t *src_ਥਾਂ)
 {
-    cte_t *rootSlot = TCB_PTR_CTE_PTR(target, index);
-    UNUSED exception_t e = cteDelete(rootSlot, true);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    cte_t *ਜੜ੍ਹ_ਥਾਂ = TCB_PTR_CTE_PTR(ਨਿਸ਼ਾਨਾ, ਸੂਚਕਾਂਕ);
+    ਅਣਵਰਤਿਆ exception_t e = cteDelete(ਜੜ੍ਹ_ਥਾਂ, true);
+    ਜੇ (e != EXCEPTION_NONE) {
+        ਵਾਪਸ e;
     }
 
     /* cteDelete on a cap installed in the tcb cannot fail */
-    if (cap_get_capType(newCap) != cap_null_cap) {
-        if (sameObjectAs(newCap, srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(newCap, srcSlot, rootSlot);
+    ਜੇ (cap_get_capType(newCap) != cap_null_cap) {
+        ਜੇ (sameObjectAs(newCap, src_ਥਾਂ->cap) &&
+            sameObjectAs(tCap, ਥਾਂ->cap)) {
+            cte_ਪਾਓ(newCap, src_ਥਾਂ, ਜੜ੍ਹ_ਥਾਂ);
         }
     }
-    return e;
+    ਵਾਪਸ e;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
-                                        cap_t fh_newCap, cte_t *fh_srcSlot,
-                                        cap_t th_newCap, cte_t *th_srcSlot,
-                                        cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                        cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-                                        word_t bufferAddr, cap_t bufferCap,
-                                        cte_t *bufferSrcSlot,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+exception_t invokeTCB_ThreadControlCaps(tcb_t *ਨਿਸ਼ਾਨਾ, cte_t *ਥਾਂ,
+                                        cap_t fh_newCap, cte_t *fh_src_ਥਾਂ,
+                                        cap_t th_newCap, cte_t *th_src_ਥਾਂ,
+                                        cap_t c_ਜੜ੍ਹ_new_Cap, cte_t *c_ਜੜ੍ਹ_src_ਥਾਂ,
+                                        cap_t v_ਜੜ੍ਹ_new_Cap, cte_t *v_ਜੜ੍ਹ_src_ਥਾਂ,
+                                        ਸ਼ਬਦ_t ਬਫਰ_Addr, cap_t ਬਫਰ_Cap,
+                                        cte_t *ਬਫਰ_Src_ਥਾਂ,
                                         thread_control_flag_t updateFlags)
 {
     exception_t e;
-    cap_t tCap = cap_thread_cap_new((word_t)target);
+    cap_t tCap = cap_thread_cap_new((ਸ਼ਬਦ_t)ਨਿਸ਼ਾਨਾ);
 
-    if (updateFlags & thread_control_caps_update_fault) {
-        e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ਜੇ (updateFlags & thread_control_caps_update_fault) {
+        e = installTCBCap(ਨਿਸ਼ਾਨਾ, tCap, ਥਾਂ, tcbFaultHandler, fh_newCap, fh_src_ਥਾਂ);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
 
     }
 
-    if (updateFlags & thread_control_caps_update_timeout) {
-        e = installTCBCap(target, tCap, slot, tcbTimeoutHandler, th_newCap, th_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ਜੇ (updateFlags & thread_control_caps_update_timeout) {
+        e = installTCBCap(ਨਿਸ਼ਾਨਾ, tCap, ਥਾਂ, tcbTimeoutHandler, th_newCap, th_src_ਥਾਂ);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
     }
 
-    if (updateFlags & thread_control_caps_update_space) {
-        e = installTCBCap(target, tCap, slot, tcbCTable, cRoot_newCap, cRoot_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ਜੇ (updateFlags & thread_control_caps_update_space) {
+        e = installTCBCap(ਨਿਸ਼ਾਨਾ, tCap, ਥਾਂ, tcbCTable, c_ਜੜ੍ਹ_new_Cap, c_ਜੜ੍ਹ_src_ਥਾਂ);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
 
-        e = installTCBCap(target, tCap, slot, tcbVTable, vRoot_newCap, vRoot_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        e = installTCBCap(ਨਿਸ਼ਾਨਾ, tCap, ਥਾਂ, tcbVTable, v_ਜੜ੍ਹ_new_Cap, v_ਜੜ੍ਹ_src_ਥਾਂ);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
     }
 
-    if (updateFlags & thread_control_caps_update_ipc_buffer) {
-        cte_t *bufferSlot;
+    ਜੇ (updateFlags & thread_control_caps_update_ipc_ਬਫਰ) {
+        cte_t *ਬਫਰ_ਥਾਂ;
 
-        bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-        e = cteDelete(bufferSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        ਬਫਰ_ਥਾਂ = TCB_PTR_CTE_PTR(ਨਿਸ਼ਾਨਾ, tcb_ਬਫਰ);
+        e = cteDelete(ਬਫਰ_ਥਾਂ, true);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
-        target->tcbIPCBuffer = bufferAddr;
+        ਨਿਸ਼ਾਨਾ->tcbIPCBuffer = ਬਫਰ_Addr;
 
-        if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+        ਜੇ (ਬਫਰ_Src_ਥਾਂ && sameObjectAs(ਬਫਰ_Cap, ਬਫਰ_Src_ਥਾਂ->cap) &&
+            sameObjectAs(tCap, ਥਾਂ->cap)) {
+            cte_ਪਾਓ(ਬਫਰ_Cap, ਬਫਰ_Src_ਥਾਂ, ਬਫਰ_ਥਾਂ);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        ਜੇ (ਨਿਸ਼ਾਨਾ == ਗੰਢ_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
-#else
-exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
-                                    cptr_t faultep, prio_t mcp, prio_t priority,
-                                    cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                    cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-                                    word_t bufferAddr, cap_t bufferCap,
-                                    cte_t *bufferSrcSlot,
+#ਨਹੀਂਤਾਂ
+exception_t invokeTCB_ThreadControl(tcb_t *ਨਿਸ਼ਾਨਾ, cte_t *ਥਾਂ,
+                                    cptr_t faultep, prio_t mcp, prio_t ਤਰਜੀਹ,
+                                    cap_t c_ਜੜ੍ਹ_new_Cap, cte_t *c_ਜੜ੍ਹ_src_ਥਾਂ,
+                                    cap_t v_ਜੜ੍ਹ_new_Cap, cte_t *v_ਜੜ੍ਹ_src_ਥਾਂ,
+                                    ਸ਼ਬਦ_t ਬਫਰ_Addr, cap_t ਬਫਰ_Cap,
+                                    cte_t *ਬਫਰ_Src_ਥਾਂ,
                                     thread_control_flag_t updateFlags)
 {
     exception_t e;
-    cap_t tCap = cap_thread_cap_new((word_t)target);
+    cap_t tCap = cap_thread_cap_new((ਸ਼ਬਦ_t)ਨਿਸ਼ਾਨਾ);
 
-    if (updateFlags & thread_control_update_space) {
-        target->tcbFaultHandler = faultep;
+    ਜੇ (updateFlags & thread_control_update_space) {
+        ਨਿਸ਼ਾਨਾ->tcbFaultHandler = faultep;
     }
 
-    if (updateFlags & thread_control_update_mcp) {
-        setMCPriority(target, mcp);
+    ਜੇ (updateFlags & thread_control_update_mcp) {
+        ਸੈੱਟ_MCPriority(ਨਿਸ਼ਾਨਾ, mcp);
     }
 
-    if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
+    ਜੇ (updateFlags & thread_control_update_space) {
+        cte_t *ਜੜ੍ਹ_ਥਾਂ;
 
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbCTable);
-        e = cteDelete(rootSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        ਜੜ੍ਹ_ਥਾਂ = TCB_PTR_CTE_PTR(ਨਿਸ਼ਾਨਾ, tcbCTable);
+        e = cteDelete(ਜੜ੍ਹ_ਥਾਂ, true);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
-        if (sameObjectAs(cRoot_newCap, cRoot_srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(cRoot_newCap, cRoot_srcSlot, rootSlot);
-        }
-    }
-
-    if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
-
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbVTable);
-        e = cteDelete(rootSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
-        }
-        if (sameObjectAs(vRoot_newCap, vRoot_srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(vRoot_newCap, vRoot_srcSlot, rootSlot);
+        ਜੇ (sameObjectAs(c_ਜੜ੍ਹ_new_Cap, c_ਜੜ੍ਹ_src_ਥਾਂ->cap) &&
+            sameObjectAs(tCap, ਥਾਂ->cap)) {
+            cte_ਪਾਓ(c_ਜੜ੍ਹ_new_Cap, c_ਜੜ੍ਹ_src_ਥਾਂ, ਜੜ੍ਹ_ਥਾਂ);
         }
     }
 
-    if (updateFlags & thread_control_update_ipc_buffer) {
-        cte_t *bufferSlot;
+    ਜੇ (updateFlags & thread_control_update_space) {
+        cte_t *ਜੜ੍ਹ_ਥਾਂ;
 
-        bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-        e = cteDelete(bufferSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        ਜੜ੍ਹ_ਥਾਂ = TCB_PTR_CTE_PTR(ਨਿਸ਼ਾਨਾ, tcbVTable);
+        e = cteDelete(ਜੜ੍ਹ_ਥਾਂ, true);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
-        target->tcbIPCBuffer = bufferAddr;
+        ਜੇ (sameObjectAs(v_ਜੜ੍ਹ_new_Cap, v_ਜੜ੍ਹ_src_ਥਾਂ->cap) &&
+            sameObjectAs(tCap, ਥਾਂ->cap)) {
+            cte_ਪਾਓ(v_ਜੜ੍ਹ_new_Cap, v_ਜੜ੍ਹ_src_ਥਾਂ, ਜੜ੍ਹ_ਥਾਂ);
+        }
+    }
 
-        if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+    ਜੇ (updateFlags & thread_control_update_ipc_ਬਫਰ) {
+        cte_t *ਬਫਰ_ਥਾਂ;
+
+        ਬਫਰ_ਥਾਂ = TCB_PTR_CTE_PTR(ਨਿਸ਼ਾਨਾ, tcb_ਬਫਰ);
+        e = cteDelete(ਬਫਰ_ਥਾਂ, true);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
+        }
+        ਨਿਸ਼ਾਨਾ->tcbIPCBuffer = ਬਫਰ_Addr;
+
+        ਜੇ (ਬਫਰ_Src_ਥਾਂ && sameObjectAs(ਬਫਰ_Cap, ਬਫਰ_Src_ਥਾਂ->cap) &&
+            sameObjectAs(tCap, ਥਾਂ->cap)) {
+            cte_ਪਾਓ(ਬਫਰ_Cap, ਬਫਰ_Src_ਥਾਂ, ਬਫਰ_ਥਾਂ);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        ਜੇ (ਨਿਸ਼ਾਨਾ == ਗੰਢ_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    if (updateFlags & thread_control_update_priority) {
-        setPriority(target, priority);
+    ਜੇ (updateFlags & thread_control_update_ਤਰਜੀਹ) {
+        ਸੈੱਟ_ਤਰਜੀਹ(ਨਿਸ਼ਾਨਾ, ਤਰਜੀਹ);
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t invokeTCB_ThreadControlSched(tcb_t *target, cte_t *slot,
-                                         cap_t fh_newCap, cte_t *fh_srcSlot,
-                                         prio_t mcp, prio_t priority,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+exception_t invokeTCB_ThreadControlSched(tcb_t *ਨਿਸ਼ਾਨਾ, cte_t *ਥਾਂ,
+                                         cap_t fh_newCap, cte_t *fh_src_ਥਾਂ,
+                                         prio_t mcp, prio_t ਤਰਜੀਹ,
                                          sched_context_t *sc,
                                          thread_control_flag_t updateFlags)
 {
-    if (updateFlags & thread_control_sched_update_fault) {
-        cap_t tCap = cap_thread_cap_new((word_t)target);
-        exception_t e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ਜੇ (updateFlags & thread_control_sched_update_fault) {
+        cap_t tCap = cap_thread_cap_new((ਸ਼ਬਦ_t)ਨਿਸ਼ਾਨਾ);
+        exception_t e = installTCBCap(ਨਿਸ਼ਾਨਾ, tCap, ਥਾਂ, tcbFaultHandler, fh_newCap, fh_src_ਥਾਂ);
+        ਜੇ (e != EXCEPTION_NONE) {
+            ਵਾਪਸ e;
         }
     }
 
-    if (updateFlags & thread_control_sched_update_mcp) {
-        setMCPriority(target, mcp);
+    ਜੇ (updateFlags & thread_control_sched_update_mcp) {
+        ਸੈੱਟ_MCPriority(ਨਿਸ਼ਾਨਾ, mcp);
     }
 
-    if (updateFlags & thread_control_sched_update_priority) {
-        setPriority(target, priority);
+    ਜੇ (updateFlags & thread_control_sched_update_ਤਰਜੀਹ) {
+        ਸੈੱਟ_ਤਰਜੀਹ(ਨਿਸ਼ਾਨਾ, ਤਰਜੀਹ);
     }
 
-    if (updateFlags & thread_control_sched_update_sc) {
-        if (sc != NULL) {
-            schedContext_bindTCB(sc, target);
-        } else if (sc == NULL) {
-            schedContext_unbindTCB(target->tcbSchedContext);
+    ਜੇ (updateFlags & thread_control_sched_update_sc) {
+        ਜੇ (sc != ਨਿਰਾ) {
+            schedContext_bindTCB(sc, ਨਿਸ਼ਾਨਾ);
+        } ਨਹੀਂਤਾਂ ਜੇ (sc == ਨਿਰਾ) {
+            schedContext_unbindTCB(ਨਿਸ਼ਾਨਾ->tcbSchedContext);
         }
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
 exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
-                                    bool_t suspendSource, bool_t resumeTarget,
-                                    bool_t transferFrame, bool_t transferInteger,
-                                    word_t transferArch)
+                                    bool_t suspend_ਸਰੋਤ, bool_t resume_ਨਿਸ਼ਾਨਾ,
+                                    bool_t transfer_ਚੌਖਟਾ, bool_t transferInteger,
+                                    ਸ਼ਬਦ_t transferArch)
 {
-    if (suspendSource) {
+    ਜੇ (suspend_ਸਰੋਤ) {
         suspend(tcb_src);
     }
 
-    if (resumeTarget) {
+    ਜੇ (resume_ਨਿਸ਼ਾਨਾ) {
         restart(dest);
     }
 
-    if (transferFrame) {
-        word_t i;
-        word_t v;
-        word_t pc;
+    ਜੇ (transfer_ਚੌਖਟਾ) {
+        ਸ਼ਬਦ_t i;
+        ਸ਼ਬਦ_t v;
+        ਸ਼ਬਦ_t pc;
 
-        for (i = 0; i < n_frameRegisters; i++) {
-            v = getRegister(tcb_src, frameRegisters[i]);
-            setRegister(dest, frameRegisters[i], v);
+        ਲਈ (i = 0; i < n_ਚੌਖਟਾ_Registers; i++) {
+            v = get_ਰਜਿਸਟਰ(tcb_src, ਚੌਖਟਾ_Registers[i]);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(dest, ਚੌਖਟਾ_Registers[i], v);
         }
 
         pc = getRestartPC(dest);
-        setNextPC(dest, pc);
+        ਸੈੱਟ_ਅਗਲਾ_PC(dest, pc);
     }
 
-    if (transferInteger) {
-        word_t i;
-        word_t v;
+    ਜੇ (transferInteger) {
+        ਸ਼ਬਦ_t i;
+        ਸ਼ਬਦ_t v;
 
-        for (i = 0; i < n_gpRegisters; i++) {
-            v = getRegister(tcb_src, gpRegisters[i]);
-            setRegister(dest, gpRegisters[i], v);
+        ਲਈ (i = 0; i < n_gpRegisters; i++) {
+            v = get_ਰਜਿਸਟਰ(tcb_src, gpRegisters[i]);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(dest, gpRegisters[i], v);
         }
     }
 
     Arch_postModifyRegisters(dest);
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    ਜੇ (dest == ਗੰਢ_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
     }
 
-    return Arch_performTransfer(transferArch, tcb_src, dest);
+    ਵਾਪਸ Arch_performTransfer(transferArch, tcb_src, dest);
 }
 
 /* ReadRegisters is a special case: replyFromKernel & setMRs are
@@ -1947,172 +1947,172 @@ exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
  * top-level replyFromKernel_success_empty() from running by setting the
  * thread state. Retype does this too.
  */
-exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
-                                    word_t n, word_t arch, bool_t call)
+exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspend_ਸਰੋਤ,
+                                    ਸ਼ਬਦ_t n, ਸ਼ਬਦ_t arch, bool_t call)
 {
-    word_t i, j;
+    ਸ਼ਬਦ_t i, j;
     exception_t e;
     tcb_t *thread;
 
-    thread = NODE_STATE(ksCurThread);
+    thread = ਗੰਢ_STATE(ksCurThread);
 
-    if (suspendSource) {
+    ਜੇ (suspend_ਸਰੋਤ) {
         suspend(tcb_src);
     }
 
-    e = Arch_performTransfer(arch, tcb_src, NODE_STATE(ksCurThread));
-    if (e != EXCEPTION_NONE) {
-        return e;
+    e = Arch_performTransfer(arch, tcb_src, ਗੰਢ_STATE(ksCurThread));
+    ਜੇ (e != EXCEPTION_NONE) {
+        ਵਾਪਸ e;
     }
 
-    if (call) {
-        word_t *ipcBuffer;
+    ਜੇ (call) {
+        ਸ਼ਬਦ_t *ipc_ਬਫਰ;
 
-        ipcBuffer = lookupIPCBuffer(true, thread);
+        ipc_ਬਫਰ = lookupIPCBuffer(true, thread);
 
-        setRegister(thread, badgeRegister, 0);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
 
-        for (i = 0; i < n && i < n_frameRegisters && i < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i],
-                        getRegister(tcb_src, frameRegisters[i]));
+        ਲਈ (i = 0; i < n && i < n_ਚੌਖਟਾ_Registers && i < n_ਸੁਨੇਹਾ_Registers; i++) {
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Registers[i],
+                        get_ਰਜਿਸਟਰ(tcb_src, ਚੌਖਟਾ_Registers[i]));
         }
 
-        if (ipcBuffer != NULL && i < n && i < n_frameRegisters) {
-            for (; i < n && i < n_frameRegisters; i++) {
-                ipcBuffer[i + 1] = getRegister(tcb_src, frameRegisters[i]);
+        ਜੇ (ipc_ਬਫਰ != ਨਿਰਾ && i < n && i < n_ਚੌਖਟਾ_Registers) {
+            ਲਈ (; i < n && i < n_ਚੌਖਟਾ_Registers; i++) {
+                ipc_ਬਫਰ[i + 1] = get_ਰਜਿਸਟਰ(tcb_src, ਚੌਖਟਾ_Registers[i]);
             }
         }
 
         j = i;
 
-        for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n
-             && i + n_frameRegisters < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i + n_frameRegisters],
-                        getRegister(tcb_src, gpRegisters[i]));
+        ਲਈ (i = 0; i < n_gpRegisters && i + n_ਚੌਖਟਾ_Registers < n
+             && i + n_ਚੌਖਟਾ_Registers < n_ਸੁਨੇਹਾ_Registers; i++) {
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Registers[i + n_ਚੌਖਟਾ_Registers],
+                        get_ਰਜਿਸਟਰ(tcb_src, gpRegisters[i]));
         }
 
-        if (ipcBuffer != NULL && i < n_gpRegisters
-            && i + n_frameRegisters < n) {
-            for (; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-                ipcBuffer[i + n_frameRegisters + 1] =
-                    getRegister(tcb_src, gpRegisters[i]);
+        ਜੇ (ipc_ਬਫਰ != ਨਿਰਾ && i < n_gpRegisters
+            && i + n_ਚੌਖਟਾ_Registers < n) {
+            ਲਈ (; i < n_gpRegisters && i + n_ਚੌਖਟਾ_Registers < n; i++) {
+                ipc_ਬਫਰ[i + n_ਚੌਖਟਾ_Registers + 1] =
+                    get_ਰਜਿਸਟਰ(tcb_src, gpRegisters[i]);
             }
         }
 
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, i + j)));
+        ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                        se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, i + j)));
     }
-    setThreadState(thread, ThreadState_Running);
+    ਸੈੱਟ_Thread_State(thread, ThreadState_Running);
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resumeTarget,
-                                     word_t n, word_t arch, word_t *buffer)
+exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resume_ਨਿਸ਼ਾਨਾ,
+                                     ਸ਼ਬਦ_t n, ਸ਼ਬਦ_t arch, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t i;
-    word_t pc;
+    ਸ਼ਬਦ_t i;
+    ਸ਼ਬਦ_t pc;
     exception_t e;
     bool_t archInfo;
 
-    e = Arch_performTransfer(arch, NODE_STATE(ksCurThread), dest);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    e = Arch_performTransfer(arch, ਗੰਢ_STATE(ksCurThread), dest);
+    ਜੇ (e != EXCEPTION_NONE) {
+        ਵਾਪਸ e;
     }
 
-    if (n > n_frameRegisters + n_gpRegisters) {
-        n = n_frameRegisters + n_gpRegisters;
+    ਜੇ (n > n_ਚੌਖਟਾ_Registers + n_gpRegisters) {
+        n = n_ਚੌਖਟਾ_Registers + n_gpRegisters;
     }
 
-    archInfo = Arch_getSanitiseRegisterInfo(dest);
+    archInfo = Arch_get_Sanitise_ਰਜਿਸਟਰ_Info(dest);
 
-    for (i = 0; i < n_frameRegisters && i < n; i++) {
+    ਲਈ (i = 0; i < n_ਚੌਖਟਾ_Registers && i < n; i++) {
         /* Offset of 2 to get past the initial syscall arguments */
-        setRegister(dest, frameRegisters[i],
-                    sanitiseRegister(frameRegisters[i],
-                                     getSyscallArg(i + 2, buffer), archInfo));
+        ਸੈੱਟ_ਰਜਿਸਟਰ(dest, ਚੌਖਟਾ_Registers[i],
+                    sanitise_ਰਜਿਸਟਰ(ਚੌਖਟਾ_Registers[i],
+                                     getSyscallArg(i + 2, ਬਫਰ), archInfo));
     }
 
-    for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-        setRegister(dest, gpRegisters[i],
-                    sanitiseRegister(gpRegisters[i],
-                                     getSyscallArg(i + n_frameRegisters + 2,
-                                                   buffer), archInfo));
+    ਲਈ (i = 0; i < n_gpRegisters && i + n_ਚੌਖਟਾ_Registers < n; i++) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(dest, gpRegisters[i],
+                    sanitise_ਰਜਿਸਟਰ(gpRegisters[i],
+                                     getSyscallArg(i + n_ਚੌਖਟਾ_Registers + 2,
+                                                   ਬਫਰ), archInfo));
     }
 
     pc = getRestartPC(dest);
-    setNextPC(dest, pc);
+    ਸੈੱਟ_ਅਗਲਾ_PC(dest, pc);
 
     Arch_postModifyRegisters(dest);
 
-    if (resumeTarget) {
+    ਜੇ (resume_ਨਿਸ਼ਾਨਾ) {
         restart(dest);
     }
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    ਜੇ (dest == ਗੰਢ_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 exception_t invokeTCB_NotificationControl(tcb_t *tcb, notification_t *ntfnPtr)
 {
-    if (ntfnPtr) {
+    ਜੇ (ntfnPtr) {
         bindNotification(tcb, ntfnPtr);
-    } else {
+    } ਨਹੀਂਤਾਂ {
         unbindNotification(tcb);
     }
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-void setThreadName(tcb_t *tcb, const char *name)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+ਖਾਲੀ ਸੈੱਟ_Thread_Name(tcb_t *tcb, ਅਚਲ ਅੱਖਰ *name)
 {
-    strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, name, TCB_NAME_LENGTH);
+    strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, name, TCB_NAME_ਲੰਮਾਈ);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-word_t setMRs_syscall_error(tcb_t *thread, word_t *receiveIPCBuffer)
+ਸ਼ਬਦ_t ਸੈੱਟ_MRs_syscall_error(tcb_t *thread, ਸ਼ਬਦ_t *receiveIPCBuffer)
 {
-    switch (current_syscall_error.type) {
-    case seL4_InvalidArgument:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidArgumentNumber);
+    ਚੋਣ (current_syscall_error.type) {
+    ਹਾਲਤ se_L4_Invalid_ਦਲੀਲ:
+        ਵਾਪਸ ਸੈੱਟ_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ);
 
-    case seL4_InvalidCapability:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidCapNumber);
+    ਹਾਲਤ seL4_InvalidCapability:
+        ਵਾਪਸ ਸੈੱਟ_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.invalid_Cap_ਸੰਖਿਆ);
 
-    case seL4_IllegalOperation:
-        return 0;
+    ਹਾਲਤ seL4_IllegalOperation:
+        ਵਾਪਸ 0;
 
-    case seL4_RangeError:
-        setMR(thread, receiveIPCBuffer, 0,
+    ਹਾਲਤ seL4_RangeError:
+        ਸੈੱਟ_MR(thread, receiveIPCBuffer, 0,
               current_syscall_error.rangeErrorMin);
-        return setMR(thread, receiveIPCBuffer, 1,
+        ਵਾਪਸ ਸੈੱਟ_MR(thread, receiveIPCBuffer, 1,
                      current_syscall_error.rangeErrorMax);
 
-    case seL4_AlignmentError:
-        return 0;
+    ਹਾਲਤ seL4_AlignmentError:
+        ਵਾਪਸ 0;
 
-    case seL4_FailedLookup:
-        setMR(thread, receiveIPCBuffer, 0,
-              current_syscall_error.failedLookupWasSource ? 1 : 0);
-        return setMRs_lookup_failure(thread, receiveIPCBuffer,
+    ਹਾਲਤ seL4_FailedLookup:
+        ਸੈੱਟ_MR(thread, receiveIPCBuffer, 0,
+              current_syscall_error.failed_Lookup_Was_ਸਰੋਤ ? 1 : 0);
+        ਵਾਪਸ ਸੈੱਟ_MRs_lookup_failure(thread, receiveIPCBuffer,
                                      current_lookup_fault, 1);
 
-    case seL4_TruncatedMessage:
-    case seL4_DeleteFirst:
-    case seL4_RevokeFirst:
-        return 0;
-    case seL4_NotEnoughMemory:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.memoryLeft);
-    default:
+    ਹਾਲਤ se_L4_Truncated_ਸੁਨੇਹਾ:
+    ਹਾਲਤ se_L4_Delete_ਪਹਿਲਾ:
+    ਹਾਲਤ se_L4_Revoke_ਪਹਿਲਾ:
+        ਵਾਪਸ 0;
+    ਹਾਲਤ se_L4_Not_Enough_ਸਮ੍ਰਿਤੀ:
+        ਵਾਪਸ ਸੈੱਟ_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.ਸਮ੍ਰਿਤੀ_ਖੱਬਾ);
+    ਮੂਲ:
         fail("Invalid syscall error");
     }
 }

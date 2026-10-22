@@ -4,146 +4,146 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/object/objecttype.h>
-#include <arch/machine/tlb.h>
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-#include <arch/object/vcpu.h>
-#endif
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/failures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/objecttype.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/tlb.h>
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/vcpu.h>
+#ਜੇ_ਅੰਤ
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_ਚੌਖਟਾ_Type(ਸ਼ਬਦ_t type)
 {
-    switch (type) {
-    case seL4_ARM_SmallPageObject:
-        return true;
-    case seL4_ARM_LargePageObject:
-        return true;
-    case seL4_ARM_SectionObject:
-        return true;
-    case seL4_ARM_SuperSectionObject:
-        return true;
-    default:
-        return false;
+    ਚੋਣ (type) {
+    ਹਾਲਤ se_L4_ARM_Small_ਪੰਨਾ_Object:
+        ਵਾਪਸ true;
+    ਹਾਲਤ se_L4_ARM_Large_ਪੰਨਾ_Object:
+        ਵਾਪਸ true;
+    ਹਾਲਤ seL4_ARM_SectionObject:
+        ਵਾਪਸ true;
+    ਹਾਲਤ seL4_ARM_SuperSectionObject:
+        ਵਾਪਸ true;
+    ਮੂਲ:
+        ਵਾਪਸ false;
     }
 }
 
-deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t Arch_deriveCap(cte_t *ਥਾਂ, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ਚੋਣ (cap_get_capType(cap)) {
+    ਹਾਲਤ cap_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        } ਨਹੀਂਤਾਂ {
             userError("Deriving an unmapped PT cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ਵਾਪਸ ret;
 
-    case cap_page_directory_cap:
-        if (cap_page_directory_cap_get_capPDIsMapped(cap)) {
+    ਹਾਲਤ cap_ਪੰਨਾ_directory_cap:
+        ਜੇ (cap_ਪੰਨਾ_directory_cap_get_cap_PDIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        } ਨਹੀਂਤਾਂ {
             userError("Deriving a PD cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ਵਾਪਸ ret;
 
     /* This is a deviation from haskell, which has only
      * one frame cap type on ARM */
-    case cap_small_frame_cap:
-        ret.cap = cap_small_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    ਹਾਲਤ cap_small_ਚੌਖਟਾ_cap:
+        ret.cap = cap_small_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ASID(cap, asidInvalid);
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
 
-    case cap_frame_cap:
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    ਹਾਲਤ cap_ਚੌਖਟਾ_cap:
+        ret.cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ASID(cap, asidInvalid);
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    ਹਾਲਤ cap_asid_control_cap:
+    ਹਾਲਤ cap_asid_pool_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ cap_vcpu_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
+#ਜੇ_ਅੰਤ
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_SMP_SUPPORT
+    ਹਾਲਤ cap_sgi_signal_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ cap_io_space_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
 
-    case cap_io_page_table_cap:
-        if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+    ਹਾਲਤ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        } ਨਹੀਂਤਾਂ {
             userError("Deriving a IOPT cap without an assigned IOASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
-#endif
-    default:
+        ਵਾਪਸ ret;
+#ਜੇ_ਅੰਤ
+    ਮੂਲ:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap");
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_ਅੰਕੜੇ(bool_t preserve, ਸ਼ਬਦ_t ਅੰਕੜੇ, cap_t cap)
 {
-    return cap;
+    ਵਾਪਸ cap;
 }
 
-cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
+cap_t CONST Arch_ਨਕਾਬ_Cap_Rights(seL4_CapRights_t cap_rights_ਨਕਾਬ, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_small_frame_cap) {
+    ਜੇ (cap_get_capType(cap) == cap_small_ਚੌਖਟਾ_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(
-                        cap_small_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_small_frame_cap_set_capFVMRights(cap,
-                                                    wordFromVMRights(vm_rights));
-    } else if (cap_get_capType(cap) == cap_frame_cap) {
+        vm_rights = vm_Rights_From_ਸ਼ਬਦ(
+                        cap_small_ਚੌਖਟਾ_cap_get_cap_FVMRights(cap));
+        vm_rights = ਨਕਾਬ_VMRights(vm_rights, cap_rights_ਨਕਾਬ);
+        ਵਾਪਸ cap_small_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FVMRights(cap,
+                                                    ਸ਼ਬਦ_From_VMRights(vm_rights));
+    } ਨਹੀਂਤਾਂ ਜੇ (cap_get_capType(cap) == cap_ਚੌਖਟਾ_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(
-                        cap_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_frame_cap_set_capFVMRights(cap,
-                                              wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        vm_rights = vm_Rights_From_ਸ਼ਬਦ(
+                        cap_ਚੌਖਟਾ_cap_get_cap_FVMRights(cap));
+        vm_rights = ਨਕਾਬ_VMRights(vm_rights, cap_rights_ਨਕਾਬ);
+        ਵਾਪਸ cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FVMRights(cap,
+                                              ਸ਼ਬਦ_From_VMRights(vm_rights));
+    } ਨਹੀਂਤਾਂ {
+        ਵਾਪਸ cap;
     }
 }
 
@@ -151,424 +151,424 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_asid_pool_cap:
-        if (final) {
+    ਚੋਣ (cap_get_capType(cap)) {
+    ਹਾਲਤ cap_asid_pool_cap:
+        ਜੇ (final) {
             deleteASIDPool(cap_asid_pool_cap_get_capASIDBase(cap),
                            ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)));
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_page_directory_cap:
-        if (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
-            deleteASID(cap_page_directory_cap_get_capPDMappedASID(cap),
-                       PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap)));
+    ਹਾਲਤ cap_ਪੰਨਾ_directory_cap:
+        ਜੇ (final && cap_ਪੰਨਾ_directory_cap_get_cap_PDIs_Mapped(cap)) {
+            deleteASID(cap_ਪੰਨਾ_directory_cap_get_cap_PDMapped_ASID(cap),
+                       PDE_PTR(cap_ਪੰਨਾ_directory_cap_get_cap_PDBase_Ptr(cap)));
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
-            unmapPageTable(
-                cap_page_table_cap_get_capPTMappedASID(cap),
-                cap_page_table_cap_get_capPTMappedAddress(cap),
-                PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
+    ਹਾਲਤ cap_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (final && cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTIs_Mapped(cap)) {
+            unmap_ਪੰਨਾ_ਸਾਰਣੀ(
+                cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTMapped_ASID(cap),
+                cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTMapped_ਪਤਾ(cap),
+                PTE_PTR(cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTBase_Ptr(cap)));
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_small_frame_cap:
-        if (cap_small_frame_cap_get_capFMappedASID(cap)) {
-#ifdef CONFIG_TK1_SMMU
-            if (isIOSpaceFrameCap(cap)) {
+    ਹਾਲਤ cap_small_ਚੌਖਟਾ_cap:
+        ਜੇ (cap_small_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+            ਜੇ (is_IOSpace_ਚੌਖਟਾ_Cap(cap)) {
                 unmapIOPage(cap);
-                break;
+                ਰੋਕੋ;
             }
-#endif
+#ਜੇ_ਅੰਤ
 
-            unmapPage(ARMSmallPage,
-                      cap_small_frame_cap_get_capFMappedASID(cap),
-                      cap_small_frame_cap_get_capFMappedAddress(cap),
-                      (void *)cap_small_frame_cap_get_capFBasePtr(cap));
+            unmap_ਪੰਨਾ(ARMSmall_ਪੰਨਾ,
+                      cap_small_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap),
+                      cap_small_ਚੌਖਟਾ_cap_get_cap_FMapped_ਪਤਾ(cap),
+                      (ਖਾਲੀ *)cap_small_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap));
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-#ifdef CONFIG_KERNEL_LOG_BUFFER
+    ਹਾਲਤ cap_ਚੌਖਟਾ_cap:
+        ਜੇ (cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_LOG_ਬਫਰ
             /* If the last cap to the user-level log buffer frame is being revoked,
              * reset the ksLog so that the kernel doesn't log anymore
              */
-            if (unlikely(cap_frame_cap_get_capFSize(cap) == ARMSection)) {
-                if (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
-                    ksUserLogBuffer = 0;
+            ਜੇ (unlikely(cap_ਚੌਖਟਾ_cap_get_cap_FSize(cap) == ARMSection)) {
+                ਜੇ (pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap)) == ks_User_Log_ਬਫਰ) {
+                    ks_User_Log_ਬਫਰ = 0;
 
                     /* Invalidate log page table entries */
-                    clearMemory((void *) armKSGlobalLogPT, seL4_PageTableBits);
+                    clear_ਸਮ੍ਰਿਤੀ((ਖਾਲੀ *) armKSGlobalLogPT, se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ);
 
                     cleanCacheRange_PoU((pptr_t) &armKSGlobalLogPT[0],
-                                        (pptr_t) &armKSGlobalLogPT[0] + BIT(seL4_PageTableBits),
-                                        addrFromKPPtr((void *)&armKSGlobalLogPT[0]));
+                                        (pptr_t) &armKSGlobalLogPT[0] + ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ),
+                                        addrFromKPPtr((ਖਾਲੀ *)&armKSGlobalLogPT[0]));
 
-                    for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-                        invalidateTranslationSingle(KS_LOG_PPTR + (idx << seL4_PageBits));
+                    ਲਈ (ਪੂਰਨ idx = 0; idx < ਦੋਆਧਾਰੀ_ਅੰਕ(PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ); idx++) {
+                        invalidateTranslationSingle(KS_LOG_PPTR + (idx << se_L4_ਪੰਨਾ_ਬਿੱਟ));
                     }
 
                     userError("Log buffer frame is invalidated, kernel can't benchmark anymore");
                 }
             }
-#endif /* CONFIG_BENCHMARK_KERNEL_LOG_BUFFER */
+#ਜੇ_ਅੰਤ /* CONFIG_BENCHMARK_KERNEL_LOG_BUFFER */
 
-            unmapPage(cap_frame_cap_get_capFSize(cap),
-                      cap_frame_cap_get_capFMappedASID(cap),
-                      cap_frame_cap_get_capFMappedAddress(cap),
-                      (void *)cap_frame_cap_get_capFBasePtr(cap));
+            unmap_ਪੰਨਾ(cap_ਚੌਖਟਾ_cap_get_cap_FSize(cap),
+                      cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap),
+                      cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ਪਤਾ(cap),
+                      (ਖਾਲੀ *)cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap));
         }
-        break;
+        ਰੋਕੋ;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        if (final) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ cap_vcpu_cap:
+        ਜੇ (final) {
             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
         }
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_SMP_SUPPORT
+    ਹਾਲਤ cap_sgi_signal_cap:
         // do nothing
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
 
 
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap:
-        if (final) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ cap_io_space_cap:
+        ਜੇ (final) {
             clearIOPageDirectory(cap);
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_io_page_table_cap:
-        if (final && cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
-            deleteIOPageTable(cap);
+    ਹਾਲਤ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (final && cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTIs_Mapped(cap)) {
+            delete_IOPage_ਸਾਰਣੀ(cap);
         }
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
 
-    default:
-        break;
+    ਮੂਲ:
+        ਰੋਕੋ;
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    ਵਾਪਸ fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_small_frame_cap:
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_small_frame_cap ||
-            cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
-            botA = generic_frame_cap_get_capFBasePtr(cap_a);
-            botB = generic_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+    ਚੋਣ (cap_get_capType(cap_a)) {
+    ਹਾਲਤ cap_small_ਚੌਖਟਾ_cap:
+    ਹਾਲਤ cap_ਚੌਖਟਾ_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_small_ਚੌਖਟਾ_cap ||
+            cap_get_capType(cap_b) == cap_ਚੌਖਟਾ_cap) {
+            ਸ਼ਬਦ_t botA, botB, ਸਿਖਰ_A, ਸਿਖਰ_B;
+            botA = generic_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_a);
+            botB = generic_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_b);
+            ਸਿਖਰ_A = botA + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(generic_ਚੌਖਟਾ_cap_get_cap_FSize(cap_a)));
+            ਸਿਖਰ_B = botB + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(generic_ਚੌਖਟਾ_cap_get_cap_FSize(cap_b))) ;
+            ਵਾਪਸ ((botA <= botB) && (ਸਿਖਰ_A >= ਸਿਖਰ_B) && (botB <= ਸਿਖਰ_B));
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
+    ਹਾਲਤ cap_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_ਪੰਨਾ_ਸਾਰਣੀ_cap) {
+            ਵਾਪਸ cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTBase_Ptr(cap_a) ==
+                   cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_PTBase_Ptr(cap_b);
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_page_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_directory_cap) {
-            return cap_page_directory_cap_get_capPDBasePtr(cap_a) ==
-                   cap_page_directory_cap_get_capPDBasePtr(cap_b);
+    ਹਾਲਤ cap_ਪੰਨਾ_directory_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_ਪੰਨਾ_directory_cap) {
+            ਵਾਪਸ cap_ਪੰਨਾ_directory_cap_get_cap_PDBase_Ptr(cap_a) ==
+                   cap_ਪੰਨਾ_directory_cap_get_cap_PDBase_Ptr(cap_b);
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+    ਹਾਲਤ cap_asid_control_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            ਵਾਪਸ true;
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    ਹਾਲਤ cap_asid_pool_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            ਵਾਪਸ cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        ਰੋਕੋ;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        if (cap_get_capType(cap_b) == cap_vcpu_cap) {
-            return cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ cap_vcpu_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_vcpu_cap) {
+            ਵਾਪਸ cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
                    cap_vcpu_cap_get_capVCPUPtr(cap_b);
         }
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
-        if (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
-            return (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_SMP_SUPPORT
+    ਹਾਲਤ cap_sgi_signal_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
+            ਵਾਪਸ (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
                     cap_sgi_signal_cap_get_capSGIIRQ(cap_b) &&
                     cap_sgi_signal_cap_get_capSGITarget(cap_a) ==
                     cap_sgi_signal_cap_get_capSGITarget(cap_b));
         }
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
 
 
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap:
-        if (cap_get_capType(cap_b) == cap_io_space_cap) {
-            return cap_io_space_cap_get_capModuleID(cap_a) ==
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ cap_io_space_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_io_space_cap) {
+            ਵਾਪਸ cap_io_space_cap_get_capModuleID(cap_a) ==
                    cap_io_space_cap_get_capModuleID(cap_b);
         }
-        break;
+        ਰੋਕੋ;
 
-    case cap_io_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_io_page_table_cap) {
-            return cap_io_page_table_cap_get_capIOPTBasePtr(cap_a) ==
-                   cap_io_page_table_cap_get_capIOPTBasePtr(cap_b);
+    ਹਾਲਤ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਜੇ (cap_get_capType(cap_b) == cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap) {
+            ਵਾਪਸ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTBase_Ptr(cap_a) ==
+                   cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTBase_Ptr(cap_b);
         }
-        break;
-#endif
+        ਰੋਕੋ;
+#ਜੇ_ਅੰਤ
     }
 
-    return false;
+    ਵਾਪਸ false;
 }
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_small_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_small_frame_cap) {
-            return ((cap_small_frame_cap_get_capFBasePtr(cap_a) ==
-                     cap_small_frame_cap_get_capFBasePtr(cap_b)) &&
-                    ((cap_small_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                     (cap_small_frame_cap_get_capFIsDevice(cap_b) == 0)));
-        } else if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return false;
+    ਜੇ (cap_get_capType(cap_a) == cap_small_ਚੌਖਟਾ_cap) {
+        ਜੇ (cap_get_capType(cap_b) == cap_small_ਚੌਖਟਾ_cap) {
+            ਵਾਪਸ ((cap_small_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_a) ==
+                     cap_small_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_b)) &&
+                    ((cap_small_ਚੌਖਟਾ_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                     (cap_small_ਚੌਖਟਾ_cap_get_cap_FIs_Device(cap_b) == 0)));
+        } ਨਹੀਂਤਾਂ ਜੇ (cap_get_capType(cap_b) == cap_ਚੌਖਟਾ_cap) {
+            ਵਾਪਸ false;
         }
     }
-    if (cap_get_capType(cap_a) == cap_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
-                     cap_frame_cap_get_capFBasePtr(cap_b)) &&
-                    (cap_frame_cap_get_capFSize(cap_a) ==
-                     cap_frame_cap_get_capFSize(cap_b)) &&
-                    ((cap_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                     (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
-        } else if (cap_get_capType(cap_b) == cap_small_frame_cap) {
-            return false;
+    ਜੇ (cap_get_capType(cap_a) == cap_ਚੌਖਟਾ_cap) {
+        ਜੇ (cap_get_capType(cap_b) == cap_ਚੌਖਟਾ_cap) {
+            ਵਾਪਸ ((cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_a) ==
+                     cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap_b)) &&
+                    (cap_ਚੌਖਟਾ_cap_get_cap_FSize(cap_a) ==
+                     cap_ਚੌਖਟਾ_cap_get_cap_FSize(cap_b)) &&
+                    ((cap_ਚੌਖਟਾ_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                     (cap_ਚੌਖਟਾ_cap_get_cap_FIs_Device(cap_b) == 0)));
+        } ਨਹੀਂਤਾਂ ਜੇ (cap_get_capType(cap_b) == cap_small_ਚੌਖਟਾ_cap) {
+            ਵਾਪਸ false;
         }
     }
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    if (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
-        return false;
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_SMP_SUPPORT
+    ਜੇ (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
+        ਵਾਪਸ false;
     }
-#endif
+#ਜੇ_ਅੰਤ
 
-    return Arch_sameRegionAs(cap_a, cap_b);
+    ਵਾਪਸ Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+ਸ਼ਬਦ_t Arch_get_Object_ਮਾਪ(ਸ਼ਬਦ_t t)
 {
-    switch (t) {
-    case seL4_ARM_SmallPageObject:
-        return ARMSmallPageBits;
-    case seL4_ARM_LargePageObject:
-        return ARMLargePageBits;
-    case seL4_ARM_SectionObject:
-        return ARMSectionBits;
-    case seL4_ARM_SuperSectionObject:
-        return ARMSuperSectionBits;
-    case seL4_ARM_PageTableObject:
-        return PTE_SIZE_BITS + PT_INDEX_BITS;
-    case seL4_ARM_PageDirectoryObject:
-        return PDE_SIZE_BITS + PD_INDEX_BITS;
-#ifdef CONFIG_TK1_SMMU
-    case seL4_ARM_IOPageTableObject:
-        return seL4_IOPageTableBits;
-#endif
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_ARM_VCPUObject:
-        return VCPU_SIZE_BITS;
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-    default:
+    ਚੋਣ (t) {
+    ਹਾਲਤ se_L4_ARM_Small_ਪੰਨਾ_Object:
+        ਵਾਪਸ ARMSmall_ਪੰਨਾ_ਬਿੱਟ;
+    ਹਾਲਤ se_L4_ARM_Large_ਪੰਨਾ_Object:
+        ਵਾਪਸ ARMLarge_ਪੰਨਾ_ਬਿੱਟ;
+    ਹਾਲਤ seL4_ARM_SectionObject:
+        ਵਾਪਸ ARMSection_ਬਿੱਟ;
+    ਹਾਲਤ seL4_ARM_SuperSectionObject:
+        ਵਾਪਸ ARMSuper_Section_ਬਿੱਟ;
+    ਹਾਲਤ se_L4_ARM_ਪੰਨਾ_ਸਾਰਣੀ_Object:
+        ਵਾਪਸ PTE_ਮਾਪ_ਬਿੱਟ + PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ;
+    ਹਾਲਤ se_L4_ARM_ਪੰਨਾ_Directory_Object:
+        ਵਾਪਸ PDE_ਮਾਪ_ਬਿੱਟ + PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ se_L4_ARM_IOPage_ਸਾਰਣੀ_Object:
+        ਵਾਪਸ se_L4_IOPage_ਸਾਰਣੀ_ਬਿੱਟ;
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_ARM_VCPUObject:
+        ਵਾਪਸ VCPU_ਮਾਪ_ਬਿੱਟ;
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+    ਮੂਲ:
         fail("Invalid object type");
-        return 0;
+        ਵਾਪਸ 0;
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Arch_createObject(object_t t, ਖਾਲੀ *region_ਅਧਾਰ, ਸ਼ਬਦ_t user_ਮਾਪ, bool_t device_ਸਮ੍ਰਿਤੀ)
 {
-    switch (t) {
-    case seL4_ARM_SmallPageObject:
-        if (deviceMemory) {
+    ਚੋਣ (t) {
+    ਹਾਲਤ se_L4_ARM_Small_ਪੰਨਾ_Object:
+        ਜੇ (device_ਸਮ੍ਰਿਤੀ) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMSmallPageBits))" */
-        } else {
+        } ਨਹੀਂਤਾਂ {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMSmallPageBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMSmallPage)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                                (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(ARMSmall_ਪੰਨਾ)),
+                                addrFromPPtr(region_ਅਧਾਰ));
         }
-        return cap_small_frame_cap_new(
-                   ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory,
-#ifdef CONFIG_TK1_SMMU
+        ਵਾਪਸ cap_small_ਚੌਖਟਾ_cap_new(
+                   ASID_ਨੀਵਾਂ(asidInvalid), VMReadWrite,
+                   0, !!device_ਸਮ੍ਰਿਤੀ,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
                    0,
-#endif
-                   ASID_HIGH(asidInvalid),
-                   (word_t)regionBase);
+#ਜੇ_ਅੰਤ
+                   ASID_ਉੱਚਾ(asidInvalid),
+                   (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
 
-    case seL4_ARM_LargePageObject:
-        if (deviceMemory) {
+    ਹਾਲਤ se_L4_ARM_Large_ਪੰਨਾ_Object:
+        ਜੇ (device_ਸਮ੍ਰਿਤੀ) {
             /** AUXUPD: "(True, ptr_retyps 16
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMLargePageBits))" */
-        } else {
+        } ਨਹੀਂਤਾਂ {
             /** AUXUPD: "(True, ptr_retyps 16
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMLargePageBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMLargePage)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                                (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(ARMLarge_ਪੰਨਾ)),
+                                addrFromPPtr(region_ਅਧਾਰ));
         }
-        return cap_frame_cap_new(
-                   ARMLargePage, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
-                   (word_t)regionBase);
+        ਵਾਪਸ cap_ਚੌਖਟਾ_cap_new(
+                   ARMLarge_ਪੰਨਾ, ASID_ਨੀਵਾਂ(asidInvalid), VMReadWrite,
+                   0, !!device_ਸਮ੍ਰਿਤੀ, ASID_ਉੱਚਾ(asidInvalid),
+                   (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
 
-    case seL4_ARM_SectionObject:
-        if (deviceMemory) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_ARM_SectionObject:
+        ਜੇ (device_ਸਮ੍ਰਿਤੀ) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
             /** AUXUPD: "(True, ptr_retyps 512
                  (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** AUXUPD: "(True, ptr_retyps 256
                  (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSection
                                             (ptr_val \<acute>regionBase)
                                             (unat ARMSectionBits))" */
-        } else {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        } ਨਹੀਂਤਾਂ {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
             /** AUXUPD: "(True, ptr_retyps 512
                  (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** AUXUPD: "(True, ptr_retyps 256
                  (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSection
                                             (ptr_val \<acute>regionBase)
                                             (unat ARMSectionBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMSection)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                                (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(ARMSection)),
+                                addrFromPPtr(region_ਅਧਾਰ));
         }
-        return cap_frame_cap_new(
-                   ARMSection, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
-                   (word_t)regionBase);
+        ਵਾਪਸ cap_ਚੌਖਟਾ_cap_new(
+                   ARMSection, ASID_ਨੀਵਾਂ(asidInvalid), VMReadWrite,
+                   0, !!device_ਸਮ੍ਰਿਤੀ, ASID_ਉੱਚਾ(asidInvalid),
+                   (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
 
-    case seL4_ARM_SuperSectionObject:
-        if (deviceMemory) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_ARM_SuperSectionObject:
+        ਜੇ (device_ਸਮ੍ਰਿਤੀ) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
             /** AUXUPD: "(True, ptr_retyps 8192
                     (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** AUXUPD: "(True, ptr_retyps 4096
                     (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSuperSection
                                                 (ptr_val \<acute>regionBase)
                                                 (unat ARMSuperSectionBits))" */
-        } else {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        } ਨਹੀਂਤਾਂ {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
             /** AUXUPD: "(True, ptr_retyps 8192
                     (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** AUXUPD: "(True, ptr_retyps 4096
                     (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSuperSection
                                                 (ptr_val \<acute>regionBase)
                                                 (unat ARMSuperSectionBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMSuperSection)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                                (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ_For_ਮਾਪ(ARMSuperSection)),
+                                addrFromPPtr(region_ਅਧਾਰ));
         }
-        return cap_frame_cap_new(
-                   ARMSuperSection, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
-                   (word_t)regionBase);
+        ਵਾਪਸ cap_ਚੌਖਟਾ_cap_new(
+                   ARMSuperSection, ASID_ਨੀਵਾਂ(asidInvalid), VMReadWrite,
+                   0, !!device_ਸਮ੍ਰਿਤੀ, ASID_ਉੱਚਾ(asidInvalid),
+                   (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
 
-    case seL4_ARM_PageTableObject:
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ se_L4_ARM_ਪੰਨਾ_ਸਾਰਣੀ_Object:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[256]) ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-        cleanCacheRange_PoU((word_t)regionBase,
-                            (word_t)regionBase + MASK(seL4_PageTableBits),
-                            addrFromPPtr(regionBase));
-        return cap_page_table_cap_new(false, asidInvalid, 0,
-                                      (word_t)regionBase);
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+        cleanCacheRange_PoU((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                            (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ),
+                            addrFromPPtr(region_ਅਧਾਰ));
+        ਵਾਪਸ cap_ਪੰਨਾ_ਸਾਰਣੀ_cap_new(false, asidInvalid, 0,
+                                      (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
 
-    case seL4_ARM_PageDirectoryObject:
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ se_L4_ARM_ਪੰਨਾ_Directory_Object:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pde_C[2048]) ptr))" */
-#else  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਨਹੀਂਤਾਂ  /* CONFIG_ARM_HYPERVISOR_SUPPORT */
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pde_C[4096]) ptr))" */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-        copyGlobalMappings((pde_t *)regionBase);
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+        copyGlobalMappings((pde_t *)region_ਅਧਾਰ);
         /* Clean the entire PD to PoU for table walker */
-        cleanCacheRange_PoU((word_t)regionBase,
-                            (word_t)regionBase + MASK(seL4_PageDirBits),
-                            addrFromPPtr(regionBase));
+        cleanCacheRange_PoU((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                            (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(se_L4_ਪੰਨਾ_Dir_ਬਿੱਟ),
+                            addrFromPPtr(region_ਅਧਾਰ));
 
-        return cap_page_directory_cap_new(false, asidInvalid,
-                                          (word_t)regionBase);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_ARM_VCPUObject:
+        ਵਾਪਸ cap_ਪੰਨਾ_directory_cap_new(false, asidInvalid,
+                                          (ਸ਼ਬਦ_t)region_ਅਧਾਰ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_ARM_VCPUObject:
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: vcpu_C ptr))" */
-        vcpu_init(VCPU_PTR(regionBase));
-        return cap_vcpu_cap_new(VCPU_REF(regionBase));
-#endif
+        vcpu_init(VCPU_PTR(region_ਅਧਾਰ));
+        ਵਾਪਸ cap_vcpu_cap_new(VCPU_REF(region_ਅਧਾਰ));
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_TK1_SMMU
-    case seL4_ARM_IOPageTableObject:
-        cleanCacheRange_RAM((word_t)regionBase,
-                            (word_t)regionBase + MASK(seL4_IOPageTableBits),
-                            addrFromPPtr(regionBase));
-        return cap_io_page_table_cap_new(0, asidInvalid, (word_t)regionBase, 0);
-#endif
-    default:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ se_L4_ARM_IOPage_ਸਾਰਣੀ_Object:
+        cleanCacheRange_RAM((ਸ਼ਬਦ_t)region_ਅਧਾਰ,
+                            (ਸ਼ਬਦ_t)region_ਅਧਾਰ + ਨਕਾਬ(se_L4_IOPage_ਸਾਰਣੀ_ਬਿੱਟ),
+                            addrFromPPtr(region_ਅਧਾਰ));
+        ਵਾਪਸ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_new(0, asidInvalid, (ਸ਼ਬਦ_t)region_ਅਧਾਰ, 0);
+#ਜੇ_ਅੰਤ
+    ਮੂਲ:
         /*
          * This is a conflation of the haskell error: "Arch.createNewCaps
          * got an API type" and the case where an invalid object type is
@@ -578,48 +578,48 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     }
 }
 
-exception_t Arch_decodeInvocation(word_t invLabel, word_t length, cptr_t cptr,
-                                  cte_t *slot, cap_t cap,
-                                  bool_t call, word_t *buffer)
+exception_t Arch_decodeInvocation(ਸ਼ਬਦ_t invLabel, ਸ਼ਬਦ_t ਲੰਮਾਈ, cptr_t cptr,
+                                  cte_t *ਥਾਂ, cap_t cap,
+                                  bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     /* The C parser cannot handle a switch statement with only a default
      * case. So we need to do some gymnastics to remove the switch if
      * there are no other cases */
-#if defined(CONFIG_TK1_SMMU) || defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
-    switch (cap_get_capType(cap)) {
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap:
-        return decodeARMIOSpaceInvocation(invLabel, cap);
-    case cap_io_page_table_cap:
-        return decodeARMIOPTInvocation(invLabel, length, slot, cap, buffer);
-#endif
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        return decodeARMVCPUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-#endif /* end of CONFIG_ARM_HYPERVISOR_SUPPORT */
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
-        return decodeSGISignalInvocation(invLabel, length, cap, buffer);
-#endif /* end of !CONFIG_ENABLE_SMP_SUPPORT */
+#ਜੇ defined(CONFIG_TK1_SMMU) || defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
+    ਚੋਣ (cap_get_capType(cap)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
+    ਹਾਲਤ cap_io_space_cap:
+        ਵਾਪਸ decodeARMIOSpaceInvocation(invLabel, cap);
+    ਹਾਲਤ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        ਵਾਪਸ decodeARMIOPTInvocation(invLabel, ਲੰਮਾਈ, ਥਾਂ, cap, ਬਫਰ);
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ cap_vcpu_cap:
+        ਵਾਪਸ decodeARMVCPUInvocation(invLabel, ਲੰਮਾਈ, cptr, ਥਾਂ, cap, call, ਬਫਰ);
+#ਜੇ_ਅੰਤ /* end of CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_SMP_SUPPORT
+    ਹਾਲਤ cap_sgi_signal_cap:
+        ਵਾਪਸ decodeSGISignalInvocation(invLabel, ਲੰਮਾਈ, cap, ਬਫਰ);
+#ਜੇ_ਅੰਤ /* end of !CONFIG_ENABLE_SMP_SUPPORT */
 
-    default:
-#else
+    ਮੂਲ:
+#ਨਹੀਂਤਾਂ
 {
-#endif
-    return decodeARMMMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+#ਜੇ_ਅੰਤ
+    ਵਾਪਸ decodeARMMMUInvocation(invLabel, ਲੰਮਾਈ, cptr, ਥਾਂ, cap, call, ਬਫਰ);
 }
 }
 
-void
+ਖਾਲੀ
 Arch_prepareThreadDelete(tcb_t * thread) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    if (thread->tcbArch.tcbVCPU) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਜੇ (thread->tcbArch.tcbVCPU) {
         dissociateVCPUTCB(thread->tcbArch.tcbVCPU, thread);
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-#ifdef CONFIG_HAVE_FPU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
     fpuRelease(thread);
-#endif
+#ਜੇ_ਅੰਤ
 }
 

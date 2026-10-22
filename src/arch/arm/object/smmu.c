@@ -3,385 +3,385 @@
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_SMMU
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/smmu.h>
 
-static exception_t checkARMCBVspace(cap_t cap)
+ਸਥਿਰ exception_t checkARMCBVspace(cap_t cap)
 {
-    word_t cb = cap_cb_cap_get_capCB(cap);
-    cte_t *cbSlot = smmuStateCBNode + cb;
-    if (unlikely(!isVTableRoot(cbSlot->cap))) {
-        return EXCEPTION_SYSCALL_ERROR;
+    ਸ਼ਬਦ_t cb = cap_cb_cap_get_capCB(cap);
+    cte_t *cb_ਥਾਂ = smmuStateCBNode + cb;
+    ਜੇ (unlikely(!is_VTable_ਜੜ੍ਹ(cb_ਥਾਂ->cap))) {
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeARMSIDControlInvocation(word_t label, word_t length, cptr_t cptr,
-                                          cte_t *srcSlot, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMSIDControlInvocation(ਸ਼ਬਦ_t label, ਸ਼ਬਦ_t ਲੰਮਾਈ, cptr_t cptr,
+                                          cte_t *src_ਥਾਂ, cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
 
-    word_t index, depth, sid;
-    cte_t *destSlot;
+    ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ, sid;
+    cte_t *dest_ਥਾਂ;
     cap_t cnodeCap;
-    lookupSlot_ret_t lu_ret;
-    exception_t status;
-    uint32_t faultStatus, faultSyndrome_0, faultSyndrome_1;
+    lookup_ਥਾਂ_ret_t lu_ret;
+    exception_t ਸਥਿਤੀ;
+    uint32_t fault_ਸਥਿਤੀ_2, faultSyndrome_0, faultSyndrome_1;
     tcb_t *thread;
 
-    if (label == ARMSIDGetFault) {
-        thread = NODE_STATE(ksCurThread);
-        smmu_read_fault_state(&faultStatus, &faultSyndrome_0, &faultSyndrome_1);
-        if (call) {
-            word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-            setRegister(thread, badgeRegister, 0);
-            setMR(thread, ipcBuffer, 0, faultStatus);
-            setMR(thread, ipcBuffer, 1, faultSyndrome_0);
-            setMR(thread, ipcBuffer, 2, faultSyndrome_1);
-            setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                            seL4_MessageInfo_new(0, 0, 0, 3)));
+    ਜੇ (label == ARMSIDGetFault) {
+        thread = ਗੰਢ_STATE(ksCurThread);
+        smmu_read_fault_state(&fault_ਸਥਿਤੀ_2, &faultSyndrome_0, &faultSyndrome_1);
+        ਜੇ (call) {
+            ਸ਼ਬਦ_t *ipc_ਬਫਰ = lookupIPCBuffer(true, thread);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
+            ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 0, fault_ਸਥਿਤੀ_2);
+            ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 1, faultSyndrome_0);
+            ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 2, faultSyndrome_1);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                            se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, 3)));
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-        return EXCEPTION_NONE;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+        ਵਾਪਸ EXCEPTION_NONE;
     }
 
-    if (label == ARMSIDClearFault) {
+    ਜੇ (label == ARMSIDClearFault) {
         smmu_clear_fault_state();
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return EXCEPTION_NONE;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ EXCEPTION_NONE;
     }
 
-    if (label != ARMSIDIssueSIDManager) {
+    ਜੇ (label != ARMSIDIssueSIDManager) {
         userError("SIDControl: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (length < 3 || current_extra_caps.excaprefs[0] == NULL) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (ਲੰਮਾਈ < 3 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    sid = getSyscallArg(0, buffer);
-    index = getSyscallArg(1, buffer);
-    depth = getSyscallArg(2, buffer);
+    sid = getSyscallArg(0, ਬਫਰ);
+    ਸੂਚਕਾਂਕ = getSyscallArg(1, ਬਫਰ);
+    ਡੂੰਘਾਈ = getSyscallArg(2, ਬਫਰ);
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (sid >= SMMU_MAX_SID) {
+    ਜੇ (sid >= SMMU_MAX_SID) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = SMMU_MAX_SID - 1;
-        userError("Rejecting request for SID %u. SID is greater than or equal to SMMU_MAX_SID.", (int)sid);
-        return EXCEPTION_SYSCALL_ERROR;
+        userError("Rejecting request for SID %u. SID is greater than or equal to SMMU_MAX_SID.", (ਪੂਰਨ)sid);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (smmuStateSIDTable[sid]) {
-        current_syscall_error.type = seL4_RevokeFirst;
-        userError("Rejecting request for SID %u. Already active.", (int)sid);
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (smmuStateSIDTable[sid]) {
+        current_syscall_error.type = se_L4_Revoke_ਪਹਿਲਾ;
+        userError("Rejecting request for SID %u. Already active.", (ਪੂਰਨ)sid);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookup_ਨਿਸ਼ਾਨਾ_ਥਾਂ(cnodeCap, ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ);
+    ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("Target slot for new SID Handler cap invalid: cap %lu, SID %u.",
-                  getExtraCPtr(buffer, 0), (int)sid);
-        return lu_ret.status;
+                  getExtraCPtr(ਬਫਰ, 0), (ਪੂਰਨ)sid);
+        ਵਾਪਸ lu_ret.ਸਥਿਤੀ;
     }
-    destSlot = lu_ret.slot;
-    status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
+    dest_ਥਾਂ = lu_ret.ਥਾਂ;
+    ਸਥਿਤੀ = ensure_ਖਾਲੀ_ਥਾਵਾਂ_ਥਾਂ(dest_ਥਾਂ);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("Target slot for new SID Handler cap not empty: cap %lu, SID %u.",
-                  getExtraCPtr(buffer, 0), (int)sid);
-        return status;
+                  getExtraCPtr(ਬਫਰ, 0), (ਪੂਰਨ)sid);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
     smmuStateSIDTable[sid] = true;
-    cteInsert(cap_sid_cap_new(sid), srcSlot, destSlot);
-    return EXCEPTION_NONE;
+    cte_ਪਾਓ(cap_sid_cap_new(sid), src_ਥਾਂ, dest_ਥਾਂ);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeARMSIDInvocation(word_t label, word_t length, cptr_t cptr,
-                                   cte_t *srcSlot, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMSIDInvocation(ਸ਼ਬਦ_t label, ਸ਼ਬਦ_t ਲੰਮਾਈ, cptr_t cptr,
+                                   cte_t *src_ਥਾਂ, cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     cap_t cbCap;
-    cte_t *cbCapSlot;
-    cte_t *cbAssignSlot;
-    exception_t status;
-    word_t sid;
+    cte_t *cb_Cap_ਥਾਂ;
+    cte_t *cb_ਸੌਂਪੋ_ਥਾਂ;
+    exception_t ਸਥਿਤੀ;
+    ਸ਼ਬਦ_t sid;
 
-    switch (label) {
-    case ARMSIDBindCB:
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+    ਚੋਣ (label) {
+    ਹਾਲਤ ARMSIDBindCB:
+        ਜੇ (unlikely(current_extra_caps.excaprefs[0] == ਨਿਰਾ)) {
             userError("ARMSIDBindCB: Invalid CB cap.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        cbCapSlot = current_extra_caps.excaprefs[0];
-        cbCap = cbCapSlot->cap;
-        if (unlikely(cap_get_capType(cbCap) != cap_cb_cap)) {
+        cb_Cap_ਥਾਂ = current_extra_caps.excaprefs[0];
+        cbCap = cb_Cap_ਥਾਂ->cap;
+        ਜੇ (unlikely(cap_get_capType(cbCap) != cap_cb_cap)) {
             userError("ARMSIDBindCB: Invalid CB cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        if (unlikely(checkARMCBVspace(cbCap) != EXCEPTION_NONE)) {
+        ਜੇ (unlikely(checkARMCBVspace(cbCap) != EXCEPTION_NONE)) {
             userError("ARMSIDBindCB: Invalid CB cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
         sid = cap_sid_cap_get_capSID(cap);
-        cbAssignSlot = smmuStateSIDNode + sid;
-        status = ensureEmptySlot(cbAssignSlot);
-        if (status != EXCEPTION_NONE) {
+        cb_ਸੌਂਪੋ_ਥਾਂ = smmuStateSIDNode + sid;
+        ਸਥਿਤੀ = ensure_ਖਾਲੀ_ਥਾਵਾਂ_ਥਾਂ(cb_ਸੌਂਪੋ_ਥਾਂ);
+        ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
             userError("ARMSIDBindCB: The SID is already bound with a context bank.");
-            return status;
+            ਵਾਪਸ ਸਥਿਤੀ;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
         /*binding the sid to cb in SMMU*/
         smmu_sid_bind_cb(sid, cap_cb_cap_get_capCB(cbCap));
         /* Building the connection between SID and CB caps by placing a
          * copy of the given cb cap in sid's cnode*/
-        cteInsert(cbCap, cbCapSlot, cbAssignSlot);
+        cte_ਪਾਓ(cbCap, cb_Cap_ਥਾਂ, cb_ਸੌਂਪੋ_ਥਾਂ);
         /* Recording the SID number in the copied CB cap.
          * Deleting the copied CB cap will trigger unbinding
          * operations. As a CB can be used (bound)
          * by multiple SID caps, each copied CB caps resulted from
          * binding operations keeps track of its serving SID numbers.*/
-        cap_cb_cap_ptr_set_capBindSID(&(cbAssignSlot->cap), sid);
-        return EXCEPTION_NONE;
+        cap_cb_cap_ptr_ਸੈੱਟ_cap_Bind_SID(&(cb_ਸੌਂਪੋ_ਥਾਂ->cap), sid);
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    case ARMSIDUnbindCB:
+    ਹਾਲਤ ARMSIDUnbindCB:
         sid = cap_sid_cap_get_capSID(cap);
-        cbAssignSlot = smmuStateSIDNode + sid;
-        if (unlikely(cap_get_capType(cbAssignSlot->cap) != cap_cb_cap)) {
+        cb_ਸੌਂਪੋ_ਥਾਂ = smmuStateSIDNode + sid;
+        ਜੇ (unlikely(cap_get_capType(cb_ਸੌਂਪੋ_ਥਾਂ->cap) != cap_cb_cap)) {
             userError("ARMSIDUnbindCB: The SID is not assigned with a context bank.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        status = cteDelete(cbAssignSlot, true);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        ਸਥਿਤੀ = cteDelete(cb_ਸੌਂਪੋ_ਥਾਂ, true);
+        ਜੇ (unlikely(ਸਥਿਤੀ != EXCEPTION_NONE)) {
             userError("ARMSIDUnbindCB: the Assigned context bank cannot be unassigned.");
-            return status;
+            ਵਾਪਸ ਸਥਿਤੀ;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return EXCEPTION_NONE;
-    default:
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ EXCEPTION_NONE;
+    ਮੂਲ:
         userError("ARMSID: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
 exception_t smmu_delete_sid(cap_t cap)
 {
-    word_t sid = cap_sid_cap_get_capSID(cap);
-    cte_t *cbAssignSlot = smmuStateSIDNode + sid;
-    exception_t status = EXCEPTION_NONE;
+    ਸ਼ਬਦ_t sid = cap_sid_cap_get_capSID(cap);
+    cte_t *cb_ਸੌਂਪੋ_ਥਾਂ = smmuStateSIDNode + sid;
+    exception_t ਸਥਿਤੀ = EXCEPTION_NONE;
     /*deleting the assigned context bank cap if exsits*/
-    if (unlikely(cap_get_capType(cbAssignSlot->cap) == cap_cb_cap)) {
-        status = cteDelete(cbAssignSlot, true);
+    ਜੇ (unlikely(cap_get_capType(cb_ਸੌਂਪੋ_ਥਾਂ->cap) == cap_cb_cap)) {
+        ਸਥਿਤੀ = cteDelete(cb_ਸੌਂਪੋ_ਥਾਂ, true);
     }
     smmuStateSIDTable[sid] = false;
-    return status;
+    ਵਾਪਸ ਸਥਿਤੀ;
 }
 
-exception_t decodeARMCBControlInvocation(word_t label, word_t length, cptr_t cptr,
-                                         cte_t *srcSlot, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMCBControlInvocation(ਸ਼ਬਦ_t label, ਸ਼ਬਦ_t ਲੰਮਾਈ, cptr_t cptr,
+                                         cte_t *src_ਥਾਂ, cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
 
-    word_t index, depth, cb;
-    cte_t *destSlot;
+    ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ, cb;
+    cte_t *dest_ਥਾਂ;
     cap_t cnodeCap;
-    lookupSlot_ret_t lu_ret;
-    exception_t status;
+    lookup_ਥਾਂ_ret_t lu_ret;
+    exception_t ਸਥਿਤੀ;
 
-    if (label == ARMCBTLBInvalidateAll) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    ਜੇ (label == ARMCBTLBInvalidateAll) {
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
         smmu_tlb_invalidate_all();
-        return EXCEPTION_NONE;
+        ਵਾਪਸ EXCEPTION_NONE;
     }
 
-    if (label != ARMCBIssueCBManager) {
+    ਜੇ (label != ARMCBIssueCBManager) {
         userError("ARMCBControl: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (length < 3 || current_extra_caps.excaprefs[0] == NULL) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (ਲੰਮਾਈ < 3 || current_extra_caps.excaprefs[0] == ਨਿਰਾ) {
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cb = getSyscallArg(0, buffer);
-    index = getSyscallArg(1, buffer);
-    depth = getSyscallArg(2, buffer);
+    cb = getSyscallArg(0, ਬਫਰ);
+    ਸੂਚਕਾਂਕ = getSyscallArg(1, ਬਫਰ);
+    ਡੂੰਘਾਈ = getSyscallArg(2, ਬਫਰ);
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cb >= SMMU_MAX_CB) {
+    ਜੇ (cb >= SMMU_MAX_CB) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = SMMU_MAX_CB - 1;
-        userError("Rejecting request for CB %u. CB is greater than or equal to SMMU_MAX_CB.", (int)cb);
-        return EXCEPTION_SYSCALL_ERROR;
+        userError("Rejecting request for CB %u. CB is greater than or equal to SMMU_MAX_CB.", (ਪੂਰਨ)cb);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (smmuStateCBTable[cb]) {
-        current_syscall_error.type = seL4_RevokeFirst;
-        userError("Rejecting request for CB %u. Already active.", (int)cb);
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (smmuStateCBTable[cb]) {
+        current_syscall_error.type = se_L4_Revoke_ਪਹਿਲਾ;
+        userError("Rejecting request for CB %u. Already active.", (ਪੂਰਨ)cb);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookup_ਨਿਸ਼ਾਨਾ_ਥਾਂ(cnodeCap, ਸੂਚਕਾਂਕ, ਡੂੰਘਾਈ);
+    ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("Target slot for new CB Handler cap invalid: cap %lu, CB %u.",
-                  getExtraCPtr(buffer, 0), (int)cb);
-        return lu_ret.status;
+                  getExtraCPtr(ਬਫਰ, 0), (ਪੂਰਨ)cb);
+        ਵਾਪਸ lu_ret.ਸਥਿਤੀ;
     }
-    destSlot = lu_ret.slot;
-    status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
+    dest_ਥਾਂ = lu_ret.ਥਾਂ;
+    ਸਥਿਤੀ = ensure_ਖਾਲੀ_ਥਾਵਾਂ_ਥਾਂ(dest_ਥਾਂ);
+    ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
         userError("Target slot for new CB Handler cap not empty: cap %lu, CB %u.",
-                  getExtraCPtr(buffer, 0), (int)cb);
-        return status;
+                  getExtraCPtr(ਬਫਰ, 0), (ਪੂਰਨ)cb);
+        ਵਾਪਸ ਸਥਿਤੀ;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
     smmuStateCBTable[cb] = true;
-    cteInsert(cap_cb_cap_new(SID_INVALID, cb), srcSlot, destSlot);
-    return EXCEPTION_NONE;
+    cte_ਪਾਓ(cap_cb_cap_new(SID_INVALID, cb), src_ਥਾਂ, dest_ਥਾਂ);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeARMCBInvocation(word_t label, word_t length, cptr_t cptr,
-                                  cte_t *srcSlot, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMCBInvocation(ਸ਼ਬਦ_t label, ਸ਼ਬਦ_t ਲੰਮਾਈ, cptr_t cptr,
+                                  cte_t *src_ਥਾਂ, cap_t cap, bool_t call, ਸ਼ਬਦ_t *ਬਫਰ)
 {
 
     cap_t vspaceCap;
-    cte_t *vspaceCapSlot;
-    cte_t *cbSlot;
-    exception_t status;
-    word_t cb;
-    uint32_t faultStatus;
-    word_t faultAddress;
+    cte_t *vspace_Cap_ਥਾਂ;
+    cte_t *cb_ਥਾਂ;
+    exception_t ਸਥਿਤੀ;
+    ਸ਼ਬਦ_t cb;
+    uint32_t fault_ਸਥਿਤੀ_2;
+    ਸ਼ਬਦ_t fault_ਪਤਾ;
     tcb_t *thread;
 
-    switch (label) {
-    case ARMCBTLBInvalidate:
-        if (unlikely(checkARMCBVspace(cap) != EXCEPTION_NONE)) {
+    ਚੋਣ (label) {
+    ਹਾਲਤ ARMCBTLBInvalidate:
+        ਜੇ (unlikely(checkARMCBVspace(cap) != EXCEPTION_NONE)) {
             userError("ARMCBTLBInvalidate: the CB does not have a vspace root.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
         cb = cap_cb_cap_get_capCB(cap);
-        cbSlot = smmuStateCBNode + cb;
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        smmu_tlb_invalidate_cb(cb, cap_vspace_cap_get_capVSMappedASID(cbSlot->cap));
-        return EXCEPTION_NONE;
+        cb_ਥਾਂ = smmuStateCBNode + cb;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        smmu_tlb_invalidate_cb(cb, cap_vspace_cap_get_capVSMappedASID(cb_ਥਾਂ->cap));
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    case ARMCBAssignVspace:
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+    ਹਾਲਤ ARMCBAssignVspace:
+        ਜੇ (unlikely(current_extra_caps.excaprefs[0] == ਨਿਰਾ)) {
+            current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
 
-        vspaceCapSlot = current_extra_caps.excaprefs[0];
-        vspaceCap = vspaceCapSlot->cap;
+        vspace_Cap_ਥਾਂ = current_extra_caps.excaprefs[0];
+        vspaceCap = vspace_Cap_ਥਾਂ->cap;
 
-        if (unlikely(!isVTableRoot(vspaceCap) || !cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
+        ਜੇ (unlikely(!is_VTable_ਜੜ੍ਹ(vspaceCap) || !cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
             userError("ARMCBAssignVspace: the vspace is invalid");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 1;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
 
         /*the cb number must be valid as it is created via the ARMCBIssueCBManager*/
         cb = cap_cb_cap_get_capCB(cap);
-        cbSlot = smmuStateCBNode + cb;
-        status = ensureEmptySlot(cbSlot);
-        if (status != EXCEPTION_NONE) {
+        cb_ਥਾਂ = smmuStateCBNode + cb;
+        ਸਥਿਤੀ = ensure_ਖਾਲੀ_ਥਾਵਾਂ_ਥਾਂ(cb_ਥਾਂ);
+        ਜੇ (ਸਥਿਤੀ != EXCEPTION_NONE) {
             userError("ARMCBAssignVspace: the CB already assigned with a vspace root.");
-            return status;
+            ਵਾਪਸ ਸਥਿਤੀ;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
         /*setting up vspace for the context bank in SMMU*/
-        smmu_cb_assign_vspace(cb, VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceCap)),
+        smmu_cb_ਸੌਂਪੋ_vspace(cb, VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceCap)),
                               cap_vspace_cap_get_capVSMappedASID(vspaceCap));
         /*Connecting vspace cap to context bank*/
-        cteInsert(vspaceCap, vspaceCapSlot, cbSlot);
-        cap_vspace_cap_ptr_set_capVSMappedCB(&(cbSlot->cap), cb);
+        cte_ਪਾਓ(vspaceCap, vspace_Cap_ਥਾਂ, cb_ਥਾਂ);
+        cap_vspace_cap_ptr_ਸੈੱਟ_cap_VSMapped_CB(&(cb_ਥਾਂ->cap), cb);
         /*set relationship between CB and ASID*/
-        smmuStateCBAsidTable[cb] = cap_vspace_cap_get_capVSMappedASID(vspaceCap);
+        smmu_State_CBAsid_ਸਾਰਣੀ[cb] = cap_vspace_cap_get_capVSMappedASID(vspaceCap);
         increaseASIDBindCB(cap_vspace_cap_get_capVSMappedASID(vspaceCap));
-        return EXCEPTION_NONE;
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    case ARMCBUnassignVspace:
-        if (unlikely(checkARMCBVspace(cap) != EXCEPTION_NONE)) {
+    ਹਾਲਤ ARMCBUnassignVspace:
+        ਜੇ (unlikely(checkARMCBVspace(cap) != EXCEPTION_NONE)) {
             userError("ARMCBUnassignVspace: the CB does not have an assigned VSpace.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
         cb = cap_cb_cap_get_capCB(cap);
-        cbSlot = smmuStateCBNode + cb;
-        status = cteDelete(cbSlot, true);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        cb_ਥਾਂ = smmuStateCBNode + cb;
+        ਸਥਿਤੀ = cteDelete(cb_ਥਾਂ, true);
+        ਜੇ (unlikely(ਸਥਿਤੀ != EXCEPTION_NONE)) {
             userError("ARMCBUnassignVspace: the Assigned VSpace cannot be deleted.");
-            return status;
+            ਵਾਪਸ ਸਥਿਤੀ;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return EXCEPTION_NONE;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    case ARMCBGetFault:
-        thread = NODE_STATE(ksCurThread);
-        smmu_cb_read_fault_state(cap_cb_cap_get_capCB(cap), &faultStatus, &faultAddress);
-        if (call) {
-            word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-            setRegister(thread, badgeRegister, 0);
-            setMR(thread, ipcBuffer, 0, faultStatus);
-            setMR(thread, ipcBuffer, 1, faultAddress);
-            setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                            seL4_MessageInfo_new(0, 0, 0, 2)));
+    ਹਾਲਤ ARMCBGetFault:
+        thread = ਗੰਢ_STATE(ksCurThread);
+        smmu_cb_read_fault_state(cap_cb_cap_get_capCB(cap), &fault_ਸਥਿਤੀ_2, &fault_ਪਤਾ);
+        ਜੇ (call) {
+            ਸ਼ਬਦ_t *ipc_ਬਫਰ = lookupIPCBuffer(true, thread);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
+            ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 0, fault_ਸਥਿਤੀ_2);
+            ਸੈੱਟ_MR(thread, ipc_ਬਫਰ, 1, fault_ਪਤਾ);
+            ਸੈੱਟ_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(
+                            se_L4_ਸੁਨੇਹਾ_Info_new(0, 0, 0, 2)));
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-        return EXCEPTION_NONE;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    case ARMCBClearFault:
+    ਹਾਲਤ ARMCBClearFault:
         smmu_cb_clear_fault_state(cap_cb_cap_get_capCB(cap));
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return EXCEPTION_NONE;
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ EXCEPTION_NONE;
 
-    default:
+    ਮੂਲ:
         userError("ARMCBInvocation: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
 
 exception_t smmu_delete_cb(cap_t cap)
 {
-    word_t cb = cap_cb_cap_get_capCB(cap);
-    cte_t *cbSlot;
-    exception_t status = EXCEPTION_NONE;
+    ਸ਼ਬਦ_t cb = cap_cb_cap_get_capCB(cap);
+    cte_t *cb_ਥਾਂ;
+    exception_t ਸਥਿਤੀ = EXCEPTION_NONE;
     /*deleting assigned vspace root if exists*/
-    if (unlikely(checkARMCBVspace(cap) == EXCEPTION_NONE)) {
-        cbSlot = smmuStateCBNode + cb;
+    ਜੇ (unlikely(checkARMCBVspace(cap) == EXCEPTION_NONE)) {
+        cb_ਥਾਂ = smmuStateCBNode + cb;
         /*the relationship between CB and ASID is reset at the vspace deletion
         triggered by the cteDelete*/
-        status = cteDelete(cbSlot, true);
+        ਸਥਿਤੀ = cteDelete(cb_ਥਾਂ, true);
     }
     smmuStateCBTable[cb] = false;
-    return status;
+    ਵਾਪਸ ਸਥਿਤੀ;
 }
 
-void smmu_cb_delete_vspace(word_t cb, asid_t asid)
+ਖਾਲੀ smmu_cb_delete_vspace(ਸ਼ਬਦ_t cb, asid_t asid)
 {
     /* Deleting the vspace cap stored in context bank's CNode, causing:
      * -reset the relationship between context bank and vspace's ASID
      * -disable the context bank as its vspace no longer exists*/
-    smmuStateCBAsidTable[cb] = ASID_INVALID;
+    smmu_State_CBAsid_ਸਾਰਣੀ[cb] = ASID_INVALID;
     decreaseASIDBindCB(asid);
     smmu_cb_disable(cb, asid);
 }
 
-void invalidateSMMUTLBByASID(asid_t asid, word_t bind_cb)
+ਖਾਲੀ invalidateSMMUTLBByASID(asid_t asid, ਸ਼ਬਦ_t bind_cb)
 {
     /* Due to the requirement of one vspace (ASID) can be shared by
      * multiple threads and drivers, there is no obvious way to
@@ -389,24 +389,24 @@ void invalidateSMMUTLBByASID(asid_t asid, word_t bind_cb)
      * search. Another possible solution is representing all context banks in
      * bitmaps, which also requires a search. This operation can only be triggered
      * by ASID invalidation or similar operations, hence the performance is not a major issue.*/
-    for (int cb = 0; cb < SMMU_MAX_CB && bind_cb; cb++) {
-        if (unlikely(smmuStateCBAsidTable[cb] == asid)) {
+    ਲਈ (ਪੂਰਨ cb = 0; cb < SMMU_MAX_CB && bind_cb; cb++) {
+        ਜੇ (unlikely(smmu_State_CBAsid_ਸਾਰਣੀ[cb] == asid)) {
             smmu_tlb_invalidate_cb(cb, asid);
             bind_cb--;
         }
     }
 }
 
-void invalidateSMMUTLBByASIDVA(asid_t asid, vptr_t vaddr, word_t bind_cb)
+ਖਾਲੀ invalidateSMMUTLBByASIDVA(asid_t asid, vptr_t vaddr, ਸ਼ਬਦ_t bind_cb)
 {
     /* Implemented in the same way as invalidateSMMUTLBByASID */
-    for (int cb = 0; cb < SMMU_MAX_CB && bind_cb; cb++) {
-        if (unlikely(smmuStateCBAsidTable[cb] == asid)) {
+    ਲਈ (ਪੂਰਨ cb = 0; cb < SMMU_MAX_CB && bind_cb; cb++) {
+        ਜੇ (unlikely(smmu_State_CBAsid_ਸਾਰਣੀ[cb] == asid)) {
             smmu_tlb_invalidate_cb_va(cb, asid, vaddr);
             bind_cb--;
         }
     }
 }
 
-#endif
+#ਜੇ_ਅੰਤ
 

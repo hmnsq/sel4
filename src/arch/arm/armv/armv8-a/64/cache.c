@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ cleanByWSL(ਸ਼ਬਦ_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm ਅਸਥਿਰ("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ cleanInvalidateByWSL(ਸ਼ਬਦ_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm ਅਸਥਿਰ("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t readCLID(ਖਾਲੀ)
 {
-    word_t CLID;
+    ਸ਼ਬਦ_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    ਵਾਪਸ CLID;
 }
 
-#define LOUU(x)    (((x) >> 27)        & MASK(3))
-#define LOC(x)     (((x) >> 24)        & MASK(3))
-#define LOUIS(x)   (((x) >> 21)        & MASK(3))
-#define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ LOUU(x)    (((x) >> 27)        & ਨਕਾਬ(3))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ LOC(x)     (((x) >> 24)        & ਨਕਾਬ(3))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ LOUIS(x)   (((x) >> 21)        & ਨਕਾਬ(3))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ CTYPE(x,n) (((x) >> (n*3))     & ਨਕਾਬ(3))
 
-enum arm_cache_type {
+ਗਿਣਤੀ arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t read_Cache_ਮਾਪ(ਪੂਰਨ level, bool_t instruction)
 {
-    word_t size, csselr_old;
+    ਸ਼ਬਦ_t ਮਾਪ, csselr_old;
     /* Save CSSELR */
     MRS("csselr_el1", csselr_old);
     /* Select cache level */
     MSR("csselr_el1", ((level << 1) | instruction));
     /* Read 'size' */
-    MRS("ccsidr_el1", size);
+    MRS("ccsidr_el1", ਮਾਪ);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    ਵਾਪਸ ਮਾਪ;
 }
 
-#define LINEBITS(s)     (((s) & MASK(3)) + 4)
-#define ASSOC(s)        ((((s) >> 3) & MASK(10)) + 1)
-#define NSETS(s)        ((((s) >> 13) & MASK(15)) + 1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ LINEBITS(s)     (((s) & ਨਕਾਬ(3)) + 4)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ASSOC(s)        ((((s) >> 3) & ਨਕਾਬ(10)) + 1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ NSETS(s)        ((((s) >> 13) & ਨਕਾਬ(15)) + 1)
 
-void clean_D_PoU(void)
+ਖਾਲੀ clean_D_PoU(ਖਾਲੀ)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    ਪੂਰਨ clid = readCLID();
+    ਪੂਰਨ lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
-            word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
-                    cleanByWSL((w << (32 - assoc_bits)) |
+    ਲਈ (ਪੂਰਨ l = 0; l < lou; l++) {
+        ਜੇ (CTYPE(clid, l) > ARMCacheI) {
+            ਸ਼ਬਦ_t lsize = read_Cache_ਮਾਪ(l, 0);
+            ਪੂਰਨ lbits = LINEBITS(lsize);
+            ਪੂਰਨ assoc = ASSOC(lsize);
+            ਪੂਰਨ assoc_ਬਿੱਟ = ਸ਼ਬਦ_ਬਿੱਟ - clzl(assoc - 1);
+            ਪੂਰਨ nsets = NSETS(lsize);
+            ਲਈ (ਪੂਰਨ w = 0; w < assoc; w++) {
+                ਲਈ (ਪੂਰਨ s = 0; s < nsets; s++) {
+                    cleanByWSL((w << (32 - assoc_ਬਿੱਟ)) |
                                (s << lbits) | (l << 1));
                 }
             }
@@ -74,35 +74,35 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ cleanInvalidate_D_by_level(ਪੂਰਨ l)
 {
-    word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    ਸ਼ਬਦ_t lsize = read_Cache_ਮਾਪ(l, 0);
+    ਪੂਰਨ lbits = LINEBITS(lsize);
+    ਪੂਰਨ assoc = ASSOC(lsize);
+    ਪੂਰਨ assoc_ਬਿੱਟ = ਸ਼ਬਦ_ਬਿੱਟ - clzl(assoc - 1);
+    ਪੂਰਨ nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
-            cleanInvalidateByWSL((w << (32 - assoc_bits)) |
+    ਲਈ (ਪੂਰਨ w = 0; w < assoc; w++) {
+        ਲਈ (ਪੂਰਨ s = 0; s < nsets; s++) {
+            cleanInvalidateByWSL((w << (32 - assoc_ਬਿੱਟ)) |
                                  (s << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+ਖਾਲੀ cleanInvalidate_D_PoC(ਖਾਲੀ)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    ਪੂਰਨ clid = readCLID();
+    ਪੂਰਨ loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    ਲਈ (ਪੂਰਨ l = 0; l < loc; l++) {
+        ਜੇ (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+ਖਾਲੀ cleanInvalidate_L1D(ਖਾਲੀ)
 {
     cleanInvalidate_D_by_level(0);
 }

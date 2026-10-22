@@ -4,47 +4,47 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/fpu.h>
-#include <api/failures.h>
-#include <model/statedata.h>
-#include <arch/object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/fpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/failures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/structures.h>
 
-#ifdef CONFIG_HAVE_FPU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
 /* Switch the owner of the FPU to the given thread on local core. */
-void switchLocalFpuOwner(tcb_t *new_owner)
+ਖਾਲੀ switchLocalFpuOwner(tcb_t *new_owner)
 {
     enableFpu();
-    if (NODE_STATE(ksCurFPUOwner)) {
-        saveFpuState(NODE_STATE(ksCurFPUOwner));
+    ਜੇ (ਗੰਢ_STATE(ksCurFPUOwner)) {
+        saveFpuState(ਗੰਢ_STATE(ksCurFPUOwner));
     }
-    if (new_owner) {
-        loadFpuState(new_owner);
-    } else {
+    ਜੇ (new_owner) {
+        ਲੱਦੋ_Fpu_State(new_owner);
+    } ਨਹੀਂਤਾਂ {
         disableFpu();
     }
-    NODE_STATE(ksCurFPUOwner) = new_owner;
+    ਗੰਢ_STATE(ksCurFPUOwner) = new_owner;
 }
 
-void switchFpuOwner(tcb_t *new_owner, word_t cpu)
+ਖਾਲੀ switchFpuOwner(tcb_t *new_owner, ਸ਼ਬਦ_t cpu)
 {
-#ifdef ENABLE_SMP_SUPPORT
-    if (cpu != getCurrentCPUIndex()) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    ਜੇ (cpu != getCurrentCPUIndex()) {
         doRemoteswitchFpuOwner(new_owner, cpu);
-    } else
-#endif /* ENABLE_SMP_SUPPORT */
+    } ਨਹੀਂਤਾਂ
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
     {
         switchLocalFpuOwner(new_owner);
     }
 }
 
 /* Prepare for the deletion of the given thread. */
-void fpuRelease(tcb_t *thread)
+ਖਾਲੀ fpuRelease(tcb_t *thread)
 {
     /* If the thread being deleted currently owns the FPU, switch away from it
      * so that 'ksCurFPUOwner' doesn't point to invalid memory. */
-    if (nativeThreadUsingFPU(thread)) {
-        switchFpuOwner(NULL, SMP_TERNARY(thread->tcbAffinity, 0));
+    ਜੇ (nativeThreadUsingFPU(thread)) {
+        switchFpuOwner(ਨਿਰਾ, SMP_TERNARY(thread->tcbAffinity, 0));
     }
 }
-#endif /* CONFIG_HAVE_FPU */
+#ਜੇ_ਅੰਤ /* CONFIG_HAVE_FPU */

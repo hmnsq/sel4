@@ -4,153 +4,153 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ENABLE_BENCHMARKS
 
-#include <types.h>
-#include <mode/machine.h>
-#include <benchmark/benchmark.h>
-#include <benchmark/benchmark_utilisation.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <benchmark/benchmark.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <benchmark/benchmark_utilisation.h>
 
 
-exception_t handle_SysBenchmarkFlushCaches(void)
+exception_t handle_SysBenchmarkFlushCaches(ਖਾਲੀ)
 {
-#ifdef CONFIG_ARCH_ARM
-    tcb_t *thread = NODE_STATE(ksCurThread);
-    if (getRegister(thread, capRegister)) {
-        arch_clean_invalidate_L1_caches(getRegister(thread, msgInfoRegister));
-    } else {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_ARM
+    tcb_t *thread = ਗੰਢ_STATE(ksCurThread);
+    ਜੇ (get_ਰਜਿਸਟਰ(thread, cap_ਰਜਿਸਟਰ)) {
+        arch_clean_invalidate_L1_caches(get_ਰਜਿਸਟਰ(thread, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ));
+    } ਨਹੀਂਤਾਂ {
         arch_clean_invalidate_caches();
     }
-#else
+#ਨਹੀਂਤਾਂ
     arch_clean_invalidate_caches();
-#endif
-    return EXCEPTION_NONE;
+#ਜੇ_ਅੰਤ
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetLog(void)
+exception_t handle_SysBenchmarkResetLog(ਖਾਲੀ)
 {
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    if (ksUserLogBuffer == 0) {
-        userError("A user-level buffer has to be set before resetting benchmark.\
-                Use seL4_BenchmarkSetLogBuffer\n");
-        setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_LOG_ਬਫਰ
+    ਜੇ (ks_User_Log_ਬਫਰ == 0) {
+        userError("A user-level ਬਫਰ has ਮੰਜ਼ਿਲ be ਸੈੱਟ before resetting benchmark.\
+                Use se_L4_Benchmark_ਸੈੱਟ_Log_ਬਫਰ\n");
+        ਸੈੱਟ_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ, seL4_IllegalOperation);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    ksLogIndex = 0;
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+    ks_Log_ਸੂਚਕਾਂਕ = 0;
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    NODE_STATE(benchmark_log_utilisation_enabled) = true;
-    benchmark_track_reset_utilisation(NODE_STATE(ksIdleThread));
-    NODE_STATE(ksCurThread)->benchmark.schedule_start_time = ksEnter;
-    NODE_STATE(ksCurThread)->benchmark.number_schedules++;
-    NODE_STATE(benchmark_start_time) = ksEnter;
-    NODE_STATE(benchmark_kernel_time) = 0;
-    NODE_STATE(benchmark_kernel_number_entries) = 0;
-    NODE_STATE(benchmark_kernel_number_schedules) = 1;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_UTILISATION
+    ਗੰਢ_STATE(benchmark_log_utilisation_enabled) = true;
+    benchmark_track_reset_utilisation(ਗੰਢ_STATE(ksIdleThread));
+    ਗੰਢ_STATE(ksCurThread)->benchmark.ਸਮਾਂ_ਸਾਰਣੀ_ਸ਼ੁਰੂ_ਸਮਾਂ = ksEnter;
+    ਗੰਢ_STATE(ksCurThread)->benchmark.ਸੰਖਿਆ_schedules++;
+    ਗੰਢ_STATE(benchmark_ਸ਼ੁਰੂ_ਸਮਾਂ) = ksEnter;
+    ਗੰਢ_STATE(benchmark_kernel_ਸਮਾਂ) = 0;
+    ਗੰਢ_STATE(benchmark_kernel_ਸੰਖਿਆ_entries) = 0;
+    ਗੰਢ_STATE(benchmark_kernel_ਸੰਖਿਆ_schedules) = 1;
     benchmark_arch_utilisation_reset();
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#ਜੇ_ਅੰਤ /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
-    setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ, seL4_NoError);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkFinalizeLog(void)
+exception_t handle_SysBenchmarkFinalizeLog(ਖਾਲੀ)
 {
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    ksLogIndexFinalized = ksLogIndex;
-    setRegister(NODE_STATE(ksCurThread), capRegister, ksLogIndexFinalized);
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_LOG_ਬਫਰ
+    ks_Log_ਸੂਚਕਾਂਕ_Finalized = ks_Log_ਸੂਚਕਾਂਕ;
+    ਸੈੱਟ_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ, ks_Log_ਸੂਚਕਾਂਕ_Finalized);
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_UTILISATION
     benchmark_utilisation_finalise();
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#ਜੇ_ਅੰਤ /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-exception_t handle_SysBenchmarkSetLogBuffer(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_LOG_ਬਫਰ
+exception_t handle_Sys_Benchmark_ਸੈੱਟ_Log_ਬਫਰ(ਖਾਲੀ)
 {
-    word_t cptr_userFrame = getRegister(NODE_STATE(ksCurThread), capRegister);
-    if (benchmark_arch_map_logBuffer(cptr_userFrame) != EXCEPTION_NONE) {
-        setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+    ਸ਼ਬਦ_t cptr_user_ਚੌਖਟਾ = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ);
+    ਜੇ (benchmark_arch_map_log_ਬਫਰ(cptr_user_ਚੌਖਟਾ) != EXCEPTION_NONE) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ, seL4_IllegalOperation);
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ, seL4_NoError);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_UTILISATION
 
-exception_t handle_SysBenchmarkGetThreadUtilisation(void)
+exception_t handle_SysBenchmarkGetThreadUtilisation(ਖਾਲੀ)
 {
     benchmark_track_utilisation_dump();
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetThreadUtilisation(void)
+exception_t handle_SysBenchmarkResetThreadUtilisation(ਖਾਲੀ)
 {
-    word_t tcb_cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    ਸ਼ਬਦ_t tcb_cptr = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), cap_ਰਜਿਸਟਰ);
     lookupCap_ret_t lu_ret;
-    word_t cap_type;
+    ਸ਼ਬਦ_t cap_type;
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
+    lu_ret = lookupCap(ਗੰਢ_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    ਜੇ (cap_type != cap_thread_cap) {
         userError("SysBenchmarkResetThreadUtilisation: cap is not a TCB, halting");
-        return EXCEPTION_NONE;
+        ਵਾਪਸ EXCEPTION_NONE;
     }
 
     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
 
     benchmark_track_reset_utilisation(tcb);
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_DEBUG_BUILD
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
 
-exception_t handle_SysBenchmarkDumpAllThreadsUtilisation(void)
+exception_t handle_Sys_Benchmark_Dump_All_ਧਾਗੇ_Utilisation(ਖਾਲੀ)
 {
-    printf("{\n");
-    printf("  \"BENCHMARK_TOTAL_UTILISATION\":%lu,\n",
-           (word_t)(NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time)));
-    printf("  \"BENCHMARK_TOTAL_KERNEL_UTILISATION\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_time));
-    printf("  \"BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_number_entries));
-    printf("  \"BENCHMARK_TOTAL_NUMBER_SCHEDULES\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_number_schedules));
-    printf("  \"BENCHMARK_TCB_\": [\n");
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        printf("    {\n");
-        printf("      \"NAME\":\"%s\",\n", TCB_PTR_DEBUG_PTR(curr)->tcbName);
-        printf("      \"UTILISATION\":%lu,\n", (word_t) curr->benchmark.utilisation);
-        printf("      \"NUMBER_SCHEDULES\":%lu,\n", (word_t) curr->benchmark.number_schedules);
-        printf("      \"KERNEL_UTILISATION\":%lu,\n", (word_t) curr->benchmark.kernel_utilisation);
-        printf("      \"NUMBER_KERNEL_ENTRIES\":%lu\n", (word_t) curr->benchmark.number_kernel_entries);
-        printf("    }");
-        if (TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext != NULL) {
-            printf(",\n");
-        } else {
-            printf("\n");
+    ਲਿਖੋ("{\n");
+    ਲਿਖੋ("  \"BENCHMARK_TOTAL_UTILISATION\":%lu,\n",
+           (ਸ਼ਬਦ_t)(ਗੰਢ_STATE(benchmark_ਸਿਰਾ_ਸਮਾਂ) - ਗੰਢ_STATE(benchmark_ਸ਼ੁਰੂ_ਸਮਾਂ)));
+    ਲਿਖੋ("  \"BENCHMARK_TOTAL_KERNEL_UTILISATION\":%lu,\n", (ਸ਼ਬਦ_t) ਗੰਢ_STATE(benchmark_kernel_ਸਮਾਂ));
+    ਲਿਖੋ("  \"BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES\":%lu,\n", (ਸ਼ਬਦ_t) ਗੰਢ_STATE(benchmark_kernel_ਸੰਖਿਆ_entries));
+    ਲਿਖੋ("  \"BENCHMARK_TOTAL_NUMBER_SCHEDULES\":%lu,\n", (ਸ਼ਬਦ_t) ਗੰਢ_STATE(benchmark_kernel_ਸੰਖਿਆ_schedules));
+    ਲਿਖੋ("  \"BENCHMARK_TCB_\": [\n");
+    ਲਈ (tcb_t *curr = ਗੰਢ_STATE(ksDebugTCBs); curr != ਨਿਰਾ; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_ਅਗਲਾ) {
+        ਲਿਖੋ("    {\n");
+        ਲਿਖੋ("      \"NAME\":\"%s\",\n", TCB_PTR_DEBUG_PTR(curr)->tcbName);
+        ਲਿਖੋ("      \"UTILISATION\":%lu,\n", (ਸ਼ਬਦ_t) curr->benchmark.utilisation);
+        ਲਿਖੋ("      \"NUMBER_SCHEDULES\":%lu,\n", (ਸ਼ਬਦ_t) curr->benchmark.ਸੰਖਿਆ_schedules);
+        ਲਿਖੋ("      \"KERNEL_UTILISATION\":%lu,\n", (ਸ਼ਬਦ_t) curr->benchmark.kernel_utilisation);
+        ਲਿਖੋ("      \"NUMBER_KERNEL_ENTRIES\":%lu\n", (ਸ਼ਬਦ_t) curr->benchmark.ਸੰਖਿਆ_kernel_entries);
+        ਲਿਖੋ("    }");
+        ਜੇ (TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_ਅਗਲਾ != ਨਿਰਾ) {
+            ਲਿਖੋ(",\n");
+        } ਨਹੀਂਤਾਂ {
+            ਲਿਖੋ("\n");
         }
     }
-    printf("  ]\n}\n");
-    return EXCEPTION_NONE;
+    ਲਿਖੋ("  ]\n}\n");
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetAllThreadsUtilisation(void)
+exception_t handle_Sys_Benchmark_Reset_All_ਧਾਗੇ_Utilisation(ਖਾਲੀ)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
+    ਲਈ (tcb_t *curr = ਗੰਢ_STATE(ksDebugTCBs); curr != ਨਿਰਾ; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_ਅਗਲਾ) {
         benchmark_track_reset_utilisation(curr);
     }
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
-#endif /* CONFIG_ENABLE_BENCHMARKS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#ਜੇ_ਅੰਤ /* CONFIG_ENABLE_BENCHMARKS */

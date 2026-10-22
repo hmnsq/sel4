@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_TK1_SMMU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_TK1_SMMU
 
-#include <plat/machine/smmu.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <object/structures.h>
-
-
-#define MC_PADDR                    0x70019000
-#define SMMU_CONFIG_OFFSET          0x10
-
-#define PTB_DATA_BASE_SHIFT         12
-#define PTB_DATA_READ               BIT(31)
-#define PTB_DATA_WRITE              BIT(30)
-#define PTB_DATA_NONSECURE          BIT(29)
-#define PTB_DATA_BASE_PD_MASK       0x3fffff
-
-#define MODULE_ASID_ENABLE          BIT(31)
-
-#define PTC_FLUSH_ALL               0
-#define PTC_FLUSH_ADR               1
-
-#define TLB_ASID_MATCH              BIT(31)
-#define TLB_FLUSH_ALL               (0)
-#define TLB_FLUSH_SECTION           (2)
-#define TLB_FLUSH_GROUP             (3)
-
-#define MC_DECERR_MTS_BIT           16u
-#define MC_SECERR_SEC_BIT           13u
-#define MC_DECERR_VPR_BIT           12u
-#define MC_APB_ASID_UPDATE_BIT      11u
-#define MC_SMMU_PAGE_BIT            10u
-#define MC_ARBITRATION_EMEM_BIT     9u
-#define MC_SECURITY_BIT             8u
-#define MC_DECERR_EMEM_BIT          6u
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/smmu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/hardware.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/structures.h>
 
 
-#define MC_ERR_ID_MASK              0x7f
-#define MC_ERR_ADR_MASK             0x7000
-#define MC_ERR_RW_MASK              0x10000
-#define MC_ERR_SEC_MASK             0x20000
-#define MC_ERR_SWAP_MASK            0x40000
-#define MC_ERR_ADR_HI_MASK          0x300000
-#define MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK     0x2000000
-#define MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK         0x4000000
-#define MC_ERR_INVALID_SMMU_PAGE_READ_MASK          0x8000000
-#define MC_ERR_TYPE_MASK                            0x70000000
-#define MC_ERR_TYPE_SHIFT                           28
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_PADDR                    0x70019000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ SMMU_CONFIG_ਵਿੱਥ          0x10
 
-#define MC_ERR_TYPE_RSVD                0
-#define MC_ERR_TYPE_DECERR_EMEM         2
-#define MC_ERR_TYPE_SECURITY            3
-#define MC_ERR_TYPE_SECURITY_CARVEOUT   4
-#define MC_ERR_TYPE_INVALID_SMMU_PAGE   6
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTB_ਅੰਕੜੇ_ਅਧਾਰ_ਖਿਸਕਾਓ         12
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTB_ਅੰਕੜੇ_READ               ਦੋਆਧਾਰੀ_ਅੰਕ(31)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTB_ਅੰਕੜੇ_WRITE              ਦੋਆਧਾਰੀ_ਅੰਕ(30)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTB_ਅੰਕੜੇ_NONSECURE          ਦੋਆਧਾਰੀ_ਅੰਕ(29)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTB_ਅੰਕੜੇ_ਅਧਾਰ_PD_ਨਕਾਬ       0x3fffff
 
-#define IOPDE_4M_INDEX_SHIFT            22
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MODULE_ASID_ENABLE          ਦੋਆਧਾਰੀ_ਅੰਕ(31)
 
-static volatile tk1_mc_regs_t *smmu_regs = (volatile tk1_mc_regs_t *)(SMMU_PPTR);
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTC_FLUSH_ALL               0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PTC_FLUSH_ADR               1
 
-static char smmu_pds[ARM_PLAT_NUM_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TLB_ASID_ਮੇਲ              ਦੋਆਧਾਰੀ_ਅੰਕ(31)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TLB_FLUSH_ALL               (0)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TLB_FLUSH_SECTION           (2)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TLB_FLUSH_ਸਮੂਹ             (3)
 
-static void do_smmu_enable(void)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_DECERR_MTS_ਦੋਆਧਾਰੀ_ਅੰਕ           16u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_SECERR_SEC_ਦੋਆਧਾਰੀ_ਅੰਕ           13u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_DECERR_VPR_ਦੋਆਧਾਰੀ_ਅੰਕ           12u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_APB_ASID_UPDATE_ਦੋਆਧਾਰੀ_ਅੰਕ      11u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_SMMU_ਪੰਨਾ_ਦੋਆਧਾਰੀ_ਅੰਕ            10u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ARBITRATION_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ     9u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_SECURITY_ਦੋਆਧਾਰੀ_ਅੰਕ             8u
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_DECERR_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ          6u
+
+
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_ID_ਨਕਾਬ              0x7f
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_ADR_ਨਕਾਬ             0x7000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_RW_ਨਕਾਬ              0x10000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_SEC_ਨਕਾਬ             0x20000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_ਅਦਲਾ_ਬਦਲੀ_ਨਕਾਬ            0x40000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_ADR_HI_ਨਕਾਬ          0x300000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_INVALID_SMMU_ਪੰਨਾ_NONSECURE_ਨਕਾਬ     0x2000000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_INVALID_SMMU_ਪੰਨਾ_WRITE_ਨਕਾਬ         0x4000000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_INVALID_SMMU_ਪੰਨਾ_READ_ਨਕਾਬ          0x8000000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_ਨਕਾਬ                            0x70000000
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_ਖਿਸਕਾਓ                           28
+
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_RSVD                0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_DECERR_EMEM         2
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_SECURITY            3
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_SECURITY_CARVEOUT   4
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MC_ERR_TYPE_INVALID_SMMU_ਪੰਨਾ   6
+
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ IOPDE_4_M_ਸੂਚਕਾਂਕ_ਖਿਸਕਾਓ            22
+
+ਸਥਿਰ ਅਸਥਿਰ tk1_mc_regs_t *smmu_regs = (ਅਸਥਿਰ tk1_mc_regs_t *)(SMMU_PPTR);
+
+ਸਥਿਰ ਅੱਖਰ smmu_pds[ARM_PLAT_ਅੰਕ_SMMU][ਦੋਆਧਾਰੀ_ਅੰਕ(SMMU_PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN(ਦੋਆਧਾਰੀ_ਅੰਕ(SMMU_PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ));
+
+ਸਥਿਰ ਖਾਲੀ do_smmu_enable(ਖਾਲੀ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    ਅਸਥਿਰ uint32_t *config = (ਅਸਥਿਰ uint32_t *)(MC_PADDR + SMMU_CONFIG_ਵਿੱਥ);
     *config = 1;
 }
 
-static void do_smmu_disable(void)
+ਸਥਿਰ ਖਾਲੀ do_smmu_disable(ਖਾਲੀ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    ਅਸਥਿਰ uint32_t *config = (ਅਸਥਿਰ uint32_t *)(MC_PADDR + SMMU_CONFIG_ਵਿੱਥ);
     *config = 0;
 }
 
-static inline void smmu_disable(void)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ smmu_disable(ਖਾਲੀ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ਜੇ (config_ਸੈੱਟ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* in hyp mode, we need call the hook in monitor mode */
         /* we need physical address here */
         paddr_t addr = addrFromKPPtr(&do_smmu_disable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm ਅਸਥਿਰ("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } ਨਹੀਂਤਾਂ {
         /* in secure mode, can enable it directly */
         smmu_regs->smmu_config = 0;
     }
 
-    return;
+    ਵਾਪਸ;
 }
 
-static inline void smmu_enable(void)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ smmu_enable(ਖਾਲੀ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ਜੇ (config_ਸੈੱਟ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         paddr_t addr = addrFromKPPtr(&do_smmu_enable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm ਅਸਥਿਰ("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } ਨਹੀਂਤਾਂ {
         smmu_regs->smmu_config = 1;
     }
 
-    return;
+    ਵਾਪਸ;
 }
 
 
-static uint32_t make_ptb_data(uint32_t pd_base, bool_t read, bool_t write, bool_t nonsecure)
+ਸਥਿਰ uint32_t make_ptb_ਅੰਕੜੇ(uint32_t pd_ਅਧਾਰ, bool_t ਪਠ, bool_t ਲਿਖ, bool_t nonsecure)
 {
     uint32_t ret = 0;
-    ret = (pd_base >> PTB_DATA_BASE_SHIFT);
+    ret = (pd_ਅਧਾਰ >> PTB_ਅੰਕੜੇ_ਅਧਾਰ_ਖਿਸਕਾਓ);
 
-    if (read) {
-        ret |= PTB_DATA_READ;
+    ਜੇ (ਪਠ) {
+        ret |= PTB_ਅੰਕੜੇ_READ;
     }
-    if (write) {
-        ret |= PTB_DATA_WRITE;
+    ਜੇ (ਲਿਖ) {
+        ret |= PTB_ਅੰਕੜੇ_WRITE;
     }
-    if (nonsecure) {
-        ret |= PTB_DATA_NONSECURE;
+    ਜੇ (nonsecure) {
+        ret |= PTB_ਅੰਕੜੇ_NONSECURE;
     }
 
-    return ret;
+    ਵਾਪਸ ret;
 }
 
-void plat_smmu_ptc_flush_all(void)
+ਖਾਲੀ plat_smmu_ptc_flush_all(ਖਾਲੀ)
 {
     uint32_t cmd = PTC_FLUSH_ALL;
     smmu_regs->smmu_ptc_flush = cmd;
 }
 
-void plat_smmu_tlb_flush_all(void)
+ਖਾਲੀ plat_smmu_tlb_flush_all(ਖਾਲੀ)
 {
     uint32_t cmd = TLB_FLUSH_ALL;
     smmu_regs->smmu_tlb_flush = cmd;
 }
 
-BOOT_CODE int plat_smmu_init(void)
+BOOT_ਕੋਡ ਪੂਰਨ plat_smmu_init(ਖਾਲੀ)
 {
     uint32_t asid;
 
     smmu_disable();
 
-    for (asid = SMMU_FIRST_ASID; asid <= SMMU_LAST_ASID; asid++) {
-        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    ਲਈ (asid = SMMU_ਪਹਿਲਾ_ASID; asid <= SMMU_ਆਖਰੀ_ASID; asid++) {
+        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_ਪਹਿਲਾ_ASID];
 
-        memset(pd, 0, BIT(SMMU_PD_INDEX_BITS));
-        cleanCacheRange_RAM((word_t)pd, ((word_t)pd + BIT(SMMU_PD_INDEX_BITS)),
+        memset(pd, 0, ਦੋਆਧਾਰੀ_ਅੰਕ(SMMU_PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ));
+        cleanCacheRange_RAM((ਸ਼ਬਦ_t)pd, ((ਸ਼ਬਦ_t)pd + ਦੋਆਧਾਰੀ_ਅੰਕ(SMMU_PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ)),
                             addrFromPPtr(pd));
 
         smmu_regs->smmu_ptb_asid = asid;
 
         /* make it read/write/nonsecure but all translation entries are invalid */
-        smmu_regs->smmu_ptb_data = make_ptb_data(pptr_to_paddr(pd), true, true, true);
+        smmu_regs->smmu_ptb_ਅੰਕੜੇ = make_ptb_ਅੰਕੜੇ(pptr_ਮੰਜ਼ਿਲ_paddr(pd), true, true, true);
     }
-    printf("Total %d IOASID set up\n", (asid - 1));
+    ਲਿਖੋ("Total %d IOASID set up\n", (asid - 1));
 
     /* now assign IOASID to each module */
     smmu_regs->smmu_afi_asid = SMMU_AFI_ASID | MODULE_ASID_ENABLE;
@@ -202,72 +202,72 @@ BOOT_CODE int plat_smmu_init(void)
     smmu_enable();
 
     /* also need to unmask interrupts */
-    if (config_set(CONFIG_SMMU_INTERRUPT_ENABLE)) {
-        smmu_regs->intmask = BIT(MC_APB_ASID_UPDATE_BIT) | BIT(MC_SMMU_PAGE_BIT) |
-                             BIT(MC_DECERR_MTS_BIT) | BIT(MC_SECERR_SEC_BIT) |
-                             BIT(MC_DECERR_VPR_BIT) | BIT(MC_ARBITRATION_EMEM_BIT) |
-                             BIT(MC_SECURITY_BIT) | BIT(MC_DECERR_EMEM_BIT);
-    } else {
+    ਜੇ (config_ਸੈੱਟ(CONFIG_SMMU_ਰੁਕਾਵਟ_ENABLE)) {
+        smmu_regs->intmask = ਦੋਆਧਾਰੀ_ਅੰਕ(MC_APB_ASID_UPDATE_ਦੋਆਧਾਰੀ_ਅੰਕ) | ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SMMU_ਪੰਨਾ_ਦੋਆਧਾਰੀ_ਅੰਕ) |
+                             ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_MTS_ਦੋਆਧਾਰੀ_ਅੰਕ) | ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECERR_SEC_ਦੋਆਧਾਰੀ_ਅੰਕ) |
+                             ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_VPR_ਦੋਆਧਾਰੀ_ਅੰਕ) | ਦੋਆਧਾਰੀ_ਅੰਕ(MC_ARBITRATION_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ) |
+                             ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECURITY_ਦੋਆਧਾਰੀ_ਅੰਕ) | ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ);
+    } ਨਹੀਂਤਾਂ {
         smmu_regs->intmask = 0;
     }
-    return ARM_PLAT_NUM_SMMU;
+    ਵਾਪਸ ARM_PLAT_ਅੰਕ_SMMU;
 }
 
 iopde_t *plat_smmu_lookup_iopd_by_asid(uint32_t asid)
 {
     /* There should be no way to generate bad ASID values through the kernel
      * so this is an assertion and not a check */
-    assert(asid >= SMMU_FIRST_ASID && asid <= SMMU_LAST_ASID);
-    return (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    ਪ੍ਰਤਿਜ੍ਞਾ(asid >= SMMU_ਪਹਿਲਾ_ASID && asid <= SMMU_ਆਖਰੀ_ASID);
+    ਵਾਪਸ (iopde_t *) smmu_pds[asid - SMMU_ਪਹਿਲਾ_ASID];
 }
 
-void plat_smmu_handle_interrupt(void)
+ਖਾਲੀ plat_smmu_handle_ਰੁਕਾਵਟ(ਖਾਲੀ)
 {
-    uint32_t status = smmu_regs->intstatus;
-    uint32_t clear_status = 0;
+    uint32_t ਸਥਿਤੀ = smmu_regs->intstatus;
+    uint32_t clear_ਸਥਿਤੀ = 0;
 
-    if (status & BIT(MC_DECERR_MTS_BIT)) {
-        clear_status |= BIT(MC_DECERR_MTS_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_MTS_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_MTS_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_SECERR_SEC_BIT)) {
-        clear_status |= BIT(MC_SECERR_SEC_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECERR_SEC_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECERR_SEC_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_DECERR_VPR_BIT)) {
-        clear_status |= BIT(MC_DECERR_VPR_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_VPR_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_VPR_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_ARBITRATION_EMEM_BIT)) {
-        clear_status |= BIT(MC_ARBITRATION_EMEM_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_ARBITRATION_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_ARBITRATION_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_SECURITY_BIT)) {
-        clear_status |= BIT(MC_SECURITY_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECURITY_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SECURITY_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_DECERR_EMEM_BIT)) {
-        clear_status |= BIT(MC_DECERR_EMEM_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_DECERR_EMEM_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
-    if (status & BIT(MC_APB_ASID_UPDATE_BIT)) {
-        clear_status |= BIT(MC_APB_ASID_UPDATE_BIT);
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_APB_ASID_UPDATE_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_APB_ASID_UPDATE_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
 
     /* we only care about SMMU translation failures */
-    if (status & BIT(MC_SMMU_PAGE_BIT)) {
-        if (config_set(CONFIG_PRINTING)) {
-            uint32_t err_status = smmu_regs->err_status;
-            uint32_t UNUSED err_adr = smmu_regs->err_adr;
-            uint32_t UNUSED id = err_status & MC_ERR_ID_MASK;
-            uint32_t UNUSED rw = (err_status & MC_ERR_RW_MASK);
-            uint32_t UNUSED read = (err_status & MC_ERR_INVALID_SMMU_PAGE_READ_MASK);
-            uint32_t UNUSED write = (err_status & MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK);
-            uint32_t UNUSED nonsecure = (err_status & MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK);
-            uint32_t UNUSED type = (err_status & MC_ERR_TYPE_MASK) >> MC_ERR_TYPE_SHIFT;
+    ਜੇ (ਸਥਿਤੀ & ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SMMU_ਪੰਨਾ_ਦੋਆਧਾਰੀ_ਅੰਕ)) {
+        ਜੇ (config_ਸੈੱਟ(CONFIG_PRINTING)) {
+            uint32_t err_ਸਥਿਤੀ = smmu_regs->err_ਸਥਿਤੀ;
+            uint32_t ਅਣਵਰਤਿਆ err_adr = smmu_regs->err_adr;
+            uint32_t ਅਣਵਰਤਿਆ id = err_ਸਥਿਤੀ & MC_ERR_ID_ਨਕਾਬ;
+            uint32_t ਅਣਵਰਤਿਆ rw = (err_ਸਥਿਤੀ & MC_ERR_RW_ਨਕਾਬ);
+            uint32_t ਅਣਵਰਤਿਆ ਪਠ = (err_ਸਥਿਤੀ & MC_ERR_INVALID_SMMU_ਪੰਨਾ_READ_ਨਕਾਬ);
+            uint32_t ਅਣਵਰਤਿਆ ਲਿਖ = (err_ਸਥਿਤੀ & MC_ERR_INVALID_SMMU_ਪੰਨਾ_WRITE_ਨਕਾਬ);
+            uint32_t ਅਣਵਰਤਿਆ nonsecure = (err_ਸਥਿਤੀ & MC_ERR_INVALID_SMMU_ਪੰਨਾ_NONSECURE_ਨਕਾਬ);
+            uint32_t ਅਣਵਰਤਿਆ type = (err_ਸਥਿਤੀ & MC_ERR_TYPE_ਨਕਾਬ) >> MC_ERR_TYPE_ਖਿਸਕਾਓ;
 
-            printf("SMMU Address translation error:\n");
-            printf("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
-            printf("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", read, write, nonsecure);
+            ਲਿਖੋ("SMMU Address translation error:\n");
+            ਲਿਖੋ("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
+            ਲਿਖੋ("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", ਪਠ, ਲਿਖ, nonsecure);
         }
-        clear_status |= BIT(MC_SMMU_PAGE_BIT);
+        clear_ਸਥਿਤੀ |= ਦੋਆਧਾਰੀ_ਅੰਕ(MC_SMMU_ਪੰਨਾ_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
 
     /* write 1 to clear the interrupt */
-    smmu_regs->intstatus = clear_status;
+    smmu_regs->intstatus = clear_ਸਥਿਤੀ;
 }
-#endif
+#ਜੇ_ਅੰਤ

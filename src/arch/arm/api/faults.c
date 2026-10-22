@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <object.h>
-#include <kernel/vspace.h>
-#include <api/faults.h>
-#include <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/faults.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
 
-bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
+bool_t Arch_handle_Fault_ਜਵਾਬ(tcb_t *receiver, tcb_t *sender, ਸ਼ਬਦ_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    ਚੋਣ (faultType) {
+    ਹਾਲਤ seL4_Fault_VMFault:
+        ਵਾਪਸ true;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_Fault_VGICMaintenance:
-        return true;
-    case seL4_Fault_VCPUFault:
-        return true;
-    case seL4_Fault_VPPIEvent:
-        return true;
-#endif
-    default:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_Fault_VGICMaintenance:
+        ਵਾਪਸ true;
+    ਹਾਲਤ seL4_Fault_VCPUFault:
+        ਵਾਪਸ true;
+    ਹਾਲਤ seL4_Fault_VPPIEvent:
+        ਵਾਪਸ true;
+#ਜੇ_ਅੰਤ
+    ਮੂਲ:
         fail("Invalid fault");
     }
 }
 
-word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
+ਸ਼ਬਦ_t Arch_ਸੈੱਟ_MRs_fault(tcb_t *sender, tcb_t *receiver, ਸ਼ਬਦ_t *receiveIPCBuffer, ਸ਼ਬਦ_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
-              seL4_Fault_VMFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
+    ਚੋਣ (faultType) {
+    ਹਾਲਤ seL4_Fault_VMFault: {
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
+              se_L4_Fault_VMFault_get_ਪਤਾ(sender->tcbFault));
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_Fault_VGICMaintenance:
-        if (seL4_Fault_VGICMaintenance_get_idxValid(sender->tcbFault)) {
-            return setMR(receiver, receiveIPCBuffer, seL4_VGICMaintenance_IDX,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ਹਾਲਤ seL4_Fault_VGICMaintenance:
+        ਜੇ (seL4_Fault_VGICMaintenance_get_idxValid(sender->tcbFault)) {
+            ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VGICMaintenance_IDX,
                          seL4_Fault_VGICMaintenance_get_idx(sender->tcbFault));
-        } else {
-            return setMR(receiver, receiveIPCBuffer, seL4_VGICMaintenance_IDX, -1);
+        } ਨਹੀਂਤਾਂ {
+            ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VGICMaintenance_IDX, -1);
         }
-    case seL4_Fault_VCPUFault:
-        return setMR(receiver, receiveIPCBuffer, seL4_VCPUFault_HSR, seL4_Fault_VCPUFault_get_hsr(sender->tcbFault));
-    case seL4_Fault_VPPIEvent:
-        return setMR(receiver, receiveIPCBuffer, seL4_VPPIEvent_IRQ, seL4_Fault_VPPIEvent_get_irq_w(sender->tcbFault));
-#endif
+    ਹਾਲਤ seL4_Fault_VCPUFault:
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VCPUFault_HSR, seL4_Fault_VCPUFault_get_hsr(sender->tcbFault));
+    ਹਾਲਤ seL4_Fault_VPPIEvent:
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_VPPIEvent_IRQ, seL4_Fault_VPPIEvent_get_irq_w(sender->tcbFault));
+#ਜੇ_ਅੰਤ
 
-    default:
+    ਮੂਲ:
         fail("Invalid fault");
     }
 }

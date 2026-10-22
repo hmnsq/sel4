@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <stdint.h>
-#include <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <assert.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
 
 /*
  * memzero needs a custom type that allows us to use a word
  * that has the aliasing properties of a char.
  */
-typedef unsigned long __attribute__((__may_alias__)) ulong_alias;
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ __attribute__((__may_alias__)) ulong_alias;
 
 /*
  * Zero 'n' bytes of memory starting from 's'.
  *
  * 'n' and 's' must be word aligned.
  */
-void memzero(void *s, unsigned long n)
+ਖਾਲੀ memzero(ਖਾਲੀ *s, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ n)
 {
     uint8_t *p = s;
 
     /* Ensure alignment constraints are met. */
-    assert((unsigned long)s % sizeof(unsigned long) == 0);
-    assert(n % sizeof(unsigned long) == 0);
+    ਪ੍ਰਤਿਜ੍ਞਾ((ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ)s % ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) == 0);
+    ਪ੍ਰਤਿਜ੍ਞਾ(n % ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) == 0);
 
     /* We will never memzero an area larger than the largest current
        live object */
@@ -33,14 +33,14 @@ void memzero(void *s, unsigned long n)
         \<or> \<acute>n <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Write out words. */
-    while (n != 0) {
+    ਜਦੋਂ (n != 0) {
         *(ulong_alias *)p = 0;
-        p += sizeof(ulong_alias);
-        n -= sizeof(ulong_alias);
+        p += ਆਕਾਰ(ulong_alias);
+        n -= ਆਕਾਰ(ulong_alias);
     }
 }
 
-void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
+ਖਾਲੀ *VISIBLE memset(ਖਾਲੀ *s, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ c, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ n)
 {
     uint8_t *p;
 
@@ -48,93 +48,93 @@ void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
      * If we are only writing zeros and we are word aligned, we can
      * use the optimized 'memzero' function.
      */
-    if (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
+    ਜੇ (likely(c == 0 && ((ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ)s % ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ)) == 0 && (n % ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ)) == 0)) {
         memzero(s, n);
-    } else {
+    } ਨਹੀਂਤਾਂ {
         /* Otherwise, we use a slower, simple memset. */
-        for (p = (uint8_t *)s; n > 0; n--, p++) {
+        ਲਈ (p = (uint8_t *)s; n > 0; n--, p++) {
             *p = (uint8_t)c;
         }
     }
 
-    return s;
+    ਵਾਪਸ s;
 }
 
-void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
+ਖਾਲੀ *VISIBLE ਸਮ੍ਰਿਤੀ_ਨਕਲ(ਖਾਲੀ *ptr_dst, ਅਚਲ ਖਾਲੀ *ptr_src, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ n)
 {
     uint8_t *p;
-    const uint8_t *q;
+    ਅਚਲ uint8_t *q;
 
-    for (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
+    ਲਈ (p = (uint8_t *)ptr_dst, q = (ਅਚਲ uint8_t *)ptr_src; n; n--, p++, q++) {
         *p = *q;
     }
 
-    return ptr_dst;
+    ਵਾਪਸ ptr_dst;
 }
 
-int PURE strncmp(const char *s1, const char *s2, int n)
+ਪੂਰਨ ਸ਼ੁੱਧ ਲੜੀ_ਤੁਲਨਾ(ਅਚਲ ਅੱਖਰ *s1, ਅਚਲ ਅੱਖਰ *s2, ਪੂਰਨ n)
 {
-    word_t i;
-    int diff;
+    ਸ਼ਬਦ_t i;
+    ਪੂਰਨ diff;
 
-    for (i = 0; i < n; i++) {
-        diff = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
-        if (diff != 0 || s1[i] == '\0') {
-            return diff;
+    ਲਈ (i = 0; i < n; i++) {
+        diff = ((ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ *)s1)[i] - ((ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ *)s2)[i];
+        ਜੇ (diff != 0 || s1[i] == '\0') {
+            ਵਾਪਸ diff;
         }
     }
 
-    return 0;
+    ਵਾਪਸ 0;
 }
 
-long CONST char_to_long(char c)
+ਲੰਮਾ CONST char_ਮੰਜ਼ਿਲ_long(ਅੱਖਰ c)
 {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+    ਜੇ (c >= '0' && c <= '9') {
+        ਵਾਪਸ c - '0';
+    } ਨਹੀਂਤਾਂ ਜੇ (c >= 'A' && c <= 'F') {
+        ਵਾਪਸ c - 'A' + 10;
+    } ਨਹੀਂਤਾਂ ਜੇ (c >= 'a' && c <= 'f') {
+        ਵਾਪਸ c - 'a' + 10;
     }
-    return -1;
+    ਵਾਪਸ -1;
 }
 
-long PURE str_to_long(const char *str)
+ਲੰਮਾ ਸ਼ੁੱਧ str_ਮੰਜ਼ਿਲ_long(ਅਚਲ ਅੱਖਰ *str)
 {
-    unsigned int base;
-    long res;
-    long val = 0;
-    char c;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਅਧਾਰ;
+    ਲੰਮਾ res;
+    ਲੰਮਾ val = 0;
+    ਅੱਖਰ c;
 
     /* NULL ptr and empty str */
-    if (str == NULL || *str == 0) {
-        return -1;
+    ਜੇ (str == ਨਿਰਾ || *str == 0) {
+        ਵਾਪਸ -1;
     }
 
     /* check for "0x", *(str + 1) may be 0, but must be allocated since str is not empty */
-    if (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
-        base = 16;
+    ਜੇ (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
+        ਅਧਾਰ = 16;
         str += 2;
         /* '0x' on its own is malformed */
-        if (*str == 0) {
-            return -1;
+        ਜੇ (*str == 0) {
+            ਵਾਪਸ -1;
         }
-    } else {
-        base = 10;
+    } ਨਹੀਂਤਾਂ {
+        ਅਧਾਰ = 10;
     }
 
     c = *str;
-    while (c != '\0') {
-        res = char_to_long(c);
-        if (res == -1 || res >= base) {
-            return -1;
+    ਜਦੋਂ (c != '\0') {
+        res = char_ਮੰਜ਼ਿਲ_long(c);
+        ਜੇ (res == -1 || res >= ਅਧਾਰ) {
+            ਵਾਪਸ -1;
         }
-        val = val * base + res;
+        val = val * ਅਧਾਰ + res;
         str++;
         c = *str;
     }
 
-    return val;
+    ਵਾਪਸ val;
 }
 
 // The following implementations of CLZ (count leading zeros) and CTZ (count
@@ -168,9 +168,9 @@ long PURE str_to_long(const char *str)
 // binary.
 
 // Check some assumptions made by the clzl, clzll, ctzl functions:
-compile_assert(clz_ulong_32_or_64, sizeof(unsigned long) == 4 || sizeof(unsigned long) == 8);
-compile_assert(clz_ullong_64, sizeof(unsigned long long) == 8);
-compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
+compile_assert(clz_ulong_32_or_64, ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) == 4 || ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) == 8);
+compile_assert(clz_ullong_64, ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ ਲੰਮਾ) == 8);
+compile_assert(clz_ਸ਼ਬਦ_ਮਾਪ, ਆਕਾਰ(ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ) * 8 == CONFIG_ਸ਼ਬਦ_ਮਾਪ);
 
 // Count leading zeros.
 // This implementation contains no branches. If the architecture provides an
@@ -183,12 +183,12 @@ compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
 // These functions are potentially `UNUSED` because we want to always expose
 // them to verification without necessarily linking them into the kernel
 // binary.
-static UNUSED CONST inline unsigned clz32(uint32_t x)
+ਸਥਿਰ ਅਣਵਰਤਿਆ CONST ਸਤਰਅੰਦਰ ਬਿਨਾਨਿਸ਼ਾਨੀ clz32(uint32_t x)
 {
     // Compiler builtins typically return int, but we use unsigned internally
     // to reduce the number of guards we see in the proofs.
-    unsigned count = 32;
-    uint32_t mask = UINT32_MAX;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ ਗਿਣਤੀ_2 = 32;
+    uint32_t ਨਕਾਬ_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -206,109 +206,109 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // while also generating reasonably efficient binary code.
 
     // The `if (1)` blocks make it easier to reason by chunks in the proofs.
-    if (1) {
+    ਜੇ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x0000ffff
-        count -= bits; // [16, 32]
+        ਨਕਾਬ_2 >>= (1 << 4); // 0x0000ffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 4; // [0, 16]
+        x >>= ਬਿੱਟ; // <= 0x0000ffff
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [16, 32]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x000000ff
-        count -= bits; // [8, 16, 24, 32]
+        ਨਕਾਬ_2 >>= (1 << 3); // 0x000000ff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 3; // [0, 8]
+        x >>= ਬਿੱਟ; // <= 0x000000ff
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [8, 16, 24, 32]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x0000000f
-        count -= bits; // [4, 8, 12, ..., 32]
+        ਨਕਾਬ_2 >>= (1 << 2); // 0x0000000f
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 2; // [0, 4]
+        x >>= ਬਿੱਟ; // <= 0x0000000f
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [4, 8, 12, ..., 32]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x00000003
-        count -= bits; // [2, 4, 6, ..., 32]
+        ਨਕਾਬ_2 >>= (1 << 1); // 0x00000003
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 1; // [0, 2]
+        x >>= ਬਿੱਟ; // <= 0x00000003
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [2, 4, 6, ..., 32]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x00000001
-        count -= bits; // [1, 2, 3, ..., 32]
+        ਨਕਾਬ_2 >>= (1 << 0); // 0x00000001
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 0; // [0, 1]
+        x >>= ਬਿੱਟ; // <= 0x00000001
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [1, 2, 3, ..., 32]
     }
 
     // If the original input was zero, there will have been no shifts, so this
     // gives a result of 32. Otherwise, x is now exactly 1, so subtracting from
     // count gives a result from [0, 1, 2, ..., 31].
-    return count - x;
+    ਵਾਪਸ ਗਿਣਤੀ_2 - x;
 }
 
-static UNUSED CONST inline unsigned clz64(uint64_t x)
+ਸਥਿਰ ਅਣਵਰਤਿਆ CONST ਸਤਰਅੰਦਰ ਬਿਨਾਨਿਸ਼ਾਨੀ clz64(uint64_t x)
 {
-    unsigned count = 64;
-    uint64_t mask = UINT64_MAX;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ ਗਿਣਤੀ_2 = 64;
+    uint64_t ਨਕਾਬ_2 = UINT64_MAX;
 
     // Although we could implement this using clz32, we spell out the
     // iterations in full for slightly better code generation at low
     // optimisation levels, and to allow us to reuse the proof machinery we
     // developed for clz32.
-    if (1) {
+    ਜੇ (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)(mask < x)) << 5; // [0, 32]
-        x >>= bits; // <= 0x00000000ffffffff
-        count -= bits; // [32, 64]
+        ਨਕਾਬ_2 >>= (1 << 5); // 0x00000000ffffffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 5; // [0, 32]
+        x >>= ਬਿੱਟ; // <= 0x00000000ffffffff
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [32, 64]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x000000000000ffff
-        count -= bits; // [16, 32, 48, 64]
+        ਨਕਾਬ_2 >>= (1 << 4); // 0x000000000000ffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 4; // [0, 16]
+        x >>= ਬਿੱਟ; // <= 0x000000000000ffff
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [16, 32, 48, 64]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x00000000000000ff
-        count -= bits; // [8, 16, 24, ..., 64]
+        ਨਕਾਬ_2 >>= (1 << 3); // 0x00000000000000ff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 3; // [0, 8]
+        x >>= ਬਿੱਟ; // <= 0x00000000000000ff
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [8, 16, 24, ..., 64]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x000000000000000f
-        count -= bits; // [4, 8, 12, ..., 64]
+        ਨਕਾਬ_2 >>= (1 << 2); // 0x000000000000000f
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 2; // [0, 4]
+        x >>= ਬਿੱਟ; // <= 0x000000000000000f
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [4, 8, 12, ..., 64]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x0000000000000003
-        count -= bits; // [2, 4, 6, ..., 64]
+        ਨਕਾਬ_2 >>= (1 << 1); // 0x0000000000000003
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 1; // [0, 2]
+        x >>= ਬਿੱਟ; // <= 0x0000000000000003
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [2, 4, 6, ..., 64]
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x0000000000000001
-        count -= bits; // [1, 2, 3, ..., 64]
+        ਨਕਾਬ_2 >>= (1 << 0); // 0x0000000000000001
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(ਨਕਾਬ_2 < x)) << 0; // [0, 1]
+        x >>= ਬਿੱਟ; // <= 0x0000000000000001
+        ਗਿਣਤੀ_2 -= ਬਿੱਟ; // [1, 2, 3, ..., 64]
     }
 
-    return count - x;
+    ਵਾਪਸ ਗਿਣਤੀ_2 - x;
 }
 
 // Count trailing zeros.
 // See comments on clz32.
-static UNUSED CONST inline unsigned ctz32(uint32_t x)
+ਸਥਿਰ ਅਣਵਰਤਿਆ CONST ਸਤਰਅੰਦਰ ਬਿਨਾਨਿਸ਼ਾਨੀ ctz32(uint32_t x)
 {
-    unsigned count = (x == 0);
-    uint32_t mask = UINT32_MAX;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ ਗਿਣਤੀ_2 = (x == 0);
+    uint32_t ਨਕਾਬ_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -328,94 +328,94 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
     // The iterations are given a very regular structure to facilitate proofs,
     // while also generating reasonably efficient binary code.
 
-    if (1) {
+    ਜੇ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x0000ffff != 0
-        count += bits; // if xi != 0 then [0, 16] else 17
+        ਨਕਾਬ_2 >>= (1 << 4); // 0x0000ffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 4; // [0, 16]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x0000ffff != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 16] else 17
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, 24] else 25
+        ਨਕਾਬ_2 >>= (1 << 3); // 0x000000ff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 3; // [0, 8]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x000000ff != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 8, 16, 24] else 25
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x0000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 28] else 29
+        ਨਕਾਬ_2 >>= (1 << 2); // 0x0000000f
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 2; // [0, 4]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x0000000f != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 4, 8, ..., 28] else 29
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x00000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 30] else 31
+        ਨਕਾਬ_2 >>= (1 << 1); // 0x00000003
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 1; // [0, 2]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x00000003 != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 2, 4, ..., 30] else 31
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x00000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 31] else 32
+        ਨਕਾਬ_2 >>= (1 << 0); // 0x00000001
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 0; // [0, 1]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x00000001 != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 1, 2, ..., 31] else 32
     }
 
-    return count;
+    ਵਾਪਸ ਗਿਣਤੀ_2;
 }
 
-static UNUSED CONST inline unsigned ctz64(uint64_t x)
+ਸਥਿਰ ਅਣਵਰਤਿਆ CONST ਸਤਰਅੰਦਰ ਬਿਨਾਨਿਸ਼ਾਨੀ ctz64(uint64_t x)
 {
-    unsigned count = (x == 0);
-    uint64_t mask = UINT64_MAX;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ ਗਿਣਤੀ_2 = (x == 0);
+    uint64_t ਨਕਾਬ_2 = UINT64_MAX;
 
-    if (1) {
+    ਜੇ (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 5; // [0, 32]
-        x >>= bits; // xi != 0 --> x & 0x00000000ffffffff != 0
-        count += bits; // if xi != 0 then [0, 32] else 33
+        ਨਕਾਬ_2 >>= (1 << 5); // 0x00000000ffffffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 5; // [0, 32]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x00000000ffffffff != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 32] else 33
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x000000000000ffff != 0
-        count += bits; // if xi != 0 then [0, 16, 32, 48] else 49
+        ਨਕਾਬ_2 >>= (1 << 4); // 0x000000000000ffff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 4; // [0, 16]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x000000000000ffff != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 16, 32, 48] else 49
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x00000000000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, ..., 56] else 57
+        ਨਕਾਬ_2 >>= (1 << 3); // 0x00000000000000ff
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 3; // [0, 8]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x00000000000000ff != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 8, 16, ..., 56] else 57
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x000000000000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 60] else 61
+        ਨਕਾਬ_2 >>= (1 << 2); // 0x000000000000000f
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 2; // [0, 4]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x000000000000000f != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 4, 8, ..., 60] else 61
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 62] else 63
+        ਨਕਾਬ_2 >>= (1 << 1); // 0x0000000000000003
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 1; // [0, 2]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x0000000000000003 != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 2, 4, ..., 62] else 63
     }
-    if (1) {
+    ਜੇ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 63] else 64
+        ਨਕਾਬ_2 >>= (1 << 0); // 0x0000000000000001
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਬਿੱਟ = ((ਬਿਨਾਨਿਸ਼ਾਨੀ)((x & ਨਕਾਬ_2) == 0)) << 0; // [0, 1]
+        x >>= ਬਿੱਟ; // xi != 0 --> x & 0x0000000000000001 != 0
+        ਗਿਣਤੀ_2 += ਬਿੱਟ; // if xi != 0 then [0, 1, 2, ..., 63] else 64
     }
 
-    return count;
+    ਵਾਪਸ ਗਿਣਤੀ_2;
 }
 
 // GCC's builtins will emit calls to these functions when the platform does
@@ -423,30 +423,30 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
 // These are only provided when the relevant config items are set.
 // We define these separately from `ctz32` etc. so that we can verify all of
 // `ctz32` etc. without necessarily linking them into the kernel binary.
-#ifdef CONFIG_CLZ_32
-CONST int __clzsi2(uint32_t x)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_CLZ_32
+CONST ਪੂਰਨ __clzsi2(uint32_t x)
 {
-    return clz32(x);
+    ਵਾਪਸ clz32(x);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_CLZ_64
-CONST int __clzdi2(uint64_t x)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_CLZ_64
+CONST ਪੂਰਨ __clzdi2(uint64_t x)
 {
-    return clz64(x);
+    ਵਾਪਸ clz64(x);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_CTZ_32
-CONST int __ctzsi2(uint32_t x)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_CTZ_32
+CONST ਪੂਰਨ __ctzsi2(uint32_t x)
 {
-    return ctz32(x);
+    ਵਾਪਸ ctz32(x);
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_CTZ_64
-CONST int __ctzdi2(uint64_t x)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_CTZ_64
+CONST ਪੂਰਨ __ctzdi2(uint64_t x)
 {
-    return ctz64(x);
+    ਵਾਪਸ ctz64(x);
 }
-#endif
+#ਜੇ_ਅੰਤ

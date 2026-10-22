@@ -4,117 +4,117 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/ipi.h>
-#include <smp/lock.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/smp/ipi.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <smp/ipi.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <smp/lock.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+ਖਾਲੀ handleRemoteCall(IpiRemoteCall_t call, ਸ਼ਬਦ_t arg0, ਸ਼ਬਦ_t arg1, ਸ਼ਬਦ_t arg2, bool_t irq_ਰਸਤਾ)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
-            ipiStallCoreCallback(irqPath);
-            break;
+    ਜੇ (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        ਚੋਣ (call) {
+        ਹਾਲਤ IpiRemoteCall_Stall:
+            ipiStallCoreCallback(irq_ਰਸਤਾ);
+            ਰੋਕੋ;
 
-        case IpiRemoteCall_InvalidatePageStructureCacheASID:
-            invalidateLocalPageStructureCacheASID(arg0, arg1);
-            break;
+        ਹਾਲਤ Ipi_Remote_Call_Invalidate_ਪੰਨਾ_Structure_Cache_ASID:
+            invalidate_Local_ਪੰਨਾ_Structure_Cache_ASID(arg0, arg1);
+            ਰੋਕੋ;
 
-        case IpiRemoteCall_InvalidateTranslationSingle:
+        ਹਾਲਤ IpiRemoteCall_InvalidateTranslationSingle:
             invalidateLocalTranslationSingle(arg0);
-            break;
+            ਰੋਕੋ;
 
-        case IpiRemoteCall_InvalidateTranslationSingleASID:
+        ਹਾਲਤ IpiRemoteCall_InvalidateTranslationSingleASID:
             invalidateLocalTranslationSingleASID(arg0, arg1);
-            break;
+            ਰੋਕੋ;
 
-        case IpiRemoteCall_InvalidateTranslationAll:
+        ਹਾਲਤ IpiRemoteCall_InvalidateTranslationAll:
             invalidateLocalTranslationAll();
-            break;
+            ਰੋਕੋ;
 
-        case IpiRemoteCall_switchFpuOwner:
+        ਹਾਲਤ IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
+            ਰੋਕੋ;
 
-#ifdef CONFIG_VTX
-        case IpiRemoteCall_ClearCurrentVCPU:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_VTX
+        ਹਾਲਤ IpiRemoteCall_ClearCurrentVCPU:
             clearCurrentVCPU();
-            break;
-        case IpiRemoteCall_VMCheckBoundNotification: {
+            ਰੋਕੋ;
+        ਹਾਲਤ IpiRemoteCall_VMCheckBoundNotification: {
             tcb_t *tcb = (tcb_t *)arg0;
 
             /* For a running VM notifications are already checked by handleVmexit */
-            if (tcb != NODE_STATE(ksCurThread)) {
+            ਜੇ (tcb != ਗੰਢ_STATE(ksCurThread)) {
                 VMCheckBoundNotification(tcb);
             }
-            break;
+            ਰੋਕੋ;
         }
-#endif
-        default:
-            Mode_handleRemoteCall((IpiModeRemoteCall_t)call, arg0, arg1, arg2);
-            break;
+#ਜੇ_ਅੰਤ
+        ਮੂਲ:
+            ਬਹੁਲਕ_handle_Remote_Call((Ipi_ਬਹੁਲਕ_Remote_Call_t)call, arg0, arg1, arg2);
+            ਰੋਕੋ;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_ਤਾਲਾ.ਗੰਢ[getCurrentCPUIndex()].ipi = 0;
         ipi_wait();
     }
 }
 
 /* make sure all cpu IDs for number of core fit in bitwise word */
-compile_assert(invalid_number_of_supported_nodes, CONFIG_MAX_NUM_NODES <= wordBits);
+compile_assert(invalid_ਸੰਖਿਆ_ਦਾ_supported_nodes, CONFIG_MAX_ਅੰਕ_NODES <= ਸ਼ਬਦ_ਬਿੱਟ);
 
-#ifdef CONFIG_USE_LOGICAL_IDS
-static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USE_LOGICAL_IDS
+ਸਥਿਰ ਖਾਲੀ x86_ipi_send_ਨਕਾਬ(ਰੁਕਾਵਟ_t ipi, ਸ਼ਬਦ_t ਨਕਾਬ_2, bool_t isBlocking)
 {
-    word_t nr_target_clusters = 0;
-    word_t target_clusters[CONFIG_MAX_NUM_NODES];
+    ਸ਼ਬਦ_t nr_ਨਿਸ਼ਾਨਾ_clusters = 0;
+    ਸ਼ਬਦ_t ਨਿਸ਼ਾਨਾ_clusters[CONFIG_MAX_ਅੰਕ_NODES];
 
-    do {
-        int core = wordBits - 1 - clzl(mask);
-        target_clusters[nr_target_clusters] = 0;
+    ਕਰੋ {
+        ਪੂਰਨ core = ਸ਼ਬਦ_ਬਿੱਟ - 1 - clzl(ਨਕਾਬ_2);
+        ਨਿਸ਼ਾਨਾ_clusters[nr_ਨਿਸ਼ਾਨਾ_clusters] = 0;
 
         /* get mask of all cores in bitmask which are in same cluster as 'core' */
-        word_t sub_mask = mask & cpu_mapping.other_indexes_in_cluster[core];
-        target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[core];
-        if (isBlocking) {
-            big_kernel_lock.node[core].ipi = 1;
+        ਸ਼ਬਦ_t sub_ਨਕਾਬ = ਨਕਾਬ_2 & cpu_mapping.other_indexes_ਵਿੱਚ_cluster[core];
+        ਨਿਸ਼ਾਨਾ_clusters[nr_ਨਿਸ਼ਾਨਾ_clusters] |= cpu_mapping.ਸੂਚਕਾਂਕ_ਮੰਜ਼ਿਲ_logical_id[core];
+        ਜੇ (isBlocking) {
+            big_kernel_ਤਾਲਾ.ਗੰਢ[core].ipi = 1;
         }
 
         /* check if there is any other core in this cluster */
-        while (sub_mask) {
-            int index = wordBits - 1 - clzl(sub_mask);
-            target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[index];
-            if (isBlocking) {
-                big_kernel_lock.node[index].ipi = 1;
+        ਜਦੋਂ (sub_ਨਕਾਬ) {
+            ਪੂਰਨ ਸੂਚਕਾਂਕ = ਸ਼ਬਦ_ਬਿੱਟ - 1 - clzl(sub_ਨਕਾਬ);
+            ਨਿਸ਼ਾਨਾ_clusters[nr_ਨਿਸ਼ਾਨਾ_clusters] |= cpu_mapping.ਸੂਚਕਾਂਕ_ਮੰਜ਼ਿਲ_logical_id[ਸੂਚਕਾਂਕ];
+            ਜੇ (isBlocking) {
+                big_kernel_ਤਾਲਾ.ਗੰਢ[ਸੂਚਕਾਂਕ].ipi = 1;
             }
-            sub_mask &= ~BIT(index);
+            sub_ਨਕਾਬ &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(ਸੂਚਕਾਂਕ);
         }
 
-        mask &= ~(cpu_mapping.other_indexes_in_cluster[core] | BIT(core));
-        nr_target_clusters++;
-    } while (mask != 0);
+        ਨਕਾਬ_2 &= ~(cpu_mapping.other_indexes_ਵਿੱਚ_cluster[core] | ਦੋਆਧਾਰੀ_ਅੰਕ(core));
+        nr_ਨਿਸ਼ਾਨਾ_clusters++;
+    } ਜਦੋਂ (ਨਕਾਬ_2 != 0);
 
     /* broadcast IPIs to clusters... */
     IPI_ICR_BARRIER;
-    for (int i = 0; i < nr_target_clusters; i++) {
-        apic_send_ipi_cluster(ipi, target_clusters[i]);
+    ਲਈ (ਪੂਰਨ i = 0; i < nr_ਨਿਸ਼ਾਨਾ_clusters; i++) {
+        apic_send_ipi_cluster(ipi, ਨਿਸ਼ਾਨਾ_clusters[i]);
     }
 }
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#ਜੇ_ਅੰਤ /* CONFIG_USE_LOGICAL_IDS */
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+ਖਾਲੀ ipi_send_ਨਕਾਬ(irq_t ipi, ਸ਼ਬਦ_t ਨਕਾਬ_2, bool_t isBlocking)
 {
-    interrupt_t interrupt_ipi = ipi + IRQ_INT_OFFSET;
+    ਰੁਕਾਵਟ_t ਰੁਕਾਵਟ_ipi = ipi + IRQ_INT_ਵਿੱਥ;
 
-#ifdef CONFIG_USE_LOGICAL_IDS
-    x86_ipi_send_mask(interrupt_ipi, mask, isBlocking);
-#else
-    generic_ipi_send_mask(interrupt_ipi, mask, isBlocking);
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USE_LOGICAL_IDS
+    x86_ipi_send_ਨਕਾਬ(ਰੁਕਾਵਟ_ipi, ਨਕਾਬ_2, isBlocking);
+#ਨਹੀਂਤਾਂ
+    generic_ipi_send_ਨਕਾਬ(ਰੁਕਾਵਟ_ipi, ਨਕਾਬ_2, isBlocking);
+#ਜੇ_ਅੰਤ /* CONFIG_USE_LOGICAL_IDS */
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */

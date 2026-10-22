@@ -4,749 +4,749 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <util.h>
-#include <api/faults.h>
-#include <api/types.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <object/domain.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#endif
-#include <model/statedata.h>
-#include <arch/machine.h>
-#include <arch/kernel/thread.h>
-#include <machine/registerset.h>
-#include <machine/fpu.h>
-#include <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/faults.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/cspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/domain.h>
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/schedcontext.h>
+#ਜੇ_ਅੰਤ
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/fpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
 
-static seL4_MessageInfo_t
-transferCaps(seL4_MessageInfo_t info,
+ਸਥਿਰ se_L4_ਸੁਨੇਹਾ_Info_t
+transferCaps(se_L4_ਸੁਨੇਹਾ_Info_t info,
              endpoint_t *endpoint, tcb_t *receiver,
-             word_t *receiveBuffer);
+             ਸ਼ਬਦ_t *receive_ਬਫਰ);
 
-BOOT_CODE void configureIdleThread(tcb_t *tcb)
+BOOT_ਕੋਡ ਖਾਲੀ configureIdleThread(tcb_t *tcb)
 {
     tcb->tcbFlags = seL4_TCBFlag_fpuDisabled;
     Arch_configureIdleThread(tcb);
-    setThreadState(tcb, ThreadState_IdleThreadState);
+    ਸੈੱਟ_Thread_State(tcb, ThreadState_IdleThreadState);
 }
 
-void activateThread(void)
+ਖਾਲੀ activateThread(ਖਾਲੀ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (unlikely(NODE_STATE(ksCurThread)->tcbYieldTo)) {
-        schedContext_completeYieldTo(NODE_STATE(ksCurThread));
-        assert(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) == ThreadState_Running);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਜੇ (unlikely(ਗੰਢ_STATE(ksCurThread)->tcb_Yield_ਮੰਜ਼ਿਲ)) {
+        sched_Context_complete_Yield_ਮੰਜ਼ਿਲ(ਗੰਢ_STATE(ksCurThread));
+        ਪ੍ਰਤਿਜ੍ਞਾ(thread_state_get_tsType(ਗੰਢ_STATE(ksCurThread)->tcbState) == ThreadState_Running);
     }
-#endif
+#ਜੇ_ਅੰਤ
 
-    switch (thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState)) {
-    case ThreadState_Running:
-#ifdef CONFIG_VTX
-    case ThreadState_RunningVM:
-#endif
-        break;
+    ਚੋਣ (thread_state_get_tsType(ਗੰਢ_STATE(ksCurThread)->tcbState)) {
+    ਹਾਲਤ ThreadState_Running:
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_VTX
+    ਹਾਲਤ ThreadState_RunningVM:
+#ਜੇ_ਅੰਤ
+        ਰੋਕੋ;
 
-    case ThreadState_Restart: {
-        word_t pc;
+    ਹਾਲਤ ThreadState_Restart: {
+        ਸ਼ਬਦ_t pc;
 
-        pc = getRestartPC(NODE_STATE(ksCurThread));
-        setNextPC(NODE_STATE(ksCurThread), pc);
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-        break;
+        pc = getRestartPC(ਗੰਢ_STATE(ksCurThread));
+        ਸੈੱਟ_ਅਗਲਾ_PC(ਗੰਢ_STATE(ksCurThread), pc);
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Running);
+        ਰੋਕੋ;
     }
 
-    case ThreadState_IdleThreadState:
-        Arch_activateIdleThread(NODE_STATE(ksCurThread));
-        break;
+    ਹਾਲਤ ThreadState_IdleThreadState:
+        Arch_activateIdleThread(ਗੰਢ_STATE(ksCurThread));
+        ਰੋਕੋ;
 
-    default:
+    ਮੂਲ:
         fail("Current thread is blocked");
     }
 }
 
-void suspend(tcb_t *target)
+ਖਾਲੀ suspend(tcb_t *ਨਿਸ਼ਾਨਾ)
 {
-    cancelIPC(target);
-    if (thread_state_get_tsType(target->tcbState) == ThreadState_Running) {
+    cancelIPC(ਨਿਸ਼ਾਨਾ);
+    ਜੇ (thread_state_get_tsType(ਨਿਸ਼ਾਨਾ->tcbState) == ThreadState_Running) {
         /* whilst in the running state it is possible that restart pc of a thread is
          * incorrect. As we do not know what state this thread will transition to
          * after we make it inactive we update its restart pc so that the thread next
          * runs at the correct address whether it is restarted or moved directly to
          * running */
-        updateRestartPC(target);
+        updateRestartPC(ਨਿਸ਼ਾਨਾ);
     }
-    tcbSchedDequeue(target);
-#ifdef CONFIG_KERNEL_MCS
-    tcbReleaseRemove(target);
-    schedContext_cancelYieldTo(target);
-#endif
-    setThreadState(target, ThreadState_Inactive);
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(ਨਿਸ਼ਾਨਾ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    tcbReleaseRemove(ਨਿਸ਼ਾਨਾ);
+    sched_Context_cancel_Yield_ਮੰਜ਼ਿਲ(ਨਿਸ਼ਾਨਾ);
+#ਜੇ_ਅੰਤ
+    ਸੈੱਟ_Thread_State(ਨਿਸ਼ਾਨਾ, ThreadState_Inactive);
 }
 
-void restart(tcb_t *target)
+ਖਾਲੀ restart(tcb_t *ਨਿਸ਼ਾਨਾ)
 {
-    if (isStopped(target)) {
-        cancelIPC(target);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(target, ThreadState_Restart);
-        sched_context_t *sc = target->tcbSchedContext;
-        if (sc_sporadic(sc) && sc != NODE_STATE(ksCurSC)) {
+    ਜੇ (isStopped(ਨਿਸ਼ਾਨਾ)) {
+        cancelIPC(ਨਿਸ਼ਾਨਾ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        ਸੈੱਟ_Thread_State(ਨਿਸ਼ਾਨਾ, ThreadState_Restart);
+        sched_context_t *sc = ਨਿਸ਼ਾਨਾ->tcbSchedContext;
+        ਜੇ (sc_sporadic(sc) && sc != ਗੰਢ_STATE(ksCurSC)) {
             refill_unblock_check(sc);
         }
         schedContext_resume(sc);
-        if (isSchedulable(target)) {
-            possibleSwitchTo(target);
+        ਜੇ (isSchedulable(ਨਿਸ਼ਾਨਾ)) {
+            possible_Switch_ਮੰਜ਼ਿਲ(ਨਿਸ਼ਾਨਾ);
         }
-#else
-        setupReplyMaster(target);
-        setThreadState(target, ThreadState_Restart);
-        SCHED_ENQUEUE(target);
-        possibleSwitchTo(target);
-#endif
+#ਨਹੀਂਤਾਂ
+        ਤਿਆਰੀ_ਜਵਾਬ_Master(ਨਿਸ਼ਾਨਾ);
+        ਸੈੱਟ_Thread_State(ਨਿਸ਼ਾਨਾ, ThreadState_Restart);
+        SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(ਨਿਸ਼ਾਨਾ);
+        possible_Switch_ਮੰਜ਼ਿਲ(ਨਿਸ਼ਾਨਾ);
+#ਜੇ_ਅੰਤ
     }
 }
 
-void doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, word_t badge,
+ਖਾਲੀ doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, ਸ਼ਬਦ_t badge,
                    bool_t grant, tcb_t *receiver)
 {
-    void *receiveBuffer, *sendBuffer;
+    ਖਾਲੀ *receive_ਬਫਰ, *send_ਬਫਰ;
 
-    receiveBuffer = lookupIPCBuffer(true, receiver);
+    receive_ਬਫਰ = lookupIPCBuffer(true, receiver);
 
-    if (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
-        sendBuffer = lookupIPCBuffer(false, sender);
-        doNormalTransfer(sender, sendBuffer, endpoint, badge, grant,
-                         receiver, receiveBuffer);
-    } else {
-        doFaultTransfer(badge, sender, receiver, receiveBuffer);
+    ਜੇ (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
+        send_ਬਫਰ = lookupIPCBuffer(false, sender);
+        do_ਸਾਧਾਰਨ_Transfer(sender, send_ਬਫਰ, endpoint, badge, grant,
+                         receiver, receive_ਬਫਰ);
+    } ਨਹੀਂਤਾਂ {
+        doFaultTransfer(badge, sender, receiver, receive_ਬਫਰ);
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void doReplyTransfer(tcb_t *sender, reply_t *reply, bool_t grant)
-#else
-void doReplyTransfer(tcb_t *sender, tcb_t *receiver, cte_t *slot, bool_t grant)
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਖਾਲੀ do_ਜਵਾਬ_Transfer(tcb_t *sender, ਜਵਾਬ_t *ਜਵਾਬ, bool_t grant)
+#ਨਹੀਂਤਾਂ
+ਖਾਲੀ do_ਜਵਾਬ_Transfer(tcb_t *sender, tcb_t *receiver, cte_t *ਥਾਂ, bool_t grant)
+#ਜੇ_ਅੰਤ
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (reply->replyTCB == NULL ||
-        thread_state_get_tsType(reply->replyTCB->tcbState) != ThreadState_BlockedOnReply) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਜੇ (ਜਵਾਬ->ਜਵਾਬ_TCB == ਨਿਰਾ ||
+        thread_state_get_tsType(ਜਵਾਬ->ਜਵਾਬ_TCB->tcbState) != Thread_State_Blocked_On_ਜਵਾਬ) {
         /* nothing to do */
-        return;
+        ਵਾਪਸ;
     }
 
-    tcb_t *receiver = reply->replyTCB;
-    reply_remove(reply, receiver);
-    assert(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
-    assert(reply->replyTCB == NULL);
+    tcb_t *receiver = ਜਵਾਬ->ਜਵਾਬ_TCB;
+    ਜਵਾਬ_remove(ਜਵਾਬ, receiver);
+    ਪ੍ਰਤਿਜ੍ਞਾ(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਜਵਾਬ->ਜਵਾਬ_TCB == ਨਿਰਾ);
 
-    if (sc_sporadic(receiver->tcbSchedContext)
-        && receiver->tcbSchedContext != NODE_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
+    ਜੇ (sc_sporadic(receiver->tcbSchedContext)
+        && receiver->tcbSchedContext != ਗੰਢ_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
         refill_unblock_check(receiver->tcbSchedContext);
     }
-#else
-    assert(thread_state_get_tsType(receiver->tcbState) ==
-           ThreadState_BlockedOnReply);
-#endif
+#ਨਹੀਂਤਾਂ
+    ਪ੍ਰਤਿਜ੍ਞਾ(thread_state_get_tsType(receiver->tcbState) ==
+           Thread_State_Blocked_On_ਜਵਾਬ);
+#ਜੇ_ਅੰਤ
 
-    word_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
-    if (likely(fault_type == seL4_Fault_NullFault)) {
-        doIPCTransfer(sender, NULL, 0, grant, receiver);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(receiver, ThreadState_Running);
-#else
+    ਸ਼ਬਦ_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
+    ਜੇ (likely(fault_type == seL4_Fault_NullFault)) {
+        doIPCTransfer(sender, ਨਿਰਾ, 0, grant, receiver);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        ਸੈੱਟ_Thread_State(receiver, ThreadState_Running);
+#ਨਹੀਂਤਾਂ
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-        setThreadState(receiver, ThreadState_Running);
-        possibleSwitchTo(receiver);
-#endif
-    } else {
-#ifndef CONFIG_KERNEL_MCS
+        cteDeleteOne(ਥਾਂ);
+        ਸੈੱਟ_Thread_State(receiver, ThreadState_Running);
+        possible_Switch_ਮੰਜ਼ਿਲ(receiver);
+#ਜੇ_ਅੰਤ
+    } ਨਹੀਂਤਾਂ {
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-#endif
-        bool_t restart = handleFaultReply(receiver, sender);
+        cteDeleteOne(ਥਾਂ);
+#ਜੇ_ਅੰਤ
+        bool_t restart = handle_Fault_ਜਵਾਬ(receiver, sender);
         receiver->tcbFault = seL4_Fault_NullFault_new();
-        if (restart) {
-            setThreadState(receiver, ThreadState_Restart);
-#ifndef CONFIG_KERNEL_MCS
-            possibleSwitchTo(receiver);
-#endif
-        } else {
-            setThreadState(receiver, ThreadState_Inactive);
+        ਜੇ (restart) {
+            ਸੈੱਟ_Thread_State(receiver, ThreadState_Restart);
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+            possible_Switch_ਮੰਜ਼ਿਲ(receiver);
+#ਜੇ_ਅੰਤ
+        } ਨਹੀਂਤਾਂ {
+            ਸੈੱਟ_Thread_State(receiver, ThreadState_Inactive);
         }
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    if (receiver->tcbSchedContext && isRunnable(receiver)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਜੇ (receiver->tcbSchedContext && isRunnable(receiver)) {
         sched_context_t *sc = receiver->tcbSchedContext;
-        if ((refill_ready(sc) && refill_sufficient(sc, 0))) {
-            possibleSwitchTo(receiver);
-        } else {
-            if (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
+        ਜੇ ((refill_ready(sc) && refill_sufficient(sc, 0))) {
+            possible_Switch_ਮੰਜ਼ਿਲ(receiver);
+        } ਨਹੀਂਤਾਂ {
+            ਜੇ (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
                 current_fault = seL4_Fault_Timeout_new(sc->scBadge);
                 handleTimeout(receiver);
-            } else {
+            } ਨਹੀਂਤਾਂ {
                 postpone(sc);
             }
         }
     }
-#endif
+#ਜੇ_ਅੰਤ
 }
 
-void doNormalTransfer(tcb_t *sender, word_t *sendBuffer, endpoint_t *endpoint,
-                      word_t badge, bool_t canGrant, tcb_t *receiver,
-                      word_t *receiveBuffer)
+ਖਾਲੀ do_ਸਾਧਾਰਨ_Transfer(tcb_t *sender, ਸ਼ਬਦ_t *send_ਬਫਰ, endpoint_t *endpoint,
+                      ਸ਼ਬਦ_t badge, bool_t canGrant, tcb_t *receiver,
+                      ਸ਼ਬਦ_t *receive_ਬਫਰ)
 {
-    word_t msgTransferred;
-    seL4_MessageInfo_t tag;
-    exception_t status;
+    ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Transferred;
+    se_L4_ਸੁਨੇਹਾ_Info_t ਟੈਗ;
+    exception_t ਸਥਿਤੀ;
 
-    tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
+    ਟੈਗ = ਸੁਨੇਹਾ_Info_From_ਸ਼ਬਦ(get_ਰਜਿਸਟਰ(sender, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ));
 
-    if (canGrant) {
-        status = lookupExtraCaps(sender, sendBuffer, tag);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            current_extra_caps.excaprefs[0] = NULL;
+    ਜੇ (canGrant) {
+        ਸਥਿਤੀ = lookupExtraCaps(sender, send_ਬਫਰ, ਟੈਗ);
+        ਜੇ (unlikely(ਸਥਿਤੀ != EXCEPTION_NONE)) {
+            current_extra_caps.excaprefs[0] = ਨਿਰਾ;
         }
-    } else {
-        current_extra_caps.excaprefs[0] = NULL;
+    } ਨਹੀਂਤਾਂ {
+        current_extra_caps.excaprefs[0] = ਨਿਰਾ;
     }
 
-    msgTransferred = copyMRs(sender, sendBuffer, receiver, receiveBuffer,
-                             seL4_MessageInfo_get_length(tag));
+    ਸੁਨੇਹਾ_Transferred = copyMRs(sender, send_ਬਫਰ, receiver, receive_ਬਫਰ,
+                             se_L4_ਸੁਨੇਹਾ_Info_get_ਲੰਮਾਈ(ਟੈਗ));
 
-    tag = transferCaps(tag, endpoint, receiver, receiveBuffer);
+    ਟੈਗ = transferCaps(ਟੈਗ, endpoint, receiver, receive_ਬਫਰ);
 
-    tag = seL4_MessageInfo_set_length(tag, msgTransferred);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(tag));
-    setRegister(receiver, badgeRegister, badge);
+    ਟੈਗ = se_L4_ਸੁਨੇਹਾ_Info_ਸੈੱਟ_ਲੰਮਾਈ(ਟੈਗ, ਸੁਨੇਹਾ_Transferred);
+    ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(ਟੈਗ));
+    ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, badge_ਰਜਿਸਟਰ, badge);
 }
 
-void doFaultTransfer(word_t badge, tcb_t *sender, tcb_t *receiver,
-                     word_t *receiverIPCBuffer)
+ਖਾਲੀ doFaultTransfer(ਸ਼ਬਦ_t badge, tcb_t *sender, tcb_t *receiver,
+                     ਸ਼ਬਦ_t *receiverIPCBuffer)
 {
-    word_t sent;
-    seL4_MessageInfo_t msgInfo;
+    ਸ਼ਬਦ_t ਭੇਜਿਆ;
+    se_L4_ਸੁਨੇਹਾ_Info_t ਸੁਨੇਹਾ_Info;
 
-    sent = setMRs_fault(sender, receiver, receiverIPCBuffer);
-    msgInfo = seL4_MessageInfo_new(
-                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, sent);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(msgInfo));
-    setRegister(receiver, badgeRegister, badge);
+    ਭੇਜਿਆ = ਸੈੱਟ_MRs_fault(sender, receiver, receiverIPCBuffer);
+    ਸੁਨੇਹਾ_Info = se_L4_ਸੁਨੇਹਾ_Info_new(
+                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, ਭੇਜਿਆ);
+    ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ, ਸ਼ਬਦ_From_ਸੁਨੇਹਾ_Info(ਸੁਨੇਹਾ_Info));
+    ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, badge_ਰਜਿਸਟਰ, badge);
 }
 
 /* Like getReceiveSlots, this is specialised for single-cap transfer. */
-static seL4_MessageInfo_t transferCaps(seL4_MessageInfo_t info,
+ਸਥਿਰ se_L4_ਸੁਨੇਹਾ_Info_t transferCaps(se_L4_ਸੁਨੇਹਾ_Info_t info,
                                        endpoint_t *endpoint, tcb_t *receiver,
-                                       word_t *receiveBuffer)
+                                       ਸ਼ਬਦ_t *receive_ਬਫਰ)
 {
-    word_t i;
-    cte_t *destSlot;
+    ਸ਼ਬਦ_t i;
+    cte_t *dest_ਥਾਂ;
 
-    info = seL4_MessageInfo_set_extraCaps(info, 0);
-    info = seL4_MessageInfo_set_capsUnwrapped(info, 0);
+    info = se_L4_ਸੁਨੇਹਾ_Info_ਸੈੱਟ_extra_Caps(info, 0);
+    info = se_L4_ਸੁਨੇਹਾ_Info_ਸੈੱਟ_caps_Unwrapped(info, 0);
 
-    if (likely(!current_extra_caps.excaprefs[0] || !receiveBuffer)) {
-        return info;
+    ਜੇ (likely(!current_extra_caps.excaprefs[0] || !receive_ਬਫਰ)) {
+        ਵਾਪਸ info;
     }
 
-    destSlot = getReceiveSlots(receiver, receiveBuffer);
+    dest_ਥਾਂ = getReceiveSlots(receiver, receive_ਬਫਰ);
 
-    for (i = 0; i < seL4_MsgMaxExtraCaps && current_extra_caps.excaprefs[i] != NULL; i++) {
-        cte_t *slot = current_extra_caps.excaprefs[i];
-        cap_t cap = slot->cap;
+    ਲਈ (i = 0; i < se_L4_ਸੁਨੇਹਾ_Max_Extra_Caps && current_extra_caps.excaprefs[i] != ਨਿਰਾ; i++) {
+        cte_t *ਥਾਂ = current_extra_caps.excaprefs[i];
+        cap_t cap = ਥਾਂ->cap;
 
-        if (cap_get_capType(cap) == cap_endpoint_cap &&
+        ਜੇ (cap_get_capType(cap) == cap_endpoint_cap &&
             EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)) == endpoint) {
             /* If this is a cap to the endpoint on which the message was sent,
              * only transfer the badge, not the cap. */
-            setExtraBadge(receiveBuffer,
+            ਸੈੱਟ_Extra_Badge(receive_ਬਫਰ,
                           cap_endpoint_cap_get_capEPBadge(cap), i);
 
-            info = seL4_MessageInfo_set_capsUnwrapped(info,
-                                                      seL4_MessageInfo_get_capsUnwrapped(info) | (1 << i));
+            info = se_L4_ਸੁਨੇਹਾ_Info_ਸੈੱਟ_caps_Unwrapped(info,
+                                                      se_L4_ਸੁਨੇਹਾ_Info_get_caps_Unwrapped(info) | (1 << i));
 
-        } else {
+        } ਨਹੀਂਤਾਂ {
             deriveCap_ret_t dc_ret;
 
-            if (!destSlot) {
-                break;
+            ਜੇ (!dest_ਥਾਂ) {
+                ਰੋਕੋ;
             }
 
-            dc_ret = deriveCap(slot, cap);
+            dc_ret = deriveCap(ਥਾਂ, cap);
 
-            if (dc_ret.status != EXCEPTION_NONE) {
-                break;
+            ਜੇ (dc_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
+                ਰੋਕੋ;
             }
-            if (cap_get_capType(dc_ret.cap) == cap_null_cap) {
-                break;
+            ਜੇ (cap_get_capType(dc_ret.cap) == cap_null_cap) {
+                ਰੋਕੋ;
             }
 
-            cteInsert(dc_ret.cap, slot, destSlot);
+            cte_ਪਾਓ(dc_ret.cap, ਥਾਂ, dest_ਥਾਂ);
 
-            destSlot = NULL;
+            dest_ਥਾਂ = ਨਿਰਾ;
         }
     }
 
-    return seL4_MessageInfo_set_extraCaps(info, i);
+    ਵਾਪਸ se_L4_ਸੁਨੇਹਾ_Info_ਸੈੱਟ_extra_Caps(info, i);
 }
 
-void doNBRecvFailedTransfer(tcb_t *thread)
+ਖਾਲੀ doNBRecvFailedTransfer(tcb_t *thread)
 {
     /* Set the badge register to 0 to indicate there was no message */
-    setRegister(thread, badgeRegister, 0);
+    ਸੈੱਟ_ਰਜਿਸਟਰ(thread, badge_ਰਜਿਸਟਰ, 0);
 }
 
-void prepareSetDomain(tcb_t *tptr, dom_t dom)
+ਖਾਲੀ prepare_ਸੈੱਟ_Domain(tcb_t *tptr, dom_t dom)
 {
-    if (ksCurDomain != dom) {
-        Arch_prepareSetDomain(tptr, dom);
-#ifdef CONFIG_HAVE_FPU
+    ਜੇ (ksCurDomain != dom) {
+        Arch_prepare_ਸੈੱਟ_Domain(tptr, dom);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
         /* Save FPU state now to avoid touching cross-domain state later */
         fpuRelease(tptr);
-#endif
+#ਜੇ_ਅੰਤ
     }
 }
 
-static void prepareNextDomain(void)
+ਸਥਿਰ ਖਾਲੀ prepare_ਅਗਲਾ_Domain(ਖਾਲੀ)
 {
-    Arch_prepareNextDomain();
-#ifdef CONFIG_HAVE_FPU
+    Arch_prepare_ਅਗਲਾ_Domain();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
     /* Save FPU state now to avoid touching cross-domain state later */
-    switchLocalFpuOwner(NULL);
-#endif
+    switchLocalFpuOwner(ਨਿਰਾ);
+#ਜੇ_ਅੰਤ
 }
 
-static void nextDomain(void)
+ਸਥਿਰ ਖਾਲੀ ਅਗਲਾ_Domain(ਖਾਲੀ)
 {
-    ksDomScheduleIdx++;
-    if (dschedule_is_end_marker(ksDomScheduleIdx)) {
-        ksDomScheduleIdx = ksDomScheduleStart;
+    ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx++;
+    ਜੇ (dschedule_is_ਸਿਰਾ_marker(ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx)) {
+        ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx = ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_ਸ਼ੁਰੂ;
     }
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksReprogram) = true;
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਗੰਢ_STATE(ksReprogram) = true;
+#ਜੇ_ਅੰਤ
     ksWorkUnitsCompleted = 0;
-    ksCurDomain = dschedule_domain(ksDomSchedule[ksDomScheduleIdx]);
-    ksDomainTime = dschedule_duration(ksDomSchedule[ksDomScheduleIdx]);
+    ksCurDomain = dschedule_domain(ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ[ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx]);
+    ks_Domain_ਸਮਾਂ = dschedule_duration(ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ[ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx]);
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static void switchSchedContext(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਸਥਿਰ ਖਾਲੀ switchSchedContext(ਖਾਲੀ)
 {
-    if (unlikely(NODE_STATE(ksCurSC) != NODE_STATE(ksCurThread)->tcbSchedContext)) {
-        NODE_STATE(ksReprogram) = true;
-        if (sc_constant_bandwidth(NODE_STATE(ksCurThread)->tcbSchedContext)) {
-            refill_unblock_check(NODE_STATE(ksCurThread)->tcbSchedContext);
+    ਜੇ (unlikely(ਗੰਢ_STATE(ksCurSC) != ਗੰਢ_STATE(ksCurThread)->tcbSchedContext)) {
+        ਗੰਢ_STATE(ksReprogram) = true;
+        ਜੇ (sc_constant_bandwidth(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext)) {
+            refill_unblock_check(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext);
         }
 
-        assert(refill_ready(NODE_STATE(ksCurThread)->tcbSchedContext));
-        assert(refill_sufficient(NODE_STATE(ksCurThread)->tcbSchedContext, 0));
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_ready(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext));
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext, 0));
     }
 
-    if (NODE_STATE(ksReprogram)) {
+    ਜੇ (ਗੰਢ_STATE(ksReprogram)) {
         /* if we are reprogamming, we have acted on the new kernel time and cannot
          * rollback -> charge the current thread */
-        commitTime();
+        commit_ਸਮਾਂ();
     }
 
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread)->tcbSchedContext;
+    ਗੰਢ_STATE(ksCurSC) = ਗੰਢ_STATE(ksCurThread)->tcbSchedContext;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-static void scheduleChooseNewThread(void)
+ਸਥਿਰ ਖਾਲੀ ਸਮਾਂ_ਸਾਰਣੀ_ਚੁਣੋ_New_Thread(ਖਾਲੀ)
 {
-    if (ksDomainTime == 0) {
-        prepareNextDomain();
-        nextDomain();
+    ਜੇ (ks_Domain_ਸਮਾਂ == 0) {
+        prepare_ਅਗਲਾ_Domain();
+        ਅਗਲਾ_Domain();
     }
-    chooseThread();
+    ਚੁਣੋ_Thread();
 }
 
-void schedule(void)
+ਖਾਲੀ ਸਮਾਂ_ਸਾਰਣੀ(ਖਾਲੀ)
 {
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     awaken();
-    checkDomainTime();
-#endif
+    check_Domain_ਸਮਾਂ();
+#ਜੇ_ਅੰਤ
 
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+    ਜੇ (ਗੰਢ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
         bool_t was_runnable;
-        if (isSchedulable(NODE_STATE(ksCurThread))) {
+        ਜੇ (isSchedulable(ਗੰਢ_STATE(ksCurThread))) {
             was_runnable = true;
-            SCHED_ENQUEUE_CURRENT_TCB;
-        } else {
+            SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ_CURRENT_TCB;
+        } ਨਹੀਂਤਾਂ {
             was_runnable = false;
         }
 
-        if (NODE_STATE(ksSchedulerAction) == SchedulerAction_ChooseNewThread) {
-            scheduleChooseNewThread();
-        } else {
-            tcb_t *candidate = NODE_STATE(ksSchedulerAction);
-            assert(isSchedulable(candidate));
+        ਜੇ (ਗੰਢ_STATE(ksSchedulerAction) == Scheduler_Action_ਚੁਣੋ_New_Thread) {
+            ਸਮਾਂ_ਸਾਰਣੀ_ਚੁਣੋ_New_Thread();
+        } ਨਹੀਂਤਾਂ {
+            tcb_t *candidate = ਗੰਢ_STATE(ksSchedulerAction);
+            ਪ੍ਰਤਿਜ੍ਞਾ(isSchedulable(candidate));
             /* Avoid checking bitmap when ksCurThread is higher prio, to
              * match fast path.
              * Don't look at ksCurThread prio when it's idle, to respect
              * information flow in non-fastpath cases. */
             bool_t fastfail =
-                NODE_STATE(ksCurThread) == NODE_STATE(ksIdleThread)
-                || (candidate->tcbPriority < NODE_STATE(ksCurThread)->tcbPriority);
-            if (fastfail &&
-                !isHighestPrio(ksCurDomain, candidate->tcbPriority)) {
-                SCHED_ENQUEUE(candidate);
+                ਗੰਢ_STATE(ksCurThread) == ਗੰਢ_STATE(ksIdleThread)
+                || (candidate->tcb_ਤਰਜੀਹ < ਗੰਢ_STATE(ksCurThread)->tcb_ਤਰਜੀਹ);
+            ਜੇ (fastfail &&
+                !isHighestPrio(ksCurDomain, candidate->tcb_ਤਰਜੀਹ)) {
+                SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(candidate);
                 /* we can't, need to reschedule */
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else if (was_runnable && candidate->tcbPriority == NODE_STATE(ksCurThread)->tcbPriority) {
+                ਗੰਢ_STATE(ksSchedulerAction) = Scheduler_Action_ਚੁਣੋ_New_Thread;
+                ਸਮਾਂ_ਸਾਰਣੀ_ਚੁਣੋ_New_Thread();
+            } ਨਹੀਂਤਾਂ ਜੇ (was_runnable && candidate->tcb_ਤਰਜੀਹ == ਗੰਢ_STATE(ksCurThread)->tcb_ਤਰਜੀਹ) {
                 /* We append the candidate at the end of the scheduling queue, that way the
                  * current thread, that was enqueued at the start of the scheduling queue
                  * will get picked during chooseNewThread */
                 SCHED_APPEND(candidate);
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else {
-                assert(candidate != NODE_STATE(ksCurThread));
-                switchToThread(candidate);
+                ਗੰਢ_STATE(ksSchedulerAction) = Scheduler_Action_ਚੁਣੋ_New_Thread;
+                ਸਮਾਂ_ਸਾਰਣੀ_ਚੁਣੋ_New_Thread();
+            } ਨਹੀਂਤਾਂ {
+                ਪ੍ਰਤਿਜ੍ਞਾ(candidate != ਗੰਢ_STATE(ksCurThread));
+                switch_ਮੰਜ਼ਿਲ_Thread(candidate);
             }
         }
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
-#ifdef ENABLE_SMP_SUPPORT
-    doMaskReschedule(ARCH_NODE_STATE(ipiReschedulePending));
-    ARCH_NODE_STATE(ipiReschedulePending) = 0;
-#endif /* ENABLE_SMP_SUPPORT */
+    ਗੰਢ_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
+    do_ਨਕਾਬ_Reschedule(ARCH_ਗੰਢ_STATE(ipiReschedulePending));
+    ARCH_ਗੰਢ_STATE(ipiReschedulePending) = 0;
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     switchSchedContext();
 
-    if (NODE_STATE(ksReprogram)) {
-        setNextInterrupt();
-        NODE_STATE(ksReprogram) = false;
+    ਜੇ (ਗੰਢ_STATE(ksReprogram)) {
+        ਸੈੱਟ_ਅਗਲਾ_ਰੁਕਾਵਟ();
+        ਗੰਢ_STATE(ksReprogram) = false;
     }
-#endif
+#ਜੇ_ਅੰਤ
 }
 
-void chooseThread(void)
+ਖਾਲੀ ਚੁਣੋ_Thread(ਖਾਲੀ)
 {
-    word_t prio;
-    word_t dom;
+    ਸ਼ਬਦ_t prio;
+    ਸ਼ਬਦ_t dom;
     tcb_t *thread;
 
-    if (numDomains > 1) {
+    ਜੇ (ਅੰਕ_Domains > 1) {
         dom = ksCurDomain;
-    } else {
+    } ਨਹੀਂਤਾਂ {
         dom = 0;
     }
 
-    if (likely(NODE_STATE(ksReadyQueuesL1Bitmap[dom]))) {
+    ਜੇ (likely(ਗੰਢ_STATE(ksReadyQueuesL1Bitmap[dom]))) {
         prio = getHighestPrio(dom);
-        thread = NODE_STATE(ksReadyQueues)[ready_queues_index(dom, prio)].head;
-        assert(thread);
-        assert(isSchedulable(thread));
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(thread->tcbSchedContext, 0));
-        assert(refill_ready(thread->tcbSchedContext));
-#endif
-        switchToThread(thread);
-    } else {
-        switchToIdleThread();
+        thread = ਗੰਢ_STATE(ksReadyQueues)[ready_queues_ਸੂਚਕਾਂਕ(dom, prio)].ਸਿਰ;
+        ਪ੍ਰਤਿਜ੍ਞਾ(thread);
+        ਪ੍ਰਤਿਜ੍ਞਾ(isSchedulable(thread));
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(thread->tcbSchedContext, 0));
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_ready(thread->tcbSchedContext));
+#ਜੇ_ਅੰਤ
+        switch_ਮੰਜ਼ਿਲ_Thread(thread);
+    } ਨਹੀਂਤਾਂ {
+        switch_ਮੰਜ਼ਿਲ_Idle_Thread();
     }
 }
 
-void switchToThread(tcb_t *thread)
+ਖਾਲੀ switch_ਮੰਜ਼ਿਲ_Thread(tcb_t *thread)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(thread->tcbSchedContext != NULL);
-    assert(!thread_state_get_tcbInReleaseQueue(thread->tcbState));
-    assert(refill_sufficient(thread->tcbSchedContext, 0));
-    assert(refill_ready(thread->tcbSchedContext));
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਪ੍ਰਤਿਜ੍ਞਾ(thread->tcbSchedContext != ਨਿਰਾ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(!thread_state_get_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(thread->tcbState));
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(thread->tcbSchedContext, 0));
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_ready(thread->tcbSchedContext));
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), thread);
-#endif
-    Arch_switchToThread(thread);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ਗੰਢ_STATE(ksCurThread), thread);
+#ਜੇ_ਅੰਤ
+    Arch_switch_ਮੰਜ਼ਿਲ_Thread(thread);
 
-#ifdef CONFIG_HAVE_FPU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
     lazyFPURestore(thread);
-#endif /* CONFIG_HAVE_FPU */
+#ਜੇ_ਅੰਤ /* CONFIG_HAVE_FPU */
 
-    tcbSchedDequeue(thread);
-    NODE_STATE(ksCurThread) = thread;
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(thread);
+    ਗੰਢ_STATE(ksCurThread) = thread;
 }
 
-void switchToIdleThread(void)
+ਖਾਲੀ switch_ਮੰਜ਼ਿਲ_Idle_Thread(ਖਾਲੀ)
 {
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), NODE_STATE(ksIdleThread));
-#endif
-    Arch_switchToIdleThread();
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ਗੰਢ_STATE(ksCurThread), ਗੰਢ_STATE(ksIdleThread));
+#ਜੇ_ਅੰਤ
+    Arch_switch_ਮੰਜ਼ਿਲ_Idle_Thread();
+    ਗੰਢ_STATE(ksCurThread) = ਗੰਢ_STATE(ksIdleThread);
 }
 
-void setDomain(tcb_t *tptr, dom_t dom)
+ਖਾਲੀ ਸੈੱਟ_Domain(tcb_t *tptr, dom_t dom)
 {
-    tcbSchedDequeue(tptr);
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(tptr);
     tptr->tcbDomain = dom;
-    if (isSchedulable(tptr)) {
-        SCHED_ENQUEUE(tptr);
+    ਜੇ (isSchedulable(tptr)) {
+        SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(tptr);
     }
-    if (tptr == NODE_STATE(ksCurThread)) {
+    ਜੇ (tptr == ਗੰਢ_STATE(ksCurThread)) {
         rescheduleRequired();
     }
 }
 
-void setMCPriority(tcb_t *tptr, prio_t mcp)
+ਖਾਲੀ ਸੈੱਟ_MCPriority(tcb_t *tptr, prio_t mcp)
 {
     tptr->tcbMCP = mcp;
 }
-#ifdef CONFIG_KERNEL_MCS
-void setPriority(tcb_t *tptr, prio_t prio)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਖਾਲੀ ਸੈੱਟ_ਤਰਜੀਹ(tcb_t *tptr, prio_t prio)
 {
-    switch (thread_state_get_tsType(tptr->tcbState)) {
-    case ThreadState_Running:
-    case ThreadState_Restart:
-        if (thread_state_get_tcbQueued(tptr->tcbState) || tptr == NODE_STATE(ksCurThread)) {
-            tcbSchedDequeue(tptr);
-            tptr->tcbPriority = prio;
-            SCHED_ENQUEUE(tptr);
+    ਚੋਣ (thread_state_get_tsType(tptr->tcbState)) {
+    ਹਾਲਤ ThreadState_Running:
+    ਹਾਲਤ ThreadState_Restart:
+        ਜੇ (thread_state_get_tcbQueued(tptr->tcbState) || tptr == ਗੰਢ_STATE(ksCurThread)) {
+            tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(tptr);
+            tptr->tcb_ਤਰਜੀਹ = prio;
+            SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(tptr);
             rescheduleRequired();
-        } else {
-            tptr->tcbPriority = prio;
+        } ਨਹੀਂਤਾਂ {
+            tptr->tcb_ਤਰਜੀਹ = prio;
         }
-        break;
-    case ThreadState_BlockedOnReceive:
-    case ThreadState_BlockedOnSend:
-        tptr->tcbPriority = prio;
+        ਰੋਕੋ;
+    ਹਾਲਤ ThreadState_BlockedOnReceive:
+    ਹਾਲਤ ThreadState_BlockedOnSend:
+        tptr->tcb_ਤਰਜੀਹ = prio;
         reorderEP(EP_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    case ThreadState_BlockedOnNotification:
-        tptr->tcbPriority = prio;
+        ਰੋਕੋ;
+    ਹਾਲਤ ThreadState_BlockedOnNotification:
+        tptr->tcb_ਤਰਜੀਹ = prio;
         reorderNTFN(NTFN_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    default:
-        tptr->tcbPriority = prio;
-        break;
+        ਰੋਕੋ;
+    ਮੂਲ:
+        tptr->tcb_ਤਰਜੀਹ = prio;
+        ਰੋਕੋ;
     }
 }
-#else
-void setPriority(tcb_t *tptr, prio_t prio)
+#ਨਹੀਂਤਾਂ
+ਖਾਲੀ ਸੈੱਟ_ਤਰਜੀਹ(tcb_t *tptr, prio_t prio)
 {
-    tcbSchedDequeue(tptr);
-    tptr->tcbPriority = prio;
-    if (isRunnable(tptr)) {
-        if (tptr == NODE_STATE(ksCurThread)) {
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(tptr);
+    tptr->tcb_ਤਰਜੀਹ = prio;
+    ਜੇ (isRunnable(tptr)) {
+        ਜੇ (tptr == ਗੰਢ_STATE(ksCurThread)) {
             rescheduleRequired();
-        } else {
-            possibleSwitchTo(tptr);
+        } ਨਹੀਂਤਾਂ {
+            possible_Switch_ਮੰਜ਼ਿਲ(tptr);
         }
     }
 }
-#endif
+#ਜੇ_ਅੰਤ
 
 /* Note that this thread will possibly continue at the end of this kernel
  * entry. Do not queue it yet, since a queue+unqueue operation is wasteful
  * if it will be picked. Instead, it waits in the 'ksSchedulerAction' site
  * on which the scheduler will take action. */
-void possibleSwitchTo(tcb_t *target)
+ਖਾਲੀ possible_Switch_ਮੰਜ਼ਿਲ(tcb_t *ਨਿਸ਼ਾਨਾ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (target->tcbSchedContext != NULL && !thread_state_get_tcbInReleaseQueue(target->tcbState)) {
-#endif
-        if (ksCurDomain != target->tcbDomain
-            SMP_COND_STATEMENT( || target->tcbAffinity != getCurrentCPUIndex())) {
-            SCHED_ENQUEUE(target);
-        } else if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਜੇ (ਨਿਸ਼ਾਨਾ->tcbSchedContext != ਨਿਰਾ && !thread_state_get_tcb_ਵਿੱਚ_Release_ਕਤਾਰ(ਨਿਸ਼ਾਨਾ->tcbState)) {
+#ਜੇ_ਅੰਤ
+        ਜੇ (ksCurDomain != ਨਿਸ਼ਾਨਾ->tcbDomain
+            SMP_COND_STATEMENT( || ਨਿਸ਼ਾਨਾ->tcbAffinity != getCurrentCPUIndex())) {
+            SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(ਨਿਸ਼ਾਨਾ);
+        } ਨਹੀਂਤਾਂ ਜੇ (ਗੰਢ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
             /* Too many threads want special treatment, use regular queues. */
             rescheduleRequired();
-            SCHED_ENQUEUE(target);
-        } else {
-            NODE_STATE(ksSchedulerAction) = target;
+            SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(ਨਿਸ਼ਾਨਾ);
+        } ਨਹੀਂਤਾਂ {
+            ਗੰਢ_STATE(ksSchedulerAction) = ਨਿਸ਼ਾਨਾ;
         }
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
     }
-#endif
+#ਜੇ_ਅੰਤ
 
 }
 
-void setThreadState(tcb_t *tptr, _thread_state_t ts)
+ਖਾਲੀ ਸੈੱਟ_Thread_State(tcb_t *tptr, _thread_state_t ts)
 {
-    thread_state_ptr_set_tsType(&tptr->tcbState, ts);
-    scheduleTCB(tptr);
+    thread_state_ptr_ਸੈੱਟ_ts_Type(&tptr->tcbState, ts);
+    ਸਮਾਂ_ਸਾਰਣੀ_TCB(tptr);
 }
 
-void scheduleTCB(tcb_t *tptr)
+ਖਾਲੀ ਸਮਾਂ_ਸਾਰਣੀ_TCB(tcb_t *tptr)
 {
-    if (tptr == NODE_STATE(ksCurThread) &&
-        NODE_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
+    ਜੇ (tptr == ਗੰਢ_STATE(ksCurThread) &&
+        ਗੰਢ_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
         !isSchedulable(tptr)) {
         /* short-cut rescheduleRequired(), because we know what the scheduler action is. */
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+        ਗੰਢ_STATE(ksSchedulerAction) = Scheduler_Action_ਚੁਣੋ_New_Thread;
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void postpone(sched_context_t *sc)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਖਾਲੀ postpone(sched_context_t *sc)
 {
     tcb_t *tcb = sc->scTcb;
-    assert(tcb != NULL);
+    ਪ੍ਰਤਿਜ੍ਞਾ(tcb != ਨਿਰਾ);
 
-    tcbSchedDequeue(tcb);
-    tcbReleaseEnqueue(tcb);
-    NODE_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
+    tcb_Sched_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(tcb);
+    tcb_Release_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(tcb);
+    ਗੰਢ_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
 }
 
-void setNextInterrupt(void)
+ਖਾਲੀ ਸੈੱਟ_ਅਗਲਾ_ਰੁਕਾਵਟ(ਖਾਲੀ)
 {
     /* fetch the head refill separately to ease verification */
-    refill_t ct_head_refill = *refill_head(NODE_STATE(ksCurThread)->tcbSchedContext);
-    ticks_t next_interrupt = NODE_STATE(ksCurTime) + ct_head_refill.rAmount;
+    refill_t ct_ਸਿਰ_refill = *refill_ਸਿਰ(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext);
+    ticks_t ਅਗਲਾ_ਰੁਕਾਵਟ = ਗੰਢ_STATE(ks_Cur_ਸਮਾਂ) + ct_ਸਿਰ_refill.rAmount;
 
-    if (numDomains > 1) {
-        next_interrupt = MIN(next_interrupt, NODE_STATE(ksCurTime) + ksDomainTime);
+    ਜੇ (ਅੰਕ_Domains > 1) {
+        ਅਗਲਾ_ਰੁਕਾਵਟ = MIN(ਅਗਲਾ_ਰੁਕਾਵਟ, ਗੰਢ_STATE(ks_Cur_ਸਮਾਂ) + ks_Domain_ਸਮਾਂ);
     }
 
-    tcb_t *rlq_head = NODE_STATE(ksReleaseQueue.head);
-    if (rlq_head != NULL) {
+    tcb_t *rlq_ਸਿਰ = ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ);
+    ਜੇ (rlq_ਸਿਰ != ਨਿਰਾ) {
         /* fetch the head refill separately to ease verification */
-        refill_t rlq_head_refill = *refill_head(rlq_head->tcbSchedContext);
-        next_interrupt = MIN(rlq_head_refill.rTime, next_interrupt);
+        refill_t rlq_ਸਿਰ_refill = *refill_ਸਿਰ(rlq_ਸਿਰ->tcbSchedContext);
+        ਅਗਲਾ_ਰੁਕਾਵਟ = MIN(rlq_ਸਿਰ_refill.r_ਸਮਾਂ, ਅਗਲਾ_ਰੁਕਾਵਟ);
     }
 
     /* We should never be attempting to schedule anything earlier than ksCurTime */
-    assert(next_interrupt >= NODE_STATE(ksCurTime));
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਅਗਲਾ_ਰੁਕਾਵਟ >= ਗੰਢ_STATE(ks_Cur_ਸਮਾਂ));
 
     /* Our lower bound ksCurTime is slightly in the past (at kernel entry) and
        we are further subtracting getTimerPrecision(), so we may be setting a
        deadline in the past. If that is the case, we assume the IRQ will be
        raised immediately after we leave the kernel. */
-    setDeadline(next_interrupt - getTimerPrecision());
+    ਸੈੱਟ_Deadline(ਅਗਲਾ_ਰੁਕਾਵਟ - getTimerPrecision());
 }
 
-void chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
+ਖਾਲੀ chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
 {
-    if (likely(NODE_STATE(ksCurSC) != NODE_STATE(ksIdleSC))) {
-        if (isRoundRobin(NODE_STATE(ksCurSC))) {
-            assert(refill_size(NODE_STATE(ksCurSC)) == MIN_REFILLS);
-            refill_t head = *refill_head(NODE_STATE(ksCurSC));
-            refill_t tail = *refill_tail(NODE_STATE(ksCurSC));
-            refill_head(NODE_STATE(ksCurSC))->rAmount = head.rAmount + tail.rAmount;
-            refill_tail(NODE_STATE(ksCurSC))->rAmount = 0;
-        } else {
+    ਜੇ (likely(ਗੰਢ_STATE(ksCurSC) != ਗੰਢ_STATE(ksIdleSC))) {
+        ਜੇ (is_ਗੇੜਾ_Robin(ਗੰਢ_STATE(ksCurSC))) {
+            ਪ੍ਰਤਿਜ੍ਞਾ(refill_ਮਾਪ(ਗੰਢ_STATE(ksCurSC)) == MIN_REFILLS);
+            refill_t ਸਿਰ = *refill_ਸਿਰ(ਗੰਢ_STATE(ksCurSC));
+            refill_t ਪੂਛ = *refill_ਪੂਛ(ਗੰਢ_STATE(ksCurSC));
+            refill_ਸਿਰ(ਗੰਢ_STATE(ksCurSC))->rAmount = ਸਿਰ.rAmount + ਪੂਛ.rAmount;
+            refill_ਪੂਛ(ਗੰਢ_STATE(ksCurSC))->rAmount = 0;
+        } ਨਹੀਂਤਾਂ {
             refill_budget_check(consumed);
         }
 
-        assert(refill_head(NODE_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
-        NODE_STATE(ksCurSC)->scConsumed += consumed;
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_ਸਿਰ(ਗੰਢ_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
+        ਗੰਢ_STATE(ksCurSC)->scConsumed += consumed;
     }
-    NODE_STATE(ksConsumed) = 0;
-    if (likely(isSchedulable(NODE_STATE(ksCurThread)))) {
-        assert(NODE_STATE(ksCurThread)->tcbSchedContext == NODE_STATE(ksCurSC));
-        endTimeslice(canTimeoutFault);
+    ਗੰਢ_STATE(ksConsumed) = 0;
+    ਜੇ (likely(isSchedulable(ਗੰਢ_STATE(ksCurThread)))) {
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਗੰਢ_STATE(ksCurThread)->tcbSchedContext == ਗੰਢ_STATE(ksCurSC));
+        ਸਿਰਾ_Timeslice(canTimeoutFault);
         rescheduleRequired();
-        NODE_STATE(ksReprogram) = true;
+        ਗੰਢ_STATE(ksReprogram) = true;
     }
 }
 
-void endTimeslice(bool_t can_timeout_fault)
+ਖਾਲੀ ਸਿਰਾ_Timeslice(bool_t can_timeout_fault)
 {
-    bool_t round_robin = isRoundRobin(NODE_STATE(ksCurSC));
-    bool_t valid = validTimeoutHandler(NODE_STATE(ksCurThread));
+    bool_t ਗੇੜਾ_robin = is_ਗੇੜਾ_Robin(ਗੰਢ_STATE(ksCurSC));
+    bool_t valid = validTimeoutHandler(ਗੰਢ_STATE(ksCurThread));
 
-    if (can_timeout_fault && !round_robin && valid) {
-        current_fault = seL4_Fault_Timeout_new(NODE_STATE(ksCurSC)->scBadge);
-        handleTimeout(NODE_STATE(ksCurThread));
-    } else if (refill_ready(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), 0)) {
+    ਜੇ (can_timeout_fault && !ਗੇੜਾ_robin && valid) {
+        current_fault = seL4_Fault_Timeout_new(ਗੰਢ_STATE(ksCurSC)->scBadge);
+        handleTimeout(ਗੰਢ_STATE(ksCurThread));
+    } ਨਹੀਂਤਾਂ ਜੇ (refill_ready(ਗੰਢ_STATE(ksCurSC)) && refill_sufficient(ਗੰਢ_STATE(ksCurSC), 0)) {
         /* apply round robin */
-        assert(!thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState));
+        ਪ੍ਰਤਿਜ੍ਞਾ(!thread_state_get_tcbQueued(ਗੰਢ_STATE(ksCurThread)->tcbState));
         SCHED_APPEND_CURRENT_TCB;
-    } else {
+    } ਨਹੀਂਤਾਂ {
         /* postpone until ready */
-        postpone(NODE_STATE(ksCurSC));
+        postpone(ਗੰਢ_STATE(ksCurSC));
     }
 }
-#else
+#ਨਹੀਂਤਾਂ
 
-void timerTick(void)
+ਖਾਲੀ timerTick(ਖਾਲੀ)
 {
-    if (likely(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+    ਜੇ (likely(thread_state_get_tsType(ਗੰਢ_STATE(ksCurThread)->tcbState) ==
                ThreadState_Running)
-#ifdef CONFIG_VTX
-        || thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_VTX
+        || thread_state_get_tsType(ਗੰਢ_STATE(ksCurThread)->tcbState) ==
         ThreadState_RunningVM
-#endif
+#ਜੇ_ਅੰਤ
        ) {
-        if (NODE_STATE(ksCurThread)->tcbTimeSlice > 1) {
-            NODE_STATE(ksCurThread)->tcbTimeSlice--;
-        } else {
-            NODE_STATE(ksCurThread)->tcbTimeSlice = CONFIG_TIME_SLICE;
+        ਜੇ (ਗੰਢ_STATE(ksCurThread)->tcb_ਸਮਾਂ_ਟੁਕੜਾ > 1) {
+            ਗੰਢ_STATE(ksCurThread)->tcb_ਸਮਾਂ_ਟੁਕੜਾ--;
+        } ਨਹੀਂਤਾਂ {
+            ਗੰਢ_STATE(ksCurThread)->tcb_ਸਮਾਂ_ਟੁਕੜਾ = CONFIG_ਸਮਾਂ_ਟੁਕੜਾ;
             SCHED_APPEND_CURRENT_TCB;
             rescheduleRequired();
         }
     }
 
-    if (numDomains > 1) {
-        ksDomainTime--;
-        if (ksDomainTime == 0) {
+    ਜੇ (ਅੰਕ_Domains > 1) {
+        ks_Domain_ਸਮਾਂ--;
+        ਜੇ (ks_Domain_ਸਮਾਂ == 0) {
             rescheduleRequired();
         }
     }
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-void rescheduleRequired(void)
+ਖਾਲੀ rescheduleRequired(ਖਾਲੀ)
 {
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
-        && NODE_STATE(ksSchedulerAction) != SchedulerAction_ChooseNewThread
-#ifdef CONFIG_KERNEL_MCS
-        && isSchedulable(NODE_STATE(ksSchedulerAction))
-#endif
+    ਜੇ (ਗੰਢ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
+        && ਗੰਢ_STATE(ksSchedulerAction) != Scheduler_Action_ਚੁਣੋ_New_Thread
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        && isSchedulable(ਗੰਢ_STATE(ksSchedulerAction))
+#ਜੇ_ਅੰਤ
        ) {
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(NODE_STATE(ksSchedulerAction)->tcbSchedContext, 0));
-        assert(refill_ready(NODE_STATE(ksSchedulerAction)->tcbSchedContext));
-#endif
-        SCHED_ENQUEUE(NODE_STATE(ksSchedulerAction));
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(ਗੰਢ_STATE(ksSchedulerAction)->tcbSchedContext, 0));
+        ਪ੍ਰਤਿਜ੍ਞਾ(refill_ready(ਗੰਢ_STATE(ksSchedulerAction)->tcbSchedContext));
+#ਜੇ_ਅੰਤ
+        SCHED_ਕਤਾਰ_ਵਿੱਚ_ਪਾਓ(ਗੰਢ_STATE(ksSchedulerAction));
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+    ਗੰਢ_STATE(ksSchedulerAction) = Scheduler_Action_ਚੁਣੋ_New_Thread;
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
 
-static inline bool_t PURE release_q_non_empty_and_ready(void)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool_t ਸ਼ੁੱਧ release_q_non_ਖਾਲੀ_ਥਾਵਾਂ_and_ready(ਖਾਲੀ)
 {
-    return NODE_STATE(ksReleaseQueue.head) != NULL
-           && refill_ready(NODE_STATE(ksReleaseQueue.head)->tcbSchedContext);
+    ਵਾਪਸ ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ) != ਨਿਰਾ
+           && refill_ready(ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ)->tcbSchedContext);
 }
 
-static void tcbReleaseDequeue(void)
+ਸਥਿਰ ਖਾਲੀ tcb_Release_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(ਖਾਲੀ)
 {
-    assert(NODE_STATE(ksReleaseQueue.head) != NULL);
-    assert(NODE_STATE(ksReleaseQueue.head)->tcbSchedPrev == NULL);
-    SMP_COND_STATEMENT(assert(NODE_STATE(ksReleaseQueue.head)->tcbAffinity == getCurrentCPUIndex()));
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ) != ਨਿਰਾ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ)->tcbSchedPrev == ਨਿਰਾ);
+    SMP_COND_STATEMENT(ਪ੍ਰਤਿਜ੍ਞਾ(ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ)->tcbAffinity == getCurrentCPUIndex()));
 
-    tcb_t *awakened = NODE_STATE(ksReleaseQueue.head);
-    assert(awakened != NODE_STATE(ksCurThread));
+    tcb_t *awakened = ਗੰਢ_STATE(ks_Release_ਕਤਾਰ.ਸਿਰ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(awakened != ਗੰਢ_STATE(ksCurThread));
     tcbReleaseRemove(awakened);
     /* round robin threads should not be in the release queue */
-    assert(!isRoundRobin(awakened->tcbSchedContext));
+    ਪ੍ਰਤਿਜ੍ਞਾ(!is_ਗੇੜਾ_Robin(awakened->tcbSchedContext));
     /* threads should wake up on the correct core */
-    SMP_COND_STATEMENT(assert(awakened->tcbAffinity == getCurrentCPUIndex()));
+    SMP_COND_STATEMENT(ਪ੍ਰਤਿਜ੍ਞਾ(awakened->tcbAffinity == getCurrentCPUIndex()));
     /* threads HEAD refill should always be >= MIN_BUDGET */
-    assert(refill_sufficient(awakened->tcbSchedContext, 0));
-    possibleSwitchTo(awakened);
+    ਪ੍ਰਤਿਜ੍ਞਾ(refill_sufficient(awakened->tcbSchedContext, 0));
+    possible_Switch_ਮੰਜ਼ਿਲ(awakened);
 }
 
-void awaken(void)
+ਖਾਲੀ awaken(ਖਾਲੀ)
 {
-    while (unlikely(release_q_non_empty_and_ready())) {
-        tcbReleaseDequeue();
+    ਜਦੋਂ (unlikely(release_q_non_ਖਾਲੀ_ਥਾਵਾਂ_and_ready())) {
+        tcb_Release_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ();
     }
 }
-#endif
+#ਜੇ_ਅੰਤ

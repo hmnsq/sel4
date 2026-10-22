@@ -4,149 +4,149 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <kernel/thread.h>
-#include <arch/kernel/thread.h>
-#include <machine/debug.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <mode/api/ipc_buffer.h>
-#include <object/schedcontext.h>
-#endif
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/faults.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/debug.h>
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/api/ipc_buffer.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/schedcontext.h>
+#ਜੇ_ਅੰਤ
 
 /* consistency with libsel4 */
-compile_assert(InvalidRoot, lookup_fault_invalid_root + 1 == seL4_InvalidRoot)
+compile_assert(Invalid_ਜੜ੍ਹ, lookup_fault_invalid_ਜੜ੍ਹ + 1 == se_L4_Invalid_ਜੜ੍ਹ)
 compile_assert(MissingCapability, lookup_fault_missing_capability + 1 == seL4_MissingCapability)
-compile_assert(DepthMismatch, lookup_fault_depth_mismatch + 1 == seL4_DepthMismatch)
+compile_assert(ਡੂੰਘਾਈ_Mismatch, lookup_fault_ਡੂੰਘਾਈ_mismatch + 1 == se_L4_ਡੂੰਘਾਈ_Mismatch)
 compile_assert(GuardMismatch, lookup_fault_guard_mismatch + 1 == seL4_GuardMismatch)
-compile_assert(seL4_UnknownSyscall_Syscall, (word_t) n_syscallMessage == seL4_UnknownSyscall_Syscall)
-compile_assert(seL4_UserException_Number, (word_t) n_exceptionMessage == seL4_UserException_Number)
-compile_assert(seL4_UserException_Code, (word_t) n_exceptionMessage + 1 == seL4_UserException_Code)
+compile_assert(seL4_UnknownSyscall_Syscall, (ਸ਼ਬਦ_t) n_syscall_ਸੁਨੇਹਾ == seL4_UnknownSyscall_Syscall)
+compile_assert(se_L4_User_Exception_ਸੰਖਿਆ, (ਸ਼ਬਦ_t) n_exception_ਸੁਨੇਹਾ == se_L4_User_Exception_ਸੰਖਿਆ)
+compile_assert(se_L4_User_Exception_ਕੋਡ, (ਸ਼ਬਦ_t) n_exception_ਸੁਨੇਹਾ + 1 == se_L4_User_Exception_ਕੋਡ)
 
-static inline unsigned int
-setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
-                      lookup_fault_t luf, unsigned int offset)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ
+ਸੈੱਟ_MRs_lookup_failure(tcb_t *receiver, ਸ਼ਬਦ_t *receiveIPCBuffer,
+                      lookup_fault_t luf, ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਵਿੱਥ)
 {
-    word_t lufType = lookup_fault_get_lufType(luf);
-    word_t i;
+    ਸ਼ਬਦ_t lufType = lookup_fault_get_lufType(luf);
+    ਸ਼ਬਦ_t i;
 
-    i = setMR(receiver, receiveIPCBuffer, offset, lufType + 1);
+    i = ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ, lufType + 1);
 
     /* check constants match libsel4 */
-    if (offset == seL4_CapFault_LookupFailureType) {
-        assert(offset + 1 == seL4_CapFault_BitsLeft);
-        assert(offset + 2 == seL4_CapFault_DepthMismatch_BitsFound);
-        assert(offset + 2 == seL4_CapFault_GuardMismatch_GuardFound);
-        assert(offset + 3 == seL4_CapFault_GuardMismatch_BitsFound);
-    } else {
-        assert(offset == 1);
+    ਜੇ (ਵਿੱਥ == seL4_CapFault_LookupFailureType) {
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਵਿੱਥ + 1 == se_L4_Cap_Fault_ਬਿੱਟ_ਖੱਬਾ);
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਵਿੱਥ + 2 == se_L4_Cap_Fault_ਡੂੰਘਾਈ_Mismatch_ਬਿੱਟ_ਮਿਲਿਆ);
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਵਿੱਥ + 2 == se_L4_Cap_Fault_Guard_Mismatch_Guard_ਮਿਲਿਆ);
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਵਿੱਥ + 3 == se_L4_Cap_Fault_Guard_Mismatch_ਬਿੱਟ_ਮਿਲਿਆ);
+    } ਨਹੀਂਤਾਂ {
+        ਪ੍ਰਤਿਜ੍ਞਾ(ਵਿੱਥ == 1);
     }
 
-    switch (lufType) {
-    case lookup_fault_invalid_root:
-        return i;
+    ਚੋਣ (lufType) {
+    ਹਾਲਤ lookup_fault_invalid_ਜੜ੍ਹ:
+        ਵਾਪਸ i;
 
-    case lookup_fault_missing_capability:
-        return setMR(receiver, receiveIPCBuffer, offset + 1,
-                     lookup_fault_missing_capability_get_bitsLeft(luf));
+    ਹਾਲਤ lookup_fault_missing_capability:
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 1,
+                     lookup_fault_missing_capability_get_ਬਿੱਟ_ਖੱਬਾ(luf));
 
-    case lookup_fault_depth_mismatch:
-        setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_depth_mismatch_get_bitsLeft(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 2,
-                     lookup_fault_depth_mismatch_get_bitsFound(luf));
+    ਹਾਲਤ lookup_fault_ਡੂੰਘਾਈ_mismatch:
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 1,
+              lookup_fault_ਡੂੰਘਾਈ_mismatch_get_ਬਿੱਟ_ਖੱਬਾ(luf));
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 2,
+                     lookup_fault_ਡੂੰਘਾਈ_mismatch_get_ਬਿੱਟ_ਮਿਲਿਆ(luf));
 
-    case lookup_fault_guard_mismatch:
-        setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_guard_mismatch_get_bitsLeft(luf));
-        setMR(receiver, receiveIPCBuffer, offset + 2,
-              lookup_fault_guard_mismatch_get_guardFound(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 3,
-                     lookup_fault_guard_mismatch_get_bitsFound(luf));
+    ਹਾਲਤ lookup_fault_guard_mismatch:
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 1,
+              lookup_fault_guard_mismatch_get_ਬਿੱਟ_ਖੱਬਾ(luf));
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 2,
+              lookup_fault_guard_mismatch_get_guard_ਮਿਲਿਆ(luf));
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, ਵਿੱਥ + 3,
+                     lookup_fault_guard_mismatch_get_ਬਿੱਟ_ਮਿਲਿਆ(luf));
 
-    default:
+    ਮੂਲ:
         fail("Invalid lookup failure");
     }
 }
 
-static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t id, word_t length)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ copy_MRs_Fault_ਜਵਾਬ(tcb_t *sender, tcb_t *receiver, ਸੁਨੇਹਾ_ID_t id, ਸ਼ਬਦ_t ਲੰਮਾਈ)
 {
-    word_t i;
+    ਸ਼ਬਦ_t i;
     bool_t archInfo;
 
-    archInfo = Arch_getSanitiseRegisterInfo(receiver);
+    archInfo = Arch_get_Sanitise_ਰਜਿਸਟਰ_Info(receiver);
 
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
-        register_t r = fault_messages[id][i];
-        word_t v = getRegister(sender, msgRegisters[i]);
-        setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
+    ਲਈ (i = 0; i < MIN(ਲੰਮਾਈ, n_ਸੁਨੇਹਾ_Registers); i++) {
+        ਰਜਿਸਟਰ_t r = fault_messages[id][i];
+        ਸ਼ਬਦ_t v = get_ਰਜਿਸਟਰ(sender, ਸੁਨੇਹਾ_Registers[i]);
+        ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, r, sanitise_ਰਜਿਸਟਰ(r, v, archInfo));
     }
 
-    if (i < length) {
-        word_t *sendBuf = lookupIPCBuffer(false, sender);
-        if (sendBuf) {
-            for (; i < length; i++) {
-                register_t r = fault_messages[id][i];
-                word_t v = sendBuf[i + 1];
-                setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
+    ਜੇ (i < ਲੰਮਾਈ) {
+        ਸ਼ਬਦ_t *sendBuf = lookupIPCBuffer(false, sender);
+        ਜੇ (sendBuf) {
+            ਲਈ (; i < ਲੰਮਾਈ; i++) {
+                ਰਜਿਸਟਰ_t r = fault_messages[id][i];
+                ਸ਼ਬਦ_t v = sendBuf[i + 1];
+                ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, r, sanitise_ਰਜਿਸਟਰ(r, v, archInfo));
             }
         }
     }
 }
 
-static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
-                                word_t length, word_t *receiveIPCBuffer)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ copyMRsFault(tcb_t *sender, tcb_t *receiver, ਸੁਨੇਹਾ_ID_t id,
+                                ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *receiveIPCBuffer)
 {
-    word_t i;
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
-        setRegister(receiver, msgRegisters[i], getRegister(sender, fault_messages[id][i]));
+    ਸ਼ਬਦ_t i;
+    ਲਈ (i = 0; i < MIN(ਲੰਮਾਈ, n_ਸੁਨੇਹਾ_Registers); i++) {
+        ਸੈੱਟ_ਰਜਿਸਟਰ(receiver, ਸੁਨੇਹਾ_Registers[i], get_ਰਜਿਸਟਰ(sender, fault_messages[id][i]));
     }
 
-    if (receiveIPCBuffer) {
-        for (; i < length; i++) {
-            receiveIPCBuffer[i + 1] = getRegister(sender, fault_messages[id][i]);
+    ਜੇ (receiveIPCBuffer) {
+        ਲਈ (; i < ਲੰਮਾਈ; i++) {
+            receiveIPCBuffer[i + 1] = get_ਰਜਿਸਟਰ(sender, fault_messages[id][i]);
         }
     }
 }
 
-bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
+bool_t handle_Fault_ਜਵਾਬ(tcb_t *receiver, tcb_t *sender)
 {
     /* These lookups are moved inward from doReplyTransfer */
-    seL4_MessageInfo_t tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
-    word_t label = seL4_MessageInfo_get_label(tag);
-    word_t length = seL4_MessageInfo_get_length(tag);
+    se_L4_ਸੁਨੇਹਾ_Info_t ਟੈਗ = ਸੁਨੇਹਾ_Info_From_ਸ਼ਬਦ(get_ਰਜਿਸਟਰ(sender, ਸੁਨੇਹਾ_Info_ਰਜਿਸਟਰ));
+    ਸ਼ਬਦ_t label = se_L4_ਸੁਨੇਹਾ_Info_get_label(ਟੈਗ);
+    ਸ਼ਬਦ_t ਲੰਮਾਈ = se_L4_ਸੁਨੇਹਾ_Info_get_ਲੰਮਾਈ(ਟੈਗ);
     seL4_Fault_t fault = receiver->tcbFault;
 
-    switch (seL4_Fault_get_seL4_FaultType(fault)) {
-    case seL4_Fault_CapFault:
-        return true;
+    ਚੋਣ (seL4_Fault_get_seL4_FaultType(fault)) {
+    ਹਾਲਤ seL4_Fault_CapFault:
+        ਵਾਪਸ true;
 
-    case seL4_Fault_UnknownSyscall:
-        copyMRsFaultReply(sender, receiver, MessageID_Syscall, MIN(length, n_syscallMessage));
-        return (label == 0);
+    ਹਾਲਤ seL4_Fault_UnknownSyscall:
+        copy_MRs_Fault_ਜਵਾਬ(sender, receiver, ਸੁਨੇਹਾ_ID_Syscall, MIN(ਲੰਮਾਈ, n_syscall_ਸੁਨੇਹਾ));
+        ਵਾਪਸ (label == 0);
 
-    case seL4_Fault_UserException:
-        copyMRsFaultReply(sender, receiver, MessageID_Exception, MIN(length, n_exceptionMessage));
-        return (label == 0);
+    ਹਾਲਤ seL4_Fault_UserException:
+        copy_MRs_Fault_ਜਵਾਬ(sender, receiver, ਸੁਨੇਹਾ_ID_Exception, MIN(ਲੰਮਾਈ, n_exception_ਸੁਨੇਹਾ));
+        ਵਾਪਸ (label == 0);
 
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        copyMRsFaultReply(sender, receiver, MessageID_TimeoutReply, MIN(length, n_timeoutMessage));
-        return (label == 0);
-#endif
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
-        word_t n_instrs;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਹਾਲਤ seL4_Fault_Timeout:
+        copy_MRs_Fault_ਜਵਾਬ(sender, receiver, ਸੁਨੇਹਾ_ID_Timeout_ਜਵਾਬ, MIN(ਲੰਮਾਈ, n_timeout_ਸੁਨੇਹਾ));
+        ਵਾਪਸ (label == 0);
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
+    ਹਾਲਤ seL4_Fault_DebugException: {
+        ਸ਼ਬਦ_t n_instrs;
 
-        if (seL4_Fault_DebugException_get_exceptionReason(fault) != seL4_SingleStep) {
+        ਜੇ (seL4_Fault_DebugException_get_exceptionReason(fault) != se_L4_Single_ਕਦਮ) {
             /* Only single-step replies are required to set message registers.
              */
-            return (label == 0);
+            ਵਾਪਸ (label == 0);
         }
 
-        if (length < DEBUG_REPLY_N_EXPECTED_REGISTERS) {
+        ਜੇ (ਲੰਮਾਈ < DEBUG_ਜਵਾਬ_N_EXPECTED_REGISTERS) {
             /* A single-step reply doesn't mean much if it isn't composed of the bp
              * number and number of instructions to skip. But even if both aren't
              * set, we can still allow the thread to continue because replying
@@ -161,16 +161,16 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
              * uses EFLAGS.TF.
              */
             n_instrs = 1;
-        } else {
+        } ਨਹੀਂਤਾਂ {
             /* If the reply had all expected registers set, proceed as normal */
-            n_instrs = getRegister(sender, msgRegisters[0]);
+            n_instrs = get_ਰਜਿਸਟਰ(sender, ਸੁਨੇਹਾ_Registers[0]);
         }
 
         syscall_error_t res;
 
         res = Arch_decodeConfigureSingleStepping(receiver, 0, n_instrs, true);
-        if (res.type != seL4_NoError) {
-            return false;
+        ਜੇ (res.type != seL4_NoError) {
+            ਵਾਪਸ false;
         };
 
         configureSingleStepping(receiver, 0, n_instrs, true);
@@ -179,83 +179,83 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
          * is whether or not the thread will be resumed with stepping still
          * enabled.
          */
-        return (label == 0);
+        ਵਾਪਸ (label == 0);
     }
-#endif
+#ਜੇ_ਅੰਤ
 
-    default:
-        return Arch_handleFaultReply(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
+    ਮੂਲ:
+        ਵਾਪਸ Arch_handle_Fault_ਜਵਾਬ(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
     }
 }
 
-word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
+ਸ਼ਬਦ_t ਸੈੱਟ_MRs_fault(tcb_t *sender, tcb_t *receiver, ਸ਼ਬਦ_t *receiveIPCBuffer)
 {
-    switch (seL4_Fault_get_seL4_FaultType(sender->tcbFault)) {
-    case seL4_Fault_CapFault:
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_Addr,
-              seL4_Fault_CapFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_InRecvPhase,
-              seL4_Fault_CapFault_get_inReceivePhase(sender->tcbFault));
-        return setMRs_lookup_failure(receiver, receiveIPCBuffer,
+    ਚੋਣ (seL4_Fault_get_seL4_FaultType(sender->tcbFault)) {
+    ਹਾਲਤ seL4_Fault_CapFault:
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_CapFault_IP, getRestartPC(sender));
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, seL4_CapFault_Addr,
+              se_L4_Fault_Cap_Fault_get_ਪਤਾ(sender->tcbFault));
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, se_L4_Cap_Fault_ਵਿੱਚ_Recv_Phase,
+              se_L4_Fault_Cap_Fault_get_ਵਿੱਚ_Receive_Phase(sender->tcbFault));
+        ਵਾਪਸ ਸੈੱਟ_MRs_lookup_failure(receiver, receiveIPCBuffer,
                                      sender->tcbLookupFailure, seL4_CapFault_LookupFailureType);
 
-    case seL4_Fault_UnknownSyscall: {
-        copyMRsFault(sender, receiver, MessageID_Syscall, n_syscallMessage,
+    ਹਾਲਤ seL4_Fault_UnknownSyscall: {
+        copyMRsFault(sender, receiver, ਸੁਨੇਹਾ_ID_Syscall, n_syscall_ਸੁਨੇਹਾ,
                      receiveIPCBuffer);
 
-        return setMR(receiver, receiveIPCBuffer, n_syscallMessage,
-                     seL4_Fault_UnknownSyscall_get_syscallNumber(sender->tcbFault));
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, n_syscall_ਸੁਨੇਹਾ,
+                     se_L4_Fault_Unknown_Syscall_get_syscall_ਸੰਖਿਆ(sender->tcbFault));
     }
 
-    case seL4_Fault_UserException: {
-        copyMRsFault(sender, receiver, MessageID_Exception,
-                     n_exceptionMessage, receiveIPCBuffer);
-        setMR(receiver, receiveIPCBuffer, n_exceptionMessage,
-              seL4_Fault_UserException_get_number(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, n_exceptionMessage + 1u,
-                     seL4_Fault_UserException_get_code(sender->tcbFault));
+    ਹਾਲਤ seL4_Fault_UserException: {
+        copyMRsFault(sender, receiver, ਸੁਨੇਹਾ_ID_Exception,
+                     n_exception_ਸੁਨੇਹਾ, receiveIPCBuffer);
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer, n_exception_ਸੁਨੇਹਾ,
+              se_L4_Fault_User_Exception_get_ਸੰਖਿਆ(sender->tcbFault));
+        ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, n_exception_ਸੁਨੇਹਾ + 1u,
+                     se_L4_Fault_User_Exception_get_ਕੋਡ(sender->tcbFault));
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout: {
-        if (sender->tcbSchedContext) {
-            word_t len;
-            time_t consumed = schedContext_updateConsumed(sender->tcbSchedContext);
-            len = setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    ਹਾਲਤ seL4_Fault_Timeout: {
+        ਜੇ (sender->tcbSchedContext) {
+            ਸ਼ਬਦ_t len;
+            ਸਮਾਂ_t consumed = schedContext_updateConsumed(sender->tcbSchedContext);
+            len = ਸੈੱਟ_MR(receiver, receiveIPCBuffer, se_L4_Timeout_ਅੰਕੜੇ,
                         seL4_Fault_Timeout_get_badge(sender->tcbFault));
-            return mode_setTimeArg(len, consumed, receiveIPCBuffer, receiver);
-        } else {
-            return setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
+            ਵਾਪਸ ਬਹੁਲਕ_ਸੈੱਟ_ਸਮਾਂ_Arg(len, consumed, receiveIPCBuffer, receiver);
+        } ਨਹੀਂਤਾਂ {
+            ਵਾਪਸ ਸੈੱਟ_MR(receiver, receiveIPCBuffer, se_L4_Timeout_ਅੰਕੜੇ,
                          seL4_Fault_Timeout_get_badge(sender->tcbFault));
         }
     }
-#endif
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
-        word_t reason = seL4_Fault_DebugException_get_exceptionReason(sender->tcbFault);
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
+    ਹਾਲਤ seL4_Fault_DebugException: {
+        ਸ਼ਬਦ_t reason = seL4_Fault_DebugException_get_exceptionReason(sender->tcbFault);
 
-        setMR(receiver, receiveIPCBuffer,
+        ਸੈੱਟ_MR(receiver, receiveIPCBuffer,
               seL4_DebugException_FaultIP, getRestartPC(sender));
-        unsigned int ret = setMR(receiver, receiveIPCBuffer,
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ret = ਸੈੱਟ_MR(receiver, receiveIPCBuffer,
                                  seL4_DebugException_ExceptionReason, reason);
 
-        if (reason != seL4_SingleStep && reason != seL4_SoftwareBreakRequest) {
-            ret = setMR(receiver, receiveIPCBuffer,
-                        seL4_DebugException_TriggerAddress,
-                        seL4_Fault_DebugException_get_breakpointAddress(sender->tcbFault));
+        ਜੇ (reason != se_L4_Single_ਕਦਮ && reason != seL4_SoftwareBreakRequest) {
+            ret = ਸੈੱਟ_MR(receiver, receiveIPCBuffer,
+                        se_L4_Debug_Exception_Trigger_ਪਤਾ,
+                        se_L4_Fault_Debug_Exception_get_breakpoint_ਪਤਾ(sender->tcbFault));
 
             /* Breakpoint messages also set a "breakpoint number" register. */
-            ret = setMR(receiver, receiveIPCBuffer,
-                        seL4_DebugException_BreakpointNumber,
-                        seL4_Fault_DebugException_get_breakpointNumber(sender->tcbFault));
+            ret = ਸੈੱਟ_MR(receiver, receiveIPCBuffer,
+                        se_L4_Debug_Exception_Breakpoint_ਸੰਖਿਆ,
+                        se_L4_Fault_Debug_Exception_get_breakpoint_ਸੰਖਿਆ(sender->tcbFault));
         }
-        return ret;
+        ਵਾਪਸ ret;
     }
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#ਜੇ_ਅੰਤ /* CONFIG_HARDWARE_DEBUG_API */
 
-    default:
-        return Arch_setMRs_fault(sender, receiver, receiveIPCBuffer,
+    ਮੂਲ:
+        ਵਾਪਸ Arch_ਸੈੱਟ_MRs_fault(sender, receiver, receiveIPCBuffer,
                                  seL4_Fault_get_seL4_FaultType(sender->tcbFault));
     }
 }

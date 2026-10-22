@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
 
-#ifdef CONFIG_PRINTING
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdarg.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,40 +24,40 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਣਤਰ ਬਾਹਰਲਾ_wrap_t  ਬਾਹਰਲਾ_wrap_t_2;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਖਾਲੀ (*ਬਾਹਰਲਾ_write_fn)(ਬਾਹਰਲਾ_wrap_t_2 *ਬਾਹਰਲਾ, ਅਚਲ ਅੱਖਰ *buf, ਸ਼ਬਦ_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
-    word_t used;
+ਬਣਤਰ ਬਾਹਰਲਾ_wrap_t {
+    ਅਚਲ ਬਾਹਰਲਾ_write_fn ਲਿਖ;
+    ਅੱਖਰ *ਅਚਲ buf;
+    ਅਚਲ ਸ਼ਬਦ_t maxlen;
+    ਸ਼ਬਦ_t ਵਰਤਿਆ_2;
 };
 
 /* printf_core() and its helpers call this to actually output something. The
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+ਸਥਿਰ ਖਾਲੀ ਬਾਹਰਲਾ(ਬਾਹਰਲਾ_wrap_t_2 *ਬਾਹਰਲਾ_wrap, ਅਚਲ ਅੱਖਰ *buf, ਸ਼ਬਦ_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    ਜੇ (ਬਾਹਰਲਾ_wrap) {
+        ਬਾਹਰਲਾ_wrap->ਲਿਖ(ਬਾਹਰਲਾ_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
-    UNUSED out_wrap_t *out,
-    const char *buf,
-    word_t len)
+ਸਥਿਰ ਖਾਲੀ do_output_ਮੰਜ਼ਿਲ_putchar(
+    ਅਣਵਰਤਿਆ ਬਾਹਰਲਾ_wrap_t_2 *ਬਾਹਰਲਾ,
+    ਅਚਲ ਅੱਖਰ *buf,
+    ਸ਼ਬਦ_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
-            putchar(*buf++);
+    ਜੇ (buf) {
+        ਜਦੋਂ (len-- > 0) {
+            ਅੱਖਰ_ਲਿਖੋ(*buf++);
         }
     }
 }
@@ -65,21 +65,21 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
-    out_wrap_t *out,
-    const char *buf,
-    word_t len)
+ਸਥਿਰ ਖਾਲੀ do_output_ਮੰਜ਼ਿਲ_ਬਫਰ(
+    ਬਾਹਰਲਾ_wrap_t_2 *ਬਾਹਰਲਾ,
+    ਅਚਲ ਅੱਖਰ *buf,
+    ਸ਼ਬਦ_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    ਜੇ (buf && (ਬਾਹਰਲਾ->ਵਰਤਿਆ_2 < ਬਾਹਰਲਾ->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        ਸ਼ਬਦ_t ਮੁਕਤ = ਬਾਹਰਲਾ->maxlen - ਬਾਹਰਲਾ->ਵਰਤਿਆ_2;
+        ਜੇ (len > ਮੁਕਤ) {
+            len = ਮੁਕਤ;
         }
-        memcpy(&out->buf[out->used], buf, len);
-        out->used += len;
+        ਸਮ੍ਰਿਤੀ_ਨਕਲ(&ਬਾਹਰਲਾ->buf[ਬਾਹਰਲਾ->ਵਰਤਿਆ_2], buf, len);
+        ਬਾਹਰਲਾ->ਵਰਤਿਆ_2 += len;
     }
 }
 
@@ -89,31 +89,31 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool_t ਅੰਕ_ਹੈ(ਅੱਖਰ c)
 {
-    return c >= '0' &&
+    ਵਾਪਸ c >= '0' &&
            c <= '9';
 }
 
 /* Convenient bit representation for modifier flags, which all fall within 31
  * codepoints of the space character.
  */
-#define MASK_TYPE(a) (1U<<( a -' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਨਕਾਬ_TYPE(a) (1U<<( a -' '))
 
-#define ALT_FORM     (1U<<('#'-' '))
-#define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
-#define PAD_POS      (1U<<(' '-' '))
-#define MARK_POS     (1U<<('+'-' '))
-#define GROUPED      (1U<<('\''-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ALT_FORM     (1U<<('#'-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZERO_PAD     (1U<<('0'-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਖੱਬਾ_ADJ     (1U<<('-'-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PAD_POS      (1U<<(' '-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ MARK_POS     (1U<<('+'-' '))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ FLAGMASK (ALT_FORM|ZERO_PAD|ਖੱਬਾ_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+ਗਿਣਤੀ {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -121,17 +121,17 @@ enum {
     LONG, ULONG,
     SHORT, USHORT, CHAR, UCHAR,
     WORDT, LLONG,
-#define IMAX LLONG
-#define UMAX ULLONG
-#define PDIFF LONG
-#define UIPTR ULONG
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ IMAX LLONG
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UMAX ULLONG
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PDIFF LONG
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UIPTR ULONG
     NOARG,
     MAXSTATE
 };
 
-#define S(x) [(x)-'A']
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+ਸਥਿਰ ਅਚਲ ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ ਹਾਲਤਾਂ[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -174,95 +174,95 @@ static const unsigned char states[]['z' - 'A' + 1] = {
     }
 };
 
-#define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
-#define DIGIT(c) (c - '0')
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ OOB(x) ((ਬਿਨਾਨਿਸ਼ਾਨੀ)(x)-'A' > 'z'-'A')
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ DIGIT(c) (c - '0')
 
-union arg {
+ਸੰਘ arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    ਲੰਮਾ ਦੁੱਗਣਾ f;
+    ਖਾਲੀ *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+ਸਥਿਰ ਖਾਲੀ ਕੱਢੋ_arg(ਸੰਘ arg *arg, ਪੂਰਨ type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
-        arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
-        arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
-        arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
-        arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
-        arg->i = va_arg(*ap, word_t);
+    ਚੋਣ (type) {
+    ਹਾਲਤ PTR:
+        arg->p = va_arg(*ap, ਖਾਲੀ *);
+        ਰੋਕੋ;
+    ਹਾਲਤ INT:
+        arg->i = va_arg(*ap, ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ UINT:
+        arg->i = va_arg(*ap, ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ LONG:
+        arg->i = va_arg(*ap, ਲੰਮਾ);
+        ਰੋਕੋ;
+    ਹਾਲਤ ULONG:
+        arg->i = va_arg(*ap, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ);
+        ਰੋਕੋ;
+    ਹਾਲਤ LLONG:
+        arg->i = va_arg(*ap, ਲੰਮਾ ਲੰਮਾ);
+        ਰੋਕੋ;
+    ਹਾਲਤ ULLONG:
+        arg->i = va_arg(*ap, ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ ਲੰਮਾ);
+        ਰੋਕੋ;
+    ਹਾਲਤ SHORT:
+        arg->i = (ਛੋਟਾ)va_arg(*ap, ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ USHORT:
+        arg->i = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਛੋਟਾ)va_arg(*ap, ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ CHAR:
+        arg->i = (ਨਿਸ਼ਾਨੀਵਾਲਾ ਅੱਖਰ)va_arg(*ap, ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ UCHAR:
+        arg->i = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ)va_arg(*ap, ਪੂਰਨ);
+        ਰੋਕੋ;
+    ਹਾਲਤ WORDT:
+        arg->i = va_arg(*ap, ਸ਼ਬਦ_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+ਸਥਿਰ ਖਾਲੀ pad(ਬਾਹਰਲਾ_wrap_t_2 *f, ਅੱਖਰ c, ਪੂਰਨ w, ਪੂਰਨ l, ਪੂਰਨ fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    ਅੱਖਰ pad[32]; /* good enough for what the kernel prints */
+    ਜੇ (fl & (ਖੱਬਾ_ADJ | ZERO_PAD) || l >= w) {
+        ਵਾਪਸ;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > ਆਕਾਰ(pad) ? ਆਕਾਰ(pad) : l);
+    ਲਈ (; l >= ਆਕਾਰ(pad); l -= ਆਕਾਰ(pad)) {
+        ਬਾਹਰਲਾ(f, pad, ਆਕਾਰ(pad));
     }
-    out(f, pad, l);
+    ਬਾਹਰਲਾ(f, pad, l);
 }
 
-static const char xdigits[16] = {
+ਸਥਿਰ ਅਚਲ ਅੱਖਰ xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+ਸਥਿਰ ਅੱਖਰ *fmt_x(uintmax_t x, ਅੱਖਰ *s, ਪੂਰਨ ਹੇਠਲਾ)
 {
-    for (; x; x >>= 4) {
-        *--s = xdigits[(x & 15)] | lower;
+    ਲਈ (; x; x >>= 4) {
+        *--s = xdigits[(x & 15)] | ਹੇਠਲਾ;
     }
-    return s;
+    ਵਾਪਸ s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+ਸਥਿਰ ਅੱਖਰ *fmt_o(uintmax_t x, ਅੱਖਰ *s)
 {
-    for (; x; x >>= 3) {
+    ਲਈ (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    ਵਾਪਸ s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+ਸਥਿਰ ਅੱਖਰ *fmt_u(uintmax_t x, ਅੱਖਰ *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    ਜਦੋਂ (0 != x) {
+#ਜੇ defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,332 +277,332 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        ਜੇ (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            ਪ੍ਰਤਿਜ੍ਞਾ(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#ਨਹੀਂਤਾਂ
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
-#endif
+        ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ rem = x % 10;
+#ਜੇ_ਅੰਤ
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    ਵਾਪਸ s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
  * reduced/removed if we could measure the buf length under all code paths
  */
-#define LDBL_MANT_DIG 113
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ LDBL_MANT_DIG 113
 
-#define NL_ARGMAX 9
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ NL_ARGMAX 9
 
-static int getint(char **s)
+ਸਥਿਰ ਪੂਰਨ getint(ਅੱਖਰ **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    ਪੂਰਨ i;
+    ਲਈ (i = 0; ਅੰਕ_ਹੈ(**s); (*s)++) {
+        ਜੇ (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } ਨਹੀਂਤਾਂ {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    ਵਾਪਸ i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+ਸਥਿਰ ਪੂਰਨ printf_core(ਬਾਹਰਲਾ_wrap_t_2 *f, ਅਚਲ ਅੱਖਰ *fmt, va_list *ap, ਸੰਘ arg *nl_arg, ਪੂਰਨ *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
-    unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
-    unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    ਅੱਖਰ *a, *z, *s = (ਅੱਖਰ *)fmt;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ l10n = 0, fl;
+    ਪੂਰਨ w, p, xp;
+    ਸੰਘ arg arg;
+    ਪੂਰਨ argpos;
+    ਬਿਨਾਨਿਸ਼ਾਨੀ st, ps;
+    ਪੂਰਨ cnt = 0, l = 0;
+    ਅੱਖਰ buf[ਆਕਾਰ(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    ਅਚਲ ਅੱਖਰ *ਅਗੇਤਰ;
+    ਪੂਰਨ t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    ਲਈ (;;) {
+        ਜੇ (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            ਵਾਪਸ -1; /*ਉਛਾਲ*/
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        ਜੇ (!*s) {
+            ਰੋਕੋ;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        ਲਈ (a = s; *s && *s != '%'; s++);
+        ਲਈ (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        ਜੇ (z - a > INTMAX_MAX - cnt) {
+            ਵਾਪਸ -1; /*ਉਛਾਲ*/
         }
         l = z - a;
-        out(f, a, l);
-        if (l) {
-            continue;
+        ਬਾਹਰਲਾ(f, a, l);
+        ਜੇ (l) {
+            ਜਾਰੀ;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        ਜੇ (ਅੰਕ_ਹੈ(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } ਨਹੀਂਤਾਂ {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
-            fl |= MASK_TYPE(*s);
+        ਲਈ (fl = 0; (ਬਿਨਾਨਿਸ਼ਾਨੀ)*s - ' ' < 32 && (FLAGMASK & ਨਕਾਬ_TYPE(*s)); s++) {
+            fl |= ਨਕਾਬ_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        ਜੇ (*s == '*') {
+            ਜੇ (ਅੰਕ_ਹੈ(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } ਨਹੀਂਤਾਂ ਜੇ (!l10n) {
+                w = f ? va_arg(*ap, ਪੂਰਨ) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } ਨਹੀਂਤਾਂ {
+                ਵਾਪਸ -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            ਜੇ (w < 0) {
+                fl |= ਖੱਬਾ_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } ਨਹੀਂਤਾਂ ਜੇ ((w = getint(&s)) < 0) {
+            ਵਾਪਸ -1; /*ਉਛਾਲ*/
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        ਜੇ (*s == '.' && s[1] == '*') {
+            ਜੇ (ਅੰਕ_ਹੈ(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } ਨਹੀਂਤਾਂ ਜੇ (!l10n) {
+                p = f ? va_arg(*ap, ਪੂਰਨ) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } ਨਹੀਂਤਾਂ {
+                ਵਾਪਸ -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } ਨਹੀਂਤਾਂ ਜੇ (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } ਨਹੀਂਤਾਂ {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        ਕਰੋ {
+            ਜੇ (OOB(*s)) {
+                ਵਾਪਸ -1; /* invalid */
             }
             ps = st;
-            st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+            st = ਹਾਲਤਾਂ[st]S(*s++);
+        } ਜਦੋਂ (st - 1 < STOP);
+        ਜੇ (!st) {
+            ਵਾਪਸ -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        ਜੇ (st == NOARG) {
+            ਜੇ (argpos >= 0) {
+                ਵਾਪਸ -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } ਨਹੀਂਤਾਂ {
+            ਜੇ (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } ਨਹੀਂਤਾਂ ਜੇ (f) {
+                ਕੱਢੋ_arg(&arg, st, ap);
+            } ਨਹੀਂਤਾਂ {
+                ਵਾਪਸ 0;
             }
         }
 
-        if (!f) {
-            continue;
+        ਜੇ (!f) {
+            ਜਾਰੀ;
         }
 
-        z = buf + sizeof(buf);
-        prefix = "-+   0X0x";
+        z = buf + ਆਕਾਰ(buf);
+        ਅਗੇਤਰ = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        ਜੇ (fl & ਖੱਬਾ_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        ਜੇ (t == 'n') {
+            ਜੇ (!arg.p) {
+                ਜਾਰੀ;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
-                *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
-                *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
-                *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
-                *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
-                *(word_t *)arg.p = cnt;
-                break;
+            ਚੋਣ (ps) {
+            ਹਾਲਤ BARE:
+                *(ਪੂਰਨ *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ LPRE:
+                *(ਲੰਮਾ *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ LLPRE:
+                *(ਲੰਮਾ ਲੰਮਾ *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ HPRE:
+                *(ਬਿਨਾਨਿਸ਼ਾਨੀ ਛੋਟਾ *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ HHPRE:
+                *(ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ ZTPRE:
+                *(ਸ਼ਬਦ_t *)arg.p = cnt;
+                ਰੋਕੋ;
+            ਹਾਲਤ JPRE:
+                *(ਸ਼ਬਦ_t *)arg.p = cnt;
+                ਰੋਕੋ;
             }
-            continue;
-        } else if (t == 'c') {
+            ਜਾਰੀ;
+        } ਨਹੀਂਤਾਂ ਜੇ (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } ਨਹੀਂਤਾਂ ਜੇ (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            ਜੇ (p < 0 && *z) {
+                ਵਾਪਸ -1; /*ਉਛਾਲ*/
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } ਨਹੀਂਤਾਂ {
+            ਚੋਣ (t) {
+            ਹਾਲਤ 'p':
+                p = MAX(p, 2 * ਆਕਾਰ(ਖਾਲੀ *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            ਹਾਲਤ 'x':
+            ਹਾਲਤ 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
-                    prefix += (t >> 4);
+                ਜੇ (arg.i && (fl & ALT_FORM)) {
+                    ਅਗੇਤਰ += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                ਰੋਕੋ;
+            ਹਾਲਤ 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                ਜੇ ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                ਰੋਕੋ;
+            ਹਾਲਤ 'd':
+            ਹਾਲਤ 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                ਜੇ (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
-                    prefix++;
-                } else if (fl & PAD_POS) {
-                    prefix += 2;
-                } else {
+                } ਨਹੀਂਤਾਂ ਜੇ (fl & MARK_POS) {
+                    ਅਗੇਤਰ++;
+                } ਨਹੀਂਤਾਂ ਜੇ (fl & PAD_POS) {
+                    ਅਗੇਤਰ += 2;
+                } ਨਹੀਂਤਾਂ {
                     pl = 0;
                 }
-            case 'u':
+            ਹਾਲਤ 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                ਰੋਕੋ;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            ਜੇ (xp && p < 0) {
+                ਵਾਪਸ -1; /*ਉਛਾਲ*/
             }
-            if (xp) {
+            ਜੇ (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            ਜੇ (!arg.i && !p) {
                 a = z;
-            } else {
+            } ਨਹੀਂਤਾਂ {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        ਜੇ (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        ਜੇ (p > INTMAX_MAX - pl) {
+            ਵਾਪਸ -1; /*ਉਛਾਲ*/
         }
-        if (w < pl + p) {
+        ਜੇ (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        ਜੇ (w > INTMAX_MAX - cnt) {
+            ਵਾਪਸ -1; /*ਉਛਾਲ*/
         }
 
         pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
+        ਬਾਹਰਲਾ(f, ਅਗੇਤਰ, pl);
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        ਬਾਹਰਲਾ(f, a, z - a);
+        pad(f, ' ', w, pl + p, fl ^ ਖੱਬਾ_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    ਜੇ (f) {
+        ਵਾਪਸ cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    ਜੇ (!l10n) {
+        ਵਾਪਸ 0;
     }
 
-    return 1;
+    ਪੂਰਨ i;
+    ਲਈ (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        ਕੱਢੋ_arg(nl_arg + i, nl_type[i], ap);
+    }
+    ਲਈ (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    ਜੇ (i <= NL_ARGMAX) {
+        ਵਾਪਸ -1; /* invalid */
+    }
+
+    ਵਾਪਸ 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+ਸਥਿਰ ਪੂਰਨ vprintf(ਬਾਹਰਲਾ_wrap_t_2 *ਬਾਹਰਲਾ, ਅਚਲ ਅੱਖਰ *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    ਪੂਰਨ nl_type[NL_ARGMAX + 1] = {0};
+    ਸੰਘ arg nl_arg[NL_ARGMAX + 1];
+    ਪੂਰਨ ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
-        va_end(ap2);
-        return -1;
+    ਜੇ (printf_core(ਨਿਰਾ, fmt, &ap2, nl_arg, nl_type) < 0) {
+        va_ਸਿਰਾ(ap2);
+        ਵਾਪਸ -1;
     }
 
-    ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
-    va_end(ap2);
-    return ret;
+    ret = printf_core(ਬਾਹਰਲਾ, fmt, &ap2, nl_arg, nl_type);
+    va_ਸਿਰਾ(ap2);
+    ਵਾਪਸ ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+ਪੂਰਨ impl_kvprintf(ਅਚਲ ਅੱਖਰ *format, va_list ap)
 {
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+    ਬਾਹਰਲਾ_wrap_t_2 ਬਾਹਰਲਾ_wrap =  {
+        .ਲਿਖ  = do_output_ਮੰਜ਼ਿਲ_putchar,
+        .buf    = ਨਿਰਾ,
         .maxlen = 0,
-        .used   = 0
+        .ਵਰਤਿਆ_2   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    ਵਾਪਸ vprintf(&ਬਾਹਰਲਾ_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+ਪੂਰਨ impl_ksnvprintf(ਅੱਖਰ *str, ਸ਼ਬਦ_t ਮਾਪ, ਅਚਲ ਅੱਖਰ *format, va_list ap)
 {
-    if (!str) {
-        size = 0;
+    ਜੇ (!str) {
+        ਮਾਪ = 0;
     }
 
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+    ਬਾਹਰਲਾ_wrap_t_2 ਬਾਹਰਲਾ_wrap =  {
+        .ਲਿਖ  = do_output_ਮੰਜ਼ਿਲ_ਬਫਰ,
         .buf    = str,
-        .maxlen = size,
-        .used   = 0
+        .maxlen = ਮਾਪ,
+        .ਵਰਤਿਆ_2   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    ਪੂਰਨ ret = vprintf(&ਬਾਹਰਲਾ_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
-        str[(ret < size) ? ret : size - 1] = '\0';
+    ਜੇ ((ret > 0) && (ਮਾਪ > 0)) {
+        str[(ret < ਮਾਪ) ? ret : ਮਾਪ - 1] = '\0';
     }
 
-    return ret;
+    ਵਾਪਸ ret;
 }
 
-#endif /* CONFIG_PRINTING */
+#ਜੇ_ਅੰਤ /* CONFIG_PRINTING */

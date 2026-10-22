@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/model/smp.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/model/smp.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ENABLE_SMP_SUPPORT
 
-nodeInfo_t node_info[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE) VISIBLE;
-char nodeSkimScratch[CONFIG_MAX_NUM_NODES][sizeof(nodeInfo_t)] ALIGN(L1_CACHE_LINE_SIZE);
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+ਗੰਢ_Info_t ਗੰਢ_info[CONFIG_MAX_ਅੰਕ_NODES] ALIGN(L1_CACHE_ਸਤਰ_ਮਾਪ) VISIBLE;
+ਅੱਖਰ ਗੰਢ_Skim_Scratch[CONFIG_MAX_ਅੰਕ_NODES][ਆਕਾਰ(ਗੰਢ_Info_t)] ALIGN(L1_CACHE_ਸਤਰ_ਮਾਪ);
+ਬਾਹਰੀ ਅੱਖਰ kernel_ਢੇਰ_alloc[CONFIG_MAX_ਅੰਕ_NODES][ਦੋਆਧਾਰੀ_ਅੰਕ(CONFIG_KERNEL_ਢੇਰ_ਬਿੱਟ)];
 
-BOOT_CODE void mode_init_tls(cpu_id_t cpu_index)
+BOOT_ਕੋਡ ਖਾਲੀ ਬਹੁਲਕ_init_tls(cpu_id_t cpu_ਸੂਚਕਾਂਕ)
 {
-    node_info[cpu_index].stackTop = kernel_stack_alloc[cpu_index + 1];
-    node_info[cpu_index].irqStack = &x64KSIRQStack[cpu_index][0];
-    node_info[cpu_index].index = cpu_index;
-    x86_wrmsr(IA32_KERNEL_GS_BASE_MSR, (word_t)&node_info[cpu_index]);
+    ਗੰਢ_info[cpu_ਸੂਚਕਾਂਕ].ਢੇਰ_ਸਿਖਰ_2 = kernel_ਢੇਰ_alloc[cpu_ਸੂਚਕਾਂਕ + 1];
+    ਗੰਢ_info[cpu_ਸੂਚਕਾਂਕ].irq_ਢੇਰ_2 = &x64KSIRQStack[cpu_ਸੂਚਕਾਂਕ][0];
+    ਗੰਢ_info[cpu_ਸੂਚਕਾਂਕ].ਸੂਚਕਾਂਕ = cpu_ਸੂਚਕਾਂਕ;
+    x86_wrmsr(IA32_KERNEL_GS_ਅਧਾਰ_MSR, (ਸ਼ਬਦ_t)&ਗੰਢ_info[cpu_ਸੂਚਕਾਂਕ]);
     swapgs();
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#ਜੇ_ਅੰਤ /* ENABLE_SMP_SUPPORT */

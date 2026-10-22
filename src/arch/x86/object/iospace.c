@@ -4,125 +4,125 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_IOMMU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_IOMMU
 
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <kernel/thread.h>
-#include <arch/api/invocation.h>
-#include <arch/object/iospace.h>
-#include <arch/model/statedata.h>
-#include <linker.h>
-#include <plat/machine/intel-vtd.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/api/invocation.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/iospace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/intel-vtd.h>
 
 
-typedef struct lookupVTDContextSlot_ret {
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਣਤਰ lookup_VTDContext_ਥਾਂ_ret {
     vtd_cte_t   *cte;
-    word_t      index;
-} lookupVTDContextSlot_ret_t;
+    ਸ਼ਬਦ_t      ਸੂਚਕਾਂਕ;
+} lookup_VTDContext_ਥਾਂ_ret_t;
 
 
-BOOT_CODE cap_t master_iospace_cap(void)
+BOOT_ਕੋਡ cap_t master_iospace_cap(ਖਾਲੀ)
 {
-    if (x86KSnumDrhu == 0) {
-        return cap_null_cap_new();
+    ਜੇ (x86KSnumDrhu == 0) {
+        ਵਾਪਸ cap_null_cap_new();
     }
 
-    return
+    ਵਾਪਸ
         cap_io_space_cap_new(
             0,              /* capDomainID  */
             0              /* capPCIDevice */
         );
 }
 
-static vtd_cte_t *lookup_vtd_context_slot(cap_t cap)
+ਸਥਿਰ vtd_cte_t *lookup_vtd_context_ਥਾਂ(cap_t cap)
 {
-    uint32_t   vtd_root_index;
-    uint32_t   vtd_context_index;
+    uint32_t   vtd_ਜੜ੍ਹ_ਸੂਚਕਾਂਕ;
+    uint32_t   vtd_context_ਸੂਚਕਾਂਕ;
     uint32_t   pci_request_id;
-    vtd_rte_t *vtd_root_slot;
+    vtd_rte_t *vtd_ਜੜ੍ਹ_ਥਾਂ;
     vtd_cte_t *vtd_context;
-    vtd_cte_t *vtd_context_slot;
+    vtd_cte_t *vtd_context_ਥਾਂ;
 
-    switch (cap_get_capType(cap)) {
-    case cap_io_space_cap:
+    ਚੋਣ (cap_get_capType(cap)) {
+    ਹਾਲਤ cap_io_space_cap:
         pci_request_id = cap_io_space_cap_get_capPCIDevice(cap);
-        break;
+        ਰੋਕੋ;
 
-    case cap_io_page_table_cap:
-        pci_request_id = cap_io_page_table_cap_get_capIOPTIOASID(cap);
-        break;
+    ਹਾਲਤ cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap:
+        pci_request_id = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTIOASID(cap);
+        ਰੋਕੋ;
 
-    case cap_frame_cap:
-        pci_request_id = cap_frame_cap_get_capFMappedASID(cap);
-        break;
+    ਹਾਲਤ cap_ਚੌਖਟਾ_cap:
+        pci_request_id = cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap);
+        ਰੋਕੋ;
 
-    default:
+    ਮੂਲ:
         fail("Invalid cap type");
     }
 
-    vtd_root_index = get_pci_bus(pci_request_id);
-    vtd_root_slot = x86KSvtdRootTable + vtd_root_index;
+    vtd_ਜੜ੍ਹ_ਸੂਚਕਾਂਕ = get_pci_bus(pci_request_id);
+    vtd_ਜੜ੍ਹ_ਥਾਂ = x86_KSvtd_ਜੜ੍ਹ_ਸਾਰਣੀ + vtd_ਜੜ੍ਹ_ਸੂਚਕਾਂਕ;
 
-    vtd_context = (vtd_cte_t *)paddr_to_pptr(vtd_rte_ptr_get_ctp(vtd_root_slot));
-    vtd_context_index = (get_pci_dev(pci_request_id) << 3) | get_pci_fun(pci_request_id);
-    vtd_context_slot = &vtd_context[vtd_context_index];
+    vtd_context = (vtd_cte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_rte_ptr_get_ctp(vtd_ਜੜ੍ਹ_ਥਾਂ));
+    vtd_context_ਸੂਚਕਾਂਕ = (get_pci_dev(pci_request_id) << 3) | get_pci_fun(pci_request_id);
+    vtd_context_ਥਾਂ = &vtd_context[vtd_context_ਸੂਚਕਾਂਕ];
 
-    return vtd_context_slot;
+    ਵਾਪਸ vtd_context_ਥਾਂ;
 }
 
-static lookupIOPTSlot_ret_t lookupIOPTSlot_resolve_levels(vtd_pte_t *iopt, word_t translation,
-                                                          word_t levels_to_resolve, word_t levels_remaining)
+ਸਥਿਰ lookupIOPTSlot_ret_t lookup_IOPTSlot_resolve_ਪੱਧਰ(vtd_pte_t *iopt, ਸ਼ਬਦ_t translation,
+                                                          ਸ਼ਬਦ_t ਪੱਧਰ_ਮੰਜ਼ਿਲ_resolve, ਸ਼ਬਦ_t ਪੱਧਰ_ਬਚਿਆ)
 {
     lookupIOPTSlot_ret_t ret;
 
-    word_t      iopt_index = 0;
-    vtd_pte_t   *iopt_slot = 0;
-    vtd_pte_t   *next_iopt_slot = 0;
+    ਸ਼ਬਦ_t      iopt_ਸੂਚਕਾਂਕ = 0;
+    vtd_pte_t   *iopt_ਥਾਂ_2 = 0;
+    vtd_pte_t   *ਅਗਲਾ_iopt_ਥਾਂ = 0;
 
-    if (iopt == 0) {
-        ret.ioptSlot = 0;
-        ret.level = levels_remaining;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+    ਜੇ (iopt == 0) {
+        ret.iopt_ਥਾਂ = 0;
+        ret.level = ਪੱਧਰ_ਬਚਿਆ;
+        ret.ਸਥਿਤੀ = EXCEPTION_LOOKUP_FAULT;
+        ਵਾਪਸ ret;
     }
 
-    iopt_index = (translation  >> (VTD_PT_INDEX_BITS * (x86KSnumIOPTLevels - 1 - (levels_to_resolve - levels_remaining)))) &
-                 MASK(VTD_PT_INDEX_BITS);
-    iopt_slot = iopt + iopt_index;
+    iopt_ਸੂਚਕਾਂਕ = (translation  >> (VTD_PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ * (x86KSnumIOPTLevels - 1 - (ਪੱਧਰ_ਮੰਜ਼ਿਲ_resolve - ਪੱਧਰ_ਬਚਿਆ)))) &
+                 ਨਕਾਬ(VTD_PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ);
+    iopt_ਥਾਂ_2 = iopt + iopt_ਸੂਚਕਾਂਕ;
 
-    if (!vtd_pte_ptr_get_write(iopt_slot) || levels_remaining == 0) {
-        ret.ioptSlot = iopt_slot;
-        ret.level = levels_remaining;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    ਜੇ (!vtd_pte_ptr_get_write(iopt_ਥਾਂ_2) || ਪੱਧਰ_ਬਚਿਆ == 0) {
+        ret.iopt_ਥਾਂ = iopt_ਥਾਂ_2;
+        ret.level = ਪੱਧਰ_ਬਚਿਆ;
+        ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+        ਵਾਪਸ ret;
     }
-    next_iopt_slot = (vtd_pte_t *)paddr_to_pptr(vtd_pte_ptr_get_addr(iopt_slot));
-    return lookupIOPTSlot_resolve_levels(next_iopt_slot, translation, levels_to_resolve, levels_remaining - 1);
+    ਅਗਲਾ_iopt_ਥਾਂ = (vtd_pte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_pte_ptr_get_addr(iopt_ਥਾਂ_2));
+    ਵਾਪਸ lookup_IOPTSlot_resolve_ਪੱਧਰ(ਅਗਲਾ_iopt_ਥਾਂ, translation, ਪੱਧਰ_ਮੰਜ਼ਿਲ_resolve, ਪੱਧਰ_ਬਚਿਆ - 1);
 }
 
 
-static inline lookupIOPTSlot_ret_t lookupIOPTSlot(vtd_pte_t *iopt, word_t io_address)
+ਸਥਿਰ ਸਤਰਅੰਦਰ lookupIOPTSlot_ret_t lookupIOPTSlot(vtd_pte_t *iopt, ਸ਼ਬਦ_t io_ਪਤਾ)
 {
     lookupIOPTSlot_ret_t ret;
 
-    if (iopt == 0) {
-        ret.ioptSlot    = 0;
+    ਜੇ (iopt == 0) {
+        ret.iopt_ਥਾਂ    = 0;
         ret.level       = 0;
-        ret.status      = EXCEPTION_LOOKUP_FAULT;
-        return ret;
-    } else {
-        return lookupIOPTSlot_resolve_levels(iopt, io_address >> PAGE_BITS,
+        ret.ਸਥਿਤੀ      = EXCEPTION_LOOKUP_FAULT;
+        ਵਾਪਸ ret;
+    } ਨਹੀਂਤਾਂ {
+        ਵਾਪਸ lookup_IOPTSlot_resolve_ਪੱਧਰ(iopt, io_ਪਤਾ >> ਪੰਨਾ_ਬਿੱਟ,
                                              x86KSnumIOPTLevels - 1, x86KSnumIOPTLevels - 1);
     }
 }
 
-void unmapVTDContextEntry(cap_t cap)
+ਖਾਲੀ unmap_VTDContext_ਇੰਦਰਾਜ(cap_t cap)
 {
-    vtd_cte_t *cte = lookup_vtd_context_slot(cap);
-    assert(cte != 0);
+    vtd_cte_t *cte = lookup_vtd_context_ਥਾਂ(cap);
+    ਪ੍ਰਤਿਜ੍ਞਾ(cte != 0);
     *cte = vtd_cte_new(
                0,
                false,
@@ -132,108 +132,108 @@ void unmapVTDContextEntry(cap_t cap)
                false
            );
 
-    flushCacheRange(cte, VTD_CTE_SIZE_BITS);
+    flushCacheRange(cte, VTD_CTE_ਮਾਪ_ਬਿੱਟ);
     invalidate_iotlb();
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ;
 }
 
-static exception_t performX86IOPTInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ਸਥਿਰ exception_t performX86IOPTInvocationUnmap(cap_t cap, cte_t *ct_ਥਾਂ)
 {
-    deleteIOPageTable(cap);
-    cap = cap_io_page_table_cap_set_capIOPTIsMapped(cap, 0);
-    ctSlot->cap = cap;
+    delete_IOPage_ਸਾਰਣੀ(cap);
+    cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIs_Mapped(cap, 0);
+    ct_ਥਾਂ->cap = cap;
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t performX86IOPTInvocationMapContextRoot(cap_t cap, cte_t *ctSlot, vtd_cte_t vtd_cte,
-                                                          vtd_cte_t *vtd_context_slot)
+ਸਥਿਰ exception_t perform_X86_IOPTInvocation_Map_Context_ਜੜ੍ਹ(cap_t cap, cte_t *ct_ਥਾਂ, vtd_cte_t vtd_cte,
+                                                          vtd_cte_t *vtd_context_ਥਾਂ)
 {
-    *vtd_context_slot = vtd_cte;
-    flushCacheRange(vtd_context_slot, VTD_CTE_SIZE_BITS);
-    ctSlot->cap = cap;
+    *vtd_context_ਥਾਂ = vtd_cte;
+    flushCacheRange(vtd_context_ਥਾਂ, VTD_CTE_ਮਾਪ_ਬਿੱਟ);
+    ct_ਥਾਂ->cap = cap;
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static exception_t performX86IOPTInvocationMapPT(cap_t cap, cte_t *ctSlot, vtd_pte_t iopte, vtd_pte_t *ioptSlot)
+ਸਥਿਰ exception_t performX86IOPTInvocationMapPT(cap_t cap, cte_t *ct_ਥਾਂ, vtd_pte_t iopte, vtd_pte_t *iopt_ਥਾਂ)
 {
-    *ioptSlot = iopte;
-    flushCacheRange(ioptSlot, VTD_PTE_SIZE_BITS);
-    ctSlot->cap = cap;
+    *iopt_ਥਾਂ = iopte;
+    flushCacheRange(iopt_ਥਾਂ, VTD_PTE_ਮਾਪ_ਬਿੱਟ);
+    ct_ਥਾਂ->cap = cap;
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 exception_t decodeX86IOPTInvocation(
-    word_t       invLabel,
-    word_t       length,
-    cte_t       *slot,
+    ਸ਼ਬਦ_t       invLabel,
+    ਸ਼ਬਦ_t       ਲੰਮਾਈ,
+    cte_t       *ਥਾਂ,
     cap_t        cap,
-    word_t      *buffer
+    ਸ਼ਬਦ_t      *ਬਫਰ
 )
 {
     cap_t      io_space;
     paddr_t    paddr;
     uint32_t   pci_request_id;
-    word_t   io_address;
+    ਸ਼ਬਦ_t   io_ਪਤਾ;
     uint16_t   domain_id;
-    vtd_cte_t *vtd_context_slot;
+    vtd_cte_t *vtd_context_ਥਾਂ;
     vtd_pte_t *vtd_pte;
 
-    if (invLabel == X86IOPageTableUnmap) {
-        if (!isFinalCapability(slot)) {
+    ਜੇ (invLabel == X86_IOPage_ਸਾਰਣੀ_Unmap) {
+        ਜੇ (!isFinalCapability(ਥਾਂ)) {
             userError("X86IOPageTableUnmap: Cannot unmap if more than one cap exists.");
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Revoke_ਪਹਿਲਾ;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86IOPTInvocationUnmap(cap, slot);
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ performX86IOPTInvocationUnmap(cap, ਥਾਂ);
     }
 
-    if (invLabel != X86IOPageTableMap) {
+    ਜੇ (invLabel != X86_IOPage_ਸਾਰਣੀ_Map) {
         userError("X86IOPageTable: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (current_extra_caps.excaprefs[0] == NULL || length < 1) {
+    ਜੇ (current_extra_caps.excaprefs[0] == ਨਿਰਾ || ਲੰਮਾਈ < 1) {
         userError("X86IOPageTableMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     io_space     = current_extra_caps.excaprefs[0]->cap;
-    io_address   = getSyscallArg(0, buffer) & ~MASK(VTD_PT_INDEX_BITS + seL4_PageBits);
+    io_ਪਤਾ   = getSyscallArg(0, ਬਫਰ) & ~ਨਕਾਬ(VTD_PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ + se_L4_ਪੰਨਾ_ਬਿੱਟ);
 
-    if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+    ਜੇ (cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTIs_Mapped(cap)) {
         userError("X86IOPageTableMap: IO page table is already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(io_space) != cap_io_space_cap) {
+    ਜੇ (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("X86IOPageTableMap: Invalid IO space capability.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     pci_request_id = cap_io_space_cap_get_capPCIDevice(io_space);
     domain_id = cap_io_space_cap_get_capDomainID(io_space);
-    if (pci_request_id == asidInvalid) {
+    ਜੇ (pci_request_id == asidInvalid) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    paddr = pptr_to_paddr(VTD_PTE_PTR(cap_io_page_table_cap_get_capIOPTBasePtr(cap)));
-    vtd_context_slot = lookup_vtd_context_slot(io_space);
+    paddr = pptr_ਮੰਜ਼ਿਲ_paddr(VTD_PTE_PTR(cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTBase_Ptr(cap)));
+    vtd_context_ਥਾਂ = lookup_vtd_context_ਥਾਂ(io_space);
 
-    if (!vtd_cte_ptr_get_present(vtd_context_slot)) {
+    ਜੇ (!vtd_cte_ptr_get_present(vtd_context_ਥਾਂ)) {
 
         /* 1st Level Page Table */
         vtd_cte_t vtd_cte = vtd_cte_new(
@@ -245,30 +245,30 @@ exception_t decodeX86IOPTInvocation(
                                 true                        /* present                     */
                             );
 
-        cap = cap_io_page_table_cap_set_capIOPTIsMapped(cap, 1);
-        cap = cap_io_page_table_cap_set_capIOPTLevel(cap, 0);
-        cap = cap_io_page_table_cap_set_capIOPTIOASID(cap, pci_request_id);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIs_Mapped(cap, 1);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTLevel(cap, 0);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIOASID(cap, pci_request_id);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86IOPTInvocationMapContextRoot(cap, slot, vtd_cte, vtd_context_slot);
-    } else {
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ perform_X86_IOPTInvocation_Map_Context_ਜੜ੍ਹ(cap, ਥਾਂ, vtd_cte, vtd_context_ਥਾਂ);
+    } ਨਹੀਂਤਾਂ {
         lookupIOPTSlot_ret_t lu_ret;
         vtd_pte_t   iopte;
 
-        vtd_pte = (vtd_pte_t *)paddr_to_pptr(vtd_cte_ptr_get_asr(vtd_context_slot));
-        lu_ret  = lookupIOPTSlot(vtd_pte, io_address);
+        vtd_pte = (vtd_pte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_cte_ptr_get_asr(vtd_context_ਥਾਂ));
+        lu_ret  = lookupIOPTSlot(vtd_pte, io_ਪਤਾ);
 
-        if (lu_ret.status != EXCEPTION_NONE) {
+        ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = false;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
 
         lu_ret.level = x86KSnumIOPTLevels - lu_ret.level;
-        if (vtd_pte_ptr_get_addr(lu_ret.ioptSlot) != 0) {
-            current_syscall_error.type = seL4_DeleteFirst;
+        ਜੇ (vtd_pte_ptr_get_addr(lu_ret.iopt_ਥਾਂ) != 0) {
+            current_syscall_error.type = se_L4_Delete_ਪਹਿਲਾ;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
 
         iopte = vtd_pte_new(
@@ -277,152 +277,152 @@ exception_t decodeX86IOPTInvocation(
                     1           /* read  permission flag    */
                 );
 
-        cap = cap_io_page_table_cap_set_capIOPTIsMapped(cap, 1);
-        cap = cap_io_page_table_cap_set_capIOPTLevel(cap, lu_ret.level);
-        cap = cap_io_page_table_cap_set_capIOPTIOASID(cap, pci_request_id);
-        cap = cap_io_page_table_cap_set_capIOPTMappedAddress(cap, io_address);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIs_Mapped(cap, 1);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTLevel(cap, lu_ret.level);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIOASID(cap, pci_request_id);
+        cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTMapped_ਪਤਾ(cap, io_ਪਤਾ);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86IOPTInvocationMapPT(cap, slot, iopte, lu_ret.ioptSlot);
+        ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+        ਵਾਪਸ performX86IOPTInvocationMapPT(cap, ਥਾਂ, iopte, lu_ret.iopt_ਥਾਂ);
     }
 }
 
-static exception_t performX86IOInvocationMap(cap_t cap, cte_t *ctSlot, vtd_pte_t iopte, vtd_pte_t *ioptSlot)
+ਸਥਿਰ exception_t performX86IOInvocationMap(cap_t cap, cte_t *ct_ਥਾਂ, vtd_pte_t iopte, vtd_pte_t *iopt_ਥਾਂ)
 {
-    ctSlot->cap = cap;
-    *ioptSlot = iopte;
-    flushCacheRange(ioptSlot, VTD_PTE_SIZE_BITS);
+    ct_ਥਾਂ->cap = cap;
+    *iopt_ਥਾਂ = iopte;
+    flushCacheRange(iopt_ਥਾਂ, VTD_PTE_ਮਾਪ_ਬਿੱਟ);
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
 
 exception_t decodeX86IOMapInvocation(
-    word_t       length,
-    cte_t       *slot,
+    ਸ਼ਬਦ_t       ਲੰਮਾਈ,
+    cte_t       *ਥਾਂ,
     cap_t        cap,
-    word_t      *buffer
+    ਸ਼ਬਦ_t      *ਬਫਰ
 )
 {
     cap_t      io_space;
-    word_t     io_address;
+    ਸ਼ਬਦ_t     io_ਪਤਾ;
     uint32_t   pci_request_id;
-    vtd_cte_t *vtd_context_slot;
+    vtd_cte_t *vtd_context_ਥਾਂ;
     vtd_pte_t *vtd_pte;
     vtd_pte_t  iopte;
     paddr_t    paddr;
     lookupIOPTSlot_ret_t lu_ret;
-    vm_rights_t frame_cap_rights;
-    seL4_CapRights_t dma_cap_rights_mask;
+    vm_rights_t ਚੌਖਟਾ_cap_rights;
+    seL4_CapRights_t dma_cap_rights_ਨਕਾਬ;
 
-    if (current_extra_caps.excaprefs[0] == NULL || length < 2) {
+    ਜੇ (current_extra_caps.excaprefs[0] == ਨਿਰਾ || ਲੰਮਾਈ < 2) {
         userError("X86PageMapIO: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_frame_cap_get_capFSize(cap) != X86_SmallPage) {
+    ਜੇ (cap_ਚੌਖਟਾ_cap_get_cap_FSize(cap) != X86_Small_ਪੰਨਾ) {
         userError("X86PageMapIO: Invalid page size.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+    ਜੇ (cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ASID(cap) != asidInvalid) {
         userError("X86PageMapIO: Page already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     io_space    = current_extra_caps.excaprefs[0]->cap;
-    io_address  = getSyscallArg(1, buffer) & ~MASK(PAGE_BITS);
-    paddr       = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
+    io_ਪਤਾ  = getSyscallArg(1, ਬਫਰ) & ~ਨਕਾਬ(ਪੰਨਾ_ਬਿੱਟ);
+    paddr       = pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap));
 
-    if (cap_get_capType(io_space) != cap_io_space_cap) {
+    ਜੇ (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("X86PageMapIO: Invalid IO space capability.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     pci_request_id = cap_io_space_cap_get_capPCIDevice(io_space);
 
-    if (pci_request_id == asidInvalid) {
+    ਜੇ (pci_request_id == asidInvalid) {
         userError("X86PageMapIO: Invalid PCI device.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    vtd_context_slot = lookup_vtd_context_slot(io_space);
+    vtd_context_ਥਾਂ = lookup_vtd_context_ਥਾਂ(io_space);
 
-    if (!vtd_cte_ptr_get_present(vtd_context_slot)) {
+    ਜੇ (!vtd_cte_ptr_get_present(vtd_context_ਥਾਂ)) {
         /* 1st Level Page Table is not installed */
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = false;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    vtd_pte = (vtd_pte_t *)paddr_to_pptr(vtd_cte_ptr_get_asr(vtd_context_slot));
-    lu_ret  = lookupIOPTSlot(vtd_pte, io_address);
-    if (lu_ret.status != EXCEPTION_NONE || lu_ret.level != 0) {
+    vtd_pte = (vtd_pte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_cte_ptr_get_asr(vtd_context_ਥਾਂ));
+    lu_ret  = lookupIOPTSlot(vtd_pte, io_ਪਤਾ);
+    ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE || lu_ret.level != 0) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = false;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vtd_pte_ptr_get_addr(lu_ret.ioptSlot) != 0) {
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    ਜੇ (vtd_pte_ptr_get_addr(lu_ret.iopt_ਥਾਂ) != 0) {
+        current_syscall_error.type = se_L4_Delete_ਪਹਿਲਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    dma_cap_rights_mask = rightsFromWord(getSyscallArg(0, buffer));
-    frame_cap_rights    = cap_frame_cap_get_capFVMRights(cap);
+    dma_cap_rights_ਨਕਾਬ = rights_From_ਸ਼ਬਦ(getSyscallArg(0, ਬਫਰ));
+    ਚੌਖਟਾ_cap_rights    = cap_ਚੌਖਟਾ_cap_get_cap_FVMRights(cap);
 
-    bool_t write = seL4_CapRights_get_capAllowWrite(dma_cap_rights_mask) && (frame_cap_rights == VMReadWrite);
-    bool_t read = seL4_CapRights_get_capAllowRead(dma_cap_rights_mask) && (frame_cap_rights != VMKernelOnly);
-    if (write || read) {
-        iopte = vtd_pte_new(paddr, !!write, !!read);
-    } else {
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+    bool_t ਲਿਖ = seL4_CapRights_get_capAllowWrite(dma_cap_rights_ਨਕਾਬ) && (ਚੌਖਟਾ_cap_rights == VMReadWrite);
+    bool_t ਪਠ = seL4_CapRights_get_capAllowRead(dma_cap_rights_ਨਕਾਬ) && (ਚੌਖਟਾ_cap_rights != VMKernelOnly);
+    ਜੇ (ਲਿਖ || ਪਠ) {
+        iopte = vtd_pte_new(paddr, !!ਲਿਖ, !!ਪਠ);
+    } ਨਹੀਂਤਾਂ {
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 0;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cap = cap_frame_cap_set_capFMapType(cap, X86_MappingIOSpace);
-    cap = cap_frame_cap_set_capFMappedASID(cap, pci_request_id);
-    cap = cap_frame_cap_set_capFMappedAddress(cap, io_address);
+    cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMap_Type(cap, X86_MappingIOSpace);
+    cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ASID(cap, pci_request_id);
+    cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ਪਤਾ(cap, io_ਪਤਾ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performX86IOInvocationMap(cap, slot, iopte, lu_ret.ioptSlot);
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    ਵਾਪਸ performX86IOInvocationMap(cap, ਥਾਂ, iopte, lu_ret.iopt_ਥਾਂ);
 }
 
-void deleteIOPageTable(cap_t io_pt_cap)
+ਖਾਲੀ delete_IOPage_ਸਾਰਣੀ(cap_t io_pt_cap)
 {
     lookupIOPTSlot_ret_t lu_ret;
     uint32_t             level;
-    word_t               io_address;
-    vtd_cte_t           *vtd_context_slot;
+    ਸ਼ਬਦ_t               io_ਪਤਾ;
+    vtd_cte_t           *vtd_context_ਥਾਂ;
     vtd_pte_t           *vtd_pte;
 
-    if (cap_io_page_table_cap_get_capIOPTIsMapped(io_pt_cap)) {
-        io_pt_cap = cap_io_page_table_cap_set_capIOPTIsMapped(io_pt_cap, 0);
-        level = cap_io_page_table_cap_get_capIOPTLevel(io_pt_cap);
-        vtd_context_slot = lookup_vtd_context_slot(io_pt_cap);
+    ਜੇ (cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTIs_Mapped(io_pt_cap)) {
+        io_pt_cap = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_ਸੈੱਟ_cap_IOPTIs_Mapped(io_pt_cap, 0);
+        level = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTLevel(io_pt_cap);
+        vtd_context_ਥਾਂ = lookup_vtd_context_ਥਾਂ(io_pt_cap);
 
-        if (!vtd_cte_ptr_get_present(vtd_context_slot)) {
-            return;
+        ਜੇ (!vtd_cte_ptr_get_present(vtd_context_ਥਾਂ)) {
+            ਵਾਪਸ;
         }
 
-        vtd_pte = (vtd_pte_t *)paddr_to_pptr(vtd_cte_ptr_get_asr(vtd_context_slot));
+        vtd_pte = (vtd_pte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_cte_ptr_get_asr(vtd_context_ਥਾਂ));
 
-        if (level == 0) {
+        ਜੇ (level == 0) {
             /* if we have been overmapped or something */
-            if (pptr_to_paddr(vtd_pte) != pptr_to_paddr((void *)cap_io_page_table_cap_get_capIOPTBasePtr(io_pt_cap))) {
-                return;
+            ਜੇ (pptr_ਮੰਜ਼ਿਲ_paddr(vtd_pte) != pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTBase_Ptr(io_pt_cap))) {
+                ਵਾਪਸ;
             }
-            *vtd_context_slot = vtd_cte_new(
+            *vtd_context_ਥਾਂ = vtd_cte_new(
                                     0,      /* Domain ID          */
                                     false,  /* RMRR               */
                                     0,      /* Address Width      */
@@ -430,82 +430,82 @@ void deleteIOPageTable(cap_t io_pt_cap)
                                     0,      /* Translation Type   */
                                     0       /* Present            */
                                 );
-            flushCacheRange(vtd_context_slot, VTD_CTE_SIZE_BITS);
-        } else {
-            io_address = cap_io_page_table_cap_get_capIOPTMappedAddress(io_pt_cap);
-            lu_ret = lookupIOPTSlot_resolve_levels(vtd_pte, io_address >> PAGE_BITS, level - 1, level - 1);
+            flushCacheRange(vtd_context_ਥਾਂ, VTD_CTE_ਮਾਪ_ਬਿੱਟ);
+        } ਨਹੀਂਤਾਂ {
+            io_ਪਤਾ = cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTMapped_ਪਤਾ(io_pt_cap);
+            lu_ret = lookup_IOPTSlot_resolve_ਪੱਧਰ(vtd_pte, io_ਪਤਾ >> ਪੰਨਾ_ਬਿੱਟ, level - 1, level - 1);
 
             /* if we have been overmapped or something */
-            if (lu_ret.status != EXCEPTION_NONE || lu_ret.level != 0) {
-                return;
+            ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE || lu_ret.level != 0) {
+                ਵਾਪਸ;
             }
-            if (vtd_pte_ptr_get_addr(lu_ret.ioptSlot) != pptr_to_paddr((void *)cap_io_page_table_cap_get_capIOPTBasePtr(
+            ਜੇ (vtd_pte_ptr_get_addr(lu_ret.iopt_ਥਾਂ) != pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)cap_io_ਪੰਨਾ_ਸਾਰਣੀ_cap_get_cap_IOPTBase_Ptr(
                                                                            io_pt_cap))) {
-                return;
+                ਵਾਪਸ;
             }
-            *lu_ret.ioptSlot = vtd_pte_new(
+            *lu_ret.iopt_ਥਾਂ = vtd_pte_new(
                                    0,  /* Physical Address */
                                    0,  /* Read Permission  */
                                    0   /* Write Permission */
                                );
-            flushCacheRange(lu_ret.ioptSlot, VTD_PTE_SIZE_BITS);
+            flushCacheRange(lu_ret.iopt_ਥਾਂ, VTD_PTE_ਮਾਪ_ਬਿੱਟ);
         }
         invalidate_iotlb();
     }
 }
 
-void unmapIOPage(cap_t cap)
+ਖਾਲੀ unmapIOPage(cap_t cap)
 {
     lookupIOPTSlot_ret_t lu_ret;
-    word_t               io_address;
-    vtd_cte_t           *vtd_context_slot;
+    ਸ਼ਬਦ_t               io_ਪਤਾ;
+    vtd_cte_t           *vtd_context_ਥਾਂ;
     vtd_pte_t           *vtd_pte;
 
-    io_address  = cap_frame_cap_get_capFMappedAddress(cap);
-    vtd_context_slot = lookup_vtd_context_slot(cap);
+    io_ਪਤਾ  = cap_ਚੌਖਟਾ_cap_get_cap_FMapped_ਪਤਾ(cap);
+    vtd_context_ਥਾਂ = lookup_vtd_context_ਥਾਂ(cap);
 
 
-    if (!vtd_cte_ptr_get_present(vtd_context_slot)) {
-        return;
+    ਜੇ (!vtd_cte_ptr_get_present(vtd_context_ਥਾਂ)) {
+        ਵਾਪਸ;
     }
 
-    vtd_pte = (vtd_pte_t *)paddr_to_pptr(vtd_cte_ptr_get_asr(vtd_context_slot));
+    vtd_pte = (vtd_pte_t *)paddr_ਮੰਜ਼ਿਲ_pptr(vtd_cte_ptr_get_asr(vtd_context_ਥਾਂ));
 
-    lu_ret  = lookupIOPTSlot(vtd_pte, io_address);
-    if (lu_ret.status != EXCEPTION_NONE || lu_ret.level != 0) {
-        return;
+    lu_ret  = lookupIOPTSlot(vtd_pte, io_ਪਤਾ);
+    ਜੇ (lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE || lu_ret.level != 0) {
+        ਵਾਪਸ;
     }
 
-    if (vtd_pte_ptr_get_addr(lu_ret.ioptSlot) != pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap))) {
-        return;
+    ਜੇ (vtd_pte_ptr_get_addr(lu_ret.iopt_ਥਾਂ) != pptr_ਮੰਜ਼ਿਲ_paddr((ਖਾਲੀ *)cap_ਚੌਖਟਾ_cap_get_cap_FBase_Ptr(cap))) {
+        ਵਾਪਸ;
     }
 
-    *lu_ret.ioptSlot = vtd_pte_new(
+    *lu_ret.iopt_ਥਾਂ = vtd_pte_new(
                            0,  /* Physical Address */
                            0,  /* Read Permission  */
                            0   /* Write Permission */
                        );
 
-    flushCacheRange(lu_ret.ioptSlot, VTD_PTE_SIZE_BITS);
+    flushCacheRange(lu_ret.iopt_ਥਾਂ, VTD_PTE_ਮਾਪ_ਬਿੱਟ);
     invalidate_iotlb();
 }
 
-exception_t performX86IOUnMapInvocation(cap_t cap, cte_t *ctSlot)
+exception_t performX86IOUnMapInvocation(cap_t cap, cte_t *ct_ਥਾਂ)
 {
-    unmapIOPage(ctSlot->cap);
+    unmapIOPage(ct_ਥਾਂ->cap);
 
-    ctSlot->cap = cap_frame_cap_set_capFMappedAddress(ctSlot->cap, 0);
-    ctSlot->cap = cap_frame_cap_set_capFMapType(ctSlot->cap, X86_MappingNone);
-    ctSlot->cap = cap_frame_cap_set_capFMappedASID(ctSlot->cap, asidInvalid);
+    ct_ਥਾਂ->cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ਪਤਾ(ct_ਥਾਂ->cap, 0);
+    ct_ਥਾਂ->cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMap_Type(ct_ਥਾਂ->cap, X86_MappingNone);
+    ct_ਥਾਂ->cap = cap_ਚੌਖਟਾ_cap_ਸੈੱਟ_cap_FMapped_ASID(ct_ਥਾਂ->cap, asidInvalid);
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeX86IOSpaceInvocation(word_t invLabel, cap_t cap)
+exception_t decodeX86IOSpaceInvocation(ਸ਼ਬਦ_t invLabel, cap_t cap)
 {
     userError("IOSpace capability has no invocations");
     current_syscall_error.type = seL4_IllegalOperation;
-    return EXCEPTION_SYSCALL_ERROR;
+    ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
 }
 
-#endif /* CONFIG_IOMMU */
+#ਜੇ_ਅੰਤ /* CONFIG_IOMMU */

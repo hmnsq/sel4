@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <arch/machine/debug_conf.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/debug_conf.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
 asid_pool_t *armKSASIDTable[nASIDPools];
 
 /* The hardware ASID to virtual ASID mapping table */
-asid_t armKSHWASIDTable[BIT(hwASIDBits)];
+asid_t armKSHWASIDTable[ਦੋਆਧਾਰੀ_ਅੰਕ(hwASIDBits)];
 hw_asid_t armKSNextASID = hwASIDMin;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
 /* The global, privileged, physically-mapped PD */
-pde_t armKSGlobalPD[BIT(PD_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageDirBits));
+pde_t armKSGlobalPD[ਦੋਆਧਾਰੀ_ਅੰਕ(PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_Dir_ਬਿੱਟ));
 
 /* The global, privileged, page table. */
-pte_t armKSGlobalPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalPT[ਦੋਆਧਾਰੀ_ਅੰਕ(PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t armKSGlobalLogPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_LOG_ਬਫਰ
+pte_t armKSGlobalLogPT[ਦੋਆਧਾਰੀ_ਅੰਕ(PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ));
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_LOG_BUFFER */
 
-#else
+#ਨਹੀਂਤਾਂ
 /* The global, hypervisor, level 1 page table */
-pdeS1_t  armHSGlobalPGD[BIT(PGD_INDEX_BITS)] ALIGN_BSS(BIT(PGD_SIZE_BITS));
+pdeS1_t  armHSGlobalPGD[ਦੋਆਧਾਰੀ_ਅੰਕ(PGD_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(PGD_ਮਾਪ_ਬਿੱਟ));
 /* The global, hypervisor, level 2 page table */
-pdeS1_t  armHSGlobalPD[BIT(PT_INDEX_BITS)]   ALIGN_BSS(BIT(seL4_PageTableBits));
+pdeS1_t  armHSGlobalPD[ਦੋਆਧਾਰੀ_ਅੰਕ(PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ)]   ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ));
 /* The global, hypervisor, level 3 page table */
-pteS1_t  armHSGlobalPT[BIT(PT_INDEX_BITS)]   ALIGN_BSS(BIT(seL4_PageTableBits));
+pteS1_t  armHSGlobalPT[ਦੋਆਧਾਰੀ_ਅੰਕ(PT_ਸੂਚਕਾਂਕ_ਬਿੱਟ)]   ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_ਸਾਰਣੀ_ਬਿੱਟ));
 /* Global user space mappings, which are empty as there is no hared kernel region */
-pde_t armUSGlobalPD[BIT(PD_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageDirBits));;
+pde_t armUSGlobalPD[ਦੋਆਧਾਰੀ_ਅੰਕ(PD_ਸੂਚਕਾਂਕ_ਬਿੱਟ)] ALIGN_BSS(ਦੋਆਧਾਰੀ_ਅੰਕ(se_L4_ਪੰਨਾ_Dir_ਬਿੱਟ));;
 /* Current VCPU */
-UP_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
+ਉੱਪਰ_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
 /* Whether the current loaded VCPU is enabled in the hardware or not */
-UP_STATE_DEFINE(bool_t, armHSVCPUActive);
+ਉੱਪਰ_STATE_DEFINE(bool_t, armHSVCPUActive);
 
-#ifdef CONFIG_HAVE_FPU
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HAVE_FPU
 /* Whether the hyper-mode kernel is allowed to execute FPU instructions */
-UP_STATE_DEFINE(bool_t, armHSFPUEnabled);
-#endif
+ਉੱਪਰ_STATE_DEFINE(bool_t, armHSFPUEnabled);
+#ਜੇ_ਅੰਤ
 
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ ARM_ਅਧਾਰ_CP14_SAVE_AND_RESTORE
 /* Null state for the Debug coprocessor's break/watchpoint registers */
 user_breakpoint_state_t armKSNullBreakpointState;
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_ARM_HAS_TLB_LOCK
-word_t armKSTlbLockCount = 0;
-#endif /* CONFIG_ARM_HAS_TLB_LOCK */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HAS_TLB_ਤਾਲਾ
+ਸ਼ਬਦ_t arm_KSTlb_ਤਾਲਾ_ਗਿਣਤੀ = 0;
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HAS_TLB_LOCK */

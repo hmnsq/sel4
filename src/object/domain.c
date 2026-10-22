@@ -4,169 +4,169 @@
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
-#include <util.h>
-#include <api/syscall.h>
-#include <kernel/thread.h>
-#include <mode/api/ipc_buffer.h>
-#include <model/statedata.h>
-#include <object/domain.h>
-#include <object/structures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/api/ipc_buffer.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/domain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object/structures.h>
 
 /* Domain schedules. The duration is in kernel ticks for non-MCS and timer ticks for MCS. */
-dschedule_t ksDomSchedule[CONFIG_NUM_DOMAIN_SCHEDULES];
+dschedule_t ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ[CONFIG_ਅੰਕ_DOMAIN_SCHEDULES];
 
-static void invokeDomainSetSet(tcb_t *tcb, dom_t domain)
+ਸਥਿਰ ਖਾਲੀ invoke_Domain_ਸੈੱਟ_ਸੈੱਟ(tcb_t *tcb, dom_t domain)
 {
-    prepareSetDomain(tcb, domain);
-    setDomain(tcb, domain);
+    prepare_ਸੈੱਟ_Domain(tcb, domain);
+    ਸੈੱਟ_Domain(tcb, domain);
 }
 
-static exception_t decodeDomainSetSetInvocation(word_t length, word_t *buffer)
+ਸਥਿਰ exception_t decode_Domain_ਸੈੱਟ_ਸੈੱਟ_Invocation(ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
     dom_t domain;
     cap_t tcap;
 
-    if (unlikely(length == 0)) {
+    ਜੇ (unlikely(ਲੰਮਾਈ == 0)) {
         userError("Domain Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
-    } else {
-        domain = getSyscallArg(0, buffer);
-        if (domain >= numDomains) {
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
+    } ਨਹੀਂਤਾਂ {
+        domain = getSyscallArg(0, ਬਫਰ);
+        ਜੇ (domain >= ਅੰਕ_Domains) {
             userError("Domain Configure: invalid domain (%lu >= %u).",
-                      domain, numDomains);
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+                      domain, ਅੰਕ_Domains);
+            current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+            current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 0;
+            ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+    ਜੇ (unlikely(current_extra_caps.excaprefs[0] == ਨਿਰਾ)) {
         userError("Domain Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcap = current_extra_caps.excaprefs[0]->cap;
-    if (unlikely(cap_get_capType(tcap) != cap_thread_cap)) {
+    ਜੇ (unlikely(cap_get_capType(tcap) != cap_thread_cap)) {
         userError("Domain Configure: thread cap required.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    invokeDomainSetSet(TCB_PTR(cap_thread_cap_get_capTCBPtr(tcap)), domain);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    invoke_Domain_ਸੈੱਟ_ਸੈੱਟ(TCB_PTR(cap_thread_cap_get_capTCBPtr(tcap)), domain);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static void invokeDomainScheduleConfigure(word_t index, dom_t domain, ticks_t duration)
+ਸਥਿਰ ਖਾਲੀ invoke_Domain_ਸਮਾਂ_ਸਾਰਣੀ_Configure(ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ, dom_t domain, ticks_t duration)
 {
-    ksDomSchedule[index] = dschedule_make(domain, duration);
+    ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ[ਸੂਚਕਾਂਕ] = dschedule_make(domain, duration);
 }
 
-static exception_t decodeDomainScheduleConfigure(word_t length, word_t *buffer)
+ਸਥਿਰ exception_t decode_Domain_ਸਮਾਂ_ਸਾਰਣੀ_Configure(ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t index;
+    ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ;
     dom_t domain;
     ticks_t duration;
 
-    if (unlikely(length < 2 + TIME_ARG_SIZE)) {
+    ਜੇ (unlikely(ਲੰਮਾਈ < 2 + ਸਮਾਂ_ARG_ਮਾਪ)) {
         userError("Domain Schedule Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
-    domain = getSyscallArg(1, buffer);
-    duration = mode_parseTimeArg(2, buffer);
+    ਸੂਚਕਾਂਕ = getSyscallArg(0, ਬਫਰ);
+    domain = getSyscallArg(1, ਬਫਰ);
+    duration = ਬਹੁਲਕ_parse_ਸਮਾਂ_Arg(2, ਬਫਰ);
 
     /* Last entry must stay an end marker, hence the -1: */
-    if (index >= domScheduleLength - 1) {
+    ਜੇ (ਸੂਚਕਾਂਕ >= dom_ਸਮਾਂ_ਸਾਰਣੀ_ਲੰਮਾਈ - 1) {
         userError("Domain Schedule Configure: Invalid index.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = domScheduleLength - 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = dom_ਸਮਾਂ_ਸਾਰਣੀ_ਲੰਮਾਈ - 2;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (domain >= numDomains) {
+    ਜੇ (domain >= ਅੰਕ_Domains) {
         userError("Domain Schedule Configure: Invalid domain.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = numDomains - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = ਅੰਕ_Domains - 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (duration > DSCHED_MAX_DURATION) {
+    ਜੇ (duration > DSCHED_MAX_DURATION) {
         userError("Domain Schedule Configure: Duration must fit in 56 bits.");
-        current_syscall_error.invalidArgumentNumber = 2;
-        current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (duration == 0 && domain != 0) {
+    ਜੇ (duration == 0 && domain != 0) {
         userError("Domain Schedule Configure: Both domain and duration must be zero for end markers.");
-        current_syscall_error.invalidArgumentNumber = 1;
-        current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 1;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (index == ksDomScheduleStart && duration == 0) {
+    ਜੇ (ਸੂਚਕਾਂਕ == ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_ਸ਼ੁਰੂ && duration == 0) {
         userError("Domain Schedule Configure: Starting schedule's duration must not be zero.");
-        current_syscall_error.invalidArgumentNumber = 2;
-        current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 2;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    invokeDomainScheduleConfigure(index, domain, duration);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    invoke_Domain_ਸਮਾਂ_ਸਾਰਣੀ_Configure(ਸੂਚਕਾਂਕ, domain, duration);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-static void invokeDomainScheduleSetStart(word_t index)
+ਸਥਿਰ ਖਾਲੀ invoke_Domain_ਸਮਾਂ_ਸਾਰਣੀ_ਸੈੱਟ_ਸ਼ੁਰੂ(ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ)
 {
-    ksDomScheduleStart = index;
+    ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_ਸ਼ੁਰੂ = ਸੂਚਕਾਂਕ;
     /* End the current domain schedule and force an
      * immediate switch to the new starting index: */
-    ksDomainTime = 0;
-    ksDomScheduleIdx = domScheduleLength - 2;
+    ks_Domain_ਸਮਾਂ = 0;
+    ks_Dom_ਸਮਾਂ_ਸਾਰਣੀ_Idx = dom_ਸਮਾਂ_ਸਾਰਣੀ_ਲੰਮਾਈ - 2;
     rescheduleRequired();
 }
 
-static exception_t decodeDomainScheduleSetStart(word_t length, word_t *buffer)
+ਸਥਿਰ exception_t decode_Domain_ਸਮਾਂ_ਸਾਰਣੀ_ਸੈੱਟ_ਸ਼ੁਰੂ(ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    word_t index;
+    ਸ਼ਬਦ_t ਸੂਚਕਾਂਕ;
 
-    if (unlikely(length < 1)) {
+    ਜੇ (unlikely(ਲੰਮਾਈ < 1)) {
         userError("Domain Schedule Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ਸੁਨੇਹਾ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
+    ਸੂਚਕਾਂਕ = getSyscallArg(0, ਬਫਰ);
 
-    if (index >= domScheduleLength) {
+    ਜੇ (ਸੂਚਕਾਂਕ >= dom_ਸਮਾਂ_ਸਾਰਣੀ_ਲੰਮਾਈ) {
         userError("Domain Schedule Set Start: Invalid index.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = domScheduleLength - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = dom_ਸਮਾਂ_ਸਾਰਣੀ_ਲੰਮਾਈ - 1;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    if (dschedule_is_end_marker(index)) {
+    ਜੇ (dschedule_is_ਸਿਰਾ_marker(ਸੂਚਕਾਂਕ)) {
         userError("Domain Schedule Set Start: Starting schedule must not be an end marker.");
-        current_syscall_error.invalidArgumentNumber = 0;
-        current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_ਦਲੀਲ_ਸੰਖਿਆ = 0;
+        current_syscall_error.type = se_L4_Invalid_ਦਲੀਲ;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    invokeDomainScheduleSetStart(index);
-    return EXCEPTION_NONE;
+    ਸੈੱਟ_Thread_State(ਗੰਢ_STATE(ksCurThread), ThreadState_Restart);
+    invoke_Domain_ਸਮਾਂ_ਸਾਰਣੀ_ਸੈੱਟ_ਸ਼ੁਰੂ(ਸੂਚਕਾਂਕ);
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-exception_t decodeDomainInvocation(word_t invLabel, word_t length, word_t *buffer)
+exception_t decodeDomainInvocation(ਸ਼ਬਦ_t invLabel, ਸ਼ਬਦ_t ਲੰਮਾਈ, ਸ਼ਬਦ_t *ਬਫਰ)
 {
-    switch (invLabel) {
-    case DomainSetSet:
-        return decodeDomainSetSetInvocation(length, buffer);
-    case DomainScheduleConfigure:
-        return decodeDomainScheduleConfigure(length, buffer);
-    case DomainScheduleSetStart:
-        return decodeDomainScheduleSetStart(length, buffer);
-    default:
+    ਚੋਣ (invLabel) {
+    ਹਾਲਤ Domain_ਸੈੱਟ_ਸੈੱਟ:
+        ਵਾਪਸ decode_Domain_ਸੈੱਟ_ਸੈੱਟ_Invocation(ਲੰਮਾਈ, ਬਫਰ);
+    ਹਾਲਤ Domain_ਸਮਾਂ_ਸਾਰਣੀ_Configure:
+        ਵਾਪਸ decode_Domain_ਸਮਾਂ_ਸਾਰਣੀ_Configure(ਲੰਮਾਈ, ਬਫਰ);
+    ਹਾਲਤ Domain_ਸਮਾਂ_ਸਾਰਣੀ_ਸੈੱਟ_ਸ਼ੁਰੂ:
+        ਵਾਪਸ decode_Domain_ਸਮਾਂ_ਸਾਰਣੀ_ਸੈੱਟ_ਸ਼ੁਰੂ(ਲੰਮਾਈ, ਬਫਰ);
+    ਮੂਲ:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
     }
 }

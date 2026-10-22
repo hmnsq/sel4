@@ -4,39 +4,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <string.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <assert.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <string.h>
 
-word_t strnlen(const char *s, word_t maxlen)
+ਸ਼ਬਦ_t strnlen(ਅਚਲ ਅੱਖਰ *s, ਸ਼ਬਦ_t maxlen)
 {
-    word_t len;
-    for (len = 0; len < maxlen && s[len]; len++);
-    return len;
+    ਸ਼ਬਦ_t len;
+    ਲਈ (len = 0; len < maxlen && s[len]; len++);
+    ਵਾਪਸ len;
 }
 
-word_t strlcpy(char *dest, const char *src, word_t size)
+ਸ਼ਬਦ_t strlcpy(ਅੱਖਰ *dest, ਅਚਲ ਅੱਖਰ *src, ਸ਼ਬਦ_t ਮਾਪ)
 {
-    word_t len;
-    for (len = 0; len + 1 < size && src[len]; len++) {
+    ਸ਼ਬਦ_t len;
+    ਲਈ (len = 0; len + 1 < ਮਾਪ && src[len]; len++) {
         dest[len] = src[len];
     }
     dest[len] = '\0';
-    return len;
+    ਵਾਪਸ len;
 }
 
-word_t strlcat(char *dest, const char *src, word_t size)
+ਸ਼ਬਦ_t strlcat(ਅੱਖਰ *dest, ਅਚਲ ਅੱਖਰ *src, ਸ਼ਬਦ_t ਮਾਪ)
 {
-    word_t len;
+    ਸ਼ਬਦ_t len;
     /* get to the end of dest */
-    for (len = 0; len < size && dest[len]; len++);
+    ਲਈ (len = 0; len < ਮਾਪ && dest[len]; len++);
     /* check that dest was at least 'size' length to prevent inserting
      * a null byte when we shouldn't */
-    if (len < size) {
-        for (; len + 1 < size && *src; len++, src++) {
+    ਜੇ (len < ਮਾਪ) {
+        ਲਈ (; len + 1 < ਮਾਪ && *src; len++, src++) {
             dest[len] = *src;
         }
         dest[len] = '\0';
     }
-    return len;
+    ਵਾਪਸ len;
 }

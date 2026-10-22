@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/devices_gen.h>
 
-#define UART_WFIFO  0x0
-#define UART_RFIFO  0x4
-#define UART_STATUS 0xC
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_WFIFO  0x0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_RFIFO  0x4
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_ਸਥਿਤੀ 0xC
 
-#define UART_TX_FULL        BIT(21)
-#define UART_RX_EMPTY       BIT(20)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_TX_ਭਰਿਆ        ਦੋਆਧਾਰੀ_ਅੰਕ(21)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_RX_ਖਾਲੀ_ਥਾਵਾਂ       ਦੋਆਧਾਰੀ_ਅੰਕ(20)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ UART_REG(x) ((ਅਸਥਿਰ uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_PRINTING
+ਖਾਲੀ uart_drv_putchar(ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ c)
 {
-    while ((*UART_REG(UART_STATUS) & UART_TX_FULL));
+    ਜਦੋਂ ((*UART_REG(UART_ਸਥਿਤੀ) & UART_TX_ਭਰਿਆ));
 
     /* Add character to the buffer. */
     *UART_REG(UART_WFIFO) = c;
 }
-#endif /* CONFIG_PRINTING */
+#ਜੇ_ਅੰਤ /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
+ਬਿਨਾਨਿਸ਼ਾਨੀ ਅੱਖਰ uart_drv_getchar(ਖਾਲੀ)
 {
-    while ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
-    return *UART_REG(UART_RFIFO);
+    ਜਦੋਂ ((*UART_REG(UART_ਸਥਿਤੀ) & UART_RX_ਖਾਲੀ_ਥਾਵਾਂ));
+    ਵਾਪਸ *UART_REG(UART_RFIFO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */

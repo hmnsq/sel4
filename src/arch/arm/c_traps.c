@@ -4,116 +4,116 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/traps.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/registerset.h>
-#include <api/syscall.h>
-#include <machine/fpu.h>
-#include <mode/machine/debug.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/traps.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/object/vcpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/syscall.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/fpu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/machine/debug.h>
 
-#include <sel4/benchmark_track_types.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <sel4/benchmark_track_types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <benchmark/benchmark_track.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <benchmark/benchmark_utilisation.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
 
-void VISIBLE NORETURN c_handle_undefined_instruction(void)
+ਖਾਲੀ VISIBLE NORETURN c_handle_undefined_instruction(ਖਾਲੀ)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    ਗੰਢ_ਤਾਲਾ_SYS;
+    c_ਇੰਦਰਾਜ_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_User_Level_Fault;
+    ks_Kernel_ਇੰਦਰਾਜ.ਸ਼ਬਦ_2 = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), ਅਗਲਾ_IP);
+#ਜੇ_ਅੰਤ
 
     /* There's only one user-level fault on ARM, and the code is (0,0) */
-#ifdef CONFIG_ARCH_AARCH32
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_AARCH32
     handleUserLevelFault(0, 0);
-#elif CONFIG_ARCH_AARCH64
-    word_t esr = getESR();
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+#ਜਾਂਜੇ CONFIG_ARCH_AARCH64
+    ਸ਼ਬਦ_t esr = getESR();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
+    ਜੇ (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
-#endif
+    } ਨਹੀਂਤਾਂ
+#ਜੇ_ਅੰਤ
     {
         handleUserLevelFault(esr, 0);
     }
-#endif
+#ਜੇ_ਅੰਤ
     restore_user_context();
     UNREACHABLE();
 }
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
-void NORETURN vm_fault_slowpath(vm_fault_type_t type)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_EXCEPTION_FASTPATH
+ਖਾਲੀ NORETURN vm_fault_slowpath(vm_fault_type_t type)
 {
     handleVMFaultEvent(type);
     restore_user_context();
     UNREACHABLE();
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    ਗੰਢ_ਤਾਲਾ_SYS;
+    c_ਇੰਦਰਾਜ_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VMFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-    ksKernelEntry.is_fastpath = false;
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_VMFault;
+    ks_Kernel_ਇੰਦਰਾਜ.ਸ਼ਬਦ_2 = get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), ਅਗਲਾ_IP);
+    ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = false;
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# ਨਹੀਂਤਾਂ
     handleVMFaultEvent(type);
     restore_user_context();
-#endif
+#ਜੇ_ਅੰਤ
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_data_fault(void)
+ਖਾਲੀ VISIBLE NORETURN c_handle_ਅੰਕੜੇ_fault(ਖਾਲੀ)
 {
-    c_handle_vm_fault(seL4_DataFault);
+    c_handle_vm_fault(se_L4_ਅੰਕੜੇ_Fault);
 }
 
-void VISIBLE NORETURN c_handle_instruction_fault(void)
+ਖਾਲੀ VISIBLE NORETURN c_handle_instruction_fault(ਖਾਲੀ)
 {
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+ਖਾਲੀ VISIBLE NORETURN c_handle_ਰੁਕਾਵਟ(ਖਾਲੀ)
 {
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
-    c_entry_hook();
+    ਗੰਢ_ਤਾਲਾ_IRQ_IF(IRQT_ਮੰਜ਼ਿਲ_IRQ(get_ਸਰਗਰਮ_IRQ()) != irq_remote_call_ipi);
+    c_ਇੰਦਰਾਜ_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_Interrupt;
-    ksKernelEntry.word = IRQT_TO_IRQ(getActiveIRQ());
-    ksKernelEntry.core = CURRENT_CPU_INDEX();
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_ਰੁਕਾਵਟ;
+    ks_Kernel_ਇੰਦਰਾਜ.ਸ਼ਬਦ_2 = IRQT_ਮੰਜ਼ਿਲ_IRQ(get_ਸਰਗਰਮ_IRQ());
+    ks_Kernel_ਇੰਦਰਾਜ.core = CURRENT_CPU_ਸੂਚਕਾਂਕ();
+#ਜੇ_ਅੰਤ
 
-    handleInterruptEntry();
+    handle_ਰੁਕਾਵਟ_ਇੰਦਰਾਜ();
     restore_user_context();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+ਖਾਲੀ NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
+    ਜੇ (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+        ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_Unknown_Syscall;
         /* ksKernelEntry.word word is already set to syscall */
-#endif /* TRACK_KERNEL_ENTRIES */
+#ਜੇ_ਅੰਤ /* TRACK_KERNEL_ENTRIES */
         /* Contrary to the name, this handles all non-standard syscalls used in
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
+    } ਨਹੀਂਤਾਂ {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+        ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = 0;
+#ਜੇ_ਅੰਤ /* TRACK KERNEL ENTRIES */
         handleSyscall(syscall);
     }
 
@@ -121,92 +121,92 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+ਖਾਲੀ VISIBLE c_handle_syscall(ਸ਼ਬਦ_t cptr, ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    ਗੰਢ_ਤਾਲਾ_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
+    c_ਇੰਦਰਾਜ_hook();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ਸ਼ੁਰੂ(cptr, ਸੁਨੇਹਾ_Info, syscall);
+    ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = 0;
+#ਜੇ_ਅੰਤ /* DEBUG */
 
     slowpath(syscall);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_FASTPATH
+ALIGN(L1_CACHE_ਸਤਰ_ਮਾਪ)
+ਖਾਲੀ VISIBLE c_handle_fastpath_call(ਸ਼ਬਦ_t cptr, ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Info)
 {
-    NODE_LOCK_SYS;
+    ਗੰਢ_ਤਾਲਾ_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_ਇੰਦਰਾਜ_hook();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ਸ਼ੁਰੂ(cptr, ਸੁਨੇਹਾ_Info, SysCall);
+    ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = 1;
+#ਜੇ_ਅੰਤ /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, ਸੁਨੇਹਾ_Info);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_KERNEL_MCS
-#ifdef CONFIG_SIGNAL_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SIGNAL_FASTPATH
+ALIGN(L1_CACHE_ਸਤਰ_ਮਾਪ)
+ਖਾਲੀ VISIBLE c_handle_fastpath_signal(ਸ਼ਬਦ_t cptr, ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Info)
 {
-    NODE_LOCK_SYS;
+    ਗੰਢ_ਤਾਲਾ_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
-    fastpath_signal(cptr, msgInfo);
+    c_ਇੰਦਰਾਜ_hook();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ਸ਼ੁਰੂ(cptr, ਸੁਨੇਹਾ_Info, SysCall);
+    ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = 1;
+#ਜੇ_ਅੰਤ /* DEBUG */
+    fastpath_signal(cptr, ਸੁਨੇਹਾ_Info);
     UNREACHABLE();
 }
-#endif /* CONFIG_SIGNAL_FASTPATH */
-#endif /* CONFIG_KERNEL_MCS */
+#ਜੇ_ਅੰਤ /* CONFIG_SIGNAL_FASTPATH */
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_MCS */
 
-ALIGN(L1_CACHE_LINE_SIZE)
-#ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
-#endif
+ALIGN(L1_CACHE_ਸਤਰ_ਮਾਪ)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਖਾਲੀ VISIBLE c_handle_fastpath_ਜਵਾਬ_recv(ਸ਼ਬਦ_t cptr, ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Info, ਸ਼ਬਦ_t ਜਵਾਬ)
+#ਨਹੀਂਤਾਂ
+ਖਾਲੀ VISIBLE c_handle_fastpath_ਜਵਾਬ_recv(ਸ਼ਬਦ_t cptr, ਸ਼ਬਦ_t ਸੁਨੇਹਾ_Info)
+#ਜੇ_ਅੰਤ
 {
-    NODE_LOCK_SYS;
+    ਗੰਢ_ਤਾਲਾ_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_ਇੰਦਰਾਜ_hook();
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ਸ਼ੁਰੂ(cptr, ਸੁਨੇਹਾ_Info, Sys_ਜਵਾਬ_Recv);
+    ks_Kernel_ਇੰਦਰਾਜ.is_fastpath = 1;
+#ਜੇ_ਅੰਤ /* DEBUG */
 
-#ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+    fastpath_ਜਵਾਬ_recv(cptr, ਸੁਨੇਹਾ_Info, ਜਵਾਬ);
+#ਨਹੀਂਤਾਂ
+    fastpath_ਜਵਾਬ_recv(cptr, ਸੁਨੇਹਾ_Info);
+#ਜੇ_ਅੰਤ
     UNREACHABLE();
 }
 
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARM_HYPERVISOR_SUPPORT
+VISIBLE NORETURN ਖਾਲੀ c_handle_vcpu_fault(ਸ਼ਬਦ_t hsr)
 {
-    NODE_LOCK_SYS;
+    ਗੰਢ_ਤਾਲਾ_SYS;
 
-    c_entry_hook();
+    c_ਇੰਦਰਾਜ_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VCPUFault;
-    ksKernelEntry.word = hsr;
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_VCPUFault;
+    ks_Kernel_ਇੰਦਰਾਜ.ਸ਼ਬਦ_2 = hsr;
+#ਜੇ_ਅੰਤ
     handleVCPUFault(hsr);
     restore_user_context();
     UNREACHABLE();
 }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#ਜੇ_ਅੰਤ /* CONFIG_ARM_HYPERVISOR_SUPPORT */

@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/io.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/kernel/vspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <linker.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/devices_gen.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <plat/machine/hardware.h>
 
-#define TIOCP_CFG_SOFTRESET BIT(1)
-#define TCLR_AUTORELOAD     BIT(1)
-#define TCLR_COMPAREENABLE  BIT(6)
-#define TCLR_STARTTIMER     BIT(0)
-#define TIER_MATCHENABLE    BIT(0)
-#define TIER_OVERFLOWENABLE BIT(1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TIOCP_CFG_SOFTRESET ਦੋਆਧਾਰੀ_ਅੰਕ(1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TCLR_AUTORELOAD     ਦੋਆਧਾਰੀ_ਅੰਕ(1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TCLR_COMPAREENABLE  ਦੋਆਧਾਰੀ_ਅੰਕ(6)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TCLR_STARTTIMER     ਦੋਆਧਾਰੀ_ਅੰਕ(0)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TIER_MATCHENABLE    ਦੋਆਧਾਰੀ_ਅੰਕ(0)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TIER_OVERFLOWENABLE ਦੋਆਧਾਰੀ_ਅੰਕ(1)
 
 timer_t *timer = (timer_t *) TIMER_PPTR;
 
-#ifdef CONFIG_KERNEL_MCS
-#define INTCPS_SYSCONFIG_SOFTRESET BIT(1)
-#define INTCPS_SYSSTATUS_RESETDONE BIT(0)
-uint32_t high_bits = 0;
-BOOT_CODE void initTimer(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ INTCPS_SYSCONFIG_SOFTRESET ਦੋਆਧਾਰੀ_ਅੰਕ(1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ INTCPS_SYSSTATUS_RESETDONE ਦੋਆਧਾਰੀ_ਅੰਕ(0)
+uint32_t ਉੱਚਾ_ਬਿੱਟ = 0;
+BOOT_ਕੋਡ ਖਾਲੀ initTimer(ਖਾਲੀ)
 {
     /* Configure gptimer9 as kernel timer */
     timer->cfg = TIOCP_CFG_SOFTRESET;
@@ -37,9 +37,9 @@ BOOT_CODE void initTimer(void)
     timer->tclr = 0;
 
     /* wait for reset */
-    while (!timer->tistat);
+    ਜਦੋਂ (!timer->tistat);
 
-    maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
+    ਨਕਾਬ_ਰੁਕਾਵਟ(/*disable*/ true, KERNEL_TIMER_IRQ);
 
     /* Set the reload value */
     timer->tldr = 0u;
@@ -53,16 +53,16 @@ BOOT_CODE void initTimer(void)
     /* start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE;
 }
-#else /* CONFIG_KERNEL_MCS */
-#define TIMER_INTERVAL_MS (CONFIG_TIMER_TICK_MS)
-BOOT_CODE void initTimer(void)
+#ਨਹੀਂਤਾਂ /* CONFIG_KERNEL_MCS */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TIMER_INTERVAL_MS (CONFIG_TIMER_TICK_MS)
+BOOT_ਕੋਡ ਖਾਲੀ initTimer(ਖਾਲੀ)
 {
     /* Configure gptimer9 as kernel timer */
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    while (!timer->tistat);
+    ਜਦੋਂ (!timer->tistat);
 
-    maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
+    ਨਕਾਬ_ਰੁਕਾਵਟ(/*disable*/ true, KERNEL_TIMER_IRQ);
 
     /* Set the reload value */
     timer->tldr = 0xFFFFFFFFUL - TIMER_RELOAD;
@@ -76,4 +76,4 @@ BOOT_CODE void initTimer(void)
     /* Set autoreload and start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER;
 }
-#endif /* !CONFIG_KERNEL_MCS */
+#ਜੇ_ਅੰਤ /* !CONFIG_KERNEL_MCS */

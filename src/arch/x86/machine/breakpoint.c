@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_HARDWARE_DEBUG_API
 
-#include <arch/machine/debug.h>
-#include <mode/machine/debug.h>
-#include <arch/machine.h>
-#include <machine/registerset.h>
-#include <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/debug.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mode/machine/debug.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
 
 /* Intel manual Vol3, 17.2.4 */
-#define X86_DEBUG_BP_SIZE_1B                (0x0u)
-#define X86_DEBUG_BP_SIZE_2B                (0x1u)
-#define X86_DEBUG_BP_SIZE_4B                (0x3u)
-#define X86_DEBUG_BP_SIZE_8B                (0x2u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_ਮਾਪ_1_B                (0x0u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_ਮਾਪ_2_B                (0x1u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_ਮਾਪ_4_B                (0x3u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_ਮਾਪ_8_B                (0x2u)
 
-#define X86_DEBUG_BP0_SIZE_SHIFT            (18)
-#define X86_DEBUG_BP1_SIZE_SHIFT            (22)
-#define X86_DEBUG_BP2_SIZE_SHIFT            (26)
-#define X86_DEBUG_BP3_SIZE_SHIFT            (30)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP0_ਮਾਪ_ਖਿਸਕਾਓ            (18)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP1_ਮਾਪ_ਖਿਸਕਾਓ            (22)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP2_ਮਾਪ_ਖਿਸਕਾਓ            (26)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP3_ਮਾਪ_ਖਿਸਕਾਓ            (30)
 
 /* NOTE: Intel manual 17.2.4:
  * I/O breakpoints are supported by every processor later than i486, but only
@@ -32,74 +32,74 @@
  * which is not the same as "Reserved", so it won't trigger an exception - it
  * will just cause an undefined reaction from the CPU.
  */
-#define X86_DEBUG_BP_TYPE_IO                (0x2u)
-#define X86_DEBUG_BP_TYPE_INSTR             (0x0u)
-#define X86_DEBUG_BP_TYPE_DATA_WRITE        (0x1u)
-#define X86_DEBUG_BP_TYPE_DATA_READWRITE    (0x3u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_TYPE_IO                (0x2u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_TYPE_INSTR             (0x0u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_WRITE        (0x1u)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_READWRITE    (0x3u)
 
-#define X86_DEBUG_BP0_TYPE_SHIFT            (16)
-#define X86_DEBUG_BP1_TYPE_SHIFT            (20)
-#define X86_DEBUG_BP2_TYPE_SHIFT            (24)
-#define X86_DEBUG_BP3_TYPE_SHIFT            (28)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ            (16)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ            (20)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ            (24)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ            (28)
 
-#define X86_DEBUG_EFLAGS_TRAP_FLAG    ((word_t)BIT(8))
-#define X86_DEBUG_EFLAGS_RESUME_FLAG    ((word_t)BIT(16))
-#define X86_DEBUG_DR6_SINGLE_STEP_FLAG  ((word_t)BIT(14))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_EFLAGS_TRAP_FLAG    ((ਸ਼ਬਦ_t)ਦੋਆਧਾਰੀ_ਅੰਕ(8))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_EFLAGS_RESUME_FLAG    ((ਸ਼ਬਦ_t)ਦੋਆਧਾਰੀ_ਅੰਕ(16))
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_DR6_SINGLE_ਕਦਮ_FLAG  ((ਸ਼ਬਦ_t)ਦੋਆਧਾਰੀ_ਅੰਕ(14))
 
-#define X86_DEBUG_DR6_BP_MASK     (0xFu)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ X86_DEBUG_DR6_BP_ਨਕਾਬ     (0xFu)
 
-static bool_t byte8_bps_supported = false;
+ਸਥਿਰ bool_t byte8_bps_supported = false;
 
-bool_t byte8BreakpointsSupported(void)
+bool_t byte8BreakpointsSupported(ਖਾਲੀ)
 {
-    return byte8_bps_supported;
+    ਵਾਪਸ byte8_bps_supported;
 }
 
-static inline void bitwiseAndDr6Reg(word_t mask)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ bitwiseAndDr6Reg(ਸ਼ਬਦ_t ਨਕਾਬ_2)
 {
-    word_t tmp;
+    ਸ਼ਬਦ_t tmp;
 
-    tmp = readDr6Reg() & mask;
+    tmp = readDr6Reg() & ਨਕਾਬ_2;
     writeDr6Reg(tmp);
 }
 
-static inline word_t readDr7Context(tcb_t *t)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t readDr7Context(tcb_t *t)
 {
-    return t->tcbArch.tcbContext.breakpointState.dr[5];
+    ਵਾਪਸ t->tcbArch.tcbContext.breakpointState.dr[5];
 }
 
-static inline void bitwiseOrDr7Context(tcb_t *t, word_t val)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ bitwiseOrDr7Context(tcb_t *t, ਸ਼ਬਦ_t val)
 {
     t->tcbArch.tcbContext.breakpointState.dr[5] |= val;
 }
 
-static inline void bitwiseAndDr7Context(tcb_t *t, word_t mask)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ bitwiseAndDr7Context(tcb_t *t, ਸ਼ਬਦ_t ਨਕਾਬ_2)
 {
-    t->tcbArch.tcbContext.breakpointState.dr[5] &= mask;
+    t->tcbArch.tcbContext.breakpointState.dr[5] &= ਨਕਾਬ_2;
 }
 
-static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
+ਸਥਿਰ ਖਾਲੀ unset_Dr7_ਬਿੱਟ_For(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    word_t mask;
+    ਸ਼ਬਦ_t ਨਕਾਬ_2;
 
-    switch (bp_num) {
-    case 0:
-        mask = (0x3u << X86_DEBUG_BP0_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        break;
-    case 1:
-        mask = (0x3u << X86_DEBUG_BP1_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        break;
-    case 2:
-        mask = (0x3u << X86_DEBUG_BP2_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        mask = (0x3u << X86_DEBUG_BP3_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        break;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        ਨਕਾਬ_2 = (0x3u << X86_DEBUG_BP0_ਮਾਪ_ਖਿਸਕਾਓ) | (0x3u << X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ);
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
+        ਨਕਾਬ_2 = (0x3u << X86_DEBUG_BP1_ਮਾਪ_ਖਿਸਕਾਓ) | (0x3u << X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ);
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
+        ਨਕਾਬ_2 = (0x3u << X86_DEBUG_BP2_ਮਾਪ_ਖਿਸਕਾਓ) | (0x3u << X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ);
+        ਰੋਕੋ;
+    ਮੂਲ: /* 3 */
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        ਨਕਾਬ_2 = (0x3u << X86_DEBUG_BP3_ਮਾਪ_ਖਿਸਕਾਓ) | (0x3u << X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ);
+        ਰੋਕੋ;
     }
 
-    mask = ~mask;
-    bitwiseAndDr7Context(t, mask);
+    ਨਕਾਬ_2 = ~ਨਕਾਬ_2;
+    bitwiseAndDr7Context(t, ਨਕਾਬ_2);
 }
 
 /** Converts an seL4_BreakpointType value into the underlying hardware
@@ -109,29 +109,29 @@ static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
  * @param rw Access trigger condition (read/write).
  * @return Hardware specific register value representing the inputs.
  */
-PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t type, word_t rw)
+ਸ਼ੁੱਧ ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t convert_Type_And_Access_ਮੰਜ਼ਿਲ_Arch(uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t type, ਸ਼ਬਦ_t rw)
 {
-    switch (type) {
-    case seL4_InstructionBreakpoint:
+    ਚੋਣ (type) {
+    ਹਾਲਤ seL4_InstructionBreakpoint:
         type = X86_DEBUG_BP_TYPE_INSTR;
-        break;
-    default: /* seL4_DataBreakpoint */
-        assert(type == seL4_DataBreakpoint);
+        ਰੋਕੋ;
+    ਮੂਲ: /* seL4_DataBreakpoint */
+        ਪ੍ਰਤਿਜ੍ਞਾ(type == se_L4_ਅੰਕੜੇ_Breakpoint);
         type = (rw == seL4_BreakOnWrite)
-               ? X86_DEBUG_BP_TYPE_DATA_WRITE
-               : X86_DEBUG_BP_TYPE_DATA_READWRITE;
+               ? X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_WRITE
+               : X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_READWRITE;
     }
 
-    switch (bp_num) {
-    case 0:
-        return type << X86_DEBUG_BP0_TYPE_SHIFT;
-    case 1:
-        return type << X86_DEBUG_BP1_TYPE_SHIFT;
-    case 2:
-        return type << X86_DEBUG_BP2_TYPE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return type << X86_DEBUG_BP3_TYPE_SHIFT;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        ਵਾਪਸ type << X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ;
+    ਹਾਲਤ 1:
+        ਵਾਪਸ type << X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ;
+    ਹਾਲਤ 2:
+        ਵਾਪਸ type << X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ;
+    ਮੂਲ: /* 3 */
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        ਵਾਪਸ type << X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ;
     }
 }
 
@@ -142,49 +142,49 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
  * @param type[out] Converted type value.
  * @param rw[out] Converted output access trigger value.
  */
-typedef struct {
-    word_t type, rw;
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਣਤਰ {
+    ਸ਼ਬਦ_t type, rw;
 } convertedTypeAndAccess_t;
 
-PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr7, uint16_t bp_num)
+ਸ਼ੁੱਧ ਸਥਿਰ ਸਤਰਅੰਦਰ convertedTypeAndAccess_t convert_Arch_ਮੰਜ਼ਿਲ_Type_And_Access(ਸ਼ਬਦ_t dr7, uint16_t bp_ਅੰਕ)
 {
     convertedTypeAndAccess_t ret;
 
-    switch (bp_num) {
-    case 0:
-        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        break;
-    case 1:
-        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        break;
-    case 2:
-        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_TYPE_SHIFT;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
+        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
+        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਮੂਲ: /* 3 */
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_TYPE_INSTR:
+    ਚੋਣ (dr7) {
+    ਹਾਲਤ X86_DEBUG_BP_TYPE_INSTR:
         ret.type = seL4_InstructionBreakpoint;
         ret.rw = seL4_BreakOnRead;
-        break;
-    case X86_DEBUG_BP_TYPE_DATA_WRITE:
-        ret.type = seL4_DataBreakpoint;
+        ਰੋਕੋ;
+    ਹਾਲਤ X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_WRITE:
+        ret.type = se_L4_ਅੰਕੜੇ_Breakpoint;
         ret.rw = seL4_BreakOnWrite;
-        break;
-    default: /* Read-write */
-        assert(dr7 == X86_DEBUG_BP_TYPE_DATA_READWRITE);
-        ret.type = seL4_DataBreakpoint;
+        ਰੋਕੋ;
+    ਮੂਲ: /* Read-write */
+        ਪ੍ਰਤਿਜ੍ਞਾ(dr7 == X86_DEBUG_BP_TYPE_ਅੰਕੜੇ_READWRITE);
+        ret.type = se_L4_ਅੰਕੜੇ_Breakpoint;
         ret.rw = seL4_BreakOnReadWrite;
-        break;
+        ਰੋਕੋ;
     }
-    return ret;
+    ਵਾਪਸ ret;
 }
 
 /** Converts an integer size number into an equivalent hardware register value.
@@ -193,41 +193,41 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
  * @param size An integer for the operand size of the breakpoint.
  * @return Converted, hardware-specific value.
  */
-PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
+ਸ਼ੁੱਧ ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t convert_ਮਾਪ_ਮੰਜ਼ਿਲ_Arch(uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t type, ਸ਼ਬਦ_t ਮਾਪ)
 {
-    if (type == seL4_InstructionBreakpoint) {
+    ਜੇ (type == seL4_InstructionBreakpoint) {
         /* Intel manual vol3 17.2.4:
          * "If the corresponding RWn field in register DR7 is 00 (instruction
          * execution), then the LENn field should also be 00"
          */
-        size = 0;
-    } else {
-        switch (size) {
-        case 1:
-            size = X86_DEBUG_BP_SIZE_1B;
-            break;
-        case 2:
-            size = X86_DEBUG_BP_SIZE_2B;
-            break;
-        case 8:
-            size = X86_DEBUG_BP_SIZE_8B;
-            break;
-        default: /* 4B */
-            assert(size == 4);
-            size = X86_DEBUG_BP_SIZE_4B;
+        ਮਾਪ = 0;
+    } ਨਹੀਂਤਾਂ {
+        ਚੋਣ (ਮਾਪ) {
+        ਹਾਲਤ 1:
+            ਮਾਪ = X86_DEBUG_BP_ਮਾਪ_1_B;
+            ਰੋਕੋ;
+        ਹਾਲਤ 2:
+            ਮਾਪ = X86_DEBUG_BP_ਮਾਪ_2_B;
+            ਰੋਕੋ;
+        ਹਾਲਤ 8:
+            ਮਾਪ = X86_DEBUG_BP_ਮਾਪ_8_B;
+            ਰੋਕੋ;
+        ਮੂਲ: /* 4B */
+            ਪ੍ਰਤਿਜ੍ਞਾ(ਮਾਪ == 4);
+            ਮਾਪ = X86_DEBUG_BP_ਮਾਪ_4_B;
         }
     }
 
-    switch (bp_num) {
-    case 0:
-        return size << X86_DEBUG_BP0_SIZE_SHIFT;
-    case 1:
-        return size << X86_DEBUG_BP1_SIZE_SHIFT;
-    case 2:
-        return size << X86_DEBUG_BP2_SIZE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return size << X86_DEBUG_BP3_SIZE_SHIFT;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        ਵਾਪਸ ਮਾਪ << X86_DEBUG_BP0_ਮਾਪ_ਖਿਸਕਾਓ;
+    ਹਾਲਤ 1:
+        ਵਾਪਸ ਮਾਪ << X86_DEBUG_BP1_ਮਾਪ_ਖਿਸਕਾਓ;
+    ਹਾਲਤ 2:
+        ਵਾਪਸ ਮਾਪ << X86_DEBUG_BP2_ਮਾਪ_ਖਿਸਕਾਓ;
+    ਮੂਲ: /* 3 */
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        ਵਾਪਸ ਮਾਪ << X86_DEBUG_BP3_ਮਾਪ_ਖਿਸਕਾਓ;
     }
 }
 
@@ -237,155 +237,155 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
  * @param n Breakpoint number.
  * @return Converted size value.
  */
-PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
+ਸ਼ੁੱਧ ਸਥਿਰ ਸਤਰਅੰਦਰ ਸ਼ਬਦ_t convert_Arch_ਮੰਜ਼ਿਲ_ਮਾਪ(ਸ਼ਬਦ_t dr7, uint16_t bp_ਅੰਕ)
 {
-    word_t type;
+    ਸ਼ਬਦ_t type;
 
-    switch (bp_num) {
-    case 0:
-        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP0_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_SIZE_SHIFT;
-        break;
-    case 1:
-        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP1_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_SIZE_SHIFT;
-        break;
-    case 2:
-        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP2_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_SIZE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP3_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_SIZE_SHIFT;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ);
+        type >>= X86_DEBUG_BP0_TYPE_ਖਿਸਕਾਓ;
+        dr7 &= 0x3u << X86_DEBUG_BP0_ਮਾਪ_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP0_ਮਾਪ_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
+        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ);
+        type >>= X86_DEBUG_BP1_TYPE_ਖਿਸਕਾਓ;
+        dr7 &= 0x3u << X86_DEBUG_BP1_ਮਾਪ_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP1_ਮਾਪ_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
+        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ);
+        type >>= X86_DEBUG_BP2_TYPE_ਖਿਸਕਾਓ;
+        dr7 &= 0x3u << X86_DEBUG_BP2_ਮਾਪ_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP2_ਮਾਪ_ਖਿਸਕਾਓ;
+        ਰੋਕੋ;
+    ਮੂਲ: /* 3 */
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ);
+        type >>= X86_DEBUG_BP3_TYPE_ਖਿਸਕਾਓ;
+        dr7 &= 0x3u << X86_DEBUG_BP3_ਮਾਪ_ਖਿਸਕਾਓ;
+        dr7 >>= X86_DEBUG_BP3_ਮਾਪ_ਖਿਸਕਾਓ;
     }
 
     /* Force size to 0 if type is instruction breakpoint. */
-    if (type == X86_DEBUG_BP_TYPE_INSTR) {
-        return 0;
+    ਜੇ (type == X86_DEBUG_BP_TYPE_INSTR) {
+        ਵਾਪਸ 0;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_SIZE_1B:
-        return 1;
-    case X86_DEBUG_BP_SIZE_2B:
-        return 2;
-    case X86_DEBUG_BP_SIZE_8B:
-        return 8;
-    default: /* 4B */
-        assert(dr7 == X86_DEBUG_BP_SIZE_4B);
-        return 4;
+    ਚੋਣ (dr7) {
+    ਹਾਲਤ X86_DEBUG_BP_ਮਾਪ_1_B:
+        ਵਾਪਸ 1;
+    ਹਾਲਤ X86_DEBUG_BP_ਮਾਪ_2_B:
+        ਵਾਪਸ 2;
+    ਹਾਲਤ X86_DEBUG_BP_ਮਾਪ_8_B:
+        ਵਾਪਸ 8;
+    ਮੂਲ: /* 4B */
+        ਪ੍ਰਤਿਜ੍ਞਾ(dr7 == X86_DEBUG_BP_ਮਾਪ_4_B);
+        ਵਾਪਸ 4;
     }
 }
 
 /** Enables a breakpoint.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void enableBreakpoint(tcb_t *t, uint16_t bp_num)
+ਸਥਿਰ ਖਾਲੀ enableBreakpoint(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    word_t enable_bit;
+    ਸ਼ਬਦ_t enable_ਦੋਆਧਾਰੀ_ਅੰਕ;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        enable_bit = X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        enable_bit = X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        enable_bit = X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        enable_bit = X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        enable_ਦੋਆਧਾਰੀ_ਅੰਕ = X86_DEBUG_BP0_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
+        enable_ਦੋਆਧਾਰੀ_ਅੰਕ = X86_DEBUG_BP1_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
+        enable_ਦੋਆਧਾਰੀ_ਅੰਕ = X86_DEBUG_BP2_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਮੂਲ:
+        enable_ਦੋਆਧਾਰੀ_ਅੰਕ = X86_DEBUG_BP3_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
     }
 
-    bitwiseOrDr7Context(t, enable_bit);
+    bitwiseOrDr7Context(t, enable_ਦੋਆਧਾਰੀ_ਅੰਕ);
 }
 
 /** Disables a breakpoint without clearing its configuration.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void disableBreakpoint(tcb_t *t, uint16_t bp_num)
+ਸਥਿਰ ਖਾਲੀ disableBreakpoint(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    word_t disable_mask;
+    ਸ਼ਬਦ_t disable_ਨਕਾਬ;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        disable_mask = ~X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        disable_mask = ~X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        disable_mask = ~X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        disable_mask = ~X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        disable_ਨਕਾਬ = ~X86_DEBUG_BP0_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
+        disable_ਨਕਾਬ = ~X86_DEBUG_BP1_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
+        disable_ਨਕਾਬ = ~X86_DEBUG_BP2_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
+    ਮੂਲ:
+        disable_ਨਕਾਬ = ~X86_DEBUG_BP3_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ;
+        ਰੋਕੋ;
     }
 
-    bitwiseAndDr7Context(t, disable_mask);
+    bitwiseAndDr7Context(t, disable_ਨਕਾਬ);
 }
 
 /** Returns a boolean for whether or not a breakpoint is enabled.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_num)
+ਸਥਿਰ bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    word_t dr7;
+    ਸ਼ਬਦ_t dr7;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
+    ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ < X86_DEBUG_BP_N_REGS);
 
     dr7 = readDr7Context(t);
-    switch (bp_num) {
-    case 0:
-        return !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
-    case 1:
-        return !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
-    case 2:
-        return !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
-    default:
-        return !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        ਵਾਪਸ !!(dr7 & X86_DEBUG_BP0_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ);
+    ਹਾਲਤ 1:
+        ਵਾਪਸ !!(dr7 & X86_DEBUG_BP1_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ);
+    ਹਾਲਤ 2:
+        ਵਾਪਸ !!(dr7 & X86_DEBUG_BP2_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ);
+    ਮੂਲ:
+        ਵਾਪਸ !!(dr7 & X86_DEBUG_BP3_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ);
     }
 }
 
-static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
+ਸਥਿਰ ਖਾਲੀ ਸੈੱਟ_Bp_Vaddr_Context(tcb_t *t, uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t vaddr)
 {
-    assert(t != NULL);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
         ubs->dr[0] = vaddr;
-        break;
-    case 1:
+        ਰੋਕੋ;
+    ਹਾਲਤ 1:
         ubs->dr[1] = vaddr;
-        break;
-    case 2:
+        ਰੋਕੋ;
+    ਹਾਲਤ 2:
         ubs->dr[2] = vaddr;
-        break;
-    default:
-        assert(bp_num == 3);
+        ਰੋਕੋ;
+    ਮੂਲ:
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
         ubs->dr[3] = vaddr;
-        break;
+        ਰੋਕੋ;
     }
-    return;
+    ਵਾਪਸ;
 }
 
 /** Backend for the seL4_TCB_SetBreakpoint invocation.
@@ -399,37 +399,37 @@ static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
  *        trigger the breakpoint. 0 is valid for Instruction breakpoints.
  * @param rw Access type that should trigger the BP (read/write).
  */
-void setBreakpoint(tcb_t *t,
-                   uint16_t bp_num, word_t vaddr, word_t types, word_t size, word_t rw)
+ਖਾਲੀ ਸੈੱਟ_Breakpoint(tcb_t *t,
+                   uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t vaddr, ਸ਼ਬਦ_t types, ਸ਼ਬਦ_t ਮਾਪ, ਸ਼ਬਦ_t rw)
 {
-    word_t dr7val;
+    ਸ਼ਬਦ_t dr7val;
 
-    assert(t != NULL);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
 
-    dr7val = convertTypeAndAccessToArch(bp_num, types, rw);
-    dr7val |= convertSizeToArch(bp_num, types, size);
+    dr7val = convert_Type_And_Access_ਮੰਜ਼ਿਲ_Arch(bp_ਅੰਕ, types, rw);
+    dr7val |= convert_ਮਾਪ_ਮੰਜ਼ਿਲ_Arch(bp_ਅੰਕ, types, ਮਾਪ);
 
-    setBpVaddrContext(t, bp_num, vaddr);
-    unsetDr7BitsFor(t, bp_num);
+    ਸੈੱਟ_Bp_Vaddr_Context(t, bp_ਅੰਕ, vaddr);
+    unset_Dr7_ਬਿੱਟ_For(t, bp_ਅੰਕ);
     bitwiseOrDr7Context(t, dr7val);
-    enableBreakpoint(t, bp_num);
+    enableBreakpoint(t, bp_ਅੰਕ);
 }
 
-static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
+ਸਥਿਰ ਸ਼ਬਦ_t getBpVaddrContext(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    assert(t != NULL);
+    ਪ੍ਰਤਿਜ੍ਞਾ(t != ਨਿਰਾ);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
-        return ubs->dr[0];
-    case 1:
-        return ubs->dr[1];
-    case 2:
-        return ubs->dr[2];
-    default:
-        assert(bp_num == 3);
-        return ubs->dr[3];
+    ਚੋਣ (bp_ਅੰਕ) {
+    ਹਾਲਤ 0:
+        ਵਾਪਸ ubs->dr[0];
+    ਹਾਲਤ 1:
+        ਵਾਪਸ ubs->dr[1];
+    ਹਾਲਤ 2:
+        ਵਾਪਸ ubs->dr[2];
+    ਮੂਲ:
+        ਪ੍ਰਤਿਜ੍ਞਾ(bp_ਅੰਕ == 3);
+        ਵਾਪਸ ubs->dr[3];
     }
 }
 
@@ -442,20 +442,20 @@ static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
  * @param bp_num Hardware breakpoint ID of the BP you'd like to query.
  * @return Structure containing information about the status of the breakpoint.
  */
-getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
+getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    word_t dr7val;
+    ਸ਼ਬਦ_t dr7val;
     getBreakpoint_t ret;
     convertedTypeAndAccess_t res;
 
     dr7val = readDr7Context(t);
-    ret.vaddr = getBpVaddrContext(t, bp_num);
-    ret.size = convertArchToSize(dr7val, bp_num);
-    res = convertArchToTypeAndAccess(dr7val, bp_num);
+    ret.vaddr = getBpVaddrContext(t, bp_ਅੰਕ);
+    ret.ਮਾਪ = convert_Arch_ਮੰਜ਼ਿਲ_ਮਾਪ(dr7val, bp_ਅੰਕ);
+    res = convert_Arch_ਮੰਜ਼ਿਲ_Type_And_Access(dr7val, bp_ਅੰਕ);
     ret.type = res.type;
     ret.rw = res.rw;
-    ret.is_enabled = breakpointIsEnabled(t, bp_num);
-    return ret;
+    ret.is_enabled = breakpointIsEnabled(t, bp_ਅੰਕ);
+    ਵਾਪਸ ret;
 }
 
 /** Backend for the x86 seL4_TCB_UnsetBreakpoint invocation.
@@ -464,11 +464,11 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
  * @param uds Arch TCB register context pointer.
  * @param bp_num The hardware breakpoint ID you'd like to clear.
  */
-void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
+ਖਾਲੀ unsetBreakpoint(tcb_t *t, uint16_t bp_ਅੰਕ)
 {
-    disableBreakpoint(t, bp_num);
-    unsetDr7BitsFor(t, bp_num);
-    setBpVaddrContext(t, bp_num, 0);
+    disableBreakpoint(t, bp_ਅੰਕ);
+    unset_Dr7_ਬਿੱਟ_For(t, bp_ਅੰਕ);
+    ਸੈੱਟ_Bp_Vaddr_Context(t, bp_ਅੰਕ, 0);
 }
 
 /** Used in the exception path to determine if an exception was caused by
@@ -478,25 +478,25 @@ void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
  * @return a structure stating whether or not the exception was caused by
  *          hardware single-stepping, and what the instruction vaddr was.
  */
-typedef struct {
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਣਤਰ {
     bool_t ret;
-    word_t instr_vaddr;
-} testAndResetSingleStepException_t;
+    ਸ਼ਬਦ_t instr_vaddr;
+} test_And_Reset_Single_ਕਦਮ_Exception_t;
 
-static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *t)
+ਸਥਿਰ test_And_Reset_Single_ਕਦਮ_Exception_t test_And_Reset_Single_ਕਦਮ_Exception(tcb_t *t)
 {
-    testAndResetSingleStepException_t ret;
-    word_t dr6;
+    test_And_Reset_Single_ਕਦਮ_Exception_t ret;
+    ਸ਼ਬਦ_t dr6;
 
     dr6 = readDr6Reg();
-    if (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
+    ਜੇ (!(dr6 & X86_DEBUG_DR6_SINGLE_ਕਦਮ_FLAG)) {
         ret.ret = false;
-        return ret;
+        ਵਾਪਸ ret;
     }
 
     ret.ret = true;
     ret.instr_vaddr = t->tcbArch.tcbContext.registers[FaultIP];
-    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_ਕਦਮ_FLAG);
 
     /* And that's not all: if the breakpoint is an instruction breakpoint, we
      * also need to set EFLAGS.RF. The processor raises the #DB exception BEFORE
@@ -511,25 +511,25 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
      */
     /* This will automatically be popped by restore_user_context() */
     t->tcbArch.tcbContext.registers[FLAGS] |= X86_DEBUG_EFLAGS_RESUME_FLAG;
-    return ret;
+    ਵਾਪਸ ret;
 }
 
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
-                               UNUSED bool_t is_reply)
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_ਅੰਕ, ਸ਼ਬਦ_t n_instr,
+                               ਅਣਵਰਤਿਆ bool_t is_ਜਵਾਬ)
 {
     /* On x86 no hardware breakpoints are needed for single stepping. */
-    if (n_instr == 0) {
+    ਜੇ (n_instr == 0) {
         /* If n_instr (number of instructions to single-step) is 0, that is the
           * same as requesting that single-stepping be disabled.
           */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
+        t->tcbArch.tcbContext.breakpointState.single_ਕਦਮ_enabled = false;
         t->tcbArch.tcbContext.registers[FLAGS] &= ~X86_DEBUG_EFLAGS_TRAP_FLAG;
-    } else {
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
+    } ਨਹੀਂਤਾਂ {
+        t->tcbArch.tcbContext.breakpointState.single_ਕਦਮ_enabled = true;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return false;
+    ਵਾਪਸ false;
 }
 
 /** Used in the exception path to determine which breakpoint triggered the
@@ -548,131 +548,131 @@ bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
  *          breakpoint was triggered, and gives information describing the
  *          breakpoint.
  */
-typedef struct {
-    int bp_num;
-    word_t vaddr, reason;
-} getAndResetActiveBreakpoint_t;
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਬਣਤਰ {
+    ਪੂਰਨ bp_ਅੰਕ;
+    ਸ਼ਬਦ_t vaddr, reason;
+} get_And_Reset_ਸਰਗਰਮ_Breakpoint_t;
 
-static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
+ਸਥਿਰ get_And_Reset_ਸਰਗਰਮ_Breakpoint_t get_And_Reset_ਸਰਗਰਮ_Breakpoint(tcb_t *t)
 {
     convertedTypeAndAccess_t tmp;
-    getAndResetActiveBreakpoint_t ret;
+    get_And_Reset_ਸਰਗਰਮ_Breakpoint_t ret;
 
     /* Read from the hardware regs, not user context */
-    word_t dr6 = readDr6Reg();
-    if (dr6 & BIT(0)) {
-        ret.bp_num = 0;
-    } else if (dr6 & BIT(1)) {
-        ret.bp_num = 1;
-    } else if (dr6 & BIT(2)) {
-        ret.bp_num = 2;
-    } else if (dr6 & BIT(3)) {
-        ret.bp_num = 3;
-    } else {
-        ret.bp_num = -1;
-        return ret;
+    ਸ਼ਬਦ_t dr6 = readDr6Reg();
+    ਜੇ (dr6 & ਦੋਆਧਾਰੀ_ਅੰਕ(0)) {
+        ret.bp_ਅੰਕ = 0;
+    } ਨਹੀਂਤਾਂ ਜੇ (dr6 & ਦੋਆਧਾਰੀ_ਅੰਕ(1)) {
+        ret.bp_ਅੰਕ = 1;
+    } ਨਹੀਂਤਾਂ ਜੇ (dr6 & ਦੋਆਧਾਰੀ_ਅੰਕ(2)) {
+        ret.bp_ਅੰਕ = 2;
+    } ਨਹੀਂਤਾਂ ਜੇ (dr6 & ਦੋਆਧਾਰੀ_ਅੰਕ(3)) {
+        ret.bp_ਅੰਕ = 3;
+    } ਨਹੀਂਤਾਂ {
+        ret.bp_ਅੰਕ = -1;
+        ਵਾਪਸ ret;
     }
 
-    tmp = convertArchToTypeAndAccess(readDr7Context(t), ret.bp_num);
-    ret.vaddr = getBpVaddrContext(t, ret.bp_num);
+    tmp = convert_Arch_ਮੰਜ਼ਿਲ_Type_And_Access(readDr7Context(t), ret.bp_ਅੰਕ);
+    ret.vaddr = getBpVaddrContext(t, ret.bp_ਅੰਕ);
     ret.reason = tmp.type;
 
-    bitwiseAndDr6Reg(~BIT(ret.bp_num));
-    return ret;
+    bitwiseAndDr6Reg(~ਦੋਆਧਾਰੀ_ਅੰਕ(ret.bp_ਅੰਕ));
+    ਵਾਪਸ ret;
 }
 
-exception_t handleUserLevelDebugException(int int_vector)
+exception_t handleUserLevelDebugException(ਪੂਰਨ int_ਸਦਿਸ਼)
 {
     tcb_t *ct;
-    getAndResetActiveBreakpoint_t active_bp;
-    testAndResetSingleStepException_t single_step_info;
+    get_And_Reset_ਸਰਗਰਮ_Breakpoint_t ਸਰਗਰਮ_bp;
+    test_And_Reset_Single_ਕਦਮ_Exception_t single_ਕਦਮ_info;
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = int_vector;
-#endif /* DEBUG */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ TRACK_KERNEL_ENTRIES
+    ks_Kernel_ਇੰਦਰਾਜ.ਰਸਤਾ = ਇੰਦਰਾਜ_User_Level_Fault;
+    ks_Kernel_ਇੰਦਰਾਜ.ਸ਼ਬਦ_2 = int_ਸਦਿਸ਼;
+#ਜੇ_ਅੰਤ /* DEBUG */
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
-    benchmark_track_start();
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+    benchmark_track_ਸ਼ੁਰੂ();
+#ਜੇ_ਅੰਤ
 
-    ct = NODE_STATE(ksCurThread);
+    ct = ਗੰਢ_STATE(ksCurThread);
 
     /* Software break request (INT3) is detected by the vector number */
-    if (int_vector == int_software_break_request) {
-        current_fault = seL4_Fault_DebugException_new(getRestartPC(NODE_STATE(ksCurThread)),
+    ਜੇ (int_ਸਦਿਸ਼ == int_software_break_request) {
+        current_fault = seL4_Fault_DebugException_new(getRestartPC(ਗੰਢ_STATE(ksCurThread)),
                                                       0, seL4_SoftwareBreakRequest);
-    } else {
+    } ਨਹੀਂਤਾਂ {
         /* Hardware breakpoint trigger is detected using DR6 */
-        active_bp = getAndResetActiveBreakpoint(ct);
-        if (active_bp.bp_num >= 0) {
-            current_fault = seL4_Fault_DebugException_new(active_bp.vaddr,
-                                                          active_bp.bp_num,
-                                                          active_bp.reason);
-        } else {
-            single_step_info = testAndResetSingleStepException(ct);
-            if (single_step_info.ret == true) {
+        ਸਰਗਰਮ_bp = get_And_Reset_ਸਰਗਰਮ_Breakpoint(ct);
+        ਜੇ (ਸਰਗਰਮ_bp.bp_ਅੰਕ >= 0) {
+            current_fault = seL4_Fault_DebugException_new(ਸਰਗਰਮ_bp.vaddr,
+                                                          ਸਰਗਰਮ_bp.bp_ਅੰਕ,
+                                                          ਸਰਗਰਮ_bp.reason);
+        } ਨਹੀਂਤਾਂ {
+            single_ਕਦਮ_info = test_And_Reset_Single_ਕਦਮ_Exception(ct);
+            ਜੇ (single_ਕਦਮ_info.ret == true) {
                 /* If the caller asked us to skip over N instructions before
                  * generating the next single-step breakpoint, we shouldn't
                  * bother to construct a fault message until we've skipped N
                  * instructions.
                  */
-                if (singleStepFaultCounterReady(ct) == false) {
-                    return EXCEPTION_NONE;
+                ਜੇ (single_ਕਦਮ_Fault_Counter_Ready(ct) == false) {
+                    ਵਾਪਸ EXCEPTION_NONE;
                 }
-                current_fault = seL4_Fault_DebugException_new(single_step_info.instr_vaddr,
-                                                              0, seL4_SingleStep);
-            } else {
-                return EXCEPTION_SYSCALL_ERROR;
+                current_fault = seL4_Fault_DebugException_new(single_ਕਦਮ_info.instr_vaddr,
+                                                              0, se_L4_Single_ਕਦਮ);
+            } ਨਹੀਂਤਾਂ {
+                ਵਾਪਸ EXCEPTION_SYSCALL_ERROR;
             }
         }
     }
 
-    handleFault(NODE_STATE(ksCurThread));
+    handleFault(ਗੰਢ_STATE(ksCurThread));
 
-    schedule();
+    ਸਮਾਂ_ਸਾਰਣੀ();
     activateThread();
 
-    return EXCEPTION_NONE;
+    ਵਾਪਸ EXCEPTION_NONE;
 }
 
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_ਕੋਡ bool_t Arch_initHardwareBreakpoints(ਖਾਲੀ)
 {
-    x86_cpu_identity_t *modelinfo;
+    x86_cpu_ਪਛਾਣ_ਤੱਤ_t *modelinfo;
 
     modelinfo = x86_cpuid_get_model_info();
     /* Intel manuals, vol3, section 17.2.4, "NOTES". */
-    if (modelinfo->family == 15) {
-        if (modelinfo->model == 3 || modelinfo->model == 4
+    ਜੇ (modelinfo->family == 15) {
+        ਜੇ (modelinfo->model == 3 || modelinfo->model == 4
             || modelinfo->model == 6) {
             byte8_bps_supported = true;
         }
     }
-    if (modelinfo->family == 6) {
-        if (modelinfo->model == 15 || modelinfo->model == 23
+    ਜੇ (modelinfo->family == 6) {
+        ਜੇ (modelinfo->model == 15 || modelinfo->model == 23
             || modelinfo->model == 0x1C) {
             byte8_bps_supported = true;
         }
     }
-    return true;
+    ਵਾਪਸ true;
 }
 
-void Arch_initBreakpointContext(user_breakpoint_state_t *uds)
+ਖਾਲੀ Arch_initBreakpointContext(user_breakpoint_state_t *uds)
 {
-    memset(uds, 0, sizeof(*uds));
+    memset(uds, 0, ਆਕਾਰ(*uds));
 
     /* Preload reserved values into register context */
     uds->dr[4] = readDr6Reg() &
-                 ~(BIT(0)
-                   | BIT(1)
-                   | BIT(2)
-                   | BIT(3)
-                   | X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+                 ~(ਦੋਆਧਾਰੀ_ਅੰਕ(0)
+                   | ਦੋਆਧਾਰੀ_ਅੰਕ(1)
+                   | ਦੋਆਧਾਰੀ_ਅੰਕ(2)
+                   | ਦੋਆਧਾਰੀ_ਅੰਕ(3)
+                   | X86_DEBUG_DR6_SINGLE_ਕਦਮ_FLAG);
 
     uds->dr[5] = readDr7Reg() &
-                 ~(X86_DEBUG_BP0_ENABLE_BIT | X86_DEBUG_BP1_ENABLE_BIT
-                   | X86_DEBUG_BP2_ENABLE_BIT
-                   | X86_DEBUG_BP3_ENABLE_BIT);
+                 ~(X86_DEBUG_BP0_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ | X86_DEBUG_BP1_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ
+                   | X86_DEBUG_BP2_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ
+                   | X86_DEBUG_BP3_ENABLE_ਦੋਆਧਾਰੀ_ਅੰਕ);
 }
 
-#endif
+#ਜੇ_ਅੰਤ

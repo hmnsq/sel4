@@ -5,39 +5,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <assert.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+ਅਚਲ ਰਜਿਸਟਰ_t ਸੁਨੇਹਾ_Registers[] = {
     a2, a3, a4, a5
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_ਸੁਨੇਹਾ_registers,
+    ਆਕਾਰ(ਸੁਨੇਹਾ_Registers) / ਆਕਾਰ(ਸੁਨੇਹਾ_Registers[0]) == n_ਸੁਨੇਹਾ_Registers
 );
 
-const register_t frameRegisters[] = {
+ਅਚਲ ਰਜਿਸਟਰ_t ਚੌਖਟਾ_Registers[] = {
     FaultIP, ra, sp, gp,
     s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_ਚੌਖਟਾ_registers,
+    ਆਕਾਰ(ਚੌਖਟਾ_Registers) / ਆਕਾਰ(ਚੌਖਟਾ_Registers[0]) == n_ਚੌਖਟਾ_Registers
 );
 
-const register_t gpRegisters[] = {
+ਅਚਲ ਰਜਿਸਟਰ_t gpRegisters[] = {
     a0, a1, a2, a3, a4, a5, a6, a7,
     t0, t1, t2, t3, t4, t5, t6,
     tp,
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    ਆਕਾਰ(gpRegisters) / ਆਕਾਰ(gpRegisters[0]) == n_gpRegisters
 );
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_MCS
+ਸ਼ਬਦ_t getNBSendRecvDest(ਖਾਲੀ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ਵਾਪਸ get_ਰਜਿਸਟਰ(ਗੰਢ_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#ਜੇ_ਅੰਤ

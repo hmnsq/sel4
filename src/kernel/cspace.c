@@ -4,190 +4,190 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <object.h>
-#include <api/failures.h>
-#include <kernel/thread.h>
-#include <kernel/cspace.h>
-#include <model/statedata.h>
-#include <arch/machine.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <types.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <object.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <api/failures.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/thread.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel/cspace.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <model/statedata.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine.h>
 
 lookupCap_ret_t lookupCap(tcb_t *thread, cptr_t cPtr)
 {
-    lookupSlot_raw_ret_t lu_ret;
+    lookup_ਥਾਂ_raw_ret_t lu_ret;
     lookupCap_ret_t ret;
 
-    lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        ret.status = lu_ret.status;
+    lu_ret = lookup_ਥਾਂ(thread, cPtr);
+    ਜੇ (unlikely(lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE)) {
+        ret.ਸਥਿਤੀ = lu_ret.ਸਥਿਤੀ;
         ret.cap = cap_null_cap_new();
-        return ret;
+        ਵਾਪਸ ret;
     }
 
-    ret.status = EXCEPTION_NONE;
-    ret.cap = lu_ret.slot->cap;
-    return ret;
+    ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+    ret.cap = lu_ret.ਥਾਂ->cap;
+    ਵਾਪਸ ret;
 }
 
-lookupCapAndSlot_ret_t lookupCapAndSlot(tcb_t *thread, cptr_t cPtr)
+lookup_Cap_And_ਥਾਂ_ret_t lookup_Cap_And_ਥਾਂ(tcb_t *thread, cptr_t cPtr)
 {
-    lookupSlot_raw_ret_t lu_ret;
-    lookupCapAndSlot_ret_t ret;
+    lookup_ਥਾਂ_raw_ret_t lu_ret;
+    lookup_Cap_And_ਥਾਂ_ret_t ret;
 
-    lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        ret.status = lu_ret.status;
-        ret.slot = NULL;
+    lu_ret = lookup_ਥਾਂ(thread, cPtr);
+    ਜੇ (unlikely(lu_ret.ਸਥਿਤੀ != EXCEPTION_NONE)) {
+        ret.ਸਥਿਤੀ = lu_ret.ਸਥਿਤੀ;
+        ret.ਥਾਂ = ਨਿਰਾ;
         ret.cap = cap_null_cap_new();
-        return ret;
+        ਵਾਪਸ ret;
     }
 
-    ret.status = EXCEPTION_NONE;
-    ret.slot = lu_ret.slot;
-    ret.cap = lu_ret.slot->cap;
-    return ret;
+    ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+    ret.ਥਾਂ = lu_ret.ਥਾਂ;
+    ret.cap = lu_ret.ਥਾਂ->cap;
+    ਵਾਪਸ ret;
 }
 
-lookupSlot_raw_ret_t lookupSlot(tcb_t *thread, cptr_t capptr)
+lookup_ਥਾਂ_raw_ret_t lookup_ਥਾਂ(tcb_t *thread, cptr_t capptr)
 {
-    cap_t threadRoot;
-    resolveAddressBits_ret_t res_ret;
-    lookupSlot_raw_ret_t ret;
+    cap_t thread_ਜੜ੍ਹ;
+    resolve_ਪਤਾ_ਬਿੱਟ_ret_t res_ret;
+    lookup_ਥਾਂ_raw_ret_t ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
-    res_ret = resolveAddressBits(threadRoot, capptr, wordBits);
+    thread_ਜੜ੍ਹ = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
+    res_ret = resolve_ਪਤਾ_ਬਿੱਟ(thread_ਜੜ੍ਹ, capptr, ਸ਼ਬਦ_ਬਿੱਟ);
 
-    ret.status = res_ret.status;
-    ret.slot = res_ret.slot;
-    return ret;
+    ret.ਸਥਿਤੀ = res_ret.ਸਥਿਤੀ;
+    ret.ਥਾਂ = res_ret.ਥਾਂ;
+    ਵਾਪਸ ret;
 }
 
-lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr,
-                                      word_t depth)
+lookup_ਥਾਂ_ret_t lookup_ਥਾਂ_For_CNode_Op(bool_t is_ਸਰੋਤ, cap_t ਜੜ੍ਹ, cptr_t capptr,
+                                      ਸ਼ਬਦ_t ਡੂੰਘਾਈ)
 {
-    resolveAddressBits_ret_t res_ret;
-    lookupSlot_ret_t ret;
+    resolve_ਪਤਾ_ਬਿੱਟ_ret_t res_ret;
+    lookup_ਥਾਂ_ret_t ret;
 
-    ret.slot = NULL;
+    ret.ਥਾਂ = ਨਿਰਾ;
 
-    if (unlikely(cap_get_capType(root) != cap_cnode_cap)) {
+    ਜੇ (unlikely(cap_get_capType(ਜੜ੍ਹ) != cap_cnode_cap)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
-        current_lookup_fault = lookup_fault_invalid_root_new();
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = is_ਸਰੋਤ;
+        current_lookup_fault = lookup_fault_invalid_ਜੜ੍ਹ_new();
+        ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ ret;
     }
 
-    if (unlikely(depth < 1 || depth > wordBits)) {
+    ਜੇ (unlikely(ਡੂੰਘਾਈ < 1 || ਡੂੰਘਾਈ > ਸ਼ਬਦ_ਬਿੱਟ)) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = wordBits;
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        current_syscall_error.rangeErrorMax = ਸ਼ਬਦ_ਬਿੱਟ;
+        ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ ret;
     }
-    res_ret = resolveAddressBits(root, capptr, depth);
-    if (unlikely(res_ret.status != EXCEPTION_NONE)) {
+    res_ret = resolve_ਪਤਾ_ਬਿੱਟ(ਜੜ੍ਹ, capptr, ਡੂੰਘਾਈ);
+    ਜੇ (unlikely(res_ret.ਸਥਿਤੀ != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
+        current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = is_ਸਰੋਤ;
         /* current_lookup_fault will have been set by resolveAddressBits */
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ ret;
     }
 
-    if (unlikely(res_ret.bitsRemaining != 0)) {
+    ਜੇ (unlikely(res_ret.ਬਿੱਟ_ਬਚਿਆ != 0)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
+        current_syscall_error.failed_Lookup_Was_ਸਰੋਤ = is_ਸਰੋਤ;
         current_lookup_fault =
-            lookup_fault_depth_mismatch_new(0, res_ret.bitsRemaining);
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+            lookup_fault_ਡੂੰਘਾਈ_mismatch_new(0, res_ret.ਬਿੱਟ_ਬਚਿਆ);
+        ret.ਸਥਿਤੀ = EXCEPTION_SYSCALL_ERROR;
+        ਵਾਪਸ ret;
     }
 
-    ret.slot = res_ret.slot;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.ਥਾਂ = res_ret.ਥਾਂ;
+    ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+    ਵਾਪਸ ret;
 }
 
-lookupSlot_ret_t lookupSourceSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_ਥਾਂ_ret_t lookup_ਸਰੋਤ_ਥਾਂ(cap_t ਜੜ੍ਹ, cptr_t capptr, ਸ਼ਬਦ_t ਡੂੰਘਾਈ)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    ਵਾਪਸ lookup_ਥਾਂ_For_CNode_Op(true, ਜੜ੍ਹ, capptr, ਡੂੰਘਾਈ);
 }
 
-lookupSlot_ret_t lookupTargetSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_ਥਾਂ_ret_t lookup_ਨਿਸ਼ਾਨਾ_ਥਾਂ(cap_t ਜੜ੍ਹ, cptr_t capptr, ਸ਼ਬਦ_t ਡੂੰਘਾਈ)
 {
-    return lookupSlotForCNodeOp(false, root, capptr, depth);
+    ਵਾਪਸ lookup_ਥਾਂ_For_CNode_Op(false, ਜੜ੍ਹ, capptr, ਡੂੰਘਾਈ);
 }
 
-lookupSlot_ret_t lookupPivotSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_ਥਾਂ_ret_t lookup_ਧੁਰਾ_ਥਾਂ(cap_t ਜੜ੍ਹ, cptr_t capptr, ਸ਼ਬਦ_t ਡੂੰਘਾਈ)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    ਵਾਪਸ lookup_ਥਾਂ_For_CNode_Op(true, ਜੜ੍ਹ, capptr, ਡੂੰਘਾਈ);
 }
 
-resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t n_bits)
+resolve_ਪਤਾ_ਬਿੱਟ_ret_t resolve_ਪਤਾ_ਬਿੱਟ(cap_t ਗੰਢ_Cap, cptr_t capptr, ਸ਼ਬਦ_t n_ਬਿੱਟ)
 {
-    resolveAddressBits_ret_t ret;
-    word_t radixBits, guardBits, levelBits, guard;
-    word_t capGuard, offset;
-    cte_t *slot;
+    resolve_ਪਤਾ_ਬਿੱਟ_ret_t ret;
+    ਸ਼ਬਦ_t radix_ਬਿੱਟ, guard_ਬਿੱਟ, level_ਬਿੱਟ, guard;
+    ਸ਼ਬਦ_t capGuard, ਵਿੱਥ;
+    cte_t *ਥਾਂ;
 
-    ret.bitsRemaining = n_bits;
-    ret.slot = NULL;
+    ret.ਬਿੱਟ_ਬਚਿਆ = n_ਬਿੱਟ;
+    ret.ਥਾਂ = ਨਿਰਾ;
 
-    if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+    ਜੇ (unlikely(cap_get_capType(ਗੰਢ_Cap) != cap_cnode_cap)) {
+        current_lookup_fault = lookup_fault_invalid_ਜੜ੍ਹ_new();
+        ret.ਸਥਿਤੀ = EXCEPTION_LOOKUP_FAULT;
+        ਵਾਪਸ ret;
     }
 
-    while (1) {
-        radixBits = cap_cnode_cap_get_capCNodeRadix(nodeCap);
-        guardBits = cap_cnode_cap_get_capCNodeGuardSize(nodeCap);
-        levelBits = radixBits + guardBits;
+    ਜਦੋਂ (1) {
+        radix_ਬਿੱਟ = cap_cnode_cap_get_capCNodeRadix(ਗੰਢ_Cap);
+        guard_ਬਿੱਟ = cap_cnode_cap_get_cap_CNode_Guard_ਮਾਪ(ਗੰਢ_Cap);
+        level_ਬਿੱਟ = radix_ਬਿੱਟ + guard_ਬਿੱਟ;
 
         /* Haskell error: "All CNodes must resolve bits" */
-        assert(levelBits != 0);
+        ਪ੍ਰਤਿਜ੍ਞਾ(level_ਬਿੱਟ != 0);
 
-        capGuard = cap_cnode_cap_get_capCNodeGuard(nodeCap);
+        capGuard = cap_cnode_cap_get_capCNodeGuard(ਗੰਢ_Cap);
 
         /* The MASK(wordRadix) here is to avoid the case where
          * n_bits = wordBits (=2^wordRadix) and guardBits = 0, as it violates
          * the C spec to shift right by more than wordBits-1.
          */
-        guard = (capptr >> ((n_bits - guardBits) & MASK(wordRadix))) & MASK(guardBits);
-        if (unlikely(guardBits > n_bits || guard != capGuard)) {
+        guard = (capptr >> ((n_ਬਿੱਟ - guard_ਬਿੱਟ) & ਨਕਾਬ(ਸ਼ਬਦ_Radix))) & ਨਕਾਬ(guard_ਬਿੱਟ);
+        ਜੇ (unlikely(guard_ਬਿੱਟ > n_ਬਿੱਟ || guard != capGuard)) {
             current_lookup_fault =
-                lookup_fault_guard_mismatch_new(capGuard, n_bits, guardBits);
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+                lookup_fault_guard_mismatch_new(capGuard, n_ਬਿੱਟ, guard_ਬਿੱਟ);
+            ret.ਸਥਿਤੀ = EXCEPTION_LOOKUP_FAULT;
+            ਵਾਪਸ ret;
         }
 
-        if (unlikely(levelBits > n_bits)) {
+        ਜੇ (unlikely(level_ਬਿੱਟ > n_ਬਿੱਟ)) {
             current_lookup_fault =
-                lookup_fault_depth_mismatch_new(levelBits, n_bits);
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+                lookup_fault_ਡੂੰਘਾਈ_mismatch_new(level_ਬਿੱਟ, n_ਬਿੱਟ);
+            ret.ਸਥਿਤੀ = EXCEPTION_LOOKUP_FAULT;
+            ਵਾਪਸ ret;
         }
 
-        offset = (capptr >> (n_bits - levelBits)) & MASK(radixBits);
-        slot = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap)) + offset;
+        ਵਿੱਥ = (capptr >> (n_ਬਿੱਟ - level_ਬਿੱਟ)) & ਨਕਾਬ(radix_ਬਿੱਟ);
+        ਥਾਂ = CTE_PTR(cap_cnode_cap_get_capCNodePtr(ਗੰਢ_Cap)) + ਵਿੱਥ;
 
-        if (likely(n_bits == levelBits)) {
-            ret.status = EXCEPTION_NONE;
-            ret.slot = slot;
-            ret.bitsRemaining = 0;
-            return ret;
+        ਜੇ (likely(n_ਬਿੱਟ == level_ਬਿੱਟ)) {
+            ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+            ret.ਥਾਂ = ਥਾਂ;
+            ret.ਬਿੱਟ_ਬਚਿਆ = 0;
+            ਵਾਪਸ ret;
         }
 
         /** GHOSTUPD: "(\<acute>levelBits > 0, id)" */
 
-        n_bits -= levelBits;
-        nodeCap = slot->cap;
+        n_ਬਿੱਟ -= level_ਬਿੱਟ;
+        ਗੰਢ_Cap = ਥਾਂ->cap;
 
-        if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
-            ret.status = EXCEPTION_NONE;
-            ret.slot = slot;
-            ret.bitsRemaining = n_bits;
-            return ret;
+        ਜੇ (unlikely(cap_get_capType(ਗੰਢ_Cap) != cap_cnode_cap)) {
+            ret.ਸਥਿਤੀ = EXCEPTION_NONE;
+            ret.ਥਾਂ = ਥਾਂ;
+            ret.ਬਿੱਟ_ਬਚਿਆ = n_ਬਿੱਟ;
+            ਵਾਪਸ ret;
         }
     }
 }

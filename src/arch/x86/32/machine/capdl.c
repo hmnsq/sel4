@@ -5,48 +5,48 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include <config.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <arch/machine/capdl.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <machine/capdl.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <arch/machine/capdl.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+ਸ਼ਬਦ_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[ESP];
+    ਵਾਪਸ tcb->tcbArch.tcbContext.registers[ESP];
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+ਖਾਲੀ print_ipc_ਬਫਰ_ਥਾਂ(tcb_t *tcb)
 {
-    printf("print_ipc_buffer_slot not implemented for IA32\n");
+    ਲਿਖੋ("print_ipc_buffer_slot not implemented for IA32\n");
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+ਖਾਲੀ obj_vtable_print_slots(tcb_t *tcb)
 {
-    printf("obj_vtable_print_slots not implemented for IA32\n");
+    ਲਿਖੋ("obj_vtable_print_slots not implemented for IA32\n");
 }
 
-void print_cap_arch(cap_t cap)
+ਖਾਲੀ print_cap_arch(cap_t cap)
 {
-    printf("print_cap_arch not implemented for IA32\n");
+    ਲਿਖੋ("print_cap_arch not implemented for IA32\n");
 }
 
-void print_object_arch(cap_t cap)
+ਖਾਲੀ print_object_arch(cap_t cap)
 {
-    printf("print_object_arch not implemented for IA32\n");
+    ਲਿਖੋ("print_object_arch not implemented for IA32\n");
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+ਖਾਲੀ obj_tcb_print_vtable(tcb_t *tcb)
 {
-    printf("obj_tcb_print_vtable not implemented for IA32\n");
+    ਲਿਖੋ("obj_tcb_print_vtable not implemented for IA32\n");
 }
 
-void debug_capDL(void)
+ਖਾਲੀ debug_capDL(ਖਾਲੀ)
 {
-    printf("Debug CapDL snapshot not full implemented for IA32\n");
+    ਲਿਖੋ("Debug CapDL snapshot not full implemented for IA32\n");
     /* reset the seen list */
-    reset_seen_list();
+    reset_ਵੇਖਿਆ_list();
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#ਜੇ_ਅੰਤ /* CONFIG_DEBUG_BUILD */
