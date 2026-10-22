@@ -11,7 +11,7 @@
 
 word_t PURE getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    trả_về getRegister(thread, FaultIP);
 }
 
 void setNextPC(tcb_t *thread, word_t v)
@@ -25,7 +25,7 @@ BOOT_CODE void map_kernel_devices(void)
      * NULL. Thus we can't use ARRAY_SIZE(kernel_device_frames) here directly,
      * but have to use NUM_KERNEL_DEVICE_FRAMES that is defined accordingly.
      */
-    for (int i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
+    cho (số_nguyên i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
         const kernel_frame_t *frame = &kernel_device_frames[i];
         /* all frames are supposed to describe device memory, so they should
          * never be marked as executable.
@@ -34,7 +34,7 @@ BOOT_CODE void map_kernel_devices(void)
         map_kernel_frame(frame->paddr, frame->pptr, VMKernelOnly,
                          vm_attributes_new(frame->armExecuteNever, false,
                                            false));
-        if (!frame->userAvailable) {
+        nếu (!frame->userAvailable) {
             reserve_region((p_region_t) {
                 .start = frame->paddr,
                 .end   = frame->paddr + BIT(PAGE_BITS)

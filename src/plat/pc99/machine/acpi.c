@@ -175,37 +175,37 @@ BOOT_CODE static uint8_t acpi_calc_checksum(char *start, uint32_t length)
 {
     uint8_t checksum = 0;
 
-    while (length > 0) {
+    trong_khi (length > 0) {
         checksum += *start;
         start++;
         length--;
     }
-    return checksum;
+    trả_về checksum;
 }
 
 BOOT_CODE static acpi_rsdp_t *acpi_get_rsdp(void)
 {
     char *addr;
 
-    for (addr = (char *)BIOS_PADDR_START; addr < (char *)BIOS_PADDR_END; addr += 16) {
-        if (strncmp(addr, acpi_str_rsd, 8) == 0) {
-            if (acpi_calc_checksum(addr, ACPI_V1_SIZE) == 0) {
-                return (acpi_rsdp_t *)addr;
+    cho (addr = (char *)BIOS_PADDR_START; addr < (char *)BIOS_PADDR_END; addr += 16) {
+        nếu (strncmp(addr, acpi_str_rsd, 8) == 0) {
+            nếu (acpi_calc_checksum(addr, ACPI_V1_SIZE) == 0) {
+                trả_về (acpi_rsdp_t *)addr;
             }
         }
     }
-    return NULL;
+    trả_về NULL;
 }
 
 BOOT_CODE static void *acpi_table_init(void *entry, enum acpi_type table_type)
 {
     void *acpi_table;
-    unsigned int pages_for_table;
-    unsigned int pages_for_header = 1;
+    unsigned số_nguyên pages_for_table;
+    unsigned số_nguyên pages_for_header = 1;
 
     /* if we need to map another page to read header */
     unsigned long offset_in_page = (unsigned long)entry & MASK(LARGE_PAGE_BITS);
-    if (MASK(LARGE_PAGE_BITS) - offset_in_page < sizeof(acpi_rsdp_t)) {
+    nếu (MASK(LARGE_PAGE_BITS) - offset_in_page < sizeof(acpi_rsdp_t)) {
         pages_for_header++;
     }
 
@@ -226,22 +226,22 @@ BOOT_CODE static void *acpi_table_init(void *entry, enum acpi_type table_type)
     default:
         printf("Error: Mapping unknown ACPI table type\n");
         assert(false);
-        return NULL;
+        trả_về NULL;
     }
 
     /* map in full table */
     acpi_table = map_temp_boot_page(entry, pages_for_table);
 
-    return acpi_table;
+    trả_về acpi_table;
 }
 
 BOOT_CODE bool_t acpi_init(acpi_rsdp_t *rsdp_data)
 {
     acpi_rsdp_t *acpi_rsdp = acpi_get_rsdp();
 
-    if (acpi_rsdp == NULL) {
+    nếu (acpi_rsdp == NULL) {
         printf("BIOS: No ACPI support detected\n");
-        return false;
+        trả_về false;
     }
     printf("ACPI: RSDP paddr=%p\n", acpi_rsdp);
     acpi_rsdp = acpi_table_init(acpi_rsdp, ACPI_RSDP);
@@ -251,7 +251,7 @@ BOOT_CODE bool_t acpi_init(acpi_rsdp_t *rsdp_data)
     *rsdp_data = *acpi_rsdp;
 
     /* perform final validation */
-    return acpi_validate_rsdp(rsdp_data);
+    trả_về acpi_validate_rsdp(rsdp_data);
 }
 
 BOOT_CODE bool_t acpi_validate_rsdp(acpi_rsdp_t *acpi_rsdp)
@@ -259,14 +259,14 @@ BOOT_CODE bool_t acpi_validate_rsdp(acpi_rsdp_t *acpi_rsdp)
     acpi_rsdt_t *acpi_rsdt;
     acpi_rsdt_t *acpi_rsdt_mapped;
 
-    if (acpi_calc_checksum((char *)acpi_rsdp, ACPI_V1_SIZE) != 0) {
+    nếu (acpi_calc_checksum((char *)acpi_rsdp, ACPI_V1_SIZE) != 0) {
         printf("BIOS: ACPIv1 information corrupt\n");
-        return false;
+        trả_về false;
     }
 
-    if (acpi_rsdp->revision > 0 && acpi_calc_checksum((char *)acpi_rsdp, sizeof(*acpi_rsdp)) != 0) {
+    nếu (acpi_rsdp->revision > 0 && acpi_calc_checksum((char *)acpi_rsdp, sizeof(*acpi_rsdp)) != 0) {
         printf("BIOS: ACPIv2 information corrupt\n");
-        return false;
+        trả_về false;
     }
 
     /* verify the rsdt, even though we do not actually make use of the mapping right now */
@@ -276,22 +276,22 @@ BOOT_CODE bool_t acpi_validate_rsdp(acpi_rsdp_t *acpi_rsdp)
     printf("ACPI: RSDT vaddr=%p\n", acpi_rsdt_mapped);
 
     assert(acpi_rsdt_mapped->header.length > 0);
-    if (acpi_calc_checksum((char *)acpi_rsdt_mapped, acpi_rsdt_mapped->header.length) != 0) {
+    nếu (acpi_calc_checksum((char *)acpi_rsdt_mapped, acpi_rsdt_mapped->header.length) != 0) {
         printf("ACPI: RSDT checksum failure\n");
-        return false;
+        trả_về false;
     }
 
-    return true;
+    trả_về true;
 }
 
 BOOT_CODE static bool_t acpi_madt_valid(acpi_madt_header_t *header, const char *name, uint8_t expected)
 {
-    if (header->length < expected) {
+    nếu (header->length < expected) {
         printf("ACPI: BIOS bug, MADT %s entry size %u < %u expected bytes.\n",
                name, header->length, expected);
-        return false;
+        trả_về false;
     }
-    return true;
+    trả_về true;
 }
 
 BOOT_CODE uint32_t acpi_madt_scan(
@@ -301,8 +301,8 @@ BOOT_CODE uint32_t acpi_madt_scan(
     paddr_t     *ioapic_paddrs
 )
 {
-    unsigned int        entries;
-    unsigned int        entry_size;
+    unsigned số_nguyên        entries;
+    unsigned số_nguyên        entry_size;
     uint32_t            num_cpu;
     uint32_t            count;
     acpi_madt_t        *acpi_madt;
@@ -319,11 +319,11 @@ BOOT_CODE uint32_t acpi_madt_scan(
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     /* Divide by uint32_t explicitly as this is the size as mandated by the ACPI standard */
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
+    cho (count = 0; count < entries; count++) {
         acpi_madt = (acpi_madt_t *)(word_t)acpi_rsdt_mapped->entry[count];
         acpi_madt_mapped = (acpi_madt_t *)acpi_table_init(acpi_madt, ACPI_RSDT);
 
-        if (strncmp(acpi_str_apic, acpi_madt_mapped->header.signature, 4) == 0) {
+        nếu (strncmp(acpi_str_apic, acpi_madt_mapped->header.signature, 4) == 0) {
             printf("ACPI: MADT paddr=%p\n", acpi_madt);
             printf("ACPI: MADT vaddr=%p\n", acpi_madt_mapped);
             printf("ACPI: MADT apic_addr=0x%x\n", acpi_madt_mapped->apic_addr);
@@ -331,7 +331,7 @@ BOOT_CODE uint32_t acpi_madt_scan(
 
             acpi_madt_header = (acpi_madt_header_t *)(acpi_madt_mapped + 1);
 
-            while ((char *)acpi_madt_header < (char *)acpi_madt_mapped + acpi_madt_mapped->header.length) {
+            trong_khi ((char *)acpi_madt_header < (char *)acpi_madt_mapped + acpi_madt_mapped->header.length) {
                 entry_size = MIN(acpi_madt_header->length, MADT_MAX_ENTRY_SIZE);
                 memcpy(madt_entry, acpi_madt_header, entry_size);
 
@@ -344,7 +344,7 @@ BOOT_CODE uint32_t acpi_madt_scan(
                  *  - APIC IDs < 0xFF should be listed in APIC subtable, APIC IDs >= 0xFF
                  *    should be listed in X2APIC subtable */
                 case MADT_APIC: {
-                    if (!acpi_madt_valid(acpi_madt_header, madt_str_apic, sizeof(acpi_madt_apic_t))) {
+                    nếu (!acpi_madt_valid(acpi_madt_header, madt_str_apic, sizeof(acpi_madt_apic_t))) {
                         break;
                     }
                     acpi_madt_apic_t *madt_apic = (acpi_madt_apic_t *) madt_entry;
@@ -352,11 +352,11 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     /* what Intel calls apic_id is what is called cpu_id in seL4! */
                     uint8_t  cpu_id = madt_apic->apic_id;
                     uint32_t flags  = madt_apic->flags;
-                    if (flags == 1) {
+                    nếu (flags == 1) {
                         printf("ACPI: MADT_APIC apic_id=0x%x\n", cpu_id);
-                        if (num_cpu == CONFIG_MAX_NUM_NODES) {
+                        nếu (num_cpu == CONFIG_MAX_NUM_NODES) {
                             printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_NUM_NODES);
-                        } else {
+                        } không_thì {
                             cpu_list[num_cpu] = cpu_id;
                             num_cpu++;
                         }
@@ -364,18 +364,18 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     break;
                 }
                 case MADT_x2APIC: {
-                    if (!acpi_madt_valid(acpi_madt_header, madt_str_x2apic, sizeof(acpi_madt_x2apic_t))) {
+                    nếu (!acpi_madt_valid(acpi_madt_header, madt_str_x2apic, sizeof(acpi_madt_x2apic_t))) {
                         break;
                     }
                     acpi_madt_x2apic_t *madt_x2apic = (acpi_madt_x2apic_t *) madt_entry;
 
                     uint32_t cpu_id = madt_x2apic->x2apic_id;
                     uint32_t flags  = madt_x2apic->flags;
-                    if (flags == 1) {
+                    nếu (flags == 1) {
                         printf("ACPI: MADT_x2APIC apic_id=0x%x\n", cpu_id);
-                        if (num_cpu == CONFIG_MAX_NUM_NODES) {
+                        nếu (num_cpu == CONFIG_MAX_NUM_NODES) {
                             printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_NUM_NODES);
-                        } else {
+                        } không_thì {
                             cpu_list[num_cpu] = cpu_id;
                             num_cpu++;
                         }
@@ -383,7 +383,7 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     break;
                 }
                 case MADT_IOAPIC:
-                    if (!acpi_madt_valid(acpi_madt_header, madt_str_ioapic, sizeof(acpi_madt_ioapic_t))) {
+                    nếu (!acpi_madt_valid(acpi_madt_header, madt_str_ioapic, sizeof(acpi_madt_ioapic_t))) {
                         break;
                     }
                     acpi_madt_ioapic_t *madt_ioapic = (acpi_madt_ioapic_t *) madt_entry;
@@ -394,15 +394,15 @@ BOOT_CODE uint32_t acpi_madt_scan(
                         madt_ioapic->ioapic_addr,
                         madt_ioapic->gsib
                     );
-                    if (*num_ioapic == CONFIG_MAX_NUM_IOAPIC) {
+                    nếu (*num_ioapic == CONFIG_MAX_NUM_IOAPIC) {
                         printf("ACPI: Not recording this IOAPIC, only support %d\n", CONFIG_MAX_NUM_IOAPIC);
-                    } else {
+                    } không_thì {
                         ioapic_paddrs[*num_ioapic] = madt_ioapic->ioapic_addr;
                         (*num_ioapic)++;
                     }
                     break;
                 case MADT_ISO: {
-                    if (!acpi_madt_valid(acpi_madt_header, madt_str_iso, sizeof(acpi_madt_iso_t))) {
+                    nếu (!acpi_madt_valid(acpi_madt_header, madt_str_iso, sizeof(acpi_madt_iso_t))) {
                         break;
                     }
                     UNUSED acpi_madt_iso_t *iso = (acpi_madt_iso_t *) madt_entry;
@@ -421,14 +421,14 @@ BOOT_CODE uint32_t acpi_madt_scan(
 
     printf("ACPI: %d CPU(s) detected\n", num_cpu);
 
-    return num_cpu;
+    trả_về num_cpu;
 }
 
 BOOT_CODE bool_t acpi_fadt_scan(
     acpi_rsdp_t *acpi_rsdp
 )
 {
-    unsigned int entries;
+    unsigned số_nguyên entries;
     uint32_t            count;
     acpi_fadt_t        *acpi_fadt;
 
@@ -439,24 +439,24 @@ BOOT_CODE bool_t acpi_fadt_scan(
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     /* Divide by uint32_t explicitly as this is the size as mandated by the ACPI standard */
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
+    cho (count = 0; count < entries; count++) {
         acpi_fadt = (acpi_fadt_t *)(word_t)acpi_rsdt_mapped->entry[count];
         acpi_fadt_mapped = (acpi_fadt_t *)acpi_table_init(acpi_fadt, ACPI_RSDT);
 
-        if (strncmp(acpi_str_fadt, acpi_fadt_mapped->header.signature, 4) == 0) {
+        nếu (strncmp(acpi_str_fadt, acpi_fadt_mapped->header.signature, 4) == 0) {
             printf("ACPI: FADT paddr=%p\n", acpi_fadt);
             printf("ACPI: FADT vaddr=%p\n", acpi_fadt_mapped);
             printf("ACPI: FADT flags=0x%x\n", acpi_fadt_mapped->flags);
 
-            if (config_set(CONFIG_USE_LOGICAL_IDS) &&
+            nếu (config_set(CONFIG_USE_LOGICAL_IDS) &&
                 acpi_fadt_mapped->flags & BIT(19)) {
                 printf("system requires apic physical mode\n");
-                return false;
+                trả_về false;
             }
         }
     }
 
-    return true;
+    trả_về true;
 }
 
 BOOT_CODE void acpi_dmar_scan(
@@ -468,10 +468,10 @@ BOOT_CODE void acpi_dmar_scan(
 )
 {
     word_t i;
-    unsigned int entries;
+    unsigned số_nguyên entries;
     uint32_t count;
     uint32_t reg_basel, reg_baseh;
-    int rmrr_count;
+    số_nguyên rmrr_count;
     dev_id_t dev_id;
 
     acpi_dmar_t          *acpi_dmar;
@@ -489,34 +489,34 @@ BOOT_CODE void acpi_dmar_scan(
 
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
+    cho (count = 0; count < entries; count++) {
         acpi_dmar = (acpi_dmar_t *)(word_t)acpi_rsdt_mapped->entry[count];
         acpi_dmar_mapped = (acpi_dmar_t *)acpi_table_init(acpi_dmar, ACPI_RSDT);
 
-        if (strncmp(acpi_str_dmar, acpi_dmar_mapped->header.signature, 4) == 0) {
+        nếu (strncmp(acpi_str_dmar, acpi_dmar_mapped->header.signature, 4) == 0) {
             printf("ACPI: DMAR paddr=%p\n", acpi_dmar);
             printf("ACPI: DMAR vaddr=%p\n", acpi_dmar_mapped);
             printf("ACPI: IOMMU host address width: %d\n", acpi_dmar_mapped->host_addr_width + 1);
             acpi_dmar_header = (acpi_dmar_header_t *)(acpi_dmar_mapped + 1);
 
-            while ((char *)acpi_dmar_header < (char *)acpi_dmar_mapped + acpi_dmar_mapped->header.length) {
+            trong_khi ((char *)acpi_dmar_header < (char *)acpi_dmar_mapped + acpi_dmar_mapped->header.length) {
                 switch (acpi_dmar_header->type) {
 
                 case DMAR_DRHD:
-                    if (*num_drhu == max_drhu_list_len) {
+                    nếu (*num_drhu == max_drhu_list_len) {
                         printf("ACPI: too many IOMMUs, disabling IOMMU support\n");
                         /* try to increase MAX_NUM_DRHU in config.h */
                         *num_drhu = 0; /* report zero IOMMUs */
-                        return;
+                        trả_về;
                     }
                     reg_basel = ((acpi_dmar_drhd_t *)acpi_dmar_header)->reg_base[0];
                     reg_baseh = ((acpi_dmar_drhd_t *)acpi_dmar_header)->reg_base[1];
                     /* check if value fits into uint32_t */
-                    if (reg_baseh != 0) {
+                    nếu (reg_baseh != 0) {
                         printf("ACPI: DMAR_DRHD reg_base exceeds 32 bit, disabling IOMMU support\n");
                         /* try to make BIOS map it below 4G */
                         *num_drhu = 0; /* report zero IOMMUs */
-                        return;
+                        trả_về;
                     }
                     drhu_list[*num_drhu] = (paddr_t)reg_basel;
                     (*num_drhu)++;
@@ -525,28 +525,28 @@ BOOT_CODE void acpi_dmar_scan(
                 case DMAR_RMRR:
                     /* loop through all device scopes of this RMRR */
                     acpi_dmar_rmrr = (acpi_dmar_rmrr_t *)acpi_dmar_header;
-                    if (acpi_dmar_rmrr->reg_base[1] != 0 ||
+                    nếu (acpi_dmar_rmrr->reg_base[1] != 0 ||
                         acpi_dmar_rmrr->reg_limit[1] != 0) {
                         printf("ACPI: RMRR device above 4GiB, disabling IOMMU support\n");
                         *num_drhu = 0;
-                        return ;
+                        trả_về ;
                     }
 
-                    for (i = 0; i <= (acpi_dmar_header->length - sizeof(acpi_dmar_rmrr_t)) / sizeof(acpi_dmar_devscope_t); i++) {
+                    cho (i = 0; i <= (acpi_dmar_header->length - sizeof(acpi_dmar_rmrr_t)) / sizeof(acpi_dmar_devscope_t); i++) {
                         acpi_dmar_devscope = &acpi_dmar_rmrr->devscope_0 + i;
 
-                        if (acpi_dmar_devscope->type != 1) {
+                        nếu (acpi_dmar_devscope->type != 1) {
                             /* FIXME - bugzilla bug 170 */
                             printf("ACPI: RMRR device scope: non-PCI-Endpoint-Devices not supported yet, disabling IOMMU support\n");
                             *num_drhu = 0; /* report zero IOMMUs */
-                            return;
+                            trả_về;
                         }
 
-                        if (acpi_dmar_devscope->length > sizeof(acpi_dmar_devscope_t)) {
+                        nếu (acpi_dmar_devscope->length > sizeof(acpi_dmar_devscope_t)) {
                             /* FIXME - bugzilla bug 170 */
                             printf("ACPI: RMRR device scope: devices behind bridges not supported yet, disabling IOMMU support\n");
                             *num_drhu = 0; /* report zero IOMMUs */
-                            return;
+                            trả_về;
                         }
 
                         dev_id =
@@ -556,10 +556,10 @@ BOOT_CODE void acpi_dmar_scan(
                                 acpi_dmar_devscope->path_0.fun
                             );
 
-                        if (rmrr_count == CONFIG_MAX_RMRR_ENTRIES) {
+                        nếu (rmrr_count == CONFIG_MAX_RMRR_ENTRIES) {
                             printf("ACPI: Too many RMRR entries, disabling IOMMU support\n");
                             *num_drhu = 0;
-                            return;
+                            trả_về;
                         }
                         printf("\tACPI: registering RMRR entry for region for device: bus=0x%x dev=0x%x fun=0x%x\n",
                                acpi_dmar_devscope->start_bus,

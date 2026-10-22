@@ -220,8 +220,8 @@ struct l2cc_map {
 
 
 #ifndef L2CC_L2C310_PPTR
-#error L2CC_L2C310_PPTR must be defined for virtual memory access to the L2 cache controller
-#else  /* L2CC_PPTR */
+#error L2CC_L2C310_PPTR must be defined cho virtual memory access to the L2 cache controller
+#không_thì  /* L2CC_PPTR */
 volatile struct l2cc_map *const l2cc
     = (volatile struct l2cc_map *)L2CC_L2C310_PPTR;
 #endif /* !L2CC_PPTR */
@@ -255,10 +255,10 @@ BOOT_CODE void initL2Cache(void)
 #endif
 
     prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_DATA_PREFETCH_EN;
-#if defined(CONFIG_PLAT_IMX6)
+#nếu defined(CONFIG_PLAT_IMX6)
     tag_ram  = CTRL_RAM_LATENCY(1, 2, 1);
     data_ram = CTRL_RAM_LATENCY(1, 2, 1);
-#else
+#không_thì
     tag_ram  = CTRL_RAM_LATENCY(1, 1, 0);
     data_ram = CTRL_RAM_LATENCY(1, 2, 0);
 #endif
@@ -271,14 +271,14 @@ BOOT_CODE void initL2Cache(void)
                | CTRL_AUX_ASSOCIATIVITY_16WAY
                | CTRL_AUS_REPLPOLICY_RROBIN;
 
-#if defined(CONFIG_PLAT_IMX6SX)
+#nếu defined(CONFIG_PLAT_IMX6SX)
     aux |= CTRL_AUX_WAYSIZE_16K;
 #elif defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
     aux |= CTRL_AUX_WAYSIZE_64K;
 #elif defined(OMAP4)
     aux |= CTRL_AUX_WAYSIZE_32K;
-#else /* ! (EXYNOS4 || OMAP4 || IMX6) */
-#error Unknown platform for L2C-310
+#không_thì /* ! (EXYNOS4 || OMAP4 || IMX6) */
+#error Unknown platform cho L2C-310
 #endif /* EXYNOS4 || OMAP4 || IMX6 */
 
 #ifdef TI_MSHIELD
@@ -288,7 +288,7 @@ BOOT_CODE void initL2Cache(void)
     mshield_smc(MSHIELD_SMC_ROM_CTRL_AUX, aux, 0);
     mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, data_ram);
 
-#else /* !TI_MSHIELD */
+#không_thì /* !TI_MSHIELD */
     /* Direct register access */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     l2cc->control.aux_control      = aux;
@@ -300,10 +300,10 @@ BOOT_CODE void initL2Cache(void)
 
     /* 2: Invalidate by way. */
     l2cc->maintenance.inv_way = 0xffff;
-    while (l2cc->maintenance.inv_way & 0xffff);
+    trong_khi (l2cc->maintenance.inv_way & 0xffff);
 
     /* 3: write to lockdown D & I reg9 if required  */
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
+    nếu ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
         /* disable lockdown */
         l2cc->lockdown.d_lockdown0 = 0;
         l2cc->lockdown.i_lockdown0 = 0;
@@ -322,7 +322,7 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    nếu ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
         /* disable lockdown */
         l2cc->lockdown.lock_line_eng = 0;
     }
@@ -336,7 +336,7 @@ BOOT_CODE void initL2Cache(void)
 #ifdef TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 1, 0);
-#else /* !TI_MSHIELD */
+#không_thì /* !TI_MSHIELD */
     /* Direct register access */
     l2cc->control.control |= CTRL_CTRL_EN;
 #endif /* TI_MSHIELD */
@@ -344,7 +344,7 @@ BOOT_CODE void initL2Cache(void)
      * of the l2cc register updates */
     dsb();
 
-#if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
+#nếu defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 1 in the ACTLR, which on the cortex-a9 is the l2 prefetch enable
      * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
     setACTLR(getACTLR() | BIT(1));
@@ -358,7 +358,7 @@ static inline void L2_cacheSync(void)
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     l2cc->maintenance.cache_sync = 0;
-    while (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
+    trong_khi (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
     /* Wait till the L2 cache operation has completed and avoid later memoy
      * operations being reordered to before this point */
     dsb();
@@ -374,11 +374,11 @@ static inline void L2_cacheSync(void)
  */
 void plat_cleanInvalidateL2Cache(void)
 {
-    if (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
+    nếu (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
         /* Avoid normal memory writes being reordered with device memory writes */
         dmb();
         l2cc->maintenance.clean_inv_way = 0xffff;
-        while (l2cc->maintenance.clean_inv_way);
+        trong_khi (l2cc->maintenance.clean_inv_way);
         L2_cacheSync();
     }
 }
@@ -390,7 +390,7 @@ void plat_cleanCache(void)
     dmb();
     /* Clean by way. */
     l2cc->maintenance.clean_way = 0xffff;
-    while (l2cc->maintenance.clean_way & 0xffff);
+    trong_khi (l2cc->maintenance.clean_way & 0xffff);
     L2_cacheSync();
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
@@ -403,7 +403,7 @@ void plat_cleanL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
+    cho (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.clean_pa = start;
@@ -423,7 +423,7 @@ void plat_invalidateL2Range(paddr_t start, paddr_t end)
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
+    cho (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.inv_pa = start;
@@ -441,7 +441,7 @@ void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
+    cho (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.clean_inv_pa = start;

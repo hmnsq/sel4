@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    nếu (pending == 0) {
+        trả_về irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    nếu (irq != INTERRUPT_CORE_GPU) {
+        trả_về irq;
     }
 
     /* GPU interrupt */
@@ -49,22 +49,22 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    nếu (pending) {
+        trả_về (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    nếu (pending) {
+        trả_về (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    nếu (pending) {
+        trả_về (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    trả_về irqInvalid;
 }
 
 static inline void maskInterrupt(bool_t disable, irq_t irq)
@@ -74,56 +74,56 @@ static inline void maskInterrupt(bool_t disable, irq_t irq)
     case INTERRUPT_CORE_CNTPNSIRQ:
     case INTERRUPT_CORE_CNTHPIRQ :
     case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+        nếu (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } không_thì {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        trả_về;
     case INTERRUPT_CORE_MAILBOX_0:
     case INTERRUPT_CORE_MAILBOX_1:
     case INTERRUPT_CORE_MAILBOX_2:
     case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        nếu (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } không_thì {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        trả_về;
     case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        nếu (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } không_thì {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
+        trả_về;
     case INTERRUPT_CORE_GPU:
     // Not maskable
     case INTERRUPT_CORE_PMU:
     // Not currently handled
     case INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
+        trả_về;
     default:
         break;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    nếu (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        trả_về;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    nếu (irq < NORMAL_IRQ_OFFSET) {
+        nếu (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } không_thì {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } không_thì nếu (irq <= maxIRQ) {
+        số_nguyên normal_irq = irq - NORMAL_IRQ_OFFSET;
+        số_nguyên index = normal_irq / 32;
+        nếu (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } không_thì {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }

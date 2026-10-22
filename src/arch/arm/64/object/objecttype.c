@@ -17,13 +17,13 @@ bool_t Arch_isFrameType(word_t type)
 {
     switch (type) {
     case seL4_ARM_SmallPageObject:
-        return true;
+        trả_về true;
     case seL4_ARM_LargePageObject:
-        return true;
+        trả_về true;
     case seL4_ARM_HugePageObject:
-        return true;
+        trả_về true;
     default:
-        return false;
+        trả_về false;
     }
 }
 
@@ -33,51 +33,51 @@ deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
 
     switch (cap_get_capType(cap)) {
     case cap_vspace_cap:
-        if (cap_vspace_cap_get_capVSIsMapped(cap)) {
+        nếu (cap_vspace_cap_get_capVSIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } không_thì {
             userError("Deriving a VSpace cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        trả_về ret;
 
     case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+        nếu (cap_page_table_cap_get_capPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } không_thì {
             userError("Deriving a PT cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        trả_về ret;
 
     case cap_frame_cap:
         ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 
     case cap_asid_control_cap:
     case cap_asid_pool_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case cap_vcpu_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 #endif
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
     case cap_sgi_signal_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 #endif
 
 #ifdef CONFIG_ARM_SMMU
@@ -85,18 +85,18 @@ deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
     case cap_cb_control_cap:
         ret.cap = cap_null_cap_new();
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
     case cap_sid_cap:
     case cap_cb_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 #endif
 #ifdef CONFIG_ALLOW_SMC_CALLS
     case cap_smc_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        trả_về ret;
 #endif
     default:
         /* This assert has no equivalent in haskell,
@@ -108,15 +108,15 @@ deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
 cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
 {
 #ifdef CONFIG_ALLOW_SMC_CALLS
-    if (cap_get_capType(cap) == cap_smc_cap) {
-        if (!preserve && cap_smc_cap_get_capSMCBadge(cap) == 0) {
-            return cap_smc_cap_set_capSMCBadge(cap, data);
-        } else {
-            return cap_null_cap_new();
+    nếu (cap_get_capType(cap) == cap_smc_cap) {
+        nếu (!preserve && cap_smc_cap_get_capSMCBadge(cap) == 0) {
+            trả_về cap_smc_cap_set_capSMCBadge(cap, data);
+        } không_thì {
+            trả_về cap_null_cap_new();
         }
-    } else {
+    } không_thì {
 #endif
-        return cap;
+        trả_về cap;
 #ifdef CONFIG_ALLOW_SMC_CALLS
     }
 #endif
@@ -124,15 +124,15 @@ cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
 
 cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    nếu (cap_get_capType(cap) == cap_frame_cap) {
         vm_rights_t vm_rights;
 
         vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
         vm_rights = maskVMRights(vm_rights, cap_rights_mask);
 
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        trả_về cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
+    } không_thì {
+        trả_về cap;
     }
 }
 
@@ -142,7 +142,7 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 
     switch (cap_get_capType(cap)) {
     case cap_asid_pool_cap:
-        if (final) {
+        nếu (final) {
             deleteASIDPool(cap_asid_pool_cap_get_capASIDBase(cap),
                            ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)));
         }
@@ -150,19 +150,19 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 
     case cap_vspace_cap:
 #ifdef CONFIG_ARM_SMMU
-        if (cap_vspace_cap_get_capVSMappedCB(cap) != CB_INVALID) {
+        nếu (cap_vspace_cap_get_capVSMappedCB(cap) != CB_INVALID) {
             smmu_cb_delete_vspace(cap_vspace_cap_get_capVSMappedCB(cap),
                                   cap_vspace_cap_get_capVSMappedASID(cap));
         }
 #endif
-        if (final && cap_vspace_cap_get_capVSIsMapped(cap)) {
+        nếu (final && cap_vspace_cap_get_capVSIsMapped(cap)) {
             deleteASID(cap_vspace_cap_get_capVSMappedASID(cap),
                        VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(cap)));
         }
         break;
 
     case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
+        nếu (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
             unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
                            cap_page_table_cap_get_capPTMappedAddress(cap),
                            PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
@@ -170,7 +170,7 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
         break;
 
     case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
+        nếu (cap_frame_cap_get_capFMappedASID(cap)) {
             unmapPage(cap_frame_cap_get_capFSize(cap),
                       cap_frame_cap_get_capFMappedASID(cap),
                       cap_frame_cap_get_capFMappedAddress(cap),
@@ -179,7 +179,7 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
         break;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case cap_vcpu_cap:
-        if (final) {
+        nếu (final) {
             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
         }
         break;
@@ -193,15 +193,15 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 
 #ifdef CONFIG_ARM_SMMU
     case cap_cb_cap:
-        if (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
+        nếu (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
             smmu_sid_unbind(cap_cb_cap_get_capBindSID(cap));
         }
-        if (final) {
+        nếu (final) {
             smmu_delete_cb(cap);
         }
         break;
     case cap_sid_cap:
-        if (final) {
+        nếu (final) {
             smmu_delete_sid(cap);
         }
         break;
@@ -210,63 +210,63 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    trả_về fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
     switch (cap_get_capType(cap_a)) {
     case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
+        nếu (cap_get_capType(cap_b) == cap_frame_cap) {
 
             word_t botA, botB, topA, topB;
             botA = cap_frame_cap_get_capFBasePtr(cap_a);
             botB = cap_frame_cap_get_capFBasePtr(cap_b);
             topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
             topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+            trả_về ((botA <= botB) && (topA >= topB) && (botB <= topB));
         }
         break;
 
     case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_page_table_cap) {
+            trả_về cap_page_table_cap_get_capPTBasePtr(cap_a) ==
                    cap_page_table_cap_get_capPTBasePtr(cap_b);
         }
         break;
 
     case cap_vspace_cap:
-        if (cap_get_capType(cap_b) == cap_vspace_cap) {
-            return cap_vspace_cap_get_capVSBasePtr(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_vspace_cap) {
+            trả_về cap_vspace_cap_get_capVSBasePtr(cap_a) ==
                    cap_vspace_cap_get_capVSBasePtr(cap_b);
         }
         break;
 
     case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+        nếu (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            trả_về true;
         }
         break;
 
     case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            trả_về cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
         break;
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case cap_vcpu_cap:
-        if (cap_get_capType(cap_b) == cap_vcpu_cap) {
-            return cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_vcpu_cap) {
+            trả_về cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
                    cap_vcpu_cap_get_capVCPUPtr(cap_b);
         }
         break;
 #endif
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
     case cap_sgi_signal_cap:
-        if (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
-            return (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
+            trả_về (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
                     cap_sgi_signal_cap_get_capSGIIRQ(cap_b) &&
                     cap_sgi_signal_cap_get_capSGITarget(cap_a) ==
                     cap_sgi_signal_cap_get_capSGITarget(cap_b));
@@ -276,46 +276,46 @@ bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 
 #ifdef CONFIG_ARM_SMMU
     case cap_sid_control_cap:
-        if (cap_get_capType(cap_b) == cap_sid_control_cap ||
+        nếu (cap_get_capType(cap_b) == cap_sid_control_cap ||
             cap_get_capType(cap_b) == cap_sid_cap) {
-            return true;
+            trả_về true;
         }
         break;
     case cap_cb_control_cap:
-        if (cap_get_capType(cap_b) == cap_cb_control_cap ||
+        nếu (cap_get_capType(cap_b) == cap_cb_control_cap ||
             cap_get_capType(cap_b) == cap_cb_cap) {
-            return true;
+            trả_về true;
         }
         break;
     case cap_sid_cap:
-        if (cap_get_capType(cap_b) == cap_sid_cap) {
-            return cap_sid_cap_get_capSID(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_sid_cap) {
+            trả_về cap_sid_cap_get_capSID(cap_a) ==
                    cap_sid_cap_get_capSID(cap_b);
         }
         break;
     case cap_cb_cap:
-        if (cap_get_capType(cap_b) == cap_cb_cap) {
-            return cap_cb_cap_get_capCB(cap_a) ==
+        nếu (cap_get_capType(cap_b) == cap_cb_cap) {
+            trả_về cap_cb_cap_get_capCB(cap_a) ==
                    cap_cb_cap_get_capCB(cap_b);
         }
         break;
 #endif
 #ifdef CONFIG_ALLOW_SMC_CALLS
     case cap_smc_cap:
-        if (cap_get_capType(cap_b) == cap_smc_cap) {
-            return true;
+        nếu (cap_get_capType(cap_b) == cap_smc_cap) {
+            trả_về true;
         }
         break;
 #endif
     }
-    return false;
+    trả_về false;
 }
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
+    nếu (cap_get_capType(cap_a) == cap_frame_cap) {
+        nếu (cap_get_capType(cap_b) == cap_frame_cap) {
+            trả_về ((cap_frame_cap_get_capFBasePtr(cap_a) ==
                      cap_frame_cap_get_capFBasePtr(cap_b)) &&
                     (cap_frame_cap_get_capFSize(cap_a) ==
                      cap_frame_cap_get_capFSize(cap_b)) &&
@@ -324,44 +324,44 @@ bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
         }
     }
 #ifdef CONFIG_ARM_SMMU
-    if (cap_get_capType(cap_a) == cap_sid_control_cap &&
+    nếu (cap_get_capType(cap_a) == cap_sid_control_cap &&
         cap_get_capType(cap_b) == cap_sid_cap) {
-        return false;
+        trả_về false;
     }
-    if (cap_get_capType(cap_a) == cap_cb_control_cap &&
+    nếu (cap_get_capType(cap_a) == cap_cb_control_cap &&
         cap_get_capType(cap_b) == cap_cb_cap) {
-        return false;
+        trả_về false;
     }
 #endif
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
-    if (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
-        return false;
+    nếu (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
+        trả_về false;
     }
 #endif
 
-    return Arch_sameRegionAs(cap_a, cap_b);
+    trả_về Arch_sameRegionAs(cap_a, cap_b);
 }
 
 word_t Arch_getObjectSize(word_t t)
 {
     switch (t) {
     case seL4_ARM_SmallPageObject:
-        return ARMSmallPageBits;
+        trả_về ARMSmallPageBits;
     case seL4_ARM_LargePageObject:
-        return ARMLargePageBits;
+        trả_về ARMLargePageBits;
     case seL4_ARM_HugePageObject:
-        return ARMHugePageBits;
+        trả_về ARMHugePageBits;
     case seL4_ARM_PageTableObject:
-        return seL4_PageTableBits;
+        trả_về seL4_PageTableBits;
     case seL4_ARM_VSpaceObject:
-        return seL4_VSpaceBits;
+        trả_về seL4_VSpaceBits;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case seL4_ARM_VCPUObject:
-        return VCPU_SIZE_BITS;
+        trả_về VCPU_SIZE_BITS;
 #endif
     default:
         fail("Invalid object type");
-        return 0;
+        trả_về 0;
     }
 }
 
@@ -369,13 +369,13 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 {
     switch (t) {
     case seL4_ARM_SmallPageObject:
-        if (deviceMemory) {
+        nếu (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMSmallPageBits))" */
-        } else {
+        } không_thì {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
@@ -385,7 +385,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 (word_t)regionBase + MASK(pageBitsForSize(ARMSmallPage)),
                                 addrFromPPtr(regionBase));
         }
-        return cap_frame_cap_new(
+        trả_về cap_frame_cap_new(
                    asidInvalid,           /* capFMappedASID */
                    (word_t)regionBase,    /* capFBasePtr */
                    ARMSmallPage,          /* capFSize */
@@ -395,13 +395,13 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_ARM_LargePageObject:
-        if (deviceMemory) {
+        nếu (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMLargePageBits))" */
-        } else {
+        } không_thì {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
@@ -411,7 +411,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 (word_t)regionBase + MASK(pageBitsForSize(ARMLargePage)),
                                 addrFromPPtr(regionBase));
         }
-        return cap_frame_cap_new(
+        trả_về cap_frame_cap_new(
                    asidInvalid,           /* capFMappedASID */
                    (word_t)regionBase,    /* capFBasePtr */
                    ARMLargePage,          /* capFSize */
@@ -421,13 +421,13 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_ARM_HugePageObject:
-        if (deviceMemory) {
+        nếu (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMHugePageBits))" */
-        } else {
+        } không_thì {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMHugePage
@@ -437,7 +437,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 (word_t)regionBase + MASK(pageBitsForSize(ARMHugePage)),
                                 addrFromPPtr(regionBase));
         }
-        return cap_frame_cap_new(
+        trả_về cap_frame_cap_new(
                    asidInvalid,           /* capFMappedASID */
                    (word_t)regionBase,    /* capFBasePtr */
                    ARMHugePage,           /* capFSize */
@@ -453,14 +453,14 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                             (word_t)regionBase + MASK(seL4_VSpaceBits),
                             addrFromPPtr(regionBase));
 #ifdef CONFIG_ARM_SMMU
-        return cap_vspace_cap_new(
+        trả_về cap_vspace_cap_new(
                    asidInvalid,           /* capVSMappedASID */
                    (word_t)regionBase,    /* capVSBasePtr    */
                    0,                     /* capVSIsMapped   */
                    CB_INVALID             /* capVSMappedCB   */
                );
-#else
-        return cap_vspace_cap_new(
+#không_thì
+        trả_về cap_vspace_cap_new(
                    asidInvalid,           /* capVSMappedASID */
                    (word_t)regionBase,    /* capVSBasePtr    */
                    0                      /* capVSIsMapped   */
@@ -473,7 +473,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
         cleanCacheRange_PoU((word_t)regionBase,
                             (word_t)regionBase + MASK(seL4_PageTableBits),
                             addrFromPPtr(regionBase));
-        return cap_page_table_cap_new(
+        trả_về cap_page_table_cap_new(
                    asidInvalid,           /* capPTMappedASID    */
                    (word_t)regionBase,    /* capPTBasePtr       */
                    0,                     /* capPTIsMapped      */
@@ -485,7 +485,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: vcpu_C ptr))" */
         vcpu_init(VCPU_PTR(regionBase));
-        return cap_vcpu_cap_new(VCPU_REF(regionBase));
+        trả_về cap_vcpu_cap_new(VCPU_REF(regionBase));
 #endif
 
     default:
@@ -501,42 +501,42 @@ exception_t Arch_decodeInvocation(word_t label, word_t length, cptr_t cptr,
     /* The C parser cannot handle a switch statement with only a default
      * case. So we need to do some gymnastics to remove the switch if
      * there are no other cases */
-#if defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || defined(CONFIG_ARM_SMMU) || defined(CONFIG_ALLOW_SMC_CALLS) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
+#nếu defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || defined(CONFIG_ARM_SMMU) || defined(CONFIG_ALLOW_SMC_CALLS) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
     switch (cap_get_capType(cap)) {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case cap_vcpu_cap:
-        return decodeARMVCPUInvocation(label, length, cptr, slot, cap, call, buffer);
+        trả_về decodeARMVCPUInvocation(label, length, cptr, slot, cap, call, buffer);
 #endif /* end of CONFIG_ARM_HYPERVISOR_SUPPORT */
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
     case cap_sgi_signal_cap:
-        return decodeSGISignalInvocation(label, length, cap, buffer);
+        trả_về decodeSGISignalInvocation(label, length, cap, buffer);
 #endif /* end of !CONFIG_ENABLE_SMP_SUPPORT */
 #ifdef CONFIG_ARM_SMMU
     case cap_sid_control_cap:
-        return decodeARMSIDControlInvocation(label, length, cptr, slot, cap, call, buffer);
+        trả_về decodeARMSIDControlInvocation(label, length, cptr, slot, cap, call, buffer);
     case cap_sid_cap:
-        return decodeARMSIDInvocation(label, length, cptr, slot, cap, call, buffer);
+        trả_về decodeARMSIDInvocation(label, length, cptr, slot, cap, call, buffer);
     case cap_cb_control_cap:
-        return decodeARMCBControlInvocation(label, length, cptr, slot, cap, call, buffer);
+        trả_về decodeARMCBControlInvocation(label, length, cptr, slot, cap, call, buffer);
     case cap_cb_cap:
-        return decodeARMCBInvocation(label, length, cptr, slot, cap, call, buffer);
+        trả_về decodeARMCBInvocation(label, length, cptr, slot, cap, call, buffer);
 #endif /*CONFIG_ARM_SMMU*/
 #ifdef CONFIG_ALLOW_SMC_CALLS
     case cap_smc_cap:
-        return decodeARMSMCInvocation(label, length, cap, call, buffer);
+        trả_về decodeARMSMCInvocation(label, length, cap, call, buffer);
 #endif
     default:
-#else
+#không_thì
 {
 #endif
-    return decodeARMMMUInvocation(label, length, cptr, slot, cap, call, buffer);
+    trả_về decodeARMMMUInvocation(label, length, cptr, slot, cap, call, buffer);
 }
 }
 
 void
 Arch_prepareThreadDelete(tcb_t * thread) {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    if (thread->tcbArch.tcbVCPU) {
+    nếu (thread->tcbArch.tcbVCPU) {
         dissociateVCPUTCB(thread->tcbArch.tcbVCPU, thread);
     }
 #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */

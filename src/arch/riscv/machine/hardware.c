@@ -21,7 +21,7 @@
 
 word_t PURE getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    trả_về getRegister(thread, FaultIP);
 }
 
 void setNextPC(tcb_t *thread, word_t v)
@@ -35,10 +35,10 @@ BOOT_CODE void map_kernel_devices(void)
      * NULL. Thus we can't use ARRAY_SIZE(kernel_device_frames) here directly,
      * but have to use NUM_KERNEL_DEVICE_FRAMES that is defined accordingly.
      */
-    for (int i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
+    cho (số_nguyên i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
         const kernel_frame_t *frame = &kernel_device_frames[i];
         map_kernel_frame(frame->paddr, frame->pptr, VMKernelOnly);
-        if (!frame->userAvailable) {
+        nếu (!frame->userAvailable) {
             reserve_region((p_region_t) {
                 .start = frame->paddr,
                 .end   = frame->paddr + BIT(seL4_LargePageBits)
@@ -87,15 +87,15 @@ static inline irq_t getActiveIRQ(void)
 
     /* If an interrupt is currently active, then return it. */
     irq_t irq = *active_irq_slot;
-    if (IS_IRQ_VALID(irq)) {
-        return irq;
+    nếu (IS_IRQ_VALID(irq)) {
+        trả_về irq;
     }
 
     /* No interrupt currently active, find a new one from the sources. The
      * priorities are: external -> software -> timer.
      */
     word_t sip = read_sip();
-    if (sip & BIT(SIP_SEIP)) {
+    nếu (sip & BIT(SIP_SEIP)) {
         /* Even if we say an external interrupt is pending, the PLIC may not
          * return any pending interrupt here in some corner cases. A level
          * triggered interrupt might have been deasserted again or another hard
@@ -109,13 +109,13 @@ static inline irq_t getActiveIRQ(void)
         plic_complete_claim(irq);
 #endif
 #ifdef ENABLE_SMP_SUPPORT
-    } else if (sip & BIT(SIP_SSIP)) {
+    } không_thì nếu (sip & BIT(SIP_SSIP)) {
         sbi_clear_ipi();
         irq = ipi_get_irq();
 #endif
-    } else if (sip & BIT(SIP_STIP)) {
+    } không_thì nếu (sip & BIT(SIP_STIP)) {
         irq = KERNEL_TIMER_IRQ;
-    } else {
+    } không_thì {
         /* Seems none of the known sources has a pending interrupt. This can
          * happen if e.g. if another hart context has claimed the interrupt
          * already.
@@ -124,15 +124,15 @@ static inline irq_t getActiveIRQ(void)
     }
 
     /* There is no guarantee that there is a new interrupt. */
-    if (!IS_IRQ_VALID(irq)) {
+    nếu (!IS_IRQ_VALID(irq)) {
         /* Sanity check: the slot can't hold an interrupt either. */
         assert(!IS_IRQ_VALID(*active_irq_slot));
-        return irqInvalid;
+        trả_về irqInvalid;
     }
 
     /* A new interrupt is active, remember it. */
     *active_irq_slot = irq;
-    return irq;
+    trả_về irq;
 }
 
 #ifdef HAVE_SET_TRIGGER
@@ -164,7 +164,7 @@ void setIRQTrigger(irq_t irq, bool_t edge_triggered)
 static inline bool_t isIRQPending(void)
 {
     word_t sip = read_sip();
-    return (sip & (BIT(SIP_STIP) | BIT(SIP_SEIP)));
+    trả_về (sip & (BIT(SIP_STIP) | BIT(SIP_SEIP)));
 }
 
 /**
@@ -180,17 +180,17 @@ static inline bool_t isIRQPending(void)
 static inline void maskInterrupt(bool_t disable, irq_t irq)
 {
     assert(IS_IRQ_VALID(irq));
-    if (irq == KERNEL_TIMER_IRQ) {
-        if (disable) {
+    nếu (irq == KERNEL_TIMER_IRQ) {
+        nếu (disable) {
             clear_sie_mask(BIT(SIE_STIE));
-        } else {
+        } không_thì {
             set_sie_mask(BIT(SIE_STIE));
         }
 #ifdef ENABLE_SMP_SUPPORT
-    } else if (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
-        return;
+    } không_thì nếu (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
+        trả_về;
 #endif
-    } else {
+    } không_thì {
         plic_mask_irq(disable, irq);
     }
 }
@@ -210,12 +210,12 @@ static inline void ackInterrupt(irq_t irq)
     assert(IS_IRQ_VALID(irq));
     active_irq[CURRENT_CPU_INDEX()] = irqInvalid;
 
-    if (irq == KERNEL_TIMER_IRQ) {
+    nếu (irq == KERNEL_TIMER_IRQ) {
         /* Reprogramming the timer has cleared the interrupt. */
-        return;
+        trả_về;
     }
 #ifdef ENABLE_SMP_SUPPORT
-    if (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
+    nếu (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
         ipi_clear_irq(irq);
     }
 #endif
@@ -230,7 +230,7 @@ void resetTimer(void)
     do {
         target = riscv_read_time() + RESET_CYCLES;
         sbi_set_timer(target);
-    } while (riscv_read_time() > target);
+    } trong_khi (riscv_read_time() > target);
 }
 
 /**
@@ -263,7 +263,7 @@ BOOT_CODE void initIRQController(void)
      * the case) and the array is in the BSS, that is filled with zeros (which
      * the a kernel loader is supposed to do and which the ELF-Loader does).
      */
-    for (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
+    cho (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
         active_irq[i] = irqInvalid;
     }
 

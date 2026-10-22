@@ -37,7 +37,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
+    trong_khi (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
     *UART_REG(UTXD) = c;
 }
 #endif /* CONFIG_PRINTING */
@@ -45,7 +45,7 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
-    return *UART_REG(URXD);
+    trong_khi (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
+    trả_về *UART_REG(URXD);
 }
 #endif /* CONFIG_DEBUG_BUILD */

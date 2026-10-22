@@ -22,7 +22,7 @@
 
 #ifdef CONFIG_ARCH_AARCH64
 #define ICC_SGI1R_EL1 "S3_0_C12_C11_5"
-#else
+#không_thì
 #define ICC_SGI1R_EL1 "p15, 0, %Q0, %R0, c12"
 #endif
 
@@ -46,7 +46,7 @@ volatile struct gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_NUM_NODE
 #define MPIDR_AFF1(x) ((x >> 8) & 0xff)
 #define MPIDR_AFF2(x) ((x >> 16) & 0xff)
 #define MPIDR_AFF3(x) ((x >> 32) & 0xff)
-#else
+#không_thì
 #define MPIDR_AFF0(x) (x & 0xff)
 #define MPIDR_AFF1(x) ((x >> 8) & 0xff)
 #define MPIDR_AFF2(x) ((x >> 16) & 0xff)
@@ -59,13 +59,13 @@ static word_t mpidr_map[CONFIG_MAX_NUM_NODES];
 
 static inline word_t get_mpidr(word_t core_id)
 {
-    return mpidr_map[core_id];
+    trả_về mpidr_map[core_id];
 }
 
 static inline word_t get_current_mpidr(void)
 {
     word_t core_id = CURRENT_CPU_INDEX();
-    return get_mpidr(core_id);
+    trả_về get_mpidr(core_id);
 }
 
 static inline uint64_t mpidr_to_gic_affinity(void)
@@ -74,13 +74,13 @@ static inline uint64_t mpidr_to_gic_affinity(void)
     uint64_t affinity = 0;
     affinity = (uint64_t)MPIDR_AFF3(mpidr) << 32 | MPIDR_AFF2(mpidr) << 16 |
                MPIDR_AFF1(mpidr) << 8  | MPIDR_AFF0(mpidr);
-    return affinity;
+    trả_về affinity;
 }
 
 static inline uint64_t sgir_word_from_args(word_t irq, word_t target)
 {
     uint64_t t = target; /* make sure shifts below are on 64 bit */
-    return (uint64_t) irq << ICC_SGI1R_INTID_SHIFT
+    trả_về (uint64_t) irq << ICC_SGI1R_INTID_SHIFT
            | (1llu << (t & 0xf)) // AFF0 base
            | ((t >> 4)  & 0x0f) << ICC_SGI1R_RS_SHIFT // AFF0 Range select
            | ((t >> 8)  & 0xff) << ICC_SGI1R_AFF1_SHIFT // AFF1
@@ -102,27 +102,27 @@ static uint32_t gicv3_do_wait_for_rwp(volatile uint32_t *ctlr_addr)
 
     /* Check the value before reading the generic timer */
     val = *ctlr_addr;
-    if (!(val & GICD_CTLR_RWP)) {
-        return 0;
+    nếu (!(val & GICD_CTLR_RWP)) {
+        trả_về 0;
     }
     SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
     gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_PER_MS);
 
-    while (waiting) {
+    trong_khi (waiting) {
         SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
         val = *ctlr_addr;
 
-        if (gpt_cnt_tval >= gpt_cnt_ciel) {
+        nếu (gpt_cnt_tval >= gpt_cnt_ciel) {
             printf("GICV3 RWP Timeout after %u ms\n", deadline_ms);
             ret = 1;
             waiting = false;
 
-        } else if (!(val & GICD_CTLR_RWP)) {
+        } không_thì nếu (!(val & GICD_CTLR_RWP)) {
             ret = 0;
             waiting = false;
         }
     }
-    return ret;
+    trả_về ret;
 }
 
 static void gicv3_dist_wait_for_rwp(void)
@@ -161,7 +161,7 @@ BOOT_CODE static void dist_init(void)
 {
     word_t i;
     uint32_t type;
-    unsigned int nr_lines;
+    unsigned số_nguyên nr_lines;
     uint64_t affinity;
     uint32_t priority;
 
@@ -174,25 +174,25 @@ BOOT_CODE static void dist_init(void)
     nr_lines = GIC_REG_WIDTH * ((type & GICD_TYPE_LINESNR) + 1);
 
     /* Assume level-triggered */
-    for (i = SPI_START; i < nr_lines; i += 16) {
+    cho (i = SPI_START; i < nr_lines; i += 16) {
         gic_dist->icfgrn[(i / 16)] = 0;
     }
 
     /* Default priority for global interrupts */
     priority = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
                 GIC_PRI_IRQ);
-    for (i = SPI_START; i < nr_lines; i += 4) {
+    cho (i = SPI_START; i < nr_lines; i += 4) {
         gic_dist->ipriorityrn[(i / 4)] = priority;
     }
     /* Disable and clear all global interrupts */
-    for (i = SPI_START; i < nr_lines; i += 32) {
+    cho (i = SPI_START; i < nr_lines; i += 32) {
         gic_dist->icenablern[(i / 32)] = IRQ_SET_ALL;
         gic_dist->icpendrn[(i / 32)] = IRQ_SET_ALL;
     }
 
     /* group 1 for non-secure */
-    if (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
-        for (i = SPI_START; i < nr_lines; i += 32) {
+    nếu (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+        cho (i = SPI_START; i < nr_lines; i += 32) {
             gic_dist->igrouprn[(i / 32)] = IRQ_SET_ALL;
         }
     }
@@ -202,13 +202,13 @@ BOOT_CODE static void dist_init(void)
 
     /* Route all global IRQs to this CPU */
     affinity = mpidr_to_gic_affinity();
-    for (i = SPI_START; i < nr_lines; i++) {
+    cho (i = SPI_START; i < nr_lines; i++) {
         gic_dist->iroutern[i - SPI_START] = affinity;
     }
 
 }
 
-BOOT_CODE static uint32_t gicr_enable_rdist(int core_id)
+BOOT_CODE static uint32_t gicr_enable_rdist(số_nguyên core_id)
 {
     uint32_t deadline_ms =  GIC_DEADLINE_MS;
     bool_t waiting = true;
@@ -224,27 +224,27 @@ BOOT_CODE static uint32_t gicr_enable_rdist(int core_id)
     SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
     gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_PER_MS);
 
-    while (waiting) {
+    trong_khi (waiting) {
         SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
         val = gic_rdist_map[core_id]->waker;
 
-        if (gpt_cnt_tval >= gpt_cnt_ciel) {
+        nếu (gpt_cnt_tval >= gpt_cnt_ciel) {
             printf("GICv3: GICR_WAKER returned non-zero %x\n", val);
             ret = 1;
             waiting = false;
 
-        } else if (!(val & GICR_WAKER_ChildrenAsleep)) {
+        } không_thì nếu (!(val & GICR_WAKER_ChildrenAsleep)) {
             ret = 0;
             waiting = false;
         }
     }
-    return ret;
+    trả_về ret;
 }
 
 BOOT_CODE static void gicr_locate_interface(void)
 {
     word_t offset;
-    int core_id = CURRENT_CPU_INDEX();
+    số_nguyên core_id = CURRENT_CPU_INDEX();
     word_t mpidr = get_current_mpidr();
     uint32_t val;
 
@@ -252,16 +252,16 @@ BOOT_CODE static void gicr_locate_interface(void)
      * Iterate through all redistributor interfaces looking for one that matches
      * our mpidr.
      */
-    for (offset = 0; offset < GICR_SIZE; offset += GICR_PER_CORE_SIZE) {
+    cho (offset = 0; offset < GICR_SIZE; offset += GICR_PER_CORE_SIZE) {
 
         uint64_t typer = ((struct gic_rdist_map *)((word_t)gicr_base + offset))->typer;
-        if ((typer >> 32) == ((MPIDR_AFF3(mpidr) << 24) |
+        nếu ((typer >> 32) == ((MPIDR_AFF3(mpidr) << 24) |
                               (MPIDR_AFF2(mpidr) << 16) |
                               (MPIDR_AFF1(mpidr) <<  8) |
                               MPIDR_AFF0(mpidr))) {
 
             word_t gicr = (word_t)gicr_base + offset;
-            if (gic_rdist_map[core_id] != NULL || gic_rdist_sgi_ppi_map[core_id] != NULL) {
+            nếu (gic_rdist_map[core_id] != NULL || gic_rdist_sgi_ppi_map[core_id] != NULL) {
                 printf("GICv3: %s[%d] %p is not null\n",
                        gic_rdist_map[core_id] == NULL ? "gic_rdist_map" : "gic_rdist_sgi_ppi_map",
                        core_id,
@@ -277,21 +277,21 @@ BOOT_CODE static void gicr_locate_interface(void)
              * However if we get a value back then something is probably wrong.
              */
             val = gic_rdist_map[core_id]->waker;
-            if (val & GICR_WAKER_ChildrenAsleep) {
+            nếu (val & GICR_WAKER_ChildrenAsleep) {
                 /* On QEMU, the redistributor may not be woken by an earlier
                  * loader, so we need to explicitly wake it here. */
-                int ret = gicr_enable_rdist(core_id);
-                if (ret == 1) {
+                số_nguyên ret = gicr_enable_rdist(core_id);
+                nếu (ret == 1) {
                     halt();
                 }
             }
             break;
         }
     }
-    if (offset >= GICR_SIZE) {
+    nếu (offset >= GICR_SIZE) {
         printf("GICv3: GICR base for CPU %d %d %d %d (Logic ID %d) not found\n",
-               (int)MPIDR_AFF3(mpidr), (int)MPIDR_AFF2(mpidr),
-               (int)MPIDR_AFF1(mpidr), (int)MPIDR_AFF0(mpidr), core_id);
+               (số_nguyên)MPIDR_AFF3(mpidr), (số_nguyên)MPIDR_AFF2(mpidr),
+               (số_nguyên)MPIDR_AFF1(mpidr), (số_nguyên)MPIDR_AFF0(mpidr), core_id);
         halt();
     }
 
@@ -300,7 +300,7 @@ BOOT_CODE static void gicr_locate_interface(void)
 
 BOOT_CODE static void gicr_init(void)
 {
-    int i;
+    số_nguyên i;
     uint32_t priority;
 
     /* Find redistributor for this core. */
@@ -312,7 +312,7 @@ BOOT_CODE static void gicr_init(void)
     /* Set priority on PPI and SGI interrupts */
     priority = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
                 GIC_PRI_IRQ);
-    for (i = 0; i < SPI_START; i += 4) {
+    cho (i = 0; i < SPI_START; i += 4) {
         gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->ipriorityrn[i / 4] = priority;
     }
 
@@ -322,7 +322,7 @@ BOOT_CODE static void gicr_init(void)
      */
     gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->icenabler0 = 0xffff0000;
     gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->isenabler0 = 0x0000ffff;
-    if (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+    nếu (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
         gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->igroupr0 = IRQ_SET_ALL;
     }
 
@@ -365,34 +365,34 @@ void setIRQTrigger(irq_t irq, bool_t trigger)
      * for PPI with default 0x00000000.*/
     word_t hw_irq = IRQT_TO_IRQ(irq);
     word_t core = IRQT_TO_CORE(irq);
-    if (HW_IRQ_IS_SGI(hw_irq)) {
-        return;
+    nếu (HW_IRQ_IS_SGI(hw_irq)) {
+        trả_về;
     }
-    int word = hw_irq >> 4;
-    int bit = ((hw_irq & 0xf) * 2);
+    số_nguyên word = hw_irq >> 4;
+    số_nguyên bit = ((hw_irq & 0xf) * 2);
     uint32_t icfgr = 0;
-    if (HW_IRQ_IS_PPI(hw_irq)) {
+    nếu (HW_IRQ_IS_PPI(hw_irq)) {
         icfgr = gic_rdist_sgi_ppi_map[core]->icfgr1;
-    } else {
+    } không_thì {
         icfgr = gic_dist->icfgrn[word];
     }
 
-    if (trigger) {
+    nếu (trigger) {
         icfgr |= (2 << bit);
-    } else {
+    } không_thì {
         icfgr &= ~(3 << bit);
     }
 
-    if (HW_IRQ_IS_PPI(hw_irq)) {
+    nếu (HW_IRQ_IS_PPI(hw_irq)) {
         gic_rdist_sgi_ppi_map[core]->icfgr1 = icfgr;
-    } else {
+    } không_thì {
         /* Update GICD_ICFGR<n>. Note that the interrupt should
          * be disabled before changing the field, and this function
          * assumes the caller has disabled the interrupt. */
         gic_dist->icfgrn[word] = icfgr;
     }
 
-    return;
+    trả_về;
 }
 
 BOOT_CODE void initIRQController(void)
@@ -416,7 +416,7 @@ bool_t plat_SGITargetValid(word_t target)
 {
     /* Aff0+Aff1+Aff2+Aff3 values are not guaranteed to be contiguous
      * and the first core may have a non-zero affinity value. */
-    return target <= UINT32_MAX;
+    trả_về target <= UINT32_MAX;
 }
 
 void plat_sendSGI(word_t irq, word_t target)
@@ -435,9 +435,9 @@ void ipi_send_target(irq_t irq, word_t cpuTargetList)
     word_t sgi1r[CONFIG_MAX_NUM_NODES];
     word_t last_aff1 = 0;
 
-    for (word_t i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+    cho (word_t i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
         sgi1r[i] = 0;
-        if (cpuTargetList & BIT(i)) {
+        nếu (cpuTargetList & BIT(i)) {
             word_t mpidr = mpidr_map[i];
             word_t aff1 = MPIDR_AFF1(mpidr);
             word_t aff0 = MPIDR_AFF0(mpidr);
@@ -445,13 +445,13 @@ void ipi_send_target(irq_t irq, word_t cpuTargetList)
             // The targets are grouped by AFF1.
             assert(aff1 >= 0 && aff1 < CONFIG_MAX_NUM_NODES);
             sgi1r[aff1] |= sgi1r_base | (aff1 << ICC_SGI1R_AFF1_SHIFT) | (1 << aff0);
-            if (aff1 > last_aff1) {
+            nếu (aff1 > last_aff1) {
                 last_aff1 = aff1;
             }
         }
     }
-    for (word_t i = 0; i <= last_aff1; i++) {
-        if (sgi1r[i] != 0) {
+    cho (word_t i = 0; i <= last_aff1; i++) {
+        nếu (sgi1r[i] != 0) {
             SYSTEM_WRITE_64(ICC_SGI1R_EL1, sgi1r[i]);
         }
     }
@@ -460,9 +460,9 @@ void ipi_send_target(irq_t irq, word_t cpuTargetList)
 
 void setIRQTarget(irq_t irq, seL4_Word target)
 {
-    if (IRQ_IS_PPI(irq)) {
+    nếu (IRQ_IS_PPI(irq)) {
         fail("PPI can't have designated target core\n");
-        return;
+        trả_về;
     }
 
     word_t hw_irq = IRQT_TO_IRQ(irq);
