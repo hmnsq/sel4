@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <mode/machine.h>
-#include <arch/machine/fpu.h>
-#include <mode/model/statedata.h>
-#include <config.h>
-#include <util.h>
+#अन्तर्भाव <mode/machine.h>
+#अन्तर्भाव <arch/machine/fpu.h>
+#अन्तर्भाव <mode/model/statedata.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <util.h>
 
 /*
  * The following function checks if the subarchitecture support asynchronous exceptions
  */
-BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
+BOOT_संहिता स्थिर अन्तःस्थ bool_t supportsAsyncExceptions(शून्य)
 {
     word_t fpexc;
 
@@ -25,10 +25,10 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
     /* Read back the FPEXC register*/
     VMRS(FPEXC, fpexc);
 
-    return !!(fpexc & BIT(FPEXC_EX_BIT));
+    प्रत्यागम !!(fpexc & BIT(FPEXC_EX_BIT));
 }
 
-#ifdef CONFIG_HAVE_FPU
+#यदि_परिभाषितम् CONFIG_HAVE_FPU
 /* This variable is set at boot/init time to true if the FPU supports 32 registers (d0-d31).
  * otherwise it only supports 16 registers (d0-d15).
  * We cache this value in the following variable to avoid reading the coprocessor
@@ -36,127 +36,127 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
  */
 bool_t isFPUD32SupportedCached;
 
-BOOT_CODE static inline bool_t isFPUD32Supported(void)
+BOOT_संहिता स्थिर अन्तःस्थ bool_t isFPUD32Supported(शून्य)
 {
     word_t mvfr0;
-    asm volatile(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
+    asm चञ्चल(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
                  "mov %0, r3       \n"
                  : "=r"(mvfr0)
                  :
                  : "r3");
-    return ((mvfr0 & 0xf) == 2);
+    प्रत्यागम ((mvfr0 & 0xf) == 2);
 }
 
 /* Initialise the FP/SIMD for this machine. */
-BOOT_CODE bool_t fpsimd_init(void)
+BOOT_संहिता bool_t fpsimd_init(शून्य)
 {
     /* We are inside CONFIG_HAVE_FPU, so CPACR_DEFAULT enables CP10 and CP11 access. */
-    setCPACR(CPACR_DEFAULT);
+    समुच्चयः_CPACR(CPACR_DEFAULT);
     isb();
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    यदि (config_समुच्चयः(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* Allow hyp mode FPU accesses for the rest of the initialisation. */
-        enableFpuInstInHyp();
+        enable_Fpu_Inst_अन्तर्_Hyp();
     }
 
-    if (supportsAsyncExceptions()) {
+    यदि (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
-        printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-        return false;
+        प्रारूप_लिख("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
+        प्रत्यागम false;
     }
 
     isFPUD32SupportedCached = isFPUD32Supported();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    यदि (config_समुच्चयः(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* FPEXC is VCPU state and native threads always have EN set. Setting EN
          * must happen before disableFpu() traps hyp mode (kernel) FPU accesses
          * again. */
-        setEnFPEXC();
+        समुच्चयः_En_FPEXC();
     }
     /* Set the FPU to lazy switch mode */
     disableFpu();
 
-    return true;
+    प्रत्यागम true;
 }
-#endif /* CONFIG_HAVE_FPU */
+#यदि_अन्तः /* CONFIG_HAVE_FPU */
 
 /* Probe the FPU hardware. Requires CP10 and CP11 access in CPACR and, in hyp
  * mode, no CP10 and CP11 traps in HCPTR. */
-BOOT_CODE static bool_t fpsimd_HWCapProbe(void)
+BOOT_संहिता स्थिर bool_t fpsimd_HWCapProbe(शून्य)
 {
     word_t fpsid;
 
     /* Check of this platform supports HW FP instructions */
-    asm volatile(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
+    asm चञ्चल(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
                  "mov %0, r0        \n"
                  : "=r"(fpsid) :
                  : "r0");
-    if (fpsid & BIT(FPSID_SW_BIT)) {
-        return false;
+    यदि (fpsid & BIT(FPSID_SW_BIT)) {
+        प्रत्यागम false;
     }
 
     word_t fpsid_subarch;
 
-    if (supportsAsyncExceptions()) {
+    यदि (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
-        if (config_set(CONFIG_HAVE_FPU)) {
-            printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-            return false;
-        } else {
+        यदि (config_समुच्चयः(CONFIG_HAVE_FPU)) {
+            प्रारूप_लिख("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
+            प्रत्यागम false;
+        } अन्यथा {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            प्रत्यागम true;
         }
     }
     /* Check for subarchitectures we support */
-    fpsid_subarch = (fpsid >> FPSID_SUBARCH_SHIFT_POS) & 0x7f;
+    fpsid_subarch = (fpsid >> FPSID_SUBARCH_सरणम्_POS) & 0x7f;
 
-    switch (fpsid_subarch) {
+    विकल्प (fpsid_subarch) {
     /* We only support the following subarch values */
-    case 0x2:
-    case 0x3:
-    case 0x4:
-        break;
-    default: {
-        if (config_set(CONFIG_HAVE_FPU)) {
-            printf("Error: seL4 doesn't support this VFP subarchitecture\n");
-            return false;
-        } else {
+    पक्ष 0x2:
+    पक्ष 0x3:
+    पक्ष 0x4:
+        भङ्ग;
+    स्वभाव: {
+        यदि (config_समुच्चयः(CONFIG_HAVE_FPU)) {
+            प्रारूप_लिख("Error: seL4 doesn't support this VFP subarchitecture\n");
+            प्रत्यागम false;
+        } अन्यथा {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            प्रत्यागम true;
         }
     }
 
     }
 
-    if (!config_set(CONFIG_HAVE_FPU)) {
-        printf("Info: Not using supported FPU as FPU is disabled in the build configuration\n");
+    यदि (!config_समुच्चयः(CONFIG_HAVE_FPU)) {
+        प्रारूप_लिख("Info: Not using supported FPU as FPU is disabled in the build configuration\n");
     }
-    return true;
+    प्रत्यागम true;
 }
 
-BOOT_CODE bool_t fpsimd_HWCapTest(void)
+BOOT_संहिता bool_t fpsimd_HWCapTest(शून्य)
 {
-    bool_t result;
+    bool_t परिणाम;
 
     /* Enable CP10 and CP11 access to read the FPU control/status registers. */
-    setCPACR(CPACR_FPU_ENABLE);
+    समुच्चयः_CPACR(CPACR_FPU_ENABLE);
     isb();
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#यदि_परिभाषितम् CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Allow hyp mode (kernel) FPU accesses, then restore HCPTR afterwards. */
     word_t hcptr = getHCPTR();
-    setHCPTR(hcptr & ~HCPTR_FPU_TRAPS);
-#endif
+    समुच्चयः_HCPTR(hcptr & ~HCPTR_FPU_TRAPS);
+#यदि_अन्तः
 
-    result = fpsimd_HWCapProbe();
+    परिणाम = fpsimd_HWCapProbe();
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    setHCPTR(hcptr);
-#endif
+#यदि_परिभाषितम् CONFIG_ARM_HYPERVISOR_SUPPORT
+    समुच्चयः_HCPTR(hcptr);
+#यदि_अन्तः
 
     /* Restore the CPACR value for native threads. Without CONFIG_HAVE_FPU this
      * disables CP10 and CP11 access again. */
-    setCPACR(CPACR_DEFAULT);
+    समुच्चयः_CPACR(CPACR_DEFAULT);
     isb();
 
-    return result;
+    प्रत्यागम परिणाम;
 }

@@ -20,7 +20,7 @@
 .extern c_handle_interrupt
 .extern c_handle_exception
 
-.section .text.traps, "ax"
+.खण्डः .text.traps, "ax"
 BEGIN_FUNC(trap_entry)
 
 #ifdef ENABLE_SMP_SUPPORT
@@ -78,10 +78,10 @@ BEGIN_FUNC(trap_entry)
   csrr s0, scause
   STORE s0, (31*REGBYTES)(t0)
 
-.option push
+.option निक्षिप
 .option norelax
   la gp, __global_pointer$
-.option pop
+.option उद्धर
 
 #ifdef ENABLE_SMP_SUPPORT
   /* save the user sp */
@@ -98,15 +98,15 @@ BEGIN_FUNC(trap_entry)
   csrr x1,  sepc
   STORE   x1, (33*REGBYTES)(t0)
 
-  /* Check if it's an interrupt */
-  bltz s0, interrupt
+  /* Check if it's an व्यवधानम् */
+  bltz s0, व्यवधानम्
 
   /* ratified priv has value 8 for ecall from U-mode exception */
   li   s4, 8
   bne  s0, s4, exception
 
 handle_syscall:
-  /* Set the return address to sepc + 4 in the case of a system/environment call */
+  /* Set the return address to sepc + 4 in the case of a system/environment आह्वान */
   addi x1, x1, 4
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
@@ -133,13 +133,13 @@ handle_syscall:
 
   j c_handle_syscall
 
-/* Not an interrupt or a syscall */
+/* Not an व्यवधानम् or a syscall */
 exception:
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
   j c_handle_exception
 
-interrupt:
+व्यवधानम्:
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
   j c_handle_interrupt

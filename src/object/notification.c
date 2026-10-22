@@ -4,108 +4,108 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
+#अन्तर्भाव <assert.h>
 
-#include <types.h>
-#include <kernel/thread.h>
-#include <object/structures.h>
-#include <object/tcb.h>
-#include <object/endpoint.h>
-#include <model/statedata.h>
-#include <machine/io.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <kernel/thread.h>
+#अन्तर्भाव <object/structures.h>
+#अन्तर्भाव <object/tcb.h>
+#अन्तर्भाव <object/endpoint.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <machine/io.h>
 
-#include <object/notification.h>
+#अन्तर्भाव <object/notification.h>
 
-static inline tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr)
+स्थिर अन्तःस्थ tcb_queue_t विशुद्धम् ntfn_ptr_get_queue(notification_t *ntfnPtr)
 {
     tcb_queue_t ntfn_queue;
 
-    ntfn_queue.head = (tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr);
-    ntfn_queue.end = (tcb_t *)notification_ptr_get_ntfnQueue_tail(ntfnPtr);
+    ntfn_queue.शीर्ष = (tcb_t *)notification_ptr_get_ntfn_Queue_शीर्ष(ntfnPtr);
+    ntfn_queue.अन्तः_2 = (tcb_t *)notification_ptr_get_ntfn_Queue_पुच्छ(ntfnPtr);
 
-    return ntfn_queue;
+    प्रत्यागम ntfn_queue;
 }
 
-static inline void ntfn_ptr_set_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue)
+स्थिर अन्तःस्थ शून्य ntfn_ptr_समुच्चयः_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue)
 {
-    notification_ptr_set_ntfnQueue_head(ntfnPtr, (word_t)ntfn_queue.head);
-    notification_ptr_set_ntfnQueue_tail(ntfnPtr, (word_t)ntfn_queue.end);
+    notification_ptr_समुच्चयः_ntfn_Queue_शीर्ष(ntfnPtr, (word_t)ntfn_queue.शीर्ष);
+    notification_ptr_समुच्चयः_ntfn_Queue_पुच्छ(ntfnPtr, (word_t)ntfn_queue.अन्तः_2);
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline void maybeDonateSchedContext(tcb_t *tcb, notification_t *ntfnPtr)
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+स्थिर अन्तःस्थ शून्य maybeDonateSchedContext(tcb_t *tcb, notification_t *ntfnPtr)
 {
-    if (tcb->tcbSchedContext == NULL) {
+    यदि (tcb->tcbSchedContext == रिक्त) {
         sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-        if (sc != NULL && sc->scTcb == NULL) {
+        यदि (sc != रिक्त && sc->scTcb == रिक्त) {
             schedContext_donate(sc, tcb);
             schedContext_resume(sc);
         }
     }
 }
 
-#endif
+#यदि_अन्तः
 
-#ifdef CONFIG_KERNEL_MCS
-#define MCS_DO_IF_SC(tcb, ntfnPtr, _block) \
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+#परिभाषय MCS_DO_IF_SC(tcb, ntfnPtr, खण्डम्) \
     maybeDonateSchedContext(tcb, ntfnPtr); \
-    if (isSchedulable(tcb)) { \
-        _block \
+    यदि (isSchedulable(tcb)) { \
+        खण्डम् \
     }
-#else
-#define MCS_DO_IF_SC(tcb, ntfnPtr, _block) \
+#अन्यथा
+#परिभाषय MCS_DO_IF_SC(tcb, ntfnPtr, खण्डम्) \
     { \
-        _block \
+        खण्डम् \
     }
-#endif
+#यदि_अन्तः
 
-void sendSignal(notification_t *ntfnPtr, word_t badge)
+शून्य sendSignal(notification_t *ntfnPtr, word_t badge)
 {
-    switch (notification_ptr_get_state(ntfnPtr)) {
-    case NtfnState_Idle: {
+    विकल्प (notification_ptr_get_state(ntfnPtr)) {
+    पक्ष NtfnState_Idle: {
         tcb_t *tcb = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
         /* Check if we are bound and that thread is waiting for a message */
-        if (tcb) {
-            if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_BlockedOnReceive) {
+        यदि (tcb) {
+            यदि (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_BlockedOnReceive) {
                 /* Send and start thread running */
                 cancelIPC(tcb);
-                setThreadState(tcb, ThreadState_Running);
-                setRegister(tcb, badgeRegister, badge);
+                समुच्चयः_Thread_State(tcb, ThreadState_Running);
+                समुच्चयः_पञ्जिकाकोशः(tcb, badge_पञ्जिकाकोशः, badge);
                 MCS_DO_IF_SC(tcb, ntfnPtr, {
-                    possibleSwitchTo(tcb);
+                    possible_Switch_गन्तव्यम्(tcb);
                 })
-#ifdef CONFIG_KERNEL_MCS
-                if (sc_sporadic(tcb->tcbSchedContext)) {
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+                यदि (sc_sporadic(tcb->tcbSchedContext)) {
                     /* We know that the tcb can't have the current SC
                      * as its own SC as this point as it should still be
                      * associated with the current thread, or no thread.
                      * This check is added here to reduce the cost of
                      * proving this to be true as a short-term stop-gap. */
-                    assert(tcb->tcbSchedContext != NODE_STATE(ksCurSC));
-                    if (tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                    प्रतिज्ञा(tcb->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC));
+                    यदि (tcb->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC)) {
                         refill_unblock_check(tcb->tcbSchedContext);
                     }
                 }
-#endif
-#ifdef CONFIG_VTX
-            } else if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM) {
-#ifdef ENABLE_SMP_SUPPORT
-                if (tcb->tcbAffinity != getCurrentCPUIndex()) {
-                    ntfn_set_active(ntfnPtr, badge);
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_VTX
+            } अन्यथा यदि (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM) {
+#यदि_परिभाषितम् ENABLE_SMP_SUPPORT
+                यदि (tcb->tcbAffinity != getCurrentCPUIndex()) {
+                    ntfn_समुच्चयः_सक्रिय(ntfnPtr, badge);
                     doRemoteVMCheckBoundNotification(tcb->tcbAffinity, tcb);
-                } else
-#endif /* ENABLE_SMP_SUPPORT */
+                } अन्यथा
+#यदि_अन्तः /* ENABLE_SMP_SUPPORT */
                 {
-                    setThreadState(tcb, ThreadState_Running);
-                    setRegister(tcb, badgeRegister, badge);
+                    समुच्चयः_Thread_State(tcb, ThreadState_Running);
+                    समुच्चयः_पञ्जिकाकोशः(tcb, badge_पञ्जिकाकोशः, badge);
                     Arch_leaveVMAsyncTransfer(tcb);
                     MCS_DO_IF_SC(tcb, ntfnPtr, {
-                        possibleSwitchTo(tcb);
+                        possible_Switch_गन्तव्यम्(tcb);
                     })
-#ifdef CONFIG_KERNEL_MCS
-                    if (tcb->tcbSchedContext != NULL && sc_active(tcb->tcbSchedContext)) {
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+                    यदि (tcb->tcbSchedContext != रिक्त && sc_सक्रिय(tcb->tcbSchedContext)) {
                         sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-                        if (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                        यदि (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC)) {
                             /* We know that the tcb can't have the current SC
                              * as its own SC as this point as it should still be
                              * associated with the current thread, or no thread.
@@ -116,10 +116,10 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                             refill_unblock_check(tcb->tcbSchedContext);
                         }
                     }
-#endif
+#यदि_अन्तः
                 }
-#endif /* CONFIG_VTX */
-            } else {
+#यदि_अन्तः /* CONFIG_VTX */
+            } अन्यथा {
                 /* In particular, this path is taken when a thread
                  * is waiting on a reply cap since BlockedOnReply
                  * would also trigger this path. I.e, a thread
@@ -127,214 +127,214 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                  * by signals on that bound notification if it is
                  * in the middle of an seL4_Call.
                  */
-                ntfn_set_active(ntfnPtr, badge);
+                ntfn_समुच्चयः_सक्रिय(ntfnPtr, badge);
             }
-        } else {
-            ntfn_set_active(ntfnPtr, badge);
+        } अन्यथा {
+            ntfn_समुच्चयः_सक्रिय(ntfnPtr, badge);
         }
-        break;
+        भङ्ग;
     }
-    case NtfnState_Waiting: {
+    पक्ष Ntfn_State_प्रतीक्षा: {
         tcb_queue_t ntfn_queue;
         tcb_t *dest;
 
         ntfn_queue = ntfn_ptr_get_queue(ntfnPtr);
-        dest = ntfn_queue.head;
+        dest = ntfn_queue.शीर्ष;
 
         /* Haskell error "WaitingNtfn Notification must have non-empty queue" */
-        assert(dest);
+        प्रतिज्ञा(dest);
 
         /* Dequeue TCB */
-#ifdef CONFIG_KERNEL_MCS
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
         tcbNTFNDequeue(dest, ntfnPtr);
-#else
+#अन्यथा
         ntfn_queue = tcbEPDequeue(dest, ntfn_queue);
-        ntfn_ptr_set_queue(ntfnPtr, ntfn_queue);
+        ntfn_ptr_समुच्चयः_queue(ntfnPtr, ntfn_queue);
 
         /* set the thread state to idle if the queue is empty */
-        if (!ntfn_queue.head) {
-            notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
+        यदि (!ntfn_queue.शीर्ष) {
+            notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
         }
-#endif /* CONFIG_KERNEL_MCS */
+#यदि_अन्तः /* CONFIG_KERNEL_MCS */
 
-        setThreadState(dest, ThreadState_Running);
-        setRegister(dest, badgeRegister, badge);
+        समुच्चयः_Thread_State(dest, ThreadState_Running);
+        समुच्चयः_पञ्जिकाकोशः(dest, badge_पञ्जिकाकोशः, badge);
         MCS_DO_IF_SC(dest, ntfnPtr, {
-            possibleSwitchTo(dest);
+            possible_Switch_गन्तव्यम्(dest);
         })
 
-#ifdef CONFIG_KERNEL_MCS
-        if (sc_sporadic(dest->tcbSchedContext)) {
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+        यदि (sc_sporadic(dest->tcbSchedContext)) {
             /* We know that the receiver can't have the current SC
              * as its own SC as this point as it should still be
              * associated with the current thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(dest->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            प्रतिज्ञा(dest->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC));
+            यदि (dest->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC)) {
                 refill_unblock_check(dest->tcbSchedContext);
             }
         }
-#endif
-        break;
+#यदि_अन्तः
+        भङ्ग;
     }
 
-    case NtfnState_Active: {
+    पक्ष Ntfn_State_सक्रिय: {
         word_t badge2;
 
-        badge2 = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
+        badge2 = notification_ptr_get_ntfn_सन्देशः_Identifier(ntfnPtr);
         badge2 |= badge;
 
-        notification_ptr_set_ntfnMsgIdentifier(ntfnPtr, badge2);
-        break;
+        notification_ptr_समुच्चयः_ntfn_सन्देशः_Identifier(ntfnPtr, badge2);
+        भङ्ग;
     }
     }
 }
 
-void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
+शून्य receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
 {
     notification_t *ntfnPtr;
 
     ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 
-    switch (notification_ptr_get_state(ntfnPtr)) {
-    case NtfnState_Idle:
-    case NtfnState_Waiting: {
+    विकल्प (notification_ptr_get_state(ntfnPtr)) {
+    पक्ष NtfnState_Idle:
+    पक्ष Ntfn_State_प्रतीक्षा: {
 
-        if (isBlocking) {
+        यदि (isBlocking) {
             /* Block thread on notification object */
-            thread_state_ptr_set_tsType(&thread->tcbState,
+            thread_state_ptr_समुच्चयः_ts_Type(&thread->tcbState,
                                         ThreadState_BlockedOnNotification);
-            thread_state_ptr_set_blockingObject(&thread->tcbState,
+            thread_state_ptr_समुच्चयः_blocking_Object(&thread->tcbState,
                                                 NTFN_REF(ntfnPtr));
-            scheduleTCB(thread);
+            कालसारणी_TCB(thread);
 
             /* Enqueue TCB */
-#ifdef CONFIG_KERNEL_MCS
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
             tcbNTFNAppend(thread, ntfnPtr);
-#else
+#अन्यथा
             tcb_queue_t ntfn_queue;
             ntfn_queue = ntfn_ptr_get_queue(ntfnPtr);
             ntfn_queue = tcbEPAppend(thread, ntfn_queue);
 
-            notification_ptr_set_state(ntfnPtr, NtfnState_Waiting);
-            ntfn_ptr_set_queue(ntfnPtr, ntfn_queue);
-#endif /* CONFIG_KERNEL_MCS */
+            notification_ptr_समुच्चयः_state(ntfnPtr, Ntfn_State_प्रतीक्षा);
+            ntfn_ptr_समुच्चयः_queue(ntfnPtr, ntfn_queue);
+#यदि_अन्तः /* CONFIG_KERNEL_MCS */
 
-#ifdef CONFIG_KERNEL_MCS
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
             maybeReturnSchedContext(ntfnPtr, thread);
-#endif
-        } else {
+#यदि_अन्तः
+        } अन्यथा {
             doNBRecvFailedTransfer(thread);
         }
 
-        break;
+        भङ्ग;
     }
 
-    case NtfnState_Active:
-        setRegister(
-            thread, badgeRegister,
-            notification_ptr_get_ntfnMsgIdentifier(ntfnPtr));
-        notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
-#ifdef CONFIG_KERNEL_MCS
+    पक्ष Ntfn_State_सक्रिय:
+        समुच्चयः_पञ्जिकाकोशः(
+            thread, badge_पञ्जिकाकोशः,
+            notification_ptr_get_ntfn_सन्देशः_Identifier(ntfnPtr));
+        notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
         maybeDonateSchedContext(thread, ntfnPtr);
         // If the SC has been donated to the current thread (in a reply_recv, send_recv scenario) then
         // we may need to perform refill_unblock_check if the SC is becoming activated.
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
+        यदि (thread->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
-#endif
-        break;
+#यदि_अन्तः
+        भङ्ग;
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline void removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_t *ntfnPtr)
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+स्थिर अन्तःस्थ शून्य removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcbNTFNDequeue(thread, ntfnPtr);
-    setThreadState(thread, ThreadState_Restart);
-    if (sc_sporadic(thread->tcbSchedContext)) {
+    समुच्चयः_Thread_State(thread, ThreadState_Restart);
+    यदि (sc_sporadic(thread->tcbSchedContext)) {
         /* We know that the thread can't have the current SC as its own SC at
          * this point as it should still be associated with the current thread,
          * or no thread. This check is added here to reduce the cost of proving
          * this to be true as a short-term stop-gap. */
-        assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+        प्रतिज्ञा(thread->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC));
+        यदि (thread->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
     }
-    possibleSwitchTo(thread);
+    possible_Switch_गन्तव्यम्(thread);
 }
-#endif
+#यदि_अन्तः
 
-void cancelAllSignals(notification_t *ntfnPtr)
+शून्य cancel_All_सङ्केताः(notification_t *ntfnPtr)
 {
-    if (notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting) {
+    यदि (notification_ptr_get_state(ntfnPtr) == Ntfn_State_प्रतीक्षा) {
         /* Clear the queue and set all blocked threads to Restart */
-#ifdef CONFIG_KERNEL_MCS
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
         tcb_queue_t queue;
-        tcb_t *thread, *next;
+        tcb_t *thread, *अग्र;
 
         queue = ntfn_ptr_get_queue(ntfnPtr);
 
-        for (thread = queue.head; thread; thread = next) {
-            next = thread->tcbSchedNext;
+        प्रति (thread = queue.शीर्ष; thread; thread = अग्र) {
+            अग्र = thread->tcb_Sched_अग्र;
             removeAndRestartNTFNQueuedThread(thread, ntfnPtr);
         }
-#else
-        tcb_t *thread = TCB_PTR(notification_ptr_get_ntfnQueue_head(ntfnPtr));
+#अन्यथा
+        tcb_t *thread = TCB_PTR(notification_ptr_get_ntfn_Queue_शीर्ष(ntfnPtr));
 
-        notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
-        notification_ptr_set_ntfnQueue_head(ntfnPtr, 0);
-        notification_ptr_set_ntfnQueue_tail(ntfnPtr, 0);
+        notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
+        notification_ptr_समुच्चयः_ntfn_Queue_शीर्ष(ntfnPtr, 0);
+        notification_ptr_समुच्चयः_ntfn_Queue_पुच्छ(ntfnPtr, 0);
 
-        for (; thread; thread = thread->tcbEPNext) {
-            setThreadState(thread, ThreadState_Restart);
-            SCHED_ENQUEUE(thread);
+        प्रति (; thread; thread = thread->tcbEPNext) {
+            समुच्चयः_Thread_State(thread, ThreadState_Restart);
+            SCHED_पङ्क्तौ_निक्षिप(thread);
         }
-#endif /* CONFIG_KERNEL_MCS */
+#यदि_अन्तः /* CONFIG_KERNEL_MCS */
         rescheduleRequired();
     }
 }
 
-void cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr)
+शून्य cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr)
 {
 
     /* Haskell error "cancelSignal: notification object must be in a waiting" state */
-    assert(notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting);
+    प्रतिज्ञा(notification_ptr_get_state(ntfnPtr) == Ntfn_State_प्रतीक्षा);
 
     /* Dequeue TCB */
-#ifdef CONFIG_KERNEL_MCS
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
     tcbNTFNDequeue(threadPtr, ntfnPtr);
-#else
+#अन्यथा
     tcb_queue_t ntfn_queue;
     ntfn_queue = ntfn_ptr_get_queue(ntfnPtr);
     ntfn_queue = tcbEPDequeue(threadPtr, ntfn_queue);
-    ntfn_ptr_set_queue(ntfnPtr, ntfn_queue);
+    ntfn_ptr_समुच्चयः_queue(ntfnPtr, ntfn_queue);
 
     /* Make notification object idle */
-    if (!ntfn_queue.head) {
-        notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
+    यदि (!ntfn_queue.शीर्ष) {
+        notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
     }
-#endif /* CONFIG_KERNEL_MCS */
+#यदि_अन्तः /* CONFIG_KERNEL_MCS */
 
     /* Make thread inactive */
-    setThreadState(threadPtr, ThreadState_Inactive);
+    समुच्चयः_Thread_State(threadPtr, ThreadState_Inactive);
 }
 
-void completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
+शून्य completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
 {
     word_t badge;
 
-    if (likely(tcb && notification_ptr_get_state(ntfnPtr) == NtfnState_Active)) {
-        badge = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
-        setRegister(tcb, badgeRegister, badge);
-        notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
-#ifdef CONFIG_KERNEL_MCS
+    यदि (likely(tcb && notification_ptr_get_state(ntfnPtr) == Ntfn_State_सक्रिय)) {
+        badge = notification_ptr_get_ntfn_सन्देशः_Identifier(ntfnPtr);
+        समुच्चयः_पञ्जिकाकोशः(tcb, badge_पञ्जिकाकोशः, badge);
+        notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
         maybeDonateSchedContext(tcb, ntfnPtr);
-        if (sc_sporadic(tcb->tcbSchedContext)) {
+        यदि (sc_sporadic(tcb->tcbSchedContext)) {
             sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-            if (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            यदि (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != ग्रन्थिः_STATE(ksCurSC)) {
                 /* We know that the tcb can't have the current SC
                  * as its own SC as this point as it should still be
                  * associated with the current thread, or no thread.
@@ -345,75 +345,75 @@ void completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
                 refill_unblock_check(tcb->tcbSchedContext);
             }
         }
-#endif
-    } else {
+#यदि_अन्तः
+    } अन्यथा {
         fail("tried to complete signal with inactive notification object");
     }
 }
 
-static inline void doUnbindNotification(notification_t *ntfnPtr, tcb_t *tcbptr)
+स्थिर अन्तःस्थ शून्य doUnbindNotification(notification_t *ntfnPtr, tcb_t *tcbptr)
 {
-    notification_ptr_set_ntfnBoundTCB(ntfnPtr, (word_t) 0);
-    tcbptr->tcbBoundNotification = NULL;
+    notification_ptr_समुच्चयः_ntfn_Bound_TCB(ntfnPtr, (word_t) 0);
+    tcbptr->tcbBoundNotification = रिक्त;
 }
 
-void unbindMaybeNotification(notification_t *ntfnPtr)
+शून्य unbindMaybeNotification(notification_t *ntfnPtr)
 {
     tcb_t *boundTCB;
     boundTCB = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
 
-    if (boundTCB) {
+    यदि (boundTCB) {
         doUnbindNotification(ntfnPtr, boundTCB);
     }
 }
 
-void unbindNotification(tcb_t *tcb)
+शून्य unbindNotification(tcb_t *tcb)
 {
     notification_t *ntfnPtr;
     ntfnPtr = tcb->tcbBoundNotification;
 
-    if (ntfnPtr) {
+    यदि (ntfnPtr) {
         doUnbindNotification(ntfnPtr, tcb);
     }
 }
 
-void bindNotification(tcb_t *tcb, notification_t *ntfnPtr)
+शून्य bindNotification(tcb_t *tcb, notification_t *ntfnPtr)
 {
-    notification_ptr_set_ntfnBoundTCB(ntfnPtr, (word_t)tcb);
+    notification_ptr_समुच्चयः_ntfn_Bound_TCB(ntfnPtr, (word_t)tcb);
     tcb->tcbBoundNotification = ntfnPtr;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void tcbNTFNAppend(tcb_t *thread, notification_t *ntfnPtr)
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+शून्य tcbNTFNAppend(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
 
     queue = ntfn_ptr_get_queue(ntfnPtr);
     new_queue = tcbAppend(thread, queue);
-    ntfn_ptr_set_queue(ntfnPtr, new_queue);
-    notification_ptr_set_state(ntfnPtr, NtfnState_Waiting);
+    ntfn_ptr_समुच्चयः_queue(ntfnPtr, new_queue);
+    notification_ptr_समुच्चयः_state(ntfnPtr, Ntfn_State_प्रतीक्षा);
 }
 
-void tcbNTFNDequeue(tcb_t *thread, notification_t *ntfnPtr)
+शून्य tcbNTFNDequeue(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
 
     queue = ntfn_ptr_get_queue(ntfnPtr);
     new_queue = tcb_queue_remove(queue, thread);
-    ntfn_ptr_set_queue(ntfnPtr, new_queue);
+    ntfn_ptr_समुच्चयः_queue(ntfnPtr, new_queue);
 
-    if (tcb_queue_empty(new_queue)) {
-        notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
+    यदि (tcb_queue_रिक्तानि(new_queue)) {
+        notification_ptr_समुच्चयः_state(ntfnPtr, NtfnState_Idle);
     }
 }
 
-void reorderNTFN(notification_t *ntfnPtr, tcb_t *thread)
+शून्य reorderNTFN(notification_t *ntfnPtr, tcb_t *thread)
 {
     tcb_queue_t queue = ntfn_ptr_get_queue(ntfnPtr);
     queue = tcb_queue_remove(queue, thread);
     queue = tcbAppend(thread, queue);
-    ntfn_ptr_set_queue(ntfnPtr, queue);
+    ntfn_ptr_समुच्चयः_queue(ntfnPtr, queue);
 }
-#endif
+#यदि_अन्तः

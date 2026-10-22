@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <plat/machine/devices_gen.h>
 
-#define UTHR        0x0
-#define ULSR        0x14
+#परिभाषय UTHR        0x0
+#परिभाषय ULSR        0x14
 
-#define ULSR_THRE   BIT(5)
-#define ULSR_RDR    BIT(0)
+#परिभाषय ULSR_THRE   BIT(5)
+#परिभाषय ULSR_RDR    BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#परिभाषय UART_REG(x) ((चञ्चल uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#यदि_परिभाषितम् CONFIG_PRINTING
+शून्य uart_drv_putchar(अचिह्नित वर्ण c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    यावत् ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#यदि_अन्तः /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
+अचिह्नित वर्ण uart_drv_getchar(शून्य)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    यावत् ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    प्रत्यागम *UART_REG(UTHR);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#यदि_अन्तः /* CONFIG_DEBUG_BUILD */

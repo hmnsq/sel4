@@ -4,61 +4,61 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/failures.h>
-#include <kernel/cspace.h>
-#include <kernel/faulthandler.h>
-#include <kernel/thread.h>
-#include <machine/io.h>
-#include <arch/machine.h>
+#अन्तर्भाव <api/failures.h>
+#अन्तर्भाव <kernel/cspace.h>
+#अन्तर्भाव <kernel/faulthandler.h>
+#अन्तर्भाव <kernel/thread.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <arch/machine.h>
 
-#ifdef CONFIG_KERNEL_MCS
-void handleFault(tcb_t *tptr)
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+शून्य handleFault(tcb_t *tptr)
 {
     cap_t faultHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap;
-    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
+    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != रिक्त);
+    यदि (!hasFaultHandler) {
         handleNoFaultHandler(tptr);
     }
 }
 
-void handleTimeout(tcb_t *tptr)
+शून्य handleTimeout(tcb_t *tptr)
 {
-    assert(validTimeoutHandler(tptr));
+    प्रतिज्ञा(validTimeoutHandler(tptr));
     cap_t timeoutHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbTimeoutHandler)->cap;
     sendFaultIPC(tptr, timeoutHandlerCap, false);
 }
 
 bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 {
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap) {
-        assert(validFaultHandler(handlerCap));
+    यदि (cap_get_capType(handlerCap) == cap_endpoint_cap) {
+        प्रतिज्ञा(validFaultHandler(handlerCap));
 
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        यदि (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = current_lookup_fault;
         }
         sendIPC(true, false,
                 cap_endpoint_cap_get_capEPBadge(handlerCap),
                 cap_endpoint_cap_get_capCanGrant(handlerCap),
-                cap_endpoint_cap_get_capCanGrantReply(handlerCap),
+                cap_endpoint_cap_get_cap_Can_Grant_प्रत्युत्तरम्(handlerCap),
                 can_donate, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return true;
-    } else {
-        assert(cap_get_capType(handlerCap) == cap_null_cap);
-        return false;
+        प्रत्यागम true;
+    } अन्यथा {
+        प्रतिज्ञा(cap_get_capType(handlerCap) == cap_null_cap);
+        प्रत्यागम false;
     }
 }
-#else
+#अन्यथा
 
-void handleFault(tcb_t *tptr)
+शून्य handleFault(tcb_t *tptr)
 {
-    exception_t status;
+    exception_t स्थितिः;
     seL4_Fault_t fault = current_fault;
 
-    status = sendFaultIPC(tptr);
-    if (status != EXCEPTION_NONE) {
+    स्थितिः = sendFaultIPC(tptr);
+    यदि (स्थितिः != EXCEPTION_NONE) {
         handleDoubleFault(tptr, fault);
     }
 }
@@ -74,18 +74,18 @@ exception_t sendFaultIPC(tcb_t *tptr)
 
     handlerCPtr = tptr->tcbFaultHandler;
     lu_ret = lookupCap(tptr, handlerCPtr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    यदि (lu_ret.स्थितिः != EXCEPTION_NONE) {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-        return EXCEPTION_FAULT;
+        प्रत्यागम EXCEPTION_FAULT;
     }
     handlerCap = lu_ret.cap;
 
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
+    यदि (cap_get_capType(handlerCap) == cap_endpoint_cap &&
         cap_endpoint_cap_get_capCanSend(handlerCap) &&
         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
-         cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
+         cap_endpoint_cap_get_cap_Can_Grant_प्रत्युत्तरम्(handlerCap))) {
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        यदि (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = original_lookup_fault;
         }
         sendIPC(true, true,
@@ -93,81 +93,81 @@ exception_t sendFaultIPC(tcb_t *tptr)
                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return EXCEPTION_NONE;
-    } else {
+        प्रत्यागम EXCEPTION_NONE;
+    } अन्यथा {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
         current_lookup_fault = lookup_fault_missing_capability_new(0);
 
-        return EXCEPTION_FAULT;
+        प्रत्यागम EXCEPTION_FAULT;
     }
 }
-#endif
+#यदि_अन्तः
 
-#ifdef CONFIG_PRINTING
-static void print_fault(seL4_Fault_t f)
+#यदि_परिभाषितम् CONFIG_PRINTING
+स्थिर शून्य print_fault(seL4_Fault_t f)
 {
-    switch (seL4_Fault_get_seL4_FaultType(f)) {
-    case seL4_Fault_NullFault:
-        printf("null fault");
-        break;
-    case seL4_Fault_CapFault:
-        printf("cap fault in %s phase at address %p",
-               seL4_Fault_CapFault_get_inReceivePhase(f) ? "receive" : "send",
-               (void *)seL4_Fault_CapFault_get_address(f));
-        break;
-    case seL4_Fault_VMFault:
-        printf("vm fault on %s at address %p with status %p",
+    विकल्प (seL4_Fault_get_seL4_FaultType(f)) {
+    पक्ष seL4_Fault_NullFault:
+        प्रारूप_लिख("null fault");
+        भङ्ग;
+    पक्ष seL4_Fault_CapFault:
+        प्रारूप_लिख("cap fault in %s phase at address %p",
+               se_L4_Fault_Cap_Fault_get_अन्तर्_Receive_Phase(f) ? "receive" : "send",
+               (शून्य *)se_L4_Fault_Cap_Fault_get_स्थानाङ्कः(f));
+        भङ्ग;
+    पक्ष seL4_Fault_VMFault:
+        प्रारूप_लिख("vm fault on %s at address %p with status %p",
                seL4_Fault_VMFault_get_instructionFault(f) ? "code" : "data",
-               (void *)seL4_Fault_VMFault_get_address(f),
-               (void *)seL4_Fault_VMFault_get_FSR(f));
-        break;
-    case seL4_Fault_UnknownSyscall:
-        printf("unknown syscall %p",
-               (void *)seL4_Fault_UnknownSyscall_get_syscallNumber(f));
-        break;
-    case seL4_Fault_UserException:
-        printf("user exception %p code %p",
-               (void *)seL4_Fault_UserException_get_number(f),
-               (void *)seL4_Fault_UserException_get_code(f));
-        break;
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        printf("Timeout fault for 0x%x\n", (unsigned int) seL4_Fault_Timeout_get_badge(f));
-        break;
-#endif
-    default:
-        printf("unknown fault");
-        break;
+               (शून्य *)se_L4_Fault_VMFault_get_स्थानाङ्कः(f),
+               (शून्य *)seL4_Fault_VMFault_get_FSR(f));
+        भङ्ग;
+    पक्ष seL4_Fault_UnknownSyscall:
+        प्रारूप_लिख("unknown syscall %p",
+               (शून्य *)se_L4_Fault_Unknown_Syscall_get_syscall_सङ्ख्या(f));
+        भङ्ग;
+    पक्ष seL4_Fault_UserException:
+        प्रारूप_लिख("user exception %p code %p",
+               (शून्य *)se_L4_Fault_User_Exception_get_सङ्ख्या(f),
+               (शून्य *)se_L4_Fault_User_Exception_get_संहिता(f));
+        भङ्ग;
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+    पक्ष seL4_Fault_Timeout:
+        प्रारूप_लिख("Timeout fault for 0x%x\n", (अचिह्नित पूर्णाङ्क) seL4_Fault_Timeout_get_badge(f));
+        भङ्ग;
+#यदि_अन्तः
+    स्वभाव:
+        प्रारूप_लिख("unknown fault");
+        भङ्ग;
     }
 }
-#endif
+#यदि_अन्तः
 
-#ifdef CONFIG_KERNEL_MCS
-void handleNoFaultHandler(tcb_t *tptr)
-#else
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+शून्य handleNoFaultHandler(tcb_t *tptr)
+#अन्यथा
 /* The second fault, ex2, is stored in the global current_fault */
-void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
-#endif
+शून्य handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
+#यदि_अन्तः
 {
-#ifdef CONFIG_PRINTING
-#ifdef CONFIG_KERNEL_MCS
-    printf("Found thread has no fault handler while trying to handle:\n");
+#यदि_परिभाषितम् CONFIG_PRINTING
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+    प्रारूप_लिख("Found thread has no fault handler while trying to handle:\n");
     print_fault(current_fault);
-#else
+#अन्यथा
     seL4_Fault_t ex2 = current_fault;
-    printf("Caught ");
+    प्रारूप_लिख("Caught ");
     print_fault(ex2);
-    printf("\nwhile trying to handle:\n");
+    प्रारूप_लिख("\nwhile trying to handle:\n");
     print_fault(ex1);
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    printf("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
-#endif /* CONFIG_DEBUG_BUILD */
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
+    प्रारूप_लिख("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
+#यदि_अन्तः /* CONFIG_DEBUG_BUILD */
 
-    printf("at address %p\n", (void *)getRestartPC(tptr));
-    printf("With stack:\n");
-    Arch_userStackTrace(tptr);
-#endif
+    प्रारूप_लिख("at address %p\n", (शून्य *)getRestartPC(tptr));
+    प्रारूप_लिख("With stack:\n");
+    Arch_user_राशिः_Trace(tptr);
+#यदि_अन्तः
 
-    setThreadState(tptr, ThreadState_Inactive);
+    समुच्चयः_Thread_State(tptr, ThreadState_Inactive);
 }

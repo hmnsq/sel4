@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <machine/io.h>
 
-#ifdef CONFIG_PRINTING
+#यदि_परिभाषितम् CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#अन्तर्भाव <stdarg.h>
+#अन्तर्भाव <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,40 +24,40 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+प्रकारनिर्देश संरचना बहिर्गमनम्_wrap_t  बहिर्गमनम्_wrap_t_2;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+प्रकारनिर्देश शून्य (*बहिर्गमनम्_write_fn)(बहिर्गमनम्_wrap_t_2 *बहिर्गमनम्, ध्रुव वर्ण *buf, word_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
-    word_t used;
+संरचना बहिर्गमनम्_wrap_t {
+    ध्रुव बहिर्गमनम्_write_fn लिख;
+    वर्ण *ध्रुव buf;
+    ध्रुव word_t maxlen;
+    word_t प्रयुक्तम्_2;
 };
 
 /* printf_core() and its helpers call this to actually output something. The
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+स्थिर शून्य बहिर्गमनम्(बहिर्गमनम्_wrap_t_2 *बहिर्गमनम्_wrap, ध्रुव वर्ण *buf, word_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    यदि (बहिर्गमनम्_wrap) {
+        बहिर्गमनम्_wrap->लिख(बहिर्गमनम्_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
-    UNUSED out_wrap_t *out,
-    const char *buf,
+स्थिर शून्य do_output_गन्तव्यम्_putchar(
+    अप्रयुक्तम् बहिर्गमनम्_wrap_t_2 *बहिर्गमनम्,
+    ध्रुव वर्ण *buf,
     word_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
-            putchar(*buf++);
+    यदि (buf) {
+        यावत् (len-- > 0) {
+            अक्षरं_लिख(*buf++);
         }
     }
 }
@@ -65,21 +65,21 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
-    out_wrap_t *out,
-    const char *buf,
+स्थिर शून्य do_output_गन्तव्यम्_बफर(
+    बहिर्गमनम्_wrap_t_2 *बहिर्गमनम्,
+    ध्रुव वर्ण *buf,
     word_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    यदि (buf && (बहिर्गमनम्->प्रयुक्तम्_2 < बहिर्गमनम्->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        word_t मुक्त = बहिर्गमनम्->maxlen - बहिर्गमनम्->प्रयुक्तम्_2;
+        यदि (len > मुक्त) {
+            len = मुक्त;
         }
-        memcpy(&out->buf[out->used], buf, len);
-        out->used += len;
+        स्मृतिं_प्रतिलिख(&बहिर्गमनम्->buf[बहिर्गमनम्->प्रयुक्तम्_2], buf, len);
+        बहिर्गमनम्->प्रयुक्तम्_2 += len;
     }
 }
 
@@ -89,31 +89,31 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+स्थिर अन्तःस्थ bool_t अङ्कः_वा(वर्ण c)
 {
-    return c >= '0' &&
+    प्रत्यागम c >= '0' &&
            c <= '9';
 }
 
 /* Convenient bit representation for modifier flags, which all fall within 31
  * codepoints of the space character.
  */
-#define MASK_TYPE(a) (1U<<( a -' '))
+#परिभाषय आवरणम्_TYPE(a) (1U<<( a -' '))
 
-#define ALT_FORM     (1U<<('#'-' '))
-#define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
-#define PAD_POS      (1U<<(' '-' '))
-#define MARK_POS     (1U<<('+'-' '))
-#define GROUPED      (1U<<('\''-' '))
+#परिभाषय ALT_FORM     (1U<<('#'-' '))
+#परिभाषय ZERO_PAD     (1U<<('0'-' '))
+#परिभाषय वामः_ADJ     (1U<<('-'-' '))
+#परिभाषय PAD_POS      (1U<<(' '-' '))
+#परिभाषय MARK_POS     (1U<<('+'-' '))
+#परिभाषय GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#परिभाषय FLAGMASK (ALT_FORM|ZERO_PAD|वामः_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+गणना {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -121,17 +121,17 @@ enum {
     LONG, ULONG,
     SHORT, USHORT, CHAR, UCHAR,
     WORDT, LLONG,
-#define IMAX LLONG
-#define UMAX ULLONG
-#define PDIFF LONG
-#define UIPTR ULONG
+#परिभाषय IMAX LLONG
+#परिभाषय UMAX ULLONG
+#परिभाषय PDIFF LONG
+#परिभाषय UIPTR ULONG
     NOARG,
     MAXSTATE
 };
 
-#define S(x) [(x)-'A']
+#परिभाषय S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+स्थिर ध्रुव अचिह्नित वर्ण अवस्थाः[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -174,95 +174,95 @@ static const unsigned char states[]['z' - 'A' + 1] = {
     }
 };
 
-#define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
-#define DIGIT(c) (c - '0')
+#परिभाषय OOB(x) ((अचिह्नित)(x)-'A' > 'z'-'A')
+#परिभाषय DIGIT(c) (c - '0')
 
-union arg {
+सङ्घ arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    दीर्घ द्विगुण f;
+    शून्य *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+स्थिर शून्य निष्कासय_arg(सङ्घ arg *arg, पूर्णाङ्क type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
-        arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
-        arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
-        arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
-        arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
+    विकल्प (type) {
+    पक्ष PTR:
+        arg->p = va_arg(*ap, शून्य *);
+        भङ्ग;
+    पक्ष INT:
+        arg->i = va_arg(*ap, पूर्णाङ्क);
+        भङ्ग;
+    पक्ष UINT:
+        arg->i = va_arg(*ap, अचिह्नित पूर्णाङ्क);
+        भङ्ग;
+    पक्ष LONG:
+        arg->i = va_arg(*ap, दीर्घ);
+        भङ्ग;
+    पक्ष ULONG:
+        arg->i = va_arg(*ap, अचिह्नित दीर्घ);
+        भङ्ग;
+    पक्ष LLONG:
+        arg->i = va_arg(*ap, दीर्घ दीर्घ);
+        भङ्ग;
+    पक्ष ULLONG:
+        arg->i = va_arg(*ap, अचिह्नित दीर्घ दीर्घ);
+        भङ्ग;
+    पक्ष SHORT:
+        arg->i = (ह्रस्व)va_arg(*ap, पूर्णाङ्क);
+        भङ्ग;
+    पक्ष USHORT:
+        arg->i = (अचिह्नित ह्रस्व)va_arg(*ap, पूर्णाङ्क);
+        भङ्ग;
+    पक्ष CHAR:
+        arg->i = (चिह्नित वर्ण)va_arg(*ap, पूर्णाङ्क);
+        भङ्ग;
+    पक्ष UCHAR:
+        arg->i = (अचिह्नित वर्ण)va_arg(*ap, पूर्णाङ्क);
+        भङ्ग;
+    पक्ष WORDT:
         arg->i = va_arg(*ap, word_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+स्थिर शून्य pad(बहिर्गमनम्_wrap_t_2 *f, वर्ण c, पूर्णाङ्क w, पूर्णाङ्क l, पूर्णाङ्क fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    वर्ण pad[32]; /* good enough for what the kernel prints */
+    यदि (fl & (वामः_ADJ | ZERO_PAD) || l >= w) {
+        प्रत्यागम;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    स्मृतिं_पूरय(pad, c, l > परिमाण(pad) ? परिमाण(pad) : l);
+    प्रति (; l >= परिमाण(pad); l -= परिमाण(pad)) {
+        बहिर्गमनम्(f, pad, परिमाण(pad));
     }
-    out(f, pad, l);
+    बहिर्गमनम्(f, pad, l);
 }
 
-static const char xdigits[16] = {
+स्थिर ध्रुव वर्ण xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+स्थिर वर्ण *fmt_x(uintmax_t x, वर्ण *s, पूर्णाङ्क अधस्तनम्)
 {
-    for (; x; x >>= 4) {
-        *--s = xdigits[(x & 15)] | lower;
+    प्रति (; x; x >>= 4) {
+        *--s = xdigits[(x & 15)] | अधस्तनम्;
     }
-    return s;
+    प्रत्यागम s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+स्थिर वर्ण *fmt_o(uintmax_t x, वर्ण *s)
 {
-    for (; x; x >>= 3) {
+    प्रति (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    प्रत्यागम s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+स्थिर वर्ण *fmt_u(uintmax_t x, वर्ण *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    यावत् (0 != x) {
+#यदि defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,332 +277,332 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        अचिह्नित पूर्णाङ्क rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        यदि (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            प्रतिज्ञा(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#अन्यथा
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
-#endif
+        अचिह्नित पूर्णाङ्क rem = x % 10;
+#यदि_अन्तः
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    प्रत्यागम s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
  * reduced/removed if we could measure the buf length under all code paths
  */
-#define LDBL_MANT_DIG 113
+#परिभाषय LDBL_MANT_DIG 113
 
-#define NL_ARGMAX 9
+#परिभाषय NL_ARGMAX 9
 
-static int getint(char **s)
+स्थिर पूर्णाङ्क getint(वर्ण **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    पूर्णाङ्क i;
+    प्रति (i = 0; अङ्कः_वा(**s); (*s)++) {
+        यदि (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } अन्यथा {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    प्रत्यागम i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+स्थिर पूर्णाङ्क printf_core(बहिर्गमनम्_wrap_t_2 *f, ध्रुव वर्ण *fmt, va_list *ap, सङ्घ arg *nl_arg, पूर्णाङ्क *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
-    unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
-    unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    वर्ण *a, *z, *s = (वर्ण *)fmt;
+    अचिह्नित l10n = 0, fl;
+    पूर्णाङ्क w, p, xp;
+    सङ्घ arg arg;
+    पूर्णाङ्क argpos;
+    अचिह्नित st, ps;
+    पूर्णाङ्क cnt = 0, l = 0;
+    वर्ण buf[परिमाण(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    ध्रुव वर्ण *उपसर्गः;
+    पूर्णाङ्क t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    प्रति (;;) {
+        यदि (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            प्रत्यागम -1; /*अतिप्रवाहः*/
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        यदि (!*s) {
+            भङ्ग;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        प्रति (a = s; *s && *s != '%'; s++);
+        प्रति (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        यदि (z - a > INTMAX_MAX - cnt) {
+            प्रत्यागम -1; /*अतिप्रवाहः*/
         }
         l = z - a;
-        out(f, a, l);
-        if (l) {
-            continue;
+        बहिर्गमनम्(f, a, l);
+        यदि (l) {
+            अनुवर्त;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        यदि (अङ्कः_वा(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } अन्यथा {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
-            fl |= MASK_TYPE(*s);
+        प्रति (fl = 0; (अचिह्नित)*s - ' ' < 32 && (FLAGMASK & आवरणम्_TYPE(*s)); s++) {
+            fl |= आवरणम्_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        यदि (*s == '*') {
+            यदि (अङ्कः_वा(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } अन्यथा यदि (!l10n) {
+                w = f ? va_arg(*ap, पूर्णाङ्क) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } अन्यथा {
+                प्रत्यागम -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            यदि (w < 0) {
+                fl |= वामः_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } अन्यथा यदि ((w = getint(&s)) < 0) {
+            प्रत्यागम -1; /*अतिप्रवाहः*/
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        यदि (*s == '.' && s[1] == '*') {
+            यदि (अङ्कः_वा(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } अन्यथा यदि (!l10n) {
+                p = f ? va_arg(*ap, पूर्णाङ्क) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } अन्यथा {
+                प्रत्यागम -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } अन्यथा यदि (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } अन्यथा {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        कुरु {
+            यदि (OOB(*s)) {
+                प्रत्यागम -1; /* invalid */
             }
             ps = st;
-            st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+            st = अवस्थाः[st]S(*s++);
+        } यावत् (st - 1 < STOP);
+        यदि (!st) {
+            प्रत्यागम -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        यदि (st == NOARG) {
+            यदि (argpos >= 0) {
+                प्रत्यागम -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } अन्यथा {
+            यदि (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } अन्यथा यदि (f) {
+                निष्कासय_arg(&arg, st, ap);
+            } अन्यथा {
+                प्रत्यागम 0;
             }
         }
 
-        if (!f) {
-            continue;
+        यदि (!f) {
+            अनुवर्त;
         }
 
-        z = buf + sizeof(buf);
-        prefix = "-+   0X0x";
+        z = buf + परिमाण(buf);
+        उपसर्गः = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        यदि (fl & वामः_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        यदि (t == 'n') {
+            यदि (!arg.p) {
+                अनुवर्त;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
-                *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
-                *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
-                *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
+            विकल्प (ps) {
+            पक्ष BARE:
+                *(पूर्णाङ्क *)arg.p = cnt;
+                भङ्ग;
+            पक्ष LPRE:
+                *(दीर्घ *)arg.p = cnt;
+                भङ्ग;
+            पक्ष LLPRE:
+                *(दीर्घ दीर्घ *)arg.p = cnt;
+                भङ्ग;
+            पक्ष HPRE:
+                *(अचिह्नित ह्रस्व *)arg.p = cnt;
+                भङ्ग;
+            पक्ष HHPRE:
+                *(अचिह्नित वर्ण *)arg.p = cnt;
+                भङ्ग;
+            पक्ष ZTPRE:
                 *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
+                भङ्ग;
+            पक्ष JPRE:
                 *(word_t *)arg.p = cnt;
-                break;
+                भङ्ग;
             }
-            continue;
-        } else if (t == 'c') {
+            अनुवर्त;
+        } अन्यथा यदि (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } अन्यथा यदि (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            यदि (p < 0 && *z) {
+                प्रत्यागम -1; /*अतिप्रवाहः*/
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } अन्यथा {
+            विकल्प (t) {
+            पक्ष 'p':
+                p = MAX(p, 2 * परिमाण(शून्य *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            पक्ष 'x':
+            पक्ष 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
-                    prefix += (t >> 4);
+                यदि (arg.i && (fl & ALT_FORM)) {
+                    उपसर्गः += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                भङ्ग;
+            पक्ष 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                यदि ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                भङ्ग;
+            पक्ष 'd':
+            पक्ष 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                यदि (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
-                    prefix++;
-                } else if (fl & PAD_POS) {
-                    prefix += 2;
-                } else {
+                } अन्यथा यदि (fl & MARK_POS) {
+                    उपसर्गः++;
+                } अन्यथा यदि (fl & PAD_POS) {
+                    उपसर्गः += 2;
+                } अन्यथा {
                     pl = 0;
                 }
-            case 'u':
+            पक्ष 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                भङ्ग;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            यदि (xp && p < 0) {
+                प्रत्यागम -1; /*अतिप्रवाहः*/
             }
-            if (xp) {
+            यदि (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            यदि (!arg.i && !p) {
                 a = z;
-            } else {
+            } अन्यथा {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        यदि (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        यदि (p > INTMAX_MAX - pl) {
+            प्रत्यागम -1; /*अतिप्रवाहः*/
         }
-        if (w < pl + p) {
+        यदि (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        यदि (w > INTMAX_MAX - cnt) {
+            प्रत्यागम -1; /*अतिप्रवाहः*/
         }
 
         pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
+        बहिर्गमनम्(f, उपसर्गः, pl);
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        बहिर्गमनम्(f, a, z - a);
+        pad(f, ' ', w, pl + p, fl ^ वामः_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    यदि (f) {
+        प्रत्यागम cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    यदि (!l10n) {
+        प्रत्यागम 0;
     }
 
-    return 1;
+    पूर्णाङ्क i;
+    प्रति (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        निष्कासय_arg(nl_arg + i, nl_type[i], ap);
+    }
+    प्रति (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    यदि (i <= NL_ARGMAX) {
+        प्रत्यागम -1; /* invalid */
+    }
+
+    प्रत्यागम 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+स्थिर पूर्णाङ्क vprintf(बहिर्गमनम्_wrap_t_2 *बहिर्गमनम्, ध्रुव वर्ण *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    पूर्णाङ्क nl_type[NL_ARGMAX + 1] = {0};
+    सङ्घ arg nl_arg[NL_ARGMAX + 1];
+    पूर्णाङ्क ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
-        va_end(ap2);
-        return -1;
+    यदि (printf_core(रिक्त, fmt, &ap2, nl_arg, nl_type) < 0) {
+        va_अन्तः(ap2);
+        प्रत्यागम -1;
     }
 
-    ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
-    va_end(ap2);
-    return ret;
+    ret = printf_core(बहिर्गमनम्, fmt, &ap2, nl_arg, nl_type);
+    va_अन्तः(ap2);
+    प्रत्यागम ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+पूर्णाङ्क impl_kvprintf(ध्रुव वर्ण *format, va_list ap)
 {
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+    बहिर्गमनम्_wrap_t_2 बहिर्गमनम्_wrap =  {
+        .लिख  = do_output_गन्तव्यम्_putchar,
+        .buf    = रिक्त,
         .maxlen = 0,
-        .used   = 0
+        .प्रयुक्तम्_2   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    प्रत्यागम vprintf(&बहिर्गमनम्_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+पूर्णाङ्क impl_ksnvprintf(वर्ण *str, word_t आकार, ध्रुव वर्ण *format, va_list ap)
 {
-    if (!str) {
-        size = 0;
+    यदि (!str) {
+        आकार = 0;
     }
 
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+    बहिर्गमनम्_wrap_t_2 बहिर्गमनम्_wrap =  {
+        .लिख  = do_output_गन्तव्यम्_बफर,
         .buf    = str,
-        .maxlen = size,
-        .used   = 0
+        .maxlen = आकार,
+        .प्रयुक्तम्_2   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    पूर्णाङ्क ret = vprintf(&बहिर्गमनम्_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
-        str[(ret < size) ? ret : size - 1] = '\0';
+    यदि ((ret > 0) && (आकार > 0)) {
+        str[(ret < आकार) ? ret : आकार - 1] = '\0';
     }
 
-    return ret;
+    प्रत्यागम ret;
 }
 
-#endif /* CONFIG_PRINTING */
+#यदि_अन्तः /* CONFIG_PRINTING */

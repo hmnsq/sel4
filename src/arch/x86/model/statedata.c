@@ -4,32 +4,32 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <api/types.h>
+#अन्तर्भाव <arch/types.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <arch/object/structures.h>
 
 /* ==== read/write kernel state not preserved across kernel entries ==== */
 
 /* Interrupt currently being handled */
-UP_STATE_DEFINE(interrupt_t, x86KScurInterrupt VISIBLE);
+ऊर्ध्वम्_STATE_DEFINE(व्यवधानम्_t, x86_KScur_व्यवधानम् VISIBLE);
 
-UP_STATE_DEFINE(interrupt_t, x86KSPendingInterrupt);
+ऊर्ध्वम्_STATE_DEFINE(व्यवधानम्_t, x86_KSPending_व्यवधानम्);
 
 /* ==== proper read/write kernel state ==== */
 
-x86_arch_global_state_t x86KSGlobalState[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE) SKIM_BSS;
+x86_arch_global_state_t x86KSGlobalState[CONFIG_MAX_अङ्कः_NODES] ALIGN(L1_CACHE_पङ्क्तिः_आकार) SKIM_BSS;
 
 /* The top level ASID table */
 asid_pool_t *x86KSASIDTable[nASIDPools];
 
 /* Current user value of the fs/gs base */
-UP_STATE_DEFINE(word_t, x86KSCurrentFSBase);
-UP_STATE_DEFINE(word_t, x86KSCurrentGSBase);
+ऊर्ध्वम्_STATE_DEFINE(word_t, x86KSCurrentFSBase);
+ऊर्ध्वम्_STATE_DEFINE(word_t, x86KSCurrentGSBase);
 
-UP_STATE_DEFINE(word_t, x86KSGPExceptReturnTo);
+ऊर्ध्वम्_STATE_DEFINE(word_t, x86_KSGPExcept_Return_गन्तव्यम्);
 
 /* ==== read-only kernel state (only written during bootstrapping) ==== */
 
@@ -37,7 +37,7 @@ UP_STATE_DEFINE(word_t, x86KSGPExceptReturnTo);
 SMP_STATE_DEFINE(cpu_id_mapping_t, cpu_mapping);
 
 /* CPU Cache Line Size */
-uint32_t x86KScacheLineSizeBits;
+uint32_t x86_KScache_पङ्क्तिः_आकार_द्वयङ्काः;
 
 /* A valid initial FPU state, copied to every new thread. */
 user_fpu_state_t x86KSnullFpuState ALIGN(MIN_FPU_ALIGNMENT);
@@ -45,32 +45,32 @@ user_fpu_state_t x86KSnullFpuState ALIGN(MIN_FPU_ALIGNMENT);
 /* Number of IOMMUs (DMA Remapping Hardware Units) */
 uint32_t x86KSnumDrhu;
 
-#ifdef CONFIG_IOMMU
+#यदि_परिभाषितम् CONFIG_IOMMU
 /* Intel VT-d Root Entry Table */
-vtd_rte_t *x86KSvtdRootTable;
+vtd_rte_t *x86_KSvtd_मूलम्_सारणी;
 uint32_t x86KSnumIOPTLevels;
 uint32_t x86KSnumIODomainIDBits;
 uint32_t x86KSFirstValidIODomain;
-#endif
+#यदि_अन्तः
 
-#ifdef CONFIG_VTX
-UP_STATE_DEFINE(vcpu_t *, x86KSCurrentVCPU);
-UP_STATE_DEFINE(struct vmxon_region, x86KSVMXOnRegion);
-#endif
+#यदि_परिभाषितम् CONFIG_VTX
+ऊर्ध्वम्_STATE_DEFINE(vcpu_t *, x86KSCurrentVCPU);
+ऊर्ध्वम्_STATE_DEFINE(संरचना vmxon_region, x86KSVMXOnRegion);
+#यदि_अन्तः
 
-#ifdef CONFIG_PRINTING
-uint16_t x86KSconsolePort;
-#endif
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
-uint16_t x86KSdebugPort;
-#endif
+#यदि_परिभाषितम् CONFIG_PRINTING
+uint16_t x86_KSconsole_पत्तनम्;
+#यदि_अन्तः
+#यदि defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+uint16_t x86_KSdebug_पत्तनम्;
+#यदि_अन्तः
 
 /* State data tracking what IRQ source is related to each
  * CPU vector */
 x86_irq_state_t x86KSIRQState[maxIRQ + 1];
 
-word_t x86KSAllocatedIOPorts[NUM_IO_PORTS / CONFIG_WORD_SIZE];
-#ifdef CONFIG_KERNEL_MCS
+word_t x86KSAllocatedIOPorts[अङ्कः_IO_PORTS / CONFIG_WORD_आकार];
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
 uint32_t x86KStscMhz;
-uint32_t x86KSapicRatio;
-#endif
+uint32_t x86_KSapic_अनुपातः;
+#यदि_अन्तः

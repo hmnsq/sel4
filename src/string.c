@@ -4,39 +4,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <string.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <assert.h>
+#अन्तर्भाव <string.h>
 
-word_t strnlen(const char *s, word_t maxlen)
+word_t strnlen(ध्रुव वर्ण *s, word_t maxlen)
 {
     word_t len;
-    for (len = 0; len < maxlen && s[len]; len++);
-    return len;
+    प्रति (len = 0; len < maxlen && s[len]; len++);
+    प्रत्यागम len;
 }
 
-word_t strlcpy(char *dest, const char *src, word_t size)
+word_t strlcpy(वर्ण *dest, ध्रुव वर्ण *src, word_t आकार)
 {
     word_t len;
-    for (len = 0; len + 1 < size && src[len]; len++) {
+    प्रति (len = 0; len + 1 < आकार && src[len]; len++) {
         dest[len] = src[len];
     }
     dest[len] = '\0';
-    return len;
+    प्रत्यागम len;
 }
 
-word_t strlcat(char *dest, const char *src, word_t size)
+word_t strlcat(वर्ण *dest, ध्रुव वर्ण *src, word_t आकार)
 {
     word_t len;
     /* get to the end of dest */
-    for (len = 0; len < size && dest[len]; len++);
+    प्रति (len = 0; len < आकार && dest[len]; len++);
     /* check that dest was at least 'size' length to prevent inserting
      * a null byte when we shouldn't */
-    if (len < size) {
-        for (; len + 1 < size && *src; len++, src++) {
+    यदि (len < आकार) {
+        प्रति (; len + 1 < आकार && *src; len++, src++) {
             dest[len] = *src;
         }
         dest[len] = '\0';
     }
-    return len;
+    प्रत्यागम len;
 }

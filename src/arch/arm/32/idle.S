@@ -7,7 +7,7 @@
 #include <machine/assembler.h>
 
 .code 32
-.section .text, "ax"
+.खण्डः .text, "ax"
 
 BEGIN_FUNC(idle_thread)
     1: wfi

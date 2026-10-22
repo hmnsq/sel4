@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <plat/machine/hardware.h>
-#include <arch/user_access.h>
-#include <mode/machine/debug.h>
+#अन्तर्भाव <plat/machine/hardware.h>
+#अन्तर्भाव <arch/user_access.h>
+#अन्तर्भाव <mode/machine/debug.h>
 
-#define PMUSERENR_ENABLE BIT(0)
+#परिभाषय PMUSERENR_ENABLE BIT(0)
 
-#define CNTKCTL_PL0PCTEN BIT(0)
-#define CNTKCTL_PL0VCTEN BIT(1)
-#define CNTKCTL_PL0VTEN  BIT(8)
-#define CNTKCTL_PL0PTEN  BIT(9)
+#परिभाषय CNTKCTL_PL0PCTEN BIT(0)
+#परिभाषय CNTKCTL_PL0VCTEN BIT(1)
+#परिभाषय CNTKCTL_PL0VTEN  BIT(8)
+#परिभाषय CNTKCTL_PL0PTEN  BIT(9)
 
-#define ID_DFR0_PMU_MASK (0xful << 28)
-#define ID_DFR0_PMU_NONE (0xful << 28)
+#परिभाषय ID_DFR0_PMU_आवरणम् (0xful << 28)
+#परिभाषय ID_DFR0_PMU_NONE (0xful << 28)
 
-#define ID_PFR1_GENERIC_TIMER BIT(16)
+#परिभाषय ID_PFR1_GENERIC_TIMER BIT(16)
 
-#define ID_PFR0_JAZELLE_MASK (0xful << 8)  /* ID_PFR0.State2 */
-#define ID_PFR0_THUMBEE_MASK (0xful << 12) /* ID_PFR0.State3 */
+#परिभाषय ID_PFR0_JAZELLE_आवरणम् (0xful << 8)  /* ID_PFR0.State2 */
+#परिभाषय ID_PFR0_THUMBEE_आवरणम् (0xful << 12) /* ID_PFR0.State3 */
 
-#define JOSCR_CD  BIT(1)
-#define TEECR_XED BIT(0)
-#define HSTR_TTEE  BIT(16)
-#define HSTR_TJDBX BIT(17)
+#परिभाषय JOSCR_CD  BIT(1)
+#परिभाषय TEECR_XED BIT(0)
+#परिभाषय HSTR_TTEE  BIT(16)
+#परिभाषय HSTR_TJDBX BIT(17)
 
 
-static void disable_jazelle_user_access(void)
+स्थिर शून्य disable_jazelle_user_access(शून्य)
 {
     uint32_t v;
-    word_t UNUSED hstr_bits = 0;  /* Only read in CONFIG_ARM_HYPERVISOR_SUPPORT */
+    word_t अप्रयुक्तम् hstr_द्वयङ्काः = 0;  /* Only read in CONFIG_ARM_HYPERVISOR_SUPPORT */
 
     MRC(ID_PFR0, v);
-    if (v & ID_PFR0_JAZELLE_MASK) {
+    यदि (v & ID_PFR0_JAZELLE_आवरणम्) {
         /* When JOSCR.CD == 0, JMCR is readable and writable for user space.
          * Clear, disable, and trap access. */
         MCR(JMCR, 0);
         MCR(JOSCR, JOSCR_CD);
-        hstr_bits |= HSTR_TJDBX;
+        hstr_द्वयङ्काः |= HSTR_TJDBX;
     }
-    if (v & ID_PFR0_THUMBEE_MASK) {
+    यदि (v & ID_PFR0_THUMBEE_आवरणम्) {
         /* Same as above, but for TEECR.XED == 0 and TEEHBR */
         MCR(TEEHBR, 0);
         MCR(TEECR, TEECR_XED);
-        hstr_bits |= HSTR_TTEE;
+        hstr_द्वयङ्काः |= HSTR_TTEE;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#यदि_परिभाषितम् CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Trap access to config registers so guest cannot re-enable them. */
-    setHSTR(getHSTR() | hstr_bits);
-#endif
+    समुच्चयः_HSTR(getHSTR() | hstr_द्वयङ्काः);
+#यदि_अन्तः
 }
 
 
-static void check_export_pmu(void)
+स्थिर शून्य check_export_pmu(शून्य)
 {
-#if defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
+#यदि defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
     /* Export performance counters */
     uint32_t v;
     MRC(PMUSERENR, v);
@@ -65,35 +65,35 @@ static void check_export_pmu(void)
     MCR(PMUSERENR, v);
 
     /* enable user-level pmu event counter if we're in secure mode */
-    if (!(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED)) {
+    यदि (!(readDscrCp() & DBGDSCR_SECURE_बहुलकम्_DISABLED)) {
         MRC(DBGSDER, v);
         v |= DBGSDER_ENABLE_SECURE_USER_NON_INVASIVE_DEBUG;
         MCR(DBGSDER, v);
     }
-#endif
+#यदि_अन्तः
 }
 
 
-static void check_export_arch_timer(void)
+स्थिर शून्य check_export_arch_timer(शून्य)
 {
     uint32_t v = 0;
-#ifdef CONFIG_EXPORT_PCNT_USER
+#यदि_परिभाषितम् CONFIG_EXPORT_PCNT_USER
     v |= CNTKCTL_PL0PCTEN;
-#endif
-#ifdef CONFIG_EXPORT_PTMR_USER
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_EXPORT_PTMR_USER
     v |= CNTKCTL_PL0PTEN;
-#endif /* CONFIG_EXPORT_PTMR_USER */
-#ifdef CONFIG_EXPORT_VCNT_USER
+#यदि_अन्तः /* CONFIG_EXPORT_PTMR_USER */
+#यदि_परिभाषितम् CONFIG_EXPORT_VCNT_USER
     v |= CNTKCTL_PL0VCTEN;
-#endif
-#ifdef CONFIG_EXPORT_VTMR_USER
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_EXPORT_VTMR_USER
     v |= CNTKCTL_PL0VTEN;
-#endif /* CONFIG_EXPORT_VTMR_USER */
+#यदि_अन्तः /* CONFIG_EXPORT_VTMR_USER */
     MCR(CNTKCTL, v);
 }
 
 
-void armv_init_user_access(void)
+शून्य armv_init_user_access(शून्य)
 {
     uint32_t v;
 
@@ -101,12 +101,12 @@ void armv_init_user_access(void)
     disable_jazelle_user_access();
     /* Performance Monitoring Unit */
     MRC(ID_DFR0, v);
-    if ((v & ID_DFR0_PMU_MASK) != ID_DFR0_PMU_NONE) {
+    यदि ((v & ID_DFR0_PMU_आवरणम्) != ID_DFR0_PMU_NONE) {
         check_export_pmu();
     }
     /* Arch timers */
     MRC(ID_PFR1, v);
-    if (v & ID_PFR1_GENERIC_TIMER) {
+    यदि (v & ID_PFR1_GENERIC_TIMER) {
         check_export_arch_timer();
     }
 }

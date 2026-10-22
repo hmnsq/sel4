@@ -4,307 +4,307 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <arch/kernel/ept.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <api/failures.h>
+#अन्तर्भाव <kernel/vspace.h>
+#अन्तर्भाव <object/structures.h>
+#अन्तर्भाव <arch/machine.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <machine/fpu.h>
+#अन्तर्भाव <arch/object/objecttype.h>
+#अन्तर्भाव <arch/object/ioport.h>
+#अन्तर्भाव <arch/kernel/ept.h>
 
-#include <arch/object/iospace.h>
-#include <plat/machine/intel-vtd.h>
+#अन्तर्भाव <arch/object/iospace.h>
+#अन्तर्भाव <plat/machine/intel-vtd.h>
 
 
 bool_t Arch_isFrameType(word_t type)
 {
-    switch (type) {
-    case seL4_X86_4K:
-        return true;
-    case seL4_X86_LargePageObject:
-        return true;
-    case seL4_X64_HugePageObject:
-        return true;
-    default:
-        return false;
+    विकल्प (type) {
+    पक्ष seL4_X86_4K:
+        प्रत्यागम true;
+    पक्ष seL4_X86_LargePageObject:
+        प्रत्यागम true;
+    पक्ष seL4_X64_HugePageObject:
+        प्रत्यागम true;
+    स्वभाव:
+        प्रत्यागम false;
     }
 }
 
-deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t बहुलकम्_derive_Cap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_pml4_cap:
-        if (cap_pml4_cap_get_capPML4IsMapped(cap)) {
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_pml4_cap:
+        यदि (cap_pml4_cap_get_capPML4IsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.स्थितिः = EXCEPTION_NONE;
+        } अन्यथा {
             userError("Deriving a PML4 cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.स्थितिः = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        प्रत्यागम ret;
 
-    case cap_pdpt_cap:
-        if (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    पक्ष cap_pdpt_cap:
+        यदि (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.स्थितिः = EXCEPTION_NONE;
+        } अन्यथा {
             userError("Deriving an unmapped PTPD cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.स्थितिः = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        प्रत्यागम ret;
 
-    case cap_frame_cap:
-        cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    पक्ष cap_frame_cap:
+        cap = cap_frame_cap_समुच्चयः_cap_FMap_Type(cap, X86_MappingNone);
+        ret.cap = cap_frame_cap_समुच्चयः_cap_FMapped_ASID(cap, asidInvalid);
+        ret.स्थितिः = EXCEPTION_NONE;
+        प्रत्यागम ret;
 
-    default:
+    स्वभाव:
         fail("Invalid arch cap type");
     }
 }
 
-finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
+finaliseCap_ret_t बहुलकम्_finalise_Cap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
+    विकल्प (cap_get_capType(cap)) {
 
-    case cap_pml4_cap:
-        if (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
+    पक्ष cap_pml4_cap:
+        यदि (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
             deleteASID(
                 cap_pml4_cap_get_capPML4MappedASID(cap),
-                PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(cap))
+                PML4E_PTR(cap_pml4_cap_get_cap_PML4_आधारः_Ptr(cap))
             );
         }
-        break;
+        भङ्ग;
 
-    case cap_pdpt_cap:
-        if (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    पक्ष cap_pdpt_cap:
+        यदि (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             unmapPDPT(
                 cap_pdpt_cap_get_capPDPTMappedASID(cap),
-                cap_pdpt_cap_get_capPDPTMappedAddress(cap),
+                cap_pdpt_cap_get_cap_PDPTMapped_स्थानाङ्कः(cap),
                 PDPTE_PTR(cap_pdpt_cap_get_capPDPTBasePtr(cap))
             );
         }
-        break;
+        भङ्ग;
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            switch (cap_frame_cap_get_capFMapType(cap)) {
-#ifdef CONFIG_VTX
-            case X86_MappingEPT:
+    पक्ष cap_frame_cap:
+        यदि (cap_frame_cap_get_capFMappedASID(cap)) {
+            विकल्प (cap_frame_cap_get_capFMapType(cap)) {
+#यदि_परिभाषितम् CONFIG_VTX
+            पक्ष X86_MappingEPT:
                 unmapEPTPage(
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    cap_frame_cap_get_cap_FMapped_स्थानाङ्कः(cap),
+                    (शून्य *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
-#endif
-#ifdef CONFIG_IOMMU
-            case X86_MappingIOSpace:
+                भङ्ग;
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_IOMMU
+            पक्ष X86_MappingIOSpace:
                 unmapIOPage(cap);
-                break;
-#endif
-            case X86_MappingVSpace:
+                भङ्ग;
+#यदि_अन्तः
+            पक्ष X86_MappingVSpace:
                 unmapPage(
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    cap_frame_cap_get_cap_FMapped_स्थानाङ्कः(cap),
+                    (शून्य *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
-            default:
+                भङ्ग;
+            स्वभाव:
                 fail("Invalid map type");
             }
         }
-        break;
+        भङ्ग;
 
-    default:
+    स्वभाव:
         fail("Invalid arch cap type");
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    प्रत्यागम fc_ret;
 }
 
-bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
+bool_t CONST बहुलकम्_same_Region_As(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
+    विकल्प (cap_get_capType(cap_a)) {
 
-    case cap_pdpt_cap:
-        if (cap_get_capType(cap_b) == cap_pdpt_cap) {
-            return cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
+    पक्ष cap_pdpt_cap:
+        यदि (cap_get_capType(cap_b) == cap_pdpt_cap) {
+            प्रत्यागम cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
                    cap_pdpt_cap_get_capPDPTBasePtr(cap_b);
         }
-        return false;
+        प्रत्यागम false;
 
-    case cap_pml4_cap:
-        if (cap_get_capType(cap_b) == cap_pml4_cap) {
-            return cap_pml4_cap_get_capPML4BasePtr(cap_a) ==
-                   cap_pml4_cap_get_capPML4BasePtr(cap_b);
+    पक्ष cap_pml4_cap:
+        यदि (cap_get_capType(cap_b) == cap_pml4_cap) {
+            प्रत्यागम cap_pml4_cap_get_cap_PML4_आधारः_Ptr(cap_a) ==
+                   cap_pml4_cap_get_cap_PML4_आधारः_Ptr(cap_b);
         }
-        return false;
-    default:
-        return false;
+        प्रत्यागम false;
+    स्वभाव:
+        प्रत्यागम false;
     }
 }
 
-word_t Mode_getObjectSize(word_t t)
+word_t बहुलकम्_get_Object_आकार(word_t t)
 {
-    switch (t) {
-    case seL4_X64_PML4Object:
-        return seL4_PML4Bits;
+    विकल्प (t) {
+    पक्ष seL4_X64_PML4Object:
+        प्रत्यागम se_L4_PML4_द्वयङ्काः;
 
-    case seL4_X64_HugePageObject:
-        return pageBitsForSize(X64_HugePage);
+    पक्ष seL4_X64_HugePageObject:
+        प्रत्यागम page_द्वयङ्काः_For_आकार(X64_HugePage);
 
-    default:
+    स्वभाव:
         fail("Invalid object type");
-        return 0;
+        प्रत्यागम 0;
     }
 }
 
-cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t बहुलकम्_create_Object(object_t t, शून्य *region_आधारः, word_t user_आकार, bool_t device_स्मृतिः)
 {
-    switch (t) {
+    विकल्प (t) {
 
-    case seL4_X86_4K:
-        if (deviceMemory) {
+    पक्ष seL4_X86_4K:
+        यदि (device_स्मृतिः) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
-        } else {
+        } अन्यथा {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
         }
-        return cap_frame_cap_new(
+        प्रत्यागम cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
-                   (word_t)regionBase, /* capFBasePtr              */
+                   (word_t)region_आधारः, /* capFBasePtr              */
                    X86_SmallPage,      /* capFSize                 */
                    X86_MappingNone,    /* capFMapType              */
                    0,                  /* capFMappedAddress        */
                    VMReadWrite,        /* capFVMRights             */
-                   deviceMemory        /* capFIsDevice             */
+                   device_स्मृतिः        /* capFIsDevice             */
                );
 
-    case seL4_X86_LargePageObject:
-        if (deviceMemory) {
+    पक्ष seL4_X86_LargePageObject:
+        यदि (device_स्मृतिः) {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
-        } else {
+        } अन्यथा {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
         }
-        return cap_frame_cap_new(
+        प्रत्यागम cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
-                   (word_t)regionBase, /* capFBasePtr              */
+                   (word_t)region_आधारः, /* capFBasePtr              */
                    X86_LargePage,      /* capFSize                 */
                    X86_MappingNone,    /* capFMapType              */
                    0,                  /* capFMappedAddress        */
                    VMReadWrite,        /* capFVMRights             */
-                   deviceMemory        /* capFIsDevice             */
+                   device_स्मृतिः        /* capFIsDevice             */
                );
 
-    case seL4_X64_HugePageObject:
-        if (deviceMemory) {
+    पक्ष seL4_X64_HugePageObject:
+        यदि (device_स्मृतिः) {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
-        } else {
+        } अन्यथा {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
         }
-        return cap_frame_cap_new(
+        प्रत्यागम cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
-                   (word_t)regionBase, /* capFBasePtr              */
+                   (word_t)region_आधारः, /* capFBasePtr              */
                    X64_HugePage,       /* capFSize                 */
                    X86_MappingNone,    /* capFMapType              */
                    0,                  /* capFMappedAddress        */
                    VMReadWrite,        /* capFVMRights             */
-                   deviceMemory        /* capFIsDevice             */
+                   device_स्मृतिः        /* capFIsDevice             */
                );
 
-    case seL4_X86_PageTableObject:
+    पक्ष se_L4_X86_Page_सारणी_Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-        return cap_page_table_cap_new(
+        प्रत्यागम cap_page_सारणी_cap_new(
                    asidInvalid,            /* capPTMappedASID    */
-                   (word_t)regionBase,     /* capPTBasePtr       */
+                   (word_t)region_आधारः,     /* capPTBasePtr       */
                    0,                      /* capPTIsMapped      */
                    0                       /* capPTMappedAddress */
                );
 
-    case seL4_X86_PageDirectoryObject:
+    पक्ष seL4_X86_PageDirectoryObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pde_C[512]) ptr))" */
-        return cap_page_directory_cap_new(
+        प्रत्यागम cap_page_directory_cap_new(
                    asidInvalid,                /* capPDMappedASID      */
-                   (word_t)regionBase,         /* capPDBasePtr         */
+                   (word_t)region_आधारः,         /* capPDBasePtr         */
                    0,                          /* capPDIsMapped        */
                    0                           /* capPDMappedAddress   */
                );
 
-    case seL4_X86_PDPTObject:
+    पक्ष seL4_X86_PDPTObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pdpte_C[512]) ptr))" */
-        return cap_pdpt_cap_new(
+        प्रत्यागम cap_pdpt_cap_new(
                    asidInvalid,                /* capPDPTMappedASID    */
-                   (word_t)regionBase,         /* capPDPTBasePtr       */
+                   (word_t)region_आधारः,         /* capPDPTBasePtr       */
                    0,                          /* capPDPTIsMapped      */
                    0                           /* capPDPTMappedAddress */
                );
 
-    case seL4_X64_PML4Object:
+    पक्ष seL4_X64_PML4Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pml4e_C[512]) ptr))" */
-        copyGlobalMappings(PML4_PTR(regionBase));
-        return cap_pml4_cap_new(
+        copyGlobalMappings(PML4_PTR(region_आधारः));
+        प्रत्यागम cap_pml4_cap_new(
                    asidInvalid,                /* capPML4MappedASID   */
-                   (word_t)regionBase,         /* capPML4BasePtr      */
+                   (word_t)region_आधारः,         /* capPML4BasePtr      */
                    0                           /* capPML4IsMapped     */
                );
 
-#ifdef CONFIG_IOMMU
-    case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+#यदि_परिभाषितम् CONFIG_IOMMU
+    पक्ष se_L4_X86_IOPage_सारणी_Object:
+        प्रत्यागम cap_io_page_सारणी_cap_new(
                    0,
                    0,
                    0,
                    asidInvalid,
-                   (word_t)regionBase
+                   (word_t)region_आधारः
                );
-#endif
+#यदि_अन्तः
 
-    default:
+    स्वभाव:
         /*
          * This is a conflation of the haskell error: "Arch.createNewCaps
          * got an API type" and the case where an invalid object type is
@@ -314,27 +314,27 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     }
 }
 
-exception_t Mode_decodeInvocation(
+exception_t बहुलकम्_decode_Invocation(
     word_t label,
-    word_t length,
+    word_t दीर्घता,
     cptr_t cptr,
     cte_t *slot,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    word_t *बफर
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_pml4_cap:
-    case cap_pdpt_cap:
-    case cap_page_directory_cap:
-    case cap_page_table_cap:
-    case cap_frame_cap:
-        return decodeX86MMUInvocation(label, length, cptr, slot, cap, call, buffer);
+    विकल्प (cap_get_capType(cap)) {
+    पक्ष cap_pml4_cap:
+    पक्ष cap_pdpt_cap:
+    पक्ष cap_page_directory_cap:
+    पक्ष cap_page_सारणी_cap:
+    पक्ष cap_frame_cap:
+        प्रत्यागम decodeX86MMUInvocation(label, दीर्घता, cptr, slot, cap, call, बफर);
 
-    default:
+    स्वभाव:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_सङ्ख्या = 0;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 }

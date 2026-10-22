@@ -14,62 +14,62 @@
  * as integer type according to the ABI.
  */
 
-.section .boot.text, "ax"
+.खण्डः .boot.text, "ax"
 
-.section .text, "ax"
+.खण्डः .text, "ax"
 
 BEGIN_FUNC(out8)                        # port, value
     movq    %rdi, %rdx
     movq    %rsi, %rax
     outb    %al, %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out8)
 
 BEGIN_FUNC(out16)
     movq    %rdi, %rdx
     movq    %rsi, %rax
     outw    %ax, %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out16)
 
 BEGIN_FUNC(out32)
     movq    %rdi, %rdx
     movq    %rsi, %rax
     outl    %eax, %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out32)
 
 BEGIN_FUNC(in8)
     movq    $0, %rax
     movq    %rdi, %rdx
     inb     %dx, %al
-    ret
+    प्रत्यागच्छ
 END_FUNC(in8)
 
 BEGIN_FUNC(in16)
     movq    $0, %rax
     movq    %rdi, %rdx
     inw     %dx, %ax
-    ret
+    प्रत्यागच्छ
 END_FUNC(in16)
 
 BEGIN_FUNC(in32)
     movq    $0, %rax
     movq    %rdi, %rdx
     inl     %dx, %eax
-    ret
+    प्रत्यागच्छ
 END_FUNC(in32)
 
 BEGIN_FUNC(getCacheLineSize)
-    push    %rbx
+    निक्षिप    %rbx
     movl    $1, %eax
     cpuid
     movl    %ebx, %eax
     shrl    $8, %eax
     andl    $0xff, %eax
     shll    $3, %eax
-    pop     %rbx
-    ret
+    उद्धर     %rbx
+    प्रत्यागच्छ
 END_FUNC(getCacheLineSize)
 
 BEGIN_FUNC(x64_install_gdt)
@@ -81,20 +81,20 @@ BEGIN_FUNC(x64_install_gdt)
     movw    $0x0, %ax
     movw    %ax, %fs
     movw    %ax, %gs
-    ret
+    प्रत्यागच्छ
 END_FUNC(x64_install_gdt)
 
 BEGIN_FUNC(x64_install_idt)
     lidt    (%rdi)
-    ret
+    प्रत्यागच्छ
 END_FUNC(x64_install_idt)
 
 BEGIN_FUNC(x64_install_ldt)
     lldt    %di
-    ret
+    प्रत्यागच्छ
 END_FUNC(x64_install_ldt)
 
 BEGIN_FUNC(x64_install_tss)
     ltr     %di
-    ret
+    प्रत्यागच्छ
 END_FUNC(x64_install_tss)

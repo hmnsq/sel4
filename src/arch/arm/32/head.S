@@ -75,13 +75,13 @@
  */
 
 .code 32
-.section .boot.text, "ax"
+.खण्डः .boot.text, "ax"
 BEGIN_FUNC(_start)
     /*
      * Get the dtb and dtb size from the elfloader stack. Do this first because
      * sp might change when we switch to supervisor mode.
      */
-    pop {r7, r8}
+    उद्धर {r7, r8}
 
     /* Supervisor/hypervisor mode, interrupts disabled */
     ldr r5, =CPSR_KERNEL
@@ -109,7 +109,7 @@ BEGIN_FUNC(_start)
 
 #if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 2 in the ACTLR, which on the cortex-a9 is the l1 prefetch enable
-     * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
+     * bit. See खण्डः 4.3.10 of the Cortex-A9 Technical Reference Manual */
     mrc p15, 0, r4, c1, c0, 1
     ldr r5, =BIT(2)
     orr r4, r4, r5
@@ -142,8 +142,8 @@ BEGIN_FUNC(_start)
     and r4, r4, #0xff
     /* Set the sp for each core assuming linear indices */
     ldr     r5, =BIT(CONFIG_KERNEL_STACK_BITS)
-    mul     r5, r4
-    add     sp, sp, r5
+    गुणय     r5, r4
+    योजय     sp, sp, r5
 #endif /* ENABLE_SMP_SUPPORT */
 
     /* Hyp kernel always run in Hyp mode. */
@@ -157,19 +157,19 @@ BEGIN_FUNC(_start)
 #ifdef ENABLE_SMP_SUPPORT
     /* Give each core its own abort stack */
     ldr     r5, =4096
-    mul     r5, r4
-    add     sp, sp, r5
+    गुणय     r5, r4
+    योजय     sp, sp, r5
 #endif
     cps #PMODE_SUPERVISOR
 #endif
 
     /* Attempt to workaround any known ARM errata. */
-    push {r0-r3,r7-r8}
+    निक्षिप {r0-r3,r7-r8}
     blx arm_errata
-    pop {r0-r3,r7-r8}
+    उद्धर {r0-r3,r7-r8}
 
     /* Put the DTB address back on the new stack for init_kernel. */
-    push {r7, r8}
+    निक्षिप {r7, r8}
 
     /* Call bootstrapping implemented in C with parameters:
      *   r0: user image physical start address

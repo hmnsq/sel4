@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/registerset.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <arch/machine/registerset.h>
 
-void Arch_initContext(user_context_t *context)
+शून्य Arch_initContext(user_context_t *context)
 {
-    Mode_initContext(context);
-    context->registers[FS_BASE] = 0;
-    context->registers[GS_BASE] = 0;
+    बहुलकम्_init_Context(context);
+    context->registers[FS_आधारः] = 0;
+    context->registers[GS_आधारः] = 0;
     context->registers[Error] = 0;
     context->registers[FaultIP] = 0;
-    context->registers[NextIP] = 0;            /* overwritten by setNextPC() later on */
+    context->registers[अग्र_IP] = 0;            /* overwritten by setNextPC() later on */
     context->registers[CS] = SEL_CS_3;
     context->registers[FLAGS] = FLAGS_USER_DEFAULT;
     context->registers[SS] = SEL_DS_3;
 
     Arch_initFpuContext(context);
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#यदि_परिभाषितम् CONFIG_HARDWARE_DEBUG_API
     Arch_initBreakpointContext(&context->breakpointState);
-#endif
+#यदि_अन्तः
 }
 
-word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
+word_t sanitise_पञ्जिकाकोशः(पञ्जिकाकोशः_t reg, word_t v, bool_t archInfo)
 {
     /* First perform any mode specific sanitization */
-    v = Mode_sanitiseRegister(reg, v);
-    if (reg == FLAGS) {
+    v = बहुलकम्_sanitise_पञ्जिकाकोशः(reg, v);
+    यदि (reg == FLAGS) {
         /* Set architecturally defined high and low bits */
-        v |=  FLAGS_HIGH;
-        v &= ~FLAGS_LOW;
+        v |=  FLAGS_उच्चः;
+        v &= ~FLAGS_नीचः;
         /* require user to have interrupts and no traps */
         v |=  FLAGS_IF;
         v &= ~FLAGS_TF;
         /* remove any other bits that shouldn't be set */
-        v &=  FLAGS_MASK;
+        v &=  FLAGS_आवरणम्;
     }
-    return v;
+    प्रत्यागम v;
 }

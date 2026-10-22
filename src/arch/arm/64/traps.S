@@ -32,7 +32,7 @@
 #ifdef CONFIG_ENABLE_SMP_SUPPORT
     bic     \_tmp, \_tmp, #0xfff
 #endif
-    mov     sp, \_tmp
+    चालय     sp, \_tmp
 .endm
 
 .macro ventry label
@@ -46,7 +46,7 @@
     /* compute vect_offset argument */
     adr     x0, .
     adr     x19, arm_vector_table
-    sub     x0, x0, x19
+    वियोजय     x0, x0, x19
     b       invalid_vector_entry
 .endm
 #else
@@ -66,7 +66,7 @@
 .endm
 #endif
 
-.section .vectors, "ax"
+.खण्डः .vectors, "ax"
 
 /* The layout of this table are specified in Table D1-7, 'Vector offsets from
  * vector table base address' of ARM DDI 0487B.b ID092517.
@@ -94,7 +94,7 @@ BEGIN_FUNC(arm_vector_table)
     ventry_invalid                         // SError 32-bit EL0/EL1
 END_FUNC(arm_vector_table)
 
-.section .vectors.text, "ax"
+.खण्डः .vectors.text, "ax"
 
 .macro kernel_enter
     /* Storing thread's stack frame */
@@ -137,9 +137,9 @@ BEGIN_FUNC(cur_el_sync)
     /* Read esr and branch to respective labels */
     mrs     x25, ESR
     lsr     x24, x25, #ESR_EC_SHIFT
-    cmp     x24, #ESR_EC_CEL_DABT
+    तुलय     x24, #ESR_EC_CEL_DABT
     b.eq    cur_el_da
-    cmp     x24, #ESR_EC_CEL_IABT
+    तुलय     x24, #ESR_EC_CEL_IABT
     b.eq    cur_el_ia
     b       cur_el_inv
 
@@ -159,14 +159,14 @@ cur_el_ia:
 
 cur_el_inv:
     /* 0x200 corresponding to the offset in the vector table */
-    mov     x0, #0x200
+    चालय     x0, #0x200
     b       invalid_vector_entry
 END_FUNC(cur_el_sync)
 
 /*
  * This is only called if ksCurThread is idle thread.
  *
- * No need to store the state of idle thread and simply call c_handle_interrupt to
+ * No need to store the state of idle thread and simply आह्वान c_handle_interrupt to
  * activate ksCurThread when returning from interrupt as long as idle thread is stateless.
  */
 BEGIN_FUNC(cur_el_irq)
@@ -180,21 +180,21 @@ BEGIN_FUNC(lower_el_sync)
     /* Read esr and branch to respective labels */
     mrs     x25, ESR
     lsr     x24, x25, #ESR_EC_SHIFT
-    cmp     x24, #ESR_EC_LEL_DABT
+    तुलय     x24, #ESR_EC_LEL_DABT
     b.eq    lel_da
-    cmp     x24, #ESR_EC_LEL_IABT
+    तुलय     x24, #ESR_EC_LEL_IABT
     b.eq    lel_ia
-    cmp     x24, #ESR_EC_LEL_SVC64
+    तुलय     x24, #ESR_EC_LEL_SVC64
     b.eq    lel_syscall
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    cmp     x24, #ESR_EC_LEL_HVC64
+    तुलय     x24, #ESR_EC_LEL_HVC64
     b.eq    lel_syscall
     mrs     x20, ELR
     str     x20, [sp, #PT_FaultIP]
 
     lsp_i   x19
     /* move the ESR as the input */
-    mov     x0, x25
+    चालय     x0, x25
     b       c_handle_vcpu_fault
 #else
     b       el0_user
@@ -216,26 +216,26 @@ lel_ia:
 
 lel_syscall:
     mrs     x20, ELR
-    sub     x20, x20, #4
+    वियोजय     x20, x20, #4
     str     x20, [sp, #PT_FaultIP]
 
     lsp_i   x19
 
 #ifdef CONFIG_FASTPATH
-    cmp     x7, #SYSCALL_CALL
+    तुलय     x7, #SYSCALL_CALL
     b.eq    c_handle_fastpath_call
 #ifdef CONFIG_SIGNAL_FASTPATH
-    cmp     x7, #SYSCALL_SEND
+    तुलय     x7, #SYSCALL_SEND
     b.eq    c_handle_fastpath_signal
 #endif /* CONFIG_SIGNAL_FASTPATH */
-    cmp     x7, #SYSCALL_REPLY_RECV
+    तुलय     x7, #SYSCALL_REPLY_RECV
 #ifdef CONFIG_KERNEL_MCS
-    mov     x2, x6
+    चालय     x2, x6
 #endif
     b.eq    c_handle_fastpath_reply_recv
 #endif
 
-    mov     x2, x7
+    चालय     x2, x7
     b       c_handle_syscall
 
 el0_user:

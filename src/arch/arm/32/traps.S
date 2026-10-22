@@ -12,7 +12,7 @@
 #include <machine/assembler.h>
 
 .code 32
-.section .vectors, "ax"
+.खण्डः .vectors, "ax"
 
 BEGIN_FUNC(arm_vector_table)
     ldr pc, =arm_reset_exception
@@ -27,7 +27,7 @@ BEGIN_FUNC(arm_vector_table)
 .ltorg
 END_FUNC(arm_vector_table)
 
-.section .vectors.text, "ax"
+.खण्डः .vectors.text, "ax"
 
 #include <arch/api/syscall.h>
 #include <arch/machine/hardware.h>
@@ -41,7 +41,7 @@ BEGIN_FUNC(arm_undefined_inst_exception)
     cps #PMODE_SUPERVISOR
     stmdb sp, {r0-lr}^
     ldr r8, [sp]
-    sub r8, r8, #4
+    वियोजय r8, r8, #4
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
     mrc p15, 0, sp, c13, c0, 4
     b c_handle_undefined_instruction
@@ -55,7 +55,7 @@ BEGIN_FUNC(arm_swi_syscall)
     /* Set the FaultIP address, which in ARM mode is the NextIP - 4.
      * NOTE: This is completely wrong and broken in thumb mode.
      */
-    sub lr, lr, #4
+    वियोजय lr, lr, #4
 
     /* Store FaultIP */
     str lr, [sp, #(PT_FaultIP - PT_NextIP)]
@@ -66,22 +66,22 @@ BEGIN_FUNC(arm_swi_syscall)
     /* Load the kernel's real stack pointer */
     mrc p15, 0, sp, c13, c0, 4
 
-    /* Load system call number as a c_handle_syscall argument. r0 and r1 are passed
+    /* Load system आह्वान number as a c_handle_syscall argument. r0 and r1 are passed
      * unmodified (cptr and msgInfo) respectively.  On MCS configurations we also
      * pass the reply cptr in r2 for fastpath_reply_recv.
      */
 
 #ifdef CONFIG_FASTPATH
-    cmp r7, #SYSCALL_CALL
+    तुलय r7, #SYSCALL_CALL
     beq c_handle_fastpath_call
-    cmp r7, #SYSCALL_REPLY_RECV
+    तुलय r7, #SYSCALL_REPLY_RECV
 #ifdef CONFIG_KERNEL_MCS
     moveq r2, r6
 #endif
     beq c_handle_fastpath_reply_recv
 #endif
 
-    mov r2, r7
+    चालय r2, r7
     b c_handle_syscall
 
 END_FUNC(arm_swi_syscall)
@@ -100,11 +100,11 @@ BEGIN_FUNC(arm_prefetch_abort_exception)
     tst     r9, #0xf
 
     /* Compute the faulting address. */
-    sub r8, r8, #4
+    वियोजय r8, r8, #4
 
     bne     kernel_prefetch_fault
 
-    /* Store faulting address in TCB and call handleVMFaultEvent. */
+    /* Store faulting address in TCB and आह्वान handleVMFaultEvent. */
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
 
     mrc p15, 0, sp, c13, c0, 4
@@ -113,8 +113,8 @@ BEGIN_FUNC(arm_prefetch_abort_exception)
 
 kernel_prefetch_fault:
 #ifdef CONFIG_DEBUG_BUILD
-    mov r0, r8
-    mov r1, lr
+    चालय r0, r8
+    चालय r1, lr
     mrc p15, 0, sp, c13, c0, 4
     blx kernelPrefetchAbort
     /* Fallthrough to infinite loop should we foolishly return. */
@@ -123,7 +123,7 @@ kernel_prefetch_fault:
      * - r8 will contain the faulting address.
      * - r9 will contain the IFSR register.
      * - lr might contain something useful too if we followed a function
-     *   call.
+     *   आह्वान.
      * - the original values of r8 and r9 will be obliterated.
      */
     mrc p15, 0, r9, c5, c0, 1    /* Get ISFR. */
@@ -147,11 +147,11 @@ BEGIN_FUNC(arm_data_abort_exception)
 
     /* Compute the faulting address.
      * For a Data abort, LR_abt points at PC+8. */
-    sub r8, r8, #8
+    वियोजय r8, r8, #8
 
     bne     kernel_data_fault
 
-    /* Store faulting address in TCB and call handleVMFaultEvent. */
+    /* Store faulting address in TCB and आह्वान handleVMFaultEvent. */
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
     mrc p15, 0, sp, c13, c0, 4
 
@@ -160,7 +160,7 @@ BEGIN_FUNC(arm_data_abort_exception)
 
 kernel_data_fault:
 #ifdef CONFIG_DEBUG_BUILD
-    mov r0, r8
+    चालय r0, r8
     mrc p15, 0, sp, c13, c0, 4
     blx kernelDataAbort
     /* Fallthrough to infinite loop should we foolishly return. */
@@ -182,7 +182,7 @@ BEGIN_FUNC(arm_irq_exception)
     cps #PMODE_SUPERVISOR
     stmdb sp, {r0-lr}^
     ldr r8, [sp]
-    sub r8, r8, #4
+    वियोजय r8, r8, #4
     str r8, [sp]
     str r8, [sp, #(PT_FaultIP - PT_NextIP)]
     mrc p15, 0, sp, c13, c0, 4

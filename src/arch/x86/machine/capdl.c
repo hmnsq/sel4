@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#अन्तर्भाव <config.h>
 
-#if defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
+#यदि defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
-#include <machine/io.h>
-#include <arch/object/iospace.h>
+#अन्तर्भाव <arch/machine/capdl.h>
+#अन्तर्भाव <string.h>
+#अन्तर्भाव <kernel/cspace.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <arch/object/iospace.h>
 
 
-void x86_obj_ioports_print_attrs(cap_t ioports_cap)
+शून्य x86_obj_ioports_print_attrs(cap_t ioports_cap)
 {
-    printf("(ports: (%lu, %lu))\n",
-           (long unsigned int)cap_io_port_cap_get_capIOPortFirstPort(ioports_cap),
-           (long unsigned int)cap_io_port_cap_get_capIOPortLastPort(ioports_cap));
+    प्रारूप_लिख("(ports: (%lu, %lu))\n",
+           (दीर्घ अचिह्नित पूर्णाङ्क)cap_io_पत्तनम्_cap_get_cap_IOPort_First_पत्तनम्(ioports_cap),
+           (दीर्घ अचिह्नित पूर्णाङ्क)cap_io_पत्तनम्_cap_get_cap_IOPort_चरमः_पत्तनम्(ioports_cap));
 }
 
-#ifdef CONFIG_IOMMU
+#यदि_परिभाषितम् CONFIG_IOMMU
 
-void x86_obj_iospace_print_attrs(cap_t iospace_cap)
+शून्य x86_obj_iospace_print_attrs(cap_t iospace_cap)
 {
-    printf("(domain_id: %lu, pci_device: %lu)\n",
-           (long unsigned int)cap_io_space_cap_get_capPCIDevice(iospace_cap),
-           (long unsigned int)cap_io_space_cap_get_capDomainID(iospace_cap));
+    प्रारूप_लिख("(domain_id: %lu, pci_device: %lu)\n",
+           (दीर्घ अचिह्नित पूर्णाङ्क)cap_io_space_cap_get_capPCIDevice(iospace_cap),
+           (दीर्घ अचिह्नित पूर्णाङ्क)cap_io_space_cap_get_capDomainID(iospace_cap));
 }
 
-void x86_obj_iopt_print_attrs(cap_t iopt_cap)
+शून्य x86_obj_iopt_print_attrs(cap_t iopt_cap)
 {
-    printf("(level: %lu)\n", (long unsigned int)cap_io_page_table_cap_get_capIOPTLevel(iopt_cap));
+    प्रारूप_लिख("(level: %lu)\n", (दीर्घ अचिह्नित पूर्णाङ्क)cap_io_page_सारणी_cap_get_cap_IOPTLevel(iopt_cap));
 }
-#endif
+#यदि_अन्तः
 
-#endif /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */
+#यदि_अन्तः /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */

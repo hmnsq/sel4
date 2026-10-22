@@ -4,70 +4,70 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#अन्तर्भाव <object.h>
+#अन्तर्भाव <machine.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <arch/kernel/vspace.h>
+#अन्तर्भाव <arch/kernel/thread.h>
+#अन्तर्भाव <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+शून्य Arch_switch_गन्तव्यम्_Thread(tcb_t *tcb)
 {
     /* set PD */
-    setVMRoot(tcb);
-#ifdef ENABLE_SMP_SUPPORT
-    asm volatile("movq %[value], %%gs:%c[offset]"
+    समुच्चयः_VMRoot(tcb);
+#यदि_परिभाषितम् ENABLE_SMP_SUPPORT
+    asm चञ्चल("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
-#endif
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+                 : [मानम्] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [विस्थापनम्] "i"(OFFSETOF(ग्रन्थिः_Info_t, currentThreadUserContext)));
+#यदि_अन्तः
+    यदि (config_समुच्चयः(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    यदि (config_समुच्चयः(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_संहिता शून्य Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, FLAGS, FLAGS_USER_DEFAULT);
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
-    setRegister(tcb, CS, SEL_CS_0);
-    setRegister(tcb, SS, SEL_DS_0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, FLAGS, FLAGS_USER_DEFAULT);
+    समुच्चयः_पञ्जिकाकोशः(tcb, अग्र_IP, (word_t)&idle_thread);
+    समुच्चयः_पञ्जिकाकोशः(tcb, CS, SEL_CS_0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, SS, SEL_DS_0);
     /* We set the RSP to 0, even though the idle thread will never touch it, as it
      * allows us to distinguish an interrupt from the idle thread from an interrupt
      * from kernel execution, just by examining the saved RSP value (since the kernel
      * thread will have a valid RSP, and never 0). See traps.S for the other side of this
      */
-    setRegister(tcb, RSP, 0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, RSP, 0);
 }
 
-void Arch_switchToIdleThread(void)
+शून्य Arch_switch_गन्तव्यम्_Idle_Thread(शून्य)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = ग्रन्थिः_STATE(ksIdleThread);
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(tcb);
-#ifdef ENABLE_SMP_SUPPORT
-    asm volatile("movq %[value], %%gs:%c[offset]"
+    समुच्चयः_VMRoot(tcb);
+#यदि_परिभाषितम् ENABLE_SMP_SUPPORT
+    asm चञ्चल("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
-#endif
+                 : [मानम्] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [विस्थापनम्] "i"(OFFSETOF(ग्रन्थिः_Info_t, currentThreadUserContext)));
+#यदि_अन्तः
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+शून्य Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Mode_postModifyRegisters(tcb_t *tptr)
+शून्य बहुलकम्_post_Modify_Registers(tcb_t *tptr)
 {
     /* Setting Error to 0 will force a return by the interrupt path, which
      * does a full restore. Unless we're the current thread, in which case
      * we still have to go back out via a sysret */
-    if (tptr != NODE_STATE(ksCurThread)) {
-        setRegister(tptr, Error, 0);
+    यदि (tptr != ग्रन्थिः_STATE(ksCurThread)) {
+        समुच्चयः_पञ्जिकाकोशः(tptr, Error, 0);
     }
 }

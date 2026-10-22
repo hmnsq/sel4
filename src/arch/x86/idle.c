@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/debug.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <api/debug.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE halt(void)
+शून्य VISIBLE halt(शून्य)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cli");
+    asm चञ्चल("cli");
 
-#ifdef CONFIG_PRINTING
-    printf("halting...");
-#ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
-#endif
-#endif
+#यदि_परिभाषितम् CONFIG_PRINTING
+    प्रारूप_लिख("halting...");
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
+    debug_print_Kernel_प्रविष्टिः_Reason();
+#यदि_अन्तः
+#यदि_अन्तः
     idle_thread();
     UNREACHABLE();
 }

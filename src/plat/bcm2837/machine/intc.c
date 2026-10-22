@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <stdint.h>
-#include <plat/machine.h>
-BOOT_CODE void initIRQController(void)
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <plat/machine.h>
+BOOT_संहिता शून्य initIRQController(शून्य)
 {
     /* Disable all interrupts */
     intc_regs->bfDisableIRQs[0] = 0xffffffff;
@@ -16,115 +16,115 @@ BOOT_CODE void initIRQController(void)
     /* Disable FIQ */
     intc_regs->FIQ_control &= ~FIQCTRL_FIQ_ENABLE;
     /* Enable IRQ control for GPU */
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
+    intc_regs->bfEnableBasicIRQs = BIT(व्यवधानम्_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_विस्थापनम्);
+    intc_regs->bfEnableBasicIRQs = BIT(व्यवधानम्_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_विस्थापनम्);
 
     core_regs->coreTimerPrescaler = 0x80000000;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_संहिता शून्य cpu_initLocalIRQController(शून्य) {}
 
-static inline irq_t getActiveIRQ(void)
+स्थिर अन्तःस्थ irq_t get_सक्रिय_IRQ(शून्य)
 {
     uint32_t pending;
     uint32_t irq;
     /* Read core interrupt register */
     pending = core_regs->coreIRQSource[0];
     /* Mask out invalid bits */
-    pending &= MASK(12);
+    pending &= आवरणम्(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    यदि (pending == 0) {
+        प्रत्यागम irqInvalid;
     }
 
     /* Get IRQ number */
-    irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    irq = (word_द्वयङ्काः - 1 - clzl(pending));
+    यदि (irq != व्यवधानम्_CORE_GPU) {
+        प्रत्यागम irq;
     }
 
     /* GPU interrupt */
     pending = intc_regs->bfIRQBasicPending;
     pending &= intc_regs->bfEnableBasicIRQs;
     /* Mask out pending register 0 and 1 */
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    pending &= ~BIT(व्यवधानम्_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_विस्थापनम्);
+    pending &= ~BIT(व्यवधानम्_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_विस्थापनम्);
+    यदि (pending) {
+        प्रत्यागम (word_द्वयङ्काः - 1 - clzl(pending)) + BASIC_IRQ_विस्थापनम्;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    यदि (pending) {
+        प्रत्यागम (word_द्वयङ्काः - 1 - clzl(pending)) + 32 + प्रसामान्यम्_IRQ_विस्थापनम्;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    यदि (pending) {
+        प्रत्यागम (word_द्वयङ्काः - 1 - clzl(pending)) + 0 + प्रसामान्यम्_IRQ_विस्थापनम्;
     }
 
-    return irqInvalid;
+    प्रत्यागम irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+स्थिर अन्तःस्थ शून्य आवरणम्_व्यवधानम्(bool_t disable, irq_t irq)
 {
-    switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+    विकल्प (irq) {
+    पक्ष व्यवधानम्_CORE_CNTPSIRQ :
+    पक्ष व्यवधानम्_CORE_CNTPNSIRQ:
+    पक्ष व्यवधानम्_CORE_CNTHPIRQ :
+    पक्ष व्यवधानम्_CORE_CNTVIRQ  :
+        यदि (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } अन्यथा {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        प्रत्यागम;
+    पक्ष व्यवधानम्_CORE_MAILBOX_0:
+    पक्ष व्यवधानम्_CORE_MAILBOX_1:
+    पक्ष व्यवधानम्_CORE_MAILBOX_2:
+    पक्ष व्यवधानम्_CORE_MAILBOX_3:
+        यदि (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } अन्यथा {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        प्रत्यागम;
+    पक्ष व्यवधानम्_CORE_LOCAL_TIMER:
+        यदि (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } अन्यथा {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        प्रत्यागम;
+    पक्ष व्यवधानम्_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    पक्ष व्यवधानम्_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    पक्ष व्यवधानम्_CORE_AXI:
         // Not currently handled
-        return;
-    default:
-        break;
+        प्रत्यागम;
+    स्वभाव:
+        भङ्ग;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    यदि (irq < BASIC_IRQ_विस्थापनम्) {
         // Other invalid irq
-        return;
+        प्रत्यागम;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
-            intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
-            intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
+    यदि (irq < प्रसामान्यम्_IRQ_विस्थापनम्) {
+        यदि (disable) {
+            intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_विस्थापनम्);
+        } अन्यथा {
+            intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_विस्थापनम्);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
-            intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
-            intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
+    } अन्यथा यदि (irq <= maxIRQ) {
+        पूर्णाङ्क प्रसामान्यम्_irq = irq - प्रसामान्यम्_IRQ_विस्थापनम्;
+        पूर्णाङ्क सूचकांक = प्रसामान्यम्_irq / 32;
+        यदि (disable) {
+            intc_regs->bfDisableIRQs[सूचकांक] = BIT(प्रसामान्यम्_irq % 32);
+        } अन्यथा {
+            intc_regs->bfEnableIRQs[सूचकांक] = BIT(प्रसामान्यम्_irq % 32);
         }
     }
 }

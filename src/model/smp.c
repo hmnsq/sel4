@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/smp.h>
-#include <object/tcb.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <model/smp.h>
+#अन्तर्भाव <object/tcb.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#यदि_परिभाषितम् ENABLE_SMP_SUPPORT
 
-void migrateTCB(tcb_t *tcb, word_t new_core)
+शून्य migrateTCB(tcb_t *tcb, word_t new_core)
 {
-    if (new_core == tcb->tcbAffinity) {
-        return;
+    यदि (new_core == tcb->tcbAffinity) {
+        प्रत्यागम;
     }
-#ifdef CONFIG_DEBUG_BUILD
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
     tcbDebugRemove(tcb);
-#endif
-#ifdef CONFIG_HAVE_FPU
+#यदि_अन्तः
+#यदि_परिभाषितम् CONFIG_HAVE_FPU
     /* If the thread owns the FPU of the core it is currently running on (which
      * is not necessarily the core, that we are now running on), then release
      * that cores's FPU.
      */
     fpuRelease(tcb);
-#endif /* CONFIG_HAVE_FPU */
+#यदि_अन्तः /* CONFIG_HAVE_FPU */
     tcb->tcbAffinity = new_core;
-#ifdef CONFIG_DEBUG_BUILD
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
     tcbDebugAppend(tcb);
-#endif
+#यदि_अन्तः
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#यदि_अन्तः /* ENABLE_SMP_SUPPORT */

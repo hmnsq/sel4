@@ -9,8 +9,8 @@
 #include <config.h>
 #include <util.h>
 
-.section .boot.text, "ax"
-.global _start
+.खण्डः .boot.text, "ax"
+.वैश्विक _start
 .extern init_kernel
 .extern kernel_stack_alloc
 .extern __global_pointer$
@@ -22,11 +22,11 @@
  */
 _start:
   fence.i
-.option push
+.option निक्षिप
 .option norelax
 1:auipc gp, %pcrel_hi(__global_pointer$)
   addi  gp, gp, %pcrel_lo(1b)
-.option pop
+.option उद्धर
   la sp, (kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS))
   csrw sscratch, x0 /* zero sscratch for the init task */
 
@@ -34,7 +34,7 @@ _start:
 /* setup the per-core stack */
   mv t0, a7
   slli t0, t0, CONFIG_KERNEL_STACK_BITS
-  add  sp, sp, t0
+  योजय  sp, sp, t0
   /* put the stack in sscratch */
   csrw sscratch, sp
 #endif

@@ -7,5 +7,5 @@
 #include <machine/assembler.h>
 
 BEGIN_FUNC(lockTLBEntry)
-    ret
+    प्रत्यागच्छ
 END_FUNC(lockTLBEntry)

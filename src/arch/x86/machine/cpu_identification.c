@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <string.h>
-#include <util.h>
-#include <arch/machine.h>
+#अन्तर्भाव <string.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <arch/machine.h>
 
 /** @file Support routines for identifying the processor family, model, etc
  * on INTEL x86 processors, as well as attempting to determine the model string.
@@ -14,32 +14,32 @@
  * AMD processors would be different.
  */
 
-const char X86_CPUID_VENDOR_STRING_INTEL[] = {'G', 'e', 'n', 'u', 'i', 'n', 'e', 'I', 'n', 't', 'e', 'l', 0};
-const char X86_CPUID_VENDOR_STRING_AMD_LEGACY[] = { 'A', 'M', 'D', 'i', 's', 'b', 'e', 't', 't', 'e', 'r', '!', 0};
-const char X86_CPUID_VENDOR_STRING_AMD[] = {'A', 'u', 't', 'h', 'e', 'n', 't', 'i', 'c', 'A', 'M', 'D', 0};
+ध्रुव वर्ण X86_CPUID_VENDOR_STRING_INTEL[] = {'G', 'e', 'n', 'u', 'i', 'n', 'e', 'I', 'n', 't', 'e', 'l', 0};
+ध्रुव वर्ण X86_CPUID_VENDOR_STRING_AMD_LEGACY[] = { 'A', 'M', 'D', 'i', 's', 'b', 'e', 't', 't', 'e', 'r', '!', 0};
+ध्रुव वर्ण X86_CPUID_VENDOR_STRING_AMD[] = {'A', 'u', 't', 'h', 'e', 'n', 't', 'i', 'c', 'A', 'M', 'D', 0};
 
-BOOT_BSS static cpu_identity_t cpu_identity;
+BOOT_BSS स्थिर cpu_तटस्थः_t cpu_तटस्थः;
 
-BOOT_CODE cpu_identity_t *x86_cpuid_get_identity(void)
+BOOT_संहिता cpu_तटस्थः_t *x86_cpuid_get_तटस्थः(शून्य)
 {
-    return &cpu_identity;
+    प्रत्यागम &cpu_तटस्थः;
 }
 
-BOOT_CODE x86_cpu_identity_t *x86_cpuid_get_model_info(void)
+BOOT_संहिता x86_cpu_तटस्थः_t *x86_cpuid_get_model_info(शून्य)
 {
-    return &cpu_identity.display;
+    प्रत्यागम &cpu_तटस्थः.display;
 }
 
 /** Extracts the vendor string from CPUID_000H.E[BCD]X.
  * Will be one of "GenuineIntel", "AMDisbetter!", "AuthenticAMD", "CentaurHauls"
  * etc. We don't support x86 CPUs from vendors other than AMD and Intel.
  */
-BOOT_CODE static void x86_cpuid_fill_vendor_string(cpu_identity_t *ci)
+BOOT_संहिता स्थिर शून्य x86_cpuid_fill_vendor_string(cpu_तटस्थः_t *ci)
 {
     MAY_ALIAS uint32_t *vendor_string32 = (uint32_t *)ci->vendor_string;
 
-    if (ci == NULL) {
-        return;
+    यदि (ci == रिक्त) {
+        प्रत्यागम;
     }
 
     vendor_string32[0] = x86_cpuid_ebx(0, 0);
@@ -49,12 +49,12 @@ BOOT_CODE static void x86_cpuid_fill_vendor_string(cpu_identity_t *ci)
     ci->vendor_string[X86_CPUID_VENDOR_STRING_MAXLENGTH] = '\0';
 }
 
-struct family_model {
+संरचना family_model {
     uint8_t family, model;
 };
 
-BOOT_CODE static void x86_cpuid_intel_identity_initialize(cpu_identity_t *ci,
-                                                          struct family_model original)
+BOOT_संहिता स्थिर शून्य x86_cpuid_intel_तटस्थः_initialize(cpu_तटस्थः_t *ci,
+                                                          संरचना family_model original)
 {
     /* Next, there are some values which require additional adjustment, and
      * require you to take into account an additional extended family and model
@@ -62,9 +62,9 @@ BOOT_CODE static void x86_cpuid_intel_identity_initialize(cpu_identity_t *ci,
      *
      * See Intel manuals vol2, section 3.2 for the literal constants.
      */
-    if (original.family != 0x0F) {
+    यदि (original.family != 0x0F) {
         ci->display.family = original.family;
-    } else {
+    } अन्यथा {
         ci->display.family = ci->display.extended_family + original.family;
     }
 
@@ -87,15 +87,15 @@ BOOT_CODE static void x86_cpuid_intel_identity_initialize(cpu_identity_t *ci,
      * See Linux source at: /arch/x86/lib/cpu.c:
      *      http://lxr.free-electrons.com/source/arch/x86/lib/cpu.c
      */
-    if (ci->display.family == 0x06 || ci->display.family == 0x0F) {
+    यदि (ci->display.family == 0x06 || ci->display.family == 0x0F) {
         ci->display.model = (ci->display.extended_model << 4u) + original.model;
-    } else {
+    } अन्यथा {
         ci->display.model = original.model;
     }
 }
 
-BOOT_CODE static void x86_cpuid_amd_identity_initialize(cpu_identity_t *ci,
-                                                        struct family_model original)
+BOOT_संहिता स्थिर शून्य x86_cpuid_amd_तटस्थः_initialize(cpu_तटस्थः_t *ci,
+                                                        संरचना family_model original)
 {
     /* Intel and AMD's specifications give slightly different ways to compose
      * the family and model IDs (AMD CPUID manual, section 2.)
@@ -104,30 +104,30 @@ BOOT_CODE static void x86_cpuid_amd_identity_initialize(cpu_identity_t *ci,
      * Intel says that if family == 0xF || family == 0x6, then adjustments are
      * needed.
      */
-    if (original.family < 0xF) {
+    यदि (original.family < 0xF) {
         ci->display.family = original.family;
         ci->display.model = original.model;
-    } else {
+    } अन्यथा {
         ci->display.family = original.family + ci->display.extended_family;
         ci->display.model = (ci->display.extended_model << 4u) + original.model;
     }
 }
 
-BOOT_CODE bool_t x86_cpuid_initialize(void)
+BOOT_संहिता bool_t x86_cpuid_initialize(शून्य)
 {
-    cpu_identity_t *ci = x86_cpuid_get_identity();
-    struct family_model original;
+    cpu_तटस्थः_t *ci = x86_cpuid_get_तटस्थः();
+    संरचना family_model original;
     cpuid_001h_eax_t eax;
     cpuid_001h_ebx_t ebx;
 
-    memset(ci, 0, sizeof(*ci));
+    स्मृतिं_पूरय(ci, 0, परिमाण(*ci));
 
     /* First determine which vendor manufactured the CPU. */
     x86_cpuid_fill_vendor_string(ci);
 
     /* Need both eax and ebx output values. */
-    eax.words[0] = x86_cpuid_eax(1, 0);
-    ebx.words[0] = x86_cpuid_ebx(1, 0);
+    eax.शब्दाः[0] = x86_cpuid_eax(1, 0);
+    ebx.शब्दाः[0] = x86_cpuid_ebx(1, 0);
 
     /* We now use EAX for the family, model, stepping values, and EBX for the
      * brand index. Store the original values from CPUID_001H.EAX.
@@ -143,24 +143,24 @@ BOOT_CODE bool_t x86_cpuid_initialize(void)
     /* Also store the brand index value given in EBX */
     ci->display.brand = cpuid_001h_ebx_get_brand(ebx);
 
-    if (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_INTEL,
+    यदि (वाक्ये_तुलय(ci->vendor_string, X86_CPUID_VENDOR_STRING_INTEL,
                 X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0) {
         ci->vendor = X86_VENDOR_INTEL;
-        x86_cpuid_intel_identity_initialize(ci, original);
-        return true;
-    } else if (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD_LEGACY,
+        x86_cpuid_intel_तटस्थः_initialize(ci, original);
+        प्रत्यागम true;
+    } अन्यथा यदि (वाक्ये_तुलय(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD_LEGACY,
                        X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0
-               || strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD,
+               || वाक्ये_तुलय(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD,
                           X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0) {
         ci->vendor = X86_VENDOR_AMD;
-        x86_cpuid_amd_identity_initialize(ci, original);
-        return true;
-    } else {
+        x86_cpuid_amd_तटस्थः_initialize(ci, original);
+        प्रत्यागम true;
+    } अन्यथा {
         /* CPU from unsupported vendor. Examples could be Cyrix, Centaur, etc.
          * The old time x86 clones. Return false to the boot and let the upper
          * level caller decide what to do.
          */
         ci->vendor = X86_VENDOR_OTHER;
-        return false;
+        प्रत्यागम false;
     }
 }

@@ -4,38 +4,38 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <machine/io.h>
 
-#define USR                   0x08
-#define UTF                   0x70
-#define UNTX                  0x40
+#परिभाषय USR                   0x08
+#परिभाषय UTF                   0x70
+#परिभाषय UNTX                  0x40
 
-#define USR_RXRDY             BIT(0)
-#define USR_RXFUL             BIT(1)
-#define USR_TXRDY             BIT(2)
-#define USR_TXEMP             BIT(3)
+#परिभाषय USR_RXRDY             BIT(0)
+#परिभाषय USR_RXFUL             BIT(1)
+#परिभाषय USR_TXRDY             BIT(2)
+#परिभाषय USR_TXEMP             BIT(3)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#परिभाषय UART_REG(X) ((चञ्चल uint32_t *)(UART_PPTR + (X)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#यदि_परिभाषितम् CONFIG_PRINTING
+शून्य uart_drv_putchar(अचिह्नित वर्ण c)
 {
-    while ((*UART_REG(USR) & USR_TXEMP) == 0);
+    यावत् ((*UART_REG(USR) & USR_TXEMP) == 0);
     /* Tell the peripheral how many characters to send */
     *UART_REG(UNTX) = 1;
     /* Write the character into the FIFO */
     *UART_REG(UTF) = c & 0xff;
 }
-#endif /* CONFIG_PRINTING */
+#यदि_अन्तः /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
+अचिह्नित वर्ण uart_drv_getchar(शून्य)
 {
-    while ((*UART_REG(USR) & USR_RXRDY) == 0);
+    यावत् ((*UART_REG(USR) & USR_RXRDY) == 0);
 
-    return *UART_REG(UTF) & 0xff;
+    प्रत्यागम *UART_REG(UTF) & 0xff;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#यदि_अन्तः /* CONFIG_DEBUG_BUILD */

@@ -6,10 +6,10 @@
 
 #include <machine/assembler.h>
 
-.section .text, "ax"
+.खण्डः .text, "ax"
 .code32
 
 BEGIN_FUNC(idle_thread)
     1: hlt
-    jmp 1b
+    कूर्द 1b
 END_FUNC(idle_thread)

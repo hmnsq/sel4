@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#अन्तर्भाव <object.h>
+#अन्तर्भाव <machine.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <arch/kernel/vspace.h>
+#अन्तर्भाव <arch/kernel/thread.h>
+#अन्तर्भाव <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+शून्य Arch_switch_गन्तव्यम्_Thread(tcb_t *tcb)
 {
     /* set PD */
-    setVMRoot(tcb);
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+    समुच्चयः_VMRoot(tcb);
+    यदि (config_समुच्चयः(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    यदि (config_समुच्चयः(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_संहिता शून्य Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, FLAGS, FLAGS_USER_DEFAULT);
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
-    setRegister(tcb, CS, SEL_CS_0);
-    setRegister(tcb, SS, SEL_DS_0);
-    setRegister(tcb, FS_BASE, 0);
-    setRegister(tcb, GS_BASE, 0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, FLAGS, FLAGS_USER_DEFAULT);
+    समुच्चयः_पञ्जिकाकोशः(tcb, अग्र_IP, (word_t)&idle_thread);
+    समुच्चयः_पञ्जिकाकोशः(tcb, CS, SEL_CS_0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, SS, SEL_DS_0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, FS_आधारः, 0);
+    समुच्चयः_पञ्जिकाकोशः(tcb, GS_आधारः, 0);
 }
 
-void Arch_switchToIdleThread(void)
+शून्य Arch_switch_गन्तव्यम्_Idle_Thread(शून्य)
 {
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    समुच्चयः_VMRoot(ग्रन्थिः_STATE(ksIdleThread));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+शून्य Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Mode_postModifyRegisters(tcb_t *tptr)
+शून्य बहुलकम्_post_Modify_Registers(tcb_t *tptr)
 {
     /* Don't need to do anything */
 }

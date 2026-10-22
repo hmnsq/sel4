@@ -43,7 +43,7 @@
  * segment loads are performed.
  *
  * In order to setup compatibility mode for an application, segment-load
- * instructions (mov to Sreg, pop Sreg) work normally in 64-bit mode. An
+ * instructions (चालय to Sreg, उद्धर Sreg) work normally in 64-bit mode. An
  * entry is read from the system descriptor table (GDT or LDT) and is loaded
  * in the hidden portion of the segment descriptor. The descriptor-register
  * base, limit and attribute fields are all loaded. However, the contents
@@ -53,7 +53,7 @@
 #ifdef ENABLE_SMP_SUPPORT
 /* If using multicore our gs base is set to point to a nodeInfo_t structure.
  * Inside that is the 'currentThreadUserContext' that points to the first
- * register we want to push in the case of the fastsyscall trap. See the
+ * register we want to निक्षिप in the case of the fastsyscall trap. See the
  * comment in the nodeInfo struct for more details
  */
 #define MAYBE_SWAPGS swapgs
@@ -68,7 +68,7 @@
  * fpu state (CONFIG_XSAVE_SIZE) and then the end of the user context is
  * after 22 words (22 == n_immContextRegisters). By default (in the case
  * of a fast syscall trap) we skip 6 registers (SS, CS, RCX, R11,
- * FaultIP, and RSP) and are ready to push Error.
+ * FaultIP, and RSP) and are ready to निक्षिप Error.
  */
 #define MAYBE_SWAPGS
 #define LOAD_USER_CONTEXT_OFFSET(x) movq (ksCurThread), %rsp; addq $(CONFIG_XSAVE_SIZE + 22*8 - 6*8 + (x)*8), %rsp
@@ -101,30 +101,30 @@
 /* Registers to be pushed after an interrupt
    %rcx must be pushed beforehand */
 #define INT_SAVE_STATE                              \
-    push    %r11;                                   \
+    निक्षिप    %r11;                                   \
     /* skip FaultIP, RSP, Error, NextIP, RFLAGS */  \
     subq    $(5 * 8), %rsp;                         \
-    push    %r15;                                   \
-    push    %r9;                                    \
-    push    %r8;                                    \
-    push    %r10;                                   \
-    push    %rdx;                                   \
-    push    %r14;                                   \
-    push    %r13;                                   \
-    push    %r12;                                   \
-    push    %rbp;                                   \
-    push    %rbx;                                   \
-    push    %rax;                                   \
-    push    %rsi;                                   \
-    push    %rdi
+    निक्षिप    %r15;                                   \
+    निक्षिप    %r9;                                    \
+    निक्षिप    %r8;                                    \
+    निक्षिप    %r10;                                   \
+    निक्षिप    %rdx;                                   \
+    निक्षिप    %r14;                                   \
+    निक्षिप    %r13;                                   \
+    निक्षिप    %r12;                                   \
+    निक्षिप    %rbp;                                   \
+    निक्षिप    %rbx;                                   \
+    निक्षिप    %rax;                                   \
+    निक्षिप    %rsi;                                   \
+    निक्षिप    %rdi
 
 /* Kernel exception handler if interrupt vector < 32. */
 #define EXPAND_EXCEPT_1(number)                     \
     /* use saved stack */                           \
     movq    32(%rsp), %rsp;                         \
-    push    %rcx;                                   \
+    निक्षिप    %rcx;                                   \
     movq    $0x##number, %rcx;                      \
-    jmp     kernel_exception
+    कूर्द     kernel_exception
 
 /* Kernel exception handler if interrupt vector >= 32.
    Either a normal interrupt from the idle thread
@@ -140,15 +140,15 @@
     /* skip 128 bytes as we need to respect the */  \
     /* red zone */                                  \
     subq    $128, %rsp;                             \
-    push    %rcx;                                   \
+    निक्षिप    %rcx;                                   \
     movq    $0x##number, %rcx;                      \
-    jmp     nested_interrupt
+    कूर्द     nested_interrupt
 
 #define INT_HANDLE_COMMON_EXCEPT(number,except) _expand_except_(except)(number)
 #define _expand_except_(except) EXPAND_EXCEPT_##except
 
 #define INT_HANDLER_COMMON(number,error_code,except) \
-.global int_##number;                               \
+.वैश्विक int_##number;                               \
 .type   int_##number, %function;                    \
 int_##number:                                       \
     error_code;                                     \
@@ -160,9 +160,9 @@ int_##number:                                       \
     /* we need to not skip RSP, FaultIP, R11 and RCX for now */ \
     MAYBE_SWAPGS;                                   \
     LOAD_USER_CONTEXT_OFFSET(4);                    \
-    push    %rcx;                                   \
+    निक्षिप    %rcx;                                   \
     movq    $0x##number, %rcx;                      \
-    jmp     handle_interrupt;                       \
+    कूर्द     handle_interrupt;                       \
 1:                                                  \
     INT_HANDLE_COMMON_EXCEPT(number,except);        \
 .size   int_##number, . - int_##number;
@@ -170,7 +170,7 @@ int_##number:                                       \
 #define INT_HANDLER_WITH_ERR_CODE(number,except) INT_HANDLER_COMMON(number,,except)
 #define INT_HANDLER_WITHOUT_ERR_CODE(number,except) INT_HANDLER_COMMON(number,pushq $0x0,except)
 
-.section .text, "ax"
+.खण्डः .text, "ax"
 .code64
 
 INT_HANDLER_WITHOUT_ERR_CODE(00,1)
@@ -446,7 +446,7 @@ INT_HANDLER_WITHOUT_ERR_CODE(fe,0)
 INT_HANDLER_WITHOUT_ERR_CODE(ff,0)
 
 BEGIN_FUNC(handle_interrupt)
-    # push the rest of the registers
+    # निक्षिप the rest of the registers
     INT_SAVE_STATE
 
     # switch to kernel stack
@@ -457,15 +457,15 @@ BEGIN_FUNC(handle_interrupt)
     movq    %rax, %rsi
 
     # gtfo to C land, we will not return
-    call    c_x64_handle_interrupt
+    आह्वान    c_x64_handle_interrupt
 END_FUNC(handle_interrupt)
 
 BEGIN_FUNC(nested_interrupt)
-    # we got an interrupt from the kernel, call into c to save the irq number,
+    # we got an interrupt from the kernel, आह्वान into c to save the irq number,
     # then return back to where we were
     INT_SAVE_STATE
     movq    %rcx, %rdi
-    call    c_nested_interrupt
+    आह्वान    c_nested_interrupt
     # disable the interrupt flag so we don't take any more interrupts
     LOAD_IRQ_STACK(rbx)
     andq    $~0x200, 24(%rbx)
@@ -494,7 +494,7 @@ interrupt_return:
 END_FUNC(nested_interrupt)
 
 BEGIN_FUNC(kernel_exception)
-    # push registers
+    # निक्षिप registers
     INT_SAVE_STATE
 #if defined(CONFIG_HARDWARE_DEBUG_API)
     /* Before giving up and panicking, we need to test for the extra case that
@@ -574,17 +574,17 @@ BEGIN_FUNC(kernel_exception)
     subq    $8, %rsp
 
     movq    %cr4, %r11
-    push    %r11
+    निक्षिप    %r11
     movq    %cr3, %r11
-    push    %r11
+    निक्षिप    %r11
     movq    %cr2, %r11
-    push    %r11
-    call    handleKernelException
+    निक्षिप    %r11
+    आह्वान    handleKernelException
     addq    $32, %rsp
     # Set RIP in the saved register context to the new IP returned from handleKernelException
     LOAD_IRQ_STACK(r8)
     movq    %rax, 8(%r8)
-    jmp     interrupt_return
+    कूर्द     interrupt_return
 END_FUNC(kernel_exception)
 
 # For a fast syscall the RFLAGS have been placed in
@@ -598,21 +598,21 @@ BEGIN_FUNC(handle_fastsyscall)
     MAYBE_SWAPGS
     LOAD_USER_CONTEXT
     pushq   $-1             # set Error -1 to mean entry via syscall
-    push    %rcx            # save NextIP
-    push    %r11            # save RFLAGS
-    push    %r15            # save R15 (message register)
-    push    %r9             # save R9 (message register)
-    push    %r8             # save R8 (message register)
-    push    %r10            # save R10 (message register)
-    push    %rdx            # save RDX (syscall number)
-    push    %r14
-    push    %r13
-    push    %r12
-    push    %rbp
-    push    %rbx
-    push    %rax
-    push    %rsi            # save RSI (msgInfo register)
-    push    %rdi            # save RDI (capRegister)
+    निक्षिप    %rcx            # save NextIP
+    निक्षिप    %r11            # save RFLAGS
+    निक्षिप    %r15            # save R15 (message register)
+    निक्षिप    %r9             # save R9 (message register)
+    निक्षिप    %r8             # save R8 (message register)
+    निक्षिप    %r10            # save R10 (message register)
+    निक्षिप    %rdx            # save RDX (syscall number)
+    निक्षिप    %r14
+    निक्षिप    %r13
+    निक्षिप    %r12
+    निक्षिप    %rbp
+    निक्षिप    %rbx
+    निक्षिप    %rax
+    निक्षिप    %rsi            # save RSI (msgInfo register)
+    निक्षिप    %rdi            # save RDI (capRegister)
 
     # switch to kernel stack
     LOAD_KERNEL_STACK
@@ -620,10 +620,10 @@ BEGIN_FUNC(handle_fastsyscall)
     # RSI, RDI and RDX are already correct for calling c_handle_syscall
     # gtfo to C land, we will not return
 #ifdef CONFIG_KERNEL_MCS
-    # mov reply to correct register for calling c_handle_syscall
+    # चालय reply to correct register for calling c_handle_syscall
     movq   %r12, %rcx
 #endif
-    jmp    c_handle_syscall
+    कूर्द    c_handle_syscall
 END_FUNC(handle_fastsyscall)
 
 # Handle Syscall (coming via sysenter)
@@ -637,26 +637,26 @@ BEGIN_FUNC(handle_syscall)
     LOAD_KERNEL_AS(rsp)
     MAYBE_SWAPGS
     LOAD_USER_CONTEXT_OFFSET(3)
-    push    %r11
-    push    %rdx            # save FaultIP
-    push    %rcx            # save RSP
-    push    $-1             # set Error -1 to mean entry via syscall
-    push    %rdx            # save FaultIP (which will need to be updated later)
+    निक्षिप    %r11
+    निक्षिप    %rdx            # save FaultIP
+    निक्षिप    %rcx            # save RSP
+    निक्षिप    $-1             # set Error -1 to mean entry via syscall
+    निक्षिप    %rdx            # save FaultIP (which will need to be updated later)
     pushf                   # save RFLAGS
     orq     $0x200, (%rsp)  # set interrupt bit in save RFLAGS
-    push    %r15            # save R15 (message register)
-    push    %r9             # save R9 (message register)
-    push    %r8             # save R8 (message register)
-    push    %r10            # save R10 (message register)
+    निक्षिप    %r15            # save R15 (message register)
+    निक्षिप    %r9             # save R9 (message register)
+    निक्षिप    %r8             # save R8 (message register)
+    निक्षिप    %r10            # save R10 (message register)
     subq    $8, %rsp        # skip RDX
-    push    %r14
-    push    %r13
-    push    %r12
-    push    %rbp
-    push    %rbx
-    push    %rax            # save RAX (syscall number)
-    push    %rsi            # save RSI (msgInfo register)
-    push    %rdi            # save RDI (capRegister)
+    निक्षिप    %r14
+    निक्षिप    %r13
+    निक्षिप    %r12
+    निक्षिप    %rbp
+    निक्षिप    %rbx
+    निक्षिप    %rax            # save RAX (syscall number)
+    निक्षिप    %rsi            # save RSI (msgInfo register)
+    निक्षिप    %rdi            # save RDI (capRegister)
 
     # switch to kernel stack
     LOAD_KERNEL_STACK
@@ -665,10 +665,10 @@ BEGIN_FUNC(handle_syscall)
     movq %rax, %rdx
     # gtfo to C land, we will not return
 #ifdef CONFIG_KERNEL_MCS
-    # mov reply to correct register for calling c_handle_syscall
+    # चालय reply to correct register for calling c_handle_syscall
     movq   %r12, %rcx
 #endif
-    call    c_handle_syscall
+    आह्वान    c_handle_syscall
 END_FUNC(handle_syscall)
 
 # Handle vmexit
@@ -679,32 +679,32 @@ BEGIN_FUNC(handle_vmexit)
     MAYBE_SWAPGS
 #else
     # Save the guest's gp registers
-    push    %r15
-    push    %r14
-    push    %r13
-    push    %r12
-    push    %r11
-    push    %r10
-    push    %r9
-    push    %r8
+    निक्षिप    %r15
+    निक्षिप    %r14
+    निक्षिप    %r13
+    निक्षिप    %r12
+    निक्षिप    %r11
+    निक्षिप    %r10
+    निक्षिप    %r9
+    निक्षिप    %r8
 #endif
-    push    %rbp
-    push    %rdi
-    push    %rsi
-    push    %rdx
-    push    %rcx
-    push    %rbx
-    push    %rax
+    निक्षिप    %rbp
+    निक्षिप    %rdi
+    निक्षिप    %rsi
+    निक्षिप    %rdx
+    निक्षिप    %rcx
+    निक्षिप    %rbx
+    निक्षिप    %rax
 
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
     # Save the guest's GS, Shadow GS, and FS
-    mov $0xC0000100, %ecx
+    चालय $0xC0000100, %ecx
     rdmsr
     shl $0x20,%rdx
     or %rdx, %rax
     pushq %rax # Save FS
     swapgs
-    mov $0xC0000101, %ecx
+    चालय $0xC0000101, %ecx
     rdmsr
     shl $0x20,%rdx
     or %rdx, %rax
@@ -716,21 +716,21 @@ BEGIN_FUNC(handle_vmexit)
     pushq %rax # Save GS
 
     # RSP now at host_gs registers
-    sub $0x18, %rsp
+    वियोजय $0x18, %rsp
 
     # Restore the host's GS and Shadow GS
-    pop %rax
+    उद्धर %rax
     movq %rax, %rdx
     shr $0x20, %rdx
     wrmsr # GS
     swapgs
-    pop %rax
+    उद्धर %rax
     movq %rax, %rdx
     shr $0x20, %rdx
     wrmsr # Shadow GS
     swapgs
-    mov $0xC0000100, %ecx
-    pop %rax
+    चालय $0xC0000100, %ecx
+    उद्धर %rax
     movq %rax, %rdx
     shr $0x20, %rdx
     wrmsr # FS
@@ -739,6 +739,6 @@ BEGIN_FUNC(handle_vmexit)
     # switch to kernel stack
     LOAD_KERNEL_STACK
     # Handle the vmexit, we will not return
-    call    c_handle_vmexit
+    आह्वान    c_handle_vmexit
 END_FUNC(handle_vmexit)
 #endif /* CONFIG_VTX */

@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <sel4/arch/constants.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
-#include <machine/debug.h>
+#अन्तर्भाव <assert.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <sel4/arch/constants.h>
+#अन्तर्भाव <arch/machine/registerset.h>
+#अन्तर्भाव <machine/fpu.h>
+#अन्तर्भाव <arch/object/structures.h>
+#अन्तर्भाव <machine/debug.h>
 
-const register_t msgRegisters[] = {
+ध्रुव पञ्जिकाकोशः_t सन्देशः_Registers[] = {
     EDI,
-#ifndef CONFIG_KERNEL_MCS
+#यदि_अपरिभाषितम् CONFIG_KERNEL_MCS
     EBP
-#endif
+#यदि_अन्तः
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_सन्देशः_registers,
+    परिमाण(सन्देशः_Registers) / परिमाण(सन्देशः_Registers[0]) == n_सन्देशः_Registers
 );
 
-const register_t frameRegisters[] = {
+ध्रुव पञ्जिकाकोशः_t frameRegisters[] = {
     FaultIP, ESP, FLAGS, EAX, EBX, ECX, EDX, ESI, EDI, EBP
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    परिमाण(frameRegisters) / परिमाण(frameRegisters[0]) == n_frameRegisters
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+ध्रुव पञ्जिकाकोशः_t gpRegisters[] = {
+    FS_आधारः, GS_आधारः
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    परिमाण(gpRegisters) / परिमाण(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+शून्य बहुलकम्_init_Context(user_context_t *context)
 {
     context->registers[EAX] = 0;
     context->registers[EBX] = 0;
@@ -51,19 +51,19 @@ void Mode_initContext(user_context_t *context)
     context->registers[ESP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+word_t बहुलकम्_sanitise_पञ्जिकाकोशः(पञ्जिकाकोशः_t reg, word_t v)
 {
-    return v;
+    प्रत्यागम v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#यदि_परिभाषितम् CONFIG_KERNEL_MCS
+word_t getNBSendRecvDest(शून्य)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    seL4_IPCBuffer *बफर = (seL4_IPCBuffer *) lookupIPCBuffer(false, ग्रन्थिः_STATE(ksCurThread));
+    यदि (बफर != रिक्त) {
+        प्रत्यागम बफर->user_दत्त;
+    } अन्यथा {
+        प्रत्यागम 0;
     }
 }
-#endif
+#यदि_अन्तः

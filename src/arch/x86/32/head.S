@@ -14,7 +14,7 @@
 #include <config.h>
 #include <machine/assembler.h>
 
-.section .phys.text, "ax"
+.खण्डः .phys.text, "ax"
 
 BEGIN_FUNC(enable_paging)
     # Set PSE (bit 4) to enable 4M pages
@@ -33,13 +33,13 @@ BEGIN_FUNC(enable_paging)
     orl  $0x80000000, %eax
     movl %eax,        %cr0
 
-    # Now that paging is enabled we can enable global pages
+    # Now that paging is enabled we can enable वैश्विक pages
     # Must be done in this sequence as per the intel manual
-    # Set PGE (bit 7) to enable global pages
+    # Set PGE (bit 7) to enable वैश्विक pages
     movl %cr4,  %eax
     orl  $0x80, %eax
     movl %eax,  %cr4
-    ret
+    प्रत्यागच्छ
 END_FUNC(enable_paging)
 
 /* ===== booting up first CPU ===== */
@@ -64,8 +64,8 @@ BEGIN_FUNC(_start)
     pushl %edi /* 1st parameter: multiboot_magic    */
 
     /* Initialise boot PD and enable paging */
-    call init_boot_pd
-    call enable_paging
+    आह्वान init_boot_pd
+    आह्वान enable_paging
 
     popl %edi
     popl %esi
@@ -79,7 +79,7 @@ BEGIN_FUNC(_start)
     /* Call boot_sys() (takes 2 parameters) and set restore_user_context() as  */
     /* return EIP. This will start the roottask as soon as boot_sys() returns. */
     pushl $restore_user_context
-    jmp   boot_sys
+    कूर्द   boot_sys
 END_FUNC(_start)
 
 /* ===== booting up another CPU ===== */
@@ -115,7 +115,7 @@ BEGIN_FUNC(boot_cpu_start)
     popf
 
     /* Enable paging */
-    call enable_paging
+    आह्वान enable_paging
 
     /* Get index of this cpu, BSP always gets index of zero */
     movl smp_aps_index, %ecx
@@ -129,7 +129,7 @@ BEGIN_FUNC(boot_cpu_start)
 
     /* Call boot_node() and set restore_user_context() as return EIP. */
     pushl $restore_user_context
-    jmp   boot_node
+    कूर्द   boot_node
 END_FUNC(boot_cpu_start)
 
 _boot_gdt_ptr:
@@ -142,7 +142,7 @@ _boot_gdt:
     .quad 0x00cf9b000000ffff /* 4GB kernel code segment */
     .quad 0x00cf93000000ffff /* 4GB kernel data segment */
 
-.global boot_cpu_end
+.वैश्विक boot_cpu_end
 boot_cpu_end:
 
 #endif /* ENABLE_SMP_SUPPORT */

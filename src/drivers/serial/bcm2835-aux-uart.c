@@ -4,50 +4,50 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <machine/io.h>
 
 /* When DLAB=1, MU_IO is a baud rate register.
  * Otherwise, write to TX, read to RX */
-#define MU_IO       0x00
+#परिभाषय MU_IO       0x00
 /* When DLAB=1, MU_IIR is a baud rate register.
  * Otherwise IRQ enable */
-#define MU_IIR      0x04
-#define MU_IER      0x08
-#define MU_LCR      0x0C
-#define MU_MCR      0x10
-#define MU_LSR      0x14
-#define MU_MSR      0x18
-#define MU_SCRATCH  0x1C
-#define MU_CNTL     0x20
+#परिभाषय MU_IIR      0x04
+#परिभाषय MU_IER      0x08
+#परिभाषय MU_LCR      0x0C
+#परिभाषय MU_MCR      0x10
+#परिभाषय MU_LSR      0x14
+#परिभाषय MU_MSR      0x18
+#परिभाषय MU_SCRATCH  0x1C
+#परिभाषय MU_CNTL     0x20
 
 /* This bit is set if the transmit FIFO can accept at least one byte.*/
-#define MU_LSR_TXEMPTY   BIT(5)
+#परिभाषय MU_LSR_TXEMPTY   BIT(5)
 /* This bit is set if the transmit FIFO is empty and the
  * transmitter is idle. (Finished shifting out the last bit). */
-#define MU_LSR_TXIDLE    BIT(6)
-#define MU_LSR_RXOVERRUN BIT(1)
-#define MU_LSR_DATAREADY BIT(0)
-#define MU_LCR_DLAB      BIT(7)
-#define MU_LCR_BREAK     BIT(6)
-#define MU_LCR_DATASIZE  BIT(0)
+#परिभाषय MU_LSR_TXIDLE    BIT(6)
+#परिभाषय MU_LSR_RXOVERRUN BIT(1)
+#परिभाषय MU_LSR_DATAREADY BIT(0)
+#परिभाषय MU_LCR_DLAB      BIT(7)
+#परिभाषय MU_LCR_BREAK     BIT(6)
+#परिभाषय MU_LCR_DATASIZE  BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#परिभाषय UART_REG(x) ((चञ्चल uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#यदि_परिभाषितम् CONFIG_PRINTING
+शून्य uart_drv_putchar(अचिह्नित वर्ण c)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
+    यावत् (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
     *UART_REG(MU_IO) = (c & 0xff);
 }
-#endif /* CONFIG_PRINTING */
+#यदि_अन्तः /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#यदि_परिभाषितम् CONFIG_DEBUG_BUILD
+अचिह्नित वर्ण uart_drv_getchar(शून्य)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
-    return *UART_REG(MU_IO);
+    यावत् (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
+    प्रत्यागम *UART_REG(MU_IO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#यदि_अन्तः /* CONFIG_DEBUG_BUILD */

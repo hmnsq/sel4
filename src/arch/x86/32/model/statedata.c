@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/model/statedata.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <mode/model/statedata.h>
 
 /* Current active page directory. This is really just a shadow of CR3 */
-UP_STATE_DEFINE(paddr_t, ia32KSCurrentPD VISIBLE);
+ऊर्ध्वम्_STATE_DEFINE(paddr_t, ia32KSCurrentPD VISIBLE);
 
 /* The privileged kernel mapping PD & PT */
-pde_t ia32KSGlobalPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-pte_t ia32KSGlobalPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
+pde_t ia32KSGlobalPD[BIT(PD_सूचकांक_द्वयङ्काः)] ALIGN(BIT(se_L4_Page_Dir_द्वयङ्काः));
+pte_t ia32KSGlobalPT[BIT(PT_सूचकांक_द्वयङ्काः)] ALIGN(BIT(se_L4_Page_सारणी_द्वयङ्काः));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t ia32KSGlobalLogPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#यदि_परिभाषितम् CONFIG_KERNEL_LOG_बफर
+pte_t ia32KSGlobalLogPT[BIT(PT_सूचकांक_द्वयङ्काः)] ALIGN(BIT(se_L4_Page_सारणी_द्वयङ्काः));
+#यदि_अन्तः /* CONFIG_KERNEL_LOG_BUFFER */

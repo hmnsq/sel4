@@ -5,95 +5,95 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <arch/machine/gic_v3.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <arch/machine/gic_v3.h>
 
-#define IRQ_SET_ALL 0xffffffff
+#परिभाषय IRQ_समुच्चयः_ALL 0xffffffff
 
-#define RDIST_BANK_SZ 0x00010000
+#परिभाषय RDIST_BANK_SZ 0x00010000
 /* One GICR region and one GICR_SGI region */
-#define GICR_PER_CORE_SIZE  (0x20000)
+#परिभाषय GICR_प्रत्येकम्_CORE_आकार  (0x20000)
 /* Assume 8 cores */
-#define GICR_SIZE           (0x100000)
+#परिभाषय GICR_आकार           (0x100000)
 
-#define GIC_DEADLINE_MS 2
-#define GIC_REG_WIDTH   32
+#परिभाषय GIC_DEADLINE_MS 2
+#परिभाषय GIC_REG_विस्तारः   32
 
-#ifdef CONFIG_ARCH_AARCH64
-#define ICC_SGI1R_EL1 "S3_0_C12_C11_5"
-#else
-#define ICC_SGI1R_EL1 "p15, 0, %Q0, %R0, c12"
-#endif
+#यदि_परिभाषितम् CONFIG_ARCH_AARCH64
+#परिभाषय ICC_SGI1R_EL1 "S3_0_C12_C11_5"
+#अन्यथा
+#परिभाषय ICC_SGI1R_EL1 "p15, 0, %Q0, %R0, c12"
+#यदि_अन्तः
 
-#define ICC_SGI1R_INTID_SHIFT          (24)
-#define ICC_SGI1R_AFF1_SHIFT           (16)
-#define ICC_SGI1R_AFF2_SHIFT           (32)
-#define ICC_SGI1R_AFF3_SHIFT           (48)
-#define ICC_SGI1R_RS_SHIFT             (44)
-#define ICC_SGI1R_IRM_BIT              (40)
-#define ICC_SGI1R_CPUTARGETLIST_MASK   0xffff
+#परिभाषय ICC_SGI1_R_INTID_सरणम्          (24)
+#परिभाषय ICC_SGI1_R_AFF1_सरणम्           (16)
+#परिभाषय ICC_SGI1_R_AFF2_सरणम्           (32)
+#परिभाषय ICC_SGI1_R_AFF3_सरणम्           (48)
+#परिभाषय ICC_SGI1_R_RS_सरणम्             (44)
+#परिभाषय ICC_SGI1R_IRM_BIT              (40)
+#परिभाषय ICC_SGI1_R_CPUTARGETLIST_आवरणम्   0xffff
 
-volatile struct gic_dist_map *const gic_dist = (volatile struct gic_dist_map *)(GICD_PPTR);
-volatile void *const gicr_base = (volatile uint8_t *)(GICR_PPTR);
+चञ्चल संरचना gic_dist_map *ध्रुव gic_dist = (चञ्चल संरचना gic_dist_map *)(GICD_PPTR);
+चञ्चल शून्य *ध्रुव gicr_आधारः = (चञ्चल uint8_t *)(GICR_PPTR);
 
-word_t active_irq[CONFIG_MAX_NUM_NODES];
-volatile struct gic_rdist_map *gic_rdist_map[CONFIG_MAX_NUM_NODES] = { 0 };
-volatile struct gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_NUM_NODES] = { 0 };
+word_t सक्रिय_irq[CONFIG_MAX_अङ्कः_NODES];
+चञ्चल संरचना gic_rdist_map *gic_rdist_map[CONFIG_MAX_अङ्कः_NODES] = { 0 };
+चञ्चल संरचना gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_अङ्कः_NODES] = { 0 };
 
-#ifdef CONFIG_ARCH_AARCH64
-#define MPIDR_AFF0(x) (x & 0xff)
-#define MPIDR_AFF1(x) ((x >> 8) & 0xff)
-#define MPIDR_AFF2(x) ((x >> 16) & 0xff)
-#define MPIDR_AFF3(x) ((x >> 32) & 0xff)
-#else
-#define MPIDR_AFF0(x) (x & 0xff)
-#define MPIDR_AFF1(x) ((x >> 8) & 0xff)
-#define MPIDR_AFF2(x) ((x >> 16) & 0xff)
-#define MPIDR_AFF3(x) (0)
-#endif
-#define MPIDR_MT(x)   (x & BIT(24))
-#define MPIDR_AFF_MASK(x) (x & 0xff00ffffff)
+#यदि_परिभाषितम् CONFIG_ARCH_AARCH64
+#परिभाषय MPIDR_AFF0(x) (x & 0xff)
+#परिभाषय MPIDR_AFF1(x) ((x >> 8) & 0xff)
+#परिभाषय MPIDR_AFF2(x) ((x >> 16) & 0xff)
+#परिभाषय MPIDR_AFF3(x) ((x >> 32) & 0xff)
+#अन्यथा
+#परिभाषय MPIDR_AFF0(x) (x & 0xff)
+#परिभाषय MPIDR_AFF1(x) ((x >> 8) & 0xff)
+#परिभाषय MPIDR_AFF2(x) ((x >> 16) & 0xff)
+#परिभाषय MPIDR_AFF3(x) (0)
+#यदि_अन्तः
+#परिभाषय MPIDR_MT(x)   (x & BIT(24))
+#परिभाषय MPIDR_AFF_आवरणम्(x) (x & 0xff00ffffff)
 
-static word_t mpidr_map[CONFIG_MAX_NUM_NODES];
+स्थिर word_t mpidr_map[CONFIG_MAX_अङ्कः_NODES];
 
-static inline word_t get_mpidr(word_t core_id)
+स्थिर अन्तःस्थ word_t get_mpidr(word_t core_id)
 {
-    return mpidr_map[core_id];
+    प्रत्यागम mpidr_map[core_id];
 }
 
-static inline word_t get_current_mpidr(void)
+स्थिर अन्तःस्थ word_t get_current_mpidr(शून्य)
 {
-    word_t core_id = CURRENT_CPU_INDEX();
-    return get_mpidr(core_id);
+    word_t core_id = CURRENT_CPU_सूचकांक();
+    प्रत्यागम get_mpidr(core_id);
 }
 
-static inline uint64_t mpidr_to_gic_affinity(void)
+स्थिर अन्तःस्थ uint64_t mpidr_गन्तव्यम्_gic_affinity(शून्य)
 {
     word_t mpidr = get_current_mpidr();
     uint64_t affinity = 0;
     affinity = (uint64_t)MPIDR_AFF3(mpidr) << 32 | MPIDR_AFF2(mpidr) << 16 |
                MPIDR_AFF1(mpidr) << 8  | MPIDR_AFF0(mpidr);
-    return affinity;
+    प्रत्यागम affinity;
 }
 
-static inline uint64_t sgir_word_from_args(word_t irq, word_t target)
+स्थिर अन्तःस्थ uint64_t sgir_word_from_तर्काः(word_t irq, word_t target)
 {
     uint64_t t = target; /* make sure shifts below are on 64 bit */
-    return (uint64_t) irq << ICC_SGI1R_INTID_SHIFT
+    प्रत्यागम (uint64_t) irq << ICC_SGI1_R_INTID_सरणम्
            | (1llu << (t & 0xf)) // AFF0 base
-           | ((t >> 4)  & 0x0f) << ICC_SGI1R_RS_SHIFT // AFF0 Range select
-           | ((t >> 8)  & 0xff) << ICC_SGI1R_AFF1_SHIFT // AFF1
-           | ((t >> 16) & 0xff) << ICC_SGI1R_AFF2_SHIFT // AFF2
-           | ((t >> 24) & 0xff) << ICC_SGI1R_AFF3_SHIFT; // AFF3
+           | ((t >> 4)  & 0x0f) << ICC_SGI1_R_RS_सरणम् // AFF0 Range select
+           | ((t >> 8)  & 0xff) << ICC_SGI1_R_AFF1_सरणम् // AFF1
+           | ((t >> 16) & 0xff) << ICC_SGI1_R_AFF2_सरणम् // AFF2
+           | ((t >> 24) & 0xff) << ICC_SGI1_R_AFF3_सरणम्; // AFF3
 }
 
 /* Wait for completion of a distributor change */
 /** DONT_TRANSLATE */
-static uint32_t gicv3_do_wait_for_rwp(volatile uint32_t *ctlr_addr)
+स्थिर uint32_t gicv3_do_wait_for_rwp(चञ्चल uint32_t *ctlr_addr)
 {
     uint32_t val;
-    bool_t waiting = true;
+    bool_t प्रतीक्षा = true;
     uint32_t ret = 0;
 
     uint64_t gpt_cnt_tval = 0;
@@ -102,44 +102,44 @@ static uint32_t gicv3_do_wait_for_rwp(volatile uint32_t *ctlr_addr)
 
     /* Check the value before reading the generic timer */
     val = *ctlr_addr;
-    if (!(val & GICD_CTLR_RWP)) {
-        return 0;
+    यदि (!(val & GICD_CTLR_RWP)) {
+        प्रत्यागम 0;
     }
     SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
-    gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_PER_MS);
+    gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_प्रत्येकम्_MS);
 
-    while (waiting) {
+    यावत् (प्रतीक्षा) {
         SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
         val = *ctlr_addr;
 
-        if (gpt_cnt_tval >= gpt_cnt_ciel) {
-            printf("GICV3 RWP Timeout after %u ms\n", deadline_ms);
+        यदि (gpt_cnt_tval >= gpt_cnt_ciel) {
+            प्रारूप_लिख("GICV3 RWP Timeout after %u ms\n", deadline_ms);
             ret = 1;
-            waiting = false;
+            प्रतीक्षा = false;
 
-        } else if (!(val & GICD_CTLR_RWP)) {
+        } अन्यथा यदि (!(val & GICD_CTLR_RWP)) {
             ret = 0;
-            waiting = false;
+            प्रतीक्षा = false;
         }
     }
-    return ret;
+    प्रत्यागम ret;
 }
 
-static void gicv3_dist_wait_for_rwp(void)
+स्थिर शून्य gicv3_dist_wait_for_rwp(शून्य)
 {
     gicv3_do_wait_for_rwp(&gic_dist->ctlr);
 }
 
-static void gicv3_redist_wait_for_rwp(void)
+स्थिर शून्य gicv3_redist_wait_for_rwp(शून्य)
 {
-    gicv3_do_wait_for_rwp(&gic_rdist_map[CURRENT_CPU_INDEX()]->ctlr);
+    gicv3_do_wait_for_rwp(&gic_rdist_map[CURRENT_CPU_सूचकांक()]->ctlr);
 }
 
-static void gicv3_enable_sre(void)
+स्थिर शून्य gicv3_enable_sre(शून्य)
 {
     word_t val;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#यदि_परिभाषितम् CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Set SRE to enable register interface for GICv3 in EL2. Disable IRQ/FIQ legacy bypass.
      * Set ICC_SRE_EL2.Enable to 0, so EL1 accesses to ICC_SRE_EL1 will trap.
      *
@@ -148,7 +148,7 @@ static void gicv3_enable_sre(void)
      */
     val = GICC_SRE_EL2_SRE | GICC_SRE_EL2_DIB | GICC_SRE_EL2_DFB;
     SYSTEM_WRITE_WORD(ICC_SRE_EL2, val);
-#endif
+#यदि_अन्तः
 
     /* Enable register interface for GICv3 in EL1. Disable IRQ/FIQ legacy bypass. */
     val = GICC_SRE_EL1_SRE | GICC_SRE_EL1_DIB | GICC_SRE_EL1_DFB;
@@ -157,13 +157,13 @@ static void gicv3_enable_sre(void)
 }
 
 
-BOOT_CODE static void dist_init(void)
+BOOT_संहिता स्थिर शून्य dist_init(शून्य)
 {
     word_t i;
     uint32_t type;
-    unsigned int nr_lines;
+    अचिह्नित पूर्णाङ्क nr_पङ्क्तयः;
     uint64_t affinity;
-    uint32_t priority;
+    uint32_t प्राथमिकता;
 
     /* Disable GIC Distributor */
     gic_dist->ctlr = 0;
@@ -171,29 +171,29 @@ BOOT_CODE static void dist_init(void)
 
     type = gic_dist->typer;
 
-    nr_lines = GIC_REG_WIDTH * ((type & GICD_TYPE_LINESNR) + 1);
+    nr_पङ्क्तयः = GIC_REG_विस्तारः * ((type & GICD_TYPE_LINESNR) + 1);
 
     /* Assume level-triggered */
-    for (i = SPI_START; i < nr_lines; i += 16) {
+    प्रति (i = SPI_START; i < nr_पङ्क्तयः; i += 16) {
         gic_dist->icfgrn[(i / 16)] = 0;
     }
 
     /* Default priority for global interrupts */
-    priority = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
+    प्राथमिकता = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
                 GIC_PRI_IRQ);
-    for (i = SPI_START; i < nr_lines; i += 4) {
-        gic_dist->ipriorityrn[(i / 4)] = priority;
+    प्रति (i = SPI_START; i < nr_पङ्क्तयः; i += 4) {
+        gic_dist->ipriorityrn[(i / 4)] = प्राथमिकता;
     }
     /* Disable and clear all global interrupts */
-    for (i = SPI_START; i < nr_lines; i += 32) {
-        gic_dist->icenablern[(i / 32)] = IRQ_SET_ALL;
-        gic_dist->icpendrn[(i / 32)] = IRQ_SET_ALL;
+    प्रति (i = SPI_START; i < nr_पङ्क्तयः; i += 32) {
+        gic_dist->icenablern[(i / 32)] = IRQ_समुच्चयः_ALL;
+        gic_dist->icpendrn[(i / 32)] = IRQ_समुच्चयः_ALL;
     }
 
     /* group 1 for non-secure */
-    if (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
-        for (i = SPI_START; i < nr_lines; i += 32) {
-            gic_dist->igrouprn[(i / 32)] = IRQ_SET_ALL;
+    यदि (config_समुच्चयः(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+        प्रति (i = SPI_START; i < nr_पङ्क्तयः; i += 32) {
+            gic_dist->igrouprn[(i / 32)] = IRQ_समुच्चयः_ALL;
         }
     }
 
@@ -201,17 +201,17 @@ BOOT_CODE static void dist_init(void)
     gicv3_dist_wait_for_rwp();
 
     /* Route all global IRQs to this CPU */
-    affinity = mpidr_to_gic_affinity();
-    for (i = SPI_START; i < nr_lines; i++) {
+    affinity = mpidr_गन्तव्यम्_gic_affinity();
+    प्रति (i = SPI_START; i < nr_पङ्क्तयः; i++) {
         gic_dist->iroutern[i - SPI_START] = affinity;
     }
 
 }
 
-BOOT_CODE static uint32_t gicr_enable_rdist(int core_id)
+BOOT_संहिता स्थिर uint32_t gicr_enable_rdist(पूर्णाङ्क core_id)
 {
     uint32_t deadline_ms =  GIC_DEADLINE_MS;
-    bool_t waiting = true;
+    bool_t प्रतीक्षा = true;
     uint32_t val;
     uint64_t gpt_cnt_tval = 0;
     uint64_t gpt_cnt_ciel;
@@ -222,29 +222,29 @@ BOOT_CODE static uint32_t gicr_enable_rdist(int core_id)
     gic_rdist_map[core_id]->waker = val;
 
     SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
-    gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_PER_MS);
+    gpt_cnt_ciel = gpt_cnt_tval + (deadline_ms * TICKS_प्रत्येकम्_MS);
 
-    while (waiting) {
+    यावत् (प्रतीक्षा) {
         SYSTEM_READ_64(CNT_CT, gpt_cnt_tval);
         val = gic_rdist_map[core_id]->waker;
 
-        if (gpt_cnt_tval >= gpt_cnt_ciel) {
-            printf("GICv3: GICR_WAKER returned non-zero %x\n", val);
+        यदि (gpt_cnt_tval >= gpt_cnt_ciel) {
+            प्रारूप_लिख("GICv3: GICR_WAKER returned non-zero %x\n", val);
             ret = 1;
-            waiting = false;
+            प्रतीक्षा = false;
 
-        } else if (!(val & GICR_WAKER_ChildrenAsleep)) {
+        } अन्यथा यदि (!(val & GICR_WAKER_ChildrenAsleep)) {
             ret = 0;
-            waiting = false;
+            प्रतीक्षा = false;
         }
     }
-    return ret;
+    प्रत्यागम ret;
 }
 
-BOOT_CODE static void gicr_locate_interface(void)
+BOOT_संहिता स्थिर शून्य gicr_locate_interface(शून्य)
 {
-    word_t offset;
-    int core_id = CURRENT_CPU_INDEX();
+    word_t विस्थापनम्;
+    पूर्णाङ्क core_id = CURRENT_CPU_सूचकांक();
     word_t mpidr = get_current_mpidr();
     uint32_t val;
 
@@ -252,24 +252,24 @@ BOOT_CODE static void gicr_locate_interface(void)
      * Iterate through all redistributor interfaces looking for one that matches
      * our mpidr.
      */
-    for (offset = 0; offset < GICR_SIZE; offset += GICR_PER_CORE_SIZE) {
+    प्रति (विस्थापनम् = 0; विस्थापनम् < GICR_आकार; विस्थापनम् += GICR_प्रत्येकम्_CORE_आकार) {
 
-        uint64_t typer = ((struct gic_rdist_map *)((word_t)gicr_base + offset))->typer;
-        if ((typer >> 32) == ((MPIDR_AFF3(mpidr) << 24) |
+        uint64_t typer = ((संरचना gic_rdist_map *)((word_t)gicr_आधारः + विस्थापनम्))->typer;
+        यदि ((typer >> 32) == ((MPIDR_AFF3(mpidr) << 24) |
                               (MPIDR_AFF2(mpidr) << 16) |
                               (MPIDR_AFF1(mpidr) <<  8) |
                               MPIDR_AFF0(mpidr))) {
 
-            word_t gicr = (word_t)gicr_base + offset;
-            if (gic_rdist_map[core_id] != NULL || gic_rdist_sgi_ppi_map[core_id] != NULL) {
-                printf("GICv3: %s[%d] %p is not null\n",
-                       gic_rdist_map[core_id] == NULL ? "gic_rdist_map" : "gic_rdist_sgi_ppi_map",
+            word_t gicr = (word_t)gicr_आधारः + विस्थापनम्;
+            यदि (gic_rdist_map[core_id] != रिक्त || gic_rdist_sgi_ppi_map[core_id] != रिक्त) {
+                प्रारूप_लिख("GICv3: %s[%d] %p is not null\n",
+                       gic_rdist_map[core_id] == रिक्त ? "gic_rdist_map" : "gic_rdist_sgi_ppi_map",
                        core_id,
-                       gic_rdist_map[core_id] == NULL ? (void *)gic_rdist_map[core_id] : (void *)gic_rdist_sgi_ppi_map[core_id]);
+                       gic_rdist_map[core_id] == रिक्त ? (शून्य *)gic_rdist_map[core_id] : (शून्य *)gic_rdist_sgi_ppi_map[core_id]);
                 halt();
             }
-            gic_rdist_map[core_id] = (void *)gicr;
-            gic_rdist_sgi_ppi_map[core_id] = (void *)(gicr + RDIST_BANK_SZ);
+            gic_rdist_map[core_id] = (शून्य *)gicr;
+            gic_rdist_sgi_ppi_map[core_id] = (शून्य *)(gicr + RDIST_BANK_SZ);
 
             /*
              * GICR_WAKER should be Read-all-zeros in Non-secure world
@@ -277,62 +277,62 @@ BOOT_CODE static void gicr_locate_interface(void)
              * However if we get a value back then something is probably wrong.
              */
             val = gic_rdist_map[core_id]->waker;
-            if (val & GICR_WAKER_ChildrenAsleep) {
+            यदि (val & GICR_WAKER_ChildrenAsleep) {
                 /* On QEMU, the redistributor may not be woken by an earlier
                  * loader, so we need to explicitly wake it here. */
-                int ret = gicr_enable_rdist(core_id);
-                if (ret == 1) {
+                पूर्णाङ्क ret = gicr_enable_rdist(core_id);
+                यदि (ret == 1) {
                     halt();
                 }
             }
-            break;
+            भङ्ग;
         }
     }
-    if (offset >= GICR_SIZE) {
-        printf("GICv3: GICR base for CPU %d %d %d %d (Logic ID %d) not found\n",
-               (int)MPIDR_AFF3(mpidr), (int)MPIDR_AFF2(mpidr),
-               (int)MPIDR_AFF1(mpidr), (int)MPIDR_AFF0(mpidr), core_id);
+    यदि (विस्थापनम् >= GICR_आकार) {
+        प्रारूप_लिख("GICv3: GICR base for CPU %d %d %d %d (Logic ID %d) not found\n",
+               (पूर्णाङ्क)MPIDR_AFF3(mpidr), (पूर्णाङ्क)MPIDR_AFF2(mpidr),
+               (पूर्णाङ्क)MPIDR_AFF1(mpidr), (पूर्णाङ्क)MPIDR_AFF0(mpidr), core_id);
         halt();
     }
 
 
 }
 
-BOOT_CODE static void gicr_init(void)
+BOOT_संहिता स्थिर शून्य gicr_init(शून्य)
 {
-    int i;
-    uint32_t priority;
+    पूर्णाङ्क i;
+    uint32_t प्राथमिकता;
 
     /* Find redistributor for this core. */
     gicr_locate_interface();
 
     /* Deactivate SGIs/PPIs */
-    gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->icactiver0 = ~0;
+    gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->icactiver0 = ~0;
 
     /* Set priority on PPI and SGI interrupts */
-    priority = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
+    प्राथमिकता = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
                 GIC_PRI_IRQ);
-    for (i = 0; i < SPI_START; i += 4) {
-        gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->ipriorityrn[i / 4] = priority;
+    प्रति (i = 0; i < SPI_START; i += 4) {
+        gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->ipriorityrn[i / 4] = प्राथमिकता;
     }
 
     /*
      * Disable all PPI interrupts, ensure all SGI interrupts are
      * enabled.
      */
-    gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->icenabler0 = 0xffff0000;
-    gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->isenabler0 = 0x0000ffff;
-    if (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
-        gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->igroupr0 = IRQ_SET_ALL;
+    gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->icenabler0 = 0xffff0000;
+    gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->isenabler0 = 0x0000ffff;
+    यदि (config_समुच्चयः(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+        gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->igroupr0 = IRQ_समुच्चयः_ALL;
     }
 
     /* Set ICFGR1 for PPIs as level-triggered */
-    gic_rdist_sgi_ppi_map[CURRENT_CPU_INDEX()]->icfgr1 = 0x0;
+    gic_rdist_sgi_ppi_map[CURRENT_CPU_सूचकांक()]->icfgr1 = 0x0;
 
     gicv3_redist_wait_for_rwp();
 }
 
-BOOT_CODE static void cpu_iface_init(void)
+BOOT_संहिता स्थिर शून्य cpu_iface_init(शून्य)
 {
     word_t icc_ctlr = 0;
 
@@ -343,7 +343,7 @@ BOOT_CODE static void cpu_iface_init(void)
     SYSTEM_WRITE_WORD(ICC_BPR1_EL1, 0);
 
     /* Set priority mask register: ICC_PMR_EL1 */
-    SYSTEM_WRITE_WORD(ICC_PMR_EL1, DEFAULT_PMR_VALUE);
+    SYSTEM_WRITE_WORD(ICC_PMR_EL1, DEFAULT_PMR_मानम्);
 
     /* EOI drops priority of the interrupt, deactivation happens separately: ICC_CTLR_EL1 */
     SYSTEM_READ_WORD(ICC_CTLR_EL1, icc_ctlr);
@@ -357,56 +357,56 @@ BOOT_CODE static void cpu_iface_init(void)
     isb();
 }
 
-void setIRQTrigger(irq_t irq, bool_t trigger)
+शून्य समुच्चयः_IRQTrigger(irq_t irq, bool_t trigger)
 {
 
     /* GICv3 has read-only GICR_ICFG0 for SGI with
      * default value 0xaaaaaaaa, and read-write GICR_ICFG1
      * for PPI with default 0x00000000.*/
-    word_t hw_irq = IRQT_TO_IRQ(irq);
-    word_t core = IRQT_TO_CORE(irq);
-    if (HW_IRQ_IS_SGI(hw_irq)) {
-        return;
+    word_t hw_irq = IRQT_गन्तव्यम्_IRQ(irq);
+    word_t core = IRQT_गन्तव्यम्_CORE(irq);
+    यदि (HW_IRQ_IS_SGI(hw_irq)) {
+        प्रत्यागम;
     }
-    int word = hw_irq >> 4;
-    int bit = ((hw_irq & 0xf) * 2);
+    पूर्णाङ्क word = hw_irq >> 4;
+    पूर्णाङ्क bit = ((hw_irq & 0xf) * 2);
     uint32_t icfgr = 0;
-    if (HW_IRQ_IS_PPI(hw_irq)) {
+    यदि (HW_IRQ_IS_PPI(hw_irq)) {
         icfgr = gic_rdist_sgi_ppi_map[core]->icfgr1;
-    } else {
+    } अन्यथा {
         icfgr = gic_dist->icfgrn[word];
     }
 
-    if (trigger) {
+    यदि (trigger) {
         icfgr |= (2 << bit);
-    } else {
+    } अन्यथा {
         icfgr &= ~(3 << bit);
     }
 
-    if (HW_IRQ_IS_PPI(hw_irq)) {
+    यदि (HW_IRQ_IS_PPI(hw_irq)) {
         gic_rdist_sgi_ppi_map[core]->icfgr1 = icfgr;
-    } else {
+    } अन्यथा {
         /* Update GICD_ICFGR<n>. Note that the interrupt should
          * be disabled before changing the field, and this function
          * assumes the caller has disabled the interrupt. */
         gic_dist->icfgrn[word] = icfgr;
     }
 
-    return;
+    प्रत्यागम;
 }
 
-BOOT_CODE void initIRQController(void)
+BOOT_संहिता शून्य initIRQController(शून्य)
 {
     dist_init();
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void)
+BOOT_संहिता शून्य cpu_initLocalIRQController(शून्य)
 {
     word_t mpidr = 0;
     SYSTEM_READ_WORD(MPIDR, mpidr);
 
-    mpidr_map[CURRENT_CPU_INDEX()] = mpidr;
-    active_irq[CURRENT_CPU_INDEX()] = IRQ_NONE;
+    mpidr_map[CURRENT_CPU_सूचकांक()] = mpidr;
+    सक्रिय_irq[CURRENT_CPU_सूचकांक()] = IRQ_NONE;
 
     gicr_init();
     cpu_iface_init();
@@ -416,63 +416,63 @@ bool_t plat_SGITargetValid(word_t target)
 {
     /* Aff0+Aff1+Aff2+Aff3 values are not guaranteed to be contiguous
      * and the first core may have a non-zero affinity value. */
-    return target <= UINT32_MAX;
+    प्रत्यागम target <= UINT32_MAX;
 }
 
-void plat_sendSGI(word_t irq, word_t target)
+शून्य plat_sendSGI(word_t irq, word_t target)
 {
-    uint64_t sgi1r_base = sgir_word_from_args(irq, target);
-    SYSTEM_WRITE_64(ICC_SGI1R_EL1, sgi1r_base);
+    uint64_t sgi1r_आधारः = sgir_word_from_तर्काः(irq, target);
+    SYSTEM_WRITE_64(ICC_SGI1R_EL1, sgi1r_आधारः);
     isb();
 }
 
-#ifdef ENABLE_SMP_SUPPORT
-#define MPIDR_MT(x)   (x & BIT(24))
+#यदि_परिभाषितम् ENABLE_SMP_SUPPORT
+#परिभाषय MPIDR_MT(x)   (x & BIT(24))
 
-void ipi_send_target(irq_t irq, word_t cpuTargetList)
+शून्य ipi_send_target(irq_t irq, word_t cpuTargetList)
 {
-    uint64_t sgi1r_base = ((word_t) IRQT_TO_IRQ(irq)) << ICC_SGI1R_INTID_SHIFT;
-    word_t sgi1r[CONFIG_MAX_NUM_NODES];
-    word_t last_aff1 = 0;
+    uint64_t sgi1r_आधारः = ((word_t) IRQT_गन्तव्यम्_IRQ(irq)) << ICC_SGI1_R_INTID_सरणम्;
+    word_t sgi1r[CONFIG_MAX_अङ्कः_NODES];
+    word_t चरमः_aff1 = 0;
 
-    for (word_t i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+    प्रति (word_t i = 0; i < CONFIG_MAX_अङ्कः_NODES; i++) {
         sgi1r[i] = 0;
-        if (cpuTargetList & BIT(i)) {
+        यदि (cpuTargetList & BIT(i)) {
             word_t mpidr = mpidr_map[i];
             word_t aff1 = MPIDR_AFF1(mpidr);
             word_t aff0 = MPIDR_AFF0(mpidr);
             // AFF1 is assumed to be contiguous and less than CONFIG_MAX_NUM_NODES.
             // The targets are grouped by AFF1.
-            assert(aff1 >= 0 && aff1 < CONFIG_MAX_NUM_NODES);
-            sgi1r[aff1] |= sgi1r_base | (aff1 << ICC_SGI1R_AFF1_SHIFT) | (1 << aff0);
-            if (aff1 > last_aff1) {
-                last_aff1 = aff1;
+            प्रतिज्ञा(aff1 >= 0 && aff1 < CONFIG_MAX_अङ्कः_NODES);
+            sgi1r[aff1] |= sgi1r_आधारः | (aff1 << ICC_SGI1_R_AFF1_सरणम्) | (1 << aff0);
+            यदि (aff1 > चरमः_aff1) {
+                चरमः_aff1 = aff1;
             }
         }
     }
-    for (word_t i = 0; i <= last_aff1; i++) {
-        if (sgi1r[i] != 0) {
+    प्रति (word_t i = 0; i <= चरमः_aff1; i++) {
+        यदि (sgi1r[i] != 0) {
             SYSTEM_WRITE_64(ICC_SGI1R_EL1, sgi1r[i]);
         }
     }
     isb();
 }
 
-void setIRQTarget(irq_t irq, seL4_Word target)
+शून्य समुच्चयः_IRQTarget(irq_t irq, seL4_Word target)
 {
-    if (IRQ_IS_PPI(irq)) {
+    यदि (IRQ_IS_PPI(irq)) {
         fail("PPI can't have designated target core\n");
-        return;
+        प्रत्यागम;
     }
 
-    word_t hw_irq = IRQT_TO_IRQ(irq);
-    gic_dist->iroutern[hw_irq - SPI_START] = MPIDR_AFF_MASK(mpidr_map[target]);
+    word_t hw_irq = IRQT_गन्तव्यम्_IRQ(irq);
+    gic_dist->iroutern[hw_irq - SPI_START] = MPIDR_AFF_आवरणम्(mpidr_map[target]);
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#यदि_अन्तः /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#यदि_परिभाषितम् CONFIG_ARM_HYPERVISOR_SUPPORT
 
-word_t gic_vcpu_num_list_regs;
+word_t gic_vcpu_अङ्कः_list_regs;
 
-#endif /* End of CONFIG_ARM_HYPERVISOR_SUPPORT */
+#यदि_अन्तः /* End of CONFIG_ARM_HYPERVISOR_SUPPORT */

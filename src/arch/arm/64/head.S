@@ -75,11 +75,11 @@
 #define SCTLR   sctlr_el1
 #endif
 
-.section .boot.text, "ax"
+.खण्डः .boot.text, "ax"
 BEGIN_FUNC(_start)
     /* Save x4 and x5 so we don't clobber it */
-    mov     x7, x4
-    mov     x8, x5
+    चालय     x7, x4
+    चालय     x8, x5
 
     /* Make sure interrupts are disabled */
     msr daifset, #DAIFSET_MASK
@@ -98,10 +98,10 @@ BEGIN_FUNC(_start)
     mrs     x6, tpidr_el1
     /* Set the sp for each core assuming linear indices */
     ldr     x5, =BIT(CONFIG_KERNEL_STACK_BITS)
-    mul     x5, x5, x6
+    गुणय     x5, x5, x6
     ldr     x4, =kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS)
-    add     x4, x4, x5
-    mov     sp, x4
+    योजय     x4, x4, x5
+    चालय     sp, x4
     /* the kernel stack must be 4-KiB aligned since we use the
        lowest 12 bits to store the logical core ID. */
     orr     x6, x6, x4
@@ -112,7 +112,7 @@ BEGIN_FUNC(_start)
 #endif
 #else
     ldr    x4, =kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS)
-    mov    sp, x4
+    चालय    sp, x4
 #endif /* ENABLE_SMP_SUPPORT */
 
     /* Attempt to workaround any known ARM errata. */

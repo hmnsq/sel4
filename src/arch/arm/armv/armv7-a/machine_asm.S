@@ -10,15 +10,15 @@
 #if defined(CONFIG_ARM_CORTEX_A8)
 
 .code 32
-.section .text, "ax"
-.global lockTLBEntryCritical
+.खण्डः .text, "ax"
+.वैश्विक lockTLBEntryCritical
 
 .balign (16*4)
 BEGIN_FUNC(lockTLBEntryCritical)
 
  /* lockTLBEntryCritical should lie within a single page so that spurious TLB walks do
  * not interfere. Aligning to a 64-byte instruction boundary will suffice, as
- * the critical section (i.e. this function) fits within 64 bytes.
+ * the critical खण्डः (i.e. this function) fits within 64 bytes.
  */
     /* Invalidate both I & D TLB entry */
     mcr p15, 0, r0, c8, c7, 1

@@ -6,7 +6,7 @@
 
 #include <machine/assembler.h>
 
-.section .boot.text, "ax"
+.खण्डः .boot.text, "ax"
 
 /* user-level selectors from </arch/mode/object/structures.h> */
 #define GDT_NULL    0
@@ -38,23 +38,23 @@ BEGIN_FUNC(ia32_install_gdt)
     movw $SEL_DS_0, %ax     # load register ax with seg selector for kernel DS
     movw %ax,   %ss
     ljmp $0x08, $1f         # reload kernel CS with a far jump
-1:  ret
+1:  प्रत्यागच्छ
 END_FUNC(ia32_install_gdt)
 
 BEGIN_FUNC(ia32_install_idt)
     movl 4(%esp), %eax
     lidt (%eax)
-    ret
+    प्रत्यागच्छ
 END_FUNC(ia32_install_idt)
 
 BEGIN_FUNC(ia32_install_ldt)
     lldt 4(%esp)
-    ret
+    प्रत्यागच्छ
 END_FUNC(ia32_install_ldt)
 
 BEGIN_FUNC(ia32_install_tss)
     ltr  4(%esp)
-    ret
+    प्रत्यागच्छ
 END_FUNC(ia32_install_tss)
 
 BEGIN_FUNC(getCacheLineSize)
@@ -66,46 +66,46 @@ BEGIN_FUNC(getCacheLineSize)
     andl  $0xff, %eax
     shll  $3,    %eax
     popl %ebx
-    ret
+    प्रत्यागच्छ
 END_FUNC(getCacheLineSize)
 
-.section .text
+.खण्डः .text
 
 BEGIN_FUNC(out8)
     movb 8(%esp), %al
     movw 4(%esp), %dx
     outb %al,     %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out8)
 
 BEGIN_FUNC(out16)
     movw 8(%esp), %ax
     movw 4(%esp), %dx
     outw  %ax,    %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out16)
 
 BEGIN_FUNC(out32)
     movl 8(%esp), %eax
     movw 4(%esp), %dx
     outl %eax,    %dx
-    ret
+    प्रत्यागच्छ
 END_FUNC(out32)
 
 BEGIN_FUNC(in8)
     movw 4(%esp), %dx
     inb  %dx,     %al
-    ret
+    प्रत्यागच्छ
 END_FUNC(in8)
 
 BEGIN_FUNC(in16)
     movw 4(%esp), %dx
     inw  %dx,     %ax
-    ret
+    प्रत्यागच्छ
 END_FUNC(in16)
 
 BEGIN_FUNC(in32)
     movw 4(%esp), %dx
     inl  %dx,     %eax
-    ret
+    प्रत्यागच्छ
 END_FUNC(in32)

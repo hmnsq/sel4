@@ -28,7 +28,7 @@
 #define IA32_APIC_BASE_MSR 0x01B
 #define APIC_ID_OFFSET 0x020
 
-.section .phys.text
+.खण्डः .phys.text
 
 .code32
 
@@ -39,19 +39,19 @@ BEGIN_FUNC(print_string)
     inb  (%dx), %al
     test $0x20, %al
     jz   2b
-    sub  $5, %dx
+    वियोजय  $5, %dx
     movb (%ebx), %al
     outb %al, %dx
     incl %ebx
     decl %ecx
     jnz  1b
-    ret
+    प्रत्यागच्छ
 END_FUNC(print_string)
 
 BEGIN_FUNC(hang)
 1:
     hlt
-    jmp  1b
+    कूर्द  1b
 END_FUNC(hang)
 
 #ifdef CONFIG_HUGE_PAGE
@@ -60,12 +60,12 @@ BEGIN_FUNC(huge_page_check)
     cpuid
     andl $0x04000000, %edx
     jz   1f
-    ret
+    प्रत्यागच्छ
 1:
     movl $huge_page_error_string, %ebx
     movl $huge_page_error_size, %ecx
-    call print_string
-    call hang
+    आह्वान print_string
+    आह्वान hang
 
 huge_page_error_string:
     .string "Huge page not supported by the processor\r\n"
@@ -75,7 +75,7 @@ END_FUNC(huge_page_check)
 
 BEGIN_FUNC(setup_pml4)
 #ifdef CONFIG_HUGE_PAGE
-    call huge_page_check
+    आह्वान huge_page_check
 #endif /* CONFIG_HUGE_PAGE */
     movl %cr0, %eax
     andl $0x7fffffff, %eax
@@ -124,7 +124,7 @@ BEGIN_FUNC(setup_pml4)
     addl $0x200000, %edx
     addl $8, %edi
     loop 2b
-    ret
+    प्रत्यागच्छ
 END_FUNC(setup_pml4)
 
 #ifdef CONFIG_SUPPORT_PCID
@@ -134,12 +134,12 @@ BEGIN_FUNC(pcid_check)
     cpuid
     andl $0x20000, %ecx
     jz   1f
-    ret
+    प्रत्यागच्छ
 1:
     movl $pcid_error_string, %ebx
     movl $pcid_error_size, %ecx
-    call print_string
-    call hang
+    आह्वान print_string
+    आह्वान hang
 
 pcid_error_string:
     .string "PCIDs not supported by the processor\r\n"
@@ -152,12 +152,12 @@ BEGIN_FUNC(invpcid_check)
     cpuid
     andl $0x400, %ebx
     jz   1f
-    ret
+    प्रत्यागच्छ
 1:
     movl  $invpcid_error_string, %ebx
     movl  $invpcid_error_size, %ecx
-    call  print_string
-    call  hang
+    आह्वान  print_string
+    आह्वान  hang
 
 invpcid_error_string:
     .string "INVPCID instruction not supported by the processor\r\n"
@@ -171,12 +171,12 @@ BEGIN_FUNC(syscall_check)
     cpuid
     andl $0x20000000, %edx
     jz   1f
-    ret
+    प्रत्यागच्छ
 1:
     movl  $syscall_error_string, %ebx
     movl  $syscall_error_size, %ecx
-    call  print_string
-    call  hang
+    आह्वान  print_string
+    आह्वान  hang
 
 syscall_error_string:
     .string "SYSCALL/SYSRET instruction not supported by the processor\r\n"
@@ -194,12 +194,12 @@ BEGIN_FUNC(fsgsbase_enable)
     /* Enable the bit in cr4. */
     orl  $0x10000, %eax
     movl %eax, %cr4
-    ret
+    प्रत्यागच्छ
 1:
     movl $fsgsbase_error_string, %ebx
     movl $fsgsbase_error_size, %ecx
-    call print_string
-    call hang
+    आह्वान print_string
+    आह्वान hang
 
 fsgsbase_error_string:
     .string "fsgsbase instructions not supported by the processor\r\n"
@@ -209,20 +209,20 @@ END_FUNC(fsgsbase_enable)
 
 #ifdef CONFIG_SYSCALL
 BEGIN_FUNC(syscall_enable)
-    call syscall_check
+    आह्वान syscall_check
     /* Set SCE (bit 0) in the extended feature MSR. */
     movl $IA32_EFER_MSR, %ecx
     rdmsr
     orl $0x1, %eax
     wrmsr
-    ret
+    प्रत्यागच्छ
 END_FUNC(syscall_enable)
 #endif /* CONFIG_SYSCALL */
 
 BEGIN_FUNC(enable_x64_mode)
 #ifdef CONFIG_SUPPORT_PCID
-    call pcid_check
-    call invpcid_check
+    आह्वान pcid_check
+    आह्वान invpcid_check
 #endif
     /* Put base pointer in cr3. */
     movl $boot_pml4, %eax
@@ -246,7 +246,7 @@ BEGIN_FUNC(enable_x64_mode)
     orl  $0x20000, %eax
     movl %eax, %cr4
 #endif
-    ret
+    प्रत्यागच्छ
 END_FUNC(enable_x64_mode)
 
 BEGIN_FUNC(common_init)
@@ -256,19 +256,19 @@ BEGIN_FUNC(common_init)
     movl %eax, %cr0
 
 #ifdef CONFIG_FSGSBASE_INST
-    call fsgsbase_enable
+    आह्वान fsgsbase_enable
 #endif /* CONFIG_FSGSBASE_INST */
 
     /* Initialize boot PML4 and switch to long mode. */
-    call setup_pml4
-    call enable_x64_mode
+    आह्वान setup_pml4
+    आह्वान enable_x64_mode
     lgdt _gdt64_ptr
 
 #ifdef CONFIG_SYSCALL
-    call syscall_enable
+    आह्वान syscall_enable
 #endif
 
-    ret
+    प्रत्यागच्छ
 END_FUNC(common_init)
 
 BEGIN_FUNC(_start)
@@ -285,14 +285,14 @@ BEGIN_FUNC(_start)
     pushl $0
     popf
 
-    /* Already push parameters for calling boot_sys later. Push
-     * them as 8 byte values so we can easily pop later. */
+    /* Already निक्षिप parameters for calling boot_sys later. Push
+     * them as 8 byte values so we can easily उद्धर later. */
     pushl $0
     pushl %esi /* 2nd parameter: multiboot_info_ptr */
     pushl $0
     pushl %edi /* 1st parameter: multiboot_magic    */
 
-    call common_init
+    आह्वान common_init
 
     /* Reload CS with long bit to enable long mode. */
     ljmp $8, $_start64
@@ -302,11 +302,11 @@ END_FUNC(_start)
 BEGIN_FUNC(_start64)
     /* Leave phys code behind and jump to the high kernel virtual address. */
     movabs $_entry_64, %rax
-    jmp *%rax
+    कूर्द *%rax
 END_FUNC(_start64)
 
 
-.section .phys.data
+.खण्डः .phys.data
 .align 16
 _gdt64:
     .quad 0x0000000000000000
@@ -328,12 +328,12 @@ _gdt64_ptr:
     .word (3 * 8) - 1
     .long _gdt64
 
-.section .phys.bss
+.खण्डः .phys.bss
 .align 4096
 _boot_pd:
     .fill 16384
 
-.section .boot.text
+.खण्डः .boot.text
 
 BEGIN_FUNC(_entry_64)
     /* Update our stack pointer. */
@@ -342,18 +342,18 @@ BEGIN_FUNC(_entry_64)
     addq %rax, %rbp
 
     /* Pop the multiboot parameters off. */
-    pop %rdi
-    pop %rsi
+    उद्धर %rdi
+    उद्धर %rsi
 
     /* Load our real kernel stack. */
     leaq kernel_stack_alloc + (1 << CONFIG_KERNEL_STACK_BITS), %rsp
 
     movabs $restore_user_context, %rax
-    push %rax
-    jmp boot_sys
+    निक्षिप %rax
+    कूर्द boot_sys
 END_FUNC(_entry_64)
 
-.section .phys.text
+.खण्डः .phys.text
 
 #ifdef ENABLE_SMP_SUPPORT
 
@@ -387,18 +387,18 @@ BEGIN_FUNC(boot_cpu_start)
     pushl $0
     popf
 
-    call common_init
+    आह्वान common_init
 
     /* Reload CS with long bit to enable long mode. */
     ljmp $8, $_start_ap64
-    jmp 1b
+    कूर्द 1b
 END_FUNC(boot_cpu_start)
 
 .code64
 BEGIN_FUNC(_start_ap64)
     /* Leave phys code behind and jump to the high kernel virtual address. */
     movabs $_entry_ap64, %rax
-    jmp *%rax
+    कूर्द *%rax
 END_FUNC(_start_ap64)
 
 _boot_gdt_ptr:
@@ -412,10 +412,10 @@ _boot_gdt:
     .quad 0x00cf9b000000ffff /* 4GB kernel code segment */
     .quad 0x00cf93000000ffff /* 4GB kernel data segment */
 
-.global boot_cpu_end
+.वैश्विक boot_cpu_end
 boot_cpu_end:
 
-.section .boot.text
+.खण्डः .boot.text
 
 BEGIN_FUNC(_entry_ap64)
     /* Get the index of this cpu. */
@@ -428,8 +428,8 @@ BEGIN_FUNC(_entry_ap64)
     addq %rcx, %rsp
 
     movabs $restore_user_context, %rax
-    push %rax
-    jmp boot_node
+    निक्षिप %rax
+    कूर्द boot_node
 END_FUNC(_entry_ap64)
 
 #endif /* ENABLE_SMP_SUPPORT */

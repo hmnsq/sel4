@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object/reply.h>
+#अन्तर्भाव <object/reply.h>
 
-void reply_push(tcb_t *tcb_caller, tcb_t *tcb_callee, reply_t *reply, bool_t canDonate)
+शून्य प्रत्युत्तरम्_प्रक्षिप(tcb_t *tcb_caller, tcb_t *tcb_callee, प्रत्युत्तरम्_t *प्रत्युत्तरम्, bool_t canDonate)
 {
     sched_context_t *sc_donated = tcb_caller->tcbSchedContext;
 
-    assert(tcb_caller != NULL);
-    assert(reply != NULL);
-    assert(reply->replyTCB == NULL);
+    प्रतिज्ञा(tcb_caller != रिक्त);
+    प्रतिज्ञा(प्रत्युत्तरम् != रिक्त);
+    प्रतिज्ञा(प्रत्युत्तरम्->प्रत्युत्तरम्_TCB == रिक्त);
 
-    assert(call_stack_get_callStackPtr(reply->replyPrev) == 0);
-    assert(call_stack_get_callStackPtr(reply->replyNext) == 0);
+    प्रतिज्ञा(call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व) == 0);
+    प्रतिज्ञा(call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र) == 0);
 
     /* caller state must be blocked on send or active, so cannot be in a existing call stack */
-    assert(thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_BlockedOnSend ||
+    प्रतिज्ञा(thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_BlockedOnSend ||
            thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_Running ||
            thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_Restart);
 
     /* callee state must be simple at this point (inactive, restart, or running),
        so it also cannot have a reply reference associated with it. */
-    assert(thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Inactive ||
+    प्रतिज्ञा(thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Inactive ||
            thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Running ||
            thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Restart);
 
     /* link caller and reply */
-    reply->replyTCB = tcb_caller;
-    setThreadStateBlockedOnReply(tcb_caller, reply);
+    प्रत्युत्तरम्->प्रत्युत्तरम्_TCB = tcb_caller;
+    समुच्चयः_Thread_State_Blocked_On_प्रत्युत्तरम्(tcb_caller, प्रत्युत्तरम्);
 
-    if (sc_donated != NULL && tcb_callee->tcbSchedContext == NULL && canDonate) {
-        reply_t *old_caller = sc_donated->scReply;
+    यदि (sc_donated != रिक्त && tcb_callee->tcbSchedContext == रिक्त && canDonate) {
+        प्रत्युत्तरम्_t *old_caller = sc_donated->sc_प्रत्युत्तरम्;
 
         /* check stack integrity */
-        assert(old_caller == NULL ||
-               SC_PTR(call_stack_get_callStackPtr(old_caller->replyNext)) == sc_donated);
+        प्रतिज्ञा(old_caller == रिक्त ||
+               SC_PTR(call_राशिः_get_call_राशिः_Ptr(old_caller->प्रत्युत्तरम्_अग्र)) == sc_donated);
 
         /* push on to stack */
-        if (old_caller) {
-            old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
+        यदि (old_caller) {
+            old_caller->प्रत्युत्तरम्_अग्र = call_राशिः_new(प्रत्युत्तरम्_REF(प्रत्युत्तरम्), false);
         }
-        reply->replyPrev = call_stack_new(REPLY_REF(old_caller), false);
-        sc_donated->scReply = reply;
-        reply->replyNext = call_stack_new(SC_REF(sc_donated), true);
+        प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व = call_राशिः_new(प्रत्युत्तरम्_REF(old_caller), false);
+        sc_donated->sc_प्रत्युत्तरम् = प्रत्युत्तरम्;
+        प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र = call_राशिः_new(SC_REF(sc_donated), true);
 
         /* now do the actual donation */
         schedContext_donate(sc_donated, tcb_callee);
@@ -53,84 +53,84 @@ void reply_push(tcb_t *tcb_caller, tcb_t *tcb_callee, reply_t *reply, bool_t can
 }
 
 /* Pop the head reply from the call stack */
-void reply_pop(reply_t *reply, tcb_t *tcb)
+शून्य प्रत्युत्तरम्_निष्कासय(प्रत्युत्तरम्_t *प्रत्युत्तरम्, tcb_t *tcb)
 {
-    assert(reply != NULL);
-    assert(reply->replyTCB == tcb);
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    assert(thread_state_get_replyObject(tcb->tcbState) == REPLY_REF(reply));
+    प्रतिज्ञा(प्रत्युत्तरम् != रिक्त);
+    प्रतिज्ञा(प्रत्युत्तरम्->प्रत्युत्तरम्_TCB == tcb);
+    प्रतिज्ञा(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_प्रत्युत्तरम्);
+    प्रतिज्ञा(thread_state_get_प्रत्युत्तरम्_Object(tcb->tcbState) == प्रत्युत्तरम्_REF(प्रत्युत्तरम्));
 
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    word_t अग्र_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र);
+    word_t पूर्व_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व);
 
-    SC_PTR(next_ptr)->scReply = REPLY_PTR(prev_ptr);
-    if (prev_ptr != 0) {
-        REPLY_PTR(prev_ptr)->replyNext = reply->replyNext;
-        assert(call_stack_get_isHead(REPLY_PTR(prev_ptr)->replyNext));
+    SC_PTR(अग्र_ptr)->sc_प्रत्युत्तरम् = प्रत्युत्तरम्_PTR(पूर्व_ptr);
+    यदि (पूर्व_ptr != 0) {
+        प्रत्युत्तरम्_PTR(पूर्व_ptr)->प्रत्युत्तरम्_अग्र = प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र;
+        प्रतिज्ञा(call_राशिः_get_is_शीर्ष(प्रत्युत्तरम्_PTR(पूर्व_ptr)->प्रत्युत्तरम्_अग्र));
     }
 
-    reply->replyNext = call_stack_new(0, false);
+    प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र = call_राशिः_new(0, false);
 
     /* give it back */
-    if (tcb->tcbSchedContext == NULL) {
+    यदि (tcb->tcbSchedContext == रिक्त) {
         /* only give the SC back if our SC is NULL. This prevents
          * strange behaviour when a thread is bound to an sc while it is
          * in the BlockedOnReply state. The semantics in this case are that the
          * SC cannot go back to the caller if the caller has received another one */
-        schedContext_donate(SC_PTR(next_ptr), tcb);
+        schedContext_donate(SC_PTR(अग्र_ptr), tcb);
     }
 
-    reply->replyPrev = call_stack_new(0, false);
-    reply_unlink(reply, tcb);
+    प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व = call_राशिः_new(0, false);
+    प्रत्युत्तरम्_unlink(प्रत्युत्तरम्, tcb);
 }
 
 /* Remove a reply from the middle of the call stack */
-void reply_remove(reply_t *reply, tcb_t *tcb)
+शून्य प्रत्युत्तरम्_remove(प्रत्युत्तरम्_t *प्रत्युत्तरम्, tcb_t *tcb)
 {
-    assert(reply->replyTCB == tcb);
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    assert(thread_state_get_replyObject(tcb->tcbState) == REPLY_REF(reply));
+    प्रतिज्ञा(प्रत्युत्तरम्->प्रत्युत्तरम्_TCB == tcb);
+    प्रतिज्ञा(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_प्रत्युत्तरम्);
+    प्रतिज्ञा(thread_state_get_प्रत्युत्तरम्_Object(tcb->tcbState) == प्रत्युत्तरम्_REF(प्रत्युत्तरम्));
 
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    word_t अग्र_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र);
+    word_t पूर्व_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व);
 
-    if (likely(next_ptr && call_stack_get_isHead(reply->replyNext))) {
+    यदि (likely(अग्र_ptr && call_राशिः_get_is_शीर्ष(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र))) {
         /* head of the call stack -> just pop */
-        reply_pop(reply, tcb);
-    } else {
-        if (next_ptr) {
+        प्रत्युत्तरम्_निष्कासय(प्रत्युत्तरम्, tcb);
+    } अन्यथा {
+        यदि (अग्र_ptr) {
             /* not the head, remove from middle - break the chain */
-            REPLY_PTR(next_ptr)->replyPrev = call_stack_new(0, false);
+            प्रत्युत्तरम्_PTR(अग्र_ptr)->प्रत्युत्तरम्_पूर्व = call_राशिः_new(0, false);
         }
-        if (prev_ptr) {
-            REPLY_PTR(prev_ptr)->replyNext = call_stack_new(0, false);
+        यदि (पूर्व_ptr) {
+            प्रत्युत्तरम्_PTR(पूर्व_ptr)->प्रत्युत्तरम्_अग्र = call_राशिः_new(0, false);
         }
-        reply->replyPrev = call_stack_new(0, false);
-        reply->replyNext = call_stack_new(0, false);
-        reply_unlink(reply, tcb);
+        प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व = call_राशिः_new(0, false);
+        प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र = call_राशिः_new(0, false);
+        प्रत्युत्तरम्_unlink(प्रत्युत्तरम्, tcb);
     }
 }
 
-void reply_remove_tcb(tcb_t *tcb)
+शून्य प्रत्युत्तरम्_remove_tcb(tcb_t *tcb)
 {
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    reply_t *reply = REPLY_PTR(thread_state_get_replyObject(tcb->tcbState));
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    प्रतिज्ञा(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_प्रत्युत्तरम्);
+    प्रत्युत्तरम्_t *प्रत्युत्तरम् = प्रत्युत्तरम्_PTR(thread_state_get_प्रत्युत्तरम्_Object(tcb->tcbState));
+    word_t अग्र_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र);
+    word_t पूर्व_ptr = call_राशिः_get_call_राशिः_Ptr(प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व);
 
-    if (next_ptr) {
-        if (call_stack_get_isHead(reply->replyNext)) {
-            SC_PTR(next_ptr)->scReply = NULL;
-        } else {
-            REPLY_PTR(next_ptr)->replyPrev = call_stack_new(0, false);
+    यदि (अग्र_ptr) {
+        यदि (call_राशिः_get_is_शीर्ष(प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र)) {
+            SC_PTR(अग्र_ptr)->sc_प्रत्युत्तरम् = रिक्त;
+        } अन्यथा {
+            प्रत्युत्तरम्_PTR(अग्र_ptr)->प्रत्युत्तरम्_पूर्व = call_राशिः_new(0, false);
         }
     }
 
-    if (prev_ptr) {
-        REPLY_PTR(prev_ptr)->replyNext = call_stack_new(0, false);
+    यदि (पूर्व_ptr) {
+        प्रत्युत्तरम्_PTR(पूर्व_ptr)->प्रत्युत्तरम्_अग्र = call_राशिः_new(0, false);
     }
 
-    reply->replyPrev = call_stack_new(0, false);
-    reply->replyNext = call_stack_new(0, false);
-    reply_unlink(reply, tcb);
+    प्रत्युत्तरम्->प्रत्युत्तरम्_पूर्व = call_राशिः_new(0, false);
+    प्रत्युत्तरम्->प्रत्युत्तरम्_अग्र = call_राशिः_new(0, false);
+    प्रत्युत्तरम्_unlink(प्रत्युत्तरम्, tcb);
 }

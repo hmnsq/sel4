@@ -6,7 +6,7 @@
 
 #include <machine/assembler.h>
 
-.section .text, "ax"
+.खण्डः .text, "ax"
 
 BEGIN_FUNC(idle_thread)
     1: wfi

@@ -59,7 +59,7 @@
 #define TLBIALLNSNH()    p15, 4,  r0, c8, c7, 0
 
 .code 32
-.section .vectors, "ax"
+.खण्डः .vectors, "ax"
 BEGIN_FUNC(arm_vector_table)
     ldr pc, =arm_hyp_reset_exception
     ldr pc, =arm_hyp_undefined_inst_exception
@@ -73,7 +73,7 @@ END_FUNC(arm_vector_table)
 
 .ltorg
 
-.section .vectors.text, "ax"
+.खण्डः .vectors.text, "ax"
 
 #include <arch/api/syscall.h>
 #include <arch/machine/hardware.h>
@@ -93,7 +93,7 @@ END_FUNC(arm_vector_table)
 
 .macro EX_ENTRY
     /* Create some scratch space */
-    push {lr}
+    निक्षिप {lr}
     /* Store ELR */
     mrs lr, elr_hyp
     str lr, [sp, #4]
@@ -102,7 +102,7 @@ END_FUNC(arm_vector_table)
     str lr, [sp, #8]
     /* Store SP_usr */
     mrs lr, sp_usr
-    push {lr}
+    निक्षिप {lr}
 .endm
 
 /* Prepare to enter the kernel */
@@ -110,7 +110,7 @@ END_FUNC(arm_vector_table)
     /* store FaultIP */
     str lr, [sp, #(PT_FaultIP - PT_SP)]
     /* Stack all user registers */
-    push {r0-r12}
+    निक्षिप {r0-r12}
     /* Load the kernel's real stack pointer */
     /* the hyp mode uses HTPIDR */
     mrc p15, 4, sp, c13, c0, 2
@@ -126,15 +126,15 @@ BEGIN_FUNC(arm_hyp_trap)
     /* ARM_ARM B3.13.6 */
     mrc HSR(lr)
     and lr, lr, #(HSREC_MASK)
-    cmp lr, #(HSREC_SVC << HSREC_SHIFT)
+    तुलय lr, #(HSREC_SVC << HSREC_SHIFT)
     beq arm_syscall
-    cmp lr, #(HSREC_HVC << HSREC_SHIFT)
+    तुलय lr, #(HSREC_HVC << HSREC_SHIFT)
     beq arm_syscall
-    cmp lr, #(HSREC_PREFETCH_ABORT << HSREC_SHIFT)
+    तुलय lr, #(HSREC_PREFETCH_ABORT << HSREC_SHIFT)
     beq arm_prefetch_abort
-    cmp lr, #(HSREC_DATA_ABORT << HSREC_SHIFT)
+    तुलय lr, #(HSREC_DATA_ABORT << HSREC_SHIFT)
     beq arm_data_abort
-    cmp lr, #(HSREC_UNKNOWN << HSREC_SHIFT)
+    तुलय lr, #(HSREC_UNKNOWN << HSREC_SHIFT)
     beq arm_undefined_inst
 
     /** Everything else is assumed to be a VCPU trap **/
@@ -165,10 +165,10 @@ END_FUNC(arm_data_abort)
 
 BEGIN_FUNC(arm_syscall)
     mrs lr, elr_hyp
-    sub lr, lr, #4
+    वियोजय lr, lr, #4
     PUSH_STACK
     /* r0: cptr, r1: msgInfo, r2: syscallNo */
-    mov r2, r7
+    चालय r2, r7
     b c_handle_syscall
 END_FUNC(arm_syscall)
 
