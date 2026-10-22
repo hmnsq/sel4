@@ -11,7 +11,7 @@ pml4e_t x64KSKernelPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits)) VISIBLE;
 pdpte_t x64KSKernelPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
 #ifdef CONFIG_HUGE_PAGE
 pde_t x64KSKernelPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#else
+#มิฉะนั้น
 pde_t x64KSKernelPDs[BIT(PDPT_INDEX_BITS)][BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
 #endif
 pte_t x64KSKernelPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
@@ -24,7 +24,7 @@ pde_t x64KSSKIMPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
 
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
 UP_STATE_DEFINE(word_t, x64KSCurrentUserCR3);
-#else
+#มิฉะนั้น
 UP_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
 #endif
 

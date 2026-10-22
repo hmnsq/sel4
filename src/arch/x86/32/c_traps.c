@@ -37,9 +37,9 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
     loadAllDisabledBreakpointState(cur_thread);
 #endif
     word_t *guest_regs_ptr = vcpu->gp_registers;
-    if (vcpu->launched) {
+    ถ้า (vcpu->launched) {
         /* attempt to do a vmresume */
-        asm volatile(
+        asm ca_ncala(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %[guest_regs], %%esp\n"
             "popl %%eax\n"
@@ -54,19 +54,19 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // if we get here we failed
 #ifdef ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#มิฉะนั้น
             "leal kernel_stack_alloc + %c1, %%esp\n"
 #endif
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - parimaa_na(word_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
         );
-    } else {
+    } มิฉะนั้น {
         /* attempt to do a vmlaunch */
-        asm volatile(
+        asm ca_ncala(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %[guest_regs], %%esp\n"
             "popl %%eax\n"
@@ -81,12 +81,12 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // if we get here we failed
 #ifdef ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#มิฉะนั้น
             "leal kernel_stack_alloc + %c1, %%esp\n"
 #endif
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - parimaa_na(word_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
@@ -105,11 +105,11 @@ void NORETURN VISIBLE restore_user_context(void)
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    ถ้า (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
         /* put this in service */
         interrupt_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
-        asm volatile(
+        asm ca_ncala(
             "mov %[stack_top], %%esp\n"
             "push %[syscall] \n"
             "push %[irq]\n"
@@ -125,10 +125,10 @@ void NORETURN VISIBLE restore_user_context(void)
     tcb_t *cur_thread = NODE_STATE(ksCurThread);
 #ifdef CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
-    if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
+    ถ้า (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
         vcpu_fpu_to_guest(cur_thread, vcpu);
         restore_vmx(cur_thread, vcpu);
-    } else if (vcpu) {
+    } มิฉะนั้น ถ้า (vcpu) {
         vcpu_fpu_to_host(cur_thread, vcpu);
     }
 #endif
@@ -138,14 +138,14 @@ void NORETURN VISIBLE restore_user_context(void)
     restore_user_debug_context(cur_thread);
 #endif
 
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    ถ้า (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_disable_ibrs();
     }
 
     /* see if we entered via syscall */
-    if (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
+    ถ้า (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
         cur_thread->tcbArch.tcbContext.registers[FLAGS] &= ~FLAGS_IF;
-        asm volatile(
+        asm ca_ncala(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %0, %%esp\n"
             // restore syscall number
@@ -178,8 +178,8 @@ void NORETURN VISIBLE restore_user_context(void)
             // before running this assembler
             : "memory"
         );
-    } else {
-        asm volatile(
+    } มิฉะนั้น {
+        asm ca_ncala(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %0, %%esp\n"
             "popl %%eax\n"

@@ -37,7 +37,7 @@ BOOT_CODE void initTimer(void)
     timer->tclr = 0;
 
     /* wait for reset */
-    while (!timer->tistat);
+    ขณะ (!timer->tistat);
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
 
@@ -53,14 +53,14 @@ BOOT_CODE void initTimer(void)
     /* start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE;
 }
-#else /* CONFIG_KERNEL_MCS */
+#มิฉะนั้น /* CONFIG_KERNEL_MCS */
 #define TIMER_INTERVAL_MS (CONFIG_TIMER_TICK_MS)
 BOOT_CODE void initTimer(void)
 {
     /* Configure gptimer9 as kernel timer */
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    while (!timer->tistat);
+    ขณะ (!timer->tistat);
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
 

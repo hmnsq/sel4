@@ -19,15 +19,15 @@
 #ifdef CONFIG_KERNEL_MCS
 void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
              bool_t canGrant, bool_t canGrantReply, bool_t canDonate, tcb_t *thread, endpoint_t *epptr)
-#else
+#มิฉะนั้น
 void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
              bool_t canGrant, bool_t canGrantReply, tcb_t *thread, endpoint_t *epptr)
 #endif
 {
     switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Send:
-        if (blocking) {
+    pak_sa EPState_Idle:
+    pak_sa EPState_Send:
+        ถ้า (blocking) {
 
             /* Set thread state to BlockedOnSend */
             thread_state_ptr_set_tsType(&thread->tcbState,
@@ -48,7 +48,7 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
             /* Place calling thread in endpoint queue */
 #ifdef CONFIG_KERNEL_MCS
             tcbEPAppend(thread, epptr, EPState_Send);
-#else
+#มิฉะนั้น
             tcb_queue_t queue;
             queue = ep_ptr_get_queue(epptr);
             queue = tcbEPAppend(thread, queue);
@@ -57,9 +57,9 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
 #endif /* CONFIG_KERNEL_MCS */
 
         }
-        break;
+        bha_nga;
 
-    case EPState_Recv: {
+    pak_sa EPState_Recv: {
         tcb_queue_t queue;
         tcb_t *dest;
 
@@ -73,11 +73,11 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
         /* Dequeue the first TCB */
 #ifdef CONFIG_KERNEL_MCS
         tcbEPDequeue(dest, epptr);
-#else
+#มิฉะนั้น
         queue = tcbEPDequeue(dest, queue);
         ep_ptr_set_queue(epptr, queue);
 
-        if (!queue.head) {
+        ถ้า (!queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Idle);
         }
 #endif /* CONFIG_KERNEL_MCS */
@@ -87,18 +87,18 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
 
 #ifdef CONFIG_KERNEL_MCS
         reply_t *reply = REPLY_PTR(thread_state_get_replyObject(dest->tcbState));
-        if (reply) {
+        ถ้า (reply) {
             reply_unlink(reply, dest);
         }
 
-        if (do_call ||
+        ถ้า (do_call ||
             seL4_Fault_ptr_get_seL4_FaultType(&thread->tcbFault) != seL4_Fault_NullFault) {
-            if (reply != NULL && (canGrant || canGrantReply)) {
+            ถ้า (reply != NULL && (canGrant || canGrantReply)) {
                 reply_push(thread, dest, reply, canDonate);
-            } else {
+            } มิฉะนั้น {
                 setThreadState(thread, ThreadState_Inactive);
             }
-        } else if (canDonate && dest->tcbSchedContext == NULL) {
+        } มิฉะนั้น ถ้า (canDonate && dest->tcbSchedContext == NULL) {
             schedContext_donate(thread->tcbSchedContext, dest);
         }
 
@@ -107,32 +107,32 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
         /* blocked threads should have enough budget to get out of the kernel */
         assert(dest_sc == NULL || refill_sufficient(dest_sc, 0));
         assert(dest_sc == NULL || refill_ready(dest_sc));
-        if (sc_sporadic(dest_sc) && dest_sc != NODE_STATE(ksCurSC)) {
+        ถ้า (sc_sporadic(dest_sc) && dest_sc != NODE_STATE(ksCurSC)) {
             refill_unblock_check(dest_sc);
         }
         possibleSwitchTo(dest);
-#else
+#มิฉะนั้น
         bool_t replyCanGrant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
 
         setThreadState(dest, ThreadState_Running);
         possibleSwitchTo(dest);
 
-        if (do_call) {
-            if (canGrant || canGrantReply) {
+        ถ้า (do_call) {
+            ถ้า (canGrant || canGrantReply) {
                 setupCallerCap(thread, dest, replyCanGrant);
-            } else {
+            } มิฉะนั้น {
                 setThreadState(thread, ThreadState_Inactive);
             }
         }
 #endif
-        break;
+        bha_nga;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
 void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking, cap_t replyCap)
-#else
+#มิฉะนั้น
 void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 #endif
 {
@@ -146,10 +146,10 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 
 #ifdef CONFIG_KERNEL_MCS
     reply_t *replyPtr = NULL;
-    if (cap_get_capType(replyCap) == cap_reply_cap) {
+    ถ้า (cap_get_capType(replyCap) == cap_reply_cap) {
         replyPtr = REPLY_PTR(cap_reply_cap_get_capReplyPtr(replyCap));
         tcb_t *reply_tcb = replyPtr->replyTCB;
-        if (unlikely(reply_tcb != NULL && reply_tcb != thread)) {
+        ถ้า (unlikely(reply_tcb != NULL && reply_tcb != thread)) {
             userError("Reply object already has unexecuted reply!");
             cancelIPC(reply_tcb);
         }
@@ -158,24 +158,24 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 
     /* Check for anything waiting in the notification */
     ntfnPtr = thread->tcbBoundNotification;
-    if (ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
+    ถ้า (ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
         completeSignal(ntfnPtr, thread);
-    } else {
+    } มิฉะนั้น {
 #ifdef CONFIG_KERNEL_MCS
         /* If this is a blocking recv and we didn't have a pending notification,
          * then if we are running on an SC from a bound notification, then we
          * need to return it so that we can passively wait on the EP for potentially
          * SC donations from client threads.
          */
-        if (ntfnPtr && isBlocking) {
+        ถ้า (ntfnPtr && isBlocking) {
             maybeReturnSchedContext(ntfnPtr, thread);
         }
 #endif
         switch (endpoint_ptr_get_state(epptr)) {
-        case EPState_Idle:
-        case EPState_Recv: {
+        pak_sa EPState_Idle:
+        pak_sa EPState_Recv: {
 
-            if (isBlocking) {
+            ถ้า (isBlocking) {
                 /* Set thread state to BlockedOnReceive */
                 thread_state_ptr_set_tsType(&thread->tcbState,
                                             ThreadState_BlockedOnReceive);
@@ -183,13 +183,13 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                     &thread->tcbState, EP_REF(epptr));
 #ifdef CONFIG_KERNEL_MCS
                 thread_state_ptr_set_replyObject(&thread->tcbState, REPLY_REF(replyPtr));
-#else
+#มิฉะนั้น
                 thread_state_ptr_set_blockingIPCCanGrant(
                     &thread->tcbState, cap_endpoint_cap_get_capCanGrant(cap));
 #endif
                 scheduleTCB(thread);
 #ifdef CONFIG_KERNEL_MCS
-                if (replyPtr) {
+                ถ้า (replyPtr) {
                     replyPtr->replyTCB = thread;
                 }
 #endif
@@ -197,20 +197,20 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                 /* Place calling thread in endpoint queue */
 #ifdef CONFIG_KERNEL_MCS
                 tcbEPAppend(thread, epptr, EPState_Recv);
-#else
+#มิฉะนั้น
                 tcb_queue_t queue;
                 queue = ep_ptr_get_queue(epptr);
                 queue = tcbEPAppend(thread, queue);
                 endpoint_ptr_set_state(epptr, EPState_Recv);
                 ep_ptr_set_queue(epptr, queue);
 #endif /* CONFIG_KERNEL_MCS */
-            } else {
+            } มิฉะนั้น {
                 doNBRecvFailedTransfer(thread);
             }
-            break;
+            bha_nga;
         }
 
-        case EPState_Send: {
+        pak_sa EPState_Send: {
             tcb_queue_t queue;
             tcb_t *sender;
             word_t badge;
@@ -228,11 +228,11 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
             /* Dequeue the first TCB */
 #ifdef CONFIG_KERNEL_MCS
             tcbEPDequeue(sender, epptr);
-#else
+#มิฉะนั้น
             queue = tcbEPDequeue(sender, queue);
             ep_ptr_set_queue(epptr, queue);
 
-            if (!queue.head) {
+            ถ้า (!queue.head) {
                 endpoint_ptr_set_state(epptr, EPState_Idle);
             }
 #endif /* CONFIG_KERNEL_MCS */
@@ -251,7 +251,7 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
             do_call = thread_state_ptr_get_blockingIPCIsCall(&sender->tcbState);
 
 #ifdef CONFIG_KERNEL_MCS
-            if (sc_sporadic(sender->tcbSchedContext)) {
+            ถ้า (sc_sporadic(sender->tcbSchedContext)) {
                 /* We know that the sender can't have the current SC as
                  * its own SC as this point as it should still be
                  * associated with the current thread, no thread, or a
@@ -259,38 +259,38 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                  * to reduce the cost of proving this to be true as a
                  * short-term stop-gap. */
                 assert(sender->tcbSchedContext != NODE_STATE(ksCurSC));
-                if (sender->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                ถ้า (sender->tcbSchedContext != NODE_STATE(ksCurSC)) {
                     refill_unblock_check(sender->tcbSchedContext);
                 }
             }
 
-            if (do_call ||
+            ถ้า (do_call ||
                 seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_NullFault) {
-                if ((canGrant || canGrantReply) && replyPtr != NULL) {
+                ถ้า ((canGrant || canGrantReply) && replyPtr != NULL) {
                     bool_t canDonate = sender->tcbSchedContext != NULL
                                        && seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_Timeout;
                     reply_push(sender, thread, replyPtr, canDonate);
-                } else {
+                } มิฉะนั้น {
                     setThreadState(sender, ThreadState_Inactive);
                 }
-            } else {
+            } มิฉะนั้น {
                 setThreadState(sender, ThreadState_Running);
                 possibleSwitchTo(sender);
                 assert(sender->tcbSchedContext == NULL || refill_sufficient(sender->tcbSchedContext, 0));
             }
-#else
-            if (do_call) {
-                if (canGrant || canGrantReply) {
+#มิฉะนั้น
+            ถ้า (do_call) {
+                ถ้า (canGrant || canGrantReply) {
                     setupCallerCap(sender, thread, cap_endpoint_cap_get_capCanGrant(cap));
-                } else {
+                } มิฉะนั้น {
                     setThreadState(sender, ThreadState_Inactive);
                 }
-            } else {
+            } มิฉะนั้น {
                 setThreadState(sender, ThreadState_Running);
                 possibleSwitchTo(sender);
             }
 #endif
-            break;
+            bha_nga;
         }
         }
     }
@@ -306,11 +306,11 @@ void replyFromKernel_error(tcb_t *thread)
     len = setMRs_syscall_error(thread, ipcBuffer);
 
 #ifdef CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
-    char *debugBuffer = (char *)(ipcBuffer + DEBUG_MESSAGE_START + 1);
-    word_t add = strlcpy(debugBuffer, (char *)current_debug_error.errorMessage,
-                         DEBUG_MESSAGE_MAXLEN * sizeof(word_t));
+    var_na *debugBuffer = (var_na *)(ipcBuffer + DEBUG_MESSAGE_START + 1);
+    word_t add = strlcpy(debugBuffer, (var_na *)current_debug_error.errorMessage,
+                         DEBUG_MESSAGE_MAXLEN * parimaa_na(word_t));
 
-    len += (add / sizeof(word_t)) + 1;
+    len += (add / parimaa_na(word_t)) + 1;
 #endif
 
     setRegister(thread, msgInfoRegister, wordFromMessageInfo(
@@ -334,8 +334,8 @@ void cancelIPC(tcb_t *tptr)
 #endif
 
     switch (thread_state_ptr_get_tsType(state)) {
-    case ThreadState_BlockedOnSend:
-    case ThreadState_BlockedOnReceive: {
+    pak_sa ThreadState_BlockedOnSend:
+    pak_sa ThreadState_BlockedOnReceive: {
         /* blockedIPCCancel state */
         endpoint_t *epptr;
 
@@ -347,38 +347,38 @@ void cancelIPC(tcb_t *tptr)
         /* Dequeue TCB */
 #ifdef CONFIG_KERNEL_MCS
         tcbEPDequeue(tptr, epptr);
-#else
+#มิฉะนั้น
         tcb_queue_t queue;
         queue = ep_ptr_get_queue(epptr);
         queue = tcbEPDequeue(tptr, queue);
         ep_ptr_set_queue(epptr, queue);
 
-        if (!queue.head) {
+        ถ้า (!queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Idle);
         }
 #endif /* CONFIG_KERNEL_MCS */
 
 #ifdef CONFIG_KERNEL_MCS
-        if (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
+        ถ้า (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
             reply_t *reply = REPLY_PTR(thread_state_ptr_get_replyObject(state));
-            if (reply != NULL) {
+            ถ้า (reply != NULL) {
                 reply_unlink(reply, tptr);
             }
         }
 #endif
         setThreadState(tptr, ThreadState_Inactive);
-        break;
+        bha_nga;
     }
 
-    case ThreadState_BlockedOnNotification:
+    pak_sa ThreadState_BlockedOnNotification:
         cancelSignal(tptr,
                      NTFN_PTR(thread_state_ptr_get_blockingObject(state)));
-        break;
+        bha_nga;
 
-    case ThreadState_BlockedOnReply: {
+    pak_sa ThreadState_BlockedOnReply: {
 #ifdef CONFIG_KERNEL_MCS
         reply_remove_tcb(tptr);
-#else
+#มิฉะนั้น
         cte_t *slot, *callerCap;
 
         tptr->tcbFault = seL4_Fault_NullFault_new();
@@ -387,46 +387,46 @@ void cancelIPC(tcb_t *tptr)
         slot = TCB_PTR_CTE_PTR(tptr, tcbReply);
 
         callerCap = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (callerCap) {
+        ถ้า (callerCap) {
             /** GHOSTUPD: "(True,
                 gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
             cteDeleteOne(callerCap);
         }
 #endif
 
-        break;
+        bha_nga;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void restart_thread_if_no_fault(tcb_t *thread)
+static anta_hstha void restart_thread_if_no_fault(tcb_t *thread)
 {
-    if (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
+    ถ้า (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
         setThreadState(thread, ThreadState_Restart);
-        if (sc_sporadic(thread->tcbSchedContext)) {
+        ถ้า (sc_sporadic(thread->tcbSchedContext)) {
             /* We know that the thread can't have the current SC
              * as its own SC as this point as it should still be
              * associated with the current thread, or no thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
             assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            ถ้า (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
                 refill_unblock_check(thread->tcbSchedContext);
             }
         }
         possibleSwitchTo(thread);
-    } else {
+    } มิฉะนั้น {
         setThreadState(thread, ThreadState_Inactive);
     }
 }
 
-static inline void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
+static anta_hstha void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
 {
     tcbEPDequeue(thread, epptr);
-    if (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
+    ถ้า (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
         reply_t *reply = REPLY_PTR(thread_state_get_replyObject(thread->tcbState));
-        if (reply != NULL) {
+        ถ้า (reply != NULL) {
             reply_unlink(reply, thread);
         }
     }
@@ -437,8 +437,8 @@ static inline void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epp
 void cancelAllIPC(endpoint_t *epptr)
 {
     switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-        break;
+    pak_sa EPState_Idle:
+        bha_nga;
 
     default: {
         /* Clear the queue and set all blocked threads to restart */
@@ -448,11 +448,11 @@ void cancelAllIPC(endpoint_t *epptr)
 
         queue = ep_ptr_get_queue(epptr);
 
-        for (thread = queue.head; thread; thread = next) {
+        สำหรับ (thread = queue.head; thread; thread = next) {
             next = thread->tcbSchedNext;
             removeAndRestartEPQueuedThread(thread, epptr);
         }
-#else
+#มิฉะนั้น
         tcb_t *thread = TCB_PTR(endpoint_ptr_get_epQueue_head(epptr));
 
         /* Make endpoint idle */
@@ -460,26 +460,26 @@ void cancelAllIPC(endpoint_t *epptr)
         endpoint_ptr_set_epQueue_head(epptr, 0);
         endpoint_ptr_set_epQueue_tail(epptr, 0);
 
-        for (; thread; thread = thread->tcbEPNext) {
+        สำหรับ (; thread; thread = thread->tcbEPNext) {
             setThreadState(thread, ThreadState_Restart);
             SCHED_ENQUEUE(thread);
         }
 #endif
 
         rescheduleRequired();
-        break;
+        bha_nga;
     }
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, word_t badge)
+static anta_hstha void removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, word_t badge)
 {
     word_t b = thread_state_ptr_get_blockingIPCBadge(&thread->tcbState);
 
     /* senders do not have reply objects in their state, and we are only cancelling sends */
     assert(thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnSend);
-    if (b == badge) {
+    ถ้า (b == badge) {
         tcbEPDequeue(thread, epptr);
         restart_thread_if_no_fault(thread);
     }
@@ -489,20 +489,20 @@ static inline void removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr
 void cancelBadgedSends(endpoint_t *epptr, word_t badge)
 {
     switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Recv:
-        break;
+    pak_sa EPState_Idle:
+    pak_sa EPState_Recv:
+        bha_nga;
 
-    case EPState_Send: {
+    pak_sa EPState_Send: {
         tcb_t *thread, *next;
         tcb_queue_t queue = ep_ptr_get_queue(epptr);
 
 #ifdef CONFIG_KERNEL_MCS
-        for (thread = queue.head; thread; thread = next) {
+        สำหรับ (thread = queue.head; thread; thread = next) {
             next = thread->tcbSchedNext;
             removeAndRestartBadgedThread(thread, epptr, badge);
         }
-#else
+#มิฉะนั้น
         /* this is a de-optimisation for verification
          * reasons. it allows the contents of the endpoint
          * queue to be ignored during the for loop. */
@@ -510,12 +510,12 @@ void cancelBadgedSends(endpoint_t *epptr, word_t badge)
         endpoint_ptr_set_epQueue_head(epptr, 0);
         endpoint_ptr_set_epQueue_tail(epptr, 0);
 
-        for (thread = queue.head; thread; thread = next) {
+        สำหรับ (thread = queue.head; thread; thread = next) {
             word_t b = thread_state_ptr_get_blockingIPCBadge(
                            &thread->tcbState);
             next = thread->tcbEPNext;
 
-            if (b == badge) {
+            ถ้า (b == badge) {
                 setThreadState(thread, ThreadState_Restart);
                 SCHED_ENQUEUE(thread);
                 queue = tcbEPDequeue(thread, queue);
@@ -524,13 +524,13 @@ void cancelBadgedSends(endpoint_t *epptr, word_t badge)
         }
         ep_ptr_set_queue(epptr, queue);
 
-        if (queue.head) {
+        ถ้า (queue.head) {
             endpoint_ptr_set_state(epptr, EPState_Send);
         }
 #endif /* CONFIG_KERNEL_MCS */
         rescheduleRequired();
 
-        break;
+        bha_nga;
     }
 
     default:
@@ -562,7 +562,7 @@ void tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
     new_queue = tcb_queue_remove(queue, thread);
     ep_ptr_set_queue(epptr, new_queue);
 
-    if (tcb_queue_empty(new_queue)) {
+    ถ้า (tcb_queue_empty(new_queue)) {
         endpoint_ptr_set_state(epptr, EPState_Idle);
     }
 }

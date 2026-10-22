@@ -22,9 +22,9 @@ void benchmark_track_utilisation_dump(void)
     lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    ถ้า (cap_type != cap_thread_cap) {
         userError("SysBenchmarkFinalizeLog: cap is not a TCB, halting");
-        return;
+        คืน;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
@@ -41,7 +41,7 @@ void benchmark_track_utilisation_dump(void)
 #ifdef ENABLE_SMP_SUPPORT
     buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = NODE_STATE_ON_CORE(ksIdleThread,
                                                                    tcb->tcbAffinity)->benchmark.utilisation; /* Idle thread utilisation of CPU the TCB is running on */
-#else
+#มิฉะนั้น
     buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
 #endif
 
@@ -57,7 +57,7 @@ void benchmark_track_utilisation_dump(void)
 #ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
     buffer[BENCHMARK_TOTAL_UTILISATION] =
         (ARCH_NODE_STATE(ccnt_num_overflows) * 0xFFFFFFFFU) + NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time);
-#else
+#มิฉะนั้น
     buffer[BENCHMARK_TOTAL_UTILISATION] = NODE_STATE(benchmark_end_time) - NODE_STATE(
                                               benchmark_start_time); /* Overall time */
 #endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */

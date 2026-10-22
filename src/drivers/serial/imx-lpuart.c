@@ -22,19 +22,19 @@
 
 #define STAT_TDRE (1 << 23)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ca_ncala uint32_t *)(UART_PPTR + (x)))
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void uart_drv_putchar(unsigned char c)
+#ถ้า defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while (!(*UART_REG(STAT) & STAT_TDRE)) { }
+    ขณะ (!(*UART_REG(STAT) & STAT_TDRE)) { }
     *UART_REG(TRANSMIT) = c;
 }
 #endif
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    return 0;
+    คืน 0;
 }
 #endif /* CONFIG_DEBUG_BUILD */
