@@ -4,38 +4,38 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/traps.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/registerset.h>
-#include <api/syscall.h>
-#include <machine/fpu.h>
-#include <mode/machine/debug.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <arch/kernel/traps.h>
+#अन्तर्भाव <arch/object/vcpu.h>
+#अन्तर्भाव <arch/machine/registerset.h>
+#अन्तर्भाव <api/syscall.h>
+#अन्तर्भाव <machine/fpu.h>
+#अन्तर्भाव <mode/machine/debug.h>
 
-#include <sel4/benchmark_track_types.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <arch/machine.h>
+#अन्तर्भाव <sel4/benchmark_track_types.h>
+#अन्तर्भाव <benchmark/benchmark_track.h>
+#अन्तर्भाव <benchmark/benchmark_utilisation.h>
+#अन्तर्भाव <arch/machine.h>
 
-void VISIBLE NORETURN c_handle_undefined_instruction(void)
+शून्य VISIBLE NORETURN c_handle_undefined_instruction(शून्य)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
     ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
+    ksKernelEntry.word = getRegister(गाठ_STATE(ksCurThread), NextIP);
 #endif
 
     /* There's only one user-level fault on ARM, and the code is (0,0) */
 #ifdef CONFIG_ARCH_AARCH32
     handleUserLevelFault(0, 0);
-#elif CONFIG_ARCH_AARCH64
+#नोचेद्यदि CONFIG_ARCH_AARCH64
     word_t esr = getESR();
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+    यदि (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
+    } अन्यथा
 #endif
     {
         handleUserLevelFault(esr, 0);
@@ -46,7 +46,7 @@ void VISIBLE NORETURN c_handle_undefined_instruction(void)
 }
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
-void NORETURN vm_fault_slowpath(vm_fault_type_t type)
+शून्य NORETURN vm_fault_slowpath(vm_fault_type_t type)
 {
     handleVMFaultEvent(type);
     restore_user_context();
@@ -54,39 +54,39 @@ void NORETURN vm_fault_slowpath(vm_fault_type_t type)
 }
 #endif
 
-static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
+स्थिर अन्तःस्थ शून्य NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
     ksKernelEntry.path = Entry_VMFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
+    ksKernelEntry.word = getRegister(गाठ_STATE(ksCurThread), NextIP);
     ksKernelEntry.is_fastpath = false;
 #endif
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# अन्यथा
     handleVMFaultEvent(type);
     restore_user_context();
 #endif
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_data_fault(void)
+शून्य VISIBLE NORETURN c_handle_data_fault(शून्य)
 {
     c_handle_vm_fault(seL4_DataFault);
 }
 
-void VISIBLE NORETURN c_handle_instruction_fault(void)
+शून्य VISIBLE NORETURN c_handle_instruction_fault(शून्य)
 {
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+शून्य VISIBLE NORETURN c_handle_interrupt(शून्य)
 {
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
+    गाठ_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
@@ -99,9 +99,9 @@ void VISIBLE NORETURN c_handle_interrupt(void)
     restore_user_context();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+शून्य NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    यदि (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
         /* ksKernelEntry.word word is already set to syscall */
@@ -110,7 +110,7 @@ void NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } अन्यथा {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -121,13 +121,13 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+शून्य VISIBLE c_handle_syscall(word_t cptr, word_t संदेश_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, संदेश_Info, syscall);
     ksKernelEntry.is_fastpath = 0;
 #endif /* DEBUG */
 
@@ -136,58 +136,58 @@ void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
 }
 
 #ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_ओळ_SIZE)
+शून्य VISIBLE c_handle_fastpath_call(word_t cptr, word_t संदेश_Info)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, संदेश_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, संदेश_Info);
     UNREACHABLE();
 }
 
 #ifdef CONFIG_KERNEL_MCS
 #ifdef CONFIG_SIGNAL_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_ओळ_SIZE)
+शून्य VISIBLE c_handle_fastpath_signal(word_t cptr, word_t संदेश_Info)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, संदेश_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
-    fastpath_signal(cptr, msgInfo);
+    fastpath_signal(cptr, संदेश_Info);
     UNREACHABLE();
 }
 #endif /* CONFIG_SIGNAL_FASTPATH */
 #endif /* CONFIG_KERNEL_MCS */
 
-ALIGN(L1_CACHE_LINE_SIZE)
+ALIGN(L1_CACHE_ओळ_SIZE)
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
+शून्य VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t संदेश_Info, word_t reply)
+#अन्यथा
+शून्य VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t संदेश_Info)
 #endif
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
+    benchmark_debug_syscall_start(cptr, संदेश_Info, SysReplyRecv);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
 #ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
+    fastpath_reply_recv(cptr, संदेश_Info, reply);
+#अन्यथा
+    fastpath_reply_recv(cptr, संदेश_Info);
 #endif
     UNREACHABLE();
 }
@@ -195,9 +195,9 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
+VISIBLE NORETURN शून्य c_handle_vcpu_fault(word_t hsr)
 {
-    NODE_LOCK_SYS;
+    गाठ_LOCK_SYS;
 
     c_entry_hook();
 
