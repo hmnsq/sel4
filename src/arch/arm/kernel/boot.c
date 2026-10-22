@@ -34,7 +34,7 @@
  * spinning until the primary core has initialized all kernel structures and
  * then set it to 1.
  */
-BOOT_BSS static volatile _Atomic int node_boot_lock;
+BOOT_BSS static ca_ncala _Atomic පූර්ණ_සංඛ්‍යා node_boot_lock;
 #endif /* ENABLE_SMP_SUPPORT */
 
 BOOT_BSS static region_t reserved[NUM_RESERVED_REGIONS];
@@ -47,13 +47,13 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
     /* reserve the kernel image region */
     reserved[0] = paddr_to_pptr_reg(get_p_reg_kernel_img());
 
-    int index = 1;
+    පූර්ණ_සංඛ්‍යා index = 1;
 
     /* add the dtb region, if it is not empty */
-    if (dtb_p_reg.start) {
-        if (index >= ARRAY_SIZE(reserved)) {
+    නම් (dtb_p_reg.start) {
+        නම් (index >= ARRAY_SIZE(reserved)) {
             printf("ERROR: no slot to add DTB to reserved regions\n");
-            return false;
+            ආපසු false;
         }
         reserved[index].start = (pptr_t) paddr_to_pptr(dtb_p_reg.start);
         reserved[index].end = (pptr_t) paddr_to_pptr(dtb_p_reg.end);
@@ -64,42 +64,42 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
      * only one mode-reserved region is supported, because this is all that is
      * needed.
      */
-    if (MODE_RESERVED > 1) {
+    නම් (MODE_RESERVED > 1) {
         printf("ERROR: MODE_RESERVED > 1 unsupported!\n");
-        return false;
+        ආපසු false;
     }
-    if (ui_p_reg.start < PADDR_TOP) {
+    නම් (ui_p_reg.start < PADDR_TOP) {
         region_t ui_reg = paddr_to_pptr_reg(ui_p_reg);
-        if (MODE_RESERVED == 1) {
-            if (index + 1 >= ARRAY_SIZE(reserved)) {
+        නම් (MODE_RESERVED == 1) {
+            නම් (index + 1 >= ARRAY_SIZE(reserved)) {
                 printf("ERROR: no slot to add the user image and the "
                        "mode-reserved region to the reserved regions\n");
-                return false;
+                ආපසු false;
             }
-            if (ui_reg.end > mode_reserved_region[0].start) {
+            නම් (ui_reg.end > mode_reserved_region[0].start) {
                 reserved[index] = mode_reserved_region[0];
                 index++;
                 reserved[index] = ui_reg;
-            } else {
+            } නැතහොත් {
                 reserved[index] = ui_reg;
                 index++;
                 reserved[index] = mode_reserved_region[0];
             }
             index++;
-        } else {
-            if (index >= ARRAY_SIZE(reserved)) {
+        } නැතහොත් {
+            නම් (index >= ARRAY_SIZE(reserved)) {
                 printf("ERROR: no slot to add the user image to the reserved"
                        "regions\n");
-                return false;
+                ආපසු false;
             }
             reserved[index] = ui_reg;
             index++;
         }
-    } else {
-        if (MODE_RESERVED == 1) {
-            if (index >= ARRAY_SIZE(reserved)) {
+    } නැතහොත් {
+        නම් (MODE_RESERVED == 1) {
+            නම් (index >= ARRAY_SIZE(reserved)) {
                 printf("ERROR: no slot to add the mode-reserved region\n");
-                return false;
+                ආපසු false;
             }
             reserved[index] = mode_reserved_region[0];
             index++;
@@ -110,7 +110,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
     }
 
     /* avail_p_regs comes from the auto-generated code */
-    return init_freemem(ARRAY_SIZE(avail_p_regs), avail_p_regs,
+    ආපසු init_freemem(ARRAY_SIZE(avail_p_regs), avail_p_regs,
                         index, reserved,
                         it_v_reg, extra_bi_size_bits);
 }
@@ -120,7 +120,7 @@ BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
 {
     unsigned i;
 
-    for (i = 0; i <= maxIRQ ; i++) {
+    සඳහා (i = 0; i <= maxIRQ ; i++) {
         setIRQState(IRQInactive, CORE_IRQ_TO_IRQT(0, i));
     }
     setIRQState(IRQTimer, CORE_IRQ_TO_IRQT(0, KERNEL_TIMER_IRQ));
@@ -135,11 +135,11 @@ BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
 #ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
 #ifdef KERNEL_PMU_IRQ
     setIRQState(IRQReserved, CORE_IRQ_TO_IRQT(0, KERNEL_PMU_IRQ));
-#if (defined CONFIG_PLAT_TX1 && defined ENABLE_SMP_SUPPORT)
+#නම් (defined CONFIG_PLAT_TX1 && defined ENABLE_SMP_SUPPORT)
 //SELFOUR-1252
 #error "This platform doesn't support tracking CPU utilisation on multicore"
 #endif /* CONFIG_PLAT_TX1 && ENABLE_SMP_SUPPORT */
-#else
+#නැතහොත්
 #error "This platform doesn't support tracking CPU utilisation feature"
 #endif /* KERNEL_TIMER_IRQ */
 #endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
@@ -182,31 +182,31 @@ BOOT_CODE static bool_t init_cpu(void)
     bool_t haveHWFPU;
 
 #ifdef CONFIG_ARCH_AARCH64
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        if (!checkTCR_EL2()) {
-            return false;
+    නම් (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        නම් (!checkTCR_EL2()) {
+            ආපසු false;
         }
     }
 #endif
 
     activate_kernel_vspace();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    නම් (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_boot_init();
     }
 
 #ifdef CONFIG_ARCH_AARCH64
     /* After activate_kernel_vspace(), so printf() is available. */
-    if (!config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !check16BitASID()) {
+    නම් (!config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !check16BitASID()) {
         printf("ERROR: kernel requires 16-bit ASIDs\n");
-        return false;
+        ආපසු false;
     }
 #endif
 
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    if (!Arch_initHardwareBreakpoints()) {
+    නම් (!Arch_initHardwareBreakpoints()) {
         printf("Kernel built with CONFIG_HARDWARE_DEBUG_API, but this board doesn't "
                "reliably support it.\n");
-        return false;
+        ආපසු false;
     }
 #endif
 
@@ -233,18 +233,18 @@ BOOT_CODE static bool_t init_cpu(void)
     haveHWFPU = fpsimd_HWCapTest();
 
     /* Disable FPU to avoid channels where a platform has an FPU but doesn't make use of it */
-    if (haveHWFPU) {
+    නම් (haveHWFPU) {
         disableFpu();
     }
 
 #ifdef CONFIG_HAVE_FPU
-    if (haveHWFPU) {
-        if (!fpsimd_init()) {
-            return false;
+    නම් (haveHWFPU) {
+        නම් (!fpsimd_init()) {
+            ආපසු false;
         }
-    } else {
+    } නැතහොත් {
         printf("Platform claims to have FP hardware, but does not!\n");
-        return false;
+        ආපසු false;
     }
 #endif /* CONFIG_HAVE_FPU */
 
@@ -259,7 +259,7 @@ BOOT_CODE static bool_t init_cpu(void)
 
     initTimer();
 
-    return true;
+    ආපසු true;
 }
 
 /* This and only this function initialises the platform. It does NOT initialise any kernel state. */
@@ -277,12 +277,12 @@ BOOT_CODE static void init_plat(void)
 BOOT_CODE static bool_t try_init_kernel_secondary_core(void)
 {
     /* need to first wait until some kernel init has been done */
-    while (!node_boot_lock);
+    අතරතුර (!node_boot_lock);
 
     /* Perform cpu init */
     init_cpu();
 
-    for (unsigned int i = 0; i < NUM_PPI; i++) {
+    සඳහා (unsigned පූර්ණ_සංඛ්‍යා i = 0; i < NUM_PPI; i++) {
         maskInterrupt(true, CORE_IRQ_TO_IRQT(getCurrentCPUIndex(), i));
     }
     setIRQState(IRQIPI, CORE_IRQ_TO_IRQT(getCurrentCPUIndex(), irq_remote_call_ipi));
@@ -300,7 +300,7 @@ BOOT_CODE static bool_t try_init_kernel_secondary_core(void)
 
     init_core_state(SchedulerAction_ResumeCurrentThread);
 
-    return true;
+    ආපසු true;
 }
 
 BOOT_CODE static void release_secondary_cpus(void)
@@ -327,7 +327,7 @@ BOOT_CODE static void release_secondary_cpus(void)
 #endif
 
     /* Wait until all the secondary cores are done initialising */
-    while (ksNumCPUs != CONFIG_MAX_NUM_NODES) {
+    අතරතුර (ksNumCPUs != CONFIG_MAX_NUM_NODES) {
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
         NODE_STATE(ksCurTime) = getCurrentTime();
 #endif
@@ -378,9 +378,9 @@ static BOOT_CODE bool_t try_init_kernel(
     map_kernel_window();
 
     /* initialise the CPU */
-    if (!init_cpu()) {
+    නම් (!init_cpu()) {
         printf("ERROR: CPU init failed\n");
-        return false;
+        ආපසු false;
     }
 
     /* debug output via serial port is only available from here */
@@ -391,28 +391,28 @@ static BOOT_CODE bool_t try_init_kernel(
 
     /* If a DTB was provided, pass the data on as extra bootinfo */
     p_region_t dtb_p_reg = P_REG_EMPTY;
-    if (dtb_size > 0) {
+    නම් (dtb_size > 0) {
         paddr_t dtb_phys_end = dtb_phys_addr + dtb_size;
-        if (dtb_phys_end < dtb_phys_addr) {
+        නම් (dtb_phys_end < dtb_phys_addr) {
             /* An integer overflow happened in DTB end address calculation, the
              * location or size passed seems invalid.
              */
             printf("ERROR: DTB location at %"SEL4_PRIx_word
                    " len %"SEL4_PRIu_word" invalid\n",
                    dtb_phys_addr, dtb_size);
-            return false;
+            ආපසු false;
         }
         /* If the DTB is located in physical memory that is not mapped in the
          * kernel window we cannot access it.
          */
-        if (dtb_phys_end >= PADDR_TOP) {
+        නම් (dtb_phys_end >= PADDR_TOP) {
             printf("ERROR: DTB at [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") "
                    "exceeds PADDR_TOP (%"SEL4_PRIx_word")\n",
                    dtb_phys_addr, dtb_phys_end, PADDR_TOP);
-            return false;
+            ආපසු false;
         }
         /* DTB seems valid and accessible, pass it on in bootinfo. */
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + dtb_size;
+        extra_bi_size += parimaa_na(seL4_BootInfoHeader) + dtb_size;
         /* Remember the memory region it uses. */
         dtb_p_reg = (p_region_t) {
             .start = dtb_phys_addr,
@@ -426,7 +426,7 @@ static BOOT_CODE bool_t try_init_kernel(
         .start = ui_v_reg.start,
         .end   = extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0)
     };
-    if (it_v_reg.end >= USER_TOP) {
+    නම් (it_v_reg.end >= USER_TOP) {
         /* Variable arguments for printf() require well defined integer types to
          * work properly. Unfortunately, the definition of USER_TOP differs
          * between platforms (int, long), so we have to cast here to play safe.
@@ -434,19 +434,19 @@ static BOOT_CODE bool_t try_init_kernel(
         printf("ERROR: userland image virt [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")"
                "exceeds USER_TOP (%"SEL4_PRIx_word")\n",
                it_v_reg.start, it_v_reg.end, (word_t)USER_TOP);
-        return false;
+        ආපසු false;
     }
 
-    if (!arch_init_freemem(ui_p_reg, dtb_p_reg, it_v_reg, extra_bi_size_bits)) {
+    නම් (!arch_init_freemem(ui_p_reg, dtb_p_reg, it_v_reg, extra_bi_size_bits)) {
         printf("ERROR: free memory management initialization failed\n");
-        return false;
+        ආපසු false;
     }
 
     /* create the root cnode */
     root_cnode_cap = create_root_cnode();
-    if (cap_get_capType(root_cnode_cap) == cap_null_cap) {
+    නම් (cap_get_capType(root_cnode_cap) == cap_null_cap) {
         printf("ERROR: root c-node creation failed\n");
-        return false;
+        ආපසු false;
     }
 
     /* create the cap for managing thread domains */
@@ -467,11 +467,11 @@ static BOOT_CODE bool_t try_init_kernel(
 
     /* put DTB in the bootinfo block, if present. */
     seL4_BootInfoHeader header;
-    if (dtb_size > 0) {
+    නම් (dtb_size > 0) {
         header.id = SEL4_BOOTINFO_HEADER_FDT;
-        header.len = sizeof(header) + dtb_size;
+        header.len = parimaa_na(header) + dtb_size;
         *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
+        extra_bi_offset += parimaa_na(header);
         memcpy((void *)(rootserver.extra_bi + extra_bi_offset),
                paddr_to_pptr(dtb_phys_addr),
                dtb_size);
@@ -480,23 +480,23 @@ static BOOT_CODE bool_t try_init_kernel(
 
     assert(extra_bi_size == extra_bi_offset);
 
-    if (config_set(CONFIG_TK1_SMMU)) {
+    නම් (config_set(CONFIG_TK1_SMMU)) {
         ndks_boot.bi_frame->ioSpaceCaps = create_iospace_caps(root_cnode_cap);
-        if (ndks_boot.bi_frame->ioSpaceCaps.start == 0 &&
+        නම් (ndks_boot.bi_frame->ioSpaceCaps.start == 0 &&
             ndks_boot.bi_frame->ioSpaceCaps.end == 0) {
             printf("ERROR: SMMU I/O space creation failed\n");
-            return false;
+            ආපසු false;
         }
-    } else {
+    } නැතහොත් {
         ndks_boot.bi_frame->ioSpaceCaps = S_REG_EMPTY;
     }
 
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
     it_pd_cap = create_it_address_space(root_cnode_cap, it_v_reg);
-    if (cap_get_capType(it_pd_cap) == cap_null_cap) {
+    නම් (cap_get_capType(it_pd_cap) == cap_null_cap) {
         printf("ERROR: address space creation for initial thread failed\n");
-        return false;
+        ආපසු false;
     }
 
     /* Create and map bootinfo frame cap */
@@ -507,7 +507,7 @@ static BOOT_CODE bool_t try_init_kernel(
     );
 
     /* create and map extra bootinfo region */
-    if (extra_bi_size > 0) {
+    නම් (extra_bi_size > 0) {
         region_t extra_bi_region = {
             .start = rootserver.extra_bi,
             .end = rootserver.extra_bi + extra_bi_size
@@ -520,9 +520,9 @@ static BOOT_CODE bool_t try_init_kernel(
                 true,
                 pptr_to_paddr((void *)extra_bi_region.start) - extra_bi_frame_vptr
             );
-        if (!extra_bi_ret.success) {
+        නම් (!extra_bi_ret.success) {
             printf("ERROR: mapping extra boot info to initial thread failed\n");
-            return false;
+            ආපසු false;
         }
         ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
     }
@@ -533,9 +533,9 @@ static BOOT_CODE bool_t try_init_kernel(
 
     /* create the initial thread's IPC buffer */
     ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_pd_cap, ipcbuf_vptr);
-    if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
+    නම් (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
         printf("ERROR: could not create IPC buffer for initial thread\n");
-        return false;
+        ආපසු false;
     }
 
     /* create all userland image frames */
@@ -547,17 +547,17 @@ static BOOT_CODE bool_t try_init_kernel(
             true,
             pv_offset
         );
-    if (!create_frames_ret.success) {
+    නම් (!create_frames_ret.success) {
         printf("ERROR: could not create all userland image frames\n");
-        return false;
+        ආපසු false;
     }
     ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
 
     /* create/initialise the initial thread's ASID pool */
     it_ap_cap = create_it_asid_pool(root_cnode_cap);
-    if (cap_get_capType(it_ap_cap) == cap_null_cap) {
+    නම් (cap_get_capType(it_ap_cap) == cap_null_cap) {
         printf("ERROR: could not create ASID pool for initial thread\n");
-        return false;
+        ආපසු false;
     }
     write_it_asid_pool(it_ap_cap, it_pd_cap);
 
@@ -584,17 +584,17 @@ static BOOT_CODE bool_t try_init_kernel(
                          ipcbuf_cap
                      );
 
-    if (initial == NULL) {
+    නම් (initial == NULL) {
         printf("ERROR: could not create initial thread\n");
-        return false;
+        ආපසු false;
     }
 
     init_core_state(initial);
 
     /* create all of the untypeds. Both devices and kernel window memory */
-    if (!create_untypeds(root_cnode_cap)) {
+    නම් (!create_untypeds(root_cnode_cap)) {
         printf("ERROR: could not create untypteds for kernel image boot memory\n");
-        return false;
+        ආපසු false;
     }
 
     /* no shared-frame caps (ARM has no multikernel support) */
@@ -611,7 +611,7 @@ static BOOT_CODE bool_t try_init_kernel(
      */
     cleanInvalidateL1Caches();
     invalidateLocalTLB();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    නම් (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         invalidateHypTLB();
     }
 
@@ -631,7 +631,7 @@ static BOOT_CODE bool_t try_init_kernel(
     printf("Booting all finished, dropped to user space\n");
 
     /* kernel successfully initialized */
-    return true;
+    ආපසු true;
 }
 
 BOOT_CODE VISIBLE void init_kernel(
@@ -647,17 +647,17 @@ BOOT_CODE VISIBLE void init_kernel(
 
 #ifdef ENABLE_SMP_SUPPORT
     /* we assume there exists a cpu with id 0 and will use it for bootstrapping */
-    if (getCurrentCPUIndex() == 0) {
+    නම් (getCurrentCPUIndex() == 0) {
         result = try_init_kernel(ui_p_reg_start,
                                  ui_p_reg_end,
                                  pv_offset,
                                  v_entry,
                                  dtb_addr_p, dtb_size);
-    } else {
+    } නැතහොත් {
         result = try_init_kernel_secondary_core();
     }
 
-#else
+#නැතහොත්
     result = try_init_kernel(ui_p_reg_start,
                              ui_p_reg_end,
                              pv_offset,
@@ -666,7 +666,7 @@ BOOT_CODE VISIBLE void init_kernel(
 
 #endif /* ENABLE_SMP_SUPPORT */
 
-    if (!result) {
+    නම් (!result) {
         fail("ERROR: kernel init failed");
         UNREACHABLE();
     }

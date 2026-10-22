@@ -13,7 +13,7 @@
 #include <benchmark/benchmark_utilisation.h>
 
 #ifdef CONFIG_ARCH_ARM
-static inline
+static anta_hstha
 FORCE_INLINE
 #endif
 void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
@@ -37,7 +37,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 
     /* Check there's no extra caps, the length is ok and there's no
      * saved fault. */
-    if (unlikely(fastpath_mi_check(msgInfo) ||
+    නම් (unlikely(fastpath_mi_check(msgInfo) ||
                  fault_type != seL4_Fault_NullFault)) {
         slowpath(SysCall);
     }
@@ -46,7 +46,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     ep_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, cptr);
 
     /* Check it's an endpoint */
-    if (unlikely(!cap_capType_equals(ep_cap, cap_endpoint_cap) ||
+    නම් (unlikely(!cap_capType_equals(ep_cap, cap_endpoint_cap) ||
                  !cap_endpoint_cap_get_capCanSend(ep_cap))) {
         slowpath(SysCall);
     }
@@ -59,13 +59,13 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     dest = TCB_PTR(endpoint_ptr_get_epQueue_head(ep_ptr));
 
     /* Check that there's a thread waiting to receive */
-    if (unlikely(endpoint_ptr_get_state(ep_ptr) != EPState_Recv)) {
+    නම් (unlikely(endpoint_ptr_get_state(ep_ptr) != EPState_Recv)) {
         slowpath(SysCall);
     }
 
     /* ensure we are not single stepping the destination in ia32 */
-#if defined(CONFIG_HARDWARE_DEBUG_API) && defined(CONFIG_ARCH_IA32)
-    if (unlikely(dest->tcbArch.tcbContext.breakpointState.single_step_enabled)) {
+#නම් defined(CONFIG_HARDWARE_DEBUG_API) && defined(CONFIG_ARCH_IA32)
+    නම් (unlikely(dest->tcbArch.tcbContext.breakpointState.single_step_enabled)) {
         slowpath(SysCall);
     }
 #endif
@@ -77,7 +77,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
 
     /* Ensure that the destination has a valid VTable. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    නම් (unlikely(! isValidVTableRoot_fp(newVTable))) {
         slowpath(SysCall);
     }
 
@@ -86,11 +86,11 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     stored_hw_asid = cap_pd[PD_ASID_SLOT];
 #endif
 
-#if defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
+#නම් defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
     /* Need to test that the ASID is still valid */
     asid_t asid = vspace_root_getMappedASID_fp(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
-    if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
+    නම් (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
                  (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) != cap_pd)) {
         slowpath(SysCall);
     }
@@ -103,18 +103,18 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     /* Need to test that the ASID is still valid */
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
-    if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
+    නම් (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
                  VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
         slowpath(SysCall);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Ensure the vmid is valid. */
-    if (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
+    නම් (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
         slowpath(SysCall);
     }
     /* vmids are the tags used instead of hw_asids in hyp mode */
     stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-#else
+#නැතහොත්
     stored_hw_asid.words[0] = asid;
 #endif
 #endif
@@ -122,7 +122,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 #ifdef CONFIG_ARCH_RISCV
     /* Need to test that the ASID is still valid */
     asid_t asid = cap_page_table_cap_get_capPTMappedASID(newVTable);
-    if (unlikely(findVSpaceForASID_fp(asid) != cap_pd)) {
+    නම් (unlikely(findVSpaceForASID_fp(asid) != cap_pd)) {
         slowpath(SysCall);
     }
     /* Get HW ASID */
@@ -132,43 +132,43 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     /* let gcc optimise this out for 1 domain */
     dom = maxDom ? ksCurDomain : 0;
     /* ensure only the idle thread or lower prio threads are present in the scheduler */
-    if (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
+    නම් (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
                  !isHighestPrio(dom, dest->tcbPriority))) {
         slowpath(SysCall);
     }
 
     /* Ensure that the endpoint has has grant or grant-reply rights so that we can
      * create the reply cap */
-    if (unlikely(!cap_endpoint_cap_get_capCanGrant(ep_cap) &&
+    නම් (unlikely(!cap_endpoint_cap_get_capCanGrant(ep_cap) &&
                  !cap_endpoint_cap_get_capCanGrantReply(ep_cap))) {
         slowpath(SysCall);
     }
 
 #ifdef CONFIG_ARCH_AARCH32
-    if (unlikely(!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid))) {
+    නම් (unlikely(!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid))) {
         slowpath(SysCall);
     }
 #endif
 
     /* Ensure the original caller is in the current domain and can be scheduled directly. */
-    if (unlikely(dest->tcbDomain != ksCurDomain && 0 < maxDom)) {
+    නම් (unlikely(dest->tcbDomain != ksCurDomain && 0 < maxDom)) {
         slowpath(SysCall);
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    if (unlikely(dest->tcbSchedContext != NULL)) {
+    නම් (unlikely(dest->tcbSchedContext != NULL)) {
         slowpath(SysCall);
     }
 
     reply_t *reply = thread_state_get_replyObject_np(dest->tcbState);
-    if (unlikely(reply == NULL)) {
+    නම් (unlikely(reply == NULL)) {
         slowpath(SysCall);
     }
 #endif
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
+    නම් (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
         slowpath(SysCall);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -185,12 +185,12 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 
     /* Dequeue the destination. */
     endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(dest->tcbEPNext));
-    if (unlikely(dest->tcbEPNext)) {
+    නම් (unlikely(dest->tcbEPNext)) {
         dest->tcbEPNext->tcbEPPrev = NULL;
 #ifdef CONFIG_KERNEL_MCS
         dest->tcbEPNext = NULL;
 #endif
-    } else {
+    } නැතහොත් {
         endpoint_ptr_mset_epQueue_tail_state(ep_ptr, 0, EPState_Idle);
     }
 
@@ -211,12 +211,12 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 
     reply_t *old_caller = sc->scReply;
     reply->replyPrev = call_stack_new(REPLY_REF(sc->scReply), false);
-    if (unlikely(old_caller)) {
+    නම් (unlikely(old_caller)) {
         old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
     }
     reply->replyNext = call_stack_new(SC_REF(sc), true);
     sc->scReply = reply;
-#else
+#නැතහොත්
     /* Get sender reply slot */
     cte_t *replySlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbReply);
 
@@ -245,12 +245,12 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 }
 
 #ifdef CONFIG_ARCH_ARM
-static inline
+static anta_hstha
 FORCE_INLINE
 #endif
 #ifdef CONFIG_KERNEL_MCS
 void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
+#නැතහොත්
 void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 {
@@ -275,7 +275,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
     /* Check there's no extra caps, the length is ok and there's no
      * saved fault. */
-    if (unlikely(fastpath_mi_check(msgInfo) ||
+    නම් (unlikely(fastpath_mi_check(msgInfo) ||
                  fault_type != seL4_Fault_NullFault)) {
         slowpath(SysReplyRecv);
     }
@@ -285,7 +285,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
                        cptr);
 
     /* Check it's an endpoint */
-    if (unlikely(!cap_capType_equals(ep_cap, cap_endpoint_cap) ||
+    නම් (unlikely(!cap_capType_equals(ep_cap, cap_endpoint_cap) ||
                  !cap_endpoint_cap_get_capCanReceive(ep_cap))) {
         slowpath(SysReplyRecv);
     }
@@ -295,13 +295,13 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     cap_t reply_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, reply);
 
     /* check it's a reply object */
-    if (unlikely(!cap_capType_equals(reply_cap, cap_reply_cap))) {
+    නම් (unlikely(!cap_capType_equals(reply_cap, cap_reply_cap))) {
         slowpath(SysReplyRecv);
     }
 #endif
 
     /* Check there is nothing waiting on the notification */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbBoundNotification &&
+    නම් (unlikely(NODE_STATE(ksCurThread)->tcbBoundNotification &&
                  notification_ptr_get_state(NODE_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active)) {
         slowpath(SysReplyRecv);
     }
@@ -310,7 +310,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     ep_ptr = EP_PTR(cap_endpoint_cap_get_capEPPtr(ep_cap));
 
     /* Check that there's not a thread waiting to send */
-    if (unlikely(endpoint_ptr_get_state(ep_ptr) == EPState_Send)) {
+    නම් (unlikely(endpoint_ptr_get_state(ep_ptr) == EPState_Send)) {
         slowpath(SysReplyRecv);
     }
 
@@ -319,7 +319,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     reply_t *reply_ptr = REPLY_PTR(cap_reply_cap_get_capReplyPtr(reply_cap));
     /* check that its valid and at the head of the call chain
        and that the current thread's SC is going to be donated. */
-    if (unlikely(reply_ptr->replyTCB == NULL ||
+    නම් (unlikely(reply_ptr->replyTCB == NULL ||
                  call_stack_get_isHead(reply_ptr->replyNext) == 0 ||
                  SC_PTR(call_stack_get_callStackPtr(reply_ptr->replyNext)) != NODE_STATE(ksCurThread)->tcbSchedContext)) {
         slowpath(SysReplyRecv);
@@ -327,11 +327,11 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
     /* Determine who the caller is. */
     caller = reply_ptr->replyTCB;
-#else
+#නැතහොත්
     /* Only reply if the reply cap is valid. */
     cte_t *callerSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
     cap_t callerCap = callerSlot->cap;
-    if (unlikely(!fastpath_reply_cap_check(callerCap))) {
+    නම් (unlikely(!fastpath_reply_cap_check(callerCap))) {
         slowpath(SysReplyRecv);
     }
 
@@ -340,8 +340,8 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 
     /* ensure we are not single stepping the caller in ia32 */
-#if defined(CONFIG_HARDWARE_DEBUG_API) && defined(CONFIG_ARCH_IA32)
-    if (unlikely(caller->tcbArch.tcbContext.breakpointState.single_step_enabled)) {
+#නම් defined(CONFIG_HARDWARE_DEBUG_API) && defined(CONFIG_ARCH_IA32)
+    නම් (unlikely(caller->tcbArch.tcbContext.breakpointState.single_step_enabled)) {
         slowpath(SysReplyRecv);
     }
 #endif
@@ -352,11 +352,11 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
     /* Change this as more types of faults are supported */
 #ifndef CONFIG_EXCEPTION_FASTPATH
-    if (unlikely(fault_type != seL4_Fault_NullFault)) {
+    නම් (unlikely(fault_type != seL4_Fault_NullFault)) {
         slowpath(SysReplyRecv);
     }
-#else
-    if (unlikely(fault_type != seL4_Fault_NullFault && fault_type != seL4_Fault_VMFault)) {
+#නැතහොත්
+    නම් (unlikely(fault_type != seL4_Fault_NullFault && fault_type != seL4_Fault_VMFault)) {
         slowpath(SysReplyRecv);
     }
 #endif
@@ -368,7 +368,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
 
     /* Ensure that the destination has a valid MMU. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    නම් (unlikely(! isValidVTableRoot_fp(newVTable))) {
         slowpath(SysReplyRecv);
     }
 
@@ -377,11 +377,11 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     stored_hw_asid = cap_pd[PD_ASID_SLOT];
 #endif
 
-#if defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
+#නම් defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
     /* Need to test that the ASID is still valid */
     asid_t asid = vspace_root_getMappedASID_fp(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
-    if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
+    නම් (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
                  (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) != cap_pd)) {
         slowpath(SysReplyRecv);
     }
@@ -394,19 +394,19 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     /* Need to test that the ASID is still valid */
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
-    if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
+    නම් (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
                  VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
         slowpath(SysReplyRecv);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Ensure the vmid is valid. */
-    if (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
+    නම් (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
         slowpath(SysReplyRecv);
     }
 
     /* vmids are the tags used instead of hw_asids in hyp mode */
     stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-#else
+#නැතහොත්
     stored_hw_asid.words[0] = asid;
 #endif
 #endif
@@ -414,7 +414,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #ifdef CONFIG_ARCH_RISCV
     /* Need to test that the ASID is still valid */
     asid_t asid = cap_page_table_cap_get_capPTMappedASID(newVTable);
-    if (unlikely(findVSpaceForASID_fp(asid) != cap_pd)) {
+    නම් (unlikely(findVSpaceForASID_fp(asid) != cap_pd)) {
         slowpath(SysReplyRecv);
     }
     /* Get HW ASID */
@@ -423,31 +423,31 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
     /* Ensure the original caller can be scheduled directly. */
     dom = maxDom ? ksCurDomain : 0;
-    if (unlikely(!isHighestPrio(dom, caller->tcbPriority))) {
+    නම් (unlikely(!isHighestPrio(dom, caller->tcbPriority))) {
         slowpath(SysReplyRecv);
     }
 
 #ifdef CONFIG_ARCH_AARCH32
     /* Ensure the HWASID is valid. */
-    if (unlikely(!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid))) {
+    නම් (unlikely(!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid))) {
         slowpath(SysReplyRecv);
     }
 #endif
 
     /* Ensure the original caller is in the current domain and can be scheduled directly. */
-    if (unlikely(caller->tcbDomain != ksCurDomain && 0 < maxDom)) {
+    නම් (unlikely(caller->tcbDomain != ksCurDomain && 0 < maxDom)) {
         slowpath(SysReplyRecv);
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    if (unlikely(caller->tcbSchedContext != NULL)) {
+    නම් (unlikely(caller->tcbSchedContext != NULL)) {
         slowpath(SysReplyRecv);
     }
 #endif
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != caller->tcbAffinity)) {
+    නම් (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != caller->tcbAffinity)) {
         slowpath(SysReplyRecv);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -471,14 +471,14 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     /* set the reply object */
     thread_state_ptr_set_replyObject_np(&NODE_STATE(ksCurThread)->tcbState, REPLY_REF(reply_ptr));
     reply_ptr->replyTCB = NODE_STATE(ksCurThread);
-#else
+#නැතහොත්
     thread_state_ptr_set_blockingIPCCanGrant(&NODE_STATE(ksCurThread)->tcbState,
                                              cap_endpoint_cap_get_capCanGrant(ep_cap));;
 #endif
 
     /* Place the thread in the endpoint queue */
     endpointTail = endpoint_ptr_get_epQueue_tail_fp(ep_ptr);
-    if (likely(!endpointTail)) {
+    නම් (likely(!endpointTail)) {
         NODE_STATE(ksCurThread)->tcbEPPrev = NULL;
         NODE_STATE(ksCurThread)->tcbEPNext = NULL;
 
@@ -486,13 +486,13 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
         endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(NODE_STATE(ksCurThread)));
         endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(NODE_STATE(ksCurThread)),
                                              EPState_Recv);
-    } else {
+    } නැතහොත් {
 #ifdef CONFIG_KERNEL_MCS
         /* Update queue. */
         tcb_queue_t queue = tcbAppend(NODE_STATE(ksCurThread), ep_ptr_get_queue(ep_ptr));
         endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(queue.head));
         endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(queue.end), EPState_Recv);
-#else
+#නැතහොත්
         /* Append current thread onto the queue. */
         endpointTail->tcbEPNext = NODE_STATE(ksCurThread);
         NODE_STATE(ksCurThread)->tcbEPPrev = endpointTail;
@@ -513,14 +513,14 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     sc->scTcb = caller;
 
     sc->scReply = REPLY_PTR(prev_ptr);
-    if (unlikely(REPLY_PTR(prev_ptr) != NULL)) {
+    නම් (unlikely(REPLY_PTR(prev_ptr) != NULL)) {
         sc->scReply->replyNext = reply_ptr->replyNext;
     }
 
     /* TODO neccessary? */
     reply_ptr->replyPrev.words[0] = 0;
     reply_ptr->replyNext.words[0] = 0;
-#else
+#නැතහොත්
     /* Delete the reply cap. */
     mdb_node_ptr_mset_mdbNext_mdbRevocable_mdbFirstBadged(
         &CTE_PTR(mdb_node_get_mdbPrev(callerSlot->cteMDBNode))->cteMDBNode,
@@ -530,7 +530,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
-    if (unlikely(fault_type != seL4_Fault_NullFault)) {
+    නම් (unlikely(fault_type != seL4_Fault_NullFault)) {
         /* Note - this works as is for VM faults but will need to be changed when other faults are added. VM faults always
          * restart the faulting thread upon reply but this is not always the case with other types of faults. This can either
          * be handled in the fastpath or redirected to the slowpath, but either way, this code must be changed so we do not
@@ -552,7 +552,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
         /* The badge/msginfo do not need to be not sent - this is not necessary for exceptions */
         restore_user_context();
-    } else {
+    } නැතහොත් {
 #endif
         /* There's no fault, so straight to the transfer. */
 
@@ -576,7 +576,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #ifdef CONFIG_SIGNAL_FASTPATH
 #ifdef CONFIG_ARCH_ARM
-static inline
+static anta_hstha
 FORCE_INLINE
 #endif
 void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
@@ -593,7 +593,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 
     /* Check there's no saved fault. Can be removed if the current thread can't
      * have a fault while invoking the fastpath */
-    if (unlikely(fault_type != seL4_Fault_NullFault)) {
+    නම් (unlikely(fault_type != seL4_Fault_NullFault)) {
         slowpath(SysSend);
     }
 
@@ -601,17 +601,17 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     cap_t cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, cptr);
 
     /* Check it's a notification */
-    if (unlikely(!cap_capType_equals(cap, cap_notification_cap))) {
+    නම් (unlikely(!cap_capType_equals(cap, cap_notification_cap))) {
         slowpath(SysSend);
     }
 
     /* Check that we are allowed to send to this cap */
-    if (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
+    නම් (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
         slowpath(SysSend);
     }
 
     /* Check that the current domain hasn't expired */
-    if (unlikely(isCurDomainExpired())) {
+    නම් (unlikely(isCurDomainExpired())) {
         slowpath(SysSend);
     }
 
@@ -624,17 +624,17 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     /* Get the notification badge */
     word_t badge = cap_notification_cap_get_capNtfnBadge(cap);
     switch (ntfnState) {
-    case NtfnState_Active:
+    pak_sa NtfnState_Active:
 #ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = true;
 #endif
         ntfn_set_active(ntfnPtr, badge | notification_ptr_get_ntfnMsgIdentifier(ntfnPtr));
         restore_user_context();
         UNREACHABLE();
-    case NtfnState_Idle:
+    pak_sa NtfnState_Idle:
         dest = (tcb_t *) notification_ptr_get_ntfnBoundTCB(ntfnPtr);
 
-        if (!dest || thread_state_ptr_get_tsType(&dest->tcbState) != ThreadState_BlockedOnReceive) {
+        නම් (!dest || thread_state_ptr_get_tsType(&dest->tcbState) != ThreadState_BlockedOnReceive) {
 #ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
             ksKernelEntry.is_fastpath = true;
 #endif
@@ -644,10 +644,10 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
         }
 
         idle = true;
-        break;
-    case NtfnState_Waiting:
+        bha_nga;
+    pak_sa NtfnState_Waiting:
         dest = TCB_PTR(notification_ptr_get_ntfnQueue_head(ntfnPtr));
-        break;
+        bha_nga;
     default:
         fail("Invalid notification state");
     }
@@ -657,15 +657,15 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 
     /* If the signalled thread doesn't have a bound SC, check if one can be
      * donated from the notification. If not, go to the slowpath */
-    if (!sc) {
+    නම් (!sc) {
         sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-        if (sc == NULL || sc->scTcb != NULL) {
+        නම් (sc == NULL || sc->scTcb != NULL) {
             slowpath(SysSend);
         }
 
         /* Slowpath the case where dest has its FPU context in the FPU of a core*/
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_HAVE_FPU)
-        if (nativeThreadUsingFPU(dest)) {
+#නම් defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_HAVE_FPU)
+        නම් (nativeThreadUsingFPU(dest)) {
             slowpath(SysSend);
         }
 #endif
@@ -673,7 +673,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 
     /* Only fastpath signal to threads which will not become the new highest prio thread on the
      * core of their SC, even if the currently running thread on the core is the idle thread. */
-    if (NODE_STATE_ON_CORE(ksCurThread, sc->scCore)->tcbPriority < dest->tcbPriority) {
+    නම් (NODE_STATE_ON_CORE(ksCurThread, sc->scCore)->tcbPriority < dest->tcbPriority) {
         slowpath(SysSend);
     }
 
@@ -682,15 +682,15 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
      * adds extra scheduler logic. Normally, this is done after donation of SC
      * but after tweaking it, I don't see anything executed in schedContext_donate
      * that will affect the conditions of this check */
-    if (sc->scRefillMax > 0) {
-        if (!(refill_ready(sc) && refill_sufficient(sc, 0))) {
+    නම් (sc->scRefillMax > 0) {
+        නම් (!(refill_ready(sc) && refill_sufficient(sc, 0))) {
             slowpath(SysSend);
         }
         schedulable = true;
     }
 
     /* Check if signal is cross-core or cross-domain */
-    if (ksCurDomain != dest->tcbDomain SMP_COND_STATEMENT( || sc->scCore != getCurrentCPUIndex())) {
+    නම් (ksCurDomain != dest->tcbDomain SMP_COND_STATEMENT( || sc->scCore != getCurrentCPUIndex())) {
         crossnode = true;
     }
 
@@ -699,10 +699,10 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     ksKernelEntry.is_fastpath = true;
 #endif
 
-    if (idle) {
+    නම් (idle) {
         /* Cancel the IPC that the signalled thread is waiting on */
         cancelIPC_fp(dest);
-    } else {
+    } නැතහොත් {
         /* Dequeue dest from the notification queue */
         tcbNTFNDequeue(dest, ntfnPtr);
     }
@@ -716,9 +716,9 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     maybeDonateSchedContext_fp(dest, sc);
 
     /* Left this in the same form as the slowpath. Not sure if optimal */
-    if (sc_sporadic(dest->tcbSchedContext)) {
+    නම් (sc_sporadic(dest->tcbSchedContext)) {
         assert(dest->tcbSchedContext != NODE_STATE(ksCurSC));
-        if (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
+        නම් (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
             refill_unblock_check(dest->tcbSchedContext);
         }
     }
@@ -726,10 +726,10 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     /* If dest was already not schedulable prior to the budget check
      * the slowpath doesn't seem to do anything special besides just not
      * not scheduling the dest thread. */
-    if (schedulable) {
-        if (NODE_STATE(ksCurThread)->tcbPriority > dest->tcbPriority || crossnode) {
+    නම් (schedulable) {
+        නම් (NODE_STATE(ksCurThread)->tcbPriority > dest->tcbPriority || crossnode) {
             SCHED_ENQUEUE(dest);
-        } else {
+        } නැතහොත් {
             SCHED_APPEND(dest);
         }
     }
@@ -739,7 +739,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 #endif
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
-static inline
+static anta_hstha
 FORCE_INLINE
 void NORETURN fastpath_vm_fault(vm_fault_type_t type)
 {
@@ -757,14 +757,14 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     /* Get the fault handler endpoint */
 #ifdef CONFIG_KERNEL_MCS
     handler_cap = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbFaultHandler)->cap;
-#else
+#නැතහොත්
     cptr_t handlerCPtr;
     handlerCPtr = NODE_STATE(ksCurThread)->tcbFaultHandler;
     handler_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, handlerCPtr);
 #endif
 
     /* Check that the cap is an endpoint cap and on non-mcs, that you can send to it and create the reply cap */
-    if (unlikely(!cap_capType_equals(handler_cap, cap_endpoint_cap)
+    නම් (unlikely(!cap_capType_equals(handler_cap, cap_endpoint_cap)
 #ifndef CONFIG_KERNEL_MCS
                  || !cap_endpoint_cap_get_capCanSend(handler_cap) || (!cap_endpoint_cap_get_capCanGrant(handler_cap) &&
                                                                       !cap_endpoint_cap_get_capCanGrantReply(handler_cap))
@@ -781,7 +781,7 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     dest = TCB_PTR(endpoint_ptr_get_epQueue_head(ep_ptr));
 
     /* Check that there's a thread waiting to receive */
-    if (unlikely(endpoint_ptr_get_state(ep_ptr) != EPState_Recv)) {
+    නම් (unlikely(endpoint_ptr_get_state(ep_ptr) != EPState_Recv)) {
         vm_fault_slowpath(type);
     }
 
@@ -792,7 +792,7 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
 
     /* Ensure that the destination has a valid VTable. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    නම් (unlikely(! isValidVTableRoot_fp(newVTable))) {
         vm_fault_slowpath(type);
     }
 
@@ -800,19 +800,19 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     /* Need to test that the ASID is still valid */
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
-    if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
+    නම් (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
                  VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
         vm_fault_slowpath(type);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Ensure the vmid is valid. */
-    if (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
+    නම් (unlikely(!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map))) {
         vm_fault_slowpath(type);
     }
 
     /* vmids are the tags used instead of hw_asids in hyp mode */
     stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-#else
+#නැතහොත්
     stored_hw_asid.words[0] = asid;
 #endif
 #endif
@@ -820,31 +820,31 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     /* let gcc optimise this out for 1 domain */
     dom = maxDom ? ksCurDomain : 0;
     /* ensure only the idle thread or lower prio threads are present in the scheduler */
-    if (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
+    නම් (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
                  !isHighestPrio(dom, dest->tcbPriority))) {
 
         vm_fault_slowpath(type);
     }
 
     /* Ensure the original caller is in the current domain and can be scheduled directly. */
-    if (unlikely(dest->tcbDomain != ksCurDomain && 0 < maxDom)) {
+    නම් (unlikely(dest->tcbDomain != ksCurDomain && 0 < maxDom)) {
         vm_fault_slowpath(type);
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    if (unlikely(dest->tcbSchedContext != NULL)) {
+    නම් (unlikely(dest->tcbSchedContext != NULL)) {
         vm_fault_slowpath(type);
     }
 
     reply_t *reply = thread_state_get_replyObject_np(dest->tcbState);
-    if (unlikely(reply == NULL)) {
+    නම් (unlikely(reply == NULL)) {
         vm_fault_slowpath(type);
     }
 #endif
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
+    නම් (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
         vm_fault_slowpath(type);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -866,12 +866,12 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
 
     /* Dequeue the destination. */
     endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(dest->tcbEPNext));
-    if (unlikely(dest->tcbEPNext)) {
+    නම් (unlikely(dest->tcbEPNext)) {
         dest->tcbEPNext->tcbEPPrev = NULL;
 #ifdef CONFIG_KERNEL_MCS
         dest->tcbEPNext = NULL;
 #endif
-    } else {
+    } නැතහොත් {
         endpoint_ptr_mset_epQueue_tail_state(ep_ptr, 0, EPState_Idle);
     }
 
@@ -892,12 +892,12 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
 
     reply_t *old_caller = sc->scReply;
     reply->replyPrev = call_stack_new(REPLY_REF(sc->scReply), false);
-    if (unlikely(old_caller)) {
+    නම් (unlikely(old_caller)) {
         old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
     }
     reply->replyNext = call_stack_new(SC_REF(sc), true);
     sc->scReply = reply;
-#else
+#නැතහොත්
     /* Get sender reply slot */
     cte_t *replySlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbReply);
 

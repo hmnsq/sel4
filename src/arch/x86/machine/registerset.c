@@ -29,7 +29,7 @@ word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
 {
     /* First perform any mode specific sanitization */
     v = Mode_sanitiseRegister(reg, v);
-    if (reg == FLAGS) {
+    නම් (reg == FLAGS) {
         /* Set architecturally defined high and low bits */
         v |=  FLAGS_HIGH;
         v &= ~FLAGS_LOW;
@@ -39,5 +39,5 @@ word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
         /* remove any other bits that shouldn't be set */
         v &=  FLAGS_MASK;
     }
-    return v;
+    ආපසු v;
 }

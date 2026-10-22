@@ -20,21 +20,21 @@ BOOT_CODE bool_t platAddDevices(void)
     /* remove the MSI region as poking at this is undefined and may allow for
      * the user to generate arbitrary MSI interrupts. Only need to consider
      * this if it would actually be in the user device region */
-    if (CONFIG_PADDR_USER_DEVICE_TOP > 0xFFFFFFF8) {
-        if (!reserve_region((p_region_t) {
+    නම් (CONFIG_PADDR_USER_DEVICE_TOP > 0xFFFFFFF8) {
+        නම් (!reserve_region((p_region_t) {
         (word_t)0xFFFFFFF8, (word_t)0xFFFFFFF8 + 8
         })) {
-            return false;
+            ආපසු false;
         }
     }
-    return true;
+    ආපසු true;
 }
 
 /* ============================== timer ============================== */
 
 #define TSC_FREQ_RETRIES 10
 
-BOOT_CODE static inline uint32_t measure_tsc_khz(void)
+BOOT_CODE static anta_hstha uint32_t measure_tsc_khz(void)
 {
     /* The frequency is repeatedly measured until the number of TSC
      * ticks in the pit wraparound interval (~50ms) fits in 32 bits.
@@ -47,7 +47,7 @@ BOOT_CODE static inline uint32_t measure_tsc_khz(void)
      * the expectation that it will eventually yield a sensible
      * result.
      */
-    for (int i = 0; i < TSC_FREQ_RETRIES; i++) {
+    සඳහා (පූර්ණ_සංඛ්‍යා i = 0; i < TSC_FREQ_RETRIES; i++) {
 
         /* read tsc */
         uint64_t old_ticks = x86_rdtsc();
@@ -59,8 +59,8 @@ BOOT_CODE static inline uint32_t measure_tsc_khz(void)
 
         uint64_t diff = new_ticks - old_ticks;
 
-        if ((uint32_t)diff == diff && new_ticks > old_ticks) {
-            return (uint32_t)diff / PIT_WRAPAROUND_MS;
+        නම් ((uint32_t)diff == diff && new_ticks > old_ticks) {
+            ආපසු (uint32_t)diff / PIT_WRAPAROUND_MS;
         }
 
         printf("warning: TSC frequency too high (%d retries remaining)\n",
@@ -70,14 +70,14 @@ BOOT_CODE static inline uint32_t measure_tsc_khz(void)
     fail("TSC frequency too high");
 
     /* should never get here */
-    return 0;
+    ආපසු 0;
 }
 
 BOOT_CODE uint32_t tsc_init(void)
 {
 
-#if CONFIG_PC99_TSC_FREQUENCY > 0
-    return CONFIG_PC99_TSC_FREQUENCY / 1000000;
+#නම් CONFIG_PC99_TSC_FREQUENCY > 0
+    ආපසු CONFIG_PC99_TSC_FREQUENCY / 1000000;
 #endif
 
     x86_cpu_identity_t *model_info = x86_cpuid_get_model_info();
@@ -92,31 +92,31 @@ BOOT_CODE uint32_t tsc_init(void)
     };
 
     /* try to read the frequency from the platform info MSR */
-    if (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID) {
-        for (int i = 0; i < ARRAY_SIZE(valid_models); i++) {
-            if (model_info->model == valid_models[i]) {
+    නම් (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID) {
+        සඳහා (පූර්ණ_සංඛ්‍යා i = 0; i < ARRAY_SIZE(valid_models); i++) {
+            නම් (model_info->model == valid_models[i]) {
 
                 /* read tsc freq from the platform info msr. Under some environments such
                  * as KVM this MSR will cause a GP fault even though it should be there.
                  * As such we perform a 'safe' rdmsr, which will catch a GP fault and
                  * tells through .success whether or not one happened */
                 rdmsr_safe_result_t info = x86_rdmsr_safe(IA32_PLATFORM_INFO_MSR);
-                if (info.success) {
+                නම් (info.success) {
                     uint32_t ratio = (((uint32_t) info.value) & 0xFF00) >> 8u;
                     /* Ignore hardware that claims a tsc frequency of zero */
-                    if (ratio != 0) {
+                    නම් (ratio != 0) {
                         /* Convert to MHz */
-                        if (model_info->model == NEHALEM_1_MODEL_ID ||
+                        නම් (model_info->model == NEHALEM_1_MODEL_ID ||
                             model_info->model == NEHALEM_2_MODEL_ID ||
                             model_info->model == NEHALEM_3_MODEL_ID) {
-                            return ratio * 13333u / 100u;
-                        } else {
-                            return ratio * 100u;
+                            ආපසු ratio * 13333u / 100u;
+                        } නැතහොත් {
+                            ආපසු ratio * 100u;
                         }
                     }
                 }
                 /* We just found the matching model, so no point continuing the search */
-                break;
+                bha_nga;
             }
         }
     }
@@ -131,5 +131,5 @@ BOOT_CODE uint32_t tsc_init(void)
     uint32_t tsc_khz = measure_tsc_khz();
 
     /* finally, return mhz */
-    return tsc_khz / 1000u;
+    ආපසු tsc_khz / 1000u;
 }
