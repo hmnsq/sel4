@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/model/statedata.h>
+#ضمن <arch/model/statedata.h>
 
 /* The privileged kernel mapping PD & PT */
-pml4e_t x64KSKernelPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits)) VISIBLE;
-pdpte_t x64KSKernelPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-#ifdef CONFIG_HUGE_PAGE
-pde_t x64KSKernelPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#else
-pde_t x64KSKernelPDs[BIT(PDPT_INDEX_BITS)][BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
-pte_t x64KSKernelPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
+pml4e_t x64KSKernelPML4[بیت(PML4_شاخص_بیتها)] ALIGN(بیت(se_L4_PML4_بیتها)) VISIBLE;
+pdpte_t x64KSKernelPDPT[بیت(PDPT_شاخص_بیتها)] ALIGN(بیت(seL4_PDPTBits));
+#اگر_تعریف_شده CONFIG_HUGE_صفحه
+pde_t x64KSKernelPD[بیت(PD_شاخص_بیتها)] ALIGN(بیت(se_L4_صفحه_Dir_بیتها));
+#وإلا
+pde_t x64KSKernelPDs[بیت(PDPT_شاخص_بیتها)][بیت(PD_شاخص_بیتها)] ALIGN(بیت(se_L4_صفحه_Dir_بیتها));
+#پایان_اگر
+pte_t x64KSKernelPT[بیت(PT_شاخص_بیتها)] ALIGN(بیت(se_L4_صفحه_جدول_بیتها));
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-pml4e_t x64KSSKIMPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits));
-pdpte_t x64KSSKIMPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-pde_t x64KSSKIMPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
+#اگر_تعریف_شده CONFIG_KERNEL_SKIM_پنجره
+pml4e_t x64KSSKIMPML4[بیت(PML4_شاخص_بیتها)] ALIGN(بیت(se_L4_PML4_بیتها));
+pdpte_t x64KSSKIMPDPT[بیت(PDPT_شاخص_بیتها)] ALIGN(بیت(seL4_PDPTBits));
+pde_t x64KSSKIMPD[بیت(PD_شاخص_بیتها)] ALIGN(بیت(se_L4_صفحه_Dir_بیتها));
+#پایان_اگر
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-UP_STATE_DEFINE(word_t, x64KSCurrentUserCR3);
-#else
-UP_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
-#endif
+#اگر_تعریف_شده CONFIG_KERNEL_SKIM_پنجره
+به_بالا_STATE_DEFINE(کلمه_t, x64KSCurrentUserCR3);
+#وإلا
+به_بالا_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
+#پایان_اگر
 
-word_t x64KSIRQStack[CONFIG_MAX_NUM_NODES][IRQ_STACK_SIZE + 2] ALIGN(64) VISIBLE SKIM_BSS;
+کلمه_t x64KSIRQStack[CONFIG_MAX_رقم_NODES][IRQ_پشته_اندازه + 2] ALIGN(64) VISIBLE SKIM_BSS;

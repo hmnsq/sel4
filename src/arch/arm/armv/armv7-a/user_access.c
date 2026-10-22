@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <plat/machine/hardware.h>
-#include <arch/user_access.h>
-#include <mode/machine/debug.h>
+#ضمن <plat/machine/hardware.h>
+#ضمن <arch/user_access.h>
+#ضمن <mode/machine/debug.h>
 
-#define PMUSERENR_ENABLE BIT(0)
+#تعریف_کن PMUSERENR_ENABLE بیت(0)
 
-#define CNTKCTL_PL0PCTEN BIT(0)
-#define CNTKCTL_PL0VCTEN BIT(1)
-#define CNTKCTL_PL0VTEN  BIT(8)
-#define CNTKCTL_PL0PTEN  BIT(9)
+#تعریف_کن CNTKCTL_PL0PCTEN بیت(0)
+#تعریف_کن CNTKCTL_PL0VCTEN بیت(1)
+#تعریف_کن CNTKCTL_PL0VTEN  بیت(8)
+#تعریف_کن CNTKCTL_PL0PTEN  بیت(9)
 
-#define ID_DFR0_PMU_MASK (0xful << 28)
-#define ID_DFR0_PMU_NONE (0xful << 28)
+#تعریف_کن ID_DFR0_PMU_ماسک (0xful << 28)
+#تعریف_کن ID_DFR0_PMU_NONE (0xful << 28)
 
-#define ID_PFR1_GENERIC_TIMER BIT(16)
+#تعریف_کن ID_PFR1_GENERIC_TIMER بیت(16)
 
-#define ID_PFR0_JAZELLE_MASK (0xful << 8)  /* ID_PFR0.State2 */
-#define ID_PFR0_THUMBEE_MASK (0xful << 12) /* ID_PFR0.State3 */
+#تعریف_کن ID_PFR0_JAZELLE_ماسک (0xful << 8)  /* ID_PFR0.State2 */
+#تعریف_کن ID_PFR0_THUMBEE_ماسک (0xful << 12) /* ID_PFR0.State3 */
 
-#define JOSCR_CD  BIT(1)
-#define TEECR_XED BIT(0)
-#define HSTR_TTEE  BIT(16)
-#define HSTR_TJDBX BIT(17)
+#تعریف_کن JOSCR_CD  بیت(1)
+#تعریف_کن TEECR_XED بیت(0)
+#تعریف_کن HSTR_TTEE  بیت(16)
+#تعریف_کن HSTR_TJDBX بیت(17)
 
 
-static void disable_jazelle_user_access(void)
+ساكن فراغ disable_jazelle_user_access(فراغ)
 {
     uint32_t v;
-    word_t UNUSED hstr_bits = 0;  /* Only read in CONFIG_ARM_HYPERVISOR_SUPPORT */
+    کلمه_t استفادهنشده hstr_بیتها = 0;  /* Only read in CONFIG_ARM_HYPERVISOR_SUPPORT */
 
     MRC(ID_PFR0, v);
-    if (v & ID_PFR0_JAZELLE_MASK) {
+    إذا (v & ID_PFR0_JAZELLE_ماسک) {
         /* When JOSCR.CD == 0, JMCR is readable and writable for user space.
          * Clear, disable, and trap access. */
         MCR(JMCR, 0);
         MCR(JOSCR, JOSCR_CD);
-        hstr_bits |= HSTR_TJDBX;
+        hstr_بیتها |= HSTR_TJDBX;
     }
-    if (v & ID_PFR0_THUMBEE_MASK) {
+    إذا (v & ID_PFR0_THUMBEE_ماسک) {
         /* Same as above, but for TEECR.XED == 0 and TEEHBR */
         MCR(TEEHBR, 0);
         MCR(TEECR, TEECR_XED);
-        hstr_bits |= HSTR_TTEE;
+        hstr_بیتها |= HSTR_TTEE;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
     /* Trap access to config registers so guest cannot re-enable them. */
-    setHSTR(getHSTR() | hstr_bits);
-#endif
+    مجموعه_HSTR(getHSTR() | hstr_بیتها);
+#پایان_اگر
 }
 
 
-static void check_export_pmu(void)
+ساكن فراغ check_export_pmu(فراغ)
 {
-#if defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
+#إذا defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
     /* Export performance counters */
     uint32_t v;
     MRC(PMUSERENR, v);
@@ -65,35 +65,35 @@ static void check_export_pmu(void)
     MCR(PMUSERENR, v);
 
     /* enable user-level pmu event counter if we're in secure mode */
-    if (!(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED)) {
+    إذا (!(readDscrCp() & DBGDSCR_SECURE_نما_DISABLED)) {
         MRC(DBGSDER, v);
         v |= DBGSDER_ENABLE_SECURE_USER_NON_INVASIVE_DEBUG;
         MCR(DBGSDER, v);
     }
-#endif
+#پایان_اگر
 }
 
 
-static void check_export_arch_timer(void)
+ساكن فراغ check_export_arch_timer(فراغ)
 {
     uint32_t v = 0;
-#ifdef CONFIG_EXPORT_PCNT_USER
+#اگر_تعریف_شده CONFIG_EXPORT_PCNT_USER
     v |= CNTKCTL_PL0PCTEN;
-#endif
-#ifdef CONFIG_EXPORT_PTMR_USER
+#پایان_اگر
+#اگر_تعریف_شده CONFIG_EXPORT_PTMR_USER
     v |= CNTKCTL_PL0PTEN;
-#endif /* CONFIG_EXPORT_PTMR_USER */
-#ifdef CONFIG_EXPORT_VCNT_USER
+#پایان_اگر /* CONFIG_EXPORT_PTMR_USER */
+#اگر_تعریف_شده CONFIG_EXPORT_VCNT_USER
     v |= CNTKCTL_PL0VCTEN;
-#endif
-#ifdef CONFIG_EXPORT_VTMR_USER
+#پایان_اگر
+#اگر_تعریف_شده CONFIG_EXPORT_VTMR_USER
     v |= CNTKCTL_PL0VTEN;
-#endif /* CONFIG_EXPORT_VTMR_USER */
+#پایان_اگر /* CONFIG_EXPORT_VTMR_USER */
     MCR(CNTKCTL, v);
 }
 
 
-void armv_init_user_access(void)
+فراغ armv_init_user_access(فراغ)
 {
     uint32_t v;
 
@@ -101,12 +101,12 @@ void armv_init_user_access(void)
     disable_jazelle_user_access();
     /* Performance Monitoring Unit */
     MRC(ID_DFR0, v);
-    if ((v & ID_DFR0_PMU_MASK) != ID_DFR0_PMU_NONE) {
+    إذا ((v & ID_DFR0_PMU_ماسک) != ID_DFR0_PMU_NONE) {
         check_export_pmu();
     }
     /* Arch timers */
     MRC(ID_PFR1, v);
-    if (v & ID_PFR1_GENERIC_TIMER) {
+    إذا (v & ID_PFR1_GENERIC_TIMER) {
         check_export_arch_timer();
     }
 }

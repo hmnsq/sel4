@@ -4,135 +4,135 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/object/objecttype.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <kernel/vspace.h>
+#ضمن <object/structures.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/object/objecttype.h>
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_قاب_Type(کلمه_t type)
 {
-    switch (type) {
-    case seL4_ARM_SmallPageObject:
-        return true;
-    case seL4_ARM_LargePageObject:
-        return true;
-    case seL4_ARM_HugePageObject:
-        return true;
-    default:
-        return false;
+    بدل (type) {
+    حالة se_L4_ARM_Small_صفحه_Object:
+        أرجع true;
+    حالة se_L4_ARM_Large_صفحه_Object:
+        أرجع true;
+    حالة se_L4_ARM_Huge_صفحه_Object:
+        أرجع true;
+    افتراضي:
+        أرجع false;
     }
 }
 
-deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t Arch_deriveCap(cte_t *جایگاه, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_vspace_cap:
-        if (cap_vspace_cap_get_capVSIsMapped(cap)) {
+    بدل (cap_get_capType(cap)) {
+    حالة cap_vspace_cap:
+        إذا (cap_vspace_cap_get_capVSIsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.وضعیت = EXCEPTION_NONE;
+        } وإلا {
             userError("Deriving a VSpace cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.وضعیت = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        أرجع ret;
 
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    حالة cap_صفحه_جدول_cap:
+        إذا (cap_صفحه_جدول_cap_get_cap_PTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.وضعیت = EXCEPTION_NONE;
+        } وإلا {
             userError("Deriving a PT cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.وضعیت = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        أرجع ret;
 
-    case cap_frame_cap:
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    حالة cap_قاب_cap:
+        ret.cap = cap_قاب_cap_مجموعه_cap_FMapped_ASID(cap, asidInvalid);
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    حالة cap_asid_control_cap:
+    حالة cap_asid_pool_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
+#پایان_اگر
+#اگر_تعریف_نشده CONFIG_ENABLE_SMP_SUPPORT
+    حالة cap_sgi_signal_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
+#پایان_اگر
 
-#ifdef CONFIG_ARM_SMMU
-    case cap_sid_control_cap:
-    case cap_cb_control_cap:
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+    حالة cap_sid_control_cap:
+    حالة cap_cb_control_cap:
         ret.cap = cap_null_cap_new();
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_sid_cap:
-    case cap_cb_cap:
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
+    حالة cap_sid_cap:
+    حالة cap_cb_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
-#ifdef CONFIG_ALLOW_SMC_CALLS
-    case cap_smc_cap:
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
+#پایان_اگر
+#اگر_تعریف_شده CONFIG_ALLOW_SMC_CALLS
+    حالة cap_smc_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-#endif
-    default:
+        ret.وضعیت = EXCEPTION_NONE;
+        أرجع ret;
+#پایان_اگر
+    افتراضي:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap");
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_داده(bool_t preserve, کلمه_t داده, cap_t cap)
 {
-#ifdef CONFIG_ALLOW_SMC_CALLS
-    if (cap_get_capType(cap) == cap_smc_cap) {
-        if (!preserve && cap_smc_cap_get_capSMCBadge(cap) == 0) {
-            return cap_smc_cap_set_capSMCBadge(cap, data);
-        } else {
-            return cap_null_cap_new();
+#اگر_تعریف_شده CONFIG_ALLOW_SMC_CALLS
+    إذا (cap_get_capType(cap) == cap_smc_cap) {
+        إذا (!preserve && cap_smc_cap_get_capSMCBadge(cap) == 0) {
+            أرجع cap_smc_cap_مجموعه_cap_SMCBadge(cap, داده);
+        } وإلا {
+            أرجع cap_null_cap_new();
         }
-    } else {
-#endif
-        return cap;
-#ifdef CONFIG_ALLOW_SMC_CALLS
+    } وإلا {
+#پایان_اگر
+        أرجع cap;
+#اگر_تعریف_شده CONFIG_ALLOW_SMC_CALLS
     }
-#endif
+#پایان_اگر
 }
 
-cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
+cap_t CONST Arch_ماسک_Cap_Rights(seL4_CapRights_t cap_rights_ماسک, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    إذا (cap_get_capType(cap) == cap_قاب_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
+        vm_rights = vm_Rights_From_کلمه(cap_قاب_cap_get_cap_FVMRights(cap));
+        vm_rights = ماسک_VMRights(vm_rights, cap_rights_ماسک);
 
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        أرجع cap_قاب_cap_مجموعه_cap_FVMRights(cap, کلمه_From_VMRights(vm_rights));
+    } وإلا {
+        أرجع cap;
     }
 }
 
@@ -140,408 +140,408 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_asid_pool_cap:
-        if (final) {
+    بدل (cap_get_capType(cap)) {
+    حالة cap_asid_pool_cap:
+        إذا (final) {
             deleteASIDPool(cap_asid_pool_cap_get_capASIDBase(cap),
                            ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)));
         }
-        break;
+        اكسر;
 
-    case cap_vspace_cap:
-#ifdef CONFIG_ARM_SMMU
-        if (cap_vspace_cap_get_capVSMappedCB(cap) != CB_INVALID) {
+    حالة cap_vspace_cap:
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+        إذا (cap_vspace_cap_get_capVSMappedCB(cap) != CB_INVALID) {
             smmu_cb_delete_vspace(cap_vspace_cap_get_capVSMappedCB(cap),
                                   cap_vspace_cap_get_capVSMappedASID(cap));
         }
-#endif
-        if (final && cap_vspace_cap_get_capVSIsMapped(cap)) {
+#پایان_اگر
+        إذا (final && cap_vspace_cap_get_capVSIsMapped(cap)) {
             deleteASID(cap_vspace_cap_get_capVSMappedASID(cap),
                        VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(cap)));
         }
-        break;
+        اكسر;
 
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
-            unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
-                           cap_page_table_cap_get_capPTMappedAddress(cap),
-                           PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
+    حالة cap_صفحه_جدول_cap:
+        إذا (final && cap_صفحه_جدول_cap_get_cap_PTIs_Mapped(cap)) {
+            unmap_صفحه_جدول(cap_صفحه_جدول_cap_get_cap_PTMapped_ASID(cap),
+                           cap_صفحه_جدول_cap_get_cap_PTMapped_آدرس(cap),
+                           PTE_PTR(cap_صفحه_جدول_cap_get_cap_PTBase_Ptr(cap)));
         }
-        break;
+        اكسر;
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            unmapPage(cap_frame_cap_get_capFSize(cap),
-                      cap_frame_cap_get_capFMappedASID(cap),
-                      cap_frame_cap_get_capFMappedAddress(cap),
-                      cap_frame_cap_get_capFBasePtr(cap));
+    حالة cap_قاب_cap:
+        إذا (cap_قاب_cap_get_cap_FMapped_ASID(cap)) {
+            unmap_صفحه(cap_قاب_cap_get_cap_FSize(cap),
+                      cap_قاب_cap_get_cap_FMapped_ASID(cap),
+                      cap_قاب_cap_get_cap_FMapped_آدرس(cap),
+                      cap_قاب_cap_get_cap_FBase_Ptr(cap));
         }
-        break;
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        if (final) {
+        اكسر;
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap:
+        إذا (final) {
             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
         }
-        break;
-#endif
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
+        اكسر;
+#پایان_اگر
+#اگر_تعریف_نشده CONFIG_ENABLE_SMP_SUPPORT
+    حالة cap_sgi_signal_cap:
         // do nothing
-        break;
-#endif
+        اكسر;
+#پایان_اگر
 
 
-#ifdef CONFIG_ARM_SMMU
-    case cap_cb_cap:
-        if (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+    حالة cap_cb_cap:
+        إذا (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
             smmu_sid_unbind(cap_cb_cap_get_capBindSID(cap));
         }
-        if (final) {
+        إذا (final) {
             smmu_delete_cb(cap);
         }
-        break;
-    case cap_sid_cap:
-        if (final) {
+        اكسر;
+    حالة cap_sid_cap:
+        إذا (final) {
             smmu_delete_sid(cap);
         }
-        break;
-#endif
+        اكسر;
+#پایان_اگر
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    أرجع fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
+    بدل (cap_get_capType(cap_a)) {
+    حالة cap_قاب_cap:
+        إذا (cap_get_capType(cap_b) == cap_قاب_cap) {
 
-            word_t botA, botB, topA, topB;
-            botA = cap_frame_cap_get_capFBasePtr(cap_a);
-            botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+            کلمه_t botA, botB, بالاترین_A, بالاترین_B;
+            botA = cap_قاب_cap_get_cap_FBase_Ptr(cap_a);
+            botB = cap_قاب_cap_get_cap_FBase_Ptr(cap_b);
+            بالاترین_A = botA + ماسک(صفحه_بیتها_For_اندازه(cap_قاب_cap_get_cap_FSize(cap_a)));
+            بالاترین_B = botB + ماسک(صفحه_بیتها_For_اندازه(cap_قاب_cap_get_cap_FSize(cap_b))) ;
+            أرجع ((botA <= botB) && (بالاترین_A >= بالاترین_B) && (botB <= بالاترین_B));
         }
-        break;
+        اكسر;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
+    حالة cap_صفحه_جدول_cap:
+        إذا (cap_get_capType(cap_b) == cap_صفحه_جدول_cap) {
+            أرجع cap_صفحه_جدول_cap_get_cap_PTBase_Ptr(cap_a) ==
+                   cap_صفحه_جدول_cap_get_cap_PTBase_Ptr(cap_b);
         }
-        break;
+        اكسر;
 
-    case cap_vspace_cap:
-        if (cap_get_capType(cap_b) == cap_vspace_cap) {
-            return cap_vspace_cap_get_capVSBasePtr(cap_a) ==
+    حالة cap_vspace_cap:
+        إذا (cap_get_capType(cap_b) == cap_vspace_cap) {
+            أرجع cap_vspace_cap_get_capVSBasePtr(cap_a) ==
                    cap_vspace_cap_get_capVSBasePtr(cap_b);
         }
-        break;
+        اكسر;
 
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+    حالة cap_asid_control_cap:
+        إذا (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            أرجع true;
         }
-        break;
+        اكسر;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    حالة cap_asid_pool_cap:
+        إذا (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            أرجع cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        اكسر;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        if (cap_get_capType(cap_b) == cap_vcpu_cap) {
-            return cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap:
+        إذا (cap_get_capType(cap_b) == cap_vcpu_cap) {
+            أرجع cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
                    cap_vcpu_cap_get_capVCPUPtr(cap_b);
         }
-        break;
-#endif
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
-        if (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
-            return (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
+        اكسر;
+#پایان_اگر
+#اگر_تعریف_نشده CONFIG_ENABLE_SMP_SUPPORT
+    حالة cap_sgi_signal_cap:
+        إذا (cap_get_capType(cap_b) == cap_sgi_signal_cap) {
+            أرجع (cap_sgi_signal_cap_get_capSGIIRQ(cap_a) ==
                     cap_sgi_signal_cap_get_capSGIIRQ(cap_b) &&
                     cap_sgi_signal_cap_get_capSGITarget(cap_a) ==
                     cap_sgi_signal_cap_get_capSGITarget(cap_b));
         }
-        break;
-#endif
+        اكسر;
+#پایان_اگر
 
-#ifdef CONFIG_ARM_SMMU
-    case cap_sid_control_cap:
-        if (cap_get_capType(cap_b) == cap_sid_control_cap ||
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+    حالة cap_sid_control_cap:
+        إذا (cap_get_capType(cap_b) == cap_sid_control_cap ||
             cap_get_capType(cap_b) == cap_sid_cap) {
-            return true;
+            أرجع true;
         }
-        break;
-    case cap_cb_control_cap:
-        if (cap_get_capType(cap_b) == cap_cb_control_cap ||
+        اكسر;
+    حالة cap_cb_control_cap:
+        إذا (cap_get_capType(cap_b) == cap_cb_control_cap ||
             cap_get_capType(cap_b) == cap_cb_cap) {
-            return true;
+            أرجع true;
         }
-        break;
-    case cap_sid_cap:
-        if (cap_get_capType(cap_b) == cap_sid_cap) {
-            return cap_sid_cap_get_capSID(cap_a) ==
+        اكسر;
+    حالة cap_sid_cap:
+        إذا (cap_get_capType(cap_b) == cap_sid_cap) {
+            أرجع cap_sid_cap_get_capSID(cap_a) ==
                    cap_sid_cap_get_capSID(cap_b);
         }
-        break;
-    case cap_cb_cap:
-        if (cap_get_capType(cap_b) == cap_cb_cap) {
-            return cap_cb_cap_get_capCB(cap_a) ==
+        اكسر;
+    حالة cap_cb_cap:
+        إذا (cap_get_capType(cap_b) == cap_cb_cap) {
+            أرجع cap_cb_cap_get_capCB(cap_a) ==
                    cap_cb_cap_get_capCB(cap_b);
         }
-        break;
-#endif
-#ifdef CONFIG_ALLOW_SMC_CALLS
-    case cap_smc_cap:
-        if (cap_get_capType(cap_b) == cap_smc_cap) {
-            return true;
+        اكسر;
+#پایان_اگر
+#اگر_تعریف_شده CONFIG_ALLOW_SMC_CALLS
+    حالة cap_smc_cap:
+        إذا (cap_get_capType(cap_b) == cap_smc_cap) {
+            أرجع true;
         }
-        break;
-#endif
+        اكسر;
+#پایان_اگر
     }
-    return false;
+    أرجع false;
 }
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
-                     cap_frame_cap_get_capFBasePtr(cap_b)) &&
-                    (cap_frame_cap_get_capFSize(cap_a) ==
-                     cap_frame_cap_get_capFSize(cap_b)) &&
-                    ((cap_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                     (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
+    إذا (cap_get_capType(cap_a) == cap_قاب_cap) {
+        إذا (cap_get_capType(cap_b) == cap_قاب_cap) {
+            أرجع ((cap_قاب_cap_get_cap_FBase_Ptr(cap_a) ==
+                     cap_قاب_cap_get_cap_FBase_Ptr(cap_b)) &&
+                    (cap_قاب_cap_get_cap_FSize(cap_a) ==
+                     cap_قاب_cap_get_cap_FSize(cap_b)) &&
+                    ((cap_قاب_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                     (cap_قاب_cap_get_cap_FIs_Device(cap_b) == 0)));
         }
     }
-#ifdef CONFIG_ARM_SMMU
-    if (cap_get_capType(cap_a) == cap_sid_control_cap &&
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+    إذا (cap_get_capType(cap_a) == cap_sid_control_cap &&
         cap_get_capType(cap_b) == cap_sid_cap) {
-        return false;
+        أرجع false;
     }
-    if (cap_get_capType(cap_a) == cap_cb_control_cap &&
+    إذا (cap_get_capType(cap_a) == cap_cb_control_cap &&
         cap_get_capType(cap_b) == cap_cb_cap) {
-        return false;
+        أرجع false;
     }
-#endif
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    if (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
-        return false;
+#پایان_اگر
+#اگر_تعریف_نشده CONFIG_ENABLE_SMP_SUPPORT
+    إذا (cap_get_capType(cap_a) == cap_sgi_signal_cap) {
+        أرجع false;
     }
-#endif
+#پایان_اگر
 
-    return Arch_sameRegionAs(cap_a, cap_b);
+    أرجع Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+کلمه_t Arch_get_Object_اندازه(کلمه_t t)
 {
-    switch (t) {
-    case seL4_ARM_SmallPageObject:
-        return ARMSmallPageBits;
-    case seL4_ARM_LargePageObject:
-        return ARMLargePageBits;
-    case seL4_ARM_HugePageObject:
-        return ARMHugePageBits;
-    case seL4_ARM_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_ARM_VSpaceObject:
-        return seL4_VSpaceBits;
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_ARM_VCPUObject:
-        return VCPU_SIZE_BITS;
-#endif
-    default:
+    بدل (t) {
+    حالة se_L4_ARM_Small_صفحه_Object:
+        أرجع ARMSmall_صفحه_بیتها;
+    حالة se_L4_ARM_Large_صفحه_Object:
+        أرجع ARMLarge_صفحه_بیتها;
+    حالة se_L4_ARM_Huge_صفحه_Object:
+        أرجع ARMHuge_صفحه_بیتها;
+    حالة se_L4_ARM_صفحه_جدول_Object:
+        أرجع se_L4_صفحه_جدول_بیتها;
+    حالة seL4_ARM_VSpaceObject:
+        أرجع se_L4_VSpace_بیتها;
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة seL4_ARM_VCPUObject:
+        أرجع VCPU_اندازه_بیتها;
+#پایان_اگر
+    افتراضي:
         fail("Invalid object type");
-        return 0;
+        أرجع 0;
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Arch_createObject(object_t t, فراغ *region_پایه, کلمه_t user_اندازه, bool_t device_حافظه)
 {
-    switch (t) {
-    case seL4_ARM_SmallPageObject:
-        if (deviceMemory) {
+    بدل (t) {
+    حالة se_L4_ARM_Small_صفحه_Object:
+        إذا (device_حافظه) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMSmallPageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMSmallPageBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMSmallPage)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((کلمه_t)region_پایه,
+                                (کلمه_t)region_پایه + ماسک(صفحه_بیتها_For_اندازه(ARMSmall_صفحه)),
+                                addrFromPPtr(region_پایه));
         }
-        return cap_frame_cap_new(
+        أرجع cap_قاب_cap_new(
                    asidInvalid,           /* capFMappedASID */
-                   (word_t)regionBase,    /* capFBasePtr */
-                   ARMSmallPage,          /* capFSize */
+                   (کلمه_t)region_پایه,    /* capFBasePtr */
+                   ARMSmall_صفحه,          /* capFSize */
                    0,                     /* capFMappedAddress */
                    VMReadWrite,           /* capFVMRights */
-                   !!deviceMemory         /* capFIsDevice */
+                   !!device_حافظه         /* capFIsDevice */
                );
 
-    case seL4_ARM_LargePageObject:
-        if (deviceMemory) {
+    حالة se_L4_ARM_Large_صفحه_Object:
+        إذا (device_حافظه) {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMLargePageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMLargePageBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMLargePage)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((کلمه_t)region_پایه,
+                                (کلمه_t)region_پایه + ماسک(صفحه_بیتها_For_اندازه(ARMLarge_صفحه)),
+                                addrFromPPtr(region_پایه));
         }
-        return cap_frame_cap_new(
+        أرجع cap_قاب_cap_new(
                    asidInvalid,           /* capFMappedASID */
-                   (word_t)regionBase,    /* capFBasePtr */
-                   ARMLargePage,          /* capFSize */
+                   (کلمه_t)region_پایه,    /* capFBasePtr */
+                   ARMLarge_صفحه,          /* capFSize */
                    0,                     /* capFMappedAddress */
                    VMReadWrite,           /* capFVMRights */
-                   !!deviceMemory         /* capFIsDevice */
+                   !!device_حافظه         /* capFIsDevice */
                );
 
-    case seL4_ARM_HugePageObject:
-        if (deviceMemory) {
+    حالة se_L4_ARM_Huge_صفحه_Object:
+        إذا (device_حافظه) {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMHugePageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.ARMHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat ARMHugePageBits))" */
-            cleanCacheRange_RAM((word_t)regionBase,
-                                (word_t)regionBase + MASK(pageBitsForSize(ARMHugePage)),
-                                addrFromPPtr(regionBase));
+            cleanCacheRange_RAM((کلمه_t)region_پایه,
+                                (کلمه_t)region_پایه + ماسک(صفحه_بیتها_For_اندازه(ARMHuge_صفحه)),
+                                addrFromPPtr(region_پایه));
         }
-        return cap_frame_cap_new(
+        أرجع cap_قاب_cap_new(
                    asidInvalid,           /* capFMappedASID */
-                   (word_t)regionBase,    /* capFBasePtr */
-                   ARMHugePage,           /* capFSize */
+                   (کلمه_t)region_پایه,    /* capFBasePtr */
+                   ARMHuge_صفحه,           /* capFSize */
                    0,                     /* capFMappedAddress */
                    VMReadWrite,           /* capFVMRights */
-                   !!deviceMemory         /* capFIsDevice */
+                   !!device_حافظه         /* capFIsDevice */
                );
-    case seL4_ARM_VSpaceObject:
+    حالة seL4_ARM_VSpaceObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[vs_array_len]) ptr))" */
         /** GHOSTUPD: "(True, gs_new_pt_t VSRootPT_T (ptr_val \<acute>regionBase))" */
-        cleanCacheRange_PoU((word_t)regionBase,
-                            (word_t)regionBase + MASK(seL4_VSpaceBits),
-                            addrFromPPtr(regionBase));
-#ifdef CONFIG_ARM_SMMU
-        return cap_vspace_cap_new(
+        cleanCacheRange_PoU((کلمه_t)region_پایه,
+                            (کلمه_t)region_پایه + ماسک(se_L4_VSpace_بیتها),
+                            addrFromPPtr(region_پایه));
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+        أرجع cap_vspace_cap_new(
                    asidInvalid,           /* capVSMappedASID */
-                   (word_t)regionBase,    /* capVSBasePtr    */
+                   (کلمه_t)region_پایه,    /* capVSBasePtr    */
                    0,                     /* capVSIsMapped   */
                    CB_INVALID             /* capVSMappedCB   */
                );
-#else
-        return cap_vspace_cap_new(
+#وإلا
+        أرجع cap_vspace_cap_new(
                    asidInvalid,           /* capVSMappedASID */
-                   (word_t)regionBase,    /* capVSBasePtr    */
+                   (کلمه_t)region_پایه,    /* capVSBasePtr    */
                    0                      /* capVSIsMapped   */
                );
-#endif /*!CONFIG_ARM_SMMU*/
-    case seL4_ARM_PageTableObject:
+#پایان_اگر /*!CONFIG_ARM_SMMU*/
+    حالة se_L4_ARM_صفحه_جدول_Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[pt_array_len]) ptr))" */
         /** GHOSTUPD: "(True, gs_new_pt_t NormalPT_T (ptr_val \<acute>regionBase))" */
-        cleanCacheRange_PoU((word_t)regionBase,
-                            (word_t)regionBase + MASK(seL4_PageTableBits),
-                            addrFromPPtr(regionBase));
-        return cap_page_table_cap_new(
+        cleanCacheRange_PoU((کلمه_t)region_پایه,
+                            (کلمه_t)region_پایه + ماسک(se_L4_صفحه_جدول_بیتها),
+                            addrFromPPtr(region_پایه));
+        أرجع cap_صفحه_جدول_cap_new(
                    asidInvalid,           /* capPTMappedASID    */
-                   (word_t)regionBase,    /* capPTBasePtr       */
+                   (کلمه_t)region_پایه,    /* capPTBasePtr       */
                    0,                     /* capPTIsMapped      */
                    0                      /* capPTMappedAddress */
                );
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case seL4_ARM_VCPUObject:
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة seL4_ARM_VCPUObject:
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: vcpu_C ptr))" */
-        vcpu_init(VCPU_PTR(regionBase));
-        return cap_vcpu_cap_new(VCPU_REF(regionBase));
-#endif
+        vcpu_init(VCPU_PTR(region_پایه));
+        أرجع cap_vcpu_cap_new(VCPU_REF(region_پایه));
+#پایان_اگر
 
-    default:
+    افتراضي:
         fail("Arch_createObject got an API type or invalid object type");
     }
 }
 
-exception_t Arch_decodeInvocation(word_t label, word_t length, cptr_t cptr,
-                                  cte_t *slot, cap_t cap,
-                                  bool_t call, word_t *buffer)
+exception_t Arch_decodeInvocation(کلمه_t label, کلمه_t درازی, cptr_t cptr,
+                                  cte_t *جایگاه, cap_t cap,
+                                  bool_t call, کلمه_t *میانگیر)
 {
 
     /* The C parser cannot handle a switch statement with only a default
      * case. So we need to do some gymnastics to remove the switch if
      * there are no other cases */
-#if defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || defined(CONFIG_ARM_SMMU) || defined(CONFIG_ALLOW_SMC_CALLS) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
-    switch (cap_get_capType(cap)) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        return decodeARMVCPUInvocation(label, length, cptr, slot, cap, call, buffer);
-#endif /* end of CONFIG_ARM_HYPERVISOR_SUPPORT */
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    case cap_sgi_signal_cap:
-        return decodeSGISignalInvocation(label, length, cap, buffer);
-#endif /* end of !CONFIG_ENABLE_SMP_SUPPORT */
-#ifdef CONFIG_ARM_SMMU
-    case cap_sid_control_cap:
-        return decodeARMSIDControlInvocation(label, length, cptr, slot, cap, call, buffer);
-    case cap_sid_cap:
-        return decodeARMSIDInvocation(label, length, cptr, slot, cap, call, buffer);
-    case cap_cb_control_cap:
-        return decodeARMCBControlInvocation(label, length, cptr, slot, cap, call, buffer);
-    case cap_cb_cap:
-        return decodeARMCBInvocation(label, length, cptr, slot, cap, call, buffer);
-#endif /*CONFIG_ARM_SMMU*/
-#ifdef CONFIG_ALLOW_SMC_CALLS
-    case cap_smc_cap:
-        return decodeARMSMCInvocation(label, length, cap, call, buffer);
-#endif
-    default:
-#else
+#إذا defined(CONFIG_ARM_HYPERVISOR_SUPPORT) || defined(CONFIG_ARM_SMMU) || defined(CONFIG_ALLOW_SMC_CALLS) || !defined(CONFIG_ENABLE_SMP_SUPPORT)
+    بدل (cap_get_capType(cap)) {
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap:
+        أرجع decodeARMVCPUInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
+#پایان_اگر /* end of CONFIG_ARM_HYPERVISOR_SUPPORT */
+#اگر_تعریف_نشده CONFIG_ENABLE_SMP_SUPPORT
+    حالة cap_sgi_signal_cap:
+        أرجع decodeSGISignalInvocation(label, درازی, cap, میانگیر);
+#پایان_اگر /* end of !CONFIG_ENABLE_SMP_SUPPORT */
+#اگر_تعریف_شده CONFIG_ARM_SMMU
+    حالة cap_sid_control_cap:
+        أرجع decodeARMSIDControlInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
+    حالة cap_sid_cap:
+        أرجع decodeARMSIDInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
+    حالة cap_cb_control_cap:
+        أرجع decodeARMCBControlInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
+    حالة cap_cb_cap:
+        أرجع decodeARMCBInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
+#پایان_اگر /*CONFIG_ARM_SMMU*/
+#اگر_تعریف_شده CONFIG_ALLOW_SMC_CALLS
+    حالة cap_smc_cap:
+        أرجع decodeARMSMCInvocation(label, درازی, cap, call, میانگیر);
+#پایان_اگر
+    افتراضي:
+#وإلا
 {
-#endif
-    return decodeARMMMUInvocation(label, length, cptr, slot, cap, call, buffer);
+#پایان_اگر
+    أرجع decodeARMMMUInvocation(label, درازی, cptr, جایگاه, cap, call, میانگیر);
 }
 }
 
-void
+فراغ
 Arch_prepareThreadDelete(tcb_t * thread) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    if (thread->tcbArch.tcbVCPU) {
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    إذا (thread->tcbArch.tcbVCPU) {
         dissociateVCPUTCB(thread->tcbArch.tcbVCPU, thread);
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#پایان_اگر /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-#ifdef CONFIG_HAVE_FPU
+#اگر_تعریف_شده CONFIG_HAVE_FPU
     fpuRelease(thread);
-#endif
+#پایان_اگر
 }

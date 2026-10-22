@@ -6,25 +6,25 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#ضمن <util.h>
+#ضمن <api/types.h>
+#ضمن <arch/types.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/object/structures.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
 asid_pool_t *riscvKSASIDTable[nASIDPools];
 
 /* Kernel Page Tables */
-pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t kernel_ریشه_صفحه_جدول[بیت(PT_شاخص_بیتها)] ALIGN_BSS(بیت(se_L4_صفحه_جدول_بیتها));
 
-#if __riscv_xlen != 32
-pte_t kernel_image_level1_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t kernel_image_level1_dev_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#elif defined(CONFIG_KERNEL_LOG_BUFFER)
-pte_t kernel_image_level1_log_buffer_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#endif
+#إذا __riscv_xlen != 32
+pte_t kernel_image_level1_pt[بیت(PT_شاخص_بیتها)] ALIGN_BSS(بیت(se_L4_صفحه_جدول_بیتها));
+pte_t kernel_image_level1_dev_pt[بیت(PT_شاخص_بیتها)] ALIGN_BSS(بیت(se_L4_صفحه_جدول_بیتها));
+#وإلاإذا defined(CONFIG_KERNEL_LOG_میانگیر)
+pte_t kernel_image_level1_log_میانگیر_pt[بیت(PT_شاخص_بیتها)] ALIGN_BSS(بیت(se_L4_صفحه_جدول_بیتها));
+#پایان_اگر
 
 SMP_STATE_DEFINE(core_map_t, coreMap);

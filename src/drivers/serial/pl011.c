@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ضمن <config.h>
+#ضمن <stdint.h>
+#ضمن <util.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/devices_gen.h>
 
-#define UARTDR                    0x000
-#define UARTFR                    0x018
+#تعریف_کن UARTDR                    0x000
+#تعریف_کن UARTFR                    0x018
 
-#define PL011_UARTFR_TXFF         BIT(5)
-#define PL011_UARTFR_RXFE         BIT(4)
+#تعریف_کن PL011_UARTFR_TXFF         بیت(5)
+#تعریف_کن PL011_UARTFR_RXFE         بیت(4)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کن UART_REG(x) ((متطاير uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#اگر_تعریف_شده CONFIG_PRINTING
+فراغ uart_drv_putchar(بیعلامت حرف c)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
+    طالما ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
 
     *UART_REG(UARTDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#پایان_اگر /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#اگر_تعریف_شده CONFIG_DEBUG_BUILD
+بیعلامت حرف uart_drv_getchar(فراغ)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
+    طالما ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
 
-    return *UART_REG(UARTDR);
+    أرجع *UART_REG(UARTDR);
 }
-#endif  /* CONFIG_DEBUG_BUILD */
+#پایان_اگر  /* CONFIG_DEBUG_BUILD */

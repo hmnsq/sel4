@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ضمن <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#اگر_تعریف_شده CONFIG_DEBUG_BUILD
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
+#ضمن <arch/machine/capdl.h>
+#ضمن <string.h>
+#ضمن <kernel/cspace.h>
 
-#define MAX_UL          0xffffffff
-#define PT_INDEX(vptr)  ((vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS))
-#define PD_INDEX(vptr)  (vptr >> (PAGE_BITS + PT_INDEX_BITS))
+#تعریف_کن MAX_UL          0xffffffff
+#تعریف_کن PT_شاخص(vptr)  ((vptr >> صفحه_بیتها) & ماسک(PT_شاخص_بیتها))
+#تعریف_کن PD_شاخص(vptr)  (vptr >> (صفحه_بیتها + PT_شاخص_بیتها))
 
-word_t get_tcb_sp(tcb_t *tcb)
+کلمه_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    أرجع tcb->tcbArch.tcbContext.registers[SP];
 }
 
-#ifdef CONFIG_PRINTING
+#اگر_تعریف_شده CONFIG_PRINTING
 
-static void obj_frame_print_attrs(resolve_ret_t ret);
-static void cap_frame_print_attrs_pt(pte_t *pte);
-static void cap_frame_print_attrs_pd(pde_t *pde);
-static void cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX);
-static void arm32_obj_pt_print_slots(pte_t *pt);
-static void arm32_cap_pt_print_slots(pte_t *pt);
+ساكن فراغ obj_قاب_print_attrs(resolve_ret_t ret);
+ساكن فراغ cap_قاب_print_attrs_pt(pte_t *pte);
+ساكن فراغ cap_قاب_print_attrs_pd(pde_t *pde);
+ساكن فراغ cap_قاب_print_attrs_impl(کلمه_t AP, کلمه_t XN, کلمه_t TEX);
+ساكن فراغ arm32_obj_pt_print_slots(pte_t *pt);
+ساكن فراغ arm32_cap_pt_print_slots(pte_t *pt);
 
 /*
  * Caps
@@ -45,484 +45,484 @@ static void arm32_cap_pt_print_slots(pte_t *pt);
  * 11   x   x   Read/write              Read/write
  */
 /* use when only have access to pte of frames */
-static void cap_frame_print_attrs_pt(pte_t *pte)
+ساكن فراغ cap_قاب_print_attrs_pt(pte_t *pte)
 {
-    word_t AP, XN, TEX;
-    switch (pte_ptr_get_pteType(pte)) {
-    case pte_pte_small:
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t AP, XN, TEX;
+    بدل (pte_ptr_get_pteType(pte)) {
+    حالة pte_pte_small:
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
         AP = pte_pte_small_ptr_get_HAP(pte);
         TEX = pte_pte_small_ptr_get_MemAttr(pte);
-#else
+#وإلا
         AP = pte_pte_small_ptr_get_AP(pte);
         TEX = pte_pte_small_ptr_get_TEX(pte);
-#endif
+#پایان_اگر
         XN = pte_pte_small_ptr_get_XN(pte);
-        break;
+        اكسر;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case pte_pte_large:
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة pte_pte_large:
         AP = pte_pte_large_ptr_get_AP(pte);
         TEX = pte_pte_large_ptr_get_TEX(pte);
         XN = pte_pte_large_ptr_get_XN(pte);
-        break;
-#endif
-    default:
-        assert(!"should not happend");
+        اكسر;
+#پایان_اگر
+    افتراضي:
+        أكد(!"should not happend");
     }
-    cap_frame_print_attrs_impl(AP, XN, TEX);
+    cap_قاب_print_attrs_impl(AP, XN, TEX);
 }
 
-static void cap_frame_print_attrs_pd(pde_t *pde)
+ساكن فراغ cap_قاب_print_attrs_pd(pde_t *pde)
 {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    cap_frame_print_attrs_impl(pde_pde_section_ptr_get_HAP(pde),
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    cap_قاب_print_attrs_impl(pde_pde_section_ptr_get_HAP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_MemAttr(pde));
-#else
-    cap_frame_print_attrs_impl(pde_pde_section_ptr_get_AP(pde),
+#وإلا
+    cap_قاب_print_attrs_impl(pde_pde_section_ptr_get_AP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_TEX(pde));
-#endif
+#پایان_اگر
 }
 
-static void cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX)
+ساكن فراغ cap_قاب_print_attrs_impl(کلمه_t AP, کلمه_t XN, کلمه_t TEX)
 {
-    printf("(");
+    چاپ_کن("(");
 
     /* rights */
-    switch (AP) {
-    case 0b00:
-    case 0b01:
-        break;
-    case 0b10:
-        printf("R");
-        break;
-    case 0b11:
-        printf("RW");
-    default:
-        break;
+    بدل (AP) {
+    حالة 0b00:
+    حالة 0b01:
+        اكسر;
+    حالة 0b10:
+        چاپ_کن("R");
+        اكسر;
+    حالة 0b11:
+        چاپ_کن("RW");
+    افتراضي:
+        اكسر;
     }
 
-    if (!XN) {
-        printf("X");
+    إذا (!XN) {
+        چاپ_کن("X");
     }
 
-    if (!TEX) {
-        printf(", uncached");
+    إذا (!TEX) {
+        چاپ_کن(", uncached");
     }
 
-    printf(")\n");
+    چاپ_کن(")\n");
 }
 
-static void arm32_cap_pt_print_slots(pte_t *pt)
+ساكن فراغ arm32_cap_pt_print_slots(pte_t *pt)
 {
-    vm_page_size_t page_size;
-    word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    vm_صفحه_اندازه_t صفحه_اندازه;
+    کلمه_t i = 0;
+    طالما (i < بیت(PT_شاخص_بیتها + صفحه_بیتها)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
-                page_size = ARMLargePage;
-            } else {
-                page_size = ARMSmallPage;
+        بدل (pte_ptr_get_pteType(pte)) {
+        حالة pte_pte_small: {
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+            إذا (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+                صفحه_اندازه = ARMLarge_صفحه;
+            } وإلا {
+                صفحه_اندازه = ARMSmall_صفحه;
             }
-#else
-            page_size = ARMSmallPage;
-#endif
-            printf("0x%lx: frame_%p_%04lu ", PT_INDEX(i), pte, PT_INDEX(i));
-            cap_frame_print_attrs_pt(pte);
-            break;
+#وإلا
+            صفحه_اندازه = ARMSmall_صفحه;
+#پایان_اگر
+            چاپ_کن("0x%lx: frame_%p_%04lu ", PT_شاخص(i), pte, PT_شاخص(i));
+            cap_قاب_print_attrs_pt(pte);
+            اكسر;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
-            page_size = ARMLargePage;
-            printf("0x%lx: frame_%p_%04lu ", PT_INDEX(i), pte, PT_INDEX(i));
-            cap_frame_print_attrs_pt(pte);
-            break;
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+        حالة pte_pte_large: {
+            صفحه_اندازه = ARMLarge_صفحه;
+            چاپ_کن("0x%lx: frame_%p_%04lu ", PT_شاخص(i), pte, PT_شاخص(i));
+            cap_قاب_print_attrs_pt(pte);
+            اكسر;
         }
-#endif
-        default:
-            page_size = ARMSmallPage;
+#پایان_اگر
+        افتراضي:
+            صفحه_اندازه = ARMSmall_صفحه;
         }
-        i += (1 << pageBitsForSize(page_size));
+        i += (1 << صفحه_بیتها_For_اندازه(صفحه_اندازه));
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+فراغ obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        vm_page_size_t page_size;
-        printf("%p_pd {\n", pd);
+    إذا (is_Valid_VTable_ریشه(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !دیده(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        جمع_کن_مقصد_دیده(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        pde_t *pd = (pde_t *)pptr_از_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        vm_صفحه_اندازه_t صفحه_اندازه;
+        چاپ_کن("%p_pd {\n", pd);
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
-        word_t i = 0;
-        while (i < MAX_UL) {
+        کلمه_t i = 0;
+        طالما (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            switch (pde_ptr_get_pdeType(pde)) {
-            case pde_pde_section: {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
-                    page_size = ARMSuperSection;
-                } else {
-                    page_size = ARMSection;
+            بدل (pde_ptr_get_pdeType(pde)) {
+            حالة pde_pde_section: {
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+                إذا (pde_pde_section_ptr_get_اندازه(pde)) {
+                    صفحه_اندازه = ARMSuperSection;
+                } وإلا {
+                    صفحه_اندازه = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
-                    page_size = ARMSuperSection;
-                } else {
-                    page_size = ARMSection;
+#وإلا
+                إذا (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+                    صفحه_اندازه = ARMSuperSection;
+                } وإلا {
+                    صفحه_اندازه = ARMSection;
                 }
-#endif
-                printf("0x%lx: frame_%p_%04lu ", PD_INDEX(i), pde, PD_INDEX(i));
-                cap_frame_print_attrs_pd(pde);
-                break;
+#پایان_اگر
+                چاپ_کن("0x%lx: frame_%p_%04lu ", PD_شاخص(i), pde, PD_شاخص(i));
+                cap_قاب_print_attrs_pd(pde);
+                اكسر;
             }
 
-            case pde_pde_coarse: {
-                printf("0x%lx: pt_%p_%04lu\n", PD_INDEX(i), pde, PD_INDEX(i));
-                page_size = ARMSection;
-                break;
+            حالة pde_pde_coarse: {
+                چاپ_کن("0x%lx: pt_%p_%04lu\n", PD_شاخص(i), pde, PD_شاخص(i));
+                صفحه_اندازه = ARMSection;
+                اكسر;
             }
-            default:
-                page_size = ARMSection;
-                break;
+            افتراضي:
+                صفحه_اندازه = ARMSection;
+                اكسر;
             }
-            i += (1 << pageBitsForSize(page_size));
-            if (i < (1 << pageBitsForSize(page_size))) {
-                break; /* overflowed */
+            i += (1 << صفحه_بیتها_For_اندازه(صفحه_اندازه));
+            إذا (i < (1 << صفحه_بیتها_For_اندازه(صفحه_اندازه))) {
+                اكسر; /* overflowed */
             }
         }
-        printf("}\n"); /* pd */
+        چاپ_کن("}\n"); /* pd */
 
         i = 0;
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
-        while (i < MAX_UL) {
+        طالما (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            if (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
-                pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
-                printf("pt_%p_%04lu {\n", pde, PD_INDEX(i));
+            إذا (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
+                pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_آدرس(pde));
+                چاپ_کن("pt_%p_%04lu {\n", pde, PD_شاخص(i));
                 arm32_cap_pt_print_slots(pt);
-                printf("}\n"); /* pt */
+                چاپ_کن("}\n"); /* pt */
             }
-            i += (1 << pageBitsForSize(ARMSection));
-            if (i < (1 << pageBitsForSize(ARMSection))) {
-                break; /* overflowed */
+            i += (1 << صفحه_بیتها_For_اندازه(ARMSection));
+            إذا (i < (1 << صفحه_بیتها_For_اندازه(ARMSection))) {
+                اكسر; /* overflowed */
             }
         }
     }
 }
 
 /* use when only have access to vptr of frames */
-static void cap_frame_print_attrs_vptr(word_t vptr, pde_t *pd)
+ساكن فراغ cap_قاب_print_attrs_vptr(کلمه_t vptr, pde_t *pd)
 {
     pde_t *pde = lookupPDSlot(pd, vptr);
 
-    switch (pde_ptr_get_pdeType(pde)) {
-    case pde_pde_section: {
-        printf("frame_%p_%04lu ", pde, PD_INDEX(vptr));
-        cap_frame_print_attrs_pd(pde);
-        break;
+    بدل (pde_ptr_get_pdeType(pde)) {
+    حالة pde_pde_section: {
+        چاپ_کن("frame_%p_%04lu ", pde, PD_شاخص(vptr));
+        cap_قاب_print_attrs_pd(pde);
+        اكسر;
     }
-    case pde_pde_coarse: {
-        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
+    حالة pde_pde_coarse: {
+        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_آدرس(pde));
         pte_t *pte = lookupPTSlot_nofail(pt, vptr);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
-            printf("frame_%p_%04lu ", pte, PT_INDEX(vptr));
-            cap_frame_print_attrs_pt(pte);
-            break;
+        بدل (pte_ptr_get_pteType(pte)) {
+        حالة pte_pte_small: {
+            چاپ_کن("frame_%p_%04lu ", pte, PT_شاخص(vptr));
+            cap_قاب_print_attrs_pt(pte);
+            اكسر;
         }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
-            printf("frame_%p_%04lu ", pte, PT_INDEX(vptr));
-            cap_frame_print_attrs_pt(pte);
-            break;
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+        حالة pte_pte_large: {
+            چاپ_کن("frame_%p_%04lu ", pte, PT_شاخص(vptr));
+            cap_قاب_print_attrs_pt(pte);
+            اكسر;
         }
-#endif
-        default:
-            assert(0);
+#پایان_اگر
+        افتراضي:
+            أكد(0);
         }
-        break;
+        اكسر;
     }
-    default:
-        assert(0);
+    افتراضي:
+        أكد(0);
     }
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+فراغ print_ipc_میانگیر_جایگاه(tcb_t *tcb)
 {
-    word_t vptr = tcb->tcbIPCBuffer;
-    asid_t asid = cap_page_directory_cap_get_capPDMappedASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-    findPDForASID_ret_t find_ret = findPDForASID(asid);
-    printf("ipc_buffer_slot: ");
-    cap_frame_print_attrs_vptr(vptr, find_ret.pd);
+    کلمه_t vptr = tcb->tcbIPCBuffer;
+    asid_t asid = cap_صفحه_directory_cap_get_cap_PDMapped_ASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    پیدا_کن_PDFor_ASID_ret_t پیدا_کن_ret = پیدا_کن_PDFor_ASID(asid);
+    چاپ_کن("ipc_buffer_slot: ");
+    cap_قاب_print_attrs_vptr(vptr, پیدا_کن_ret.pd);
 }
 
-void print_cap_arch(cap_t cap)
+فراغ print_cap_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        findPDForASID_ret_t find_ret = findPDForASID(asid);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr), (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr));
+    بدل (cap_get_capType(cap)) {
+    حالة cap_صفحه_جدول_cap: {
+        asid_t asid = cap_صفحه_جدول_cap_get_cap_PTMapped_ASID(cap);
+        پیدا_کن_PDFor_ASID_ret_t پیدا_کن_ret = پیدا_کن_PDFor_ASID(asid);
+        vptr_t vptr = cap_صفحه_جدول_cap_get_cap_PTMapped_آدرس(cap);
+        إذا (asid) {
+            چاپ_کن("pt_%p_%04lu (asid: %lu)\n",
+                   lookupPDSlot(پیدا_کن_ret.pd, vptr), PD_شاخص(vptr), (دراز بیعلامت صحيح)asid);
+        } وإلا {
+            چاپ_کن("pt_%p_%04lu\n", lookupPDSlot(پیدا_کن_ret.pd, vptr), PD_شاخص(vptr));
         }
-        break;
+        اكسر;
     }
-    case cap_page_directory_cap: {
-        asid_t asid = cap_page_directory_cap_get_capPDMappedASID(cap);
-        findPDForASID_ret_t find_ret = findPDForASID(asid);
-        if (asid) {
-            printf("%p_pd (asid: %lu)\n",
-                   find_ret.pd, (long unsigned int)asid);
-        } else {
-            printf("%p_pd\n", find_ret.pd);
+    حالة cap_صفحه_directory_cap: {
+        asid_t asid = cap_صفحه_directory_cap_get_cap_PDMapped_ASID(cap);
+        پیدا_کن_PDFor_ASID_ret_t پیدا_کن_ret = پیدا_کن_PDFor_ASID(asid);
+        إذا (asid) {
+            چاپ_کن("%p_pd (asid: %lu)\n",
+                   پیدا_کن_ret.pd, (دراز بیعلامت صحيح)asid);
+        } وإلا {
+            چاپ_کن("%p_pd\n", پیدا_کن_ret.pd);
         }
-        break;
+        اكسر;
     }
-    case cap_asid_control_cap: {
+    حالة cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        چاپ_کن("asid_control\n");
+        اكسر;
     }
-    case cap_small_frame_cap: {
-        vptr_t vptr = cap_small_frame_cap_get_capFMappedAddress(cap);
-        findPDForASID_ret_t find_ret = findPDForASID(cap_small_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
-        cap_frame_print_attrs_vptr(vptr, find_ret.pd);
-        break;
+    حالة cap_small_قاب_cap: {
+        vptr_t vptr = cap_small_قاب_cap_get_cap_FMapped_آدرس(cap);
+        پیدا_کن_PDFor_ASID_ret_t پیدا_کن_ret = پیدا_کن_PDFor_ASID(cap_small_قاب_cap_get_cap_FMapped_ASID(cap));
+        أكد(پیدا_کن_ret.وضعیت == EXCEPTION_NONE);
+        cap_قاب_print_attrs_vptr(vptr, پیدا_کن_ret.pd);
+        اكسر;
     }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findPDForASID_ret_t find_ret = findPDForASID(cap_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
-        cap_frame_print_attrs_vptr(vptr, find_ret.pd);
-        break;
+    حالة cap_قاب_cap: {
+        vptr_t vptr = cap_قاب_cap_get_cap_FMapped_آدرس(cap);
+        پیدا_کن_PDFor_ASID_ret_t پیدا_کن_ret = پیدا_کن_PDFor_ASID(cap_قاب_cap_get_cap_FMapped_ASID(cap));
+        أكد(پیدا_کن_ret.وضعیت == EXCEPTION_NONE);
+        cap_قاب_print_attrs_vptr(vptr, پیدا_کن_ret.pd);
+        اكسر;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    حالة cap_asid_pool_cap: {
+        چاپ_کن("%p_asid_pool\n", (فراغ *)cap_asid_pool_cap_get_capASIDPool(cap));
+        اكسر;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap: {
+        چاپ_کن("%p_vcpu\n", (فراغ *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        اكسر;
     }
-#endif
+#پایان_اگر
 
         /* ARM specific caps */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space\n", (void *)cap_io_space_cap_get_capModuleID(cap));
-        break;
+#اگر_تعریف_شده CONFIG_TK1_SMMU
+    حالة cap_io_space_cap: {
+        چاپ_کن("%p_io_space\n", (فراغ *)cap_io_space_cap_get_capModuleID(cap));
+        اكسر;
     }
-#endif
-    default: {
-        printf("[unknown cap %u]\n", cap_get_capType(cap));
-        break;
+#پایان_اگر
+    افتراضي: {
+        چاپ_کن("[unknown cap %u]\n", cap_get_capType(cap));
+        اكسر;
     }
     }
 }
 
-void print_object_arch(cap_t cap)
+فراغ print_object_arch(cap_t cap)
 {
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-    case cap_small_frame_cap:
-    case cap_page_table_cap:
-    case cap_page_directory_cap:
+    بدل (cap_get_capType(cap)) {
+    حالة cap_قاب_cap:
+    حالة cap_small_قاب_cap:
+    حالة cap_صفحه_جدول_cap:
+    حالة cap_صفحه_directory_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        اكسر;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    حالة cap_asid_pool_cap: {
+        چاپ_کن("%p_asid_pool = asid_pool ",
+               (فراغ *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        اكسر;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu = vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة cap_vcpu_cap: {
+        چاپ_کن("%p_vcpu = vcpu\n", (فراغ *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        اكسر;
     }
-#endif
+#پایان_اگر
         /* ARM specific objects */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space = io_space ", (void *)cap_io_space_cap_get_capModuleID(cap));
+#اگر_تعریف_شده CONFIG_TK1_SMMU
+    حالة cap_io_space_cap: {
+        چاپ_کن("%p_io_space = io_space ", (فراغ *)cap_io_space_cap_get_capModuleID(cap));
         arm_obj_iospace_print_attrs(cap);
-        break;
+        اكسر;
     }
-#endif
-    default: {
-        printf("[unknown object %u]\n", cap_get_capType(cap));
-        break;
+#پایان_اگر
+    افتراضي: {
+        چاپ_کن("[unknown object %u]\n", cap_get_capType(cap));
+        اكسر;
     }
     }
 }
 
-static void obj_frame_print_attrs(resolve_ret_t ret)
+ساكن فراغ obj_قاب_print_attrs(resolve_ret_t ret)
 {
-    printf("(");
+    چاپ_کن("(");
 
     /* VM size */
-    switch (ret.frameSize) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case ARMSection:
-        printf("2M");
-        break;
-    case ARMSuperSection:
-        printf("32M");
-        break;
-#else
-    case ARMSection:
-        printf("1M");
-        break;
-    case ARMSuperSection:
-        printf("16M");
-        break;
-#endif
-    case ARMLargePage:
-        printf("64k");
-        break;
-    case ARMSmallPage:
-        printf("4k");
-        break;
+    بدل (ret.قاب_اندازه) {
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+    حالة ARMSection:
+        چاپ_کن("2M");
+        اكسر;
+    حالة ARMSuperSection:
+        چاپ_کن("32M");
+        اكسر;
+#وإلا
+    حالة ARMSection:
+        چاپ_کن("1M");
+        اكسر;
+    حالة ARMSuperSection:
+        چاپ_کن("16M");
+        اكسر;
+#پایان_اگر
+    حالة ARMLarge_صفحه:
+        چاپ_کن("64k");
+        اكسر;
+    حالة ARMSmall_صفحه:
+        چاپ_کن("4k");
+        اكسر;
     }
 
-    printf(", paddr: %p)\n", (void *)ret.frameBase);
+    چاپ_کن(", paddr: %p)\n", (فراغ *)ret.قاب_پایه);
 }
 
-static void arm32_obj_pt_print_slots(pte_t *pt)
+ساكن فراغ arm32_obj_pt_print_slots(pte_t *pt)
 {
     resolve_ret_t ret;
-    word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    کلمه_t i = 0;
+    طالما (i < بیت(PT_شاخص_بیتها + صفحه_بیتها)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
-            ret.frameBase = pte_pte_small_ptr_get_address(pte);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+        بدل (pte_ptr_get_pteType(pte)) {
+        حالة pte_pte_small: {
+            ret.قاب_پایه = pte_pte_small_ptr_get_آدرس(pte);
+#اگر_تعریف_شده CONFIG_ARM_HYPERVISOR_SUPPORT
+            إذا (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 /* Entries are represented as 16 contiguous small frames. We need to mask
                    to get the large frame base */
-                ret.frameBase &= ~MASK(pageBitsForSize(ARMLargePage));
-                ret.frameSize = ARMLargePage;
-            } else {
-                ret.frameSize = ARMSmallPage;
+                ret.قاب_پایه &= ~ماسک(صفحه_بیتها_For_اندازه(ARMLarge_صفحه));
+                ret.قاب_اندازه = ARMLarge_صفحه;
+            } وإلا {
+                ret.قاب_اندازه = ARMSmall_صفحه;
             }
-#else
-            ret.frameSize = ARMSmallPage;
-#endif
-            printf("frame_%p_%04lu = frame ", pte, PT_INDEX(i));
-            obj_frame_print_attrs(ret);
-            break;
+#وإلا
+            ret.قاب_اندازه = ARMSmall_صفحه;
+#پایان_اگر
+            چاپ_کن("frame_%p_%04lu = frame ", pte, PT_شاخص(i));
+            obj_قاب_print_attrs(ret);
+            اكسر;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
-            ret.frameBase = pte_pte_large_ptr_get_address(pte);
-            ret.frameSize = ARMLargePage;
-            printf("frame_%p_%04lu = frame ", pte, PT_INDEX(i));
-            obj_frame_print_attrs(ret);
-            break;
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+        حالة pte_pte_large: {
+            ret.قاب_پایه = pte_pte_large_ptr_get_آدرس(pte);
+            ret.قاب_اندازه = ARMLarge_صفحه;
+            چاپ_کن("frame_%p_%04lu = frame ", pte, PT_شاخص(i));
+            obj_قاب_print_attrs(ret);
+            اكسر;
         }
-#endif
-        default:
-            ret.frameSize = ARMSmallPage;
+#پایان_اگر
+        افتراضي:
+            ret.قاب_اندازه = ARMSmall_صفحه;
         }
-        i += (1 << pageBitsForSize(ret.frameSize));
+        i += (1 << صفحه_بیتها_For_اندازه(ret.قاب_اندازه));
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+فراغ obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    إذا (is_Valid_VTable_ریشه(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !دیده(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        جمع_کن_مقصد_دیده(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        pde_t *pd = (pde_t *)pptr_از_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         resolve_ret_t ret = {};
-        printf("%p_pd = pd\n", pd);
+        چاپ_کن("%p_pd = pd\n", pd);
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
-        word_t i = 0;
-        while (i < MAX_UL) {
+        کلمه_t i = 0;
+        طالما (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            switch (pde_ptr_get_pdeType(pde)) {
-            case pde_pde_section: {
-                ret.frameBase = pde_pde_section_ptr_get_address(pde);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
-                    ret.frameSize = ARMSuperSection;
-                } else {
-                    ret.frameSize = ARMSection;
+            بدل (pde_ptr_get_pdeType(pde)) {
+            حالة pde_pde_section: {
+                ret.قاب_پایه = pde_pde_section_ptr_get_آدرس(pde);
+#اگر_تعریف_نشده CONFIG_ARM_HYPERVISOR_SUPPORT
+                إذا (pde_pde_section_ptr_get_اندازه(pde)) {
+                    ret.قاب_اندازه = ARMSuperSection;
+                } وإلا {
+                    ret.قاب_اندازه = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#وإلا
+                إذا (pde_pde_section_ptr_get_contiguous_hint(pde)) {
                     /* Entries are represented as 16 contiguous sections. We need to mask
                     to get the super section frame base */
-                    ret.frameBase &= ~MASK(pageBitsForSize(ARMSuperSection));
-                    ret.frameSize = ARMSuperSection;
-                } else {
-                    ret.frameSize = ARMSection;
+                    ret.قاب_پایه &= ~ماسک(صفحه_بیتها_For_اندازه(ARMSuperSection));
+                    ret.قاب_اندازه = ARMSuperSection;
+                } وإلا {
+                    ret.قاب_اندازه = ARMSection;
                 }
-#endif
-                printf("frame_%p_%04lu = frame ", pde, PD_INDEX(i));
-                obj_frame_print_attrs(ret);
-                break;
+#پایان_اگر
+                چاپ_کن("frame_%p_%04lu = frame ", pde, PD_شاخص(i));
+                obj_قاب_print_attrs(ret);
+                اكسر;
             }
 
-            case pde_pde_coarse: {
-                pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
-                printf("pt_%p_%04lu = pt\n", pde, PD_INDEX(i));
+            حالة pde_pde_coarse: {
+                pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_آدرس(pde));
+                چاپ_کن("pt_%p_%04lu = pt\n", pde, PD_شاخص(i));
                 arm32_obj_pt_print_slots(pt);
-                ret.frameSize = ARMSection;
-                break;
+                ret.قاب_اندازه = ARMSection;
+                اكسر;
             }
-            default:
-                ret.frameSize = ARMSection;
-                break;
+            افتراضي:
+                ret.قاب_اندازه = ARMSection;
+                اكسر;
             }
-            i += (1 << pageBitsForSize(ret.frameSize));
-            if (i < (1 << pageBitsForSize(ret.frameSize))) {
-                break; /* overflowed */
+            i += (1 << صفحه_بیتها_For_اندازه(ret.قاب_اندازه));
+            إذا (i < (1 << صفحه_بیتها_For_اندازه(ret.قاب_اندازه))) {
+                اكسر; /* overflowed */
             }
         }
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#پایان_اگر /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+فراغ debug_capDL(فراغ)
 {
-    printf("arch aarch32\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    چاپ_کن("arch aarch32\n");
+    چاپ_کن("objects {\n");
+#اگر_تعریف_شده CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#پایان_اگر
+    چاپ_کن("}\n");
 
-    printf("caps {\n");
+    چاپ_کن("caps {\n");
 
     /* reset the seen list */
-    reset_seen_list();
+    reset_دیده_list();
 
-#ifdef CONFIG_PRINTING
+#اگر_تعریف_شده CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    چاپ_کن("}\n");
 
     obj_irq_print_maps();
-#endif /* CONFIG_PRINTING */
+#پایان_اگر /* CONFIG_PRINTING */
 }
 
 
-#endif /* CONFIG_DEBUG_BUILD */
+#پایان_اگر /* CONFIG_DEBUG_BUILD */

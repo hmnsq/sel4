@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ضمن <config.h>
+#ضمن <stdint.h>
+#ضمن <util.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/devices_gen.h>
 
-#define UTHR        0x0
-#define ULSR        0x14
+#تعریف_کن UTHR        0x0
+#تعریف_کن ULSR        0x14
 
-#define ULSR_THRE   BIT(5)
-#define ULSR_RDR    BIT(0)
+#تعریف_کن ULSR_THRE   بیت(5)
+#تعریف_کن ULSR_RDR    بیت(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کن UART_REG(x) ((متطاير uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#اگر_تعریف_شده CONFIG_PRINTING
+فراغ uart_drv_putchar(بیعلامت حرف c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    طالما ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#پایان_اگر /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#اگر_تعریف_شده CONFIG_DEBUG_BUILD
+بیعلامت حرف uart_drv_getchar(فراغ)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    طالما ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    أرجع *UART_REG(UTHR);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#پایان_اگر /* CONFIG_DEBUG_BUILD */

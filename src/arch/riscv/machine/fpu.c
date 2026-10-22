@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#ifdef CONFIG_HAVE_FPU
-#include <arch/machine/fpu.h>
+#اگر_تعریف_شده CONFIG_HAVE_FPU
+#ضمن <arch/machine/fpu.h>
 
-bool_t isFPUEnabled[CONFIG_MAX_NUM_NODES];
-#endif
+bool_t isFPUEnabled[CONFIG_MAX_رقم_NODES];
+#پایان_اگر

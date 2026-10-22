@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ضمن <config.h>
 
-#if defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
+#إذا defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
-#include <machine/io.h>
-#include <arch/object/iospace.h>
+#ضمن <arch/machine/capdl.h>
+#ضمن <string.h>
+#ضمن <kernel/cspace.h>
+#ضمن <machine/io.h>
+#ضمن <arch/object/iospace.h>
 
 
-void x86_obj_ioports_print_attrs(cap_t ioports_cap)
+فراغ x86_obj_ioports_print_attrs(cap_t ioports_cap)
 {
-    printf("(ports: (%lu, %lu))\n",
-           (long unsigned int)cap_io_port_cap_get_capIOPortFirstPort(ioports_cap),
-           (long unsigned int)cap_io_port_cap_get_capIOPortLastPort(ioports_cap));
+    چاپ_کن("(ports: (%lu, %lu))\n",
+           (دراز بیعلامت صحيح)cap_io_پورت_cap_get_cap_IOPort_اولی_پورت(ioports_cap),
+           (دراز بیعلامت صحيح)cap_io_پورت_cap_get_cap_IOPort_آخرین_پورت(ioports_cap));
 }
 
-#ifdef CONFIG_IOMMU
+#اگر_تعریف_شده CONFIG_IOMMU
 
-void x86_obj_iospace_print_attrs(cap_t iospace_cap)
+فراغ x86_obj_iospace_print_attrs(cap_t iospace_cap)
 {
-    printf("(domain_id: %lu, pci_device: %lu)\n",
-           (long unsigned int)cap_io_space_cap_get_capPCIDevice(iospace_cap),
-           (long unsigned int)cap_io_space_cap_get_capDomainID(iospace_cap));
+    چاپ_کن("(domain_id: %lu, pci_device: %lu)\n",
+           (دراز بیعلامت صحيح)cap_io_space_cap_get_capPCIDevice(iospace_cap),
+           (دراز بیعلامت صحيح)cap_io_space_cap_get_capDomainID(iospace_cap));
 }
 
-void x86_obj_iopt_print_attrs(cap_t iopt_cap)
+فراغ x86_obj_iopt_print_attrs(cap_t iopt_cap)
 {
-    printf("(level: %lu)\n", (long unsigned int)cap_io_page_table_cap_get_capIOPTLevel(iopt_cap));
+    چاپ_کن("(level: %lu)\n", (دراز بیعلامت صحيح)cap_io_صفحه_جدول_cap_get_cap_IOPTLevel(iopt_cap));
 }
-#endif
+#پایان_اگر
 
-#endif /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */
+#پایان_اگر /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */

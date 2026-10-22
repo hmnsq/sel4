@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <stdint.h>
-#include <plat/machine.h>
-BOOT_CODE void initIRQController(void)
+#ضمن <util.h>
+#ضمن <stdint.h>
+#ضمن <plat/machine.h>
+BOOT_کد فراغ initIRQController(فراغ)
 {
     /* Disable all interrupts */
     intc_regs->bfDisableIRQs[0] = 0xffffffff;
@@ -16,115 +16,115 @@ BOOT_CODE void initIRQController(void)
     /* Disable FIQ */
     intc_regs->FIQ_control &= ~FIQCTRL_FIQ_ENABLE;
     /* Enable IRQ control for GPU */
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
+    intc_regs->bfEnableBasicIRQs = بیت(وقفه_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_جابه_جایی);
+    intc_regs->bfEnableBasicIRQs = بیت(وقفه_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_جابه_جایی);
 
     core_regs->coreTimerPrescaler = 0x80000000;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_کد فراغ cpu_initLocalIRQController(فراغ) {}
 
-static inline irq_t getActiveIRQ(void)
+ساكن مضمن irq_t get_فعال_IRQ(فراغ)
 {
     uint32_t pending;
     uint32_t irq;
     /* Read core interrupt register */
     pending = core_regs->coreIRQSource[0];
     /* Mask out invalid bits */
-    pending &= MASK(12);
+    pending &= ماسک(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    إذا (pending == 0) {
+        أرجع irqInvalid;
     }
 
     /* Get IRQ number */
-    irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    irq = (کلمه_بیتها - 1 - clzl(pending));
+    إذا (irq != وقفه_CORE_GPU) {
+        أرجع irq;
     }
 
     /* GPU interrupt */
     pending = intc_regs->bfIRQBasicPending;
     pending &= intc_regs->bfEnableBasicIRQs;
     /* Mask out pending register 0 and 1 */
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    pending &= ~بیت(وقفه_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_جابه_جایی);
+    pending &= ~بیت(وقفه_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_جابه_جایی);
+    إذا (pending) {
+        أرجع (کلمه_بیتها - 1 - clzl(pending)) + BASIC_IRQ_جابه_جایی;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    إذا (pending) {
+        أرجع (کلمه_بیتها - 1 - clzl(pending)) + 32 + نرمال_IRQ_جابه_جایی;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    إذا (pending) {
+        أرجع (کلمه_بیتها - 1 - clzl(pending)) + 0 + نرمال_IRQ_جابه_جایی;
     }
 
-    return irqInvalid;
+    أرجع irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+ساكن مضمن فراغ ماسک_وقفه(bool_t disable, irq_t irq)
 {
-    switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
-            core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
-            core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
+    بدل (irq) {
+    حالة وقفه_CORE_CNTPSIRQ :
+    حالة وقفه_CORE_CNTPNSIRQ:
+    حالة وقفه_CORE_CNTHPIRQ :
+    حالة وقفه_CORE_CNTVIRQ  :
+        إذا (disable) {
+            core_regs->coreTimersIrqCtrl[0] &= ~بیت(irq);
+        } وإلا {
+            core_regs->coreTimersIrqCtrl[0] |= بیت(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
-            core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
-            core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
+        أرجع;
+    حالة وقفه_CORE_MAILBOX_0:
+    حالة وقفه_CORE_MAILBOX_1:
+    حالة وقفه_CORE_MAILBOX_2:
+    حالة وقفه_CORE_MAILBOX_3:
+        إذا (disable) {
+            core_regs->coreMailboxesIrqCtrl[0] &= ~بیت(irq);
+        } وإلا {
+            core_regs->coreMailboxesIrqCtrl[0] |= بیت(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
-            core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
-            core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
+        أرجع;
+    حالة وقفه_CORE_LOCAL_TIMER:
+        إذا (disable) {
+            core_regs->localTimerCtl &= ~بیت(LOCAL_TIMER_CTRL_IRQ_بیت);
+        } وإلا {
+            core_regs->localTimerCtl |= بیت(LOCAL_TIMER_CTRL_IRQ_بیت);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        أرجع;
+    حالة وقفه_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    حالة وقفه_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    حالة وقفه_CORE_AXI:
         // Not currently handled
-        return;
-    default:
-        break;
+        أرجع;
+    افتراضي:
+        اكسر;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    إذا (irq < BASIC_IRQ_جابه_جایی) {
         // Other invalid irq
-        return;
+        أرجع;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
-            intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
-            intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
+    إذا (irq < نرمال_IRQ_جابه_جایی) {
+        إذا (disable) {
+            intc_regs->bfDisableBasicIRQs = بیت(irq - BASIC_IRQ_جابه_جایی);
+        } وإلا {
+            intc_regs->bfEnableBasicIRQs = بیت(irq - BASIC_IRQ_جابه_جایی);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
-            intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
-            intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
+    } وإلا إذا (irq <= maxIRQ) {
+        صحيح نرمال_irq = irq - نرمال_IRQ_جابه_جایی;
+        صحيح شاخص = نرمال_irq / 32;
+        إذا (disable) {
+            intc_regs->bfDisableIRQs[شاخص] = بیت(نرمال_irq % 32);
+        } وإلا {
+            intc_regs->bfEnableIRQs[شاخص] = بیت(نرمال_irq % 32);
         }
     }
 }

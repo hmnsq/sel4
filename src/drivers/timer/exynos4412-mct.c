@@ -4,55 +4,55 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <drivers/timer/mct.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <plat/machine.h>
+#ضمن <linker.h>
+#ضمن <drivers/timer/mct.h>
 
 timer_t *mct = (timer_t *) EXYNOS_MCT_PPTR;
 
-#ifdef CONFIG_KERNEL_MCS
+#اگر_تعریف_شده CONFIG_KERNEL_MCS
 
-BOOT_CODE void initTimer(void)
+BOOT_کد فراغ initTimer(فراغ)
 {
 
-    mct_clear_write_status();
-    mct->global.comp0_add_inc = 0;
+    mct_clear_write_وضعیت();
+    mct->global.comp0_جمع_کن_inc = 0;
     /* Enable interrupts */
     mct->global.int_en = GINT_COMP0_IRQ;
-    while (mct->global.wstat != (GWSTAT_COMP0_ADD_INC));
-    mct->global.wstat = (GWSTAT_COMP0_ADD_INC);
+    طالما (mct->global.wstat != (GWSTAT_COMP0_جمع_کن_INC));
+    mct->global.wstat = (GWSTAT_COMP0_جمع_کن_INC);
     /* enable interrupts */
     mct->global.tcon = GTCON_EN | GTCON_COMP0_EN;
-    while (mct->global.wstat != GWSTAT_TCON);
+    طالما (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 }
 
-#else /* CONFIG_KERNEL_MCS */
+#وإلا /* CONFIG_KERNEL_MCS */
 
-BOOT_CODE void initTimer(void)
+BOOT_کد فراغ initTimer(فراغ)
 {
 
-    mct_clear_write_status();
+    mct_clear_write_وضعیت();
 
     /* Configure the comparator */
-    mct->global.comp0_add_inc = TIMER_RELOAD;
+    mct->global.comp0_جمع_کن_inc = TIMER_RELOAD;
 
-    uint64_t  comparator_value = ((((uint64_t) mct->global.cnth) << 32llu)
+    uint64_t  comparator_مقدار = ((((uint64_t) mct->global.cnth) << 32llu)
                                   | mct->global.cntl) + TIMER_RELOAD;
-    mct->global.comp0h = (uint32_t)(comparator_value >> 32u);
-    mct->global.comp0l = (uint32_t) comparator_value;
+    mct->global.comp0h = (uint32_t)(comparator_مقدار >> 32u);
+    mct->global.comp0l = (uint32_t) comparator_مقدار;
     /* Enable interrupts */
     mct->global.int_en = GINT_COMP0_IRQ;
 
     /* Wait for update */
-    while (mct->global.wstat != (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_ADD_INC));
-    mct->global.wstat = (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_ADD_INC);
+    طالما (mct->global.wstat != (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_جمع_کن_INC));
+    mct->global.wstat = (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_جمع_کن_INC);
 
     /* enable interrupts */
     mct->global.tcon = GTCON_EN | GTCON_COMP0_EN | GTCON_COMP0_AUTOINC;
-    while (mct->global.wstat != GWSTAT_TCON);
+    طالما (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 }
-#endif /* CONFIG_KERNEL_MCS */
+#پایان_اگر /* CONFIG_KERNEL_MCS */
