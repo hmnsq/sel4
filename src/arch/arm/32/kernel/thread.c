@@ -14,7 +14,7 @@
 
 void Arch_switchToThread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ប្រសិនបើ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
 
@@ -30,7 +30,7 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
 
 void Arch_switchToIdleThread(void)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ប្រសិនបើ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(NULL);
     }
 
