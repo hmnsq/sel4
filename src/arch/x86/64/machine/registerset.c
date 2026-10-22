@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
+#ضمن <assert.h>
+#ضمن <arch/machine/registerset.h>
+#ضمن <machine/fpu.h>
+#ضمن <arch/object/structures.h>
 
-const register_t msgRegisters[] = {
+ثابت register_t رسالة_Registers[] = {
     R10, R8, R9, R15
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    حجم(رسالة_Registers) / حجم(رسالة_Registers[0]) == n_رسالة_Registers
 );
 
-const register_t frameRegisters[] = {
+ثابت register_t frameRegisters[] = {
     FaultIP, RSP, FLAGS, RAX, RBX, RCX, RDX, RSI, RDI, RBP,
     R8, R9, R10, R11, R12, R13, R14, R15
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    حجم(frameRegisters) / حجم(frameRegisters[0]) == n_frameRegisters
 );
 
-const register_t gpRegisters[] = {
+ثابت register_t gpRegisters[] = {
     FS_BASE, GS_BASE
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    حجم(gpRegisters) / حجم(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+فراغ Mode_initContext(user_context_t *context)
 {
     context->registers[RAX] = 0;
     context->registers[RBX] = 0;
@@ -56,19 +56,19 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    إذا (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        إذا (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    إرجاع v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+word_t getNBSendRecvDest(فراغ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    إرجاع getRegister(عقدة_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

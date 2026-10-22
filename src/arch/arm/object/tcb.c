@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <sel4/constants.h>
-#include <machine/registerset.h>
-#include <object/structures.h>
-#include <arch/machine.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <sel4/constants.h>
+#ضمن <machine/registerset.h>
+#ضمن <object/structures.h>
+#ضمن <arch/machine.h>
 
 word_t CONST Arch_decodeTransfer(word_t flags)
 {
-    return 0;
+    إرجاع 0;
 }
 
 exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
-    return EXCEPTION_NONE;
+    إرجاع EXCEPTION_NONE;
 }
