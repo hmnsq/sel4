@@ -4,128 +4,128 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <kernel/boot.h>
-#include <kernel/thread.h>
-#include <machine/io.h>
-#include <machine/registerset.h>
-#include <model/statedata.h>
-#include <object/domain.h>
-#include <arch/machine.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <hardware.h>
-#include <util.h>
+#شامل <assert.h>
+#شامل <kernel/boot.h>
+#شامل <kernel/thread.h>
+#شامل <machine/io.h>
+#شامل <machine/registerset.h>
+#شامل <model/statedata.h>
+#شامل <object/domain.h>
+#شامل <arch/machine.h>
+#شامل <arch/kernel/boot.h>
+#شامل <arch/kernel/vspace.h>
+#شامل <linker.h>
+#شامل <hardware.h>
+#شامل <util.h>
 
 /* (node-local) state accessed only during bootstrapping */
 BOOT_BSS ndks_boot_t ndks_boot;
 
 BOOT_BSS rootserver_mem_t rootserver;
-BOOT_BSS static region_t rootserver_mem;
+BOOT_BSS ساکن region_t rootserver_mem;
 
 /* Returns the physical region of the kernel image boot part, which is the part
  * that is no longer needed once booting is finished. */
-extern char ki_boot_end[1];
-BOOT_CODE p_region_t get_p_reg_kernel_img_boot(void)
+خارجی حرف ki_boot_انتہا[1];
+BOOT_رمز p_region_t get_p_reg_kernel_img_boot(خالی)
 {
-    return (p_region_t) {
-        .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
-        .end   = kpptr_to_paddr(ki_boot_end)
+    واپس (p_region_t) {
+        .آغاز = kpptr_مقصد_paddr((ثابت خالی *)KERNEL_ELF_بنیاد),
+        .انتہا   = kpptr_مقصد_paddr(ki_boot_انتہا)
     };
 }
 
 /* Returns the physical region of the kernel image. */
-BOOT_CODE p_region_t get_p_reg_kernel_img(void)
+BOOT_رمز p_region_t get_p_reg_kernel_img(خالی)
 {
-    return (p_region_t) {
-        .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
-        .end   = kpptr_to_paddr((const void *)KERNEL_ELF_TOP)
+    واپس (p_region_t) {
+        .آغاز = kpptr_مقصد_paddr((ثابت خالی *)KERNEL_ELF_بنیاد),
+        .انتہا   = kpptr_مقصد_paddr((ثابت خالی *)KERNEL_ELF_چوٹی)
     };
 }
 
-BOOT_CODE static void merge_regions(void)
+BOOT_رمز ساکن خالی ملاؤ_regions(خالی)
 {
     /* Walk through reserved regions and see if any can be merged */
-    word_t top = 0;
-    for (word_t i = 1; i < ndks_boot.resv_count; i++) {
-        if (ndks_boot.reserved[top].end == ndks_boot.reserved[i].start) {
+    لفظ_t چوٹی = 0;
+    برائے (لفظ_t i = 1; i < ndks_boot.resv_گنتی; i++) {
+        اگر (ndks_boot.reserved[چوٹی].انتہا == ndks_boot.reserved[i].آغاز) {
             /* extend earlier region */
-            ndks_boot.reserved[top].end = ndks_boot.reserved[i].end;
-        } else {
+            ndks_boot.reserved[چوٹی].انتہا = ndks_boot.reserved[i].انتہا;
+        } ورنہ {
             /* add region */
-            top++;
-            ndks_boot.reserved[top] = ndks_boot.reserved[i];
+            چوٹی++;
+            ndks_boot.reserved[چوٹی] = ndks_boot.reserved[i];
         }
     }
-    ndks_boot.resv_count = ndks_boot.resv_count > 0 ? top + 1 : 0;
+    ndks_boot.resv_گنتی = ndks_boot.resv_گنتی > 0 ? چوٹی + 1 : 0;
 }
 
-BOOT_CODE bool_t reserve_region(p_region_t reg)
+BOOT_رمز bool_t reserve_region(p_region_t reg)
 {
-    word_t i;
-    assert(reg.start <= reg.end);
-    if (reg.start == reg.end) {
-        return true;
+    لفظ_t i;
+    أكد(reg.آغاز <= reg.انتہا);
+    اگر (reg.آغاز == reg.انتہا) {
+        واپس true;
     }
 
     /* keep the regions in order */
-    for (i = 0; i < ndks_boot.resv_count; i++) {
+    برائے (i = 0; i < ndks_boot.resv_گنتی; i++) {
         /* Try and merge the region to an existing one, if possible */
-        if (ndks_boot.reserved[i].start == reg.end) {
-            ndks_boot.reserved[i].start = reg.start;
-            merge_regions();
-            return true;
+        اگر (ndks_boot.reserved[i].آغاز == reg.انتہا) {
+            ndks_boot.reserved[i].آغاز = reg.آغاز;
+            ملاؤ_regions();
+            واپس true;
         }
-        if (ndks_boot.reserved[i].end == reg.start) {
-            ndks_boot.reserved[i].end = reg.end;
-            merge_regions();
-            return true;
+        اگر (ndks_boot.reserved[i].انتہا == reg.آغاز) {
+            ndks_boot.reserved[i].انتہا = reg.انتہا;
+            ملاؤ_regions();
+            واپس true;
         }
         /* Otherwise figure out where it should go. */
-        if (ndks_boot.reserved[i].start > reg.end) {
+        اگر (ndks_boot.reserved[i].آغاز > reg.انتہا) {
             /* move regions down, making sure there's enough room */
-            if (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
-                printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
+            اگر (ndks_boot.resv_گنتی + 1 >= MAX_عدد_RESV_REG) {
+                لکھو("Can't mark region 0x%"SEL4_PRIx_لفظ"-0x%"SEL4_PRIx_لفظ
                        " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-                       reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-                return false;
+                       reg.آغاز, reg.انتہا, (صحیح)MAX_عدد_RESV_REG);
+                واپس false;
             }
-            for (word_t j = ndks_boot.resv_count; j > i; j--) {
+            برائے (لفظ_t j = ndks_boot.resv_گنتی; j > i; j--) {
                 ndks_boot.reserved[j] = ndks_boot.reserved[j - 1];
             }
             /* insert the new region */
             ndks_boot.reserved[i] = reg;
-            ndks_boot.resv_count++;
-            return true;
+            ndks_boot.resv_گنتی++;
+            واپس true;
         }
     }
 
-    if (i + 1 == MAX_NUM_RESV_REG) {
-        printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
+    اگر (i + 1 == MAX_عدد_RESV_REG) {
+        لکھو("Can't mark region 0x%"SEL4_PRIx_لفظ"-0x%"SEL4_PRIx_لفظ
                " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-               reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-        return false;
+               reg.آغاز, reg.انتہا, (صحیح)MAX_عدد_RESV_REG);
+        واپس false;
     }
 
     ndks_boot.reserved[i] = reg;
-    ndks_boot.resv_count++;
+    ndks_boot.resv_گنتی++;
 
-    return true;
+    واپس true;
 }
 
-BOOT_CODE static bool_t insert_region(region_t reg)
+BOOT_رمز ساکن bool_t داخل_کرو_region(region_t reg)
 {
-    assert(reg.start <= reg.end);
-    if (is_reg_empty(reg)) {
-        return true;
+    أكد(reg.آغاز <= reg.انتہا);
+    اگر (is_reg_خالی_خانے(reg)) {
+        واپس true;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
-        if (is_reg_empty(ndks_boot.freemem[i])) {
-            reserve_region(pptr_to_paddr_reg(reg));
+    برائے (لفظ_t i = 0; i < ARRAY_سائز(ndks_boot.freemem); i++) {
+        اگر (is_reg_خالی_خانے(ndks_boot.freemem[i])) {
+            reserve_region(pptr_مقصد_paddr_reg(reg));
             ndks_boot.freemem[i] = reg;
-            return true;
+            واپس true;
         }
     }
 
@@ -138,184 +138,184 @@ BOOT_CODE static bool_t insert_region(region_t reg)
      * don't stop the boot process here, but return an error. The caller should
      * decide how bad this is.
      */
-    printf("no free memory slot left for [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
+    لکھو("no free memory slot left for [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ"),"
            " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
-           reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
+           reg.آغاز, reg.انتہا, (غیرعلامتی صحیح)MAX_عدد_FREEMEM_REG);
 
     /* For debug builds we consider this a fatal error. Rationale is, that the
      * caller does not check the error code at the moment, but just ignores any
      * failures silently. */
-    assert(0);
+    أكد(0);
 
-    return false;
+    واپس false;
 }
 
-BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
+BOOT_رمز ساکن pptr_t alloc_rootserver_obj(لفظ_t سائز_بٹ, لفظ_t n)
 {
-    pptr_t allocated = rootserver_mem.start;
+    pptr_t allocated = rootserver_mem.آغاز;
     /* allocated memory must be aligned */
-    assert(allocated % BIT(size_bits) == 0);
-    rootserver_mem.start += (n * BIT(size_bits));
+    أكد(allocated % ثنائی_ہندسہ(سائز_بٹ) == 0);
+    rootserver_mem.آغاز += (n * ثنائی_ہندسہ(سائز_بٹ));
     /* we must not have run out of memory */
-    assert(rootserver_mem.start <= rootserver_mem.end);
-    memzero((void *) allocated, n * BIT(size_bits));
-    return allocated;
+    أكد(rootserver_mem.آغاز <= rootserver_mem.انتہا);
+    memzero((خالی *) allocated, n * ثنائی_ہندسہ(سائز_بٹ));
+    واپس allocated;
 }
 
-BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
+BOOT_رمز ساکن لفظ_t rootserver_max_سائز_بٹ(لفظ_t extra_bi_سائز_بٹ)
 {
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
-    word_t max = MAX(cnode_size_bits, seL4_VSpaceBits);
-    return MAX(max, extra_bi_size_bits);
+    لفظ_t cnode_سائز_بٹ = CONFIG_جڑ_CNODE_سائز_بٹ + se_L4_خانہ_بٹ;
+    لفظ_t max = MAX(cnode_سائز_بٹ, se_L4_VSpace_بٹ);
+    واپس MAX(max, extra_bi_سائز_بٹ);
 }
 
-BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits)
+BOOT_رمز ساکن لفظ_t calculate_rootserver_سائز(v_region_t it_v_reg, لفظ_t extra_bi_سائز_بٹ)
 {
     /* work out how much memory we need for root server objects */
-    word_t size = BIT(CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits);
-    size += BIT(seL4_TCBBits); // root thread tcb
-    size += BIT(seL4_PageBits); // ipc buf
-    size += BIT(seL4_BootInfoFrameBits); // boot info
-    size += BIT(seL4_ASIDPoolBits);
-    size += extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0;
-    size += BIT(seL4_VSpaceBits); // root vspace
-#ifdef CONFIG_KERNEL_MCS
-    size += BIT(seL4_MinSchedContextBits); // root sched context
-#endif
+    لفظ_t سائز = ثنائی_ہندسہ(CONFIG_جڑ_CNODE_سائز_بٹ + se_L4_خانہ_بٹ);
+    سائز += ثنائی_ہندسہ(seL4_TCBBits); // root thread tcb
+    سائز += ثنائی_ہندسہ(se_L4_صفحہ_بٹ); // ipc buf
+    سائز += ثنائی_ہندسہ(se_L4_Boot_Info_چوکھٹا_بٹ); // boot info
+    سائز += ثنائی_ہندسہ(se_L4_ASIDPool_بٹ);
+    سائز += extra_bi_سائز_بٹ > 0 ? ثنائی_ہندسہ(extra_bi_سائز_بٹ) : 0;
+    سائز += ثنائی_ہندسہ(se_L4_VSpace_بٹ); // root vspace
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    سائز += ثنائی_ہندسہ(se_L4_Min_Sched_Context_بٹ); // root sched context
+#اگر_ختم
     /* for all archs, seL4_PageTable Bits is the size of all non top-level paging structures */
-    return size + arch_get_n_paging(it_v_reg) * BIT(seL4_PageTableBits);
+    واپس سائز + arch_get_n_paging(it_v_reg) * ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ);
 }
 
-BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi_size_bits)
+BOOT_رمز ساکن خالی maybe_alloc_extra_bi(لفظ_t cmp_سائز_بٹ, لفظ_t extra_bi_سائز_بٹ)
 {
-    if (extra_bi_size_bits >= cmp_size_bits && rootserver.extra_bi == 0) {
-        rootserver.extra_bi = alloc_rootserver_obj(extra_bi_size_bits, 1);
+    اگر (extra_bi_سائز_بٹ >= cmp_سائز_بٹ && rootserver.extra_bi == 0) {
+        rootserver.extra_bi = alloc_rootserver_obj(extra_bi_سائز_بٹ, 1);
     }
 }
 
 /* Create pptrs for all root server objects, starting at a give start address,
  * to cover the virtual memory region v_reg, and any extra boot info.
  */
-BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_reg,
-                                                word_t extra_bi_size_bits)
+BOOT_رمز ساکن خالی create_rootserver_objects(pptr_t آغاز, v_region_t it_v_reg,
+                                                لفظ_t extra_bi_سائز_بٹ)
 {
     /* the largest object the PD, the root cnode, or the extra boot info */
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
-    word_t max = rootserver_max_size_bits(extra_bi_size_bits);
+    لفظ_t cnode_سائز_بٹ = CONFIG_جڑ_CNODE_سائز_بٹ + se_L4_خانہ_بٹ;
+    لفظ_t max = rootserver_max_سائز_بٹ(extra_bi_سائز_بٹ);
 
-    word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
-    rootserver_mem.start = start;
-    rootserver_mem.end = start + size;
+    لفظ_t سائز = calculate_rootserver_سائز(it_v_reg, extra_bi_سائز_بٹ);
+    rootserver_mem.آغاز = آغاز;
+    rootserver_mem.انتہا = آغاز + سائز;
 
-    maybe_alloc_extra_bi(max, extra_bi_size_bits);
+    maybe_alloc_extra_bi(max, extra_bi_سائز_بٹ);
 
     /* the root cnode is at least 4k, so it could be larger or smaller than a pd. */
-#if (CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
-    rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
-    maybe_alloc_extra_bi(seL4_VSpaceBits, extra_bi_size_bits);
-    rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
-#else
-    rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
-    maybe_alloc_extra_bi(cnode_size_bits, extra_bi_size_bits);
-    rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
-#endif
+#اگر (CONFIG_جڑ_CNODE_سائز_بٹ + se_L4_خانہ_بٹ) > se_L4_VSpace_بٹ
+    rootserver.cnode = alloc_rootserver_obj(cnode_سائز_بٹ, 1);
+    maybe_alloc_extra_bi(se_L4_VSpace_بٹ, extra_bi_سائز_بٹ);
+    rootserver.vspace = alloc_rootserver_obj(se_L4_VSpace_بٹ, 1);
+#ورنہ
+    rootserver.vspace = alloc_rootserver_obj(se_L4_VSpace_بٹ, 1);
+    maybe_alloc_extra_bi(cnode_سائز_بٹ, extra_bi_سائز_بٹ);
+    rootserver.cnode = alloc_rootserver_obj(cnode_سائز_بٹ, 1);
+#اگر_ختم
 
     /* at this point we are up to creating 4k objects - which is the min size of
      * extra_bi so this is the last chance to allocate it */
-    maybe_alloc_extra_bi(seL4_PageBits, extra_bi_size_bits);
-    compile_assert(invalid_seL4_ASIDPoolBits, seL4_ASIDPoolBits == seL4_PageBits);
-    rootserver.asid_pool = alloc_rootserver_obj(seL4_ASIDPoolBits, 1);
-    rootserver.ipc_buf = alloc_rootserver_obj(seL4_PageBits, 1);
+    maybe_alloc_extra_bi(se_L4_صفحہ_بٹ, extra_bi_سائز_بٹ);
+    compile_assert(invalid_se_L4_ASIDPool_بٹ, se_L4_ASIDPool_بٹ == se_L4_صفحہ_بٹ);
+    rootserver.asid_pool = alloc_rootserver_obj(se_L4_ASIDPool_بٹ, 1);
+    rootserver.ipc_buf = alloc_rootserver_obj(se_L4_صفحہ_بٹ, 1);
     /* The boot info size must be at least one page. Due to the hard-coded order
      * of allocations used in the current implementation here, it can't be any
      * bigger.
      */
-    compile_assert(invalid_seL4_BootInfoFrameBits, seL4_BootInfoFrameBits == seL4_PageBits);
-    rootserver.boot_info = alloc_rootserver_obj(seL4_BootInfoFrameBits, 1);
+    compile_assert(invalid_se_L4_Boot_Info_چوکھٹا_بٹ, se_L4_Boot_Info_چوکھٹا_بٹ == se_L4_صفحہ_بٹ);
+    rootserver.boot_info = alloc_rootserver_obj(se_L4_Boot_Info_چوکھٹا_بٹ, 1);
 
     /* TCBs on aarch32 can be larger than page tables in certain configs */
-#if seL4_TCBBits >= seL4_PageTableBits
+#اگر seL4_TCBBits >= se_L4_صفحہ_جدول_بٹ
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
-#endif
+#اگر_ختم
 
     /* paging structures are 4k on every arch except aarch32 (1k) */
-    word_t n = arch_get_n_paging(it_v_reg);
-    rootserver.paging.start = alloc_rootserver_obj(seL4_PageTableBits, n);
-    rootserver.paging.end = rootserver.paging.start + n * BIT(seL4_PageTableBits);
+    لفظ_t n = arch_get_n_paging(it_v_reg);
+    rootserver.paging.آغاز = alloc_rootserver_obj(se_L4_صفحہ_جدول_بٹ, n);
+    rootserver.paging.انتہا = rootserver.paging.آغاز + n * ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ);
 
     /* for most archs, TCBs are smaller than page tables */
-#if seL4_TCBBits < seL4_PageTableBits
+#اگر seL4_TCBBits < se_L4_صفحہ_جدول_بٹ
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
-#endif
+#اگر_ختم
 
-#ifdef CONFIG_KERNEL_MCS
-    rootserver.sc = alloc_rootserver_obj(seL4_MinSchedContextBits, 1);
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    rootserver.sc = alloc_rootserver_obj(se_L4_Min_Sched_Context_بٹ, 1);
+#اگر_ختم
     /* we should have allocated all our memory */
-    assert(rootserver_mem.start == rootserver_mem.end);
+    أكد(rootserver_mem.آغاز == rootserver_mem.انتہا);
 }
 
-BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap)
+BOOT_رمز خالی write_خانہ(خانہ_ptr_t خانہ_ptr, cap_t cap)
 {
-    slot_ptr->cap = cap;
+    خانہ_ptr->cap = cap;
 
-    slot_ptr->cteMDBNode = nullMDBNode;
-    mdb_node_ptr_set_mdbRevocable(&slot_ptr->cteMDBNode, true);
-    mdb_node_ptr_set_mdbFirstBadged(&slot_ptr->cteMDBNode, true);
+    خانہ_ptr->cteMDBNode = nullMDBNode;
+    mdb_گرہ_ptr_سیٹ_mdb_Revocable(&خانہ_ptr->cteMDBNode, true);
+    mdb_گرہ_ptr_سیٹ_mdb_پہلا_Badged(&خانہ_ptr->cteMDBNode, true);
 }
 
 /* Our root CNode needs to be able to fit all the initial caps and not
  * cover all of memory.
  */
-compile_assert(root_cnode_size_valid,
-               CONFIG_ROOT_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= seL4_NumInitialCaps &&
-               CONFIG_ROOT_CNODE_SIZE_BITS >= (seL4_PageBits - seL4_SlotBits))
+compile_assert(جڑ_cnode_سائز_valid,
+               CONFIG_جڑ_CNODE_سائز_بٹ < 32 - se_L4_خانہ_بٹ &&
+               ثنائی_ہندسہ(CONFIG_جڑ_CNODE_سائز_بٹ) >= se_L4_عدد_Initial_Caps &&
+               CONFIG_جڑ_CNODE_سائز_بٹ >= (se_L4_صفحہ_بٹ - se_L4_خانہ_بٹ))
 
-BOOT_CODE cap_t
-create_root_cnode(void)
+BOOT_رمز cap_t
+create_جڑ_cnode(خالی)
 {
     cap_t cap = cap_cnode_cap_new(
-                    CONFIG_ROOT_CNODE_SIZE_BITS, /* radix */
-                    wordBits - CONFIG_ROOT_CNODE_SIZE_BITS, /* guard size */
+                    CONFIG_جڑ_CNODE_سائز_بٹ, /* radix */
+                    لفظ_بٹ - CONFIG_جڑ_CNODE_سائز_بٹ, /* guard size */
                     0, /* guard */
                     rootserver.cnode); /* pptr */
 
     /* write the root CNode cap into the root CNode */
-    write_slot(SLOT_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
+    write_خانہ(خانہ_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
 
-    return cap;
+    واپس cap;
 }
 
 /* Check domain scheduler assumptions. */
-compile_assert(num_domains_valid,
-               CONFIG_NUM_DOMAINS >= 1 && CONFIG_NUM_DOMAINS <= 256)
-compile_assert(num_priorities_valid,
-               CONFIG_NUM_PRIORITIES >= 1 && CONFIG_NUM_PRIORITIES <= 256)
+compile_assert(عدد_domains_valid,
+               CONFIG_عدد_DOMAINS >= 1 && CONFIG_عدد_DOMAINS <= 256)
+compile_assert(عدد_priorities_valid,
+               CONFIG_عدد_PRIORITIES >= 1 && CONFIG_عدد_PRIORITIES <= 256)
 
-BOOT_CODE void
-create_domain_cap(cap_t root_cnode_cap)
+BOOT_رمز خالی
+create_domain_cap(cap_t جڑ_cnode_cap)
 {
     cap_t cap = cap_domain_cap_new();
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapDomain), cap);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapDomain), cap);
 }
 
-BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_رمز cap_t create_ipcbuf_چوکھٹا_cap(cap_t جڑ_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
-    clearMemory((void *)rootserver.ipc_buf, PAGE_BITS);
+    clear_حافظہ((خالی *)rootserver.ipc_buf, صفحہ_بٹ);
 
     /* create a cap of it and write it into the root CNode */
-    cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
+    cap_t cap = create_mapped_it_چوکھٹا_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
 
-    return cap;
+    واپس cap;
 }
 
-BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_رمز خالی create_bi_چوکھٹا_cap(cap_t جڑ_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
     /* create a cap of it and write it into the root CNode */
-    cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapBootInfoFrame), cap);
+    cap_t cap = create_mapped_it_چوکھٹا_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), se_L4_Cap_Boot_Info_چوکھٹا), cap);
 }
 
 /**
@@ -327,311 +327,311 @@ BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vp
  *
  * which handles the 0-size case.
  */
-BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
+BOOT_رمز لفظ_t calculate_extra_bi_سائز_بٹ(لفظ_t extra_سائز)
 {
-    if (extra_size == 0) {
-        return 0;
+    اگر (extra_سائز == 0) {
+        واپس 0;
     }
 
-    word_t clzl_ret = clzl(ROUND_UP(extra_size, seL4_PageBits));
-    word_t msb = seL4_WordBits - 1 - clzl_ret;
+    لفظ_t clzl_ret = clzl(باری_اوپر(extra_سائز, se_L4_صفحہ_بٹ));
+    لفظ_t msb = se_L4_لفظ_بٹ - 1 - clzl_ret;
     /* If region is bigger than a page, make sure we overallocate rather than
      * underallocate
      */
-    if (extra_size > BIT(msb)) {
+    اگر (extra_سائز > ثنائی_ہندسہ(msb)) {
         msb++;
     }
-    return msb;
+    واپس msb;
 }
 
-BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
-                                 vptr_t ipcbuf_vptr, word_t extra_bi_size)
+BOOT_رمز خالی populate_bi_چوکھٹا(گرہ_id_t گرہ_id, لفظ_t عدد_nodes,
+                                 vptr_t ipcbuf_vptr, لفظ_t extra_bi_سائز)
 {
     /* clear boot info memory */
-    clearMemory((void *)rootserver.boot_info, seL4_BootInfoFrameBits);
-    if (extra_bi_size) {
-        clearMemory((void *)rootserver.extra_bi,
-                    calculate_extra_bi_size_bits(extra_bi_size));
+    clear_حافظہ((خالی *)rootserver.boot_info, se_L4_Boot_Info_چوکھٹا_بٹ);
+    اگر (extra_bi_سائز) {
+        clear_حافظہ((خالی *)rootserver.extra_bi,
+                    calculate_extra_bi_سائز_بٹ(extra_bi_سائز));
     }
 
     /* initialise bootinfo-related global state */
     seL4_BootInfo *bi = BI_PTR(rootserver.boot_info);
-    bi->nodeID = node_id;
-    bi->numNodes = num_nodes;
-    bi->numIOPTLevels = 0;
-    bi->ipcBuffer = (seL4_IPCBuffer *)ipcbuf_vptr;
-    bi->initThreadCNodeSizeBits = CONFIG_ROOT_CNODE_SIZE_BITS;
+    bi->گرہ_ID = گرہ_id;
+    bi->عدد_Nodes = عدد_nodes;
+    bi->عدد_IOPTLevels = 0;
+    bi->ipc_بفر = (seL4_IPCBuffer *)ipcbuf_vptr;
+    bi->init_Thread_CNode_سائز_بٹ = CONFIG_جڑ_CNODE_سائز_بٹ;
     bi->initThreadDomain = 0;
-    bi->extraLen = extra_bi_size;
+    bi->extraLen = extra_bi_سائز;
 
-    ndks_boot.bi_frame = bi;
-    ndks_boot.slot_pos_cur = seL4_NumInitialCaps;
+    ndks_boot.bi_چوکھٹا = bi;
+    ndks_boot.خانہ_pos_cur = se_L4_عدد_Initial_Caps;
 }
 
-BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap)
+BOOT_رمز bool_t provide_cap(cap_t جڑ_cnode_cap, cap_t cap)
 {
-    if (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
-        printf("ERROR: can't add another cap, all %"SEL4_PRIu_word
+    اگر (ndks_boot.خانہ_pos_cur >= ثنائی_ہندسہ(CONFIG_جڑ_CNODE_سائز_بٹ)) {
+        لکھو("ERROR: can't add another cap, all %"SEL4_PRIu_لفظ
                " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
-        return false;
+               ثنائی_ہندسہ(CONFIG_جڑ_CNODE_سائز_بٹ));
+        واپس false;
     }
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), ndks_boot.slot_pos_cur), cap);
-    ndks_boot.slot_pos_cur++;
-    return true;
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), ndks_boot.خانہ_pos_cur), cap);
+    ndks_boot.خانہ_pos_cur++;
+    واپس true;
 }
 
-BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
-    cap_t    root_cnode_cap,
+BOOT_رمز create_چوکھٹے_کا_region_ret_t create_چوکھٹے_کا_region(
+    cap_t    جڑ_cnode_cap,
     cap_t    pd_cap,
     region_t reg,
     bool_t   do_map,
-    sword_t  pv_offset
+    sword_t  pv_انحراف
 )
 {
     pptr_t     f;
-    cap_t      frame_cap;
-    seL4_SlotPos slot_pos_before;
-    seL4_SlotPos slot_pos_after;
+    cap_t      چوکھٹا_cap;
+    se_L4_خانہ_Pos خانہ_pos_before;
+    se_L4_خانہ_Pos خانہ_pos_after;
 
-    slot_pos_before = ndks_boot.slot_pos_cur;
+    خانہ_pos_before = ndks_boot.خانہ_pos_cur;
 
-    for (f = reg.start; f < reg.end; f += BIT(PAGE_BITS)) {
-        if (do_map) {
-            frame_cap = create_mapped_it_frame_cap(pd_cap, f, pptr_to_paddr((void *)(f - pv_offset)), IT_ASID, false, true);
-        } else {
-            frame_cap = create_unmapped_it_frame_cap(f, false);
+    برائے (f = reg.آغاز; f < reg.انتہا; f += ثنائی_ہندسہ(صفحہ_بٹ)) {
+        اگر (do_map) {
+            چوکھٹا_cap = create_mapped_it_چوکھٹا_cap(pd_cap, f, pptr_مقصد_paddr((خالی *)(f - pv_انحراف)), IT_ASID, false, true);
+        } ورنہ {
+            چوکھٹا_cap = create_unmapped_it_چوکھٹا_cap(f, false);
         }
-        if (!provide_cap(root_cnode_cap, frame_cap)) {
-            return (create_frames_of_region_ret_t) {
-                .region  = S_REG_EMPTY,
+        اگر (!provide_cap(جڑ_cnode_cap, چوکھٹا_cap)) {
+            واپس (create_چوکھٹے_کا_region_ret_t) {
+                .region  = S_REG_خالی_خانے,
                 .success = false
             };
         }
     }
 
-    slot_pos_after = ndks_boot.slot_pos_cur;
+    خانہ_pos_after = ndks_boot.خانہ_pos_cur;
 
-    return (create_frames_of_region_ret_t) {
-        .region = (seL4_SlotRegion) {
-            .start = slot_pos_before,
-            .end   = slot_pos_after
+    واپس (create_چوکھٹے_کا_region_ret_t) {
+        .region = (se_L4_خانہ_Region) {
+            .آغاز = خانہ_pos_before,
+            .انتہا   = خانہ_pos_after
         },
         .success = true
     };
 }
 
-BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
+BOOT_رمز cap_t create_it_asid_pool(cap_t جڑ_cnode_cap)
 {
-    cap_t ap_cap = cap_asid_pool_cap_new(ASID_HIGH(IT_ASID) << asidLowBits, rootserver.asid_pool);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
+    cap_t ap_cap = cap_asid_pool_cap_new(ASID_بلند(IT_ASID) << asid_کم_بٹ, rootserver.asid_pool);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
 
     /* create ASID control cap */
-    write_slot(
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapASIDControl),
+    write_خانہ(
+        خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapASIDControl),
         cap_asid_control_cap_new()
     );
 
-    return ap_cap;
+    واپس ap_cap;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+BOOT_رمز ساکن خالی configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
 {
     tcb->tcbSchedContext = sc_pptr;
     refill_new(tcb->tcbSchedContext, MIN_REFILLS, timeslice, 0);
     tcb->tcbSchedContext->scTcb = tcb;
 }
 
-BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
+BOOT_رمز bool_t init_sched_control(cap_t جڑ_cnode_cap, لفظ_t عدد_nodes)
 {
-    seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
+    se_L4_خانہ_Pos خانہ_pos_before = ndks_boot.خانہ_pos_cur;
 
     /* create a sched control cap for each core */
-    for (unsigned int i = 0; i < num_nodes; i++) {
-        if (!provide_cap(root_cnode_cap, cap_sched_control_cap_new(i))) {
-            printf("can't init sched_control for node %u, provide_cap() failed\n", i);
-            return false;
+    برائے (غیرعلامتی صحیح i = 0; i < عدد_nodes; i++) {
+        اگر (!provide_cap(جڑ_cnode_cap, cap_sched_control_cap_new(i))) {
+            لکھو("can't init sched_control for node %u, provide_cap() failed\n", i);
+            واپس false;
         }
     }
 
     /* update boot info with slot region for sched control caps */
-    ndks_boot.bi_frame->schedcontrol = (seL4_SlotRegion) {
-        .start = slot_pos_before,
-        .end = ndks_boot.slot_pos_cur
+    ndks_boot.bi_چوکھٹا->schedcontrol = (se_L4_خانہ_Region) {
+        .آغاز = خانہ_pos_before,
+        .انتہا = ndks_boot.خانہ_pos_cur
     };
 
-    return true;
+    واپس true;
 }
-#endif
+#اگر_ختم
 
-BOOT_CODE void create_idle_thread(void)
+BOOT_رمز خالی create_idle_thread(خالی)
 {
     pptr_t pptr;
 
-#ifdef ENABLE_SMP_SUPPORT
-    for (unsigned int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-#endif /* ENABLE_SMP_SUPPORT */
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
+    برائے (غیرعلامتی صحیح i = 0; i < CONFIG_MAX_عدد_NODES; i++) {
+#اگر_ختم /* ENABLE_SMP_SUPPORT */
         pptr = (pptr_t) &ksIdleThreadTCB[SMP_TERNARY(i, 0)];
-        NODE_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
-        configureIdleThread(NODE_STATE_ON_CORE(ksIdleThread, i));
-#ifdef CONFIG_DEBUG_BUILD
-        setThreadName(NODE_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
-#endif
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
-#ifdef CONFIG_KERNEL_MCS
-        configure_sched_context(NODE_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
+        گرہ_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_انحراف);
+        configureIdleThread(گرہ_STATE_ON_CORE(ksIdleThread, i));
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+        سیٹ_Thread_Name(گرہ_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
+#اگر_ختم
+        SMP_COND_STATEMENT(گرہ_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+        configure_sched_context(گرہ_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
                                 MAX_PERIOD_TICKS);
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
-        NODE_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
-#endif
-#ifdef ENABLE_SMP_SUPPORT
+        SMP_COND_STATEMENT(گرہ_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
+        گرہ_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
+#اگر_ختم
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
     }
-#endif /* ENABLE_SMP_SUPPORT */
+#اگر_ختم /* ENABLE_SMP_SUPPORT */
 }
 
-BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
+BOOT_رمز tcb_t *create_initial_thread(cap_t جڑ_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_اندراج, vptr_t bi_چوکھٹا_vptr,
                                        vptr_t ipcbuf_vptr, cap_t ipcbuf_cap)
 {
-    tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_OFFSET);
-#ifndef CONFIG_KERNEL_MCS
-    tcb->tcbTimeSlice = CONFIG_TIME_SLICE;
-#endif
+    tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_انحراف);
+#اگر_غیر_تعریف_شدہ CONFIG_KERNEL_MCS
+    tcb->tcb_وقت_قاش = CONFIG_وقت_قاش;
+#اگر_ختم
 
     Arch_initContext(&tcb->tcbArch.tcbContext);
 
     /* derive a copy of the IPC buffer cap for inserting */
-    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        printf("Failed to derive copy of IPC Buffer\n");
-        return NULL;
+    deriveCap_ret_t dc_ret = deriveCap(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
+    اگر (dc_ret.حالت_2 != EXCEPTION_NONE) {
+        لکھو("Failed to derive copy of IPC Buffer\n");
+        واپس تہی;
     }
 
     /* initialise TCB (corresponds directly to abstract specification) */
-    cteInsert(
-        root_cnode_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
-        SLOT_PTR(rootserver.tcb, tcbCTable)
+    cte_داخل_کرو(
+        جڑ_cnode_cap,
+        خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadCNode),
+        خانہ_PTR(rootserver.tcb, tcbCTable)
     );
-    cteInsert(
+    cte_داخل_کرو(
         it_pd_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
-        SLOT_PTR(rootserver.tcb, tcbVTable)
+        خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadVSpace),
+        خانہ_PTR(rootserver.tcb, tcbVTable)
     );
-    cteInsert(
+    cte_داخل_کرو(
         dc_ret.cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
-        SLOT_PTR(rootserver.tcb, tcbBuffer)
+        خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadIPCBuffer),
+        خانہ_PTR(rootserver.tcb, tcb_بفر)
     );
     tcb->tcbIPCBuffer = ipcbuf_vptr;
 
-    setRegister(tcb, capRegister, bi_frame_vptr);
-    setNextPC(tcb, ui_v_entry);
+    سیٹ_رجسٹر(tcb, cap_رجسٹر, bi_چوکھٹا_vptr);
+    سیٹ_اگلا_PC(tcb, ui_v_اندراج);
 
     /* initialise TCB */
-#ifdef CONFIG_KERNEL_MCS
-    configure_sched_context(tcb, SC_PTR(rootserver.sc), usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    configure_sched_context(tcb, SC_PTR(rootserver.sc), us_مقصد_Ticks(CONFIG_BOOT_THREAD_وقت_قاش * US_اندر_MS));
+#اگر_ختم
 
-    tcb->tcbPriority = seL4_MaxPrio;
+    tcb->tcb_ترجیح = seL4_MaxPrio;
     tcb->tcbMCP = seL4_MaxPrio;
     tcb->tcbDomain = 0;
-#ifndef CONFIG_KERNEL_MCS
-    setupReplyMaster(tcb);
-#endif
-    setThreadState(tcb, ThreadState_Running);
+#اگر_غیر_تعریف_شدہ CONFIG_KERNEL_MCS
+    تیاری_جواب_Master(tcb);
+#اگر_ختم
+    سیٹ_Thread_State(tcb, ThreadState_Running);
 
-#ifndef CONFIG_KERNEL_MCS
+#اگر_غیر_تعریف_شدہ CONFIG_KERNEL_MCS
     SMP_COND_STATEMENT(tcb->tcbAffinity = 0);
-#endif
+#اگر_ختم
 
     /* create initial thread's TCB cap */
     cap_t cap = cap_thread_cap_new(TCB_REF(tcb));
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadTCB), cap);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadTCB), cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), seL4_MinSchedContextBits);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadSC), cap);
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    setThreadName(tcb, "rootserver");
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), se_L4_Min_Sched_Context_بٹ);
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapInitThreadSC), cap);
+#اگر_ختم
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+    سیٹ_Thread_Name(tcb, "rootserver");
+#اگر_ختم
 
-    return tcb;
+    واپس tcb;
 }
 
-#ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-BOOT_CODE static bool_t hypervisor_present(void)
+#اگر_تعریف_شدہ ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
+BOOT_رمز ساکن bool_t hypervisor_present(خالی)
 {
-#ifdef CONFIG_ARCH_X86
+#اگر_تعریف_شدہ CONFIG_ARCH_X86
     uint32_t ebx = x86_cpuid_ebx(KVM_CPUID_SIGNATURE, 0);
     uint32_t ecx = x86_cpuid_ecx(KVM_CPUID_SIGNATURE, 0);
     uint32_t edx = x86_cpuid_edx(KVM_CPUID_SIGNATURE, 0);
 
-    if ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
+    اگر ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
         || (ebx == CPUID_TCG_EBX && ecx == CPUID_TCG_ECX && edx == CPUID_TCG_EDX)) {
-        return true;
+        واپس true;
     }
-#endif
-    return false;
+#اگر_ختم
+    واپس false;
 }
 
-BOOT_CODE void clock_sync_test(void)
+BOOT_رمز خالی clock_sync_test(خالی)
 {
     ticks_t t, t0;
-    ticks_t margin = usToTicks(CLOCK_SYNC_DELTA) + getTimerPrecision();
+    ticks_t margin = us_مقصد_Ticks(CLOCK_SYNC_DELTA) + getTimerPrecision();
 
-    assert(getCurrentCPUIndex() != 0);
-    t = NODE_STATE_ON_CORE(ksCurTime, 0);
-    do {
+    أكد(getCurrentCPUIndex() != 0);
+    t = گرہ_STATE_ON_CORE(ks_Cur_وقت, 0);
+    کرو {
         /* perform a memory acquire to get new values of ksCurTime */
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
-        t0 = NODE_STATE_ON_CORE(ksCurTime, 0);
-    } while (t0 == t);
-    t = getCurrentTime();
-    printf("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
-           (int)getCurrentCPUIndex(), t0, t, t - t0);
+        t0 = گرہ_STATE_ON_CORE(ks_Cur_وقت, 0);
+    } جب (t0 == t);
+    t = get_Current_وقت();
+    لکھو("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
+           (صحیح)getCurrentCPUIndex(), t0, t, t - t0);
     /*
      * The test does not consistently work if we are in a virtual machine (e.g
      * within QEMU) because the measurement cannot distinguish between
      * interrupted clock reads and out-of-sync clocks.
      */
-    if (hypervisor_present()) {
-        printf("clock_sync_test[%d]: disabled, detected running as VM\n", (int)getCurrentCPUIndex());
-    } else {
-        assert(t0 <= margin + t && t <= t0 + margin);
+    اگر (hypervisor_present()) {
+        لکھو("clock_sync_test[%d]: disabled, detected running as VM\n", (صحیح)getCurrentCPUIndex());
+    } ورنہ {
+        أكد(t0 <= margin + t && t <= t0 + margin);
     }
 }
-#endif
+#اگر_ختم
 
-BOOT_CODE void init_core_state(tcb_t *scheduler_action)
+BOOT_رمز خالی init_core_state(tcb_t *scheduler_action)
 {
-#ifdef CONFIG_HAVE_FPU
-    NODE_STATE(ksCurFPUOwner) = NULL;
-#endif
-#ifdef CONFIG_DEBUG_BUILD
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
+    گرہ_STATE(ksCurFPUOwner) = تہی;
+#اگر_ختم
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
     /* add initial threads to the debug queue */
-    NODE_STATE(ksDebugTCBs) = NULL;
-    if (scheduler_action != SchedulerAction_ResumeCurrentThread &&
-        scheduler_action != SchedulerAction_ChooseNewThread) {
+    گرہ_STATE(ksDebugTCBs) = تہی;
+    اگر (scheduler_action != SchedulerAction_ResumeCurrentThread &&
+        scheduler_action != Scheduler_Action_انتخاب_New_Thread) {
         tcbDebugAppend(scheduler_action);
     }
-    tcbDebugAppend(NODE_STATE(ksIdleThread));
-#endif
-    NODE_STATE(ksSchedulerAction) = scheduler_action;
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread->tcbSchedContext);
-    NODE_STATE(ksConsumed) = 0;
-    NODE_STATE(ksReprogram) = true;
-    NODE_STATE(ksReleaseQueue.head) = NULL;
-    NODE_STATE(ksReleaseQueue.end) = NULL;
-    NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+    tcbDebugAppend(گرہ_STATE(ksIdleThread));
+#اگر_ختم
+    گرہ_STATE(ksSchedulerAction) = scheduler_action;
+    گرہ_STATE(ksCurThread) = گرہ_STATE(ksIdleThread);
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    گرہ_STATE(ksCurSC) = گرہ_STATE(ksCurThread->tcbSchedContext);
+    گرہ_STATE(ksConsumed) = 0;
+    گرہ_STATE(ksReprogram) = true;
+    گرہ_STATE(ks_Release_قطار.سر) = تہی;
+    گرہ_STATE(ks_Release_قطار.انتہا) = تہی;
+    گرہ_STATE(ks_Cur_وقت) = get_Current_وقت();
+#اگر_ختم
     /* No need for NODE_STATE() as there is no SMP support for domains */
     ksCurDomain = 0;
-    ksDomainTime = DSCHED_MAX_DURATION;
-    ksDomSchedule[0] = dschedule_make(0, DSCHED_MAX_DURATION);
+    ks_Domain_وقت = DSCHED_MAX_DURATION;
+    ks_Dom_جدول_وقت[0] = dschedule_make(0, DSCHED_MAX_DURATION);
 }
 
 /**
@@ -645,9 +645,9 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
  * @return false if the pointer is definitely not in the kernel window, true
  *         otherwise.
  */
-BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
+BOOT_رمز ساکن bool_t pptr_اندر_kernel_کھڑکی(pptr_t pptr)
 {
-    return pptr >= PPTR_BASE && pptr < PPTR_TOP;
+    واپس pptr >= PPTR_بنیاد && pptr < PPTR_چوٹی;
 }
 
 /**
@@ -663,12 +663,12 @@ BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
  * @param first_untyped_slot next available slot in the boot info structure
  * @return true on success, false on failure
  */
-BOOT_CODE static bool_t provide_untyped_cap(
-    cap_t      root_cnode_cap,
-    bool_t     device_memory,
+BOOT_رمز ساکن bool_t provide_untyped_cap(
+    cap_t      جڑ_cnode_cap,
+    bool_t     device_حافظہ_2,
     pptr_t     pptr,
-    word_t     size_bits,
-    seL4_SlotPos first_untyped_slot
+    لفظ_t     سائز_بٹ,
+    se_L4_خانہ_Pos پہلا_untyped_خانہ
 )
 {
     bool_t ret;
@@ -678,49 +678,49 @@ BOOT_CODE static bool_t provide_untyped_cap(
        return failure if anything unexpected happens. */
 
     /* Bounds check for size parameter */
-    if (size_bits > seL4_MaxUntypedBits || size_bits < seL4_MinUntypedBits) {
-        printf("Kernel init: Invalid untyped size %"SEL4_PRIu_word"\n", size_bits);
-        return false;
+    اگر (سائز_بٹ > se_L4_Max_Untyped_بٹ || سائز_بٹ < se_L4_Min_Untyped_بٹ) {
+        لکھو("Kernel init: Invalid untyped size %"SEL4_PRIu_لفظ"\n", سائز_بٹ);
+        واپس false;
     }
 
     /* All cap ptrs must be aligned to object size */
-    if (!IS_ALIGNED(pptr, size_bits)) {
-        printf("Kernel init: Unaligned untyped pptr %p (alignment %"SEL4_PRIu_word")\n", (void *)pptr, size_bits);
-        return false;
+    اگر (!IS_ALIGNED(pptr, سائز_بٹ)) {
+        لکھو("Kernel init: Unaligned untyped pptr %p (alignment %"SEL4_PRIu_لفظ")\n", (خالی *)pptr, سائز_بٹ);
+        واپس false;
     }
 
     /* All cap ptrs apart from device untypeds must be in the kernel window. */
-    if (!device_memory && !pptr_in_kernel_window(pptr)) {
-        printf("Kernel init: Non-device untyped pptr %p outside kernel window\n",
-               (void *)pptr);
-        return false;
+    اگر (!device_حافظہ_2 && !pptr_اندر_kernel_کھڑکی(pptr)) {
+        لکھو("Kernel init: Non-device untyped pptr %p outside kernel window\n",
+               (خالی *)pptr);
+        واپس false;
     }
 
     /* Check that the end of the region is also in the kernel window, so we don't
        need to assume that the kernel window is aligned up to potentially
        seL4_MaxUntypedBits. */
-    if (!device_memory && !pptr_in_kernel_window(pptr + MASK(size_bits))) {
-        printf("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_word")\n",
-               (void *)pptr, size_bits);
-        return false;
+    اگر (!device_حافظہ_2 && !pptr_اندر_kernel_کھڑکی(pptr + نقاب(سائز_بٹ))) {
+        لکھو("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_لفظ")\n",
+               (خالی *)pptr, سائز_بٹ);
+        واپس false;
     }
 
-    word_t i = ndks_boot.slot_pos_cur - first_untyped_slot;
-    if (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
-        ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc) {
-            .paddr    = pptr_to_paddr((void *)pptr),
-            .sizeBits = size_bits,
-            .isDevice = device_memory,
+    لفظ_t i = ndks_boot.خانہ_pos_cur - پہلا_untyped_خانہ;
+    اگر (i < CONFIG_MAX_عدد_BOOTINFO_UNTYPED_CAPS) {
+        ndks_boot.bi_چوکھٹا->untypedList[i] = (seL4_UntypedDesc) {
+            .paddr    = pptr_مقصد_paddr((خالی *)pptr),
+            .سائز_بٹ_2 = سائز_بٹ,
+            .isDevice = device_حافظہ_2,
             .padding  = {0}
         };
-        ut_cap = cap_untyped_cap_new(MAX_FREE_INDEX(size_bits),
-                                     device_memory, size_bits, pptr);
-        ret = provide_cap(root_cnode_cap, ut_cap);
-    } else {
-        printf("Kernel init: Too many untyped regions for boot info\n");
+        ut_cap = cap_untyped_cap_new(MAX_FREE_اشاریہ(سائز_بٹ),
+                                     device_حافظہ_2, سائز_بٹ, pptr);
+        ret = provide_cap(جڑ_cnode_cap, ut_cap);
+    } ورنہ {
+        لکھو("Kernel init: Too many untyped regions for boot info\n");
         ret = true;
     }
-    return ret;
+    واپس ret;
 }
 
 /**
@@ -738,11 +738,11 @@ BOOT_CODE static bool_t provide_untyped_cap(
  * @param first_untyped_slot First available untyped boot info slot.
  * @return true on success, false on failure.
  */
-BOOT_CODE static bool_t create_untypeds_for_region(
-    cap_t      root_cnode_cap,
-    bool_t     device_memory,
+BOOT_رمز ساکن bool_t create_untypeds_for_region(
+    cap_t      جڑ_cnode_cap,
+    bool_t     device_حافظہ_2,
     region_t   reg,
-    seL4_SlotPos first_untyped_slot
+    se_L4_خانہ_Pos پہلا_untyped_خانہ
 )
 {
     /* This code works with regions that wrap (where end < start), because the loop cuts up the
@@ -751,72 +751,72 @@ BOOT_CODE static bool_t create_untypeds_for_region(
        [0..end) is not necessarily part of the kernel window (depending on the value of PPTR_BASE).
        This is fine for device untypeds. For normal untypeds, the region is assumed to be fully in
        the kernel window. This is not checked here. */
-    while (!is_reg_empty(reg)) {
+    جب (!is_reg_خالی_خانے(reg)) {
 
         /* Calculate the bit size of the region. This is also correct for end < start: it will
            return the correct size of the set [start..-1] union [0..end). This will then be too
            large for alignment, so the code further down will reduce the size. */
-        unsigned int size_bits = seL4_WordBits - 1 - clzl(reg.end - reg.start);
+        غیرعلامتی صحیح سائز_بٹ = se_L4_لفظ_بٹ - 1 - clzl(reg.انتہا - reg.آغاز);
         /* The size can't exceed the largest possible untyped size. */
-        if (size_bits > seL4_MaxUntypedBits) {
-            size_bits = seL4_MaxUntypedBits;
+        اگر (سائز_بٹ > se_L4_Max_Untyped_بٹ) {
+            سائز_بٹ = se_L4_Max_Untyped_بٹ;
         }
         /* The start address 0 satisfies any alignment needs, otherwise ensure
          * the region's bit size does not exceed the alignment of the region.
          */
-        if (0 != reg.start) {
-            unsigned int align_bits = ctzl(reg.start);
-            if (size_bits > align_bits) {
-                size_bits = align_bits;
+        اگر (0 != reg.آغاز) {
+            غیرعلامتی صحیح align_بٹ = ctzl(reg.آغاز);
+            اگر (سائز_بٹ > align_بٹ) {
+                سائز_بٹ = align_بٹ;
             }
         }
         /* Provide an untyped capability for the region only if it is large
          * enough to be retyped into objects later. Otherwise the region can't
          * be used anyway.
          */
-        if (size_bits >= seL4_MinUntypedBits) {
-            if (!provide_untyped_cap(root_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
-                return false;
+        اگر (سائز_بٹ >= se_L4_Min_Untyped_بٹ) {
+            اگر (!provide_untyped_cap(جڑ_cnode_cap, device_حافظہ_2, reg.آغاز, سائز_بٹ, پہلا_untyped_خانہ)) {
+                واپس false;
             }
         }
-        reg.start += BIT(size_bits);
+        reg.آغاز += ثنائی_ہندسہ(سائز_بٹ);
     }
-    return true;
+    واپس true;
 }
 
-BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
+BOOT_رمز bool_t create_untypeds(cap_t جڑ_cnode_cap)
 {
-    seL4_SlotPos first_untyped_slot = ndks_boot.slot_pos_cur;
+    se_L4_خانہ_Pos پہلا_untyped_خانہ = ndks_boot.خانہ_pos_cur;
 
-    paddr_t start = 0;
-    for (word_t i = 0; i < ndks_boot.resv_count; i++) {
-        if (start < ndks_boot.reserved[i].start) {
-            region_t reg = paddr_to_pptr_reg((p_region_t) {
-                start, ndks_boot.reserved[i].start
+    paddr_t آغاز = 0;
+    برائے (لفظ_t i = 0; i < ndks_boot.resv_گنتی; i++) {
+        اگر (آغاز < ndks_boot.reserved[i].آغاز) {
+            region_t reg = paddr_مقصد_pptr_reg((p_region_t) {
+                آغاز, ndks_boot.reserved[i].آغاز
             });
-            if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
-                printf("ERROR: creation of untypeds for device region #%u at"
-                       " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                       (unsigned int)i, reg.start, reg.end);
-                return false;
+            اگر (!create_untypeds_for_region(جڑ_cnode_cap, true, reg, پہلا_untyped_خانہ)) {
+                لکھو("ERROR: creation of untypeds for device region #%u at"
+                       " [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ") failed\n",
+                       (غیرعلامتی صحیح)i, reg.آغاز, reg.انتہا);
+                واپس false;
             }
         }
 
-        start = ndks_boot.reserved[i].end;
+        آغاز = ndks_boot.reserved[i].انتہا;
     }
 
-    if (start <= CONFIG_PADDR_USER_DEVICE_TOP - 1) {
-        region_t reg = paddr_to_pptr_reg((p_region_t) {
+    اگر (آغاز <= CONFIG_PADDR_USER_DEVICE_چوٹی - 1) {
+        region_t reg = paddr_مقصد_pptr_reg((p_region_t) {
             /* CONFIG_PADDR_USER_DEVICE_TOP cast to paddr_t can be 0.
              * create_untypeds_for_region() can deal with that correctly. */
-            start, (paddr_t) CONFIG_PADDR_USER_DEVICE_TOP
+            آغاز, (paddr_t) CONFIG_PADDR_USER_DEVICE_چوٹی
         });
 
-        if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
-            printf("ERROR: creation of untypeds for top device region"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                   reg.start, reg.end);
-            return false;
+        اگر (!create_untypeds_for_region(جڑ_cnode_cap, true, reg, پہلا_untyped_خانہ)) {
+            لکھو("ERROR: creation of untypeds for top device region"
+                   " [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ") failed\n",
+                   reg.آغاز, reg.انتہا);
+            واپس false;
         }
     }
 
@@ -824,90 +824,90 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
      * boot process. We can create UT objects for these frames, so the memory
      * can be reused.
      */
-    region_t boot_mem_reuse_reg = paddr_to_pptr_reg(get_p_reg_kernel_img_boot());
-    if (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
-        printf("ERROR: creation of untypeds for recycled boot memory"
-               " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-               boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
-        return false;
+    region_t boot_mem_reuse_reg = paddr_مقصد_pptr_reg(get_p_reg_kernel_img_boot());
+    اگر (!create_untypeds_for_region(جڑ_cnode_cap, false, boot_mem_reuse_reg, پہلا_untyped_خانہ)) {
+        لکھو("ERROR: creation of untypeds for recycled boot memory"
+               " [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ"] failed\n",
+               boot_mem_reuse_reg.آغاز, boot_mem_reuse_reg.انتہا);
+        واپس false;
     }
 
     /* convert remaining freemem into UT objects and provide the caps */
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
+    برائے (لفظ_t i = 0; i < ARRAY_سائز(ndks_boot.freemem); i++) {
         region_t reg = ndks_boot.freemem[i];
-        ndks_boot.freemem[i] = REG_EMPTY;
-        if (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
-            printf("ERROR: creation of untypeds for free memory region #%u at"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                   (unsigned int)i, reg.start, reg.end);
-            return false;
+        ndks_boot.freemem[i] = REG_خالی_خانے;
+        اگر (!create_untypeds_for_region(جڑ_cnode_cap, false, reg, پہلا_untyped_خانہ)) {
+            لکھو("ERROR: creation of untypeds for free memory region #%u at"
+                   " [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ") failed\n",
+                   (غیرعلامتی صحیح)i, reg.آغاز, reg.انتہا);
+            واپس false;
         }
     }
 
-    ndks_boot.bi_frame->untyped = (seL4_SlotRegion) {
-        .start = first_untyped_slot,
-        .end   = ndks_boot.slot_pos_cur
+    ndks_boot.bi_چوکھٹا->untyped = (se_L4_خانہ_Region) {
+        .آغاز = پہلا_untyped_خانہ,
+        .انتہا   = ndks_boot.خانہ_pos_cur
     };
 
-    return true;
+    واپس true;
 }
 
-BOOT_CODE void bi_finalise(void)
+BOOT_رمز خالی bi_finalise(خالی)
 {
 
-    if (rootserver.paging.start != rootserver.paging.end) {
-        printf("WARNING: internal book keeping error. Less pagetables allocated than predicted: "
-               "%ld page tables allocated but not used.\n", (rootserver.paging.end - rootserver.paging.start) >> seL4_PageTableBits);
+    اگر (rootserver.paging.آغاز != rootserver.paging.انتہا) {
+        لکھو("WARNING: internal book keeping error. Less pagetables allocated than predicted: "
+               "%ld page tables allocated but not used.\n", (rootserver.paging.انتہا - rootserver.paging.آغاز) >> se_L4_صفحہ_جدول_بٹ);
     }
 
-    ndks_boot.bi_frame->empty = (seL4_SlotRegion) {
-        .start = ndks_boot.slot_pos_cur,
-        .end   = BIT(CONFIG_ROOT_CNODE_SIZE_BITS)
+    ndks_boot.bi_چوکھٹا->خالی_خانے = (se_L4_خانہ_Region) {
+        .آغاز = ndks_boot.خانہ_pos_cur,
+        .انتہا   = ثنائی_ہندسہ(CONFIG_جڑ_CNODE_سائز_بٹ)
     };
 }
 
-BOOT_CODE static bool_t check_available_memory(word_t n_available,
-                                               const p_region_t *available)
+BOOT_رمز ساکن bool_t check_دستیاب_حافظہ(لفظ_t n_دستیاب,
+                                               ثابت p_region_t *دستیاب)
 {
     /* The system configuration is broken if no region is available. */
-    if (0 == n_available) {
-        printf("ERROR: no memory regions available\n");
-        return false;
+    اگر (0 == n_دستیاب) {
+        لکھو("ERROR: no memory regions available\n");
+        واپس false;
     }
 
-    printf("Available phys memory regions: %"SEL4_PRIu_word"\n", n_available);
+    لکھو("Available phys memory regions: %"SEL4_PRIu_لفظ"\n", n_دستیاب);
     /* Force ordering and exclusivity of available regions. */
-    for (word_t i = 0; i < n_available; i++) {
-        const p_region_t *r = &available[i];
-        printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
+    برائے (لفظ_t i = 0; i < n_دستیاب; i++) {
+        ثابت p_region_t *r = &دستیاب[i];
+        لکھو("  [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ")\n", r->آغاز, r->انتہا);
 
         /* Available regions must not wrap */
-        if (r->start > r->end) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+        اگر (r->آغاز > r->انتہا) {
+            لکھو("ERROR: memory region %"SEL4_PRIu_لفظ" has start > end\n", i);
+            واپس false;
         }
 
         /* Available regions must be non-empty. */
-        if (r->start == r->end) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" empty\n", i);
-            return false;
+        اگر (r->آغاز == r->انتہا) {
+            لکھو("ERROR: memory region %"SEL4_PRIu_لفظ" empty\n", i);
+            واپس false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
          * so the '==' case is fine. Directly adjacent regions are allowed.
          */
-        if ((i > 0) && (r->start < available[i - 1].end)) {
-            printf("ERROR: memory region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+        اگر ((i > 0) && (r->آغاز < دستیاب[i - 1].انتہا)) {
+            لکھو("ERROR: memory region %"SEL4_PRIu_لفظ" in wrong order\n", i);
+            واپس false;
         }
     }
 
-    return true;
+    واپس true;
 }
 
 /* We can't declare arrays on the stack, so this is space for init_avail_reg()
  * below to populate and init_freemem() to consume. */
-BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
+BOOT_BSS ساکن region_t avail_reg[MAX_عدد_FREEMEM_REG];
 
 /**
  * Initialise avail_reg with the parts of the available memory regions that are
@@ -920,211 +920,211 @@ BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
  * check_available_memory(). Returns the number of entries populated in
  * avail_reg.
  */
-BOOT_CODE static word_t init_avail_reg(word_t n_available,
-                                       const p_region_t *available)
+BOOT_رمز ساکن لفظ_t init_avail_reg(لفظ_t n_دستیاب,
+                                       ثابت p_region_t *دستیاب)
 {
-    word_t cnt = 0;
-    for (word_t i = 0; i < n_available; i++) {
-        const p_region_t *r = &available[i];
+    لفظ_t cnt = 0;
+    برائے (لفظ_t i = 0; i < n_دستیاب; i++) {
+        ثابت p_region_t *r = &دستیاب[i];
 
-        if ((r->start >= PADDR_TOP) || (r->end <= PADDR_BASE)) {
-            printf("  region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") is outside the kernel"
-                   " window, only potentially available as device untypeds\n", r->start, r->end);
-        } else {
+        اگر ((r->آغاز >= PADDR_چوٹی) || (r->انتہا <= PADDR_بنیاد)) {
+            لکھو("  region [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ") is outside the kernel"
+                   " window, only potentially available as device untypeds\n", r->آغاز, r->انتہا);
+        } ورنہ {
             p_region_t usable_reg = {
-                .start = MAX(r->start, PADDR_BASE),
-                .end   = MIN(r->end, PADDR_TOP)
+                .آغاز = MAX(r->آغاز, PADDR_بنیاد),
+                .انتہا   = MIN(r->انتہا, PADDR_چوٹی)
             };
 
-            if (cnt >= ARRAY_SIZE(avail_reg)) {
+            اگر (cnt >= ARRAY_سائز(avail_reg)) {
                 /* No space left in the array, seems MAX_NUM_FREEMEM_REG should
                  * be increased. Debug builds raise an assert here because this
                  * is likely a porting issue that should be looked into. Release
                  * builds will continue booting, but can't use this memory
                  * region. This might still be sufficient to run.
                  */
-                printf("  WARNING: cannot use region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
-                       " avail_reg[] is full\n", r->start, r->end);
-                assert(0);
-            } else {
-                avail_reg[cnt] = paddr_to_pptr_reg(usable_reg);
+                لکھو("  WARNING: cannot use region [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ"),"
+                       " avail_reg[] is full\n", r->آغاز, r->انتہا);
+                أكد(0);
+            } ورنہ {
+                avail_reg[cnt] = paddr_مقصد_pptr_reg(usable_reg);
                 cnt++;
             }
         }
     }
-    return cnt;
+    واپس cnt;
 }
 
 
-BOOT_CODE static bool_t check_reserved_memory(word_t n_reserved,
-                                              const region_t *reserved)
+BOOT_رمز ساکن bool_t check_reserved_حافظہ(لفظ_t n_reserved,
+                                              ثابت region_t *reserved)
 {
-    printf("Reserved virt address space regions: %"SEL4_PRIu_word"\n",
+    لکھو("Reserved virt address space regions: %"SEL4_PRIu_لفظ"\n",
            n_reserved);
     /* Force ordering and exclusivity of reserved regions. */
-    for (word_t i = 0; i < n_reserved; i++) {
-        const region_t *r = &reserved[i];
-        printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
+    برائے (لفظ_t i = 0; i < n_reserved; i++) {
+        ثابت region_t *r = &reserved[i];
+        لکھو("  [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ")\n", r->آغاز, r->انتہا);
 
         /* Reserved regions must be sane, the size is allowed to be zero. */
-        if (r->start > r->end) {
-            printf("ERROR: reserved region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+        اگر (r->آغاز > r->انتہا) {
+            لکھو("ERROR: reserved region %"SEL4_PRIu_لفظ" has start > end\n", i);
+            واپس false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
            so the == case is fine. Directly adjacent regions are allowed. */
-        if ((i > 0) && (r->start < reserved[i - 1].end)) {
-            printf("ERROR: reserved region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+        اگر ((i > 0) && (r->آغاز < reserved[i - 1].انتہا)) {
+            لکھو("ERROR: reserved region %"SEL4_PRIu_لفظ" in wrong order\n", i);
+            واپس false;
         }
     }
 
-    return true;
+    واپس true;
 }
 
 /**
  * Dynamically initialise the available memory on the platform.
  * A region represents an area of memory.
  */
-BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
-                              word_t n_reserved, const region_t *reserved,
-                              v_region_t it_v_reg, word_t extra_bi_size_bits)
+BOOT_رمز bool_t init_freemem(لفظ_t n_دستیاب, ثابت p_region_t *دستیاب,
+                              لفظ_t n_reserved, ثابت region_t *reserved,
+                              v_region_t it_v_reg, لفظ_t extra_bi_سائز_بٹ)
 {
-    if (!check_available_memory(n_available, available)) {
-        return false;
+    اگر (!check_دستیاب_حافظہ(n_دستیاب, دستیاب)) {
+        واپس false;
     }
 
     /* After here, avail_reg[0..n_available) are all regions within the kernel window. */
-    n_available = init_avail_reg(n_available, available);
-    if (0 == n_available) {
-        printf("ERROR: no available memory within the kernel window\n");
-        return false;
+    n_دستیاب = init_avail_reg(n_دستیاب, دستیاب);
+    اگر (0 == n_دستیاب) {
+        لکھو("ERROR: no available memory within the kernel window\n");
+        واپس false;
     }
 
-    if (!check_reserved_memory(n_reserved, reserved)) {
-        return false;
+    اگر (!check_reserved_حافظہ(n_reserved, reserved)) {
+        واپس false;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
-        ndks_boot.freemem[i] = REG_EMPTY;
+    برائے (لفظ_t i = 0; i < ARRAY_سائز(ndks_boot.freemem); i++) {
+        ndks_boot.freemem[i] = REG_خالی_خانے;
     }
 
-    word_t a = 0;
-    word_t r = 0;
+    لفظ_t a = 0;
+    لفظ_t r = 0;
     /* Now iterate through the available regions, removing any reserved regions. */
-    while (a < n_available && r < n_reserved) {
-        if (reserved[r].start == reserved[r].end) {
+    جب (a < n_دستیاب && r < n_reserved) {
+        اگر (reserved[r].آغاز == reserved[r].انتہا) {
             /* reserved region is empty - skip it */
             r++;
-        } else if (avail_reg[a].start >= avail_reg[a].end) {
+        } ورنہ اگر (avail_reg[a].آغاز >= avail_reg[a].انتہا) {
             /* skip the entire region - it's empty now after trimming */
             a++;
-        } else if (reserved[r].end <= avail_reg[a].start) {
+        } ورنہ اگر (reserved[r].انتہا <= avail_reg[a].آغاز) {
             /* the reserved region is below the available region - skip it */
-            reserve_region(pptr_to_paddr_reg(reserved[r]));
+            reserve_region(pptr_مقصد_paddr_reg(reserved[r]));
             r++;
-        } else if (reserved[r].start >= avail_reg[a].end) {
+        } ورنہ اگر (reserved[r].آغاز >= avail_reg[a].انتہا) {
             /* the reserved region is above the available region - take the whole thing */
-            insert_region(avail_reg[a]);
+            داخل_کرو_region(avail_reg[a]);
             a++;
-        } else {
+        } ورنہ {
             /* the reserved region overlaps with the available region */
-            if (reserved[r].start <= avail_reg[a].start) {
+            اگر (reserved[r].آغاز <= avail_reg[a].آغاز) {
                 /* the region overlaps with the start of the available region.
                  * trim start of the available region */
-                avail_reg[a].start = MIN(avail_reg[a].end, reserved[r].end);
+                avail_reg[a].آغاز = MIN(avail_reg[a].انتہا, reserved[r].انتہا);
                 /* do not increment reserved index here - there could be more overlapping regions */
-            } else {
-                assert(reserved[r].start < avail_reg[a].end);
+            } ورنہ {
+                أكد(reserved[r].آغاز < avail_reg[a].انتہا);
                 /* take the first chunk of the available region and move
                  * the start to the end of the reserved region */
                 region_t m = avail_reg[a];
-                m.end = reserved[r].start;
-                insert_region(m);
-                if (avail_reg[a].end > reserved[r].end) {
-                    avail_reg[a].start = reserved[r].end;
+                m.انتہا = reserved[r].آغاز;
+                داخل_کرو_region(m);
+                اگر (avail_reg[a].انتہا > reserved[r].انتہا) {
+                    avail_reg[a].آغاز = reserved[r].انتہا;
                     /* we could increment reserved index here, but it's more consistent with the
                      * other overlapping case if we don't */
-                } else {
+                } ورنہ {
                     a++;
                 }
             }
         }
     }
 
-    for (; r < n_reserved; r++) {
-        if (reserved[r].start < reserved[r].end) {
-            reserve_region(pptr_to_paddr_reg(reserved[r]));
+    برائے (; r < n_reserved; r++) {
+        اگر (reserved[r].آغاز < reserved[r].انتہا) {
+            reserve_region(pptr_مقصد_paddr_reg(reserved[r]));
         }
     }
 
     /* no more reserved regions - add the rest */
-    for (; a < n_available; a++) {
-        if (avail_reg[a].start < avail_reg[a].end) {
-            insert_region(avail_reg[a]);
+    برائے (; a < n_دستیاب; a++) {
+        اگر (avail_reg[a].آغاز < avail_reg[a].انتہا) {
+            داخل_کرو_region(avail_reg[a]);
         }
     }
 
     /* now try to fit the root server objects into a region */
-    int i = ARRAY_SIZE(ndks_boot.freemem) - 1;
-    if (!is_reg_empty(ndks_boot.freemem[i])) {
-        printf("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
-               (unsigned int)MAX_NUM_FREEMEM_REG);
-        return false;
+    صحیح i = ARRAY_سائز(ndks_boot.freemem) - 1;
+    اگر (!is_reg_خالی_خانے(ndks_boot.freemem[i])) {
+        لکھو("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
+               (غیرعلامتی صحیح)MAX_عدد_FREEMEM_REG);
+        واپس false;
     }
     /* skip any empty regions */
-    for (; i >= 0 && is_reg_empty(ndks_boot.freemem[i]); i--);
+    برائے (; i >= 0 && is_reg_خالی_خانے(ndks_boot.freemem[i]); i--);
 
     /* try to grab the last available p region to create the root server objects
      * from. If possible, retain any left over memory as an extra p region */
-    word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
-    word_t max = rootserver_max_size_bits(extra_bi_size_bits);
-    for (; i >= 0; i--) {
+    لفظ_t سائز = calculate_rootserver_سائز(it_v_reg, extra_bi_سائز_بٹ);
+    لفظ_t max = rootserver_max_سائز_بٹ(extra_bi_سائز_بٹ);
+    برائے (; i >= 0; i--) {
         /* Invariant: both i and (i + 1) are valid indices in ndks_boot.freemem. */
-        assert(i < ARRAY_SIZE(ndks_boot.freemem) - 1);
+        أكد(i < ARRAY_سائز(ndks_boot.freemem) - 1);
         /* Invariant; the region at index i is the current candidate.
          * Invariant: regions 0 up to (i - 1), if any, are additional candidates.
          * Invariant: region (i + 1) is empty. */
-        assert(is_reg_empty(ndks_boot.freemem[i + 1]));
+        أكد(is_reg_خالی_خانے(ndks_boot.freemem[i + 1]));
         /* Invariant: regions above (i + 1), if any, are empty or too small to use.
          * Invariant: all non-empty regions are ordered, disjoint and unallocated. */
 
         /* We make a fresh variable to index the known-empty region, because the
          * SimplExportAndRefine verification test has poor support for array
          * indices that are sums of variables and small constants. */
-        int empty_index = i + 1;
+        صحیح خالی_خانے_اشاریہ = i + 1;
 
         /* Try to take the top-most suitably sized and aligned chunk. */
-        pptr_t unaligned_start = ndks_boot.freemem[i].end - size;
-        pptr_t start = ROUND_DOWN(unaligned_start, max);
+        pptr_t unaligned_آغاز = ndks_boot.freemem[i].انتہا - سائز;
+        pptr_t آغاز = باری_نیچے_کو(unaligned_آغاز, max);
         /* if unaligned_start didn't underflow, and start fits in the region,
          * then we've found a region that fits the root server objects. */
-        if (unaligned_start <= ndks_boot.freemem[i].end
-            && start >= ndks_boot.freemem[i].start) {
-            create_rootserver_objects(start, it_v_reg, extra_bi_size_bits);
+        اگر (unaligned_آغاز <= ndks_boot.freemem[i].انتہا
+            && آغاز >= ndks_boot.freemem[i].آغاز) {
+            create_rootserver_objects(آغاز, it_v_reg, extra_bi_سائز_بٹ);
             /* There may be leftovers before and after the memory we used. */
             /* Shuffle the after leftover up to the empty slot (i + 1). */
-            ndks_boot.freemem[empty_index] = (region_t) {
-                .start = start + size,
-                .end = ndks_boot.freemem[i].end
+            ndks_boot.freemem[خالی_خانے_اشاریہ] = (region_t) {
+                .آغاز = آغاز + سائز,
+                .انتہا = ndks_boot.freemem[i].انتہا
             };
             /* Leave the before leftover in current slot i. */
-            ndks_boot.freemem[i].end = start;
+            ndks_boot.freemem[i].انتہا = آغاز;
             /* Regions i and (i + 1) are now well defined, ordered, disjoint,
              * and unallocated, so we can return successfully. */
-            return true;
+            واپس true;
         }
         /* Region i isn't big enough, so shuffle it up to slot (i + 1),
          * which we know is unused. */
-        ndks_boot.freemem[empty_index] = ndks_boot.freemem[i];
+        ndks_boot.freemem[خالی_خانے_اشاریہ] = ndks_boot.freemem[i];
         /* Now region i is unused, so make it empty to reestablish the invariant
          * for the next iteration (when it will be slot i + 1). */
-        ndks_boot.freemem[i] = REG_EMPTY;
+        ndks_boot.freemem[i] = REG_خالی_خانے;
     }
 
     /* We didn't find a big enough region. */
-    printf("ERROR: no free memory region is big enough for root server "
-           "objects, need size/alignment of 2^%"SEL4_PRIu_word"\n", max);
-    return false;
+    لکھو("ERROR: no free memory region is big enough for root server "
+           "objects, need size/alignment of 2^%"SEL4_PRIu_لفظ"\n", max);
+    واپس false;
 }

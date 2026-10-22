@@ -4,61 +4,61 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/failures.h>
-#include <kernel/cspace.h>
-#include <kernel/faulthandler.h>
-#include <kernel/thread.h>
-#include <machine/io.h>
-#include <arch/machine.h>
+#شامل <api/failures.h>
+#شامل <kernel/cspace.h>
+#شامل <kernel/faulthandler.h>
+#شامل <kernel/thread.h>
+#شامل <machine/io.h>
+#شامل <arch/machine.h>
 
-#ifdef CONFIG_KERNEL_MCS
-void handleFault(tcb_t *tptr)
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+خالی handleFault(tcb_t *tptr)
 {
     cap_t faultHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap;
-    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
+    bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != تہی);
+    اگر (!hasFaultHandler) {
         handleNoFaultHandler(tptr);
     }
 }
 
-void handleTimeout(tcb_t *tptr)
+خالی handleTimeout(tcb_t *tptr)
 {
-    assert(validTimeoutHandler(tptr));
+    أكد(validTimeoutHandler(tptr));
     cap_t timeoutHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbTimeoutHandler)->cap;
     sendFaultIPC(tptr, timeoutHandlerCap, false);
 }
 
 bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 {
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap) {
-        assert(validFaultHandler(handlerCap));
+    اگر (cap_get_capType(handlerCap) == cap_endpoint_cap) {
+        أكد(validFaultHandler(handlerCap));
 
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        اگر (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = current_lookup_fault;
         }
         sendIPC(true, false,
                 cap_endpoint_cap_get_capEPBadge(handlerCap),
                 cap_endpoint_cap_get_capCanGrant(handlerCap),
-                cap_endpoint_cap_get_capCanGrantReply(handlerCap),
+                cap_endpoint_cap_get_cap_Can_Grant_جواب(handlerCap),
                 can_donate, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return true;
-    } else {
-        assert(cap_get_capType(handlerCap) == cap_null_cap);
-        return false;
+        واپس true;
+    } ورنہ {
+        أكد(cap_get_capType(handlerCap) == cap_null_cap);
+        واپس false;
     }
 }
-#else
+#ورنہ
 
-void handleFault(tcb_t *tptr)
+خالی handleFault(tcb_t *tptr)
 {
-    exception_t status;
+    exception_t حالت_2;
     seL4_Fault_t fault = current_fault;
 
-    status = sendFaultIPC(tptr);
-    if (status != EXCEPTION_NONE) {
+    حالت_2 = sendFaultIPC(tptr);
+    اگر (حالت_2 != EXCEPTION_NONE) {
         handleDoubleFault(tptr, fault);
     }
 }
@@ -74,18 +74,18 @@ exception_t sendFaultIPC(tcb_t *tptr)
 
     handlerCPtr = tptr->tcbFaultHandler;
     lu_ret = lookupCap(tptr, handlerCPtr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-        return EXCEPTION_FAULT;
+        واپس EXCEPTION_FAULT;
     }
     handlerCap = lu_ret.cap;
 
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
+    اگر (cap_get_capType(handlerCap) == cap_endpoint_cap &&
         cap_endpoint_cap_get_capCanSend(handlerCap) &&
         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
-         cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
+         cap_endpoint_cap_get_cap_Can_Grant_جواب(handlerCap))) {
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        اگر (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = original_lookup_fault;
         }
         sendIPC(true, true,
@@ -93,81 +93,81 @@ exception_t sendFaultIPC(tcb_t *tptr)
                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return EXCEPTION_NONE;
-    } else {
+        واپس EXCEPTION_NONE;
+    } ورنہ {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
         current_lookup_fault = lookup_fault_missing_capability_new(0);
 
-        return EXCEPTION_FAULT;
+        واپس EXCEPTION_FAULT;
     }
 }
-#endif
+#اگر_ختم
 
-#ifdef CONFIG_PRINTING
-static void print_fault(seL4_Fault_t f)
+#اگر_تعریف_شدہ CONFIG_PRINTING
+ساکن خالی print_fault(seL4_Fault_t f)
 {
-    switch (seL4_Fault_get_seL4_FaultType(f)) {
-    case seL4_Fault_NullFault:
-        printf("null fault");
-        break;
-    case seL4_Fault_CapFault:
-        printf("cap fault in %s phase at address %p",
-               seL4_Fault_CapFault_get_inReceivePhase(f) ? "receive" : "send",
-               (void *)seL4_Fault_CapFault_get_address(f));
-        break;
-    case seL4_Fault_VMFault:
-        printf("vm fault on %s at address %p with status %p",
+    انتخاب (seL4_Fault_get_seL4_FaultType(f)) {
+    حالت seL4_Fault_NullFault:
+        لکھو("null fault");
+        توڑو;
+    حالت seL4_Fault_CapFault:
+        لکھو("cap fault in %s phase at address %p",
+               se_L4_Fault_Cap_Fault_get_اندر_Receive_Phase(f) ? "receive" : "send",
+               (خالی *)se_L4_Fault_Cap_Fault_get_پتہ(f));
+        توڑو;
+    حالت seL4_Fault_VMFault:
+        لکھو("vm fault on %s at address %p with status %p",
                seL4_Fault_VMFault_get_instructionFault(f) ? "code" : "data",
-               (void *)seL4_Fault_VMFault_get_address(f),
-               (void *)seL4_Fault_VMFault_get_FSR(f));
-        break;
-    case seL4_Fault_UnknownSyscall:
-        printf("unknown syscall %p",
-               (void *)seL4_Fault_UnknownSyscall_get_syscallNumber(f));
-        break;
-    case seL4_Fault_UserException:
-        printf("user exception %p code %p",
-               (void *)seL4_Fault_UserException_get_number(f),
-               (void *)seL4_Fault_UserException_get_code(f));
-        break;
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        printf("Timeout fault for 0x%x\n", (unsigned int) seL4_Fault_Timeout_get_badge(f));
-        break;
-#endif
-    default:
-        printf("unknown fault");
-        break;
+               (خالی *)se_L4_Fault_VMFault_get_پتہ(f),
+               (خالی *)seL4_Fault_VMFault_get_FSR(f));
+        توڑو;
+    حالت seL4_Fault_UnknownSyscall:
+        لکھو("unknown syscall %p",
+               (خالی *)se_L4_Fault_Unknown_Syscall_get_syscall_نمبر(f));
+        توڑو;
+    حالت seL4_Fault_UserException:
+        لکھو("user exception %p code %p",
+               (خالی *)se_L4_Fault_User_Exception_get_نمبر(f),
+               (خالی *)se_L4_Fault_User_Exception_get_رمز(f));
+        توڑو;
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    حالت seL4_Fault_Timeout:
+        لکھو("Timeout fault for 0x%x\n", (غیرعلامتی صحیح) seL4_Fault_Timeout_get_badge(f));
+        توڑو;
+#اگر_ختم
+    طےشدہ:
+        لکھو("unknown fault");
+        توڑو;
     }
 }
-#endif
+#اگر_ختم
 
-#ifdef CONFIG_KERNEL_MCS
-void handleNoFaultHandler(tcb_t *tptr)
-#else
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+خالی handleNoFaultHandler(tcb_t *tptr)
+#ورنہ
 /* The second fault, ex2, is stored in the global current_fault */
-void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
-#endif
+خالی handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
+#اگر_ختم
 {
-#ifdef CONFIG_PRINTING
-#ifdef CONFIG_KERNEL_MCS
-    printf("Found thread has no fault handler while trying to handle:\n");
+#اگر_تعریف_شدہ CONFIG_PRINTING
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    لکھو("Found thread has no fault handler while trying to handle:\n");
     print_fault(current_fault);
-#else
+#ورنہ
     seL4_Fault_t ex2 = current_fault;
-    printf("Caught ");
+    لکھو("Caught ");
     print_fault(ex2);
-    printf("\nwhile trying to handle:\n");
+    لکھو("\nwhile trying to handle:\n");
     print_fault(ex1);
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    printf("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+    لکھو("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
+#اگر_ختم /* CONFIG_DEBUG_BUILD */
 
-    printf("at address %p\n", (void *)getRestartPC(tptr));
-    printf("With stack:\n");
-    Arch_userStackTrace(tptr);
-#endif
+    لکھو("at address %p\n", (خالی *)getRestartPC(tptr));
+    لکھو("With stack:\n");
+    Arch_user_ڈھیر_Trace(tptr);
+#اگر_ختم
 
-    setThreadState(tptr, ThreadState_Inactive);
+    سیٹ_Thread_State(tptr, ThreadState_Inactive);
 }

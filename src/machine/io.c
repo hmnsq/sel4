@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#شامل <config.h>
+#شامل <machine/io.h>
 
-#ifdef CONFIG_PRINTING
+#اگر_تعریف_شدہ CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#شامل <stdarg.h>
+#شامل <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,40 +24,40 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+قسمتعریف ساخت برآمد_wrap_t  برآمد_wrap_t_2;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+قسمتعریف خالی (*برآمد_write_fn)(برآمد_wrap_t_2 *برآمد, ثابت حرف *buf, لفظ_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
-    word_t used;
+ساخت برآمد_wrap_t {
+    ثابت برآمد_write_fn اكتب;
+    حرف *ثابت buf;
+    ثابت لفظ_t maxlen;
+    لفظ_t مستعمل_2;
 };
 
 /* printf_core() and its helpers call this to actually output something. The
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+ساکن خالی برآمد(برآمد_wrap_t_2 *برآمد_wrap, ثابت حرف *buf, لفظ_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    اگر (برآمد_wrap) {
+        برآمد_wrap->اكتب(برآمد_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
-    UNUSED out_wrap_t *out,
-    const char *buf,
-    word_t len)
+ساکن خالی do_output_مقصد_putchar(
+    غیر_مستعمل برآمد_wrap_t_2 *برآمد,
+    ثابت حرف *buf,
+    لفظ_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
-            putchar(*buf++);
+    اگر (buf) {
+        جب (len-- > 0) {
+            حرف_لکھو(*buf++);
         }
     }
 }
@@ -65,21 +65,21 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
-    out_wrap_t *out,
-    const char *buf,
-    word_t len)
+ساکن خالی do_output_مقصد_بفر(
+    برآمد_wrap_t_2 *برآمد,
+    ثابت حرف *buf,
+    لفظ_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    اگر (buf && (برآمد->مستعمل_2 < برآمد->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        لفظ_t آزاد = برآمد->maxlen - برآمد->مستعمل_2;
+        اگر (len > آزاد) {
+            len = آزاد;
         }
-        memcpy(&out->buf[out->used], buf, len);
-        out->used += len;
+        حافظہ_نقل(&برآمد->buf[برآمد->مستعمل_2], buf, len);
+        برآمد->مستعمل_2 += len;
     }
 }
 
@@ -89,31 +89,31 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+ساکن اندرونی bool_t ہندسہ_ہے(حرف c)
 {
-    return c >= '0' &&
+    واپس c >= '0' &&
            c <= '9';
 }
 
 /* Convenient bit representation for modifier flags, which all fall within 31
  * codepoints of the space character.
  */
-#define MASK_TYPE(a) (1U<<( a -' '))
+#تعریف_کرو نقاب_TYPE(a) (1U<<( a -' '))
 
-#define ALT_FORM     (1U<<('#'-' '))
-#define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
-#define PAD_POS      (1U<<(' '-' '))
-#define MARK_POS     (1U<<('+'-' '))
-#define GROUPED      (1U<<('\''-' '))
+#تعریف_کرو ALT_FORM     (1U<<('#'-' '))
+#تعریف_کرو ZERO_PAD     (1U<<('0'-' '))
+#تعریف_کرو بایاں_ADJ     (1U<<('-'-' '))
+#تعریف_کرو PAD_POS      (1U<<(' '-' '))
+#تعریف_کرو MARK_POS     (1U<<('+'-' '))
+#تعریف_کرو GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#تعریف_کرو FLAGMASK (ALT_FORM|ZERO_PAD|بایاں_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+شمار {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -121,17 +121,17 @@ enum {
     LONG, ULONG,
     SHORT, USHORT, CHAR, UCHAR,
     WORDT, LLONG,
-#define IMAX LLONG
-#define UMAX ULLONG
-#define PDIFF LONG
-#define UIPTR ULONG
+#تعریف_کرو IMAX LLONG
+#تعریف_کرو UMAX ULLONG
+#تعریف_کرو PDIFF LONG
+#تعریف_کرو UIPTR ULONG
     NOARG,
     MAXSTATE
 };
 
-#define S(x) [(x)-'A']
+#تعریف_کرو S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+ساکن ثابت غیرعلامتی حرف حالتیں[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -174,95 +174,95 @@ static const unsigned char states[]['z' - 'A' + 1] = {
     }
 };
 
-#define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
-#define DIGIT(c) (c - '0')
+#تعریف_کرو OOB(x) ((غیرعلامتی)(x)-'A' > 'z'-'A')
+#تعریف_کرو DIGIT(c) (c - '0')
 
-union arg {
+اتحاد arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    طویل دوہرا f;
+    خالی *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+ساکن خالی نکالو_arg(اتحاد arg *arg, صحیح type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
-        arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
-        arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
-        arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
-        arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
-        arg->i = va_arg(*ap, word_t);
+    انتخاب (type) {
+    حالت PTR:
+        arg->p = va_arg(*ap, خالی *);
+        توڑو;
+    حالت INT:
+        arg->i = va_arg(*ap, صحیح);
+        توڑو;
+    حالت UINT:
+        arg->i = va_arg(*ap, غیرعلامتی صحیح);
+        توڑو;
+    حالت LONG:
+        arg->i = va_arg(*ap, طویل);
+        توڑو;
+    حالت ULONG:
+        arg->i = va_arg(*ap, غیرعلامتی طویل);
+        توڑو;
+    حالت LLONG:
+        arg->i = va_arg(*ap, طویل طویل);
+        توڑو;
+    حالت ULLONG:
+        arg->i = va_arg(*ap, غیرعلامتی طویل طویل);
+        توڑو;
+    حالت SHORT:
+        arg->i = (مختصر)va_arg(*ap, صحیح);
+        توڑو;
+    حالت USHORT:
+        arg->i = (غیرعلامتی مختصر)va_arg(*ap, صحیح);
+        توڑو;
+    حالت CHAR:
+        arg->i = (علامتی حرف)va_arg(*ap, صحیح);
+        توڑو;
+    حالت UCHAR:
+        arg->i = (غیرعلامتی حرف)va_arg(*ap, صحیح);
+        توڑو;
+    حالت WORDT:
+        arg->i = va_arg(*ap, لفظ_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+ساکن خالی pad(برآمد_wrap_t_2 *f, حرف c, صحیح w, صحیح l, صحیح fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    حرف pad[32]; /* good enough for what the kernel prints */
+    اگر (fl & (بایاں_ADJ | ZERO_PAD) || l >= w) {
+        واپس;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > حجم(pad) ? حجم(pad) : l);
+    برائے (; l >= حجم(pad); l -= حجم(pad)) {
+        برآمد(f, pad, حجم(pad));
     }
-    out(f, pad, l);
+    برآمد(f, pad, l);
 }
 
-static const char xdigits[16] = {
+ساکن ثابت حرف xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+ساکن حرف *fmt_x(uintmax_t x, حرف *s, صحیح زیریں)
 {
-    for (; x; x >>= 4) {
-        *--s = xdigits[(x & 15)] | lower;
+    برائے (; x; x >>= 4) {
+        *--s = xdigits[(x & 15)] | زیریں;
     }
-    return s;
+    واپس s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+ساکن حرف *fmt_o(uintmax_t x, حرف *s)
 {
-    for (; x; x >>= 3) {
+    برائے (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    واپس s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+ساکن حرف *fmt_u(uintmax_t x, حرف *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    جب (0 != x) {
+#اگر defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,332 +277,332 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        غیرعلامتی صحیح rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        اگر (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            أكد(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#ورنہ
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
-#endif
+        غیرعلامتی صحیح rem = x % 10;
+#اگر_ختم
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    واپس s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
  * reduced/removed if we could measure the buf length under all code paths
  */
-#define LDBL_MANT_DIG 113
+#تعریف_کرو LDBL_MANT_DIG 113
 
-#define NL_ARGMAX 9
+#تعریف_کرو NL_ARGMAX 9
 
-static int getint(char **s)
+ساکن صحیح getint(حرف **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    صحیح i;
+    برائے (i = 0; ہندسہ_ہے(**s); (*s)++) {
+        اگر (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } ورنہ {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    واپس i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+ساکن صحیح printf_core(برآمد_wrap_t_2 *f, ثابت حرف *fmt, va_list *ap, اتحاد arg *nl_arg, صحیح *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
-    unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
-    unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    حرف *a, *z, *s = (حرف *)fmt;
+    غیرعلامتی l10n = 0, fl;
+    صحیح w, p, xp;
+    اتحاد arg arg;
+    صحیح argpos;
+    غیرعلامتی st, ps;
+    صحیح cnt = 0, l = 0;
+    حرف buf[حجم(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    ثابت حرف *سابقہ;
+    صحیح t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    برائے (;;) {
+        اگر (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            واپس -1; /*حد_سے_تجاوز*/
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        اگر (!*s) {
+            توڑو;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        برائے (a = s; *s && *s != '%'; s++);
+        برائے (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        اگر (z - a > INTMAX_MAX - cnt) {
+            واپس -1; /*حد_سے_تجاوز*/
         }
         l = z - a;
-        out(f, a, l);
-        if (l) {
-            continue;
+        برآمد(f, a, l);
+        اگر (l) {
+            جاری;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        اگر (ہندسہ_ہے(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } ورنہ {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
-            fl |= MASK_TYPE(*s);
+        برائے (fl = 0; (غیرعلامتی)*s - ' ' < 32 && (FLAGMASK & نقاب_TYPE(*s)); s++) {
+            fl |= نقاب_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        اگر (*s == '*') {
+            اگر (ہندسہ_ہے(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } ورنہ اگر (!l10n) {
+                w = f ? va_arg(*ap, صحیح) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } ورنہ {
+                واپس -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            اگر (w < 0) {
+                fl |= بایاں_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } ورنہ اگر ((w = getint(&s)) < 0) {
+            واپس -1; /*حد_سے_تجاوز*/
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        اگر (*s == '.' && s[1] == '*') {
+            اگر (ہندسہ_ہے(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } ورنہ اگر (!l10n) {
+                p = f ? va_arg(*ap, صحیح) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } ورنہ {
+                واپس -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } ورنہ اگر (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } ورنہ {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        کرو {
+            اگر (OOB(*s)) {
+                واپس -1; /* invalid */
             }
             ps = st;
-            st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+            st = حالتیں[st]S(*s++);
+        } جب (st - 1 < STOP);
+        اگر (!st) {
+            واپس -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        اگر (st == NOARG) {
+            اگر (argpos >= 0) {
+                واپس -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } ورنہ {
+            اگر (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } ورنہ اگر (f) {
+                نکالو_arg(&arg, st, ap);
+            } ورنہ {
+                واپس 0;
             }
         }
 
-        if (!f) {
-            continue;
+        اگر (!f) {
+            جاری;
         }
 
-        z = buf + sizeof(buf);
-        prefix = "-+   0X0x";
+        z = buf + حجم(buf);
+        سابقہ = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        اگر (fl & بایاں_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        اگر (t == 'n') {
+            اگر (!arg.p) {
+                جاری;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
-                *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
-                *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
-                *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
-                *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
-                *(word_t *)arg.p = cnt;
-                break;
+            انتخاب (ps) {
+            حالت BARE:
+                *(صحیح *)arg.p = cnt;
+                توڑو;
+            حالت LPRE:
+                *(طویل *)arg.p = cnt;
+                توڑو;
+            حالت LLPRE:
+                *(طویل طویل *)arg.p = cnt;
+                توڑو;
+            حالت HPRE:
+                *(غیرعلامتی مختصر *)arg.p = cnt;
+                توڑو;
+            حالت HHPRE:
+                *(غیرعلامتی حرف *)arg.p = cnt;
+                توڑو;
+            حالت ZTPRE:
+                *(لفظ_t *)arg.p = cnt;
+                توڑو;
+            حالت JPRE:
+                *(لفظ_t *)arg.p = cnt;
+                توڑو;
             }
-            continue;
-        } else if (t == 'c') {
+            جاری;
+        } ورنہ اگر (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } ورنہ اگر (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            اگر (p < 0 && *z) {
+                واپس -1; /*حد_سے_تجاوز*/
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } ورنہ {
+            انتخاب (t) {
+            حالت 'p':
+                p = MAX(p, 2 * حجم(خالی *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            حالت 'x':
+            حالت 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
-                    prefix += (t >> 4);
+                اگر (arg.i && (fl & ALT_FORM)) {
+                    سابقہ += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                توڑو;
+            حالت 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                اگر ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                توڑو;
+            حالت 'd':
+            حالت 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                اگر (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
-                    prefix++;
-                } else if (fl & PAD_POS) {
-                    prefix += 2;
-                } else {
+                } ورنہ اگر (fl & MARK_POS) {
+                    سابقہ++;
+                } ورنہ اگر (fl & PAD_POS) {
+                    سابقہ += 2;
+                } ورنہ {
                     pl = 0;
                 }
-            case 'u':
+            حالت 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                توڑو;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            اگر (xp && p < 0) {
+                واپس -1; /*حد_سے_تجاوز*/
             }
-            if (xp) {
+            اگر (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            اگر (!arg.i && !p) {
                 a = z;
-            } else {
+            } ورنہ {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        اگر (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        اگر (p > INTMAX_MAX - pl) {
+            واپس -1; /*حد_سے_تجاوز*/
         }
-        if (w < pl + p) {
+        اگر (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        اگر (w > INTMAX_MAX - cnt) {
+            واپس -1; /*حد_سے_تجاوز*/
         }
 
         pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
+        برآمد(f, سابقہ, pl);
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        برآمد(f, a, z - a);
+        pad(f, ' ', w, pl + p, fl ^ بایاں_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    اگر (f) {
+        واپس cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    اگر (!l10n) {
+        واپس 0;
     }
 
-    return 1;
+    صحیح i;
+    برائے (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        نکالو_arg(nl_arg + i, nl_type[i], ap);
+    }
+    برائے (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    اگر (i <= NL_ARGMAX) {
+        واپس -1; /* invalid */
+    }
+
+    واپس 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+ساکن صحیح vprintf(برآمد_wrap_t_2 *برآمد, ثابت حرف *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    صحیح nl_type[NL_ARGMAX + 1] = {0};
+    اتحاد arg nl_arg[NL_ARGMAX + 1];
+    صحیح ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
-        va_end(ap2);
-        return -1;
+    اگر (printf_core(تہی, fmt, &ap2, nl_arg, nl_type) < 0) {
+        va_انتہا(ap2);
+        واپس -1;
     }
 
-    ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
-    va_end(ap2);
-    return ret;
+    ret = printf_core(برآمد, fmt, &ap2, nl_arg, nl_type);
+    va_انتہا(ap2);
+    واپس ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+صحیح impl_kvprintf(ثابت حرف *format, va_list ap)
 {
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+    برآمد_wrap_t_2 برآمد_wrap =  {
+        .اكتب  = do_output_مقصد_putchar,
+        .buf    = تہی,
         .maxlen = 0,
-        .used   = 0
+        .مستعمل_2   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    واپس vprintf(&برآمد_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+صحیح impl_ksnvprintf(حرف *str, لفظ_t سائز, ثابت حرف *format, va_list ap)
 {
-    if (!str) {
-        size = 0;
+    اگر (!str) {
+        سائز = 0;
     }
 
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+    برآمد_wrap_t_2 برآمد_wrap =  {
+        .اكتب  = do_output_مقصد_بفر,
         .buf    = str,
-        .maxlen = size,
-        .used   = 0
+        .maxlen = سائز,
+        .مستعمل_2   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    صحیح ret = vprintf(&برآمد_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
-        str[(ret < size) ? ret : size - 1] = '\0';
+    اگر ((ret > 0) && (سائز > 0)) {
+        str[(ret < سائز) ? ret : سائز - 1] = '\0';
     }
 
-    return ret;
+    واپس ret;
 }
 
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */

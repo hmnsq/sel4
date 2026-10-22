@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#شامل <config.h>
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#اگر_تعریف_شدہ CONFIG_HARDWARE_DEBUG_API
 
-#include <arch/machine/debug.h>
-#include <mode/machine/debug.h>
-#include <arch/machine.h>
-#include <machine/registerset.h>
-#include <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
+#شامل <arch/machine/debug.h>
+#شامل <mode/machine/debug.h>
+#شامل <arch/machine.h>
+#شامل <machine/registerset.h>
+#شامل <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
 
 /* Intel manual Vol3, 17.2.4 */
-#define X86_DEBUG_BP_SIZE_1B                (0x0u)
-#define X86_DEBUG_BP_SIZE_2B                (0x1u)
-#define X86_DEBUG_BP_SIZE_4B                (0x3u)
-#define X86_DEBUG_BP_SIZE_8B                (0x2u)
+#تعریف_کرو X86_DEBUG_BP_سائز_1_B                (0x0u)
+#تعریف_کرو X86_DEBUG_BP_سائز_2_B                (0x1u)
+#تعریف_کرو X86_DEBUG_BP_سائز_4_B                (0x3u)
+#تعریف_کرو X86_DEBUG_BP_سائز_8_B                (0x2u)
 
-#define X86_DEBUG_BP0_SIZE_SHIFT            (18)
-#define X86_DEBUG_BP1_SIZE_SHIFT            (22)
-#define X86_DEBUG_BP2_SIZE_SHIFT            (26)
-#define X86_DEBUG_BP3_SIZE_SHIFT            (30)
+#تعریف_کرو X86_DEBUG_BP0_سائز_سرکاؤ            (18)
+#تعریف_کرو X86_DEBUG_BP1_سائز_سرکاؤ            (22)
+#تعریف_کرو X86_DEBUG_BP2_سائز_سرکاؤ            (26)
+#تعریف_کرو X86_DEBUG_BP3_سائز_سرکاؤ            (30)
 
 /* NOTE: Intel manual 17.2.4:
  * I/O breakpoints are supported by every processor later than i486, but only
@@ -32,74 +32,74 @@
  * which is not the same as "Reserved", so it won't trigger an exception - it
  * will just cause an undefined reaction from the CPU.
  */
-#define X86_DEBUG_BP_TYPE_IO                (0x2u)
-#define X86_DEBUG_BP_TYPE_INSTR             (0x0u)
-#define X86_DEBUG_BP_TYPE_DATA_WRITE        (0x1u)
-#define X86_DEBUG_BP_TYPE_DATA_READWRITE    (0x3u)
+#تعریف_کرو X86_DEBUG_BP_TYPE_IO                (0x2u)
+#تعریف_کرو X86_DEBUG_BP_TYPE_INSTR             (0x0u)
+#تعریف_کرو X86_DEBUG_BP_TYPE_ڈیٹا_WRITE        (0x1u)
+#تعریف_کرو X86_DEBUG_BP_TYPE_ڈیٹا_READWRITE    (0x3u)
 
-#define X86_DEBUG_BP0_TYPE_SHIFT            (16)
-#define X86_DEBUG_BP1_TYPE_SHIFT            (20)
-#define X86_DEBUG_BP2_TYPE_SHIFT            (24)
-#define X86_DEBUG_BP3_TYPE_SHIFT            (28)
+#تعریف_کرو X86_DEBUG_BP0_TYPE_سرکاؤ            (16)
+#تعریف_کرو X86_DEBUG_BP1_TYPE_سرکاؤ            (20)
+#تعریف_کرو X86_DEBUG_BP2_TYPE_سرکاؤ            (24)
+#تعریف_کرو X86_DEBUG_BP3_TYPE_سرکاؤ            (28)
 
-#define X86_DEBUG_EFLAGS_TRAP_FLAG    ((word_t)BIT(8))
-#define X86_DEBUG_EFLAGS_RESUME_FLAG    ((word_t)BIT(16))
-#define X86_DEBUG_DR6_SINGLE_STEP_FLAG  ((word_t)BIT(14))
+#تعریف_کرو X86_DEBUG_EFLAGS_TRAP_FLAG    ((لفظ_t)ثنائی_ہندسہ(8))
+#تعریف_کرو X86_DEBUG_EFLAGS_RESUME_FLAG    ((لفظ_t)ثنائی_ہندسہ(16))
+#تعریف_کرو X86_DEBUG_DR6_SINGLE_قدم_FLAG  ((لفظ_t)ثنائی_ہندسہ(14))
 
-#define X86_DEBUG_DR6_BP_MASK     (0xFu)
+#تعریف_کرو X86_DEBUG_DR6_BP_نقاب     (0xFu)
 
-static bool_t byte8_bps_supported = false;
+ساکن bool_t byte8_bps_supported = false;
 
-bool_t byte8BreakpointsSupported(void)
+bool_t byte8BreakpointsSupported(خالی)
 {
-    return byte8_bps_supported;
+    واپس byte8_bps_supported;
 }
 
-static inline void bitwiseAndDr6Reg(word_t mask)
+ساکن اندرونی خالی bitwiseAndDr6Reg(لفظ_t نقاب_2)
 {
-    word_t tmp;
+    لفظ_t tmp;
 
-    tmp = readDr6Reg() & mask;
+    tmp = readDr6Reg() & نقاب_2;
     writeDr6Reg(tmp);
 }
 
-static inline word_t readDr7Context(tcb_t *t)
+ساکن اندرونی لفظ_t readDr7Context(tcb_t *t)
 {
-    return t->tcbArch.tcbContext.breakpointState.dr[5];
+    واپس t->tcbArch.tcbContext.breakpointState.dr[5];
 }
 
-static inline void bitwiseOrDr7Context(tcb_t *t, word_t val)
+ساکن اندرونی خالی bitwiseOrDr7Context(tcb_t *t, لفظ_t val)
 {
     t->tcbArch.tcbContext.breakpointState.dr[5] |= val;
 }
 
-static inline void bitwiseAndDr7Context(tcb_t *t, word_t mask)
+ساکن اندرونی خالی bitwiseAndDr7Context(tcb_t *t, لفظ_t نقاب_2)
 {
-    t->tcbArch.tcbContext.breakpointState.dr[5] &= mask;
+    t->tcbArch.tcbContext.breakpointState.dr[5] &= نقاب_2;
 }
 
-static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
+ساکن خالی unset_Dr7_بٹ_For(tcb_t *t, uint16_t bp_عدد)
 {
-    word_t mask;
+    لفظ_t نقاب_2;
 
-    switch (bp_num) {
-    case 0:
-        mask = (0x3u << X86_DEBUG_BP0_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        break;
-    case 1:
-        mask = (0x3u << X86_DEBUG_BP1_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        break;
-    case 2:
-        mask = (0x3u << X86_DEBUG_BP2_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        mask = (0x3u << X86_DEBUG_BP3_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        break;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        نقاب_2 = (0x3u << X86_DEBUG_BP0_سائز_سرکاؤ) | (0x3u << X86_DEBUG_BP0_TYPE_سرکاؤ);
+        توڑو;
+    حالت 1:
+        نقاب_2 = (0x3u << X86_DEBUG_BP1_سائز_سرکاؤ) | (0x3u << X86_DEBUG_BP1_TYPE_سرکاؤ);
+        توڑو;
+    حالت 2:
+        نقاب_2 = (0x3u << X86_DEBUG_BP2_سائز_سرکاؤ) | (0x3u << X86_DEBUG_BP2_TYPE_سرکاؤ);
+        توڑو;
+    طےشدہ: /* 3 */
+        أكد(bp_عدد == 3);
+        نقاب_2 = (0x3u << X86_DEBUG_BP3_سائز_سرکاؤ) | (0x3u << X86_DEBUG_BP3_TYPE_سرکاؤ);
+        توڑو;
     }
 
-    mask = ~mask;
-    bitwiseAndDr7Context(t, mask);
+    نقاب_2 = ~نقاب_2;
+    bitwiseAndDr7Context(t, نقاب_2);
 }
 
 /** Converts an seL4_BreakpointType value into the underlying hardware
@@ -109,29 +109,29 @@ static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
  * @param rw Access trigger condition (read/write).
  * @return Hardware specific register value representing the inputs.
  */
-PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t type, word_t rw)
+خالص ساکن اندرونی لفظ_t convert_Type_And_Access_مقصد_Arch(uint16_t bp_عدد, لفظ_t type, لفظ_t rw)
 {
-    switch (type) {
-    case seL4_InstructionBreakpoint:
+    انتخاب (type) {
+    حالت seL4_InstructionBreakpoint:
         type = X86_DEBUG_BP_TYPE_INSTR;
-        break;
-    default: /* seL4_DataBreakpoint */
-        assert(type == seL4_DataBreakpoint);
+        توڑو;
+    طےشدہ: /* seL4_DataBreakpoint */
+        أكد(type == se_L4_ڈیٹا_Breakpoint);
         type = (rw == seL4_BreakOnWrite)
-               ? X86_DEBUG_BP_TYPE_DATA_WRITE
-               : X86_DEBUG_BP_TYPE_DATA_READWRITE;
+               ? X86_DEBUG_BP_TYPE_ڈیٹا_WRITE
+               : X86_DEBUG_BP_TYPE_ڈیٹا_READWRITE;
     }
 
-    switch (bp_num) {
-    case 0:
-        return type << X86_DEBUG_BP0_TYPE_SHIFT;
-    case 1:
-        return type << X86_DEBUG_BP1_TYPE_SHIFT;
-    case 2:
-        return type << X86_DEBUG_BP2_TYPE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return type << X86_DEBUG_BP3_TYPE_SHIFT;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        واپس type << X86_DEBUG_BP0_TYPE_سرکاؤ;
+    حالت 1:
+        واپس type << X86_DEBUG_BP1_TYPE_سرکاؤ;
+    حالت 2:
+        واپس type << X86_DEBUG_BP2_TYPE_سرکاؤ;
+    طےشدہ: /* 3 */
+        أكد(bp_عدد == 3);
+        واپس type << X86_DEBUG_BP3_TYPE_سرکاؤ;
     }
 }
 
@@ -142,49 +142,49 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
  * @param type[out] Converted type value.
  * @param rw[out] Converted output access trigger value.
  */
-typedef struct {
-    word_t type, rw;
+قسمتعریف ساخت {
+    لفظ_t type, rw;
 } convertedTypeAndAccess_t;
 
-PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr7, uint16_t bp_num)
+خالص ساکن اندرونی convertedTypeAndAccess_t convert_Arch_مقصد_Type_And_Access(لفظ_t dr7, uint16_t bp_عدد)
 {
     convertedTypeAndAccess_t ret;
 
-    switch (bp_num) {
-    case 0:
-        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        break;
-    case 1:
-        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        break;
-    case 2:
-        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_TYPE_SHIFT;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP0_TYPE_سرکاؤ;
+        توڑو;
+    حالت 1:
+        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP1_TYPE_سرکاؤ;
+        توڑو;
+    حالت 2:
+        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP2_TYPE_سرکاؤ;
+        توڑو;
+    طےشدہ: /* 3 */
+        أكد(bp_عدد == 3);
+        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP3_TYPE_سرکاؤ;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_TYPE_INSTR:
+    انتخاب (dr7) {
+    حالت X86_DEBUG_BP_TYPE_INSTR:
         ret.type = seL4_InstructionBreakpoint;
         ret.rw = seL4_BreakOnRead;
-        break;
-    case X86_DEBUG_BP_TYPE_DATA_WRITE:
-        ret.type = seL4_DataBreakpoint;
+        توڑو;
+    حالت X86_DEBUG_BP_TYPE_ڈیٹا_WRITE:
+        ret.type = se_L4_ڈیٹا_Breakpoint;
         ret.rw = seL4_BreakOnWrite;
-        break;
-    default: /* Read-write */
-        assert(dr7 == X86_DEBUG_BP_TYPE_DATA_READWRITE);
-        ret.type = seL4_DataBreakpoint;
+        توڑو;
+    طےشدہ: /* Read-write */
+        أكد(dr7 == X86_DEBUG_BP_TYPE_ڈیٹا_READWRITE);
+        ret.type = se_L4_ڈیٹا_Breakpoint;
         ret.rw = seL4_BreakOnReadWrite;
-        break;
+        توڑو;
     }
-    return ret;
+    واپس ret;
 }
 
 /** Converts an integer size number into an equivalent hardware register value.
@@ -193,41 +193,41 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
  * @param size An integer for the operand size of the breakpoint.
  * @return Converted, hardware-specific value.
  */
-PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
+خالص ساکن اندرونی لفظ_t convert_سائز_مقصد_Arch(uint16_t bp_عدد, لفظ_t type, لفظ_t سائز)
 {
-    if (type == seL4_InstructionBreakpoint) {
+    اگر (type == seL4_InstructionBreakpoint) {
         /* Intel manual vol3 17.2.4:
          * "If the corresponding RWn field in register DR7 is 00 (instruction
          * execution), then the LENn field should also be 00"
          */
-        size = 0;
-    } else {
-        switch (size) {
-        case 1:
-            size = X86_DEBUG_BP_SIZE_1B;
-            break;
-        case 2:
-            size = X86_DEBUG_BP_SIZE_2B;
-            break;
-        case 8:
-            size = X86_DEBUG_BP_SIZE_8B;
-            break;
-        default: /* 4B */
-            assert(size == 4);
-            size = X86_DEBUG_BP_SIZE_4B;
+        سائز = 0;
+    } ورنہ {
+        انتخاب (سائز) {
+        حالت 1:
+            سائز = X86_DEBUG_BP_سائز_1_B;
+            توڑو;
+        حالت 2:
+            سائز = X86_DEBUG_BP_سائز_2_B;
+            توڑو;
+        حالت 8:
+            سائز = X86_DEBUG_BP_سائز_8_B;
+            توڑو;
+        طےشدہ: /* 4B */
+            أكد(سائز == 4);
+            سائز = X86_DEBUG_BP_سائز_4_B;
         }
     }
 
-    switch (bp_num) {
-    case 0:
-        return size << X86_DEBUG_BP0_SIZE_SHIFT;
-    case 1:
-        return size << X86_DEBUG_BP1_SIZE_SHIFT;
-    case 2:
-        return size << X86_DEBUG_BP2_SIZE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return size << X86_DEBUG_BP3_SIZE_SHIFT;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        واپس سائز << X86_DEBUG_BP0_سائز_سرکاؤ;
+    حالت 1:
+        واپس سائز << X86_DEBUG_BP1_سائز_سرکاؤ;
+    حالت 2:
+        واپس سائز << X86_DEBUG_BP2_سائز_سرکاؤ;
+    طےشدہ: /* 3 */
+        أكد(bp_عدد == 3);
+        واپس سائز << X86_DEBUG_BP3_سائز_سرکاؤ;
     }
 }
 
@@ -237,155 +237,155 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
  * @param n Breakpoint number.
  * @return Converted size value.
  */
-PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
+خالص ساکن اندرونی لفظ_t convert_Arch_مقصد_سائز(لفظ_t dr7, uint16_t bp_عدد)
 {
-    word_t type;
+    لفظ_t type;
 
-    switch (bp_num) {
-    case 0:
-        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP0_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_SIZE_SHIFT;
-        break;
-    case 1:
-        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP1_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_SIZE_SHIFT;
-        break;
-    case 2:
-        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP2_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_SIZE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP3_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_SIZE_SHIFT;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_سرکاؤ);
+        type >>= X86_DEBUG_BP0_TYPE_سرکاؤ;
+        dr7 &= 0x3u << X86_DEBUG_BP0_سائز_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP0_سائز_سرکاؤ;
+        توڑو;
+    حالت 1:
+        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_سرکاؤ);
+        type >>= X86_DEBUG_BP1_TYPE_سرکاؤ;
+        dr7 &= 0x3u << X86_DEBUG_BP1_سائز_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP1_سائز_سرکاؤ;
+        توڑو;
+    حالت 2:
+        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_سرکاؤ);
+        type >>= X86_DEBUG_BP2_TYPE_سرکاؤ;
+        dr7 &= 0x3u << X86_DEBUG_BP2_سائز_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP2_سائز_سرکاؤ;
+        توڑو;
+    طےشدہ: /* 3 */
+        أكد(bp_عدد == 3);
+        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_سرکاؤ);
+        type >>= X86_DEBUG_BP3_TYPE_سرکاؤ;
+        dr7 &= 0x3u << X86_DEBUG_BP3_سائز_سرکاؤ;
+        dr7 >>= X86_DEBUG_BP3_سائز_سرکاؤ;
     }
 
     /* Force size to 0 if type is instruction breakpoint. */
-    if (type == X86_DEBUG_BP_TYPE_INSTR) {
-        return 0;
+    اگر (type == X86_DEBUG_BP_TYPE_INSTR) {
+        واپس 0;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_SIZE_1B:
-        return 1;
-    case X86_DEBUG_BP_SIZE_2B:
-        return 2;
-    case X86_DEBUG_BP_SIZE_8B:
-        return 8;
-    default: /* 4B */
-        assert(dr7 == X86_DEBUG_BP_SIZE_4B);
-        return 4;
+    انتخاب (dr7) {
+    حالت X86_DEBUG_BP_سائز_1_B:
+        واپس 1;
+    حالت X86_DEBUG_BP_سائز_2_B:
+        واپس 2;
+    حالت X86_DEBUG_BP_سائز_8_B:
+        واپس 8;
+    طےشدہ: /* 4B */
+        أكد(dr7 == X86_DEBUG_BP_سائز_4_B);
+        واپس 4;
     }
 }
 
 /** Enables a breakpoint.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void enableBreakpoint(tcb_t *t, uint16_t bp_num)
+ساکن خالی enableBreakpoint(tcb_t *t, uint16_t bp_عدد)
 {
-    word_t enable_bit;
+    لفظ_t enable_ثنائی_ہندسہ;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    أكد(t != تہی);
+    أكد(bp_عدد < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        enable_bit = X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        enable_bit = X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        enable_bit = X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        enable_bit = X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        enable_ثنائی_ہندسہ = X86_DEBUG_BP0_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    حالت 1:
+        enable_ثنائی_ہندسہ = X86_DEBUG_BP1_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    حالت 2:
+        enable_ثنائی_ہندسہ = X86_DEBUG_BP2_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    طےشدہ:
+        enable_ثنائی_ہندسہ = X86_DEBUG_BP3_ENABLE_ثنائی_ہندسہ;
+        توڑو;
     }
 
-    bitwiseOrDr7Context(t, enable_bit);
+    bitwiseOrDr7Context(t, enable_ثنائی_ہندسہ);
 }
 
 /** Disables a breakpoint without clearing its configuration.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void disableBreakpoint(tcb_t *t, uint16_t bp_num)
+ساکن خالی disableBreakpoint(tcb_t *t, uint16_t bp_عدد)
 {
-    word_t disable_mask;
+    لفظ_t disable_نقاب;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    أكد(t != تہی);
+    أكد(bp_عدد < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        disable_mask = ~X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        disable_mask = ~X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        disable_mask = ~X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        disable_mask = ~X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    انتخاب (bp_عدد) {
+    حالت 0:
+        disable_نقاب = ~X86_DEBUG_BP0_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    حالت 1:
+        disable_نقاب = ~X86_DEBUG_BP1_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    حالت 2:
+        disable_نقاب = ~X86_DEBUG_BP2_ENABLE_ثنائی_ہندسہ;
+        توڑو;
+    طےشدہ:
+        disable_نقاب = ~X86_DEBUG_BP3_ENABLE_ثنائی_ہندسہ;
+        توڑو;
     }
 
-    bitwiseAndDr7Context(t, disable_mask);
+    bitwiseAndDr7Context(t, disable_نقاب);
 }
 
 /** Returns a boolean for whether or not a breakpoint is enabled.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_num)
+ساکن bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_عدد)
 {
-    word_t dr7;
+    لفظ_t dr7;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    أكد(t != تہی);
+    أكد(bp_عدد < X86_DEBUG_BP_N_REGS);
 
     dr7 = readDr7Context(t);
-    switch (bp_num) {
-    case 0:
-        return !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
-    case 1:
-        return !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
-    case 2:
-        return !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
-    default:
-        return !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
+    انتخاب (bp_عدد) {
+    حالت 0:
+        واپس !!(dr7 & X86_DEBUG_BP0_ENABLE_ثنائی_ہندسہ);
+    حالت 1:
+        واپس !!(dr7 & X86_DEBUG_BP1_ENABLE_ثنائی_ہندسہ);
+    حالت 2:
+        واپس !!(dr7 & X86_DEBUG_BP2_ENABLE_ثنائی_ہندسہ);
+    طےشدہ:
+        واپس !!(dr7 & X86_DEBUG_BP3_ENABLE_ثنائی_ہندسہ);
     }
 }
 
-static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
+ساکن خالی سیٹ_Bp_Vaddr_Context(tcb_t *t, uint16_t bp_عدد, لفظ_t vaddr)
 {
-    assert(t != NULL);
+    أكد(t != تہی);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
+    انتخاب (bp_عدد) {
+    حالت 0:
         ubs->dr[0] = vaddr;
-        break;
-    case 1:
+        توڑو;
+    حالت 1:
         ubs->dr[1] = vaddr;
-        break;
-    case 2:
+        توڑو;
+    حالت 2:
         ubs->dr[2] = vaddr;
-        break;
-    default:
-        assert(bp_num == 3);
+        توڑو;
+    طےشدہ:
+        أكد(bp_عدد == 3);
         ubs->dr[3] = vaddr;
-        break;
+        توڑو;
     }
-    return;
+    واپس;
 }
 
 /** Backend for the seL4_TCB_SetBreakpoint invocation.
@@ -399,37 +399,37 @@ static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
  *        trigger the breakpoint. 0 is valid for Instruction breakpoints.
  * @param rw Access type that should trigger the BP (read/write).
  */
-void setBreakpoint(tcb_t *t,
-                   uint16_t bp_num, word_t vaddr, word_t types, word_t size, word_t rw)
+خالی سیٹ_Breakpoint(tcb_t *t,
+                   uint16_t bp_عدد, لفظ_t vaddr, لفظ_t types, لفظ_t سائز, لفظ_t rw)
 {
-    word_t dr7val;
+    لفظ_t dr7val;
 
-    assert(t != NULL);
+    أكد(t != تہی);
 
-    dr7val = convertTypeAndAccessToArch(bp_num, types, rw);
-    dr7val |= convertSizeToArch(bp_num, types, size);
+    dr7val = convert_Type_And_Access_مقصد_Arch(bp_عدد, types, rw);
+    dr7val |= convert_سائز_مقصد_Arch(bp_عدد, types, سائز);
 
-    setBpVaddrContext(t, bp_num, vaddr);
-    unsetDr7BitsFor(t, bp_num);
+    سیٹ_Bp_Vaddr_Context(t, bp_عدد, vaddr);
+    unset_Dr7_بٹ_For(t, bp_عدد);
     bitwiseOrDr7Context(t, dr7val);
-    enableBreakpoint(t, bp_num);
+    enableBreakpoint(t, bp_عدد);
 }
 
-static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
+ساکن لفظ_t getBpVaddrContext(tcb_t *t, uint16_t bp_عدد)
 {
-    assert(t != NULL);
+    أكد(t != تہی);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
-        return ubs->dr[0];
-    case 1:
-        return ubs->dr[1];
-    case 2:
-        return ubs->dr[2];
-    default:
-        assert(bp_num == 3);
-        return ubs->dr[3];
+    انتخاب (bp_عدد) {
+    حالت 0:
+        واپس ubs->dr[0];
+    حالت 1:
+        واپس ubs->dr[1];
+    حالت 2:
+        واپس ubs->dr[2];
+    طےشدہ:
+        أكد(bp_عدد == 3);
+        واپس ubs->dr[3];
     }
 }
 
@@ -442,20 +442,20 @@ static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
  * @param bp_num Hardware breakpoint ID of the BP you'd like to query.
  * @return Structure containing information about the status of the breakpoint.
  */
-getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
+getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_عدد)
 {
-    word_t dr7val;
+    لفظ_t dr7val;
     getBreakpoint_t ret;
     convertedTypeAndAccess_t res;
 
     dr7val = readDr7Context(t);
-    ret.vaddr = getBpVaddrContext(t, bp_num);
-    ret.size = convertArchToSize(dr7val, bp_num);
-    res = convertArchToTypeAndAccess(dr7val, bp_num);
+    ret.vaddr = getBpVaddrContext(t, bp_عدد);
+    ret.سائز = convert_Arch_مقصد_سائز(dr7val, bp_عدد);
+    res = convert_Arch_مقصد_Type_And_Access(dr7val, bp_عدد);
     ret.type = res.type;
     ret.rw = res.rw;
-    ret.is_enabled = breakpointIsEnabled(t, bp_num);
-    return ret;
+    ret.is_enabled = breakpointIsEnabled(t, bp_عدد);
+    واپس ret;
 }
 
 /** Backend for the x86 seL4_TCB_UnsetBreakpoint invocation.
@@ -464,11 +464,11 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
  * @param uds Arch TCB register context pointer.
  * @param bp_num The hardware breakpoint ID you'd like to clear.
  */
-void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
+خالی unsetBreakpoint(tcb_t *t, uint16_t bp_عدد)
 {
-    disableBreakpoint(t, bp_num);
-    unsetDr7BitsFor(t, bp_num);
-    setBpVaddrContext(t, bp_num, 0);
+    disableBreakpoint(t, bp_عدد);
+    unset_Dr7_بٹ_For(t, bp_عدد);
+    سیٹ_Bp_Vaddr_Context(t, bp_عدد, 0);
 }
 
 /** Used in the exception path to determine if an exception was caused by
@@ -478,25 +478,25 @@ void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
  * @return a structure stating whether or not the exception was caused by
  *          hardware single-stepping, and what the instruction vaddr was.
  */
-typedef struct {
+قسمتعریف ساخت {
     bool_t ret;
-    word_t instr_vaddr;
-} testAndResetSingleStepException_t;
+    لفظ_t instr_vaddr;
+} test_And_Reset_Single_قدم_Exception_t;
 
-static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *t)
+ساکن test_And_Reset_Single_قدم_Exception_t test_And_Reset_Single_قدم_Exception(tcb_t *t)
 {
-    testAndResetSingleStepException_t ret;
-    word_t dr6;
+    test_And_Reset_Single_قدم_Exception_t ret;
+    لفظ_t dr6;
 
     dr6 = readDr6Reg();
-    if (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
+    اگر (!(dr6 & X86_DEBUG_DR6_SINGLE_قدم_FLAG)) {
         ret.ret = false;
-        return ret;
+        واپس ret;
     }
 
     ret.ret = true;
     ret.instr_vaddr = t->tcbArch.tcbContext.registers[FaultIP];
-    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_قدم_FLAG);
 
     /* And that's not all: if the breakpoint is an instruction breakpoint, we
      * also need to set EFLAGS.RF. The processor raises the #DB exception BEFORE
@@ -511,25 +511,25 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
      */
     /* This will automatically be popped by restore_user_context() */
     t->tcbArch.tcbContext.registers[FLAGS] |= X86_DEBUG_EFLAGS_RESUME_FLAG;
-    return ret;
+    واپس ret;
 }
 
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
-                               UNUSED bool_t is_reply)
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_عدد, لفظ_t n_instr,
+                               غیر_مستعمل bool_t is_جواب)
 {
     /* On x86 no hardware breakpoints are needed for single stepping. */
-    if (n_instr == 0) {
+    اگر (n_instr == 0) {
         /* If n_instr (number of instructions to single-step) is 0, that is the
           * same as requesting that single-stepping be disabled.
           */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
+        t->tcbArch.tcbContext.breakpointState.single_قدم_enabled = false;
         t->tcbArch.tcbContext.registers[FLAGS] &= ~X86_DEBUG_EFLAGS_TRAP_FLAG;
-    } else {
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
+    } ورنہ {
+        t->tcbArch.tcbContext.breakpointState.single_قدم_enabled = true;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return false;
+    واپس false;
 }
 
 /** Used in the exception path to determine which breakpoint triggered the
@@ -548,131 +548,131 @@ bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
  *          breakpoint was triggered, and gives information describing the
  *          breakpoint.
  */
-typedef struct {
-    int bp_num;
-    word_t vaddr, reason;
-} getAndResetActiveBreakpoint_t;
+قسمتعریف ساخت {
+    صحیح bp_عدد;
+    لفظ_t vaddr, reason;
+} get_And_Reset_فعال_Breakpoint_t;
 
-static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
+ساکن get_And_Reset_فعال_Breakpoint_t get_And_Reset_فعال_Breakpoint(tcb_t *t)
 {
     convertedTypeAndAccess_t tmp;
-    getAndResetActiveBreakpoint_t ret;
+    get_And_Reset_فعال_Breakpoint_t ret;
 
     /* Read from the hardware regs, not user context */
-    word_t dr6 = readDr6Reg();
-    if (dr6 & BIT(0)) {
-        ret.bp_num = 0;
-    } else if (dr6 & BIT(1)) {
-        ret.bp_num = 1;
-    } else if (dr6 & BIT(2)) {
-        ret.bp_num = 2;
-    } else if (dr6 & BIT(3)) {
-        ret.bp_num = 3;
-    } else {
-        ret.bp_num = -1;
-        return ret;
+    لفظ_t dr6 = readDr6Reg();
+    اگر (dr6 & ثنائی_ہندسہ(0)) {
+        ret.bp_عدد = 0;
+    } ورنہ اگر (dr6 & ثنائی_ہندسہ(1)) {
+        ret.bp_عدد = 1;
+    } ورنہ اگر (dr6 & ثنائی_ہندسہ(2)) {
+        ret.bp_عدد = 2;
+    } ورنہ اگر (dr6 & ثنائی_ہندسہ(3)) {
+        ret.bp_عدد = 3;
+    } ورنہ {
+        ret.bp_عدد = -1;
+        واپس ret;
     }
 
-    tmp = convertArchToTypeAndAccess(readDr7Context(t), ret.bp_num);
-    ret.vaddr = getBpVaddrContext(t, ret.bp_num);
+    tmp = convert_Arch_مقصد_Type_And_Access(readDr7Context(t), ret.bp_عدد);
+    ret.vaddr = getBpVaddrContext(t, ret.bp_عدد);
     ret.reason = tmp.type;
 
-    bitwiseAndDr6Reg(~BIT(ret.bp_num));
-    return ret;
+    bitwiseAndDr6Reg(~ثنائی_ہندسہ(ret.bp_عدد));
+    واپس ret;
 }
 
-exception_t handleUserLevelDebugException(int int_vector)
+exception_t handleUserLevelDebugException(صحیح int_سمتیہ)
 {
     tcb_t *ct;
-    getAndResetActiveBreakpoint_t active_bp;
-    testAndResetSingleStepException_t single_step_info;
+    get_And_Reset_فعال_Breakpoint_t فعال_bp;
+    test_And_Reset_Single_قدم_Exception_t single_قدم_info;
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = int_vector;
-#endif /* DEBUG */
+#اگر_تعریف_شدہ TRACK_KERNEL_ENTRIES
+    ks_Kernel_اندراج.راستہ = اندراج_User_Level_Fault;
+    ks_Kernel_اندراج.لفظ = int_سمتیہ;
+#اگر_ختم /* DEBUG */
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
-    benchmark_track_start();
-#endif
+#اگر_تعریف_شدہ CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+    benchmark_track_آغاز();
+#اگر_ختم
 
-    ct = NODE_STATE(ksCurThread);
+    ct = گرہ_STATE(ksCurThread);
 
     /* Software break request (INT3) is detected by the vector number */
-    if (int_vector == int_software_break_request) {
-        current_fault = seL4_Fault_DebugException_new(getRestartPC(NODE_STATE(ksCurThread)),
+    اگر (int_سمتیہ == int_software_break_request) {
+        current_fault = seL4_Fault_DebugException_new(getRestartPC(گرہ_STATE(ksCurThread)),
                                                       0, seL4_SoftwareBreakRequest);
-    } else {
+    } ورنہ {
         /* Hardware breakpoint trigger is detected using DR6 */
-        active_bp = getAndResetActiveBreakpoint(ct);
-        if (active_bp.bp_num >= 0) {
-            current_fault = seL4_Fault_DebugException_new(active_bp.vaddr,
-                                                          active_bp.bp_num,
-                                                          active_bp.reason);
-        } else {
-            single_step_info = testAndResetSingleStepException(ct);
-            if (single_step_info.ret == true) {
+        فعال_bp = get_And_Reset_فعال_Breakpoint(ct);
+        اگر (فعال_bp.bp_عدد >= 0) {
+            current_fault = seL4_Fault_DebugException_new(فعال_bp.vaddr,
+                                                          فعال_bp.bp_عدد,
+                                                          فعال_bp.reason);
+        } ورنہ {
+            single_قدم_info = test_And_Reset_Single_قدم_Exception(ct);
+            اگر (single_قدم_info.ret == true) {
                 /* If the caller asked us to skip over N instructions before
                  * generating the next single-step breakpoint, we shouldn't
                  * bother to construct a fault message until we've skipped N
                  * instructions.
                  */
-                if (singleStepFaultCounterReady(ct) == false) {
-                    return EXCEPTION_NONE;
+                اگر (single_قدم_Fault_شمار_Ready(ct) == false) {
+                    واپس EXCEPTION_NONE;
                 }
-                current_fault = seL4_Fault_DebugException_new(single_step_info.instr_vaddr,
-                                                              0, seL4_SingleStep);
-            } else {
-                return EXCEPTION_SYSCALL_ERROR;
+                current_fault = seL4_Fault_DebugException_new(single_قدم_info.instr_vaddr,
+                                                              0, se_L4_Single_قدم);
+            } ورنہ {
+                واپس EXCEPTION_SYSCALL_ERROR;
             }
         }
     }
 
-    handleFault(NODE_STATE(ksCurThread));
+    handleFault(گرہ_STATE(ksCurThread));
 
-    schedule();
+    جدول_وقت();
     activateThread();
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_رمز bool_t Arch_initHardwareBreakpoints(خالی)
 {
-    x86_cpu_identity_t *modelinfo;
+    x86_cpu_شناختی_عنصر_t *modelinfo;
 
     modelinfo = x86_cpuid_get_model_info();
     /* Intel manuals, vol3, section 17.2.4, "NOTES". */
-    if (modelinfo->family == 15) {
-        if (modelinfo->model == 3 || modelinfo->model == 4
+    اگر (modelinfo->family == 15) {
+        اگر (modelinfo->model == 3 || modelinfo->model == 4
             || modelinfo->model == 6) {
             byte8_bps_supported = true;
         }
     }
-    if (modelinfo->family == 6) {
-        if (modelinfo->model == 15 || modelinfo->model == 23
+    اگر (modelinfo->family == 6) {
+        اگر (modelinfo->model == 15 || modelinfo->model == 23
             || modelinfo->model == 0x1C) {
             byte8_bps_supported = true;
         }
     }
-    return true;
+    واپس true;
 }
 
-void Arch_initBreakpointContext(user_breakpoint_state_t *uds)
+خالی Arch_initBreakpointContext(user_breakpoint_state_t *uds)
 {
-    memset(uds, 0, sizeof(*uds));
+    memset(uds, 0, حجم(*uds));
 
     /* Preload reserved values into register context */
     uds->dr[4] = readDr6Reg() &
-                 ~(BIT(0)
-                   | BIT(1)
-                   | BIT(2)
-                   | BIT(3)
-                   | X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+                 ~(ثنائی_ہندسہ(0)
+                   | ثنائی_ہندسہ(1)
+                   | ثنائی_ہندسہ(2)
+                   | ثنائی_ہندسہ(3)
+                   | X86_DEBUG_DR6_SINGLE_قدم_FLAG);
 
     uds->dr[5] = readDr7Reg() &
-                 ~(X86_DEBUG_BP0_ENABLE_BIT | X86_DEBUG_BP1_ENABLE_BIT
-                   | X86_DEBUG_BP2_ENABLE_BIT
-                   | X86_DEBUG_BP3_ENABLE_BIT);
+                 ~(X86_DEBUG_BP0_ENABLE_ثنائی_ہندسہ | X86_DEBUG_BP1_ENABLE_ثنائی_ہندسہ
+                   | X86_DEBUG_BP2_ENABLE_ثنائی_ہندسہ
+                   | X86_DEBUG_BP3_ENABLE_ثنائی_ہندسہ);
 }
 
-#endif
+#اگر_ختم

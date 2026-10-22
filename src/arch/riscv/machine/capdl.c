@@ -4,247 +4,247 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#شامل <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <arch/machine/capdl.h>
+#شامل <machine/capdl.h>
+#شامل <arch/machine/capdl.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+لفظ_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    واپس tcb->tcbArch.tcbContext.registers[SP];
 }
 
-#ifdef CONFIG_PRINTING
+#اگر_تعریف_شدہ CONFIG_PRINTING
 
-static void obj_asidpool_print_attrs(cap_t asid_cap);
-static void obj_frame_print_attrs(paddr_t paddr);
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level);
-static void cap_frame_print_attrs_vptr(word_t vptr, pte_t *lvl1pt);
-static void cap_frame_print_attrs_pt(pte_t *ptSlot);
+ساکن خالی obj_asidpool_print_attrs(cap_t asid_cap);
+ساکن خالی obj_چوکھٹا_print_attrs(paddr_t paddr);
+ساکن خالی riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, صحیح level);
+ساکن خالی cap_چوکھٹا_print_attrs_vptr(لفظ_t vptr, pte_t *lvl1pt);
+ساکن خالی cap_چوکھٹا_print_attrs_pt(pte_t *pt_خانہ);
 
-static void obj_asidpool_print_attrs(cap_t asid_cap)
+ساکن خالی obj_asidpool_print_attrs(cap_t asid_cap)
 {
     asid_t asid = cap_asid_pool_cap_get_capASIDBase(asid_cap);
-    printf("(asid_high: 0x%lx)\n", ASID_HIGH(asid));
+    لکھو("(asid_high: 0x%lx)\n", ASID_بلند(asid));
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+خالی print_ipc_بفر_خانہ(tcb_t *tcb)
 {
-    word_t vptr = tcb->tcbIPCBuffer;
-    asid_t asid = cap_page_table_cap_get_capPTMappedASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-    findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
+    لفظ_t vptr = tcb->tcbIPCBuffer;
+    asid_t asid = cap_صفحہ_جدول_cap_get_cap_PTMapped_ASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    ڈھونڈو_VSpace_For_ASID_ret_t ڈھونڈو_ret = ڈھونڈو_VSpace_For_ASID(asid);
 
-    printf("ipc_buffer_slot: ");
-    cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
+    لکھو("ipc_buffer_slot: ");
+    cap_چوکھٹا_print_attrs_vptr(vptr, ڈھونڈو_ret.vspace_جڑ);
 }
 
-static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int level)
+ساکن خالی riscv_cap_pt_print_slots(pte_t *بالائی_Pt_خانہ, لفظ_t pt_اشاریہ, صحیح level)
 {
     pte_t *pt;
-    if (level == CONFIG_PT_LEVELS) {
-        printf("%p_pd {\n", upperPtSlot);
-        pt = upperPtSlot;
-    } else {
-        printf("pt_%p_%04lu {\n", upperPtSlot, ptIndex);
-        pt = getPPtrFromHWPTE(upperPtSlot);
+    اگر (level == CONFIG_PT_سطحیں) {
+        لکھو("%p_pd {\n", بالائی_Pt_خانہ);
+        pt = بالائی_Pt_خانہ;
+    } ورنہ {
+        لکھو("pt_%p_%04lu {\n", بالائی_Pt_خانہ, pt_اشاریہ);
+        pt = getPPtrFromHWPTE(بالائی_Pt_خانہ);
     }
     level -= 1;
 
-    word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
+    لفظ_t pt_بٹ_بایاں = PT_اشاریہ_بٹ * level + se_L4_صفحہ_بٹ;
 
     /* - 1 to avoid overflowing */
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
-        word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                printf("0x%lx: pt_%p_%04lu\n", ptSlotIndex, ptSlot, ptSlotIndex);
-            } else { /* frame */
-                printf("0x%lx: frame_%p_%04lu", ptSlotIndex, ptSlot, ptSlotIndex);
-                cap_frame_print_attrs_pt(ptSlot);
+    برائے (لفظ_t i = 0; i < ثنائی_ہندسہ(pt_بٹ_بایاں + PT_اشاریہ_بٹ) - 1; i += (1 << (pt_بٹ_بایاں))) {
+        لفظ_t pt_خانہ_اشاریہ = ((i >> pt_بٹ_بایاں) & نقاب(PT_اشاریہ_بٹ));
+        pte_t *pt_خانہ = pt + pt_خانہ_اشاریہ;
+        اگر (pte_ptr_get_valid(pt_خانہ)) {
+            اگر (level) { /* pt */
+                لکھو("0x%lx: pt_%p_%04lu\n", pt_خانہ_اشاریہ, pt_خانہ, pt_خانہ_اشاریہ);
+            } ورنہ { /*چوکھٹا*/
+                لکھو("0x%lx: frame_%p_%04lu", pt_خانہ_اشاریہ, pt_خانہ, pt_خانہ_اشاریہ);
+                cap_چوکھٹا_print_attrs_pt(pt_خانہ);
             }
         }
     }
-    printf("}\n"); /* lvl1pt/pt */
+    لکھو("}\n"); /* lvl1pt/pt */
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
-        word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                riscv_cap_pt_print_slots(ptSlot, ptSlotIndex, level);
+    برائے (لفظ_t i = 0; i < ثنائی_ہندسہ(pt_بٹ_بایاں + PT_اشاریہ_بٹ) - 1; i += (1 << (pt_بٹ_بایاں))) {
+        لفظ_t pt_خانہ_اشاریہ = ((i >> pt_بٹ_بایاں) & نقاب(PT_اشاریہ_بٹ));
+        pte_t *pt_خانہ = pt + pt_خانہ_اشاریہ;
+        اگر (pte_ptr_get_valid(pt_خانہ)) {
+            اگر (level) { /* pt */
+                riscv_cap_pt_print_slots(pt_خانہ, pt_خانہ_اشاریہ, level);
             }
         }
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+خالی obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_LEVELS);
+    اگر (is_Valid_VTable_جڑ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !نظر_آیا(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        pte_t *lvl1pt = PTE_PTR(pptr_کا_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        جوڑو_مقصد_نظر_آیا(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_سطحیں);
     }
 }
 
-static void cap_frame_print_attrs_pt(pte_t *ptSlot)
+ساکن خالی cap_چوکھٹا_print_attrs_pt(pte_t *pt_خانہ)
 {
-    printf("(");
+    لکھو("(");
 
     /* rights */
-    if (pte_ptr_get_read(ptSlot)) {
-        printf("R");
+    اگر (pte_ptr_get_read(pt_خانہ)) {
+        لکھو("R");
     }
 
-    if (pte_ptr_get_write(ptSlot)) {
-        printf("W");
+    اگر (pte_ptr_get_write(pt_خانہ)) {
+        لکھو("W");
     }
 
-    if (pte_ptr_get_execute(ptSlot)) {
-        printf("X");
+    اگر (pte_ptr_get_execute(pt_خانہ)) {
+        لکھو("X");
     }
 
     /* cacheable not supported yet */
 
-    printf(")\n");
+    لکھو(")\n");
 }
 
-static void cap_frame_print_attrs_vptr(word_t vptr, pte_t *lvl1pt)
+ساکن خالی cap_چوکھٹا_print_attrs_vptr(لفظ_t vptr, pte_t *lvl1pt)
 {
     lookupPTSlot_ret_t lu_ret = lookupPTSlot(lvl1pt, vptr);
-    assert(lu_ret.ptBitsLeft == seL4_PageBits);
-    word_t slot = ((vptr >> lu_ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
+    أكد(lu_ret.pt_بٹ_بایاں == se_L4_صفحہ_بٹ);
+    لفظ_t خانہ = ((vptr >> lu_ret.pt_بٹ_بایاں) & نقاب(PT_اشاریہ_بٹ));
 
-    printf("frame_%p_%04lu ", lu_ret.ptSlot, slot);
-    cap_frame_print_attrs_pt(lu_ret.ptSlot);
+    لکھو("frame_%p_%04lu ", lu_ret.pt_خانہ, خانہ);
+    cap_چوکھٹا_print_attrs_pt(lu_ret.pt_خانہ);
 }
 
-void print_cap_arch(cap_t cap)
+خالی print_cap_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_صفحہ_جدول_cap: {
+        asid_t asid = cap_صفحہ_جدول_cap_get_cap_PTMapped_ASID(cap);
+        ڈھونڈو_VSpace_For_ASID_ret_t ڈھونڈو_ret = ڈھونڈو_VSpace_For_ASID(asid);
+        vptr_t vptr = cap_صفحہ_جدول_cap_get_cap_PTMapped_پتہ(cap);
 
-        word_t ptBitsLeft = PT_INDEX_BITS * CONFIG_PT_LEVELS + seL4_PageBits;
-        word_t slot = ((vptr >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot, (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot);
+        لفظ_t pt_بٹ_بایاں = PT_اشاریہ_بٹ * CONFIG_PT_سطحیں + se_L4_صفحہ_بٹ;
+        لفظ_t خانہ = ((vptr >> pt_بٹ_بایاں) & نقاب(PT_اشاریہ_بٹ));
+        اگر (asid) {
+            لکھو("pt_%p_%04lu (asid: %lu)\n",
+                   lookupPTSlot(ڈھونڈو_ret.vspace_جڑ, vptr).pt_خانہ, خانہ, (طویل غیرعلامتی صحیح)asid);
+        } ورنہ {
+            لکھو("pt_%p_%04lu\n", lookupPTSlot(ڈھونڈو_ret.vspace_جڑ, vptr).pt_خانہ, خانہ);
         }
-        break;
+        توڑو;
     }
-    case cap_asid_control_cap: {
+    حالت cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        لکھو("asid_control\n");
+        توڑو;
     }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
+    حالت cap_چوکھٹا_cap: {
+        vptr_t vptr = cap_چوکھٹا_cap_get_cap_FMapped_پتہ(cap);
+        ڈھونڈو_VSpace_For_ASID_ret_t ڈھونڈو_ret = ڈھونڈو_VSpace_For_ASID(cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap));
 
-        assert(find_ret.status == EXCEPTION_NONE);
-        cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
-        break;
+        أكد(ڈھونڈو_ret.حالت_2 == EXCEPTION_NONE);
+        cap_چوکھٹا_print_attrs_vptr(vptr, ڈھونڈو_ret.vspace_جڑ);
+        توڑو;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    حالت cap_asid_pool_cap: {
+        لکھو("%p_asid_pool\n", (خالی *)cap_asid_pool_cap_get_capASIDPool(cap));
+        توڑو;
     }
     /* riscv specific caps */
     /* nothing */
-    default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+    طےشدہ: {
+        لکھو("[unknown cap %lu]\n", (طویل غیرعلامتی صحیح)cap_get_capType(cap));
+        توڑو;
     }
     }
 }
 
-static void obj_frame_print_attrs(paddr_t paddr)
+ساکن خالی obj_چوکھٹا_print_attrs(paddr_t paddr)
 {
-    printf("(4k, paddr: 0x%p)\n", (void *)paddr);
+    لکھو("(4k, paddr: 0x%p)\n", (خالی *)paddr);
 }
 
-void print_object_arch(cap_t cap)
+خالی print_object_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-    case cap_page_table_cap:
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_چوکھٹا_cap:
+    حالت cap_صفحہ_جدول_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        توڑو;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    حالت cap_asid_pool_cap: {
+        لکھو("%p_asid_pool = asid_pool ",
+               (خالی *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        توڑو;
     }
     /* riscv specific caps */
     /* nothing */
-    default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+    طےشدہ: {
+        لکھو("[unknown object %lu]\n", (طویل غیرعلامتی صحیح)cap_get_capType(cap));
+        توڑو;
     }
     }
 }
 
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level)
+ساکن خالی riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, صحیح level)
 {
-    word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
+    لفظ_t pt_بٹ_بایاں = PT_اشاریہ_بٹ * level + se_L4_صفحہ_بٹ;
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS); i += (1 << (ptBitsLeft))) {
-        word_t ptIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                printf("pt_%p_%04lu = pt\n", ptSlot, ptIndex);
-                riscv_obj_pt_print_slots(lvl1pt, getPPtrFromHWPTE(ptSlot), level - 1);
-            } else { /* frame */
-                paddr_t paddr = pte_ptr_get_ppn(ptSlot);
-                printf("frame_%p_%04lu = frame ", ptSlot, ptIndex);
-                obj_frame_print_attrs(paddr);
+    برائے (لفظ_t i = 0; i < ثنائی_ہندسہ(pt_بٹ_بایاں + PT_اشاریہ_بٹ); i += (1 << (pt_بٹ_بایاں))) {
+        لفظ_t pt_اشاریہ = ((i >> pt_بٹ_بایاں) & نقاب(PT_اشاریہ_بٹ));
+        pte_t *pt_خانہ = pt + pt_اشاریہ;
+        اگر (pte_ptr_get_valid(pt_خانہ)) {
+            اگر (level) { /* pt */
+                لکھو("pt_%p_%04lu = pt\n", pt_خانہ, pt_اشاریہ);
+                riscv_obj_pt_print_slots(lvl1pt, getPPtrFromHWPTE(pt_خانہ), level - 1);
+            } ورنہ { /*چوکھٹا*/
+                paddr_t paddr = pte_ptr_get_ppn(pt_خانہ);
+                لکھو("frame_%p_%04lu = frame ", pt_خانہ, pt_اشاریہ);
+                obj_چوکھٹا_print_attrs(paddr);
             }
         }
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+خالی obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        printf("%p_pd = pt\n", lvl1pt);
-        riscv_obj_pt_print_slots(lvl1pt, lvl1pt, CONFIG_PT_LEVELS - 1);
+    اگر (is_Valid_VTable_جڑ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !نظر_آیا(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        جوڑو_مقصد_نظر_آیا(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        pte_t *lvl1pt = PTE_PTR(pptr_کا_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        لکھو("%p_pd = pt\n", lvl1pt);
+        riscv_obj_pt_print_slots(lvl1pt, lvl1pt, CONFIG_PT_سطحیں - 1);
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+خالی debug_capDL(خالی)
 {
-    printf("arch riscv\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    لکھو("arch riscv\n");
+    لکھو("objects {\n");
+#اگر_تعریف_شدہ CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#اگر_ختم
+    لکھو("}\n");
 
-    printf("caps {\n");
+    لکھو("caps {\n");
 
     /* reset the seen list */
-    reset_seen_list();
+    reset_نظر_آیا_list();
 
-#ifdef CONFIG_PRINTING
+#اگر_تعریف_شدہ CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    لکھو("}\n");
 
     obj_irq_print_maps();
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم /* CONFIG_DEBUG_BUILD */

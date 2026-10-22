@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#شامل <config.h>
+#شامل <model/statedata.h>
+#شامل <arch/fastpath/fastpath.h>
+#شامل <arch/kernel/traps.h>
+#شامل <arch/machine/debug.h>
+#شامل <arch/machine/debug_conf.h>
+#شامل <api/syscall.h>
+#شامل <linker.h>
+#شامل <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#شامل <benchmark/benchmark_track.h>
+#شامل <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+خالی VISIBLE NORETURN restore_user_context(خالی)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread);
+    لفظ_t cur_thread_reg = (لفظ_t) گرہ_STATE(ksCurThread);
 
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#اگر_تعریف_شدہ ARM_CP14_SAVE_AND_RESTORE_NATIVE_دھاگے
+    restore_user_debug_context(گرہ_STATE(ksCurThread));
+#اگر_ختم
 
-    NODE_UNLOCK_IF_HELD;
+    گرہ_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        asm volatile(
+    اگر (config_سیٹ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        asm متلون(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
             /* Pop user registers */
@@ -53,12 +53,12 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
-        asm volatile("mov sp, %[cur_thread] \n\
+    } ورنہ {
+        asm متلون("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"
                      : /* no output */
-                     : [cur_thread] "r"(cur_thread_reg + NextIP * sizeof(word_t))
+                     : [cur_thread] "r"(cur_thread_reg + اگلا_IP * حجم(لفظ_t))
                     );
     }
     UNREACHABLE();

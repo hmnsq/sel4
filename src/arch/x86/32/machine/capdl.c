@@ -5,48 +5,48 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include <config.h>
+#شامل <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <arch/machine/capdl.h>
+#شامل <machine/capdl.h>
+#شامل <arch/machine/capdl.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+لفظ_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[ESP];
+    واپس tcb->tcbArch.tcbContext.registers[ESP];
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+خالی print_ipc_بفر_خانہ(tcb_t *tcb)
 {
-    printf("print_ipc_buffer_slot not implemented for IA32\n");
+    لکھو("print_ipc_buffer_slot not implemented for IA32\n");
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+خالی obj_vtable_print_slots(tcb_t *tcb)
 {
-    printf("obj_vtable_print_slots not implemented for IA32\n");
+    لکھو("obj_vtable_print_slots not implemented for IA32\n");
 }
 
-void print_cap_arch(cap_t cap)
+خالی print_cap_arch(cap_t cap)
 {
-    printf("print_cap_arch not implemented for IA32\n");
+    لکھو("print_cap_arch not implemented for IA32\n");
 }
 
-void print_object_arch(cap_t cap)
+خالی print_object_arch(cap_t cap)
 {
-    printf("print_object_arch not implemented for IA32\n");
+    لکھو("print_object_arch not implemented for IA32\n");
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+خالی obj_tcb_print_vtable(tcb_t *tcb)
 {
-    printf("obj_tcb_print_vtable not implemented for IA32\n");
+    لکھو("obj_tcb_print_vtable not implemented for IA32\n");
 }
 
-void debug_capDL(void)
+خالی debug_capDL(خالی)
 {
-    printf("Debug CapDL snapshot not full implemented for IA32\n");
+    لکھو("Debug CapDL snapshot not full implemented for IA32\n");
     /* reset the seen list */
-    reset_seen_list();
+    reset_نظر_آیا_list();
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم /* CONFIG_DEBUG_BUILD */

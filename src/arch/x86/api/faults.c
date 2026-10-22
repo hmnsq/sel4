@@ -4,89 +4,89 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <util.h>
+#شامل <types.h>
+#شامل <machine/io.h>
+#شامل <api/faults.h>
+#شامل <api/syscall.h>
+#شامل <util.h>
 
-bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
+bool_t Arch_handle_Fault_جواب(tcb_t *receiver, tcb_t *sender, لفظ_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    انتخاب (faultType) {
+    حالت seL4_Fault_VMFault:
+        واپس true;
 
-    default:
+    طےشدہ:
         fail("Invalid fault");
     }
 }
 
-word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
+لفظ_t Arch_سیٹ_MRs_fault(tcb_t *sender, tcb_t *receiver, لفظ_t *receiveIPCBuffer, لفظ_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
-              seL4_Fault_VMFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
+    انتخاب (faultType) {
+    حالت seL4_Fault_VMFault: {
+        سیٹ_MR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
+        سیٹ_MR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
+              se_L4_Fault_VMFault_get_پتہ(sender->tcbFault));
+        سیٹ_MR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        واپس سیٹ_MR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
-    default:
+    طےشدہ:
         fail("Invalid fault");
     }
 }
 
-word_t handleKernelException(
-    word_t vector,
-    word_t errcode,
-    word_t ip,
-    word_t sp,
-    word_t flags,
-    word_t cr0,
-    word_t cr2,
-    word_t cr3,
-    word_t cr4
+لفظ_t handleKernelException(
+    لفظ_t سمتیہ,
+    لفظ_t errcode,
+    لفظ_t ip,
+    لفظ_t sp,
+    لفظ_t flags,
+    لفظ_t cr0,
+    لفظ_t cr2,
+    لفظ_t cr3,
+    لفظ_t cr4
 );
 
 VISIBLE
-word_t handleKernelException(
-    word_t vector,
-    word_t errcode,
-    word_t ip,
-    word_t sp,
-    word_t flags,
-    word_t cr0,
-    word_t cr2,
-    word_t cr3,
-    word_t cr4
+لفظ_t handleKernelException(
+    لفظ_t سمتیہ,
+    لفظ_t errcode,
+    لفظ_t ip,
+    لفظ_t sp,
+    لفظ_t flags,
+    لفظ_t cr0,
+    لفظ_t cr2,
+    لفظ_t cr3,
+    لفظ_t cr4
 )
 {
-    word_t i;
+    لفظ_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
-        word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
-        ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
-        return ret;
+    اگر (سمتیہ == int_gp_fault && ARCH_گرہ_STATE(x86_KSGPExcept_Return_مقصد) != 0) {
+        لفظ_t ret = ARCH_گرہ_STATE(x86_KSGPExcept_Return_مقصد);
+        ARCH_گرہ_STATE(x86_KSGPExcept_Return_مقصد) = 0;
+        واپس ret;
     }
-    printf("\n========== KERNEL EXCEPTION ==========\n");
-    printf("Vector:  0x%lx\n", vector);
-    printf("ErrCode: 0x%lx\n", errcode);
-    printf("IP:      0x%lx\n", ip);
-    printf("SP:      0x%lx\n", sp);
-    printf("FLAGS:   0x%lx\n", flags);
-    printf("CR0:     0x%lx\n", cr0);
-    printf("CR2:     0x%lx (page-fault address)\n", cr2);
-    printf("CR3:     0x%lx (page-directory physical address)\n", cr3);
-    printf("CR4:     0x%lx\n", cr4);
-    printf("\nStack Dump:\n");
-    for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
-        printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
+    لکھو("\n========== KERNEL EXCEPTION ==========\n");
+    لکھو("Vector:  0x%lx\n", سمتیہ);
+    لکھو("ErrCode: 0x%lx\n", errcode);
+    لکھو("IP:      0x%lx\n", ip);
+    لکھو("SP:      0x%lx\n", sp);
+    لکھو("FLAGS:   0x%lx\n", flags);
+    لکھو("CR0:     0x%lx\n", cr0);
+    لکھو("CR2:     0x%lx (page-fault address)\n", cr2);
+    لکھو("CR3:     0x%lx (page-directory physical address)\n", cr3);
+    لکھو("CR4:     0x%lx\n", cr4);
+    لکھو("\nStack Dump:\n");
+    برائے (i = 0; i < 20; i++) {
+        لفظ_t غیر_مستعمل ڈھیر = sp + i * حجم(لفظ_t);
+        لکھو("*0x%lx == 0x%lx\n", ڈھیر, *(لفظ_t *)ڈھیر);
     }
-    printf("\nHalting...\n");
+    لکھو("\nHalting...\n");
     halt();
     UNREACHABLE();
 }

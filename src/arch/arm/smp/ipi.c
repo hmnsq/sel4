@@ -4,72 +4,72 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/lock.h>
-#include <util.h>
+#شامل <config.h>
+#شامل <mode/smp/ipi.h>
+#شامل <smp/lock.h>
+#شامل <util.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+خالی handleRemoteCall(IpiRemoteCall_t call, لفظ_t arg0, لفظ_t arg1, لفظ_t arg2, bool_t irq_راستہ)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
-            ipiStallCoreCallback(irqPath);
-            break;
+    اگر (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        انتخاب (call) {
+        حالت IpiRemoteCall_Stall:
+            ipiStallCoreCallback(irq_راستہ);
+            توڑو;
 
-#ifdef CONFIG_HAVE_FPU
-        case IpiRemoteCall_switchFpuOwner:
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
+        حالت IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
-#endif /* CONFIG_HAVE_FPU */
+            توڑو;
+#اگر_ختم /* CONFIG_HAVE_FPU */
 
-        case IpiRemoteCall_InvalidateTranslationSingle:
+        حالت IpiRemoteCall_InvalidateTranslationSingle:
             invalidateTranslationSingleLocal(arg0);
-            break;
+            توڑو;
 
-        case IpiRemoteCall_InvalidateTranslationASID:
+        حالت IpiRemoteCall_InvalidateTranslationASID:
             invalidateTranslationASIDLocal(arg0);
-            break;
+            توڑو;
 
-        case IpiRemoteCall_InvalidateTranslationAll:
+        حالت IpiRemoteCall_InvalidateTranslationAll:
             invalidateTranslationAllLocal();
-            break;
+            توڑو;
 
-        case IpiRemoteCall_MaskPrivateInterrupt:
-            maskInterrupt(arg0, IDX_TO_IRQT(arg1));
-            break;
+        حالت Ipi_Remote_Call_نقاب_نجی_مداخلت:
+            نقاب_مداخلت(arg0, IDX_مقصد_IRQT(arg1));
+            توڑو;
 
-#ifdef CONFIG_ARM_GIC_V3_SUPPORT
-        case IpiRemoteCall_DeactivatePrivateInterrupt:
-            deactivateInterrupt(IDX_TO_IRQT(arg1));
-            break;
-#endif
+#اگر_تعریف_شدہ CONFIG_ARM_GIC_V3_SUPPORT
+        حالت Ipi_Remote_Call_Deactivate_نجی_مداخلت:
+            deactivate_مداخلت(IDX_مقصد_IRQT(arg1));
+            توڑو;
+#اگر_ختم
 
-#if defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
-        case IpiRemoteCall_VCPUInjectInterrupt: {
+#اگر defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
+        حالت Ipi_Remote_Call_VCPUInject_مداخلت: {
             virq_t virq;
-            virq.words[0] = arg2;
-            handleVCPUInjectInterruptIPI((vcpu_t *) arg0, arg1, virq);
-            break;
+            virq.الفاظ[0] = arg2;
+            handle_VCPUInject_مداخلت_IPI((vcpu_t *) arg0, arg1, virq);
+            توڑو;
         }
-#endif
+#اگر_ختم
 
-        default:
+        طےشدہ:
             fail("Invalid remote call");
-            break;
+            توڑو;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_تالا.گرہ[getCurrentCPUIndex()].ipi = 0;
         ipi_wait();
     }
 }
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+خالی ipi_send_نقاب(irq_t ipi, لفظ_t نقاب_2, bool_t isBlocking)
 {
-    generic_ipi_send_mask(ipi, mask, isBlocking);
+    generic_ipi_send_نقاب(ipi, نقاب_2, isBlocking);
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#اگر_ختم /* ENABLE_SMP_SUPPORT */

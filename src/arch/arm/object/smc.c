@@ -3,97 +3,97 @@
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
-#include <config.h>
+#شامل <config.h>
 
-#ifdef CONFIG_ALLOW_SMC_CALLS
-#include <arch/object/smc.h>
+#اگر_تعریف_شدہ CONFIG_ALLOW_SMC_CALLS
+#شامل <arch/object/smc.h>
 
 /** Wrapped in a struct for verification, so the array does not decay to a pointer. */
-typedef struct smc_args_t_ {
-    word_t arg[NUM_SMC_REGS];
-} smc_args_t;
+قسمتعریف ساخت smc_دلائل_t {
+    لفظ_t arg[عدد_SMC_REGS];
+} smc_دلائل_t_2;
 
 /** We need the function result to be returned on the stack for verification.
   * In reality, this function is inlined and the compiler should optimise all
   * of this argument shuffling away. */
-static inline smc_args_t doSMC(smc_args_t smc_args)
+ساکن اندرونی smc_دلائل_t_2 doSMC(smc_دلائل_t_2 smc_دلائل)
 {
-    register seL4_Word r0 asm("x0") = smc_args.arg[0];
-    register seL4_Word r1 asm("x1") = smc_args.arg[1];
-    register seL4_Word r2 asm("x2") = smc_args.arg[2];
-    register seL4_Word r3 asm("x3") = smc_args.arg[3];
-    register seL4_Word r4 asm("x4") = smc_args.arg[4];
-    register seL4_Word r5 asm("x5") = smc_args.arg[5];
-    register seL4_Word r6 asm("x6") = smc_args.arg[6];
-    register seL4_Word r7 asm("x7") = smc_args.arg[7];
+    اندراج se_L4_لفظ r0 asm("x0") = smc_دلائل.arg[0];
+    اندراج se_L4_لفظ r1 asm("x1") = smc_دلائل.arg[1];
+    اندراج se_L4_لفظ r2 asm("x2") = smc_دلائل.arg[2];
+    اندراج se_L4_لفظ r3 asm("x3") = smc_دلائل.arg[3];
+    اندراج se_L4_لفظ r4 asm("x4") = smc_دلائل.arg[4];
+    اندراج se_L4_لفظ r5 asm("x5") = smc_دلائل.arg[5];
+    اندراج se_L4_لفظ r6 asm("x6") = smc_دلائل.arg[6];
+    اندراج se_L4_لفظ r7 asm("x7") = smc_دلائل.arg[7];
 
-    asm volatile("smc #0\n"
+    asm متلون("smc #0\n"
                  : "+r"(r0), "+r"(r1), "+r"(r2), "+r"(r3),
                  "+r"(r4), "+r"(r5), "+r"(r6), "+r"(r7)
                  :: "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17", "memory");
 
-    smc_args.arg[0] = r0;
-    smc_args.arg[1] = r1;
-    smc_args.arg[2] = r2;
-    smc_args.arg[3] = r3;
-    smc_args.arg[4] = r4;
-    smc_args.arg[5] = r5;
-    smc_args.arg[6] = r6;
-    smc_args.arg[7] = r7;
-    return smc_args;
+    smc_دلائل.arg[0] = r0;
+    smc_دلائل.arg[1] = r1;
+    smc_دلائل.arg[2] = r2;
+    smc_دلائل.arg[3] = r3;
+    smc_دلائل.arg[4] = r4;
+    smc_دلائل.arg[5] = r5;
+    smc_دلائل.arg[6] = r6;
+    smc_دلائل.arg[7] = r7;
+    واپس smc_دلائل;
 }
 
-static exception_t invokeSMCCall(smc_args_t smc_args, bool_t call)
+ساکن exception_t invokeSMCCall(smc_دلائل_t_2 smc_دلائل, bool_t call)
 {
-    smc_args = doSMC(smc_args);
+    smc_دلائل = doSMC(smc_دلائل);
 
-    if (call) {
-        tcb_t *thread = NODE_STATE(ksCurThread);
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
+    اگر (call) {
+        tcb_t *thread = گرہ_STATE(ksCurThread);
+        لفظ_t *ipc_بفر = lookupIPCBuffer(true, thread);
 
-        setRegister(thread, badgeRegister, 0);
-        for (word_t i = 0; i < NUM_SMC_REGS; i++) {
-            setMR(thread, ipcBuffer, i, smc_args.arg[i]);
+        سیٹ_رجسٹر(thread, badge_رجسٹر, 0);
+        برائے (لفظ_t i = 0; i < عدد_SMC_REGS; i++) {
+            سیٹ_MR(thread, ipc_بفر, i, smc_دلائل.arg[i]);
         }
 
-        word_t length = ipcBuffer ? NUM_SMC_REGS : n_msgRegisters;
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+        لفظ_t لمبائی = ipc_بفر ? عدد_SMC_REGS : n_پیغام_Registers;
+        سیٹ_رجسٹر(thread, پیغام_Info_رجسٹر, لفظ_From_پیغام_Info(
+                        se_L4_پیغام_Info_new(0, 0, 0, لمبائی)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Running);
+    واپس EXCEPTION_NONE;
 }
 
-exception_t decodeARMSMCInvocation(word_t label, word_t length, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMSMCInvocation(لفظ_t label, لفظ_t لمبائی, cap_t cap, bool_t call, لفظ_t *بفر)
 {
-    if (label != ARMSMCCall) {
+    اگر (label != ARMSMCCall) {
         userError("ARMSMCInvocation: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < NUM_SMC_REGS) {
+    اگر (لمبائی < عدد_SMC_REGS) {
         userError("ARMSMCCall: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t badge = cap_smc_cap_get_capSMCBadge(cap);
-    word_t smc_func_id = getSyscallArg(0, buffer);
+    لفظ_t badge = cap_smc_cap_get_capSMCBadge(cap);
+    لفظ_t smc_func_id = getSyscallArg(0, بفر);
 
-    if (badge != 0 && badge != smc_func_id) {
+    اگر (badge != 0 && badge != smc_func_id) {
         userError("ARMSMCCall: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    smc_args_t smc_args;
-    for (word_t i = 0; i < NUM_SMC_REGS; i++) {
-        smc_args.arg[i] = getSyscallArg(i, buffer);
+    smc_دلائل_t_2 smc_دلائل;
+    برائے (لفظ_t i = 0; i < عدد_SMC_REGS; i++) {
+        smc_دلائل.arg[i] = getSyscallArg(i, بفر);
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSMCCall(smc_args, call);
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+    واپس invokeSMCCall(smc_دلائل, call);
 }
 
-#endif
+#اگر_ختم

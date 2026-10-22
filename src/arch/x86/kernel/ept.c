@@ -4,347 +4,347 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#شامل <config.h>
 
-#ifdef CONFIG_VTX
+#اگر_تعریف_شدہ CONFIG_VTX
 
-#include <model/statedata.h>
-#include <arch/kernel/ept.h>
-#include <arch/api/invocation.h>
+#شامل <model/statedata.h>
+#شامل <arch/kernel/ept.h>
+#شامل <arch/api/invocation.h>
 
-struct lookupEPTPDPTSlot_ret {
-    exception_t status;
-    ept_pdpte_t *pdptSlot;
+ساخت lookupEPTPDPTSlot_ret {
+    exception_t حالت_2;
+    ept_pdpte_t *pdpt_خانہ;
 };
-typedef struct lookupEPTPDPTSlot_ret lookupEPTPDPTSlot_ret_t;
+قسمتعریف ساخت lookupEPTPDPTSlot_ret lookupEPTPDPTSlot_ret_t;
 
-struct lookupEPTPDSlot_ret {
-    exception_t status;
-    ept_pde_t  *pdSlot;
+ساخت lookupEPTPDSlot_ret {
+    exception_t حالت_2;
+    ept_pde_t  *pd_خانہ;
 };
-typedef struct lookupEPTPDSlot_ret lookupEPTPDSlot_ret_t;
+قسمتعریف ساخت lookupEPTPDSlot_ret lookupEPTPDSlot_ret_t;
 
-struct lookupEPTPTSlot_ret {
-    exception_t status;
-    ept_pte_t  *ptSlot;
+ساخت lookupEPTPTSlot_ret {
+    exception_t حالت_2;
+    ept_pte_t  *pt_خانہ;
 };
-typedef struct lookupEPTPTSlot_ret lookupEPTPTSlot_ret_t;
+قسمتعریف ساخت lookupEPTPTSlot_ret lookupEPTPTSlot_ret_t;
 
-enum ept_cache_options {
+شمار ept_cache_options {
     EPTUncacheable = 0,
     EPTWriteCombining = 1,
     EPTWriteThrough = 4,
     EPTWriteProtected = 5,
-    EPTWriteBack = 6
+    EPTWrite_عقب = 6
 };
-typedef enum ept_cache_options ept_cache_options_t;
+قسمتعریف شمار ept_cache_options ept_cache_options_t;
 
-void deleteEPTASID(asid_t asid, ept_pml4e_t *ept)
+خالی deleteEPTASID(asid_t asid, ept_pml4e_t *ept)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
-    if (poolPtr != NULL) {
-        asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
-        if (asid_map_get_type(asid_map) == asid_map_asid_map_ept &&
-            (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_root(asid_map) == ept) {
-            poolPtr->array[ASID_LOW(asid)] = asid_map_asid_map_none_new();
+    poolPtr = x86KSASIDTable[ASID_بلند(asid)];
+    اگر (poolPtr != تہی) {
+        asid_map_t asid_map = poolPtr->array[ASID_کم(asid)];
+        اگر (asid_map_get_type(asid_map) == asid_map_asid_map_ept &&
+            (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_جڑ(asid_map) == ept) {
+            poolPtr->array[ASID_کم(asid)] = asid_map_asid_map_none_new();
         }
     }
 }
 
-exception_t performX86EPTPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+exception_t performX86EPTPageInvocationUnmap(cap_t cap, cte_t *ct_خانہ)
 {
     unmapEPTPage(
-        cap_frame_cap_get_capFSize(cap),
-        cap_frame_cap_get_capFMappedASID(cap),
-        cap_frame_cap_get_capFMappedAddress(cap),
-        (void *)cap_frame_cap_get_capFBasePtr(cap)
+        cap_چوکھٹا_cap_get_cap_FSize(cap),
+        cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap),
+        cap_چوکھٹا_cap_get_cap_FMapped_پتہ(cap),
+        (خالی *)cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap)
     );
 
-    cap_frame_cap_ptr_set_capFMappedAddress(&ctSlot->cap, 0);
-    cap_frame_cap_ptr_set_capFMappedASID(&ctSlot->cap, asidInvalid);
-    cap_frame_cap_ptr_set_capFMapType(&ctSlot->cap, X86_MappingNone);
+    cap_چوکھٹا_cap_ptr_سیٹ_cap_FMapped_پتہ(&ct_خانہ->cap, 0);
+    cap_چوکھٹا_cap_ptr_سیٹ_cap_FMapped_ASID(&ct_خانہ->cap, asidInvalid);
+    cap_چوکھٹا_cap_ptr_سیٹ_cap_FMap_Type(&ct_خانہ->cap, X86_MappingNone);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-findEPTForASID_ret_t findEPTForASID(asid_t asid)
+ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_EPTFor_ASID(asid_t asid)
 {
-    findEPTForASID_ret_t ret;
+    ڈھونڈو_EPTFor_ASID_ret_t ret;
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (asid_map_get_type(asid_map) != asid_map_asid_map_ept) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    asid_map = ڈھونڈو_Map_For_ASID(asid);
+    اگر (asid_map_get_type(asid_map) != asid_map_asid_map_ept) {
+        current_lookup_fault = lookup_fault_invalid_جڑ_new();
 
-        ret.ept = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.ept = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    ret.ept = (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_root(asid_map);
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.ept = (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_جڑ(asid_map);
+    ret.حالت_2 = EXCEPTION_NONE;
+    واپس ret;
 }
 
-static ept_pml4e_t *CONST lookupEPTPML4Slot(ept_pml4e_t *pml4, vptr_t vptr)
+ساکن ept_pml4e_t *CONST lookup_EPTPML4_خانہ(ept_pml4e_t *pml4, vptr_t vptr)
 {
-    return pml4 + GET_EPT_PML4_INDEX(vptr);
+    واپس pml4 + GET_EPT_PML4_اشاریہ(vptr);
 }
 
-static lookupEPTPDPTSlot_ret_t CONST lookupEPTPDPTSlot(ept_pml4e_t *pml4, vptr_t vptr)
+ساکن lookupEPTPDPTSlot_ret_t CONST lookupEPTPDPTSlot(ept_pml4e_t *pml4, vptr_t vptr)
 {
     lookupEPTPDPTSlot_ret_t ret;
-    ept_pml4e_t *pml4Slot;
+    ept_pml4e_t *pml4_خانہ;
 
-    pml4Slot = lookupEPTPML4Slot(pml4, vptr);
+    pml4_خانہ = lookup_EPTPML4_خانہ(pml4, vptr);
 
-    if (!ept_pml4e_ptr_get_read(pml4Slot)) {
-        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PML4_INDEX_OFFSET);
+    اگر (!ept_pml4e_ptr_get_read(pml4_خانہ)) {
+        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PML4_اشاریہ_انحراف);
 
-        ret.pdptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pdpt_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    ept_pdpte_t *pdpt = paddr_to_pptr(ept_pml4e_ptr_get_pdpt_base_address(pml4Slot));
-    uint32_t index = GET_EPT_PDPT_INDEX(vptr);
-    ret.pdptSlot = pdpt + index;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ept_pdpte_t *pdpt = paddr_مقصد_pptr(ept_pml4e_ptr_get_pdpt_بنیاد_پتہ(pml4_خانہ));
+    uint32_t اشاریہ = GET_EPT_PDPT_اشاریہ(vptr);
+    ret.pdpt_خانہ = pdpt + اشاریہ;
+    ret.حالت_2 = EXCEPTION_NONE;
+    واپس ret;
 }
 
-static lookupEPTPDSlot_ret_t lookupEPTPDSlot(ept_pml4e_t *pml4, vptr_t vptr)
+ساکن lookupEPTPDSlot_ret_t lookupEPTPDSlot(ept_pml4e_t *pml4, vptr_t vptr)
 {
     lookupEPTPDSlot_ret_t ret;
     lookupEPTPDPTSlot_ret_t lu_ret;
 
     lu_ret = lookupEPTPDPTSlot(pml4, vptr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
         /* current_lookup_fault will have been set by lookupEPTPDPTSlot */
-        ret.pdSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    if (!ept_pdpte_ptr_get_read(lu_ret.pdptSlot)) {
-        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PDPT_INDEX_OFFSET);
+    اگر (!ept_pdpte_ptr_get_read(lu_ret.pdpt_خانہ)) {
+        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PDPT_اشاریہ_انحراف);
 
-        ret.pdSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    ept_pde_t *pd = paddr_to_pptr(ept_pdpte_ptr_get_pd_base_address(lu_ret.pdptSlot));
-    uint32_t index = GET_EPT_PD_INDEX(vptr);
-    ret.pdSlot = pd + index;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ept_pde_t *pd = paddr_مقصد_pptr(ept_pdpte_ptr_get_pd_بنیاد_پتہ(lu_ret.pdpt_خانہ));
+    uint32_t اشاریہ = GET_EPT_PD_اشاریہ(vptr);
+    ret.pd_خانہ = pd + اشاریہ;
+    ret.حالت_2 = EXCEPTION_NONE;
+    واپس ret;
 }
 
-static lookupEPTPTSlot_ret_t lookupEPTPTSlot(ept_pml4e_t *pml4, vptr_t vptr)
+ساکن lookupEPTPTSlot_ret_t lookupEPTPTSlot(ept_pml4e_t *pml4, vptr_t vptr)
 {
     lookupEPTPTSlot_ret_t ret;
     lookupEPTPDSlot_ret_t lu_ret;
 
     lu_ret = lookupEPTPDSlot(pml4, vptr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
         /* current_lookup_fault will have been set by lookupEPTPDSlot */
-        ret.ptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pt_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    if ((ept_pde_ptr_get_page_size(lu_ret.pdSlot) != ept_pde_ept_pde_pt) ||
-        !ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pdSlot)) {
-        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PD_INDEX_OFFSET);
+    اگر ((ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) != ept_pde_ept_pde_pt) ||
+        !ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pd_خانہ)) {
+        current_lookup_fault = lookup_fault_missing_capability_new(EPT_PD_اشاریہ_انحراف);
 
-        ret.ptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pt_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 
-    ept_pte_t *pt = paddr_to_pptr(ept_pde_ept_pde_pt_ptr_get_pt_base_address(lu_ret.pdSlot));
-    uint32_t index = GET_EPT_PT_INDEX(vptr);
+    ept_pte_t *pt = paddr_مقصد_pptr(ept_pde_ept_pde_pt_ptr_get_pt_بنیاد_پتہ(lu_ret.pd_خانہ));
+    uint32_t اشاریہ = GET_EPT_PT_اشاریہ(vptr);
 
-    ret.ptSlot = pt + index;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.pt_خانہ = pt + اشاریہ;
+    ret.حالت_2 = EXCEPTION_NONE;
+    واپس ret;
 }
 
-static ept_cache_options_t eptCacheFromVmAttr(vm_attributes_t vmAttr)
+ساکن ept_cache_options_t eptCacheFromVmAttr(vm_اوصاف_t vmAttr)
 {
     /* Need to sanitise user input, vmAttr will not have been verified at this point. */
-    ept_cache_options_t option = vmAttr.words[0];
-    if (option != EPTUncacheable &&
+    ept_cache_options_t option = vmAttr.الفاظ[0];
+    اگر (option != EPTUncacheable &&
         option != EPTWriteCombining &&
         option != EPTWriteThrough &&
-        option != EPTWriteBack) {
-        option = EPTWriteBack;
+        option != EPTWrite_عقب) {
+        option = EPTWrite_عقب;
     }
-    return option;
+    واپس option;
 }
 
 EPTPDPTMapped_ret_t EPTPDPTMapped(asid_t asid, vptr_t vptr, ept_pdpte_t *pdpt)
 {
     EPTPDPTMapped_ret_t ret;
-    findEPTForASID_ret_t asid_ret;
-    ept_pml4e_t *pml4Slot;
+    ڈھونڈو_EPTFor_ASID_ret_t asid_ret;
+    ept_pml4e_t *pml4_خانہ;
 
-    asid_ret = findEPTForASID(asid);
-    if (asid_ret.status != EXCEPTION_NONE) {
-        ret.pml4 = NULL;
-        ret.pml4Slot = NULL;
-        ret.status = asid_ret.status;
-        return ret;
+    asid_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (asid_ret.حالت_2 != EXCEPTION_NONE) {
+        ret.pml4 = تہی;
+        ret.pml4_خانہ = تہی;
+        ret.حالت_2 = asid_ret.حالت_2;
+        واپس ret;
     }
 
-    pml4Slot = lookupEPTPML4Slot(asid_ret.ept, vptr);
+    pml4_خانہ = lookup_EPTPML4_خانہ(asid_ret.ept, vptr);
 
-    if (ept_pml4e_ptr_get_read(pml4Slot)
-        && ptrFromPAddr(ept_pml4e_ptr_get_pdpt_base_address(pml4Slot)) == pdpt) {
+    اگر (ept_pml4e_ptr_get_read(pml4_خانہ)
+        && ptrFromPAddr(ept_pml4e_ptr_get_pdpt_بنیاد_پتہ(pml4_خانہ)) == pdpt) {
         ret.pml4 = asid_ret.ept;
-        ret.pml4Slot = pml4Slot;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    } else {
-        ret.pml4 = NULL;
-        ret.pml4Slot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pml4_خانہ = pml4_خانہ;
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
+    } ورنہ {
+        ret.pml4 = تہی;
+        ret.pml4_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 }
 
-void unmapEPTPDPT(asid_t asid, vptr_t vaddr, ept_pdpte_t *pdpt)
+خالی unmapEPTPDPT(asid_t asid, vptr_t vaddr, ept_pdpte_t *pdpt)
 {
     EPTPDPTMapped_ret_t lu_ret;
 
     lu_ret = EPTPDPTMapped(asid, vaddr, pdpt);
 
-    if (lu_ret.status == EXCEPTION_NONE) {
-        *lu_ret.pml4Slot = ept_pml4e_new(0, 0, 0, 0);
+    اگر (lu_ret.حالت_2 == EXCEPTION_NONE) {
+        *lu_ret.pml4_خانہ = ept_pml4e_new(0, 0, 0, 0);
         invept(lu_ret.pml4);
     }
 }
 
-static exception_t performEPTPDPTInvocationUnmap(cap_t cap, cte_t *cte)
+ساکن exception_t performEPTPDPTInvocationUnmap(cap_t cap, cte_t *cte)
 {
-    if (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    اگر (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
         ept_pdpte_t *pdpt = (ept_pdpte_t *)cap_ept_pdpt_cap_get_capPDPTBasePtr(cap);
         unmapEPTPDPT(
             cap_ept_pdpt_cap_get_capPDPTMappedASID(cap),
-            cap_ept_pdpt_cap_get_capPDPTMappedAddress(cap),
+            cap_ept_pdpt_cap_get_cap_PDPTMapped_پتہ(cap),
             pdpt);
-        clearMemory((void *)pdpt, cap_get_capSizeBits(cap));
+        clear_حافظہ((خالی *)pdpt, cap_get_cap_سائز_بٹ(cap));
     }
-    cap_ept_pdpt_cap_ptr_set_capPDPTIsMapped(&(cte->cap), 0);
+    cap_ept_pdpt_cap_ptr_سیٹ_cap_PDPTIs_Mapped(&(cte->cap), 0);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-static exception_t performEPTPDPTInvocationMap(cap_t cap, cte_t *cte, ept_pml4e_t pml4e, ept_pml4e_t *pml4Slot,
+ساکن exception_t performEPTPDPTInvocationMap(cap_t cap, cte_t *cte, ept_pml4e_t pml4e, ept_pml4e_t *pml4_خانہ,
                                                ept_pml4e_t *pml4)
 {
     cte->cap = cap;
-    *pml4Slot = pml4e;
+    *pml4_خانہ = pml4e;
     invept(pml4);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-static exception_t decodeX86EPTPDPTInvocation(
-    word_t invLabel,
-    word_t length,
+ساکن exception_t decodeX86EPTPDPTInvocation(
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cte_t *cte,
     cap_t cap,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    word_t          vaddr;
+    لفظ_t          vaddr;
     cap_t           pml4Cap;
     ept_pml4e_t    *pml4;
     ept_pml4e_t     pml4e;
     paddr_t         paddr;
     asid_t          asid;
-    findEPTForASID_ret_t find_ret;
-    ept_pml4e_t    *pml4Slot;
+    ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_ret;
+    ept_pml4e_t    *pml4_خانہ;
 
-    if (invLabel == X86EPTPDPTUnmap) {
-        if (!isFinalCapability(cte)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+    اگر (invLabel == X86EPTPDPTUnmap) {
+        اگر (!isFinalCapability(cte)) {
+            current_syscall_error.type = se_L4_Revoke_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performEPTPDPTInvocationUnmap(cap, cte);
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        واپس performEPTPDPTInvocationUnmap(cap, cte);
     }
 
-    if (invLabel != X86EPTPDPTMap) {
+    اگر (invLabel != X86EPTPDPTMap) {
         userError("X86EPTPDPT Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL) {
+    اگر (لمبائی < 2 || current_extra_caps.excaprefs[0] == تہی) {
         userError("X86EPTPDPTMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    اگر (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
         userError("X86EPTPDPTMap: EPT PDPT is already mapped to a PML4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_نمبر = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
+    vaddr = getSyscallArg(0, بفر);
     /* cannot use ~MASK(EPT_PML4_INDEX_OFFSET) because on 32-bit compilations
      * this results in an error shifting by greater than 31 bits, so we manually
      * force a 64-bit variable to do the shifting with */
-    vaddr = vaddr & ~(((uint64_t)1 << EPT_PML4_INDEX_OFFSET) - 1);
+    vaddr = vaddr & ~(((uint64_t)1 << EPT_PML4_اشاریہ_انحراف) - 1);
     pml4Cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
+    اگر (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
         userError("X86EPTPDPTMap: Not a valid EPT PML4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(pml4Cap);
+    pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_cap_PML4_بنیاد_Ptr(pml4Cap);
     asid = cap_ept_pml4_cap_get_capPML4MappedASID(pml4Cap);
 
-    find_ret = findEPTForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
+    ڈھونڈو_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (find_ret.ept != pml4) {
+    اگر (ڈھونڈو_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    pml4Slot = lookupEPTPML4Slot(pml4, vaddr);
+    pml4_خانہ = lookup_EPTPML4_خانہ(pml4, vaddr);
 
-    if (ept_pml4e_ptr_get_read(pml4Slot)) {
+    اگر (ept_pml4e_ptr_get_read(pml4_خانہ)) {
         userError("X86EPTPDPTMap: PDPT already mapped here.");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_پہلا;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    paddr = pptr_to_paddr((void *)cap_ept_pdpt_cap_get_capPDPTBasePtr(cap));
+    paddr = pptr_مقصد_paddr((خالی *)cap_ept_pdpt_cap_get_capPDPTBasePtr(cap));
     pml4e = ept_pml4e_new(
                 paddr,
                 1,
@@ -352,31 +352,31 @@ static exception_t decodeX86EPTPDPTInvocation(
                 1
             );
 
-    cap = cap_ept_pdpt_cap_set_capPDPTIsMapped(cap, 1);
-    cap = cap_ept_pdpt_cap_set_capPDPTMappedASID(cap, asid);
-    cap = cap_ept_pdpt_cap_set_capPDPTMappedAddress(cap, vaddr);
+    cap = cap_ept_pdpt_cap_سیٹ_cap_PDPTIs_Mapped(cap, 1);
+    cap = cap_ept_pdpt_cap_سیٹ_cap_PDPTMapped_ASID(cap, asid);
+    cap = cap_ept_pdpt_cap_سیٹ_cap_PDPTMapped_پتہ(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performEPTPDPTInvocationMap(cap, cte, pml4e, pml4Slot, pml4);
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+    واپس performEPTPDPTInvocationMap(cap, cte, pml4e, pml4_خانہ, pml4);
 }
 
 exception_t decodeX86EPTInvocation(
-    word_t invLabel,
-    word_t length,
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cptr_t cptr,
     cte_t *cte,
     cap_t cap,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_ept_pdpt_cap:
-        return decodeX86EPTPDPTInvocation(invLabel, length, cte, cap, buffer);
-    case cap_ept_pd_cap:
-        return decodeX86EPTPDInvocation(invLabel, length, cte, cap, buffer);
-    case cap_ept_pt_cap:
-        return decodeX86EPTPTInvocation(invLabel, length, cte, cap, buffer);
-    default:
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_ept_pdpt_cap:
+        واپس decodeX86EPTPDPTInvocation(invLabel, لمبائی, cte, cap, بفر);
+    حالت cap_ept_pd_cap:
+        واپس decodeX86EPTPDInvocation(invLabel, لمبائی, cte, cap, بفر);
+    حالت cap_ept_pt_cap:
+        واپس decodeX86EPTPTInvocation(invLabel, لمبائی, cte, cap, بفر);
+    طےشدہ:
         fail("Invalid cap type");
     }
 }
@@ -384,47 +384,47 @@ exception_t decodeX86EPTInvocation(
 EPTPageDirectoryMapped_ret_t EPTPageDirectoryMapped(asid_t asid, vptr_t vaddr, ept_pde_t *pd)
 {
     EPTPageDirectoryMapped_ret_t ret;
-    lookupEPTPDPTSlot_ret_t find_ret;
-    findEPTForASID_ret_t asid_ret;
+    lookupEPTPDPTSlot_ret_t ڈھونڈو_ret;
+    ڈھونڈو_EPTFor_ASID_ret_t asid_ret;
 
-    asid_ret = findEPTForASID(asid);
-    if (asid_ret.status != EXCEPTION_NONE) {
-        ret.pml4 = NULL;
-        ret.pdptSlot = NULL;
-        ret.status = asid_ret.status;
-        return ret;
+    asid_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (asid_ret.حالت_2 != EXCEPTION_NONE) {
+        ret.pml4 = تہی;
+        ret.pdpt_خانہ = تہی;
+        ret.حالت_2 = asid_ret.حالت_2;
+        واپس ret;
     }
 
-    find_ret = lookupEPTPDPTSlot(asid_ret.ept, vaddr);
-    if (find_ret.status != EXCEPTION_NONE) {
-        ret.pml4 = NULL;
-        ret.pdptSlot = NULL;
-        ret.status = find_ret.status;
-        return ret;
+    ڈھونڈو_ret = lookupEPTPDPTSlot(asid_ret.ept, vaddr);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
+        ret.pml4 = تہی;
+        ret.pdpt_خانہ = تہی;
+        ret.حالت_2 = ڈھونڈو_ret.حالت_2;
+        واپس ret;
     }
 
-    if (ept_pdpte_ptr_get_read(find_ret.pdptSlot)
-        && ptrFromPAddr(ept_pdpte_ptr_get_pd_base_address(find_ret.pdptSlot)) == pd) {
+    اگر (ept_pdpte_ptr_get_read(ڈھونڈو_ret.pdpt_خانہ)
+        && ptrFromPAddr(ept_pdpte_ptr_get_pd_بنیاد_پتہ(ڈھونڈو_ret.pdpt_خانہ)) == pd) {
         ret.pml4 = asid_ret.ept;
-        ret.pdptSlot = find_ret.pdptSlot;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    } else {
-        ret.pml4 = NULL;
-        ret.pdptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pdpt_خانہ = ڈھونڈو_ret.pdpt_خانہ;
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
+    } ورنہ {
+        ret.pml4 = تہی;
+        ret.pdpt_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 }
 
-void unmapEPTPageDirectory(asid_t asid, vptr_t vaddr, ept_pde_t *pd)
+خالی unmapEPTPageDirectory(asid_t asid, vptr_t vaddr, ept_pde_t *pd)
 {
     EPTPageDirectoryMapped_ret_t lu_ret;
 
     lu_ret = EPTPageDirectoryMapped(asid, vaddr, pd);
 
-    if (lu_ret.status == EXCEPTION_NONE) {
-        *lu_ret.pdptSlot = ept_pdpte_new(
+    اگر (lu_ret.حالت_2 == EXCEPTION_NONE) {
+        *lu_ret.pdpt_خانہ = ept_pdpte_new(
                                0,  /* pd_base_address  */
                                0,  /* avl_cte_depth    */
                                0,  /* execute          */
@@ -435,124 +435,124 @@ void unmapEPTPageDirectory(asid_t asid, vptr_t vaddr, ept_pde_t *pd)
     }
 }
 
-static exception_t performEPTPDInvocationUnmap(cap_t cap, cte_t *cte)
+ساکن exception_t performEPTPDInvocationUnmap(cap_t cap, cte_t *cte)
 {
-    if (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    اگر (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
         ept_pde_t *pd = (ept_pde_t *)cap_ept_pd_cap_get_capPDBasePtr(cap);
         unmapEPTPageDirectory(
             cap_ept_pd_cap_get_capPDMappedASID(cap),
-            cap_ept_pd_cap_get_capPDMappedAddress(cap),
+            cap_ept_pd_cap_get_cap_PDMapped_پتہ(cap),
             pd);
-        clearMemory((void *)pd, cap_get_capSizeBits(cap));
+        clear_حافظہ((خالی *)pd, cap_get_cap_سائز_بٹ(cap));
     }
-    cap_ept_pd_cap_ptr_set_capPDIsMapped(&(cte->cap), 0);
+    cap_ept_pd_cap_ptr_سیٹ_cap_PDIs_Mapped(&(cte->cap), 0);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-static exception_t performEPTPDInvocationMap(cap_t cap, cte_t *cte, ept_pdpte_t pdpte, ept_pdpte_t *pdptSlot,
+ساکن exception_t performEPTPDInvocationMap(cap_t cap, cte_t *cte, ept_pdpte_t pdpte, ept_pdpte_t *pdpt_خانہ,
                                              ept_pml4e_t *pml4)
 {
     cte->cap = cap;
-    *pdptSlot = pdpte;
+    *pdpt_خانہ = pdpte;
     invept(pml4);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
 exception_t decodeX86EPTPDInvocation(
-    word_t invLabel,
-    word_t length,
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cte_t *cte,
     cap_t cap,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    word_t          vaddr;
+    لفظ_t          vaddr;
     cap_t           pml4Cap;
     ept_pml4e_t    *pml4;
     ept_pdpte_t     pdpte;
     paddr_t         paddr;
     asid_t          asid;
-    findEPTForASID_ret_t find_ret;
+    ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_ret;
     lookupEPTPDPTSlot_ret_t lu_ret;
 
-    if (invLabel == X86EPTPDUnmap) {
-        if (!isFinalCapability(cte)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+    اگر (invLabel == X86EPTPDUnmap) {
+        اگر (!isFinalCapability(cte)) {
+            current_syscall_error.type = se_L4_Revoke_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performEPTPDInvocationUnmap(cap, cte);
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        واپس performEPTPDInvocationUnmap(cap, cte);
     }
 
-    if (invLabel != X86EPTPDMap) {
+    اگر (invLabel != X86EPTPDMap) {
         userError("X86EPTPD Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL) {
+    اگر (لمبائی < 2 || current_extra_caps.excaprefs[0] == تہی) {
         userError("X86EPTPDMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    اگر (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
         userError("X86EPTPDMap: EPT Page directory is already mapped to a PDPT.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_نمبر = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
-    vaddr = vaddr & ~MASK(EPT_PDPT_INDEX_OFFSET);
+    vaddr = getSyscallArg(0, بفر);
+    vaddr = vaddr & ~نقاب(EPT_PDPT_اشاریہ_انحراف);
     pml4Cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
+    اگر (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
         userError("X86EPTPDMap: Not a valid EPT pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(pml4Cap);
+    pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_cap_PML4_بنیاد_Ptr(pml4Cap);
     asid = cap_ept_pml4_cap_get_capPML4MappedASID(pml4Cap);
 
-    find_ret = findEPTForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
+    ڈھونڈو_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
         userError("X86EPTPDMap: EPT PML4 is not mapped.");
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (find_ret.ept != pml4) {
+    اگر (ڈھونڈو_ret.ept != pml4) {
         userError("X86EPTPDMap: EPT PML4 asid is invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
     lu_ret = lookupEPTPDPTSlot(pml4, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (ept_pdpte_ptr_get_read(lu_ret.pdptSlot)) {
+    اگر (ept_pdpte_ptr_get_read(lu_ret.pdpt_خانہ)) {
         userError("X86EPTPDMap: Page directory already mapped here.");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_پہلا;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    paddr = pptr_to_paddr((void *)(cap_ept_pd_cap_get_capPDBasePtr(cap)));
+    paddr = pptr_مقصد_paddr((خالی *)(cap_ept_pd_cap_get_capPDBasePtr(cap)));
     pdpte = ept_pdpte_new(
                 paddr,  /* pd_base_address  */
                 0,      /* avl_cte_depth    */
@@ -561,58 +561,58 @@ exception_t decodeX86EPTPDInvocation(
                 1       /* read             */
             );
 
-    cap = cap_ept_pd_cap_set_capPDIsMapped(cap, 1);
-    cap = cap_ept_pd_cap_set_capPDMappedASID(cap, asid);
-    cap = cap_ept_pd_cap_set_capPDMappedAddress(cap, vaddr);
+    cap = cap_ept_pd_cap_سیٹ_cap_PDIs_Mapped(cap, 1);
+    cap = cap_ept_pd_cap_سیٹ_cap_PDMapped_ASID(cap, asid);
+    cap = cap_ept_pd_cap_سیٹ_cap_PDMapped_پتہ(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performEPTPDInvocationMap(cap, cte, pdpte, lu_ret.pdptSlot, pml4);
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+    واپس performEPTPDInvocationMap(cap, cte, pdpte, lu_ret.pdpt_خانہ, pml4);
 }
 
-EPTPageTableMapped_ret_t EPTPageTableMapped(asid_t asid, vptr_t vaddr, ept_pte_t *pt)
+EPTPage_جدول_Mapped_ret_t EPTPage_جدول_Mapped(asid_t asid, vptr_t vaddr, ept_pte_t *pt)
 {
-    EPTPageTableMapped_ret_t ret;
-    lookupEPTPDSlot_ret_t find_ret;
-    findEPTForASID_ret_t asid_ret;
+    EPTPage_جدول_Mapped_ret_t ret;
+    lookupEPTPDSlot_ret_t ڈھونڈو_ret;
+    ڈھونڈو_EPTFor_ASID_ret_t asid_ret;
 
-    asid_ret = findEPTForASID(asid);
-    if (asid_ret.status != EXCEPTION_NONE) {
-        ret.pml4 = NULL;
-        ret.pdSlot = NULL;
-        ret.status = asid_ret.status;
-        return ret;
+    asid_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (asid_ret.حالت_2 != EXCEPTION_NONE) {
+        ret.pml4 = تہی;
+        ret.pd_خانہ = تہی;
+        ret.حالت_2 = asid_ret.حالت_2;
+        واپس ret;
     }
 
-    find_ret = lookupEPTPDSlot(asid_ret.ept, vaddr);
-    if (find_ret.status != EXCEPTION_NONE) {
-        ret.pml4 = NULL;
-        ret.pdSlot = NULL;
-        ret.status = find_ret.status;
-        return ret;
+    ڈھونڈو_ret = lookupEPTPDSlot(asid_ret.ept, vaddr);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
+        ret.pml4 = تہی;
+        ret.pd_خانہ = تہی;
+        ret.حالت_2 = ڈھونڈو_ret.حالت_2;
+        واپس ret;
     }
 
-    if (ept_pde_ptr_get_page_size(find_ret.pdSlot) == ept_pde_ept_pde_pt
-        && ptrFromPAddr(ept_pde_ept_pde_pt_ptr_get_pt_base_address(find_ret.pdSlot)) == pt) {
+    اگر (ept_pde_ptr_get_صفحہ_سائز(ڈھونڈو_ret.pd_خانہ) == ept_pde_ept_pde_pt
+        && ptrFromPAddr(ept_pde_ept_pde_pt_ptr_get_pt_بنیاد_پتہ(ڈھونڈو_ret.pd_خانہ)) == pt) {
         ret.pml4 = asid_ret.ept;
-        ret.pdSlot = find_ret.pdSlot;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    } else {
-        ret.pml4 = NULL;
-        ret.pdSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd_خانہ = ڈھونڈو_ret.pd_خانہ;
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
+    } ورنہ {
+        ret.pml4 = تہی;
+        ret.pd_خانہ = تہی;
+        ret.حالت_2 = EXCEPTION_LOOKUP_FAULT;
+        واپس ret;
     }
 }
 
-void unmapEPTPageTable(asid_t asid, vptr_t vaddr, ept_pte_t *pt)
+خالی unmap_EPTPage_جدول(asid_t asid, vptr_t vaddr, ept_pte_t *pt)
 {
-    EPTPageTableMapped_ret_t lu_ret;
+    EPTPage_جدول_Mapped_ret_t lu_ret;
 
-    lu_ret = EPTPageTableMapped(asid, vaddr, pt);
+    lu_ret = EPTPage_جدول_Mapped(asid, vaddr, pt);
 
-    if (lu_ret.status == EXCEPTION_NONE) {
-        *lu_ret.pdSlot = ept_pde_ept_pde_pt_new(
+    اگر (lu_ret.حالت_2 == EXCEPTION_NONE) {
+        *lu_ret.pd_خانہ = ept_pde_ept_pde_pt_new(
                              0,  /* pt_base_address  */
                              0,  /* avl_cte_depth    */
                              0,  /* execute          */
@@ -623,126 +623,126 @@ void unmapEPTPageTable(asid_t asid, vptr_t vaddr, ept_pte_t *pt)
     }
 }
 
-static exception_t performEPTPTInvocationUnmap(cap_t cap, cte_t *cte)
+ساکن exception_t performEPTPTInvocationUnmap(cap_t cap, cte_t *cte)
 {
-    if (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+    اگر (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
         ept_pte_t *pt = (ept_pte_t *)cap_ept_pt_cap_get_capPTBasePtr(cap);
-        unmapEPTPageTable(
+        unmap_EPTPage_جدول(
             cap_ept_pt_cap_get_capPTMappedASID(cap),
-            cap_ept_pt_cap_get_capPTMappedAddress(cap),
+            cap_ept_pt_cap_get_cap_PTMapped_پتہ(cap),
             pt);
-        clearMemory((void *)pt, cap_get_capSizeBits(cap));
+        clear_حافظہ((خالی *)pt, cap_get_cap_سائز_بٹ(cap));
     }
-    cap_ept_pt_cap_ptr_set_capPTIsMapped(&(cte->cap), 0);
+    cap_ept_pt_cap_ptr_سیٹ_cap_PTIs_Mapped(&(cte->cap), 0);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-static exception_t performEPTPTInvocationMap(cap_t cap, cte_t *cte, ept_pde_t pde, ept_pde_t *pdSlot, ept_pml4e_t *pml4)
+ساکن exception_t performEPTPTInvocationMap(cap_t cap, cte_t *cte, ept_pde_t pde, ept_pde_t *pd_خانہ, ept_pml4e_t *pml4)
 {
     cte->cap = cap;
-    *pdSlot = pde;
+    *pd_خانہ = pde;
     invept(pml4);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
 exception_t decodeX86EPTPTInvocation(
-    word_t invLabel,
-    word_t length,
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cte_t *cte,
     cap_t cap,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    word_t          vaddr;
+    لفظ_t          vaddr;
     cap_t           pml4Cap;
     ept_pml4e_t    *pml4;
     ept_pde_t       pde;
     paddr_t         paddr;
     asid_t          asid;
-    findEPTForASID_ret_t find_ret;
+    ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_ret;
     lookupEPTPDSlot_ret_t lu_ret;
 
-    if (invLabel == X86EPTPTUnmap) {
-        if (!isFinalCapability(cte)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+    اگر (invLabel == X86EPTPTUnmap) {
+        اگر (!isFinalCapability(cte)) {
+            current_syscall_error.type = se_L4_Revoke_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performEPTPTInvocationUnmap(cap, cte);
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        واپس performEPTPTInvocationUnmap(cap, cte);
     }
 
-    if (invLabel != X86EPTPTMap) {
+    اگر (invLabel != X86EPTPTMap) {
         userError("X86EPTPT Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL) {
+    اگر (لمبائی < 2 || current_extra_caps.excaprefs[0] == تہی) {
         userError("X86EPTPT: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+    اگر (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
         userError("X86EPTPT EPT Page table is already mapped to an EPT page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_نمبر = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
-    vaddr = vaddr & ~MASK(EPT_PD_INDEX_OFFSET);
+    vaddr = getSyscallArg(0, بفر);
+    vaddr = vaddr & ~نقاب(EPT_PD_اشاریہ_انحراف);
     pml4Cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap ||
+    اگر (cap_get_capType(pml4Cap) != cap_ept_pml4_cap ||
         !cap_ept_pml4_cap_get_capPML4IsMapped(pml4Cap)) {
         userError("X86EPTPTMap: Not a valid EPT pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    pml4 = (ept_pml4e_t *)(cap_ept_pml4_cap_get_capPML4BasePtr(pml4Cap));
+    pml4 = (ept_pml4e_t *)(cap_ept_pml4_cap_get_cap_PML4_بنیاد_Ptr(pml4Cap));
     asid = cap_ept_pml4_cap_get_capPML4MappedASID(pml4Cap);
 
-    find_ret = findEPTForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
+    ڈھونڈو_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (find_ret.ept != pml4) {
+    اگر (ڈھونڈو_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
     lu_ret = lookupEPTPDSlot(pml4, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
         /* current_lookup_fault will have been set by lookupPTSlot */
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (((ept_pde_ptr_get_page_size(lu_ret.pdSlot) == ept_pde_ept_pde_pt) &&
-         ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pdSlot)) ||
-        ((ept_pde_ptr_get_page_size(lu_ret.pdSlot) == ept_pde_ept_pde_2m) &&
-         ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pdSlot))) {
+    اگر (((ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) == ept_pde_ept_pde_pt) &&
+         ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pd_خانہ)) ||
+        ((ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) == ept_pde_ept_pde_2m) &&
+         ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pd_خانہ))) {
         userError("X86EPTPTMap: Page table already mapped here");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_پہلا;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    paddr = pptr_to_paddr((void *)(cap_ept_pt_cap_get_capPTBasePtr(cap)));
+    paddr = pptr_مقصد_paddr((خالی *)(cap_ept_pt_cap_get_capPTBasePtr(cap)));
     pde = ept_pde_ept_pde_pt_new(
               paddr,/* pt_base_address  */
               0,    /* avl_cte_depth    */
@@ -751,133 +751,133 @@ exception_t decodeX86EPTPTInvocation(
               1     /* read             */
           );
 
-    cap = cap_ept_pt_cap_set_capPTIsMapped(cap, 1);
-    cap = cap_ept_pt_cap_set_capPTMappedASID(cap, asid);
-    cap = cap_ept_pt_cap_set_capPTMappedAddress(cap, vaddr);
+    cap = cap_ept_pt_cap_سیٹ_cap_PTIs_Mapped(cap, 1);
+    cap = cap_ept_pt_cap_سیٹ_cap_PTMapped_ASID(cap, asid);
+    cap = cap_ept_pt_cap_سیٹ_cap_PTMapped_پتہ(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performEPTPTInvocationMap(cap, cte, pde, lu_ret.pdSlot, pml4);
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+    واپس performEPTPTInvocationMap(cap, cte, pde, lu_ret.pd_خانہ, pml4);
 }
 
-static exception_t performEPTPageMapPTE(cap_t cap, cte_t *cte, ept_pte_t *ptSlot, ept_pte_t pte, ept_pml4e_t *pml4)
+ساکن exception_t performEPTPageMapPTE(cap_t cap, cte_t *cte, ept_pte_t *pt_خانہ, ept_pte_t pte, ept_pml4e_t *pml4)
 {
-    *ptSlot = pte;
+    *pt_خانہ = pte;
     cte->cap = cap;
     invept(pml4);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-static exception_t performEPTPageMapPDE(cap_t cap, cte_t *cte, ept_pde_t *pdSlot, ept_pde_t pde1, ept_pde_t pde2,
+ساکن exception_t performEPTPageMapPDE(cap_t cap, cte_t *cte, ept_pde_t *pd_خانہ, ept_pde_t pde1, ept_pde_t pde2,
                                         ept_pml4e_t *pml4)
 {
-    pdSlot[0] = pde1;
-    if (LARGE_PAGE_BITS == 22) {
-        pdSlot[1] = pde2;
+    pd_خانہ[0] = pde1;
+    اگر (LARGE_صفحہ_بٹ == 22) {
+        pd_خانہ[1] = pde2;
     }
     cte->cap = cap;
     invept(pml4);
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
 exception_t decodeX86EPTPageMap(
-    word_t invLabel,
-    word_t length,
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cte_t *cte,
     cap_t cap,
-    word_t *buffer)
+    لفظ_t *بفر)
 {
-    word_t          vaddr;
-    word_t          w_rightsMask;
+    لفظ_t          vaddr;
+    لفظ_t          w_rights_نقاب;
     paddr_t         paddr;
     cap_t           pml4Cap;
     ept_pml4e_t    *pml4;
     vm_rights_t     capVMRights;
     vm_rights_t     vmRights;
-    vm_attributes_t vmAttr;
-    vm_page_size_t  frameSize;
+    vm_اوصاف_t vmAttr;
+    vm_صفحہ_سائز_t  چوکھٹا_سائز;
     asid_t          asid;
 
-    frameSize = cap_frame_cap_get_capFSize(cap);
-    vaddr = getSyscallArg(0, buffer);
-    vaddr = vaddr & ~MASK(EPT_PT_INDEX_OFFSET);
-    w_rightsMask = getSyscallArg(1, buffer);
-    vmAttr = vmAttributesFromWord(getSyscallArg(2, buffer));
+    چوکھٹا_سائز = cap_چوکھٹا_cap_get_cap_FSize(cap);
+    vaddr = getSyscallArg(0, بفر);
+    vaddr = vaddr & ~نقاب(EPT_PT_اشاریہ_انحراف);
+    w_rights_نقاب = getSyscallArg(1, بفر);
+    vmAttr = vm_اوصاف_From_لفظ(getSyscallArg(2, بفر));
     pml4Cap = current_extra_caps.excaprefs[0]->cap;
 
-    capVMRights = cap_frame_cap_get_capFVMRights(cap);
+    capVMRights = cap_چوکھٹا_cap_get_cap_FVMRights(cap);
 
-    if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+    اگر (cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap) != asidInvalid) {
         userError("X86EPTPageMap: Frame already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_نمبر = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    assert(cap_frame_cap_get_capFMapType(cap) == X86_MappingNone);
+    أكد(cap_چوکھٹا_cap_get_cap_FMap_Type(cap) == X86_MappingNone);
 
-    if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap ||
+    اگر (cap_get_capType(pml4Cap) != cap_ept_pml4_cap ||
         !cap_ept_pml4_cap_get_capPML4IsMapped(pml4Cap)) {
         userError("X86EPTPageMap: Attempting to map frame into invalid ept pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    pml4 = (ept_pml4e_t *)(cap_ept_pml4_cap_get_capPML4BasePtr(pml4Cap));
+    pml4 = (ept_pml4e_t *)(cap_ept_pml4_cap_get_cap_PML4_بنیاد_Ptr(pml4Cap));
     asid = cap_ept_pml4_cap_get_capPML4MappedASID(pml4Cap);
 
-    findEPTForASID_ret_t find_ret = findEPTForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
+    ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
+        current_syscall_error.failed_Lookup_Was_ماخذ = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (find_ret.ept != pml4) {
+    اگر (ڈھونڈو_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_نمبر = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
 
-    vmRights = maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
+    vmRights = نقاب_VMRights(capVMRights, rights_From_لفظ(w_rights_نقاب));
 
-    if (!checkVPAlignment(frameSize, vaddr)) {
+    اگر (!checkVPAlignment(چوکھٹا_سائز, vaddr)) {
         current_syscall_error.type = seL4_AlignmentError;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    paddr = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
+    paddr = pptr_مقصد_paddr((خالی *)cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap));
 
-    cap = cap_frame_cap_set_capFMappedASID(cap, asid);
-    cap = cap_frame_cap_set_capFMappedAddress(cap, vaddr);
-    cap = cap_frame_cap_set_capFMapType(cap, X86_MappingEPT);
+    cap = cap_چوکھٹا_cap_سیٹ_cap_FMapped_ASID(cap, asid);
+    cap = cap_چوکھٹا_cap_سیٹ_cap_FMapped_پتہ(cap, vaddr);
+    cap = cap_چوکھٹا_cap_سیٹ_cap_FMap_Type(cap, X86_MappingEPT);
 
-    switch (frameSize) {
+    انتخاب (چوکھٹا_سائز) {
     /* PTE mappings */
-    case X86_SmallPage: {
+    حالت X86_Small_صفحہ: {
         lookupEPTPTSlot_ret_t lu_ret;
         ept_pte_t pte;
 
         lu_ret = lookupEPTPTSlot(pml4, vaddr);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
+            current_syscall_error.failed_Lookup_Was_ماخذ = false;
             /* current_lookup_fault will have been set by lookupEPTPTSlot */
-            return EXCEPTION_SYSCALL_ERROR;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (ept_pte_ptr_get_read(lu_ret.ptSlot)) {
+        اگر (ept_pte_ptr_get_read(lu_ret.pt_خانہ)) {
             userError("X86EPTPageMap: Mapping already present.");
-            current_syscall_error.type = seL4_DeleteFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Delete_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
 
         pte = ept_pte_new(
@@ -889,42 +889,42 @@ exception_t decodeX86EPTPageMap(
                   WritableFromVMRights(vmRights),
                   1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performEPTPageMapPTE(cap, cte, lu_ret.ptSlot, pte, pml4);
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        واپس performEPTPageMapPTE(cap, cte, lu_ret.pt_خانہ, pte, pml4);
     }
 
     /* PDE mappings */
-    case X86_LargePage: {
+    حالت X86_Large_صفحہ: {
         lookupEPTPDSlot_ret_t lu_ret;
 
         lu_ret = lookupEPTPDSlot(pml4, vaddr);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
             userError("X86EPTPageMap: Need a page directory first.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
+            current_syscall_error.failed_Lookup_Was_ماخذ = false;
             /* current_lookup_fault will have been set by lookupEPTPDSlot */
-            return EXCEPTION_SYSCALL_ERROR;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
 
 
-        if ((ept_pde_ptr_get_page_size(lu_ret.pdSlot) == ept_pde_ept_pde_pt) &&
-            ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pdSlot)) {
+        اگر ((ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) == ept_pde_ept_pde_pt) &&
+            ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pd_خانہ)) {
             userError("X86EPTPageMap: Page table already present.");
-            current_syscall_error.type = seL4_DeleteFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Delete_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
-        if (LARGE_PAGE_BITS != EPT_PD_INDEX_OFFSET &&
-            (ept_pde_ptr_get_page_size(lu_ret.pdSlot + 1) == ept_pde_ept_pde_pt) &&
-            ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pdSlot + 1)) {
+        اگر (LARGE_صفحہ_بٹ != EPT_PD_اشاریہ_انحراف &&
+            (ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ + 1) == ept_pde_ept_pde_pt) &&
+            ept_pde_ept_pde_pt_ptr_get_read(lu_ret.pd_خانہ + 1)) {
             userError("X86EPTPageMap: Page table already present.");
-            current_syscall_error.type = seL4_DeleteFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Delete_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
-        if ((ept_pde_ptr_get_page_size(lu_ret.pdSlot) == ept_pde_ept_pde_2m) &&
-            ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pdSlot)) {
+        اگر ((ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) == ept_pde_ept_pde_2m) &&
+            ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pd_خانہ)) {
             userError("X86EPTPageMap: Mapping already present.");
-            current_syscall_error.type = seL4_DeleteFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Delete_پہلا;
+            واپس EXCEPTION_SYSCALL_ERROR;
         }
 
         ept_pde_t pde1 = ept_pde_ept_pde_2m_new(
@@ -937,7 +937,7 @@ exception_t decodeX86EPTPageMap(
                              1);
 
         ept_pde_t pde2 = ept_pde_ept_pde_2m_new(
-                             paddr + BIT(EPT_PD_INDEX_OFFSET),
+                             paddr + ثنائی_ہندسہ(EPT_PD_اشاریہ_انحراف),
                              0,
                              0,
                              eptCacheFromVmAttr(vmAttr),
@@ -945,82 +945,82 @@ exception_t decodeX86EPTPageMap(
                              WritableFromVMRights(vmRights),
                              1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performEPTPageMapPDE(cap, cte, lu_ret.pdSlot, pde1, pde2, pml4);
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        واپس performEPTPageMapPDE(cap, cte, lu_ret.pd_خانہ, pde1, pde2, pml4);
     }
 
-    default:
+    طےشدہ:
         /* When initializing EPT we only checked for support for 4K and 2M
          * pages, so we must disallow attempting to use any other */
         userError("X86EPTPageMap: Attempted to map unsupported page size.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_نمبر = 0;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void unmapEPTPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
+خالی unmapEPTPage(vm_صفحہ_سائز_t صفحہ_سائز, asid_t asid, vptr_t vptr, خالی *pptr)
 {
-    findEPTForASID_ret_t find_ret;
+    ڈھونڈو_EPTFor_ASID_ret_t ڈھونڈو_ret;
     paddr_t addr = addrFromPPtr(pptr);
 
-    find_ret = findEPTForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    ڈھونڈو_ret = ڈھونڈو_EPTFor_ASID(asid);
+    اگر (ڈھونڈو_ret.حالت_2 != EXCEPTION_NONE) {
+        واپس;
     }
 
-    switch (page_size) {
-    case X86_SmallPage: {
+    انتخاب (صفحہ_سائز) {
+    حالت X86_Small_صفحہ: {
         lookupEPTPTSlot_ret_t lu_ret;
 
-        lu_ret = lookupEPTPTSlot(find_ret.ept, vptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return;
+        lu_ret = lookupEPTPTSlot(ڈھونڈو_ret.ept, vptr);
+        اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
+            واپس;
         }
-        if (!ept_pte_ptr_get_read(lu_ret.ptSlot)) {
-            return;
+        اگر (!ept_pte_ptr_get_read(lu_ret.pt_خانہ)) {
+            واپس;
         }
-        if (ept_pte_ptr_get_page_base_address(lu_ret.ptSlot) != addr) {
-            return;
+        اگر (ept_pte_ptr_get_صفحہ_بنیاد_پتہ(lu_ret.pt_خانہ) != addr) {
+            واپس;
         }
 
-        *lu_ret.ptSlot = ept_pte_new(0, 0, 0, 0, 0, 0, 0);
-        break;
+        *lu_ret.pt_خانہ = ept_pte_new(0, 0, 0, 0, 0, 0, 0);
+        توڑو;
     }
-    case X86_LargePage: {
+    حالت X86_Large_صفحہ: {
         lookupEPTPDSlot_ret_t lu_ret;
 
-        lu_ret = lookupEPTPDSlot(find_ret.ept, vptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return;
+        lu_ret = lookupEPTPDSlot(ڈھونڈو_ret.ept, vptr);
+        اگر (lu_ret.حالت_2 != EXCEPTION_NONE) {
+            واپس;
         }
-        if (ept_pde_ptr_get_page_size(lu_ret.pdSlot) != ept_pde_ept_pde_2m) {
-            return;
+        اگر (ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ) != ept_pde_ept_pde_2m) {
+            واپس;
         }
-        if (!ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pdSlot)) {
-            return;
+        اگر (!ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pd_خانہ)) {
+            واپس;
         }
-        if (ept_pde_ept_pde_2m_ptr_get_page_base_address(lu_ret.pdSlot) != addr) {
-            return;
+        اگر (ept_pde_ept_pde_2m_ptr_get_صفحہ_بنیاد_پتہ(lu_ret.pd_خانہ) != addr) {
+            واپس;
         }
 
-        lu_ret.pdSlot[0] = ept_pde_ept_pde_2m_new(0, 0, 0, 0, 0, 0, 0);
+        lu_ret.pd_خانہ[0] = ept_pde_ept_pde_2m_new(0, 0, 0, 0, 0, 0, 0);
 
-        if (LARGE_PAGE_BITS != EPT_PD_INDEX_OFFSET) {
-            assert(ept_pde_ptr_get_page_size(lu_ret.pdSlot + 1) == ept_pde_ept_pde_2m);
-            assert(ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pdSlot + 1));
-            assert(ept_pde_ept_pde_2m_ptr_get_page_base_address(lu_ret.pdSlot + 1) == addr + BIT(21));
+        اگر (LARGE_صفحہ_بٹ != EPT_PD_اشاریہ_انحراف) {
+            أكد(ept_pde_ptr_get_صفحہ_سائز(lu_ret.pd_خانہ + 1) == ept_pde_ept_pde_2m);
+            أكد(ept_pde_ept_pde_2m_ptr_get_read(lu_ret.pd_خانہ + 1));
+            أكد(ept_pde_ept_pde_2m_ptr_get_صفحہ_بنیاد_پتہ(lu_ret.pd_خانہ + 1) == addr + ثنائی_ہندسہ(21));
 
-            lu_ret.pdSlot[1] = ept_pde_ept_pde_2m_new(0, 0, 0, 0, 0, 0, 0);
+            lu_ret.pd_خانہ[1] = ept_pde_ept_pde_2m_new(0, 0, 0, 0, 0, 0, 0);
         }
-        break;
+        توڑو;
     }
-    default:
+    طےشدہ:
         /* we did not allow mapping additional page sizes into EPT objects,
          * so this should not happen. As we have no way to return an error
          * all we can do is assert */
-        assert(!"Invalid page size for unmap");
+        أكد(!"Invalid page size for unmap");
     }
 }
 
-#endif /* CONFIG_VTX */
+#اگر_ختم /* CONFIG_VTX */

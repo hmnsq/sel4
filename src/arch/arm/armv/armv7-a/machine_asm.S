@@ -11,7 +11,7 @@
 
 .code 32
 .section .text, "ax"
-.global lockTLBEntryCritical
+.عام lockTLBEntryCritical
 
 .balign (16*4)
 BEGIN_FUNC(lockTLBEntryCritical)

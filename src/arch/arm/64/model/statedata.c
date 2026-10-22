@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#شامل <config.h>
+#شامل <util.h>
+#شامل <api/types.h>
+#شامل <arch/types.h>
+#شامل <arch/model/statedata.h>
+#شامل <arch/object/structures.h>
+#شامل <linker.h>
+#شامل <plat/machine/hardware.h>
 
-#ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
-#endif
+#اگر_تعریف_شدہ CONFIG_ARM_SMMU
+#شامل <arch/object/smmu.h>
+#اگر_ختم
 
 
 asid_pool_t *armKSASIDTable[nASIDPools];
@@ -82,50 +82,50 @@ asid_pool_t *armKSASIDTable[nASIDPools];
  * applies.
  */
 
-vspace_root_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
-pte_t armKSGlobalKernelPGD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+vspace_جڑ_t armKSGlobalUserVSpace[ثنائی_ہندسہ(se_L4_VSpace_اشاریہ_بٹ)] ALIGN_BSS(ثنائی_ہندسہ(se_L4_VSpace_بٹ));
+pte_t armKSGlobalKernelPGD[ثنائی_ہندسہ(PT_اشاریہ_بٹ)] ALIGN_BSS(ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ));
 
-pte_t armKSGlobalKernelPUD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPDs[BIT(PT_INDEX_BITS)][BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPUD[ثنائی_ہندسہ(PT_اشاریہ_بٹ)] ALIGN_BSS(ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ));
+pte_t armKSGlobalKernelPDs[ثنائی_ہندسہ(PT_اشاریہ_بٹ)][ثنائی_ہندسہ(PT_اشاریہ_بٹ)] ALIGN_BSS(ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ));
+pte_t armKSGlobalKernelPT[ثنائی_ہندسہ(PT_اشاریہ_بٹ)] ALIGN_BSS(ثنائی_ہندسہ(se_L4_صفحہ_جدول_بٹ));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][BIT(PT_INDEX_BITS) - 2];
+#اگر_تعریف_شدہ CONFIG_KERNEL_LOG_بفر
+pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[ثنائی_ہندسہ(PT_اشاریہ_بٹ) - 1][ثنائی_ہندسہ(PT_اشاریہ_بٹ) - 2];
 compile_assert(log_pude_is_correct_preallocated_pude,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+               GET_KPT_اشاریہ(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == ثنائی_ہندسہ(PT_اشاریہ_بٹ) - 1);
 compile_assert(log_pde_is_correct_preallocated_pde,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == BIT(PT_INDEX_BITS) - 2);
-#endif
+               GET_KPT_اشاریہ(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == ثنائی_ہندسہ(PT_اشاریہ_بٹ) - 2);
+#اگر_ختم
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-UP_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
-UP_STATE_DEFINE(bool_t, armHSVCPUActive);
+#اگر_تعریف_شدہ CONFIG_ARM_HYPERVISOR_SUPPORT
+اوپر_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
+اوپر_STATE_DEFINE(bool_t, armHSVCPUActive);
 
 /* The hardware VMID to virtual ASID mapping table.
  * The ARMv8 supports 8-bit VMID which is used as logical ASID
  * when the kernel runs in EL2.
  */
-asid_t armKSHWASIDTable[BIT(hwASIDBits)];
+asid_t armKSHWASIDTable[ثنائی_ہندسہ(hwASIDBits)];
 hw_asid_t armKSNextASID = hwASIDMin;
-#endif
+#اگر_ختم
 
-#ifdef CONFIG_ARM_SMMU
+#اگر_تعریف_شدہ CONFIG_ARM_SMMU
 /*recording the state of created SID caps*/
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
-cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+cte_t smmuStateSIDNode[ثنائی_ہندسہ(SMMU_SID_CNODE_خانہ_بٹ)] ALIGN(ثنائی_ہندسہ(SMMU_SID_CNODE_خانہ_بٹ + se_L4_خانہ_بٹ));
+compile_assert(smmu_State_SIDCNode_سائز, حجم(smmuStateSIDNode) >= ((SMMU_MAX_SID) * حجم(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
-cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+cte_t smmuStateCBNode[ثنائی_ہندسہ(SMMU_CB_CNODE_خانہ_بٹ)] ALIGN(ثنائی_ہندسہ(SMMU_CB_CNODE_خانہ_بٹ + se_L4_خانہ_بٹ));
+compile_assert(smmu_State_CBCNode_سائز, حجم(smmuStateCBNode) >= ((SMMU_MAX_CB) * حجم(cte_t)));
 /*recording the context bank to ASID relationship*/
-asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
-#endif
+asid_t smmu_State_CBAsid_جدول[SMMU_MAX_CB];
+#اگر_ختم
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#اگر_تعریف_شدہ ARM_بنیاد_CP14_SAVE_AND_RESTORE
 /* Null state for the Debug coprocessor's break/watchpoint registers */
 user_breakpoint_state_t armKSNullBreakpointState;
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#اگر_ختم /* ARM_BASE_CP14_SAVE_AND_RESTORE */

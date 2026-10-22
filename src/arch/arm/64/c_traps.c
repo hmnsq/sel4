@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#شامل <config.h>
+#شامل <model/statedata.h>
+#شامل <arch/fastpath/fastpath.h>
+#شامل <arch/kernel/traps.h>
+#شامل <api/syscall.h>
+#شامل <linker.h>
+#شامل <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#شامل <benchmark/benchmark_track.h>
+#شامل <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+خالی VISIBLE NORETURN restore_user_context(خالی)
 {
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#اگر_تعریف_شدہ ARM_CP14_SAVE_AND_RESTORE_NATIVE_دھاگے
+    restore_user_debug_context(گرہ_STATE(ksCurThread));
+#اگر_ختم
 
-    NODE_UNLOCK_IF_HELD;
+    گرہ_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm متلون(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
         "ldp     x21, x22, [sp, %[SP_EL0]] \n"
         "ldr     x23, [sp, %[SPSR_EL1]]    \n"
         "msr     sp_el0, x21                \n"
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#اگر_تعریف_شدہ CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#ورنہ
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
-#endif
+#اگر_ختم
         /* Restore remaining registers */
         "ldp     x0,  x1,  [sp, #16 * 0]    \n"
         "ldp     x2,  x3,  [sp, #16 * 1]    \n"
@@ -59,60 +59,60 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(گرہ_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#اگر defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+غیر_مستعمل ساکن ثابت حرف *vect_انحراف_مقصد_name(لفظ_t vect_انحراف)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    انتخاب (vect_انحراف) {
+    حالت 0x000:
+        واپس "Synchronous EL1t/EL2t";
+    حالت 0x080:
+        واپس "IRQ EL1t/EL2t";
+    حالت 0x100:
+        واپس "FIQ EL1t/EL2t";
+    حالت 0x180:
+        واپس "SError EL1t/EL2t";
+    حالت 0x200:
+        واپس "Synchronous Current EL";
+    حالت 0x280:
+        واپس "IRQ Current EL";
+    حالت 0x300:
+        واپس "FIQ Current EL";
+    حالت 0x380:
+        واپس "SError Current EL";
+    حالت 0x400:
+        واپس "Synchronous 64-bit EL0/EL1";
+    حالت 0x480:
+        واپس "IRQ 64-bit EL0/EL1";
+    حالت 0x500:
+        واپس "FIQ 64-bit EL0/EL1";
+    حالت 0x580:
+        واپس "SError 64-bit EL0/EL1";
+    حالت 0x600:
+        واپس "Synchronous 32-bit EL0/EL1";
+    حالت 0x680:
+        واپس "IRQ 32-bit EL0/EL1";
+    حالت 0x700:
+        واپس "FIQ 32-bit EL0/EL1";
+    حالت 0x780:
+        واپس "SError 32-bit EL0/EL1";
+    طےشدہ:
+        واپس "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+خالی VISIBLE c_handle_invalid_سمتیہ_اندراج(لفظ_t vect_انحراف, لفظ_t pc)
 {
-    printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
-    printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));
-    printf("Fault attributed to program counter: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("ESR: 0x%"SEL4_PRIx_word" FAR: 0x%"SEL4_PRIx_word"\n", getESR(), getFAR());
+    لکھو("\n\nKERNEL INVALID VECTOR ENTRY!\n");
+    لکھو("Vector: 0x%"SEL4_PRIx_لفظ" (%s)\n", vect_انحراف, vect_انحراف_مقصد_name(vect_انحراف));
+    لکھو("Fault attributed to program counter: 0x%"SEL4_PRIx_لفظ"\n", pc);
+    لکھو("ESR: 0x%"SEL4_PRIx_لفظ" FAR: 0x%"SEL4_PRIx_لفظ"\n", getESR(), getFAR());
 }
-#endif
+#اگر_ختم

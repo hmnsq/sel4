@@ -4,50 +4,50 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#شامل <config.h>
+#شامل <stdint.h>
+#شامل <util.h>
+#شامل <machine/io.h>
 
 /* When DLAB=1, MU_IO is a baud rate register.
  * Otherwise, write to TX, read to RX */
-#define MU_IO       0x00
+#تعریف_کرو MU_IO       0x00
 /* When DLAB=1, MU_IIR is a baud rate register.
  * Otherwise IRQ enable */
-#define MU_IIR      0x04
-#define MU_IER      0x08
-#define MU_LCR      0x0C
-#define MU_MCR      0x10
-#define MU_LSR      0x14
-#define MU_MSR      0x18
-#define MU_SCRATCH  0x1C
-#define MU_CNTL     0x20
+#تعریف_کرو MU_IIR      0x04
+#تعریف_کرو MU_IER      0x08
+#تعریف_کرو MU_LCR      0x0C
+#تعریف_کرو MU_MCR      0x10
+#تعریف_کرو MU_LSR      0x14
+#تعریف_کرو MU_MSR      0x18
+#تعریف_کرو MU_SCRATCH  0x1C
+#تعریف_کرو MU_CNTL     0x20
 
 /* This bit is set if the transmit FIFO can accept at least one byte.*/
-#define MU_LSR_TXEMPTY   BIT(5)
+#تعریف_کرو MU_LSR_TXEMPTY   ثنائی_ہندسہ(5)
 /* This bit is set if the transmit FIFO is empty and the
  * transmitter is idle. (Finished shifting out the last bit). */
-#define MU_LSR_TXIDLE    BIT(6)
-#define MU_LSR_RXOVERRUN BIT(1)
-#define MU_LSR_DATAREADY BIT(0)
-#define MU_LCR_DLAB      BIT(7)
-#define MU_LCR_BREAK     BIT(6)
-#define MU_LCR_DATASIZE  BIT(0)
+#تعریف_کرو MU_LSR_TXIDLE    ثنائی_ہندسہ(6)
+#تعریف_کرو MU_LSR_RXOVERRUN ثنائی_ہندسہ(1)
+#تعریف_کرو MU_LSR_DATAREADY ثنائی_ہندسہ(0)
+#تعریف_کرو MU_LCR_DLAB      ثنائی_ہندسہ(7)
+#تعریف_کرو MU_LCR_BREAK     ثنائی_ہندسہ(6)
+#تعریف_کرو MU_LCR_DATASIZE  ثنائی_ہندسہ(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کرو UART_REG(x) ((متلون uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#اگر_تعریف_شدہ CONFIG_PRINTING
+خالی uart_drv_putchar(غیرعلامتی حرف c)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
+    جب (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
     *UART_REG(MU_IO) = (c & 0xff);
 }
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+غیرعلامتی حرف uart_drv_getchar(خالی)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
-    return *UART_REG(MU_IO);
+    جب (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
+    واپس *UART_REG(MU_IO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم /* CONFIG_DEBUG_BUILD */

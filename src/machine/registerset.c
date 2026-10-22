@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <machine/registerset.h>
+#شامل <machine/registerset.h>
 
-const register_t fault_messages[][MAX_MSG_SIZE] = {
-    [MessageID_Syscall] = SYSCALL_MESSAGE,
-    [MessageID_Exception] = EXCEPTION_MESSAGE,
-#ifdef CONFIG_KERNEL_MCS
-    [MessageID_TimeoutReply] = TIMEOUT_REPLY_MESSAGE,
-#endif
+ثابت رجسٹر_t fault_messages[][MAX_پیغام_سائز] = {
+    [پیغام_ID_Syscall] = SYSCALL_پیغام,
+    [پیغام_ID_Exception] = EXCEPTION_پیغام,
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    [پیغام_ID_Timeout_جواب] = TIMEOUT_جواب_پیغام,
+#اگر_ختم
 };

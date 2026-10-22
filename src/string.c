@@ -4,39 +4,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <string.h>
+#شامل <config.h>
+#شامل <assert.h>
+#شامل <string.h>
 
-word_t strnlen(const char *s, word_t maxlen)
+لفظ_t strnlen(ثابت حرف *s, لفظ_t maxlen)
 {
-    word_t len;
-    for (len = 0; len < maxlen && s[len]; len++);
-    return len;
+    لفظ_t len;
+    برائے (len = 0; len < maxlen && s[len]; len++);
+    واپس len;
 }
 
-word_t strlcpy(char *dest, const char *src, word_t size)
+لفظ_t strlcpy(حرف *dest, ثابت حرف *src, لفظ_t سائز)
 {
-    word_t len;
-    for (len = 0; len + 1 < size && src[len]; len++) {
+    لفظ_t len;
+    برائے (len = 0; len + 1 < سائز && src[len]; len++) {
         dest[len] = src[len];
     }
     dest[len] = '\0';
-    return len;
+    واپس len;
 }
 
-word_t strlcat(char *dest, const char *src, word_t size)
+لفظ_t strlcat(حرف *dest, ثابت حرف *src, لفظ_t سائز)
 {
-    word_t len;
+    لفظ_t len;
     /* get to the end of dest */
-    for (len = 0; len < size && dest[len]; len++);
+    برائے (len = 0; len < سائز && dest[len]; len++);
     /* check that dest was at least 'size' length to prevent inserting
      * a null byte when we shouldn't */
-    if (len < size) {
-        for (; len + 1 < size && *src; len++, src++) {
+    اگر (len < سائز) {
+        برائے (; len + 1 < سائز && *src; len++, src++) {
             dest[len] = *src;
         }
         dest[len] = '\0';
     }
-    return len;
+    واپس len;
 }

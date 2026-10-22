@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#شامل <config.h>
+#شامل <stdint.h>
+#شامل <util.h>
+#شامل <machine/io.h>
+#شامل <plat/machine/devices_gen.h>
 
-#define USART_ISR               0x1C
-#define USART_TDR               0x28
+#تعریف_کرو USART_ISR               0x1C
+#تعریف_کرو USART_TDR               0x28
 
-#define USART_ISR_TXE           0x80U
+#تعریف_کرو USART_ISR_TXE           0x80U
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کرو UART_REG(x) ((متلون uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#اگر_تعریف_شدہ CONFIG_PRINTING
+خالی uart_drv_putchar(غیرعلامتی حرف c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    جب (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+غیرعلامتی حرف uart_drv_getchar(خالی)
 {
-    return -1;
+    واپس -1;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم /* CONFIG_DEBUG_BUILD */

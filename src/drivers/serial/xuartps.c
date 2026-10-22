@@ -4,46 +4,46 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#شامل <config.h>
+#شامل <stdint.h>
+#شامل <util.h>
+#شامل <machine/io.h>
+#شامل <plat/machine/devices_gen.h>
 
-#define UART_CONTROL                 0x00
-#define UART_MODE                    0x04
-#define UART_INTRPT_EN               0x08
-#define UART_INTRPT_DIS              0x0C
-#define UART_INTRPT_MASK             0x10
-#define UART_CHNL_INT_STS            0x14
-#define UART_BAUD_RATE_GEN           0x18
-#define UART_RCVR_TIMEOUT            0x1C
-#define UART_RCVR_FIFO_TRIGGER_LEVEL 0x20
-#define UART_MODEM_CTRL              0x24
-#define UART_MODEM_STS               0x28
-#define UART_CHANNEL_STS             0x2C
-#define UART_TX_RX_FIFO              0x30
-#define UART_BAUD_RATE_DIVIDER       0x34
-#define UART_FLOW_DELAY              0x38
-#define UART_TX_FIFO_TRIGGER_LEVEL   0x44
+#تعریف_کرو UART_CONTROL                 0x00
+#تعریف_کرو UART_منوال                    0x04
+#تعریف_کرو UART_INTRPT_EN               0x08
+#تعریف_کرو UART_INTRPT_DIS              0x0C
+#تعریف_کرو UART_INTRPT_نقاب             0x10
+#تعریف_کرو UART_CHNL_INT_STS            0x14
+#تعریف_کرو UART_BAUD_شرح_GEN           0x18
+#تعریف_کرو UART_RCVR_TIMEOUT            0x1C
+#تعریف_کرو UART_RCVR_FIFO_TRIGGER_LEVEL 0x20
+#تعریف_کرو UART_MODEM_CTRL              0x24
+#تعریف_کرو UART_MODEM_STS               0x28
+#تعریف_کرو UART_CHANNEL_STS             0x2C
+#تعریف_کرو UART_TX_RX_FIFO              0x30
+#تعریف_کرو UART_BAUD_شرح_DIVIDER       0x34
+#تعریف_کرو UART_FLOW_DELAY              0x38
+#تعریف_کرو UART_TX_FIFO_TRIGGER_LEVEL   0x44
 
-#define UART_INTRPT_MASK_TXEMPTY     BIT(3)
-#define UART_CHANNEL_STS_TXEMPTY     BIT(3)
+#تعریف_کرو UART_INTRPT_نقاب_TXEMPTY     ثنائی_ہندسہ(3)
+#تعریف_کرو UART_CHANNEL_STS_TXEMPTY     ثنائی_ہندسہ(3)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کرو UART_REG(x) ((متلون uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#اگر_تعریف_شدہ CONFIG_PRINTING
+خالی uart_drv_putchar(غیرعلامتی حرف c)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
+    جب (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
     *UART_REG(UART_TX_RX_FIFO) = c;
 }
-#endif /* CONFIG_PRINTING */
+#اگر_ختم /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#اگر_تعریف_شدہ CONFIG_DEBUG_BUILD
+غیرعلامتی حرف uart_drv_getchar(خالی)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & BIT(UART_CHANNEL_STS_TXEMPTY)));
-    return *UART_REG(UART_TX_RX_FIFO);
+    جب (!(*UART_REG(UART_CHANNEL_STS) & ثنائی_ہندسہ(UART_CHANNEL_STS_TXEMPTY)));
+    واپس *UART_REG(UART_TX_RX_FIFO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#اگر_ختم /* CONFIG_DEBUG_BUILD */

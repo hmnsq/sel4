@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/stack.h>
+#شامل <kernel/stack.h>
 
-VISIBLE ALIGN(KERNEL_STACK_ALIGNMENT)
-char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+VISIBLE ALIGN(KERNEL_ڈھیر_ALIGNMENT)
+حرف kernel_ڈھیر_alloc[CONFIG_MAX_عدد_NODES][ثنائی_ہندسہ(CONFIG_KERNEL_ڈھیر_بٹ)];

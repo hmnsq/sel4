@@ -4,210 +4,210 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <arch/kernel/ept.h>
+#شامل <config.h>
+#شامل <types.h>
+#شامل <api/failures.h>
+#شامل <kernel/vspace.h>
+#شامل <object/structures.h>
+#شامل <arch/machine.h>
+#شامل <arch/model/statedata.h>
+#شامل <arch/machine/fpu.h>
+#شامل <arch/object/objecttype.h>
+#شامل <arch/object/ioport.h>
+#شامل <arch/kernel/ept.h>
 
-#include <arch/object/iospace.h>
-#include <plat/machine/intel-vtd.h>
+#شامل <arch/object/iospace.h>
+#شامل <plat/machine/intel-vtd.h>
 
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_چوکھٹا_Type(لفظ_t type)
 {
-    switch (type) {
-    case seL4_X86_4K:
-        return true;
-    case seL4_X86_LargePageObject:
-        return true;
-    default:
-        return false;
+    انتخاب (type) {
+    حالت seL4_X86_4K:
+        واپس true;
+    حالت se_L4_X86_Large_صفحہ_Object:
+        واپس true;
+    طےشدہ:
+        واپس false;
     }
 }
 
-deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t منوال_derive_Cap(cte_t *خانہ, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-        cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_چوکھٹا_cap:
+        cap = cap_چوکھٹا_cap_سیٹ_cap_FMap_Type(cap, X86_MappingNone);
+        ret.cap = cap_چوکھٹا_cap_سیٹ_cap_FMapped_ASID(cap, asidInvalid);
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
 
-    default:
+    طےشدہ:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap type");
     }
 }
 
-finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
+finaliseCap_ret_t منوال_finalise_Cap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
+    انتخاب (cap_get_capType(cap)) {
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            switch (cap_frame_cap_get_capFMapType(cap)) {
-#ifdef CONFIG_VTX
-            case X86_MappingEPT:
+    حالت cap_چوکھٹا_cap:
+        اگر (cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap)) {
+            انتخاب (cap_چوکھٹا_cap_get_cap_FMap_Type(cap)) {
+#اگر_تعریف_شدہ CONFIG_VTX
+            حالت X86_MappingEPT:
                 unmapEPTPage(
-                    cap_frame_cap_get_capFSize(cap),
-                    cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    cap_چوکھٹا_cap_get_cap_FSize(cap),
+                    cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap),
+                    cap_چوکھٹا_cap_get_cap_FMapped_پتہ(cap),
+                    (خالی *)cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap)
                 );
-                break;
-#endif
-            case X86_MappingVSpace:
+                توڑو;
+#اگر_ختم
+            حالت X86_MappingVSpace:
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
+#اگر_تعریف_شدہ CONFIG_KERNEL_LOG_بفر
                 /* If the last cap to the user-level log buffer frame is being revoked,
                  * reset the ksLog so that the kernel doesn't log anymore
                  */
-                if (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
-                    if (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
-                        ksUserLogBuffer = 0;
+                اگر (unlikely(cap_چوکھٹا_cap_get_cap_FSize(cap) == X86_Large_صفحہ)) {
+                    اگر (pptr_مقصد_paddr((خالی *)cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap)) == ks_User_Log_بفر) {
+                        ks_User_Log_بفر = 0;
 
                         /* Invalidate log page table entries */
-                        clearMemory(ia32KSGlobalLogPT, seL4_PageTableBits);
+                        clear_حافظہ(ia32KSGlobalLogPT, se_L4_صفحہ_جدول_بٹ);
 
-                        for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+                        برائے (صحیح idx = 0; idx < ثنائی_ہندسہ(PT_اشاریہ_بٹ); idx++) {
+                            invalidateTLBEntry(KS_LOG_PPTR + (idx << se_L4_صفحہ_بٹ), نقاب(ks_عدد_CPUs));
                         }
 
                         userError("Log buffer frame is invalidated, kernel can't benchmark anymore\n");
                     }
                 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#اگر_ختم /* CONFIG_KERNEL_LOG_BUFFER */
 
-                unmapPage(
-                    cap_frame_cap_get_capFSize(cap),
-                    cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                unmap_صفحہ(
+                    cap_چوکھٹا_cap_get_cap_FSize(cap),
+                    cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap),
+                    cap_چوکھٹا_cap_get_cap_FMapped_پتہ(cap),
+                    (خالی *)cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap)
                 );
-                break;
-#ifdef CONFIG_IOMMU
-            case X86_MappingIOSpace:
+                توڑو;
+#اگر_تعریف_شدہ CONFIG_IOMMU
+            حالت X86_MappingIOSpace:
                 unmapIOPage(cap);
-                break;
-#endif
-            default:
+                توڑو;
+#اگر_ختم
+            طےشدہ:
                 fail("No mapping type for mapped cap");
-                break;
+                توڑو;
             }
         }
-        break;
+        توڑو;
 
-    default:
+    طےشدہ:
         fail("Invalid arch cap type");
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    واپس fc_ret;
 }
 
-bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
+bool_t CONST منوال_same_Region_As(cap_t cap_a, cap_t cap_b)
 {
-    return false;
+    واپس false;
 }
 
-word_t Mode_getObjectSize(word_t t)
+لفظ_t منوال_get_Object_سائز(لفظ_t t)
 {
     fail("Invalid object type");
-    return 0;
+    واپس 0;
 }
 
-cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t منوال_create_Object(object_t t, خالی *region_بنیاد, لفظ_t user_سائز, bool_t device_حافظہ)
 {
-    switch (t) {
-    case seL4_X86_4K:
-        return cap_frame_cap_new(
-                   X86_SmallPage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+    انتخاب (t) {
+    حالت seL4_X86_4K:
+        واپس cap_چوکھٹا_cap_new(
+                   X86_Small_صفحہ,          /* capFSize             */
+                   ASID_کم(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
-                   deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   device_حافظہ,           /* capFIsDevice         */
+                   ASID_بلند(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
-                   (word_t)regionBase      /* capFBasePtr          */
+                   (لفظ_t)region_بنیاد      /* capFBasePtr          */
                );
 
-    case seL4_X86_LargePageObject:
-        return cap_frame_cap_new(
-                   X86_LargePage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+    حالت se_L4_X86_Large_صفحہ_Object:
+        واپس cap_چوکھٹا_cap_new(
+                   X86_Large_صفحہ,          /* capFSize             */
+                   ASID_کم(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
-                   deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   device_حافظہ,           /* capFIsDevice         */
+                   ASID_بلند(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
-                   (word_t)regionBase      /* capFBasePtr          */
+                   (لفظ_t)region_بنیاد      /* capFBasePtr          */
                );
 
-    case seL4_X86_PageTableObject:
-        return cap_page_table_cap_new(
+    حالت se_L4_X86_صفحہ_جدول_Object:
+        واپس cap_صفحہ_جدول_cap_new(
                    0,                  /* capPTIsMapped        */
                    asidInvalid,        /* capPTMappedASID      */
                    0,                  /* capPTMappedAddress   */
-                   (word_t)regionBase  /* capPTBasePtr         */
+                   (لفظ_t)region_بنیاد  /* capPTBasePtr         */
                );
 
-    case seL4_X86_PageDirectoryObject:
-        copyGlobalMappings(regionBase);
-        return cap_page_directory_cap_new(
+    حالت se_L4_X86_صفحہ_Directory_Object:
+        copyGlobalMappings(region_بنیاد);
+        واپس cap_صفحہ_directory_cap_new(
                    0,                  /* capPDIsMapped      */
                    asidInvalid,        /* capPDMappedASID    */
                    0,                  /* capPDMappedAddress */
-                   (word_t)regionBase  /* capPDBasePtr       */
+                   (لفظ_t)region_بنیاد  /* capPDBasePtr       */
                );
 
-#ifdef CONFIG_IOMMU
-    case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+#اگر_تعریف_شدہ CONFIG_IOMMU
+    حالت se_L4_X86_IOPage_جدول_Object:
+        واپس cap_io_صفحہ_جدول_cap_new(
                    0,  /* capIOPTIsMapped      */
                    0,  /* capIOPTLevel         */
                    0,  /* capIOPTMappedAddress */
                    0,  /* capIOPTIOASID        */
-                   (word_t)regionBase  /* capIOPTBasePtr */
+                   (لفظ_t)region_بنیاد  /* capIOPTBasePtr */
                );
-#endif
+#اگر_ختم
 
-    default:
+    طےشدہ:
         fail("Mode_createObject got an API type or invalid object type");
     }
 }
 
-exception_t Mode_decodeInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t منوال_decode_Invocation(
+    لفظ_t invLabel,
+    لفظ_t لمبائی,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *خانہ,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-    case cap_page_table_cap:
-    case cap_frame_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    default:
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_صفحہ_directory_cap:
+    حالت cap_صفحہ_جدول_cap:
+    حالت cap_چوکھٹا_cap:
+        واپس decodeX86MMUInvocation(invLabel, لمبائی, cptr, خانہ, cap, call, بفر);
+    طےشدہ:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_نمبر = 0;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 }

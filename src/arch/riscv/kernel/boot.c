@@ -6,171 +6,171 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <kernel/boot.h>
-#include <machine/io.h>
-#include <model/statedata.h>
-#include <object/interrupt.h>
-#include <arch/machine.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/traps.h>
-#include <arch/kernel/vspace.h>
-#include <arch/benchmark.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <machine.h>
+#شامل <config.h>
+#شامل <assert.h>
+#شامل <kernel/boot.h>
+#شامل <machine/io.h>
+#شامل <model/statedata.h>
+#شامل <object/interrupt.h>
+#شامل <arch/machine.h>
+#شامل <arch/kernel/boot.h>
+#شامل <arch/kernel/traps.h>
+#شامل <arch/kernel/vspace.h>
+#شامل <arch/benchmark.h>
+#شامل <linker.h>
+#شامل <plat/machine/hardware.h>
+#شامل <machine.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
 /* SMP boot synchronization works based on a global variable with the initial
  * value 0, as the loader must zero all BSS variables. Secondary cores keep
  * spinning until the primary core has initialized all kernel structures and
  * then set it to 1.
  */
-BOOT_BSS static volatile _Atomic word_t node_boot_lock;
-#endif
+BOOT_BSS ساکن متلون _Atomic لفظ_t گرہ_boot_تالا;
+#اگر_ختم
 
-BOOT_BSS static region_t res_reg[NUM_RESERVED_REGIONS];
+BOOT_BSS ساکن region_t res_reg[عدد_RESERVED_REGIONS];
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t
+BOOT_رمز cap_t create_mapped_it_چوکھٹا_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t
                                            use_large, bool_t executable)
 {
     cap_t cap;
-    vm_page_size_t frame_size;
+    vm_صفحہ_سائز_t چوکھٹا_سائز_2;
 
-    if (use_large) {
-        frame_size = RISCV_Mega_Page;
-    } else {
-        frame_size = RISCV_4K_Page;
+    اگر (use_large) {
+        چوکھٹا_سائز_2 = RISCV_Mega_صفحہ;
+    } ورنہ {
+        چوکھٹا_سائز_2 = RISCV_4_K_صفحہ;
     }
 
-    cap = cap_frame_cap_new(
+    cap = cap_چوکھٹا_cap_new(
               asid,                            /* capFMappedASID       */
               pptr,                            /* capFBasePtr          */
-              frame_size,                      /* capFSize             */
-              wordFromVMRights(VMReadWrite),   /* capFVMRights         */
+              چوکھٹا_سائز_2,                      /* capFSize             */
+              لفظ_From_VMRights(VMReadWrite),   /* capFVMRights         */
               0,                               /* capFIsDevice         */
               vptr                             /* capFMappedAddress    */
           );
 
-    map_it_frame_cap(pd_cap, cap);
-    return cap;
+    map_it_چوکھٹا_cap(pd_cap, cap);
+    واپس cap;
 }
 
-BOOT_CODE static bool_t arch_init_freemem(region_t ui_reg,
+BOOT_رمز ساکن bool_t arch_init_freemem(region_t ui_reg,
                                           p_region_t dtb_p_reg,
                                           v_region_t it_v_reg,
-                                          word_t extra_bi_size_bits)
+                                          لفظ_t extra_bi_سائز_بٹ)
 {
     /* Reserve the kernel image region. This may look a bit awkward, as the
      * symbols are a reference in the kernel image window, but all allocations
      * are done in terms of the main kernel window, so we do some translation.
      */
-    res_reg[0] = paddr_to_pptr_reg(get_p_reg_kernel_img());
-    int index = 1;
+    res_reg[0] = paddr_مقصد_pptr_reg(get_p_reg_kernel_img());
+    صحیح اشاریہ = 1;
 
     /* add the dtb region, if it is not empty */
-    if (dtb_p_reg.start) {
-        if (index >= ARRAY_SIZE(res_reg)) {
-            printf("ERROR: no slot to add DTB to reserved regions\n");
-            return false;
+    اگر (dtb_p_reg.آغاز) {
+        اگر (اشاریہ >= ARRAY_سائز(res_reg)) {
+            لکھو("ERROR: no slot to add DTB to reserved regions\n");
+            واپس false;
         }
-        res_reg[index] = paddr_to_pptr_reg(dtb_p_reg);
-        index += 1;
+        res_reg[اشاریہ] = paddr_مقصد_pptr_reg(dtb_p_reg);
+        اشاریہ += 1;
     }
 
     /* reserve the user image region */
-    if (index >= ARRAY_SIZE(res_reg)) {
-        printf("ERROR: no slot to add user image to reserved regions\n");
-        return false;
+    اگر (اشاریہ >= ARRAY_سائز(res_reg)) {
+        لکھو("ERROR: no slot to add user image to reserved regions\n");
+        واپس false;
     }
-    res_reg[index] = ui_reg;
-    index += 1;
+    res_reg[اشاریہ] = ui_reg;
+    اشاریہ += 1;
 
     /* avail_p_regs comes from the auto-generated code */
-    return init_freemem(ARRAY_SIZE(avail_p_regs), avail_p_regs,
-                        index, res_reg,
-                        it_v_reg, extra_bi_size_bits);
+    واپس init_freemem(ARRAY_سائز(avail_p_regs), avail_p_regs,
+                        اشاریہ, res_reg,
+                        it_v_reg, extra_bi_سائز_بٹ);
 }
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_رمز ساکن خالی init_irqs(cap_t جڑ_cnode_cap)
 {
     irq_t i;
 
-    for (i = 0; i <= maxIRQ; i++) {
-        if (i != irqInvalid) {
+    برائے (i = 0; i <= maxIRQ; i++) {
+        اگر (i != irqInvalid) {
             /* IRQ 0 is irqInvalid */
-            setIRQState(IRQInactive, i);
+            سیٹ_IRQState(IRQInactive, i);
         }
     }
-    setIRQState(IRQTimer, KERNEL_TIMER_IRQ);
-#ifdef ENABLE_SMP_SUPPORT
-    setIRQState(IRQIPI, irq_remote_call_ipi);
-    setIRQState(IRQIPI, irq_reschedule_ipi);
-#endif
+    سیٹ_IRQState(IRQTimer, KERNEL_TIMER_IRQ);
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
+    سیٹ_IRQState(IRQIPI, irq_remote_call_ipi);
+    سیٹ_IRQState(IRQIPI, irq_reschedule_ipi);
+#اگر_ختم
     /* provide the IRQ control cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
+    write_خانہ(خانہ_PTR(pptr_کا_cap(جڑ_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
 }
 
 /* This and only this function initialises the CPU. It does NOT initialise any kernel state. */
 
-#ifdef CONFIG_HAVE_FPU
-BOOT_CODE static void init_fpu(void)
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
+BOOT_رمز ساکن خالی init_fpu(خالی)
 {
-    set_fs_clean();
+    سیٹ_fs_clean();
     write_fcsr(0);
     disableFpu();
 }
-#endif
+#اگر_ختم
 
-BOOT_CODE static void init_cpu(void)
+BOOT_رمز ساکن خالی init_cpu(خالی)
 {
 
     activate_kernel_vspace();
     /* Write trap entry address to stvec */
-    write_stvec((word_t)trap_entry);
+    write_stvec((لفظ_t)trap_اندراج);
     initLocalIRQController();
-#ifndef CONFIG_KERNEL_MCS
+#اگر_غیر_تعریف_شدہ CONFIG_KERNEL_MCS
     initTimer();
-#endif
+#اگر_ختم
 
     /* disable FPU access */
-    set_fs_off();
+    سیٹ_fs_off();
 
-#ifdef CONFIG_HAVE_FPU
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
     init_fpu();
-#endif
+#اگر_ختم
 }
 
 /* This and only this function initialises the platform. It does NOT initialise any kernel state. */
 
-BOOT_CODE static void init_plat(void)
+BOOT_رمز ساکن خالی init_plat(خالی)
 {
     initIRQController();
 }
 
 
-#ifdef ENABLE_SMP_SUPPORT
-BOOT_CODE static bool_t try_init_kernel_secondary_core(word_t hart_id, word_t core_id)
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
+BOOT_رمز ساکن bool_t try_init_kernel_secondary_core(لفظ_t hart_id, لفظ_t core_id)
 {
-    while (!node_boot_lock);
+    جب (!گرہ_boot_تالا);
 
     fence_r_rw();
 
     init_cpu();
-    NODE_LOCK_SYS;
+    گرہ_تالا_SYS;
 
     clock_sync_test();
-    ksNumCPUs++;
+    ks_عدد_CPUs++;
     init_core_state(SchedulerAction_ResumeCurrentThread);
     ifence_local();
-    return true;
+    واپس true;
 }
 
-BOOT_CODE static void release_secondary_cores(void)
+BOOT_رمز ساکن خالی release_secondary_cores(خالی)
 {
-    assert(0 == node_boot_lock); /* Sanity check for a proper lock state. */
-    node_boot_lock = 1;
+    أكد(0 == گرہ_boot_تالا); /* Sanity check for a proper lock state. */
+    گرہ_boot_تالا = 1;
     /* At this point in time the primary core (executing this code) already uses
      * the seL4 MMU/cache setup. However, the secondary cores are still using
      * the elfloader's MMU/cache setup, and thus the update of node_boot_lock
@@ -179,262 +179,262 @@ BOOT_CODE static void release_secondary_cores(void)
      */
     fence_rw_rw();
 
-    while (ksNumCPUs != CONFIG_MAX_NUM_NODES) {
-#ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-        NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+    جب (ks_عدد_CPUs != CONFIG_MAX_عدد_NODES) {
+#اگر_تعریف_شدہ ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
+        گرہ_STATE(ks_Cur_وقت) = get_Current_وقت();
+#اگر_ختم
         __atomic_thread_fence(__ATOMIC_ACQ_REL);
     }
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#اگر_ختم /* ENABLE_SMP_SUPPORT */
 
 /* Main kernel initialisation function. */
 
-static BOOT_CODE bool_t try_init_kernel(
-    paddr_t ui_p_reg_start,
-    paddr_t ui_p_reg_end,
-    sword_t pv_offset,
-    vptr_t  v_entry,
+ساکن BOOT_رمز bool_t try_init_kernel(
+    paddr_t ui_p_reg_آغاز,
+    paddr_t ui_p_reg_انتہا,
+    sword_t pv_انحراف,
+    vptr_t  v_اندراج,
     paddr_t dtb_phys_addr,
-    word_t  dtb_size
+    لفظ_t  dtb_سائز
 )
 {
-    cap_t root_cnode_cap;
+    cap_t جڑ_cnode_cap;
     cap_t it_pd_cap;
     cap_t it_ap_cap;
     cap_t ipcbuf_cap;
-    region_t ui_reg = paddr_to_pptr_reg((p_region_t) {
-        ui_p_reg_start, ui_p_reg_end
+    region_t ui_reg = paddr_مقصد_pptr_reg((p_region_t) {
+        ui_p_reg_آغاز, ui_p_reg_انتہا
     });
-    word_t extra_bi_size = 0;
-    pptr_t extra_bi_offset = 0;
-    vptr_t extra_bi_frame_vptr;
-    vptr_t bi_frame_vptr;
+    لفظ_t extra_bi_سائز = 0;
+    pptr_t extra_bi_انحراف = 0;
+    vptr_t extra_bi_چوکھٹا_vptr;
+    vptr_t bi_چوکھٹا_vptr;
     vptr_t ipcbuf_vptr;
-    create_frames_of_region_ret_t create_frames_ret;
-    create_frames_of_region_ret_t extra_bi_ret;
+    create_چوکھٹے_کا_region_ret_t create_چوکھٹے_ret;
+    create_چوکھٹے_کا_region_ret_t extra_bi_ret;
 
     /* convert from physical addresses to userland vptrs */
     v_region_t ui_v_reg = {
-        .start = ui_p_reg_start - pv_offset,
-        .end   = ui_p_reg_end   - pv_offset
+        .آغاز = ui_p_reg_آغاز - pv_انحراف,
+        .انتہا   = ui_p_reg_انتہا   - pv_انحراف
     };
 
-    ipcbuf_vptr = ui_v_reg.end;
-    bi_frame_vptr = ipcbuf_vptr + BIT(PAGE_BITS);
-    extra_bi_frame_vptr = bi_frame_vptr + BIT(seL4_BootInfoFrameBits);
+    ipcbuf_vptr = ui_v_reg.انتہا;
+    bi_چوکھٹا_vptr = ipcbuf_vptr + ثنائی_ہندسہ(صفحہ_بٹ);
+    extra_bi_چوکھٹا_vptr = bi_چوکھٹا_vptr + ثنائی_ہندسہ(se_L4_Boot_Info_چوکھٹا_بٹ);
 
-    map_kernel_window();
+    map_kernel_کھڑکی();
 
     /* initialise the CPU */
     init_cpu();
 
-    printf("Bootstrapping kernel\n");
+    لکھو("Bootstrapping kernel\n");
 
     /* initialize the platform */
     init_plat();
 
     /* If a DTB was provided, pass the data on as extra bootinfo */
-    p_region_t dtb_p_reg = P_REG_EMPTY;
-    if (dtb_size > 0) {
-#ifdef CONFIG_PLAT_ROCKETCHIP_ZCU102
+    p_region_t dtb_p_reg = P_REG_خالی_خانے;
+    اگر (dtb_سائز > 0) {
+#اگر_تعریف_شدہ CONFIG_PLAT_ROCKETCHIP_ZCU102
         /* The softcore rocketchip instantiation doesn't work well when this
          * page isn't reserved. Round up so the whole page is reserved to
          * avoid the problem
          */
-        dtb_size = ROUND_UP(dtb_size, PAGE_BITS);
-#endif
-        paddr_t dtb_phys_end = dtb_phys_addr + dtb_size;
-        if (dtb_phys_end < dtb_phys_addr) {
+        dtb_سائز = باری_اوپر(dtb_سائز, صفحہ_بٹ);
+#اگر_ختم
+        paddr_t dtb_phys_انتہا = dtb_phys_addr + dtb_سائز;
+        اگر (dtb_phys_انتہا < dtb_phys_addr) {
             /* An integer overflow happened in DTB end address calculation, the
              * location or size passed seems invalid.
              */
-            printf("ERROR: DTB location at %"SEL4_PRIx_word
-                   " len %"SEL4_PRIu_word" invalid\n",
-                   dtb_phys_addr, dtb_size);
-            return false;
+            لکھو("ERROR: DTB location at %"SEL4_PRIx_لفظ
+                   " len %"SEL4_PRIu_لفظ" invalid\n",
+                   dtb_phys_addr, dtb_سائز);
+            واپس false;
         }
         /* If the DTB is located in physical memory that is not mapped in the
          * kernel window we cannot access it.
          */
-        if (dtb_phys_end >= PADDR_TOP) {
-            printf("ERROR: DTB at [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") "
-                   "exceeds PADDR_TOP (%"SEL4_PRIx_word")\n",
-                   dtb_phys_addr, dtb_phys_end, PADDR_TOP);
-            return false;
+        اگر (dtb_phys_انتہا >= PADDR_چوٹی) {
+            لکھو("ERROR: DTB at [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ") "
+                   "exceeds PADDR_TOP (%"SEL4_PRIx_لفظ")\n",
+                   dtb_phys_addr, dtb_phys_انتہا, PADDR_چوٹی);
+            واپس false;
         }
         /* DTB seems valid and accessible, pass it on in bootinfo. */
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + dtb_size;
+        extra_bi_سائز += حجم(se_L4_Boot_Info_سرخی) + dtb_سائز;
         /* Remember the memory region it uses. */
         dtb_p_reg = (p_region_t) {
-            .start = dtb_phys_addr,
-            .end   = dtb_phys_end
+            .آغاز = dtb_phys_addr,
+            .انتہا   = dtb_phys_انتہا
         };
     }
 
     /* The region of the initial thread is the user image + ipcbuf + boot info + extra */
-    word_t extra_bi_size_bits = calculate_extra_bi_size_bits(extra_bi_size);
+    لفظ_t extra_bi_سائز_بٹ = calculate_extra_bi_سائز_بٹ(extra_bi_سائز);
     v_region_t it_v_reg = {
-        .start = ui_v_reg.start,
-        .end   = extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0)
+        .آغاز = ui_v_reg.آغاز,
+        .انتہا   = extra_bi_چوکھٹا_vptr + (extra_bi_سائز_بٹ > 0 ? ثنائی_ہندسہ(extra_bi_سائز_بٹ) : 0)
     };
-    if (it_v_reg.end >= USER_TOP) {
+    اگر (it_v_reg.انتہا >= USER_چوٹی) {
         /* Variable arguments for printf() require well defined integer types
          * to work properly. Unfortunately, the definition of USER_TOP differs
          * between platforms (int, long), so we have to cast here to play safe.
          */
-        printf("ERROR: userland image virt [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")"
-               "exceeds USER_TOP (%"SEL4_PRIx_word")\n",
-               it_v_reg.start, it_v_reg.end, (word_t)USER_TOP);
-        return false;
+        لکھو("ERROR: userland image virt [%"SEL4_PRIx_لفظ"..%"SEL4_PRIx_لفظ")"
+               "exceeds USER_TOP (%"SEL4_PRIx_لفظ")\n",
+               it_v_reg.آغاز, it_v_reg.انتہا, (لفظ_t)USER_چوٹی);
+        واپس false;
     }
 
     /* make the free memory available to alloc_region() */
-    if (!arch_init_freemem(ui_reg, dtb_p_reg, it_v_reg, extra_bi_size_bits)) {
-        printf("ERROR: free memory management initialization failed\n");
-        return false;
+    اگر (!arch_init_freemem(ui_reg, dtb_p_reg, it_v_reg, extra_bi_سائز_بٹ)) {
+        لکھو("ERROR: free memory management initialization failed\n");
+        واپس false;
     }
 
     /* create the root cnode */
-    root_cnode_cap = create_root_cnode();
-    if (cap_get_capType(root_cnode_cap) == cap_null_cap) {
-        printf("ERROR: root c-node creation failed\n");
-        return false;
+    جڑ_cnode_cap = create_جڑ_cnode();
+    اگر (cap_get_capType(جڑ_cnode_cap) == cap_null_cap) {
+        لکھو("ERROR: root c-node creation failed\n");
+        واپس false;
     }
 
     /* create the cap for managing thread domains */
-    create_domain_cap(root_cnode_cap);
+    create_domain_cap(جڑ_cnode_cap);
 
     /* initialise the IRQ states and provide the IRQ control cap */
-    init_irqs(root_cnode_cap);
+    init_irqs(جڑ_cnode_cap);
 
     /* create the bootinfo frame */
-    populate_bi_frame(0, CONFIG_MAX_NUM_NODES, ipcbuf_vptr, extra_bi_size);
+    populate_bi_چوکھٹا(0, CONFIG_MAX_عدد_NODES, ipcbuf_vptr, extra_bi_سائز);
 
     /* put DTB in the bootinfo block, if present. */
-    seL4_BootInfoHeader header;
-    if (dtb_size > 0) {
-        header.id = SEL4_BOOTINFO_HEADER_FDT;
-        header.len = sizeof(header) + dtb_size;
-        *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset),
-               paddr_to_pptr(dtb_phys_addr),
-               dtb_size);
-        extra_bi_offset += dtb_size;
+    se_L4_Boot_Info_سرخی سرخی;
+    اگر (dtb_سائز > 0) {
+        سرخی.id = SEL4_BOOTINFO_سرخی_FDT;
+        سرخی.len = حجم(سرخی) + dtb_سائز;
+        *(se_L4_Boot_Info_سرخی *)(rootserver.extra_bi + extra_bi_انحراف) = سرخی;
+        extra_bi_انحراف += حجم(سرخی);
+        حافظہ_نقل((خالی *)(rootserver.extra_bi + extra_bi_انحراف),
+               paddr_مقصد_pptr(dtb_phys_addr),
+               dtb_سائز);
+        extra_bi_انحراف += dtb_سائز;
     }
 
-    assert(extra_bi_size == extra_bi_offset);
+    أكد(extra_bi_سائز == extra_bi_انحراف);
 
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
-    it_pd_cap = create_it_address_space(root_cnode_cap, it_v_reg);
-    if (cap_get_capType(it_pd_cap) == cap_null_cap) {
-        printf("ERROR: address space creation for initial thread failed\n");
-        return false;
+    it_pd_cap = create_it_پتہ_space(جڑ_cnode_cap, it_v_reg);
+    اگر (cap_get_capType(it_pd_cap) == cap_null_cap) {
+        لکھو("ERROR: address space creation for initial thread failed\n");
+        واپس false;
     }
 
     /* Create and map bootinfo frame cap */
-    create_bi_frame_cap(
-        root_cnode_cap,
+    create_bi_چوکھٹا_cap(
+        جڑ_cnode_cap,
         it_pd_cap,
-        bi_frame_vptr
+        bi_چوکھٹا_vptr
     );
 
     /* create and map extra bootinfo region */
-    if (extra_bi_size > 0) {
+    اگر (extra_bi_سائز > 0) {
         region_t extra_bi_region = {
-            .start = rootserver.extra_bi,
-            .end = rootserver.extra_bi + extra_bi_size
+            .آغاز = rootserver.extra_bi,
+            .انتہا = rootserver.extra_bi + extra_bi_سائز
         };
         extra_bi_ret =
-            create_frames_of_region(
-                root_cnode_cap,
+            create_چوکھٹے_کا_region(
+                جڑ_cnode_cap,
                 it_pd_cap,
                 extra_bi_region,
                 true,
-                pptr_to_paddr((void *)extra_bi_region.start) - extra_bi_frame_vptr
+                pptr_مقصد_paddr((خالی *)extra_bi_region.آغاز) - extra_bi_چوکھٹا_vptr
             );
-        if (!extra_bi_ret.success) {
-            printf("ERROR: mapping extra boot info to initial thread failed\n");
-            return false;
+        اگر (!extra_bi_ret.success) {
+            لکھو("ERROR: mapping extra boot info to initial thread failed\n");
+            واپس false;
         }
-        ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
+        ndks_boot.bi_چوکھٹا->extraBIPages = extra_bi_ret.region;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    init_sched_control(root_cnode_cap, CONFIG_MAX_NUM_NODES);
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    init_sched_control(جڑ_cnode_cap, CONFIG_MAX_عدد_NODES);
+#اگر_ختم
 
     /* create the initial thread's IPC buffer */
-    ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_pd_cap, ipcbuf_vptr);
-    if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
-        printf("ERROR: could not create IPC buffer for initial thread\n");
-        return false;
+    ipcbuf_cap = create_ipcbuf_چوکھٹا_cap(جڑ_cnode_cap, it_pd_cap, ipcbuf_vptr);
+    اگر (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
+        لکھو("ERROR: could not create IPC buffer for initial thread\n");
+        واپس false;
     }
 
     /* create all userland image frames */
-    create_frames_ret =
-        create_frames_of_region(
-            root_cnode_cap,
+    create_چوکھٹے_ret =
+        create_چوکھٹے_کا_region(
+            جڑ_cnode_cap,
             it_pd_cap,
             ui_reg,
             true,
-            pv_offset
+            pv_انحراف
         );
-    if (!create_frames_ret.success) {
-        printf("ERROR: could not create all userland image frames\n");
-        return false;
+    اگر (!create_چوکھٹے_ret.success) {
+        لکھو("ERROR: could not create all userland image frames\n");
+        واپس false;
     }
-    ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
+    ndks_boot.bi_چوکھٹا->user_Image_چوکھٹے = create_چوکھٹے_ret.region;
 
     /* create the initial thread's ASID pool */
-    it_ap_cap = create_it_asid_pool(root_cnode_cap);
-    if (cap_get_capType(it_ap_cap) == cap_null_cap) {
-        printf("ERROR: could not create ASID pool for initial thread\n");
-        return false;
+    it_ap_cap = create_it_asid_pool(جڑ_cnode_cap);
+    اگر (cap_get_capType(it_ap_cap) == cap_null_cap) {
+        لکھو("ERROR: could not create ASID pool for initial thread\n");
+        واپس false;
     }
     write_it_asid_pool(it_ap_cap, it_pd_cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    گرہ_STATE(ks_Cur_وقت) = get_Current_وقت();
+#اگر_ختم
 
     /* create the idle thread */
     create_idle_thread();
 
     /* create the initial thread */
     tcb_t *initial = create_initial_thread(
-                         root_cnode_cap,
+                         جڑ_cnode_cap,
                          it_pd_cap,
-                         v_entry,
-                         bi_frame_vptr,
+                         v_اندراج,
+                         bi_چوکھٹا_vptr,
                          ipcbuf_vptr,
                          ipcbuf_cap
                      );
 
-    if (initial == NULL) {
-        printf("ERROR: could not create initial thread\n");
-        return false;
+    اگر (initial == تہی) {
+        لکھو("ERROR: could not create initial thread\n");
+        واپس false;
     }
 
     init_core_state(initial);
 
     /* convert the remaining free memory into UT objects and provide the caps */
-    if (!create_untypeds(root_cnode_cap)) {
-        printf("ERROR: could not create untypteds for kernel image boot memory\n");
-        return false;
+    اگر (!create_untypeds(جڑ_cnode_cap)) {
+        لکھو("ERROR: could not create untypteds for kernel image boot memory\n");
+        واپس false;
     }
 
     /* no shared-frame caps (RISC-V has no multikernel support) */
-    ndks_boot.bi_frame->sharedFrames = S_REG_EMPTY;
+    ndks_boot.bi_چوکھٹا->shared_چوکھٹے = S_REG_خالی_خانے;
 
     /* finalise the bootinfo frame */
     bi_finalise();
 
-    ksNumCPUs = 1;
+    ks_عدد_CPUs = 1;
 
-    SMP_COND_STATEMENT(clh_lock_init());
+    SMP_COND_STATEMENT(clh_تالا_init());
     SMP_COND_STATEMENT(release_secondary_cores());
 
     /* All cores are up now, so there can be concurrency. The kernel booting is
@@ -442,58 +442,58 @@ static BOOT_CODE bool_t try_init_kernel(
      * primary has to do now is schedule the initial thread. Currently there is
      * nothing that touches any global data structures, nevertheless we grab the
      * BKL here to play safe. It is released when the kernel is left. */
-    NODE_LOCK_SYS;
+    گرہ_تالا_SYS;
 
-    printf("Booting all finished, dropped to user space\n");
-    return true;
+    لکھو("Booting all finished, dropped to user space\n");
+    واپس true;
 }
 
-BOOT_CODE VISIBLE void init_kernel(
-    paddr_t ui_p_reg_start,
-    paddr_t ui_p_reg_end,
-    sword_t pv_offset,
-    vptr_t  v_entry,
+BOOT_رمز VISIBLE خالی init_kernel(
+    paddr_t ui_p_reg_آغاز,
+    paddr_t ui_p_reg_انتہا,
+    sword_t pv_انحراف,
+    vptr_t  v_اندراج,
     paddr_t dtb_addr_p,
-    uint32_t dtb_size
-#ifdef ENABLE_SMP_SUPPORT
+    uint32_t dtb_سائز
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
     ,
-    word_t hart_id,
-    word_t core_id
-#endif
+    لفظ_t hart_id,
+    لفظ_t core_id
+#اگر_ختم
 )
 {
-    bool_t result;
+    bool_t نتیجہ;
 
-#ifdef ENABLE_SMP_SUPPORT
-    add_hart_to_core_map(hart_id, core_id);
-    if (core_id == 0) {
-        result = try_init_kernel(ui_p_reg_start,
-                                 ui_p_reg_end,
-                                 pv_offset,
-                                 v_entry,
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
+    جوڑو_hart_مقصد_core_map(hart_id, core_id);
+    اگر (core_id == 0) {
+        نتیجہ = try_init_kernel(ui_p_reg_آغاز,
+                                 ui_p_reg_انتہا,
+                                 pv_انحراف,
+                                 v_اندراج,
                                  dtb_addr_p,
-                                 dtb_size);
-    } else {
-        result = try_init_kernel_secondary_core(hart_id, core_id);
+                                 dtb_سائز);
+    } ورنہ {
+        نتیجہ = try_init_kernel_secondary_core(hart_id, core_id);
     }
-#else
-    result = try_init_kernel(ui_p_reg_start,
-                             ui_p_reg_end,
-                             pv_offset,
-                             v_entry,
+#ورنہ
+    نتیجہ = try_init_kernel(ui_p_reg_آغاز,
+                             ui_p_reg_انتہا,
+                             pv_انحراف,
+                             v_اندراج,
                              dtb_addr_p,
-                             dtb_size);
-#endif
-    if (!result) {
+                             dtb_سائز);
+#اگر_ختم
+    اگر (!نتیجہ) {
         fail("ERROR: kernel init failed");
         UNREACHABLE();
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-    NODE_STATE(ksConsumed) = 0;
-#endif
+#اگر_تعریف_شدہ CONFIG_KERNEL_MCS
+    گرہ_STATE(ks_Cur_وقت) = get_Current_وقت();
+    گرہ_STATE(ksConsumed) = 0;
+#اگر_ختم
 
-    schedule();
+    جدول_وقت();
     activateThread();
 }

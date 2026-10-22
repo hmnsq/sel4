@@ -4,79 +4,79 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <machine/registerset.h>
-#include <object/structures.h>
-#include <arch/object/tcb.h>
-#include <arch/machine.h>
+#شامل <types.h>
+#شامل <api/failures.h>
+#شامل <machine/registerset.h>
+#شامل <object/structures.h>
+#شامل <arch/object/tcb.h>
+#شامل <arch/machine.h>
 
-word_t CONST Arch_decodeTransfer(word_t flags)
+لفظ_t CONST Arch_decodeTransfer(لفظ_t flags)
 {
-    return 0;
+    واپس 0;
 }
 
-exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
+exception_t CONST Arch_performTransfer(لفظ_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_VTX
-void Arch_leaveVMAsyncTransfer(tcb_t *tcb)
+#اگر_تعریف_شدہ CONFIG_VTX
+خالی Arch_leaveVMAsyncTransfer(tcb_t *tcb)
 {
-    vcpu_sysvmenter_reply_to_user(tcb);
+    vcpu_sysvmenter_جواب_مقصد_user(tcb);
 }
 
-static exception_t performSetEPTRoot(tcb_t *tcb, cap_t cap, cte_t *slot)
+ساکن exception_t perform_سیٹ_EPTRoot(tcb_t *tcb, cap_t cap, cte_t *خانہ)
 {
-    cte_t *rootSlot;
+    cte_t *جڑ_خانہ;
     exception_t e;
 
-    rootSlot = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
-    e = cteDelete(rootSlot, true);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    جڑ_خانہ = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
+    e = cteDelete(جڑ_خانہ, true);
+    اگر (e != EXCEPTION_NONE) {
+        واپس e;
     }
 
-    cteInsert(cap, slot, rootSlot);
+    cte_داخل_کرو(cap, خانہ, جڑ_خانہ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+    واپس EXCEPTION_NONE;
 }
 
-exception_t decodeSetEPTRoot(cap_t cap)
+exception_t decode_سیٹ_EPTRoot(cap_t cap)
 {
-    cap_t rootCap;
-    cte_t *rootSlot;
+    cap_t جڑ_Cap;
+    cte_t *جڑ_خانہ;
     deriveCap_ret_t dc_ret;
 
-    rootSlot = current_extra_caps.excaprefs[0];
+    جڑ_خانہ = current_extra_caps.excaprefs[0];
 
-    if (rootSlot == NULL) {
+    اگر (جڑ_خانہ == تہی) {
         userError("TCB SetEPTRoot: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    rootCap = rootSlot->cap;
+    جڑ_Cap = جڑ_خانہ->cap;
 
-    if (cap_get_capType(rootCap) != cap_ept_pml4_cap) {
+    اگر (cap_get_capType(جڑ_Cap) != cap_ept_pml4_cap) {
         userError("TCB SetEPTRoot: EPT PDPT is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    dc_ret = deriveCap(rootSlot, rootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(جڑ_خانہ, جڑ_Cap);
+    اگر (dc_ret.حالت_2 != EXCEPTION_NONE) {
+        واپس dc_ret.حالت_2;
     }
 
-    if (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
+    اگر (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
         userError("decodeSetEPTRoot: Invalid EPT cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        واپس EXCEPTION_SYSCALL_ERROR;
     }
 
-    return performSetEPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, rootSlot);
+    واپس perform_سیٹ_EPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, جڑ_خانہ);
 }
-#endif
+#اگر_ختم

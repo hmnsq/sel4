@@ -4,54 +4,54 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#شامل <config.h>
+#اگر_تعریف_شدہ CONFIG_HARDWARE_DEBUG_API
 
-#include <machine/debug.h>
-#include <arch/kernel/vspace.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <arch/machine/registerset.h>
-#include <arch/model/statedata.h>
-#include <armv/debug.h>
-#include <mode/machine/debug.h>
-#include <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
-#include <string.h>
-#include <util.h>
+#شامل <machine/debug.h>
+#شامل <arch/kernel/vspace.h>
+#شامل <arch/machine/debug.h>
+#شامل <arch/machine/debug_conf.h>
+#شامل <arch/machine/registerset.h>
+#شامل <arch/model/statedata.h>
+#شامل <armv/debug.h>
+#شامل <mode/machine/debug.h>
+#شامل <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
+#شامل <string.h>
+#شامل <util.h>
 
-#define MDSCR_MDE (BIT(15))
-#define MDSCR_SS  (BIT(0))
-#define SPSR_SS   (BIT(21))
+#تعریف_کرو MDSCR_MDE (ثنائی_ہندسہ(15))
+#تعریف_کرو MDSCR_SS  (ثنائی_ہندسہ(0))
+#تعریف_کرو SPSR_SS   (ثنائی_ہندسہ(21))
 
-#define ESR_EXCEPTION_CLASS_MASK 0xFC000000
-#define ESR_EXCEPTION_CLASS_OFF 26
+#تعریف_کرو ESR_EXCEPTION_CLASS_نقاب 0xFC000000
+#تعریف_کرو ESR_EXCEPTION_CLASS_OFF 26
 
-#define DEBUG_ENTRY_BREAKPOINT      0x30
-#define DEBUG_ENTRY_SINGLE_STEP     0x32
-#define DEBUG_ENTRY_WATCHPOINT      0x34
-#define DEBUG_ENTRY_EXPLICIT_BKPT   0x3C
+#تعریف_کرو DEBUG_اندراج_BREAKPOINT      0x30
+#تعریف_کرو DEBUG_اندراج_SINGLE_قدم     0x32
+#تعریف_کرو DEBUG_اندراج_WATCHPOINT      0x34
+#تعریف_کرو DEBUG_اندراج_EXPLICIT_BKPT   0x3C
 
-#define OSDLR_LOCK (BIT(0))
-#define OSLAR_LOCK (BIT(0))
+#تعریف_کرو OSDLR_تالا (ثنائی_ہندسہ(0))
+#تعریف_کرو OSLAR_تالا (ثنائی_ہندسہ(0))
 
-bool_t byte8WatchpointsSupported(void)
+bool_t byte8WatchpointsSupported(خالی)
 {
-    return true;
+    واپس true;
 }
 
-exception_t handleDebugFaultEvent(word_t esr)
+exception_t handleDebugFaultEvent(لفظ_t esr)
 {
     MCS_DO_IF_BUDGET({
-        current_fault = handleUserLevelDebugException(esr, getRestartPC(NODE_STATE(ksCurThread)));
-        if (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
+        current_fault = handleUserLevelDebugException(esr, getRestartPC(گرہ_STATE(ksCurThread)));
+        اگر (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
         {
-            handleFault(NODE_STATE(ksCurThread));
+            handleFault(گرہ_STATE(ksCurThread));
         }
     })
-    schedule();
+    جدول_وقت();
     activateThread();
 
-    return EXCEPTION_NONE;
+    واپس EXCEPTION_NONE;
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -60,23 +60,23 @@ exception_t handleDebugFaultEvent(word_t esr)
  * @param bp_num The hardware ID of the breakpoint register to be used.
  * @param n_instr The number of instructions to step over.
  */
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
-                               bool_t is_reply)
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_عدد, لفظ_t n_instr,
+                               bool_t is_جواب)
 {
-    if (n_instr > 0) {
+    اگر (n_instr > 0) {
         /* Enable single stepping */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+        t->tcbArch.tcbContext.breakpointState.single_قدم_enabled = true;
+    } ورنہ {
         /* Disable single stepping */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
+        t->tcbArch.tcbContext.breakpointState.single_قدم_enabled = false;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return true;
+    واپس true;
 }
 
 /* Guides the debug hardware initialization sequence. */
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_رمز bool_t Arch_initHardwareBreakpoints(خالی)
 {
     /*
      * ARMv8 Architecture Reference Manual for A-profile Architecture
@@ -84,7 +84,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      *    ... MDSCR_EL1.MDE
      */
 
-    word_t mdscr = 0;
+    لفظ_t mdscr = 0;
     MRS("MDSCR_EL1", mdscr);
     mdscr |= MDSCR_MDE;
     MSR("MDSCR_EL1", mdscr);
@@ -99,13 +99,13 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      */
 
     /* Ensure that the OS double lock is unset */
-    word_t osdlr = 0;
+    لفظ_t osdlr = 0;
     MRS("osdlr_el1", osdlr);
-    osdlr &= ~OSDLR_LOCK;
+    osdlr &= ~OSDLR_تالا;
     MSR("osdlr_el1", osdlr);
 
     /* Ensure that the OS lock is unset */
-    word_t oslar = 0;
+    لفظ_t oslar = 0;
     MSR("oslar_el1", oslar);
 
     /* Ensure that all the breakpoint and watchpoint registers are initially disabled */
@@ -120,21 +120,21 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    برائے (صحیح i = 0; i < se_L4_عدد_Exclusive_Breakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    برائے (صحیح i = 0; i < se_L4_عدد_Exclusive_Watchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
-    return true;
+    واپس true;
 }
 
 /* Abstract wrapper around the ESR fault status value */
 
-static word_t getFaultStatus(word_t esr)
+ساکن لفظ_t get_Fault_حالت(لفظ_t esr)
 {
-    return (esr & ESR_EXCEPTION_CLASS_MASK) >> ESR_EXCEPTION_CLASS_OFF;
+    واپس (esr & ESR_EXCEPTION_CLASS_نقاب) >> ESR_EXCEPTION_CLASS_OFF;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -149,13 +149,13 @@ static word_t getFaultStatus(word_t esr)
  *           values change. This also makes the debug code forward compatible
  *           aarch64.
  */
-bool_t isDebugFault(word_t esr)
+bool_t isDebugFault(لفظ_t esr)
 {
-    word_t exception_class = getFaultStatus(esr);
-    return (exception_class == DEBUG_ENTRY_BREAKPOINT ||
-            exception_class == DEBUG_ENTRY_SINGLE_STEP ||
-            exception_class == DEBUG_ENTRY_WATCHPOINT ||
-            exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
+    لفظ_t exception_class = get_Fault_حالت(esr);
+    واپس (exception_class == DEBUG_اندراج_BREAKPOINT ||
+            exception_class == DEBUG_اندراج_SINGLE_قدم ||
+            exception_class == DEBUG_اندراج_WATCHPOINT ||
+            exception_class == DEBUG_اندراج_EXPLICIT_BKPT);
 }
 
 /** Called to process a debug exception.
@@ -174,81 +174,81 @@ bool_t isDebugFault(word_t esr)
  * @param fault_vaddr The instruction vaddr which triggered the exception, as
  *                    extracted by the kernel.
  */
-seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
+seL4_Fault_t handleUserLevelDebugException(لفظ_t esr, لفظ_t fault_vaddr)
 {
-    int active_bp;
-    word_t bp_reason, bp_vaddr;
-    word_t exception_class = getFaultStatus(esr);
+    صحیح فعال_bp;
+    لفظ_t bp_reason, bp_vaddr;
+    لفظ_t exception_class = get_Fault_حالت(esr);
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_DebugFault;
-    ksKernelEntry.word = exception_class;
-#endif
+#اگر_تعریف_شدہ TRACK_KERNEL_ENTRIES
+    ks_Kernel_اندراج.راستہ = اندراج_Debug_Fault;
+    ks_Kernel_اندراج.لفظ = exception_class;
+#اگر_ختم
 
-    switch (exception_class) {
-    case DEBUG_ENTRY_BREAKPOINT:
+    انتخاب (exception_class) {
+    حالت DEBUG_اندراج_BREAKPOINT:
         bp_reason = seL4_InstructionBreakpoint;
         bp_vaddr = fault_vaddr;
-        break;
-    case DEBUG_ENTRY_WATCHPOINT:
-        bp_reason = seL4_DataBreakpoint;
+        توڑو;
+    حالت DEBUG_اندراج_WATCHPOINT:
+        bp_reason = se_L4_ڈیٹا_Breakpoint;
         bp_vaddr = getFAR();
-        break;
-    case DEBUG_ENTRY_SINGLE_STEP:
-        bp_reason = seL4_SingleStep;
+        توڑو;
+    حالت DEBUG_اندراج_SINGLE_قدم:
+        bp_reason = se_L4_Single_قدم;
         bp_vaddr = fault_vaddr;
-        active_bp = 0;
-        break;
-    default: /* EXPLICIT_BKPT: BKPT instruction */
-        assert(exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
+        فعال_bp = 0;
+        توڑو;
+    طےشدہ: /* EXPLICIT_BKPT: BKPT instruction */
+        أكد(exception_class == DEBUG_اندراج_EXPLICIT_BKPT);
         bp_reason = seL4_SoftwareBreakRequest;
         bp_vaddr = fault_vaddr;
-        active_bp = 0;
+        فعال_bp = 0;
     }
 
     /* There is no hardware register associated with BKPT instruction
     * triggers or single stepping.
     */
-    if (bp_reason != seL4_SoftwareBreakRequest && bp_reason != seL4_SingleStep) {
-        active_bp = getAndResetActiveBreakpoint(bp_vaddr, bp_reason);
-        active_bp = getBpNumFromType(active_bp, bp_reason);
-        assert(active_bp >= 0);
+    اگر (bp_reason != seL4_SoftwareBreakRequest && bp_reason != se_L4_Single_قدم) {
+        فعال_bp = get_And_Reset_فعال_Breakpoint(bp_vaddr, bp_reason);
+        فعال_bp = get_Bp_عدد_From_Type(فعال_bp, bp_reason);
+        أكد(فعال_bp >= 0);
     }
 
-    if (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(NODE_STATE(ksCurThread))) {
-        return seL4_Fault_NullFault_new();
+    اگر (bp_reason == se_L4_Single_قدم && !single_قدم_Fault_شمار_Ready(گرہ_STATE(ksCurThread))) {
+        واپس seL4_Fault_NullFault_new();
     }
 
-    return seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
+    واپس seL4_Fault_DebugException_new(bp_vaddr, فعال_bp, bp_reason);
 }
 
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#اگر_ختم /* CONFIG_HARDWARE_DEBUG_API */
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#اگر_تعریف_شدہ ARM_بنیاد_CP14_SAVE_AND_RESTORE
 
 /** Pops debug register context for a thread into the CPU.
  *
  * Mirrors the idea of restore_user_context.
  */
-void aarch64_restore_user_debug_context(tcb_t *target_thread)
+خالی aarch64_restore_user_debug_context(tcb_t *ہدف_thread)
 {
-    assert(target_thread != NULL);
+    أكد(ہدف_thread != تہی);
 
     /* Set/unset single stepping if applicable */
-    word_t mdscr = 0, spsr = 0;
+    لفظ_t mdscr = 0, spsr = 0;
     MRS("MDSCR_EL1", mdscr);
-    spsr = getRegister(target_thread, SPSR_EL1);
-    if (target_thread->tcbArch.tcbContext.breakpointState.single_step_enabled) {
+    spsr = get_رجسٹر(ہدف_thread, SPSR_EL1);
+    اگر (ہدف_thread->tcbArch.tcbContext.breakpointState.single_قدم_enabled) {
         /* Enable single stepping */
         mdscr |= MDSCR_SS;
         spsr |= SPSR_SS;
-    } else {
+    } ورنہ {
         /* Disable single stepping */
         mdscr &= ~MDSCR_SS;
         spsr &= ~SPSR_SS;
     }
     MSR("MDSCR_EL1", mdscr);
-    setRegister(target_thread, SPSR_EL1, spsr);
+    سیٹ_رجسٹر(ہدف_thread, SPSR_EL1, spsr);
 }
 
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#اگر_ختم /* ARM_BASE_CP14_SAVE_AND_RESTORE */

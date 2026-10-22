@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#شامل <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+ساکن اندرونی خالی cleanByWSL(لفظ_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm متلون("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+ساکن اندرونی خالی cleanInvalidateByWSL(لفظ_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm متلون("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+ساکن اندرونی لفظ_t readCLID(خالی)
 {
-    word_t CLID;
+    لفظ_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    واپس CLID;
 }
 
-#define LOUU(x)    (((x) >> 27)        & MASK(3))
-#define LOC(x)     (((x) >> 24)        & MASK(3))
-#define LOUIS(x)   (((x) >> 21)        & MASK(3))
-#define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
+#تعریف_کرو LOUU(x)    (((x) >> 27)        & نقاب(3))
+#تعریف_کرو LOC(x)     (((x) >> 24)        & نقاب(3))
+#تعریف_کرو LOUIS(x)   (((x) >> 21)        & نقاب(3))
+#تعریف_کرو CTYPE(x,n) (((x) >> (n*3))     & نقاب(3))
 
-enum arm_cache_type {
+شمار arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+ساکن اندرونی لفظ_t read_Cache_سائز(صحیح level, bool_t instruction)
 {
-    word_t size, csselr_old;
+    لفظ_t سائز, csselr_old;
     /* Save CSSELR */
     MRS("csselr_el1", csselr_old);
     /* Select cache level */
     MSR("csselr_el1", ((level << 1) | instruction));
     /* Read 'size' */
-    MRS("ccsidr_el1", size);
+    MRS("ccsidr_el1", سائز);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    واپس سائز;
 }
 
-#define LINEBITS(s)     (((s) & MASK(3)) + 4)
-#define ASSOC(s)        ((((s) >> 3) & MASK(10)) + 1)
-#define NSETS(s)        ((((s) >> 13) & MASK(15)) + 1)
+#تعریف_کرو LINEBITS(s)     (((s) & نقاب(3)) + 4)
+#تعریف_کرو ASSOC(s)        ((((s) >> 3) & نقاب(10)) + 1)
+#تعریف_کرو NSETS(s)        ((((s) >> 13) & نقاب(15)) + 1)
 
-void clean_D_PoU(void)
+خالی clean_D_PoU(خالی)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    صحیح clid = readCLID();
+    صحیح lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
-            word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
-                    cleanByWSL((w << (32 - assoc_bits)) |
+    برائے (صحیح l = 0; l < lou; l++) {
+        اگر (CTYPE(clid, l) > ARMCacheI) {
+            لفظ_t lsize = read_Cache_سائز(l, 0);
+            صحیح lbits = LINEBITS(lsize);
+            صحیح assoc = ASSOC(lsize);
+            صحیح assoc_بٹ = لفظ_بٹ - clzl(assoc - 1);
+            صحیح nsets = NSETS(lsize);
+            برائے (صحیح w = 0; w < assoc; w++) {
+                برائے (صحیح s = 0; s < nsets; s++) {
+                    cleanByWSL((w << (32 - assoc_بٹ)) |
                                (s << lbits) | (l << 1));
                 }
             }
@@ -74,35 +74,35 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+ساکن اندرونی خالی cleanInvalidate_D_by_level(صحیح l)
 {
-    word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    لفظ_t lsize = read_Cache_سائز(l, 0);
+    صحیح lbits = LINEBITS(lsize);
+    صحیح assoc = ASSOC(lsize);
+    صحیح assoc_بٹ = لفظ_بٹ - clzl(assoc - 1);
+    صحیح nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
-            cleanInvalidateByWSL((w << (32 - assoc_bits)) |
+    برائے (صحیح w = 0; w < assoc; w++) {
+        برائے (صحیح s = 0; s < nsets; s++) {
+            cleanInvalidateByWSL((w << (32 - assoc_بٹ)) |
                                  (s << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+خالی cleanInvalidate_D_PoC(خالی)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    صحیح clid = readCLID();
+    صحیح loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    برائے (صحیح l = 0; l < loc; l++) {
+        اگر (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+خالی cleanInvalidate_L1D(خالی)
 {
     cleanInvalidate_D_by_level(0);
 }

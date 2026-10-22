@@ -4,55 +4,55 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/types.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <arch/machine/l2c_310.h>
+#شامل <api/types.h>
+#شامل <arch/machine.h>
+#شامل <arch/machine/hardware.h>
+#شامل <arch/machine/l2c_310.h>
 
-#define LINE_START(a) ROUND_DOWN(a, L1_CACHE_LINE_SIZE_BITS)
-#define LINE_INDEX(a) (LINE_START(a)>>L1_CACHE_LINE_SIZE_BITS)
+#تعریف_کرو سطر_آغاز(a) باری_نیچے_کو(a, L1_CACHE_سطر_سائز_بٹ)
+#تعریف_کرو سطر_اشاریہ(a) (سطر_آغاز(a)>>L1_CACHE_سطر_سائز_بٹ)
 
-static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
+ساکن خالی cleanCacheRange_PoC(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t سطر;
+    لفظ_t اشاریہ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        cleanByVA(سطر, pstart + (سطر - آغاز));
     }
 }
 
-void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+خالی cleanInvalidateCacheRange_RAM(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t سطر;
+    لفظ_t اشاریہ;
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end, id)" */
 
     /* First clean the L1 range */
-    cleanCacheRange_PoC(start, end, pstart);
+    cleanCacheRange_PoC(آغاز, انتہا, pstart);
 
     /* ensure operation completes and visible in L2 */
     dsb();
 
     /* Now clean and invalidate the L2 range */
-    plat_cleanInvalidateL2Range(pstart, pstart + (end - start));
+    plat_cleanInvalidateL2Range(pstart, pstart + (انتہا - آغاز));
 
     /* Finally clean and invalidate the L1 range. The extra clean is only strictly necessary
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanInvalByVA(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        cleanInvalByVA(سطر, pstart + (سطر - آغاز));
     }
     /* ensure clean and invalidate complete */
     dsb();
 }
 
-void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+خالی cleanCacheRange_RAM(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -60,7 +60,7 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* clean l1 to l2 */
-    cleanCacheRange_PoC(start, end, pstart);
+    cleanCacheRange_PoC(آغاز, انتہا, pstart);
 
     /* ensure cache operation completes before cleaning l2 */
     dsb();
@@ -71,41 +71,41 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* now clean l2 to RAM */
-    plat_cleanL2Range(pstart, pstart + (end - start));
+    plat_cleanL2Range(pstart, pstart + (انتہا - آغاز));
 }
 
-void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
+خالی cleanCacheRange_PoU(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t سطر;
+    لفظ_t اشاریہ;
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA_PoU(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        cleanByVA_PoU(سطر, pstart + (سطر - آغاز));
     }
 }
 
-void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+خالی invalidateCacheRange_RAM(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t سطر;
+    لفظ_t اشاریہ;
 
     /* If the start and end are not aligned to a cache line boundary
      * then we need to clean the line first to prevent invalidating
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
-        cleanCacheRange_RAM(start, start, pstart);
+    اگر (آغاز != سطر_آغاز(آغاز)) {
+        cleanCacheRange_RAM(آغاز, آغاز, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
-        line = LINE_START(end);
-        cleanCacheRange_RAM(line, line, pstart + (line - start));
+    اگر (انتہا + 1 != سطر_آغاز(انتہا + 1)) {
+        سطر = سطر_آغاز(انتہا);
+        cleanCacheRange_RAM(سطر, سطر, pstart + (سطر - آغاز));
     }
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -116,7 +116,7 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
     /* Invalidate L2 range. Invalidating the L2 before the L1 is the order
      * given in the l2c_310 manual, as an L1 line might be allocated from the L2
      * before the L2 can be invalidated. */
-    plat_invalidateL2Range(pstart, pstart + (end - start));
+    plat_invalidateL2Range(pstart, pstart + (انتہا - آغاز));
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -124,17 +124,17 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        invalidateByVA(سطر, pstart + (سطر - آغاز));
     }
     /* Ensure invalidate completes */
     dsb();
 }
 
-void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
+خالی invalidateCacheRange_I(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-#if defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
+#اگر defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     /* In cases where the hypervisor is supported, the virtual address passed
      * to this function are kernel aliases for the underlying physical memory
      * rather than the virtual address in the actual vspace. This works fine
@@ -145,29 +145,29 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      * case
      */
     invalidate_I_PoU();
-#else
-    vptr_t line;
-    word_t index;
+#ورنہ
+    vptr_t سطر;
+    لفظ_t اشاریہ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA_I(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        invalidateByVA_I(سطر, pstart + (سطر - آغاز));
     }
-#endif
+#اگر_ختم
 }
 
-void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
+خالی branchFlushRange(vptr_t آغاز, vptr_t انتہا, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t سطر;
+    لفظ_t اشاریہ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        branchFlush(line, pstart + (line - start));
+    برائے (اشاریہ = سطر_اشاریہ(آغاز); اشاریہ < سطر_اشاریہ(انتہا) + 1; اشاریہ++) {
+        سطر = اشاریہ << L1_CACHE_سطر_سائز_بٹ;
+        branchFlush(سطر, pstart + (سطر - آغاز));
     }
 }
 
-void cleanCaches_PoU(void)
+خالی cleanCaches_PoU(خالی)
 {
     dsb();
     clean_D_PoU();
@@ -176,7 +176,7 @@ void cleanCaches_PoU(void)
     dsb();
 }
 
-void cleanInvalidateL1Caches(void)
+خالی cleanInvalidateL1Caches(خالی)
 {
     dsb();
     cleanInvalidate_D_PoC();
@@ -185,7 +185,7 @@ void cleanInvalidateL1Caches(void)
     dsb();
 }
 
-void arch_clean_invalidate_caches(void)
+خالی arch_clean_invalidate_caches(خالی)
 {
     cleanCaches_PoU();
     plat_cleanInvalidateL2Cache();
@@ -193,14 +193,14 @@ void arch_clean_invalidate_caches(void)
     isb();
 }
 
-void arch_clean_invalidate_L1_caches(word_t type)
+خالی arch_clean_invalidate_L1_caches(لفظ_t type)
 {
     dsb();
-    if (type & BIT(1)) {
+    اگر (type & ثنائی_ہندسہ(1)) {
         cleanInvalidate_L1D();
         dsb();
     }
-    if (type & BIT(0)) {
+    اگر (type & ثنائی_ہندسہ(0)) {
         invalidate_I_PoU();
         dsb();
         isb();

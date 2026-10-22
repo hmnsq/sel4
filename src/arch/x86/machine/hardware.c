@@ -4,91 +4,91 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/registerset.h>
-#include <model/statedata.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <arch/machine/registerset.h>
-#include <linker.h>
+#شامل <types.h>
+#شامل <machine/registerset.h>
+#شامل <model/statedata.h>
+#شامل <object/structures.h>
+#شامل <arch/machine.h>
+#شامل <arch/machine/hardware.h>
+#شامل <arch/machine/registerset.h>
+#شامل <linker.h>
 
 /* initialises MSRs required to setup sysenter and sysexit */
-BOOT_CODE void init_sysenter_msrs(void)
+BOOT_رمز خالی init_sysenter_msrs(خالی)
 {
-    x86_wrmsr(IA32_SYSENTER_CS_MSR, (uint64_t)(word_t)SEL_CS_0);
-    x86_wrmsr(IA32_SYSENTER_EIP_MSR, (uint64_t)(word_t)&handle_syscall);
-    if (config_set(CONFIG_ARCH_IA32) && !config_set(CONFIG_HARDWARE_DEBUG_API)) {
+    x86_wrmsr(IA32_SYSENTER_CS_MSR, (uint64_t)(لفظ_t)SEL_CS_0);
+    x86_wrmsr(IA32_SYSENTER_EIP_MSR, (uint64_t)(لفظ_t)&handle_syscall);
+    اگر (config_سیٹ(CONFIG_ARCH_IA32) && !config_سیٹ(CONFIG_HARDWARE_DEBUG_API)) {
         /* manually add 4 bytes to x86KStss so that it is valid for both
          * 32-bit and 64-bit, although only ia32 actually requires a valid
          * sysenter esp */
-        x86_wrmsr(IA32_SYSENTER_ESP_MSR, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0]
+        x86_wrmsr(IA32_SYSENTER_ESP_MSR, (uint64_t)(لفظ_t)((حرف *)&x86KSGlobalState[CURRENT_CPU_اشاریہ()].x86KStss.tss.الفاظ[0]
                                                             + 4));
     }
 }
 
-word_t PURE getRestartPC(tcb_t *thread)
+لفظ_t خالص getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    واپس get_رجسٹر(thread, FaultIP);
 }
 
-void setNextPC(tcb_t *thread, word_t v)
+خالی سیٹ_اگلا_PC(tcb_t *thread, لفظ_t v)
 {
-    setRegister(thread, NextIP, v);
+    سیٹ_رجسٹر(thread, اگلا_IP, v);
 }
 
 /* Returns the size of CPU's cacheline */
-BOOT_CODE uint32_t CONST getCacheLineSizeBits(void)
+BOOT_رمز uint32_t CONST get_Cache_سطر_سائز_بٹ(خالی)
 {
-    uint32_t line_size;
+    uint32_t سطر_سائز;
     uint32_t n;
 
-    line_size = getCacheLineSize();
-    if (line_size == 0) {
-        printf("Cacheline size must be >0\n");
-        return 0;
+    سطر_سائز = get_Cache_سطر_سائز();
+    اگر (سطر_سائز == 0) {
+        لکھو("Cacheline size must be >0\n");
+        واپس 0;
     }
 
     /* determine size_bits */
     n = 0;
-    while (!(line_size & 1)) {
-        line_size >>= 1;
+    جب (!(سطر_سائز & 1)) {
+        سطر_سائز >>= 1;
         n++;
     }
 
-    if (line_size != 1) {
-        printf("Cacheline size must be a power of two\n");
-        return 0;
+    اگر (سطر_سائز != 1) {
+        لکھو("Cacheline size must be a power of two\n");
+        واپس 0;
     }
 
-    return n;
+    واپس n;
 }
 
 /* Flushes a specific memory range from the CPU cache */
 
-void flushCacheRange(void *vaddr, uint32_t size_bits)
+خالی flushCacheRange(خالی *vaddr, uint32_t سائز_بٹ)
 {
-    word_t v;
+    لفظ_t v;
 
-    assert(size_bits < seL4_WordBits);
-    assert(IS_ALIGNED((word_t)vaddr, size_bits));
+    أكد(سائز_بٹ < se_L4_لفظ_بٹ);
+    أكد(IS_ALIGNED((لفظ_t)vaddr, سائز_بٹ));
 
     x86_mfence();
 
-    for (v = ROUND_DOWN((word_t)vaddr, x86KScacheLineSizeBits);
-         v < (word_t)vaddr + BIT(size_bits);
-         v += BIT(x86KScacheLineSizeBits)) {
-        flushCacheLine((void *)v);
+    برائے (v = باری_نیچے_کو((لفظ_t)vaddr, x86_KScache_سطر_سائز_بٹ);
+         v < (لفظ_t)vaddr + ثنائی_ہندسہ(سائز_بٹ);
+         v += ثنائی_ہندسہ(x86_KScache_سطر_سائز_بٹ)) {
+        flush_Cache_سطر((خالی *)v);
     }
     x86_mfence();
 }
 
 /* Disables as many prefetchers as possible */
-BOOT_CODE bool_t disablePrefetchers(void)
+BOOT_رمز bool_t disablePrefetchers(خالی)
 {
-    x86_cpu_identity_t *model_info;
-    uint32_t low, high;
-    word_t i;
+    x86_cpu_شناختی_عنصر_t *model_info;
+    uint32_t کم, بلند;
+    لفظ_t i;
 
     uint32_t valid_models[] = { BROADWELL_1_MODEL_ID, BROADWELL_2_MODEL_ID,
                                 BROADWELL_3_MODEL_ID, BROADWELL_4_MODEL_ID,
@@ -104,7 +104,7 @@ BOOT_CODE bool_t disablePrefetchers(void)
 
     model_info = x86_cpuid_get_model_info();
 
-    for (i = 0; i < ARRAY_SIZE(valid_models); i++) {
+    برائے (i = 0; i < ARRAY_سائز(valid_models); i++) {
         /* The model ID is only useful when hashed together with the family ID.
          * They are both meant to be combined to form a unique identifier.
          *
@@ -112,70 +112,70 @@ BOOT_CODE bool_t disablePrefetchers(void)
          * disable prefetching on anything that matches family_ID==0x6, and
          * there is no need to also look at the model_ID.
          */
-        if (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID
+        اگر (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID
             && model_info->model == valid_models[i]) {
-            low = x86_rdmsr_low(IA32_PREFETCHER_MSR);
-            high = x86_rdmsr_high(IA32_PREFETCHER_MSR);
+            کم = x86_rdmsr_کم(IA32_PREFETCHER_MSR);
+            بلند = x86_rdmsr_بلند(IA32_PREFETCHER_MSR);
 
-            low |= IA32_PREFETCHER_MSR_L2;
-            low |= IA32_PREFETCHER_MSR_L2_ADJACENT;
-            low |= IA32_PREFETCHER_MSR_DCU;
-            low |= IA32_PREFETCHER_MSR_DCU_IP;
+            کم |= IA32_PREFETCHER_MSR_L2;
+            کم |= IA32_PREFETCHER_MSR_L2_ADJACENT;
+            کم |= IA32_PREFETCHER_MSR_DCU;
+            کم |= IA32_PREFETCHER_MSR_DCU_IP;
 
-            x86_wrmsr(IA32_PREFETCHER_MSR, ((uint64_t)high) << 32 | low);
+            x86_wrmsr(IA32_PREFETCHER_MSR, ((uint64_t)بلند) << 32 | کم);
 
-            return true;
+            واپس true;
         }
     }
 
-    printf("Disabling prefetchers not implemented for CPU fam %x model %x\n",
+    لکھو("Disabling prefetchers not implemented for CPU fam %x model %x\n",
            model_info->family, model_info->model);
-    return false;
+    واپس false;
 }
 
-BOOT_CODE void enablePMCUser(void)
+BOOT_رمز خالی enablePMCUser(خالی)
 {
     write_cr4(read_cr4() | CR4_PCE);
 }
 
-BOOT_CODE bool_t init_ibrs(void)
+BOOT_رمز bool_t init_ibrs(خالی)
 {
     cpuid_007h_edx_t edx;
-    edx.words[0] = x86_cpuid_edx(0x7, 0);
+    edx.الفاظ[0] = x86_cpuid_edx(0x7, 0);
     bool_t support_ibrs = cpuid_007h_edx_get_ibrs_ibpb(edx);
-    if ((config_set(CONFIG_KERNEL_X86_IBRS_BASIC) || config_set(CONFIG_KERNEL_X86_IBRS_STIBP)) && !support_ibrs) {
-        printf("IBRS not supported by CPU\n");
-        return false;
-    } else if (support_ibrs) {
+    اگر ((config_سیٹ(CONFIG_KERNEL_X86_IBRS_BASIC) || config_سیٹ(CONFIG_KERNEL_X86_IBRS_STIBP)) && !support_ibrs) {
+        لکھو("IBRS not supported by CPU\n");
+        واپس false;
+    } ورنہ اگر (support_ibrs) {
         /* 'disable' IBRS. For IBRS_BASIC this does nothing, and for STIBP this will cause
          * us to enable STIBP, and we can then forget about it */
         x86_disable_ibrs();
     }
     /* IBRS is also the feature flag for IBPB */
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH) && !support_ibrs) {
-        printf("IBPB not supported by CPU\n");
-        return false;
+    اگر (config_سیٹ(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH) && !support_ibrs) {
+        لکھو("IBPB not supported by CPU\n");
+        واپس false;
     }
     /* check for enhanced IBRS */
     bool_t enhanced_ibrs = false;
-    if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
+    اگر (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
-        cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
-        if (ia32_arch_capabilities_msr_get_ibrs_all(cap_msr)) {
+        cap_msr.الفاظ[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
+        اگر (ia32_arch_capabilities_msr_get_ibrs_all(cap_msr)) {
             enhanced_ibrs = true;
         }
     }
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC) && enhanced_ibrs) {
-        printf("Kernel configured for basic IBRS, but CPU supports enhanced IBRS. "
+    اگر (config_سیٹ(CONFIG_KERNEL_X86_IBRS_BASIC) && enhanced_ibrs) {
+        لکھو("Kernel configured for basic IBRS, but CPU supports enhanced IBRS. "
                "Enable enhanced IBRS for improved performance\n");
     }
-    if (config_set(CONFIG_KERNEL_X86_IBRS_ALL)) {
-        if (!enhanced_ibrs) {
-            printf("Enhanced IBRS not supported by CPU\n");
-            return false;
+    اگر (config_سیٹ(CONFIG_KERNEL_X86_IBRS_ALL)) {
+        اگر (!enhanced_ibrs) {
+            لکھو("Enhanced IBRS not supported by CPU\n");
+            واپس false;
         }
         /* enable IBRS and then we can forget about it */
         x86_enable_ibrs();
     }
-    return true;
+    واپس true;
 }

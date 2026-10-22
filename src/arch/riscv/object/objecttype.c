@@ -5,66 +5,66 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/object/objecttype.h>
+#شامل <types.h>
+#شامل <api/failures.h>
+#شامل <kernel/vspace.h>
+#شامل <object/structures.h>
+#شامل <arch/machine.h>
+#شامل <arch/model/statedata.h>
+#شامل <arch/object/objecttype.h>
 
-deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t Arch_deriveCap(cte_t *خانہ, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
+    انتخاب (cap_get_capType(cap)) {
 
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    حالت cap_صفحہ_جدول_cap:
+        اگر (cap_صفحہ_جدول_cap_get_cap_PTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.حالت_2 = EXCEPTION_NONE;
+        } ورنہ {
             userError("Deriving an unmapped PT cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.حالت_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        واپس ret;
 
-    case cap_frame_cap:
-        cap = cap_frame_cap_set_capFMappedAddress(cap, 0);
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    حالت cap_چوکھٹا_cap:
+        cap = cap_چوکھٹا_cap_سیٹ_cap_FMapped_پتہ(cap, 0);
+        ret.cap = cap_چوکھٹا_cap_سیٹ_cap_FMapped_ASID(cap, asidInvalid);
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    حالت cap_asid_control_cap:
+    حالت cap_asid_pool_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.حالت_2 = EXCEPTION_NONE;
+        واپس ret;
 
-    default:
+    طےشدہ:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap type");
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_ڈیٹا(bool_t preserve, لفظ_t ڈیٹا, cap_t cap)
 {
-    return cap;
+    واپس cap;
 }
 
-cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
+cap_t CONST Arch_نقاب_Cap_Rights(seL4_CapRights_t cap_rights_نقاب, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    اگر (cap_get_capType(cap) == cap_چوکھٹا_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        vm_rights = vm_Rights_From_لفظ(cap_چوکھٹا_cap_get_cap_FVMRights(cap));
+        vm_rights = نقاب_VMRights(vm_rights, cap_rights_نقاب);
+        واپس cap_چوکھٹا_cap_سیٹ_cap_FVMRights(cap, لفظ_From_VMRights(vm_rights));
+    } ورنہ {
+        واپس cap;
     }
 }
 
@@ -72,18 +72,18 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
+    انتخاب (cap_get_capType(cap)) {
+    حالت cap_چوکھٹا_cap:
 
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            unmapPage(cap_frame_cap_get_capFSize(cap),
-                      cap_frame_cap_get_capFMappedASID(cap),
-                      cap_frame_cap_get_capFMappedAddress(cap),
-                      cap_frame_cap_get_capFBasePtr(cap));
+        اگر (cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap)) {
+            unmap_صفحہ(cap_چوکھٹا_cap_get_cap_FSize(cap),
+                      cap_چوکھٹا_cap_get_cap_FMapped_ASID(cap),
+                      cap_چوکھٹا_cap_get_cap_FMapped_پتہ(cap),
+                      cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap));
         }
-        break;
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
+        توڑو;
+    حالت cap_صفحہ_جدول_cap:
+        اگر (final && cap_صفحہ_جدول_cap_get_cap_PTIs_Mapped(cap)) {
             /*
              * This PageTable is either mapped as a vspace_root or otherwise exists
              * as an entry in another PageTable. We check if it is a vspace_root and
@@ -91,194 +91,194 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
              * a mapped PageTable and unmap it from whatever page table it is mapped
              * into.
              */
-            asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-            findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-            pte_t *pte = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-            if (find_ret.status == EXCEPTION_NONE && find_ret.vspace_root == pte) {
+            asid_t asid = cap_صفحہ_جدول_cap_get_cap_PTMapped_ASID(cap);
+            ڈھونڈو_VSpace_For_ASID_ret_t ڈھونڈو_ret = ڈھونڈو_VSpace_For_ASID(asid);
+            pte_t *pte = PTE_PTR(cap_صفحہ_جدول_cap_get_cap_PTBase_Ptr(cap));
+            اگر (ڈھونڈو_ret.حالت_2 == EXCEPTION_NONE && ڈھونڈو_ret.vspace_جڑ == pte) {
                 deleteASID(asid, pte);
-            } else {
-                unmapPageTable(asid, cap_page_table_cap_get_capPTMappedAddress(cap), pte);
+            } ورنہ {
+                unmap_صفحہ_جدول(asid, cap_صفحہ_جدول_cap_get_cap_PTMapped_پتہ(cap), pte);
             }
         }
-        break;
-    case cap_asid_pool_cap:
-        if (final) {
+        توڑو;
+    حالت cap_asid_pool_cap:
+        اگر (final) {
             deleteASIDPool(
                 cap_asid_pool_cap_get_capASIDBase(cap),
                 ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))
             );
         }
-        break;
-    case cap_asid_control_cap:
-        break;
+        توڑو;
+    حالت cap_asid_control_cap:
+        توڑو;
     }
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    واپس fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
-            botA = cap_frame_cap_get_capFBasePtr(cap_a);
-            botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+    انتخاب (cap_get_capType(cap_a)) {
+    حالت cap_چوکھٹا_cap:
+        اگر (cap_get_capType(cap_b) == cap_چوکھٹا_cap) {
+            لفظ_t botA, botB, چوٹی_A, چوٹی_B;
+            botA = cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap_a);
+            botB = cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap_b);
+            چوٹی_A = botA + نقاب(صفحہ_بٹ_For_سائز(cap_چوکھٹا_cap_get_cap_FSize(cap_a)));
+            چوٹی_B = botB + نقاب(صفحہ_بٹ_For_سائز(cap_چوکھٹا_cap_get_cap_FSize(cap_b))) ;
+            واپس ((botA <= botB) && (چوٹی_A >= چوٹی_B) && (botB <= چوٹی_B));
         }
-        break;
+        توڑو;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
+    حالت cap_صفحہ_جدول_cap:
+        اگر (cap_get_capType(cap_b) == cap_صفحہ_جدول_cap) {
+            واپس cap_صفحہ_جدول_cap_get_cap_PTBase_Ptr(cap_a) ==
+                   cap_صفحہ_جدول_cap_get_cap_PTBase_Ptr(cap_b);
         }
-        break;
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+        توڑو;
+    حالت cap_asid_control_cap:
+        اگر (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            واپس true;
         }
-        break;
+        توڑو;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    حالت cap_asid_pool_cap:
+        اگر (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            واپس cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        توڑو;
     }
 
-    return false;
+    واپس false;
 }
 
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if ((cap_get_capType(cap_a) == cap_frame_cap) &&
-        (cap_get_capType(cap_b) == cap_frame_cap)) {
-        return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
-                 cap_frame_cap_get_capFBasePtr(cap_b)) &&
-                (cap_frame_cap_get_capFSize(cap_a) ==
-                 cap_frame_cap_get_capFSize(cap_b)) &&
-                ((cap_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                 (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
+    اگر ((cap_get_capType(cap_a) == cap_چوکھٹا_cap) &&
+        (cap_get_capType(cap_b) == cap_چوکھٹا_cap)) {
+        واپس ((cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap_a) ==
+                 cap_چوکھٹا_cap_get_cap_FBase_Ptr(cap_b)) &&
+                (cap_چوکھٹا_cap_get_cap_FSize(cap_a) ==
+                 cap_چوکھٹا_cap_get_cap_FSize(cap_b)) &&
+                ((cap_چوکھٹا_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                 (cap_چوکھٹا_cap_get_cap_FIs_Device(cap_b) == 0)));
     }
-    return Arch_sameRegionAs(cap_a, cap_b);
+    واپس Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+لفظ_t Arch_get_Object_سائز(لفظ_t t)
 {
-    switch (t) {
-    case seL4_RISCV_4K_Page:
-    case seL4_RISCV_PageTableObject:
-        return seL4_PageBits;
-    case seL4_RISCV_Mega_Page:
-        return seL4_LargePageBits;
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page:
-        return seL4_HugePageBits;
-#endif
-#if CONFIG_PT_LEVELS > 3
-    case seL4_RISCV_Tera_Page:
-        return seL4_TeraPageBits;
-#endif
-    default:
+    انتخاب (t) {
+    حالت se_L4_RISCV_4_K_صفحہ:
+    حالت se_L4_RISCV_صفحہ_جدول_Object:
+        واپس se_L4_صفحہ_بٹ;
+    حالت se_L4_RISCV_Mega_صفحہ:
+        واپس se_L4_Large_صفحہ_بٹ;
+#اگر CONFIG_PT_سطحیں > 2
+    حالت se_L4_RISCV_Giga_صفحہ:
+        واپس se_L4_Huge_صفحہ_بٹ;
+#اگر_ختم
+#اگر CONFIG_PT_سطحیں > 3
+    حالت se_L4_RISCV_Tera_صفحہ:
+        واپس se_L4_Tera_صفحہ_بٹ;
+#اگر_ختم
+    طےشدہ:
         fail("Invalid object type");
-        return 0;
+        واپس 0;
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t
-                        deviceMemory)
+cap_t Arch_createObject(object_t t, خالی *region_بنیاد, لفظ_t user_سائز, bool_t
+                        device_حافظہ)
 {
-    switch (t) {
-    case seL4_RISCV_4K_Page:
-        if (deviceMemory) {
+    انتخاب (t) {
+    حالت se_L4_RISCV_4_K_صفحہ:
+        اگر (device_حافظہ) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVPageBits))" */
-        } else {
+        } ورنہ {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVPageBits))" */
         }
-        return cap_frame_cap_new(
+        واپس cap_چوکھٹا_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_4K_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (لفظ_t) region_بنیاد,            /* capFBasePtr          */
+                   RISCV_4_K_صفحہ,                  /* capFSize             */
+                   لفظ_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_حافظہ,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
 
-    case seL4_RISCV_Mega_Page: {
-        if (deviceMemory) {
+    حالت se_L4_RISCV_Mega_صفحہ: {
+        اگر (device_حافظہ) {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVMegaPageBits))" */
-        } else {
+        } ورنہ {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVMegaPageBits))" */
         }
-        return cap_frame_cap_new(
+        واپس cap_چوکھٹا_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_Mega_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (لفظ_t) region_بنیاد,            /* capFBasePtr          */
+                   RISCV_Mega_صفحہ,                  /* capFSize             */
+                   لفظ_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_حافظہ,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
     }
 
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page: {
-        if (deviceMemory) {
+#اگر CONFIG_PT_سطحیں > 2
+    حالت se_L4_RISCV_Giga_صفحہ: {
+        اگر (device_حافظہ) {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVGigaPageBits))" */
-        } else {
+        } ورنہ {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVGigaPageBits))" */
         }
-        return cap_frame_cap_new(
+        واپس cap_چوکھٹا_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_Giga_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (لفظ_t) region_بنیاد,            /* capFBasePtr          */
+                   RISCV_Giga_صفحہ,                  /* capFSize             */
+                   لفظ_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_حافظہ,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
     }
-#endif
+#اگر_ختم
 
-    case seL4_RISCV_PageTableObject:
+    حالت se_L4_RISCV_صفحہ_جدول_Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-        return cap_page_table_cap_new(
+        واپس cap_صفحہ_جدول_cap_new(
                    asidInvalid,            /* capPTMappedASID    */
-                   (word_t)regionBase,     /* capPTBasePtr       */
+                   (لفظ_t)region_بنیاد,     /* capPTBasePtr       */
                    0,                      /* capPTIsMapped      */
                    0                       /* capPTMappedAddress */
                );
 
-    default:
+    طےشدہ:
         /*
          * This is a conflation of the haskell error: "Arch.createNewCaps
          * got an API type" and the case where an invalid object type is
@@ -289,38 +289,38 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t
 }
 
 exception_t Arch_decodeInvocation(
-    word_t label,
-    word_t length,
+    لفظ_t label,
+    لفظ_t لمبائی,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *خانہ,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    return decodeRISCVMMUInvocation(label, length, cptr, slot, cap, call, buffer);
+    واپس decodeRISCVMMUInvocation(label, لمبائی, cptr, خانہ, cap, call, بفر);
 }
 
-void Arch_prepareThreadDelete(tcb_t *thread)
+خالی Arch_prepareThreadDelete(tcb_t *thread)
 {
-#ifdef CONFIG_HAVE_FPU
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
     fpuRelease(thread);
-#endif
+#اگر_ختم
 }
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_چوکھٹا_Type(لفظ_t type)
 {
-    switch (type) {
-#if CONFIG_PT_LEVELS == 4
-    case seL4_RISCV_Tera_Page:
-#endif
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page:
-#endif
-    case seL4_RISCV_Mega_Page:
-    case seL4_RISCV_4K_Page:
-        return true;
-    default:
-        return false;
+    انتخاب (type) {
+#اگر CONFIG_PT_سطحیں == 4
+    حالت se_L4_RISCV_Tera_صفحہ:
+#اگر_ختم
+#اگر CONFIG_PT_سطحیں > 2
+    حالت se_L4_RISCV_Giga_صفحہ:
+#اگر_ختم
+    حالت se_L4_RISCV_Mega_صفحہ:
+    حالت se_L4_RISCV_4_K_صفحہ:
+        واپس true;
+    طےشدہ:
+        واپس false;
     }
 }

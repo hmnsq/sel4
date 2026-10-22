@@ -4,72 +4,72 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/lock.h>
-#include <util.h>
+#شامل <config.h>
+#شامل <mode/smp/ipi.h>
+#شامل <smp/lock.h>
+#شامل <util.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#اگر_تعریف_شدہ ENABLE_SMP_SUPPORT
 
-static volatile irq_t ipiIrq[CONFIG_MAX_NUM_NODES];
+ساکن متلون irq_t ipiIrq[CONFIG_MAX_عدد_NODES];
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+خالی handleRemoteCall(IpiRemoteCall_t call, لفظ_t arg0, لفظ_t arg1, لفظ_t arg2, bool_t irq_راستہ)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
-            ipiStallCoreCallback(irqPath);
-            break;
+    اگر (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        انتخاب (call) {
+        حالت IpiRemoteCall_Stall:
+            ipiStallCoreCallback(irq_راستہ);
+            توڑو;
 
-#ifdef CONFIG_HAVE_FPU
-        case IpiRemoteCall_switchFpuOwner:
+#اگر_تعریف_شدہ CONFIG_HAVE_FPU
+        حالت IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
-#endif /* CONFIG_HAVE_FPU */
+            توڑو;
+#اگر_ختم /* CONFIG_HAVE_FPU */
 
-        default:
+        طےشدہ:
             fail("Invalid remote call");
-            break;
+            توڑو;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_تالا.گرہ[getCurrentCPUIndex()].ipi = 0;
         ipiIrq[getCurrentCPUIndex()] = irqInvalid;
         ipi_wait();
     }
 }
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+خالی ipi_send_نقاب(irq_t ipi, لفظ_t نقاب_2, bool_t isBlocking)
 {
-    generic_ipi_send_mask(ipi, mask, isBlocking);
+    generic_ipi_send_نقاب(ipi, نقاب_2, isBlocking);
 }
 
-irq_t ipi_get_irq(void)
+irq_t ipi_get_irq(خالی)
 {
-    assert(!(ipiIrq[getCurrentCPUIndex()] == irqInvalid && clh_is_ipi_pending(getCurrentCPUIndex())));
-    return ipiIrq[getCurrentCPUIndex()];
+    أكد(!(ipiIrq[getCurrentCPUIndex()] == irqInvalid && clh_is_ipi_pending(getCurrentCPUIndex())));
+    واپس ipiIrq[getCurrentCPUIndex()];
 }
 
-void ipi_clear_irq(irq_t irq)
+خالی ipi_clear_irq(irq_t irq)
 {
     ipiIrq[getCurrentCPUIndex()] = irqInvalid;
-    return;
+    واپس;
 }
 
 /* this function is called with a single hart id. */
-void ipi_send_target(irq_t irq, word_t hart_id)
+خالی ipi_send_ہدف(irq_t irq, لفظ_t hart_id)
 {
-    word_t hart_mask = BIT(hart_id);
-    word_t core_id = hartIDToCoreID(hart_id);
-    assert(core_id < CONFIG_MAX_NUM_NODES);
+    لفظ_t hart_نقاب = ثنائی_ہندسہ(hart_id);
+    لفظ_t core_id = hartIDToCoreID(hart_id);
+    أكد(core_id < CONFIG_MAX_عدد_NODES);
 
-    assert((ipiIrq[core_id] == irqInvalid) || (ipiIrq[core_id] == irq_reschedule_ipi) ||
+    أكد((ipiIrq[core_id] == irqInvalid) || (ipiIrq[core_id] == irq_reschedule_ipi) ||
            (ipiIrq[core_id] == irq_remote_call_ipi && !clh_is_ipi_pending(core_id)));
 
     ipiIrq[core_id] = irq;
     fence_rw_rw();
-    sbi_send_ipi(hart_mask);
+    sbi_send_ipi(hart_نقاب);
 }
 
-#endif
+#اگر_ختم
