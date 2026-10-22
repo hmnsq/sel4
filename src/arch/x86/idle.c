@@ -11,7 +11,7 @@
 void VISIBLE halt(void)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cli");
+    asm ca_ncala("cli");
 
 #ifdef CONFIG_PRINTING
     printf("halting...");

@@ -56,12 +56,12 @@ static uint32_t num_ioapics = 0;
 
 static void ioapic_write(uint32_t ioapic, word_t reg, uint32_t value)
 {
-    *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg) = value;
+    *(ca_ncala uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg) = value;
 }
 
 static uint32_t ioapic_read(uint32_t ioapic, word_t reg)
 {
-    return *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg);
+    ᬯᬮᬶ *(ca_ncala uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg);
 }
 
 static void single_ioapic_init(word_t ioapic)
@@ -77,7 +77,7 @@ static void single_ioapic_init(word_t ioapic)
      * The MRE field of the IOAPICVER register is supposed to only be able to
      * return a max value of 239, which means a max nirqs value of IOAPIC_IRQ_LINES.
      */
-    if (nirqs > IOAPIC_IRQ_LINES) {
+    ᬬᬾᬦ᭄ (nirqs > IOAPIC_IRQ_LINES) {
         userError("%s: ioapic %lu has %u IRQs,\n"
                   "which is greater than the max handled (%u)\n",
                   __func__, ioapic, nirqs, IOAPIC_IRQ_LINES);
@@ -109,14 +109,14 @@ void ioapic_init(uint32_t num_nodes, cpu_id_t *cpu_list, uint32_t num_ioapic)
 
 void ioapic_mask(bool_t mask, uint32_t ioapic, uint32_t pin)
 {
-    int index = ioapic * IOAPIC_IRQ_LINES + pin;
-    if (ioapic >= num_ioapics || pin >= ioapic_nirqs[ioapic]) {
+    puur_naa_nka index = ioapic * IOAPIC_IRQ_LINES + pin;
+    ᬬᬾᬦ᭄ (ioapic >= num_ioapics || pin >= ioapic_nirqs[ioapic]) {
         /* silently ignore requests to non existent parts of the interrupt space */
-        return;
+        ᬯᬮᬶ;
     }
-    if (mask) {
+    ᬬᬾᬦ᭄ (mask) {
         ioredtbl_state[index] |= IOREDTBL_LOW_INTERRUPT_MASK;
-    } else {
+    } ᬮᬶᬬ {
         ioredtbl_state[index] &= ~IOREDTBL_LOW_INTERRUPT_MASK;
         /* it should not be possible to be unmasking an interrupt, without
          * it having been mapped to a vector, assert that this is the case */
@@ -129,41 +129,41 @@ void ioapic_mask(bool_t mask, uint32_t ioapic, uint32_t pin)
 exception_t ioapic_decode_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,
                                             word_t polarity, word_t vector)
 {
-    if (num_ioapics == 0) {
+    ᬬᬾᬦ᭄ (num_ioapics == 0) {
         userError("System has no IOAPICs");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᬯᬮᬶ EXCEPTION_SYSCALL_ERROR;
     }
-    if (ioapic >= num_ioapics) {
+    ᬬᬾᬦ᭄ (ioapic >= num_ioapics) {
         userError("Invalid IOAPIC %ld, only have %ld", (long)ioapic, (long)num_ioapics);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = num_ioapics - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᬯᬮᬶ EXCEPTION_SYSCALL_ERROR;
     }
-    if (pin >= ioapic_nirqs[ioapic]) {
+    ᬬᬾᬦ᭄ (pin >= ioapic_nirqs[ioapic]) {
         userError("Invalid IOAPIC pin %ld, there are %d pins", (long)pin, ioapic_nirqs[ioapic]);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = ioapic_nirqs[ioapic] - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᬯᬮᬶ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (level != 0 && level != 1) {
-        userError("Level should be 0 or 1, not %d", (int)level);
+    ᬬᬾᬦ᭄ (level != 0 && level != 1) {
+        userError("Level should be 0 or 1, not %d", (puur_naa_nka)level);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᬯᬮᬶ EXCEPTION_SYSCALL_ERROR;
     }
-    if (polarity != 0 && polarity != 1) {
-        userError("Polarity should be 0 or 1, not %d", (int)polarity);
+    ᬬᬾᬦ᭄ (polarity != 0 && polarity != 1) {
+        userError("Polarity should be 0 or 1, not %d", (puur_naa_nka)polarity);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᬯᬮᬶ EXCEPTION_SYSCALL_ERROR;
     }
-    return EXCEPTION_NONE;
+    ᬯᬮᬶ EXCEPTION_NONE;
 }
 
 void ioapic_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,
