@@ -4,33 +4,33 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <arch/kernel/ept.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <kernel/vspace.h>
+#ضمن <object/structures.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <machine/fpu.h>
+#ضمن <arch/object/objecttype.h>
+#ضمن <arch/object/ioport.h>
+#ضمن <arch/kernel/ept.h>
 
-#include <arch/object/iospace.h>
-#include <plat/machine/intel-vtd.h>
+#ضمن <arch/object/iospace.h>
+#ضمن <plat/machine/intel-vtd.h>
 
 
 bool_t Arch_isFrameType(word_t type)
 {
-    switch (type) {
-    case seL4_X86_4K:
-        return true;
-    case seL4_X86_LargePageObject:
-        return true;
-    case seL4_X64_HugePageObject:
-        return true;
-    default:
-        return false;
+    بدل (type) {
+    حالة seL4_X86_4K:
+        أرجع true;
+    حالة seL4_X86_LargePageObject:
+        أرجع true;
+    حالة seL4_X64_HugePageObject:
+        أرجع true;
+    افتراضي:
+        أرجع false;
     }
 }
 
@@ -38,38 +38,38 @@ deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_pml4_cap:
-        if (cap_pml4_cap_get_capPML4IsMapped(cap)) {
+    بدل (cap_get_capType(cap)) {
+    حالة cap_pml4_cap:
+        إذا (cap_pml4_cap_get_capPML4IsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } وإلا {
             userError("Deriving a PML4 cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        أرجع ret;
 
-    case cap_pdpt_cap:
-        if (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    حالة cap_pdpt_cap:
+        إذا (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } وإلا {
             userError("Deriving an unmapped PTPD cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        أرجع ret;
 
-    case cap_frame_cap:
+    حالة cap_frame_cap:
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
         ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
         ret.status = EXCEPTION_NONE;
-        return ret;
+        أرجع ret;
 
-    default:
+    افتراضي:
         fail("Invalid arch cap type");
     }
 }
@@ -78,124 +78,124 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
+    بدل (cap_get_capType(cap)) {
 
-    case cap_pml4_cap:
-        if (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
+    حالة cap_pml4_cap:
+        إذا (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
             deleteASID(
                 cap_pml4_cap_get_capPML4MappedASID(cap),
                 PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(cap))
             );
         }
-        break;
+        اكسر;
 
-    case cap_pdpt_cap:
-        if (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    حالة cap_pdpt_cap:
+        إذا (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             unmapPDPT(
                 cap_pdpt_cap_get_capPDPTMappedASID(cap),
                 cap_pdpt_cap_get_capPDPTMappedAddress(cap),
                 PDPTE_PTR(cap_pdpt_cap_get_capPDPTBasePtr(cap))
             );
         }
-        break;
+        اكسر;
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            switch (cap_frame_cap_get_capFMapType(cap)) {
+    حالة cap_frame_cap:
+        إذا (cap_frame_cap_get_capFMappedASID(cap)) {
+            بدل (cap_frame_cap_get_capFMapType(cap)) {
 #ifdef CONFIG_VTX
-            case X86_MappingEPT:
+            حالة X86_MappingEPT:
                 unmapEPTPage(
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
                     cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    (فراغ *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
+                اكسر;
 #endif
 #ifdef CONFIG_IOMMU
-            case X86_MappingIOSpace:
+            حالة X86_MappingIOSpace:
                 unmapIOPage(cap);
-                break;
+                اكسر;
 #endif
-            case X86_MappingVSpace:
+            حالة X86_MappingVSpace:
                 unmapPage(
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
                     cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    (فراغ *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
-            default:
+                اكسر;
+            افتراضي:
                 fail("Invalid map type");
             }
         }
-        break;
+        اكسر;
 
-    default:
+    افتراضي:
         fail("Invalid arch cap type");
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    أرجع fc_ret;
 }
 
 bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
+    بدل (cap_get_capType(cap_a)) {
 
-    case cap_pdpt_cap:
-        if (cap_get_capType(cap_b) == cap_pdpt_cap) {
-            return cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
+    حالة cap_pdpt_cap:
+        إذا (cap_get_capType(cap_b) == cap_pdpt_cap) {
+            أرجع cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
                    cap_pdpt_cap_get_capPDPTBasePtr(cap_b);
         }
-        return false;
+        أرجع false;
 
-    case cap_pml4_cap:
-        if (cap_get_capType(cap_b) == cap_pml4_cap) {
-            return cap_pml4_cap_get_capPML4BasePtr(cap_a) ==
+    حالة cap_pml4_cap:
+        إذا (cap_get_capType(cap_b) == cap_pml4_cap) {
+            أرجع cap_pml4_cap_get_capPML4BasePtr(cap_a) ==
                    cap_pml4_cap_get_capPML4BasePtr(cap_b);
         }
-        return false;
-    default:
-        return false;
+        أرجع false;
+    افتراضي:
+        أرجع false;
     }
 }
 
 word_t Mode_getObjectSize(word_t t)
 {
-    switch (t) {
-    case seL4_X64_PML4Object:
-        return seL4_PML4Bits;
+    بدل (t) {
+    حالة seL4_X64_PML4Object:
+        أرجع seL4_PML4Bits;
 
-    case seL4_X64_HugePageObject:
-        return pageBitsForSize(X64_HugePage);
+    حالة seL4_X64_HugePageObject:
+        أرجع pageBitsForSize(X64_HugePage);
 
-    default:
+    افتراضي:
         fail("Invalid object type");
-        return 0;
+        أرجع 0;
     }
 }
 
-cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Mode_createObject(object_t t, فراغ *regionBase, word_t userSize, bool_t deviceMemory)
 {
-    switch (t) {
+    بدل (t) {
 
-    case seL4_X86_4K:
-        if (deviceMemory) {
+    حالة seL4_X86_4K:
+        إذا (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
         }
-        return cap_frame_cap_new(
+        أرجع cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X86_SmallPage,      /* capFSize                 */
@@ -205,21 +205,21 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                    deviceMemory        /* capFIsDevice             */
                );
 
-    case seL4_X86_LargePageObject:
-        if (deviceMemory) {
+    حالة seL4_X86_LargePageObject:
+        إذا (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
         }
-        return cap_frame_cap_new(
+        أرجع cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X86_LargePage,      /* capFSize                 */
@@ -229,21 +229,21 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                    deviceMemory        /* capFIsDevice             */
                );
 
-    case seL4_X64_HugePageObject:
-        if (deviceMemory) {
+    حالة seL4_X64_HugePageObject:
+        إذا (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
-        } else {
+        } وإلا {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
         }
-        return cap_frame_cap_new(
+        أرجع cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X64_HugePage,       /* capFSize                 */
@@ -253,49 +253,49 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                    deviceMemory        /* capFIsDevice             */
                );
 
-    case seL4_X86_PageTableObject:
+    حالة seL4_X86_PageTableObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-        return cap_page_table_cap_new(
+        أرجع cap_page_table_cap_new(
                    asidInvalid,            /* capPTMappedASID    */
                    (word_t)regionBase,     /* capPTBasePtr       */
                    0,                      /* capPTIsMapped      */
                    0                       /* capPTMappedAddress */
                );
 
-    case seL4_X86_PageDirectoryObject:
+    حالة seL4_X86_PageDirectoryObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pde_C[512]) ptr))" */
-        return cap_page_directory_cap_new(
+        أرجع cap_page_directory_cap_new(
                    asidInvalid,                /* capPDMappedASID      */
                    (word_t)regionBase,         /* capPDBasePtr         */
                    0,                          /* capPDIsMapped        */
                    0                           /* capPDMappedAddress   */
                );
 
-    case seL4_X86_PDPTObject:
+    حالة seL4_X86_PDPTObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pdpte_C[512]) ptr))" */
-        return cap_pdpt_cap_new(
+        أرجع cap_pdpt_cap_new(
                    asidInvalid,                /* capPDPTMappedASID    */
                    (word_t)regionBase,         /* capPDPTBasePtr       */
                    0,                          /* capPDPTIsMapped      */
                    0                           /* capPDPTMappedAddress */
                );
 
-    case seL4_X64_PML4Object:
+    حالة seL4_X64_PML4Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pml4e_C[512]) ptr))" */
         copyGlobalMappings(PML4_PTR(regionBase));
-        return cap_pml4_cap_new(
+        أرجع cap_pml4_cap_new(
                    asidInvalid,                /* capPML4MappedASID   */
                    (word_t)regionBase,         /* capPML4BasePtr      */
                    0                           /* capPML4IsMapped     */
                );
 
 #ifdef CONFIG_IOMMU
-    case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+    حالة seL4_X86_IOPageTableObject:
+        أرجع cap_io_page_table_cap_new(
                    0,
                    0,
                    0,
@@ -304,7 +304,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 #endif
 
-    default:
+    افتراضي:
         /*
          * This is a conflation of the haskell error: "Arch.createNewCaps
          * got an API type" and the case where an invalid object type is
@@ -324,17 +324,17 @@ exception_t Mode_decodeInvocation(
     word_t *buffer
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_pml4_cap:
-    case cap_pdpt_cap:
-    case cap_page_directory_cap:
-    case cap_page_table_cap:
-    case cap_frame_cap:
-        return decodeX86MMUInvocation(label, length, cptr, slot, cap, call, buffer);
+    بدل (cap_get_capType(cap)) {
+    حالة cap_pml4_cap:
+    حالة cap_pdpt_cap:
+    حالة cap_page_directory_cap:
+    حالة cap_page_table_cap:
+    حالة cap_frame_cap:
+        أرجع decodeX86MMUInvocation(label, length, cptr, slot, cap, call, buffer);
 
-    default:
+    افتراضي:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_نومبور = 0;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 }

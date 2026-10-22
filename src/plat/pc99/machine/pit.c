@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <linker.h>
-#include <machine/io.h>
-#include <plat/machine/pit.h>
+#ضمن <linker.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/pit.h>
 
 /* PIT (i8253) registers */
 #define PIT_MODE 0x43
@@ -15,29 +15,29 @@
 /* Count frequency in Hz */
 #define PIT_HZ 1193182
 
-BOOT_CODE void pit_init(void)
+BOOT_CODE فراغ pit_init(فراغ)
 {
-    uint16_t divisor = (PIT_HZ * PIT_WRAPAROUND_MS) / 1000;
+    uint16_t ڤمباهاݢي = (PIT_HZ * PIT_WRAPAROUND_MS) / 1000;
 
     out8(PIT_MODE, 0x34);          /* Set mode 2 and wait for divisor bytes */
-    out8(PIT_CH0, divisor & 0xff); /* Set low byte of divisor */
-    out8(PIT_CH0, divisor >> 8);   /* Set high byte of divisor */
+    out8(PIT_CH0, ڤمباهاݢي & 0xff); /* Set low byte of divisor */
+    out8(PIT_CH0, ڤمباهاݢي >> 8);   /* Set high byte of divisor */
 }
 
-BOOT_CODE void pit_wait_wraparound(void)
+BOOT_CODE فراغ pit_wait_wraparound(فراغ)
 {
-    uint16_t count;
-    uint16_t count_old;
+    uint16_t کيراءن;
+    uint16_t کيراءن_old;
 
     out8(PIT_MODE, 0x00);
-    count = in8(PIT_CH0);
-    count |= (in8(PIT_CH0) << 8);
-    count_old = count;
+    کيراءن = in8(PIT_CH0);
+    کيراءن |= (in8(PIT_CH0) << 8);
+    کيراءن_old = کيراءن;
 
-    while (count <= count_old) {
-        count_old = count;
+    طالما (کيراءن <= کيراءن_old) {
+        کيراءن_old = کيراءن;
         out8(PIT_MODE, 0x00);
-        count = in8(PIT_CH0);
-        count |= (in8(PIT_CH0) << 8);
+        کيراءن = in8(PIT_CH0);
+        کيراءن |= (in8(PIT_CH0) << 8);
     }
 }
