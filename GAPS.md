@@ -1,0 +1,493 @@
+# What is still missing
+
+76 languages. Each line says in how many languages it is missing.
+
+## Files in languages BURP cannot read yet
+
+
+## Keywords with no word in a language's table
+
+- yantra:SS: 75
+- yantra:CS: 75
+- yantra:GS: 75
+- yantra:DS: 75
+- yantra:EIP: 75
+- yantra:EDX: 75
+- yantra:ES: 75
+- yantra:FS: 75
+- yantra:IRET: 75
+- yantra:EAX: 75
+- yantra:ECX: 75
+- yantra:EBX: 75
+- yantra:EDI: 75
+- yantra:IP: 75
+- yantra:SP: 75
+- yantra:EBP: 75
+- yantra:ESI: 75
+- guru:asm: 71
+- guru:va_arg: 71
+- guru:time_t: 71
+- guru:va_list: 71
+- guru:vprintf: 71
+- guru:LDBL_MANT_DIG: 71
+- guru:va_end: 71
+- guru:memset: 70
+- guru:#endif: 66
+- guru:#ifdef: 66
+- guru:#define: 66
+- guru:#ifndef: 66
+- guru:#error: 66
+- guru:#pragma: 66
+- guru:printf: 62
+- guru:unsigned: 62
+- guru:long: 62
+- guru:memcpy: 62
+- guru:strncmp: 62
+- guru:short: 62
+- guru:putchar: 62
+- guru:isdigit: 62
+- guru:signed: 62
+- yantra:global: 45
+- guru:virtual: 40
+- yantra:call: 26
+- guru:void: 25
+- guru:static: 25
+- guru:assert: 25
+- guru:NULL: 25
+- guru:switch: 25
+- guru:default: 25
+- guru:const: 25
+- guru:typedef: 25
+- guru:write: 25
+- guru:read: 25
+- guru:continue: 25
+- guru:do: 25
+- guru:extern: 25
+- guru:#elif: 25
+- guru:free: 25
+- guru:for: 9
+- guru:case: 9
+- guru:break: 9
+- guru:sizeof: 9
+- guru:char: 9
+- guru:inline: 9
+- guru:volatile: 9
+- guru:struct: 9
+- guru:enum: 9
+- guru:register: 9
+- guru:union: 9
+- guru:double: 9
+- guru:if: 1
+- guru:return: 1
+- guru:else: 1
+- guru:int: 1
+- guru:#else: 1
+- guru:while: 1
+- guru:#if: 1
+
+## Names with no dictionary entry (the most common first)
+
+- `cap`: 76
+- `i`: 76
+- `current_syscall_error`: 76
+- `ret`: 76
+- `type`: 76
+- `cap_t`: 76
+- `tcb`: 76
+- `EXCEPTION_SYSCALL_ERROR`: 76
+- `EXCEPTION_NONE`: 76
+- `asid`: 76
+- `userError`: 76
+- `ksCurThread`: 76
+- `bool_t`: 76
+- `lu_ret`: 76
+- `thread`: 76
+- `tcb_t`: 76
+- `sc`: 76
+- `exception_t`: 76
+- `cap_get_capType`: 76
+- `vptr`: 76
+- `unlikely`: 76
+- `cte_t`: 76
+- `vcpu`: 76
+- `idt`: 76
+- `vaddr`: 76
+- `irq`: 76
+- `pd`: 76
+- `CONFIG_KERNEL_MCS`: 76
+- `reg`: 76
+- `pte_t`: 76
+- `getSyscallArg`: 76
+- `t`: 76
+- `vptr_t`: 76
+- `paddr`: 76
+- `paddr_t`: 76
+- `invLabel`: 76
+- `asid_t`: 76
+- `current_extra_caps`: 76
+- `excaprefs`: 76
+- `CONFIG_ARM_HYPERVISOR_SUPPORT`: 76
+- `cap_b`: 76
+- `ThreadState_Restart`: 76
+- `x`: 76
+- `seL4_IllegalOperation`: 76
+- `pte`: 76
+- `call`: 76
+- `vspace`: 76
+- `pt`: 76
+- `dest`: 76
+- `pde`: 76
+- `ntfnPtr`: 76
+- `tcbSchedContext`: 76
+- `pde_t`: 76
+- `cte`: 76
+- `tptr`: 76
+- `vm_rights`: 76
+- `s`: 76
+- `TCB_PTR_CTE_PTR`: 76
+- `receiver`: 76
+- `v`: 76
+- `idx`: 76
+- `sender`: 76
+- `cap_a`: 76
+- `cap_null_cap_new`: 76
+- `asid_map`: 76
+- `boot_state`: 76
+- `seL4_InvalidCapability`: 76
+- `pptr`: 76
+- `cptr`: 76
+- `ndks_boot`: 76
+- `tcbState`: 76
+- `CONST`: 76
+- `pml4`: 76
+- `fail`: 76
+- `tcbArch`: 76
+- `defined`: 76
+- `ENABLE_SMP_SUPPORT`: 76
+- `w`: 76
+- `n`: 76
+- `asidInvalid`: 76
+- `badge`: 76
+- `pstart`: 76
+- `c`: 76
+- `pptr_t`: 76
+- `cb`: 76
+- `fc_ret`: 76
+- `it_v_reg`: 76
+- `val`: 76
+- `compile_assert`: 76
+- `addr`: 76
+- `vspace_cap`: 76
+- `S`: 76
+- `epptr`: 76
+- `tcbContext`: 76
+- `sched_context_t`: 76
+- `len`: 76
+- `rootserver`: 76
+- `poolPtr`: 76
+- `VISIBLE`: 76
+- `registers`: 76
+- `l`: 76
+- `reserved`: 76
+- `a`: 76
+- `pc`: 76
+- `irq_t`: 76
+- `TCB_PTR`: 76
+- `level`: 76
+- `arg`: 76
+- `r`: 76
+- `label`: 76
+- `current_fault`: 76
+- `tcbVTable`: 76
+- `vcpu_t`: 76
+- `getCurrentCPUIndex`: 76
+- `tcbAffinity`: 76
+- `receiveIPCBuffer`: 76
+- `cap_thread_cap_get_capTCBPtr`: 76
+- `cteMDBNode`: 76
+- `cap_null_cap`: 76
+- `vm_rights_t`: 76
+- `flags`: 76
+- `CONFIG_DEBUG_BUILD`: 76
+- `e`: 76
+- `CONFIG_PRINTING`: 76
+- `VMReadWrite`: 76
+- `p`: 76
+- `slowpath`: 76
+- `dc_ret`: 76
+- `cur_thread`: 76
+- `seL4_FailedLookup`: 76
+- `final`: 76
+- `ksCurSC`: 76
+- `bcr`: 76
+- `smmu_dev_knowledge`: 76
+- `UART_REG`: 76
+- `cptr_t`: 76
+- `ap`: 76
+- `vpid`: 76
+- `vmwrite`: 76
+- `ThreadState_Running`: 76
+- `stored_hw_asid`: 76
+- `context`: 76
+- `asid_pool_t`: 76
+- `tcbFault`: 76
+- `addrFromPPtr`: 76
+- `vspaceCap`: 76
+- `dom`: 76
+- `l2cc`: 76
+- `ioapic`: 76
+- `res`: 76
+- `UNREACHABLE`: 76
+- `array`: 76
+- `seL4_RangeError`: 76
+- `smmu_regs`: 76
+- `ticks_t`: 76
+- `rAmount`: 76
+- `dbg`: 76
+- `gic_dist`: 76
+- `ipi`: 76
+- `pdpt`: 76
+- `curr`: 76
+- `SMP_TERNARY`: 76
+- `current_lookup_fault`: 76
+- `rangeErrorMax`: 76
+- `syscall`: 76
+- `rangeErrorMin`: 76
+- `vm_attr`: 76
+- `acpi_rsdp`: 76
+- `cmdline`: 76
+- `NORETURN`: 76
+- `pd_cap`: 76
+- `likely`: 76
+- `breakpointState`: 76
+- `ci`: 76
+- `phys`: 76
+- `pool`: 76
+- `p_region_t`: 76
+- `wcr`: 76
+- `f`: 76
+- `lookupPTSlot_ret_t`: 76
+- `ALIGN`: 76
+- `pdpte_t`: 76
+- `isBlocking`: 76
+- `info`: 76
+- `attr`: 76
+- `core_id`: 76
+- `CONFIG_VTX`: 76
+- `smmu_write_reg32`: 76
+- `ARMSection`: 76
+- `cpu_id`: 76
+- `dr7`: 76
+- `out8`: 76
+- `SMMU_GR0_PPTR`: 76
+- `sp`: 76
+- `EXCEPTION_LOOKUP_FAULT`: 76
+- `lookupPTSlot`: 76
+- `vmRights`: 76
+- `ept_pml4e_t`: 76
+- `prio`: 76
+- `map_ret`: 76
+- `cleanupInfo`: 76
+- `SMP_COND_STATEMENT`: 76
+- `timer`: 76
+- `ksIdleThread`: 76
+- `cap_asid_pool_cap`: 76
+- `cap_vcpu_cap_get_capVCPUPtr`: 76
+- `asid_map_t`: 76
+- `pml4e_t`: 76
+- `scTcb`: 76
+- `hw_asid`: 76
+- `ULVL_FRM_ARM_PT_LVL`: 76
+- `rw`: 76
+- `lvl1pt`: 76
+- `rmrr_list`: 76
+- `entries`: 76
+- `MODULE_ASID_ENABLE`: 76
+- `lookupIPCBuffer`: 76
+- `halt`: 76
+- `caller`: 76
+- `restore_user_context`: 76
+- `use_large`: 76
+- `PTE_PTR`: 76
+- `v_region_t`: 76
+- `IT_ASID`: 76
+- `lookupPDSlot`: 76
+- `TRACK_KERNEL_ENTRIES`: 76
+- `sid`: 76
+- `fault`: 76
+- `CONFIG_HARDWARE_DEBUG_API`: 76
+- `cap_thread_cap`: 76
+- `notification_t`: 76
+- `IS_ALIGNED`: 76
+- `mbi`: 76
+- `elfFile`: 76
+- `seL4_Fault_CapFault_new`: 76
+- `rescheduleRequired`: 76
+- `tcbVCPU`: 76
+- `resolve_ret`: 76
+- `VMKernelOnly`: 76
+- `VMReadOnly`: 76
+- `armKSASIDTable`: 76
+- `untyped`: 76
+- `CONFIG_HAVE_FPU`: 76
+- `region_t`: 76
+- `str`: 76
+- `vtd_pte_t`: 76
+- `CTE_PTR`: 76
+- `TCB_PTR_DEBUG_PTR`: 76
+- `asidPool`: 76
+- `cap_asid_pool_cap_get_capASIDPool`: 76
+- `pud`: 76
+- `CONFIG_IOMMU`: 76
+- `vtd_read32`: 76
+- `cap_endpoint_cap`: 76
+- `cap_notification_cap`: 76
+- `addrFromKPPtr`: 76
+- `cap_asid_control_cap`: 76
+- `cnodeCap`: 76
+- `global`: 76
+- `pdpte`: 76
+- `ui_info`: 76
+- `model`: 76
+- `mct`: 76
+- `ep_ptr`: 76
+- `current`: 76
+- `canGrant`: 76
+- `reason`: 76
+- `thread_state_get_tsType`: 76
+- `it_pd_cap`: 76
+- `pte_entries`: 76
+- `cap_io_space_cap`: 76
+- `bp_reason`: 76
+- `armHSCurVCPU`: 76
+- `ipcbuf_vptr`: 76
+- `virq`: 76
+- `pml4Cap`: 76
+- `endpoint_t`: 76
+- `freemem`: 76
+- `ksSchedulerAction`: 76
+- `cap_cnode_cap`: 76
+- `newCap`: 76
+- `new_cap`: 76
+- `id`: 76
+- `refill_t`: 76
+- `SysCall`: 76
+- `CONFIG_TK1_SMMU`: 76
+- `dsb`: 76
+- `pde_entries`: 76
+- `cap_vcpu_cap`: 76
+- `gpRegisters`: 76
+- `deriveCap_ret_t`: 76
+- `remainder`: 76
+- `CONFIG_ARM_SMMU`: 76
+- `X`: 76
+- `iopte`: 76
+- `vcpuTCB`: 76
+- `x86KSGlobalState`: 76
+- `phdr`: 76
+- `original`: 76
+- `benchmark`: 76
+
+## Comments with no translation
+
+- present: 76
+- accessed: 76
+- ENABLE_SMP_SUPPORT: 76
+- cache_disabled: 76
+- read_write: 76
+- global: 76
+- write_through: 76
+- super_user: 76
+- CONFIG_ARM_HYPERVISOR_SUPPORT: 76
+- CONFIG_DEBUG_BUILD: 76
+- CONFIG_PRINTING: 76
+- CONFIG_KERNEL_MCS: 76
+- avl: 76
+- dirty: 76
+- capFVMRights: 76
+- capFMappedAddress: 76
+- capFBasePtr: 76
+- pat: 76
+- capFSize: 76
+- capFIsDevice: 76
+- CONFIG_KERNEL_LOG_BUFFER: 76
+- page_base_address: 76
+- read: 76
+- write: 76
+- capPTIsMapped: 76
+- capPTMappedASID: 76
+- capPTMappedAddress: 76
+- capPTBasePtr: 76
+- capFMappedASID: 76
+- trigger_mode: 76
+- delivery_mode: 76
+- CONFIG_X86_64_VTX_64BIT_GUESTS: 76
+- APX = 0, privileged full access: 76
+- * DONT_TRANSLATE: 76
+- Don't need to do anything: 76
+- Executable: 76
+- not global: 76
+- execute: 76
+- dest_shorthand: 76
+- level: 76
+- dest_mode: 76
+- CONFIG_HAVE_FPU: 76
+- DEBUG: 76
+- Present: 76
+- pt_base_address: 76
+- Set our stack pointer to the top of the tcb so we can efficiently pop: 76
+- Clobber memory so the compiler is forced to complete all stores: 76
+- delivery_status: 76
+- dest: 76
+- CONFIG_HARDWARE_DEBUG_API: 76
+- was_interrupt_entry: 76
+- shareable if SMP enabled, otherwise unshared: 76
+- * GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
+            \<or> \<acu: 76
+- disable: 76
+- read write: 76
+- before running this assembler: 76
+- dpl: 76
+- capFMapType: 76
+- CONFIG_KERNEL_SKIM_WINDOW: 76
+- write through: 76
+- super user: 76
+- CONFIG_USE_LOGICAL_IDS: 76
+- Need to test that the ASID is still valid: 76
+- CONFIG_BENCHMARK_TRACK_UTILISATION: 76
+- faulting section: 76
+- Not contiguous: 76
+- VMKernelOnly: 76
+- capPDIsMapped: 76
+- capPDMappedASID: 76
+- capPDBasePtr: 76
+- AF - Always set: 76
+- not shared: 76
+- Haskell error: "ASID pool's base must be aligned": 76
+- access flag: 76
+- Avoid normal memory writes being reordered with device memory writes: 76
+- valid: 76
+- Base high 8 bits: 76
+- Granularity: 76
+- Operation size: 76
+- Segment limit high 4 bits: 76
+- Descriptor privilege level: 76
+- Base middle 8 bits: 76
+- Base low 16 bits: 76
+- Segment limit low 16 bits: 76
+- physical address: 76
+- invalid: 76
+- Cacheable: 76
+- capFMappedASIDLow: 76
+- capFMappedASIDHigh: 76
+- ==================== BOOT CODE FINISHES HERE ====================: 76
+- only one in the system: 76
+- reset the seen list: 76
+- !CONFIG_DEBUG_DISABLE_L2_CACHE: 76
+- nonsecure: 76
+- granularity: 76
+- capPDMappedAddress: 76
+- not CONFIG_X86_64_VTX_64BIT_GUESTS: 76
+- cache disabled: 76
+- ensure we got a TCB cap: 76
+- Force the idle thread to run on kernel page table: 76
