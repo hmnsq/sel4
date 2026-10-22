@@ -23,7 +23,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while ((*UART_REG(USR) & USR_TXEMP) == 0);
+    ながら ((*UART_REG(USR) & USR_TXEMP) == 0);
     /* Tell the peripheral how many characters to send */
     *UART_REG(UNTX) = 1;
     /* Write the character into the FIFO */
@@ -34,8 +34,8 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    while ((*UART_REG(USR) & USR_RXRDY) == 0);
+    ながら ((*UART_REG(USR) & USR_RXRDY) == 0);
 
-    return *UART_REG(UTF) & 0xff;
+    戻る *UART_REG(UTF) & 0xff;
 }
 #endif /* CONFIG_DEBUG_BUILD */

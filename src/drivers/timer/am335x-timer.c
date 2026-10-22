@@ -36,7 +36,7 @@ timer_t *timer = (timer_t *) TIMER_PPTR;
 #define SET_REGISTER(reg, mask) \
         do {                    \
             reg |= mask;        \
-        } while((reg & mask) != mask);
+        } ながら((reg & mask) != mask);
 
 static BOOT_CODE void disableWatchdog(void)
 {
@@ -44,11 +44,11 @@ static BOOT_CODE void disableWatchdog(void)
 
     // am335x ref man, sec 20.4.3.8
     *WDT_REG(wdt, WDT_REG_WSPR) = 0xaaaa;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    ながら ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
     *WDT_REG(wdt, WDT_REG_WSPR) = 0x5555;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    ながら ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
 }
@@ -64,25 +64,25 @@ static BOOT_CODE void enableTimers(void)
     /* XXX repeat this for DMTIMER4..7 */
     /* select clock - Timer 3 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    ながら ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    ながら ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 
     /* select clock - Timer 4 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    ながら ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    ながら ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 }
@@ -94,7 +94,7 @@ static BOOT_CODE void enableTimers(void)
 uint32_t high_bits = 0;
 BOOT_CODE void initTimer(void)
 {
-    int timeout;
+    整数 timeout;
     disableWatchdog();
     enableTimers();
 
@@ -105,11 +105,11 @@ BOOT_CODE void initTimer(void)
     SET_REGISTER(timer->tclr, 0u);
 
     /* wait for reset */
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
+    ために (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
 
-    if (!timeout) {
+    もし (!timeout) {
         printf("init timer failed\n");
-        return;
+        戻る;
     }
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
@@ -127,24 +127,24 @@ BOOT_CODE void initTimer(void)
     SET_REGISTER(timer->tclr, (TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE));
 }
 
-#else /* CONFIG_KERNEL_MCS */
+#否则 /* CONFIG_KERNEL_MCS */
 
 
 /* Configure dmtimer0 as kernel preemption timer */
 BOOT_CODE void initTimer(void)
 {
-    int timeout;
+    整数 timeout;
 
     disableWatchdog();
     enableTimers();
 
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
+    ために (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
         ;
-    if (!timeout) {
+    もし (!timeout) {
         printf("init timer failed\n");
-        return;
+        戻る;
     }
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);

@@ -27,13 +27,13 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
     /* Enable interrupts and keep working in supervisor mode */
     setRegister(tcb, SSTATUS, (word_t) SSTATUS_SPP | SSTATUS_SPIE);
 #ifdef ENABLE_SMP_SUPPORT
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        if (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
+    ために (整数 i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+        もし (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
             setRegister(tcb, SP, (word_t)kernel_stack_alloc + (i + 1) * BIT(CONFIG_KERNEL_STACK_BITS));
             break;
         }
     }
-#else
+#否则
     setRegister(tcb, SP, (word_t)kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS));
 #endif
 }

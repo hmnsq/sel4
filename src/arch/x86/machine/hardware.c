@@ -18,7 +18,7 @@ BOOT_CODE void init_sysenter_msrs(void)
 {
     x86_wrmsr(IA32_SYSENTER_CS_MSR, (uint64_t)(word_t)SEL_CS_0);
     x86_wrmsr(IA32_SYSENTER_EIP_MSR, (uint64_t)(word_t)&handle_syscall);
-    if (config_set(CONFIG_ARCH_IA32) && !config_set(CONFIG_HARDWARE_DEBUG_API)) {
+    もし (config_set(CONFIG_ARCH_IA32) && !config_set(CONFIG_HARDWARE_DEBUG_API)) {
         /* manually add 4 bytes to x86KStss so that it is valid for both
          * 32-bit and 64-bit, although only ia32 actually requires a valid
          * sysenter esp */
@@ -29,7 +29,7 @@ BOOT_CODE void init_sysenter_msrs(void)
 
 word_t PURE getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    戻る getRegister(thread, FaultIP);
 }
 
 void setNextPC(tcb_t *thread, word_t v)
@@ -44,24 +44,24 @@ BOOT_CODE uint32_t CONST getCacheLineSizeBits(void)
     uint32_t n;
 
     line_size = getCacheLineSize();
-    if (line_size == 0) {
+    もし (line_size == 0) {
         printf("Cacheline size must be >0\n");
-        return 0;
+        戻る 0;
     }
 
     /* determine size_bits */
     n = 0;
-    while (!(line_size & 1)) {
+    ながら (!(line_size & 1)) {
         line_size >>= 1;
         n++;
     }
 
-    if (line_size != 1) {
+    もし (line_size != 1) {
         printf("Cacheline size must be a power of two\n");
-        return 0;
+        戻る 0;
     }
 
-    return n;
+    戻る n;
 }
 
 /* Flushes a specific memory range from the CPU cache */
@@ -75,7 +75,7 @@ void flushCacheRange(void *vaddr, uint32_t size_bits)
 
     x86_mfence();
 
-    for (v = ROUND_DOWN((word_t)vaddr, x86KScacheLineSizeBits);
+    ために (v = ROUND_DOWN((word_t)vaddr, x86KScacheLineSizeBits);
          v < (word_t)vaddr + BIT(size_bits);
          v += BIT(x86KScacheLineSizeBits)) {
         flushCacheLine((void *)v);
@@ -104,7 +104,7 @@ BOOT_CODE bool_t disablePrefetchers(void)
 
     model_info = x86_cpuid_get_model_info();
 
-    for (i = 0; i < ARRAY_SIZE(valid_models); i++) {
+    ために (i = 0; i < ARRAY_SIZE(valid_models); i++) {
         /* The model ID is only useful when hashed together with the family ID.
          * They are both meant to be combined to form a unique identifier.
          *
@@ -112,7 +112,7 @@ BOOT_CODE bool_t disablePrefetchers(void)
          * disable prefetching on anything that matches family_ID==0x6, and
          * there is no need to also look at the model_ID.
          */
-        if (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID
+        もし (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID
             && model_info->model == valid_models[i]) {
             low = x86_rdmsr_low(IA32_PREFETCHER_MSR);
             high = x86_rdmsr_high(IA32_PREFETCHER_MSR);
@@ -124,13 +124,13 @@ BOOT_CODE bool_t disablePrefetchers(void)
 
             x86_wrmsr(IA32_PREFETCHER_MSR, ((uint64_t)high) << 32 | low);
 
-            return true;
+            戻る true;
         }
     }
 
     printf("Disabling prefetchers not implemented for CPU fam %x model %x\n",
            model_info->family, model_info->model);
-    return false;
+    戻る false;
 }
 
 BOOT_CODE void enablePMCUser(void)
@@ -143,39 +143,39 @@ BOOT_CODE bool_t init_ibrs(void)
     cpuid_007h_edx_t edx;
     edx.words[0] = x86_cpuid_edx(0x7, 0);
     bool_t support_ibrs = cpuid_007h_edx_get_ibrs_ibpb(edx);
-    if ((config_set(CONFIG_KERNEL_X86_IBRS_BASIC) || config_set(CONFIG_KERNEL_X86_IBRS_STIBP)) && !support_ibrs) {
+    もし ((config_set(CONFIG_KERNEL_X86_IBRS_BASIC) || config_set(CONFIG_KERNEL_X86_IBRS_STIBP)) && !support_ibrs) {
         printf("IBRS not supported by CPU\n");
-        return false;
-    } else if (support_ibrs) {
+        戻る false;
+    } 否则 もし (support_ibrs) {
         /* 'disable' IBRS. For IBRS_BASIC this does nothing, and for STIBP this will cause
          * us to enable STIBP, and we can then forget about it */
         x86_disable_ibrs();
     }
     /* IBRS is also the feature flag for IBPB */
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH) && !support_ibrs) {
+    もし (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH) && !support_ibrs) {
         printf("IBPB not supported by CPU\n");
-        return false;
+        戻る false;
     }
     /* check for enhanced IBRS */
     bool_t enhanced_ibrs = false;
-    if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
+    もし (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
         cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
-        if (ia32_arch_capabilities_msr_get_ibrs_all(cap_msr)) {
+        もし (ia32_arch_capabilities_msr_get_ibrs_all(cap_msr)) {
             enhanced_ibrs = true;
         }
     }
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC) && enhanced_ibrs) {
+    もし (config_set(CONFIG_KERNEL_X86_IBRS_BASIC) && enhanced_ibrs) {
         printf("Kernel configured for basic IBRS, but CPU supports enhanced IBRS. "
                "Enable enhanced IBRS for improved performance\n");
     }
-    if (config_set(CONFIG_KERNEL_X86_IBRS_ALL)) {
-        if (!enhanced_ibrs) {
+    もし (config_set(CONFIG_KERNEL_X86_IBRS_ALL)) {
+        もし (!enhanced_ibrs) {
             printf("Enhanced IBRS not supported by CPU\n");
-            return false;
+            戻る false;
         }
         /* enable IBRS and then we can forget about it */
         x86_enable_ibrs();
     }
-    return true;
+    戻る true;
 }

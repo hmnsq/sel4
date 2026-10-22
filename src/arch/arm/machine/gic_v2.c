@@ -21,15 +21,15 @@
 #define IRQ_SET_ALL 0xffffffff
 
 #ifndef GIC_V2_DISTRIBUTOR_PPTR
-#error GIC_V2_DISTRIBUTOR_PPTR must be defined for virtual memory access to the gic distributer
-#else  /* GIC_DISTRIBUTOR_PPTR */
+#error GIC_V2_DISTRIBUTOR_PPTR must be defined ために virtual memory access to the gic distributer
+#否则  /* GIC_DISTRIBUTOR_PPTR */
 volatile struct gic_dist_map *const gic_dist =
     (volatile struct gic_dist_map *)(GIC_V2_DISTRIBUTOR_PPTR);
 #endif /* GIC_DISTRIBUTOR_PPTR */
 
 #ifndef GIC_V2_CONTROLLER_PPTR
-#error GIC_V2_CONTROLLER_PPTR must be defined for virtual memory access to the gic cpu interface
-#else  /* GIC_CONTROLLER_PPTR */
+#error GIC_V2_CONTROLLER_PPTR must be defined ために virtual memory access to the gic cpu interface
+#否则  /* GIC_CONTROLLER_PPTR */
 volatile struct gic_cpu_iface_map *const gic_cpuiface =
     (volatile struct gic_cpu_iface_map *)(GIC_V2_CONTROLLER_PPTR);
 #endif /* GIC_CONTROLLER_PPTR */
@@ -40,32 +40,32 @@ word_t active_irq[CONFIG_MAX_NUM_NODES];
  * for PPI are read only and return only the current processor as the target.
  * If this doesn't lead to a valid ID, we emit a warning and default to core 0.
  */
-BOOT_CODE static uint8_t infer_cpu_gic_id(int nirqs)
+BOOT_CODE static uint8_t infer_cpu_gic_id(整数 nirqs)
 {
     word_t i;
     uint32_t target = 0;
-    for (i = 0; i < nirqs; i += 4) {
+    ために (i = 0; i < nirqs; i += 4) {
         target = gic_dist->targets[i >> 2];
         target |= target >> 16;
         target |= target >> 8;
-        if (target) {
+        もし (target) {
             break;
         }
     }
-    if (!target) {
+    もし (!target) {
         printf("Warning: Could not infer GIC interrupt target ID, assuming 0.\n");
         target = BIT(0);
     }
-    return target & 0xff;
+    戻る target & 0xff;
 }
 
 BOOT_CODE static void dist_init(void)
 {
     word_t i;
-    int nirqs = 32 * ((gic_dist->ic_type & 0x1f) + 1);
+    整数 nirqs = 32 * ((gic_dist->ic_type & 0x1f) + 1);
     gic_dist->enable = 0;
 
-    for (i = 0; i < nirqs; i += 32) {
+    ために (i = 0; i < nirqs; i += 32) {
         /* disable */
         gic_dist->enable_clr[i >> 5] = IRQ_SET_ALL;
         /* clear pending */
@@ -73,10 +73,10 @@ BOOT_CODE static void dist_init(void)
     }
 
     /* reset interrupts priority */
-    for (i = 32; i < nirqs; i += 4) {
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ために (i = 32; i < nirqs; i += 4) {
+        もし (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
             gic_dist->priority[i >> 2] = 0x80808080;
-        } else {
+        } 否则 {
             gic_dist->priority[i >> 2] = 0;
         }
     }
@@ -86,20 +86,20 @@ BOOT_CODE static void dist_init(void)
      * We query which id that the GIC uses for us and use that.
      */
     uint8_t target = infer_cpu_gic_id(nirqs);
-    for (i = 0; i < nirqs; i += 4) {
+    ために (i = 0; i < nirqs; i += 4) {
         gic_dist->targets[i >> 2] = TARGET_CPU_ALLINT(target);
     }
 
     /* level-triggered, 1-N */
-    for (i = 64; i < nirqs; i += 32) {
+    ために (i = 64; i < nirqs; i += 32) {
         gic_dist->config[i >> 5] = 0x55555555;
     }
 
     /* group 0 for secure; group 1 for non-secure */
-    for (i = 0; i < nirqs; i += 32) {
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+    ために (i = 0; i < nirqs; i += 32) {
+        もし (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
             gic_dist->security[i >> 5] = 0xffffffff;
-        } else {
+        } 否则 {
             gic_dist->security[i >> 5] = 0;
         }
     }
@@ -116,16 +116,16 @@ BOOT_CODE static void cpu_iface_init(void)
     gic_dist->pending_clr[0] = IRQ_SET_ALL;
 
     /* put everything in group 0; group 1 if in hyp mode */
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
+    もし (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && !config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
         gic_dist->security[0] = 0xffffffff;
         gic_dist->priority[0] = 0x80808080;
-    } else {
+    } 否则 {
         gic_dist->security[0] = 0;
         gic_dist->priority[0] = 0x0;
     }
 
     /* clear any software generated interrupts */
-    for (i = 0; i < 16; i += 4) {
+    ために (i = 0; i < 16; i += 4) {
         gic_dist->sgi_pending_clr[i >> 2] = IRQ_SET_ALL;
     }
 
@@ -140,7 +140,7 @@ BOOT_CODE static void cpu_iface_init(void)
     gic_cpuiface->pb_c = 0x00000003;
 
     i = gic_cpuiface->int_ack;
-    while ((i & IRQ_MASK) != IRQ_NONE) {
+    ながら ((i & IRQ_MASK) != IRQ_NONE) {
         gic_cpuiface->eoi = i;
         i = gic_cpuiface->int_ack;
     }
@@ -154,10 +154,10 @@ void setIRQTrigger(irq_t irq, bool_t trigger)
      * while 0 indicates that it is level-triggered */
     word_t index = IRQT_TO_IRQ(irq) / 16u;
     word_t offset = (IRQT_TO_IRQ(irq) % 16u) * 2;
-    if (trigger) {
+    もし (trigger) {
         /* set the bit */
         gic_dist->config[index] |= BIT(offset + 1);
-    } else {
+    } 否则 {
         gic_dist->config[index] &= ~BIT(offset + 1);
     }
 }
@@ -178,7 +178,7 @@ BOOT_CODE void cpu_initLocalIRQController(void)
 bool_t plat_SGITargetValid(word_t target)
 {
     /* written as <= so that the term is the same as in gic_v3 for the proofs */
-    return target <= GIC_SGI_NUM_TARGETS - 1;
+    戻る target <= GIC_SGI_NUM_TARGETS - 1;
 }
 
 void plat_sendSGI(word_t irq, word_t target)
@@ -202,7 +202,7 @@ void plat_sendSGI(word_t irq, word_t target)
 */
 void ipi_send_target(irq_t irq, word_t cpuTargetList)
 {
-    if (config_set(CONFIG_PLAT_TX2)) {
+    もし (config_set(CONFIG_PLAT_TX2)) {
         /* We need to swap the top 4 bits and the bottom 4 bits of the
          * cpuTargetList since the A57 cores with logical core ID 0-3 are
          * in cluster 1 and the Denver2 cores with logical core ID 4-5 are
@@ -223,9 +223,9 @@ void setIRQTarget(irq_t irq, seL4_Word target)
     word_t hwIRQ = IRQT_TO_IRQ(irq);
 
     /* Return early if PPI */
-    if (IRQ_IS_PPI(irq)) {
+    もし (IRQ_IS_PPI(irq)) {
         fail("PPI can't have designated target core\n");
-        return;
+        戻る;
     }
     targets[hwIRQ] = targetList;
 }
@@ -234,8 +234,8 @@ void setIRQTarget(irq_t irq, seL4_Word target)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 
 #ifndef GIC_V2_VCPUCTRL_PPTR
-#error GIC_V2_VCPUCTRL_PPTR must be defined for virtual memory access to the gic virtual cpu interface control
-#else  /* GIC_PL400_GICVCPUCTRL_PPTR */
+#error GIC_V2_VCPUCTRL_PPTR must be defined ために virtual memory access to the gic virtual cpu interface control
+#否则  /* GIC_PL400_GICVCPUCTRL_PPTR */
 volatile struct gich_vcpu_ctrl_map *gic_vcpu_ctrl =
     (volatile struct gich_vcpu_ctrl_map *)(GIC_V2_VCPUCTRL_PPTR);
 #endif /* GIC_PL400_GICVCPUCTRL_PPTR */

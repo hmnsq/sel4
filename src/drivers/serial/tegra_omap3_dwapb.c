@@ -21,7 +21,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    ながら ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
@@ -30,8 +30,8 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    ながら ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    戻る *UART_REG(UTHR);
 }
 #endif /* CONFIG_DEBUG_BUILD */

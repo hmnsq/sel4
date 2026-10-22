@@ -39,7 +39,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
+    ながら (!(*UART_REG(MU_LSR) & MU_LSR_TXIDLE));
     *UART_REG(MU_IO) = (c & 0xff);
 }
 #endif /* CONFIG_PRINTING */
@@ -47,7 +47,7 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    while (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
-    return *UART_REG(MU_IO);
+    ながら (!(*UART_REG(MU_LSR) & MU_LSR_DATAREADY));
+    戻る *UART_REG(MU_IO);
 }
 #endif /* CONFIG_DEBUG_BUILD */

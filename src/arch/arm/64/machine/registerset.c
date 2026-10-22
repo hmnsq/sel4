@@ -37,6 +37,6 @@ compile_assert(
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    戻る getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

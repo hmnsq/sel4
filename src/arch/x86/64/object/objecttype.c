@@ -24,13 +24,13 @@ bool_t Arch_isFrameType(word_t type)
 {
     switch (type) {
     case seL4_X86_4K:
-        return true;
+        戻る true;
     case seL4_X86_LargePageObject:
-        return true;
+        戻る true;
     case seL4_X64_HugePageObject:
-        return true;
+        戻る true;
     default:
-        return false;
+        戻る false;
     }
 }
 
@@ -40,34 +40,34 @@ deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
 
     switch (cap_get_capType(cap)) {
     case cap_pml4_cap:
-        if (cap_pml4_cap_get_capPML4IsMapped(cap)) {
+        もし (cap_pml4_cap_get_capPML4IsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } 否则 {
             userError("Deriving a PML4 cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        戻る ret;
 
     case cap_pdpt_cap:
-        if (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+        もし (cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } 否则 {
             userError("Deriving an unmapped PTPD cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        戻る ret;
 
     case cap_frame_cap:
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
         ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
         ret.status = EXCEPTION_NONE;
-        return ret;
+        戻る ret;
 
     default:
         fail("Invalid arch cap type");
@@ -81,7 +81,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
     switch (cap_get_capType(cap)) {
 
     case cap_pml4_cap:
-        if (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
+        もし (final && cap_pml4_cap_get_capPML4IsMapped(cap)) {
             deleteASID(
                 cap_pml4_cap_get_capPML4MappedASID(cap),
                 PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(cap))
@@ -90,7 +90,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
         break;
 
     case cap_pdpt_cap:
-        if (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
+        もし (final && cap_pdpt_cap_get_capPDPTIsMapped(cap)) {
             unmapPDPT(
                 cap_pdpt_cap_get_capPDPTMappedASID(cap),
                 cap_pdpt_cap_get_capPDPTMappedAddress(cap),
@@ -100,7 +100,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
         break;
 
     case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
+        もし (cap_frame_cap_get_capFMappedASID(cap)) {
             switch (cap_frame_cap_get_capFMapType(cap)) {
 #ifdef CONFIG_VTX
             case X86_MappingEPT:
@@ -137,7 +137,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    戻る fc_ret;
 }
 
 bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
@@ -145,20 +145,20 @@ bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
     switch (cap_get_capType(cap_a)) {
 
     case cap_pdpt_cap:
-        if (cap_get_capType(cap_b) == cap_pdpt_cap) {
-            return cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
+        もし (cap_get_capType(cap_b) == cap_pdpt_cap) {
+            戻る cap_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
                    cap_pdpt_cap_get_capPDPTBasePtr(cap_b);
         }
-        return false;
+        戻る false;
 
     case cap_pml4_cap:
-        if (cap_get_capType(cap_b) == cap_pml4_cap) {
-            return cap_pml4_cap_get_capPML4BasePtr(cap_a) ==
+        もし (cap_get_capType(cap_b) == cap_pml4_cap) {
+            戻る cap_pml4_cap_get_capPML4BasePtr(cap_a) ==
                    cap_pml4_cap_get_capPML4BasePtr(cap_b);
         }
-        return false;
+        戻る false;
     default:
-        return false;
+        戻る false;
     }
 }
 
@@ -166,14 +166,14 @@ word_t Mode_getObjectSize(word_t t)
 {
     switch (t) {
     case seL4_X64_PML4Object:
-        return seL4_PML4Bits;
+        戻る seL4_PML4Bits;
 
     case seL4_X64_HugePageObject:
-        return pageBitsForSize(X64_HugePage);
+        戻る pageBitsForSize(X64_HugePage);
 
     default:
         fail("Invalid object type");
-        return 0;
+        戻る 0;
     }
 }
 
@@ -182,20 +182,20 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     switch (t) {
 
     case seL4_X86_4K:
-        if (deviceMemory) {
+        もし (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
-        } else {
+        } 否则 {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64SmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64SmallPageBits))" */
         }
-        return cap_frame_cap_new(
+        戻る cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X86_SmallPage,      /* capFSize                 */
@@ -206,20 +206,20 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_X86_LargePageObject:
-        if (deviceMemory) {
+        もし (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
-        } else {
+        } 否则 {
             /** AUXUPD: "(True, ptr_retyps 512
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64LargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64LargePageBits))" */
         }
-        return cap_frame_cap_new(
+        戻る cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X86_LargePage,      /* capFSize                 */
@@ -230,20 +230,20 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
     case seL4_X64_HugePageObject:
-        if (deviceMemory) {
+        もし (deviceMemory) {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
-        } else {
+        } 否则 {
             /** AUXUPD: "(True, ptr_retyps 262144
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.X64HugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat X64HugePageBits))" */
         }
-        return cap_frame_cap_new(
+        戻る cap_frame_cap_new(
                    asidInvalid,        /* capFMappedASID           */
                    (word_t)regionBase, /* capFBasePtr              */
                    X64_HugePage,       /* capFSize                 */
@@ -256,7 +256,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     case seL4_X86_PageTableObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-        return cap_page_table_cap_new(
+        戻る cap_page_table_cap_new(
                    asidInvalid,            /* capPTMappedASID    */
                    (word_t)regionBase,     /* capPTBasePtr       */
                    0,                      /* capPTIsMapped      */
@@ -266,7 +266,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     case seL4_X86_PageDirectoryObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pde_C[512]) ptr))" */
-        return cap_page_directory_cap_new(
+        戻る cap_page_directory_cap_new(
                    asidInvalid,                /* capPDMappedASID      */
                    (word_t)regionBase,         /* capPDBasePtr         */
                    0,                          /* capPDIsMapped        */
@@ -276,7 +276,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     case seL4_X86_PDPTObject:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pdpte_C[512]) ptr))" */
-        return cap_pdpt_cap_new(
+        戻る cap_pdpt_cap_new(
                    asidInvalid,                /* capPDPTMappedASID    */
                    (word_t)regionBase,         /* capPDPTBasePtr       */
                    0,                          /* capPDPTIsMapped      */
@@ -287,7 +287,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pml4e_C[512]) ptr))" */
         copyGlobalMappings(PML4_PTR(regionBase));
-        return cap_pml4_cap_new(
+        戻る cap_pml4_cap_new(
                    asidInvalid,                /* capPML4MappedASID   */
                    (word_t)regionBase,         /* capPML4BasePtr      */
                    0                           /* capPML4IsMapped     */
@@ -295,7 +295,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 
 #ifdef CONFIG_IOMMU
     case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+        戻る cap_io_page_table_cap_new(
                    0,
                    0,
                    0,
@@ -330,11 +330,11 @@ exception_t Mode_decodeInvocation(
     case cap_page_directory_cap:
     case cap_page_table_cap:
     case cap_frame_cap:
-        return decodeX86MMUInvocation(label, length, cptr, slot, cap, call, buffer);
+        戻る decodeX86MMUInvocation(label, length, cptr, slot, cap, call, buffer);
 
     default:
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        戻る EXCEPTION_SYSCALL_ERROR;
     }
 }

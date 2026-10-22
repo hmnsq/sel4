@@ -60,19 +60,19 @@ cmdline_opt_t cmdline_opt;
 
 BOOT_CODE static paddr_t find_load_paddr(paddr_t min_paddr, word_t image_size)
 {
-    int i;
+    整数 i;
 
-    for (i = 0; i < boot_state.mem_p_regs.count; i++) {
+    ために (i = 0; i < boot_state.mem_p_regs.count; i++) {
         paddr_t start = MAX(min_paddr, boot_state.mem_p_regs.list[i].start);
         paddr_t end = boot_state.mem_p_regs.list[i].end;
         word_t region_size = end - start;
 
-        if (region_size >= image_size) {
-            return start;
+        もし (region_size >= image_size) {
+            戻る start;
         }
     }
 
-    return 0;
+    戻る 0;
 }
 
 BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_module_end, paddr_t load_paddr)
@@ -81,17 +81,17 @@ BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_
     word_t entry;
     Elf_Header_t *elf_file = (Elf_Header_t *)boot_module_start;
 
-    if (!elf_checkFile(elf_file, boot_module_end - boot_module_start)) {
+    もし (!elf_checkFile(elf_file, boot_module_end - boot_module_start)) {
         printf("Boot module does not contain a valid ELF image\n");
-        return 0;
+        戻る 0;
     }
 
     v_reg = elf_getMemoryBounds(elf_file);
     entry = elf_file->e_entry;
 
-    if (v_reg.end == 0) {
+    もし (v_reg.end == 0) {
         printf("ELF image in boot module does not contain any segments\n");
-        return 0;
+        戻る 0;
     }
     v_reg.end = ROUND_UP(v_reg.end, PAGE_BITS);
 
@@ -102,18 +102,18 @@ BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_
            (void *)v_reg.end
           );
 
-    if (!IS_ALIGNED(v_reg.start, PAGE_BITS)) {
+    もし (!IS_ALIGNED(v_reg.start, PAGE_BITS)) {
         printf("Userland image virtual start address must be 4KB-aligned\n");
-        return 0;
+        戻る 0;
     }
-    if (v_reg.end + 2 * BIT(PAGE_BITS) > USER_TOP) {
+    もし (v_reg.end + 2 * BIT(PAGE_BITS) > USER_TOP) {
         /* for IPC buffer frame and bootinfo frame, need 2*4K of additional userland virtual memory */
         printf("Userland image virtual end address too high\n");
-        return 0;
+        戻る 0;
     }
-    if ((entry < v_reg.start) || (entry >= v_reg.end)) {
+    もし ((entry < v_reg.start) || (entry >= v_reg.end)) {
         printf("Userland image entry point does not lie within userland image\n");
-        return 0;
+        戻る 0;
     }
 
     load_paddr = find_load_paddr(load_paddr, v_reg.end - v_reg.start);
@@ -138,18 +138,18 @@ BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_
     );
     elf_load(elf_file, boot_state.ui_info.pv_offset);
 
-    return load_paddr;
+    戻る load_paddr;
 }
 
 static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
 {
-    if (!map_kernel_window(
+    もし (!map_kernel_window(
             boot_state.num_ioapic,
             boot_state.ioapic_paddr,
             boot_state.num_drhu,
             boot_state.drhu_list
         )) {
-        return false;
+        戻る false;
     }
     setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
@@ -157,18 +157,18 @@ static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
     asm volatile("" ::: "memory");
 
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
-    if (!map_skim_window((vptr_t)ki_skim_start, (vptr_t)ki_skim_end)) {
-        return false;
+    もし (!map_skim_window((vptr_t)ki_skim_start, (vptr_t)ki_skim_end)) {
+        戻る false;
     }
 #endif
 
     /* initialise the CPU */
-    if (!init_cpu(config_set(CONFIG_IRQ_IOAPIC) ? 1 : 0)) {
-        return false;
+    もし (!init_cpu(config_set(CONFIG_IRQ_IOAPIC) ? 1 : 0)) {
+        戻る false;
     }
 
     /* initialise NDKS and kernel heap */
-    if (!init_sys_state(
+    もし (!init_sys_state(
             cpu_id,
             &boot_state.mem_p_regs,
             boot_state.ui_info,
@@ -181,29 +181,29 @@ static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
             &boot_state.mb_mmap_info,
             &boot_state.fb_info
         )) {
-        return false;
+        戻る false;
     }
 
-    return true;
+    戻る true;
 }
 
 static BOOT_CODE bool_t add_mem_p_regs(p_region_t reg)
 {
-    if (reg.start == reg.end) {
+    もし (reg.start == reg.end) {
         // Return true here if asked to add an empty region.
         // Some of the callers round down the end address to
-        return true;
+        戻る true;
     }
-    if (reg.end > PADDR_TOP && reg.start >= PADDR_TOP) {
+    もし (reg.end > PADDR_TOP && reg.start >= PADDR_TOP) {
         /* Return true here as it's not an error for there to exist memory outside the kernel window,
          * we're just going to ignore it and leave it to be given out as device memory */
-        return true;
+        戻る true;
     }
-    if (boot_state.mem_p_regs.count == MAX_NUM_FREEMEM_REG) {
+    もし (boot_state.mem_p_regs.count == MAX_NUM_FREEMEM_REG) {
         printf("Dropping memory region 0x%lx-0x%lx, try increasing MAX_NUM_FREEMEM_REG\n", reg.start, reg.end);
-        return false;
+        戻る false;
     }
-    if (reg.end > PADDR_TOP) {
+    もし (reg.end > PADDR_TOP) {
         assert(reg.start < PADDR_TOP);
         /* Clamp a region to the top of the kernel window if it extends beyond */
         reg.end = PADDR_TOP;
@@ -211,7 +211,7 @@ static BOOT_CODE bool_t add_mem_p_regs(p_region_t reg)
     printf("Adding physical memory region 0x%lx-0x%lx\n", reg.start, reg.end);
     boot_state.mem_p_regs.list[boot_state.mem_p_regs.count] = reg;
     boot_state.mem_p_regs.count++;
-    return true;
+    戻る true;
 }
 
 /*
@@ -223,26 +223,26 @@ static BOOT_CODE bool_t parse_mem_map(uint32_t mmap_length, uint32_t mmap_addr)
     multiboot_mmap_t *mmap = (multiboot_mmap_t *)((word_t)mmap_addr);
     printf("Parsing GRUB physical memory map\n");
 
-    while ((word_t)mmap < (word_t)(mmap_addr + mmap_length)) {
+    ながら ((word_t)mmap < (word_t)(mmap_addr + mmap_length)) {
         uint64_t mem_start = mmap->base_addr;
         uint64_t mem_length = mmap->length;
         uint32_t type = mmap->type;
-        if (mem_start != (uint64_t)(word_t)mem_start) {
+        もし (mem_start != (uint64_t)(word_t)mem_start) {
             printf("\tPhysical memory region not addressable\n");
-        } else {
+        } 否则 {
             printf("\tPhysical Memory Region from %lx size %lx type %d\n", (long)mem_start, (long)mem_length, type);
-            if (type == MULTIBOOT_MMAP_USEABLE_TYPE && mem_start >= HIGHMEM_PADDR && mem_length >= BIT(PAGE_BITS)) {
+            もし (type == MULTIBOOT_MMAP_USEABLE_TYPE && mem_start >= HIGHMEM_PADDR && mem_length >= BIT(PAGE_BITS)) {
 
-                if (!add_mem_p_regs((p_region_t) {
+                もし (!add_mem_p_regs((p_region_t) {
                 ROUND_UP(mem_start, PAGE_BITS), ROUND_DOWN(mem_start + mem_length, PAGE_BITS),
                 })) {
-                    return false;
+                    戻る false;
                 }
             }
         }
         mmap++;
     }
-    return true;
+    戻る true;
 }
 
 static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
@@ -250,19 +250,19 @@ static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
     word_t microarch_generation = 0;
     x86_cpu_identity_t *model_info = x86_cpuid_get_model_info();
 
-    if (config_set(CONFIG_ARCH_X86_SKYLAKE)) {
+    もし (config_set(CONFIG_ARCH_X86_SKYLAKE)) {
         microarch_generation = 7;
-    } else if (config_set(CONFIG_ARCH_X86_BROADWELL)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_BROADWELL)) {
         microarch_generation = 6;
-    } else if (config_set(CONFIG_ARCH_X86_HASWELL)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_HASWELL)) {
         microarch_generation = 5;
-    } else if (config_set(CONFIG_ARCH_X86_IVY)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_IVY)) {
         microarch_generation = 4;
-    } else if (config_set(CONFIG_ARCH_X86_SANDY)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_SANDY)) {
         microarch_generation = 3;
-    } else if (config_set(CONFIG_ARCH_X86_WESTMERE)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_WESTMERE)) {
         microarch_generation = 2;
-    } else if (config_set(CONFIG_ARCH_X86_NEHALEM)) {
+    } 否则 もし (config_set(CONFIG_ARCH_X86_NEHALEM)) {
         microarch_generation = 1;
     }
 
@@ -270,8 +270,8 @@ static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
     case SKYLAKE_1_MODEL_ID:
     case SKYLAKE_2_MODEL_ID:
     case SKYLAKE_X_MODEL_ID:
-        if (microarch_generation > 7) {
-            return false;
+        もし (microarch_generation > 7) {
+            戻る false;
         }
         break;
 
@@ -280,8 +280,8 @@ static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
     case BROADWELL_3_MODEL_ID:
     case BROADWELL_4_MODEL_ID:
     case BROADWELL_5_MODEL_ID:
-        if (microarch_generation > 6) {
-            return false;
+        もし (microarch_generation > 6) {
+            戻る false;
         }
         break;
 
@@ -289,49 +289,49 @@ static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
     case HASWELL_2_MODEL_ID:
     case HASWELL_3_MODEL_ID:
     case HASWELL_4_MODEL_ID:
-        if (microarch_generation > 5) {
-            return false;
+        もし (microarch_generation > 5) {
+            戻る false;
         }
         break;
 
     case IVY_BRIDGE_1_MODEL_ID:
     case IVY_BRIDGE_2_MODEL_ID:
     case IVY_BRIDGE_3_MODEL_ID:
-        if (microarch_generation > 4) {
-            return false;
+        もし (microarch_generation > 4) {
+            戻る false;
         }
         break;
 
     case SANDY_BRIDGE_1_MODEL_ID:
     case SANDY_BRIDGE_2_MODEL_ID:
-        if (microarch_generation > 3) {
-            return false;
+        もし (microarch_generation > 3) {
+            戻る false;
         }
         break;
 
     case WESTMERE_1_MODEL_ID:
     case WESTMERE_2_MODEL_ID:
     case WESTMERE_3_MODEL_ID:
-        if (microarch_generation > 2) {
-            return false;
+        もし (microarch_generation > 2) {
+            戻る false;
         }
         break;
 
     case NEHALEM_1_MODEL_ID:
     case NEHALEM_2_MODEL_ID:
     case NEHALEM_3_MODEL_ID:
-        if (microarch_generation > 1) {
-            return false;
+        もし (microarch_generation > 1) {
+            戻る false;
         }
         break;
 
     default:
-        if (!config_set(CONFIG_ARCH_X86_GENERIC)) {
-            return false;
+        もし (!config_set(CONFIG_ARCH_X86_GENERIC)) {
+            戻る false;
         }
     }
 
-    return true;
+    戻る true;
 }
 
 static BOOT_CODE bool_t try_boot_sys(void)
@@ -342,7 +342,7 @@ static BOOT_CODE bool_t try_boot_sys(void)
 
     boot_state.ki_p_reg = get_p_reg_kernel_img();
 
-    if (!x86_cpuid_initialize()) {
+    もし (!x86_cpuid_initialize()) {
         printf("Warning: Your x86 CPU has an unsupported vendor, '%s'.\n"
                "\tYour setup may not be able to competently run seL4 as "
                "intended.\n"
@@ -350,7 +350,7 @@ static BOOT_CODE bool_t try_boot_sys(void)
                x86_cpuid_get_identity()->vendor_string);
     }
 
-    if (!is_compiled_for_microarchitecture()) {
+    もし (!is_compiled_for_microarchitecture()) {
         printf("Warning: Your kernel was not compiled for the current microarchitecture.\n");
     }
 
@@ -358,25 +358,25 @@ static BOOT_CODE bool_t try_boot_sys(void)
     edx.words[0] = x86_cpuid_edx(0x7, 0);
     /* see if we can definitively say whether or not we need the skim window by
      * checking whether the CPU is vulnerable to rogue data cache loads (rdcl) */
-    if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
+    もし (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
         cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
-        if (ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
+        もし (ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
             printf("CPU reports not vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
                    "yet SKIM window is enabled. Performance is needlessly being impacted, consider disabling.\n");
-        } else if (!ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && !config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
+        } 否则 もし (!ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && !config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
             printf("CPU reports vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
                    "yet SKIM window is *not* enabled. Please re-build with SKIM window enabled.");
-            return false;
+            戻る false;
         }
-    } else {
+    } 否则 {
         /* hardware doesn't tell us directly so guess based on CPU vendor */
-        if (config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_AMD) {
+        もし (config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_AMD) {
             printf("SKIM window for mitigating Meltdown (https://www.meltdownattack.com) "
                    "not necessary for AMD and performance is being needlessly affected, "
                    "consider disabling\n");
         }
-        if (!config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_INTEL) {
+        もし (!config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_INTEL) {
             printf("***WARNING*** SKIM window not enabled, this machine is probably vulnerable "
                    "to Meltdown (https://www.meltdownattack.com), consider enabling\n");
         }
@@ -384,8 +384,8 @@ static BOOT_CODE bool_t try_boot_sys(void)
 
 #ifdef ENABLE_SMP_SUPPORT
     /* copy boot code for APs to lower memory to run in real mode */
-    if (!copy_boot_code_aps(boot_state.mem_lower)) {
-        return false;
+    もし (!copy_boot_code_aps(boot_state.mem_lower)) {
+        戻る false;
     }
     /* Initialize any kernel TLS */
     mode_init_tls(0);
@@ -400,25 +400,25 @@ static BOOT_CODE bool_t try_boot_sys(void)
 
     /* remapping legacy IRQs to their correct vectors */
     pic_remap_irqs(IRQ_INT_OFFSET);
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
+    もし (config_set(CONFIG_IRQ_IOAPIC)) {
         /* Disable the PIC so that it does not generate any interrupts. We need to
          * do this *before* we initialize the apic */
         pic_disable();
     }
 
     /* validate the ACPI table */
-    if (!acpi_validate_rsdp(&boot_state.acpi_rsdp)) {
-        return false;
+    もし (!acpi_validate_rsdp(&boot_state.acpi_rsdp)) {
+        戻る false;
     }
 
     /* check if kernel configuration matches platform requirements */
-    if (!acpi_fadt_scan(&boot_state.acpi_rsdp)) {
-        return false;
+    もし (!acpi_fadt_scan(&boot_state.acpi_rsdp)) {
+        戻る false;
     }
 
-    if (!config_set(CONFIG_IOMMU) || cmdline_opt.disable_iommu) {
+    もし (!config_set(CONFIG_IOMMU) || cmdline_opt.disable_iommu) {
         boot_state.num_drhu = 0;
-    } else {
+    } 否则 {
         /* query available IOMMUs from ACPI */
         acpi_dmar_scan(
             &boot_state.acpi_rsdp,
@@ -432,18 +432,18 @@ static BOOT_CODE bool_t try_boot_sys(void)
     /* query available CPUs from ACPI */
     boot_state.num_cpus = acpi_madt_scan(&boot_state.acpi_rsdp, boot_state.cpus, &boot_state.num_ioapic,
                                          boot_state.ioapic_paddr);
-    if (boot_state.num_cpus == 0) {
+    もし (boot_state.num_cpus == 0) {
         printf("No CPUs detected\n");
-        return false;
+        戻る false;
     }
 
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
-        if (boot_state.num_ioapic == 0) {
+    もし (config_set(CONFIG_IRQ_IOAPIC)) {
+        もし (boot_state.num_ioapic == 0) {
             printf("No IOAPICs detected\n");
-            return false;
+            戻る false;
         }
-    } else {
-        if (boot_state.num_ioapic > 0) {
+    } 否则 {
+        もし (boot_state.num_ioapic > 0) {
             printf("Detected %d IOAPICs, but configured to use PIC instead\n", boot_state.num_ioapic);
         }
     }
@@ -455,8 +455,8 @@ static BOOT_CODE bool_t try_boot_sys(void)
     load_paddr = mods_end_paddr;
 
     load_paddr = load_boot_module(boot_state.boot_module_start, boot_state.boot_module_end, load_paddr);
-    if (!load_paddr) {
-        return false;
+    もし (!load_paddr) {
+        戻る false;
     }
 
     /* calculate final location of userland images */
@@ -478,19 +478,19 @@ static BOOT_CODE bool_t try_boot_sys(void)
 
     /* ==== following code corresponds to abstract specification after "select" ==== */
 
-    if (!platAddDevices()) {
-        return false;
+    もし (!platAddDevices()) {
+        戻る false;
     }
 
     /* Total number of cores we intend to boot */
     ksNumCPUs = boot_state.num_cpus;
 
     printf("Starting node #0 with APIC ID %lu\n", boot_state.cpus[0]);
-    if (!try_boot_sys_node(boot_state.cpus[0])) {
-        return false;
+    もし (!try_boot_sys_node(boot_state.cpus[0])) {
+        戻る false;
     }
 
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
+    もし (config_set(CONFIG_IRQ_IOAPIC)) {
         ioapic_init(1, boot_state.cpus, boot_state.num_ioapic);
     }
 
@@ -503,7 +503,7 @@ static BOOT_CODE bool_t try_boot_sys(void)
 
     printf("Booting all finished, dropped to user space\n");
 
-    return true;
+    戻る true;
 }
 
 static BOOT_CODE bool_t try_boot_sys_mbi1(
@@ -515,24 +515,24 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
 
     cmdline_parse((const char *)(word_t)mbi->part1.cmdline, &cmdline_opt);
 
-    if ((mbi->part1.flags & MULTIBOOT_INFO_MEM_FLAG) == 0) {
+    もし ((mbi->part1.flags & MULTIBOOT_INFO_MEM_FLAG) == 0) {
         printf("Boot loader did not provide information about physical memory size\n");
-        return false;
+        戻る false;
     }
 
-    if (!(mbi->part1.flags & MULTIBOOT_INFO_MODS_FLAG)) {
+    もし (!(mbi->part1.flags & MULTIBOOT_INFO_MODS_FLAG)) {
         printf("Boot loader did not provide information about boot modules\n");
-        return false;
+        戻る false;
     }
 
     printf("Detected %d boot module(s):\n", mbi->part1.mod_count);
 
-    if (mbi->part1.mod_count < 1) {
+    もし (mbi->part1.mod_count < 1) {
         printf("Expect at least one boot module (containing a userland image)\n");
-        return false;
+        戻る false;
     }
 
-    for (i = 0; i < mbi->part1.mod_count; i++) {
+    ために (i = 0; i < mbi->part1.mod_count; i++) {
         printf(
             "  module #%ld: start=0x%x end=0x%x size=0x%x name='%s'\n",
             i,
@@ -541,11 +541,11 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
             modules[i].end - modules[i].start,
             (char *)(long)modules[i].name
         );
-        if ((sword_t)(modules[i].end - modules[i].start) <= 0) {
+        もし ((sword_t)(modules[i].end - modules[i].start) <= 0) {
             printf("Invalid boot module size! Possible cause: boot module file not found by QEMU\n");
-            return false;
+            戻る false;
         }
-        if (boot_state.mods_end_paddr < modules[i].end) {
+        もし (boot_state.mods_end_paddr < modules[i].end) {
             boot_state.mods_end_paddr = modules[i].end;
         }
     }
@@ -556,12 +556,12 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
      * include all the physical memory in the kernel window, but also includes any
      * important or kernel devices. */
     boot_state.mem_p_regs.count = 0;
-    if (mbi->part1.flags & MULTIBOOT_INFO_MMAP_FLAG) {
-        if (!parse_mem_map(mbi->part2.mmap_length, mbi->part2.mmap_addr)) {
-            return false;
+    もし (mbi->part1.flags & MULTIBOOT_INFO_MMAP_FLAG) {
+        もし (!parse_mem_map(mbi->part2.mmap_length, mbi->part2.mmap_addr)) {
+            戻る false;
         }
         uint32_t multiboot_mmap_length = mbi->part2.mmap_length;
-        if (multiboot_mmap_length > (SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * sizeof(seL4_X86_mb_mmap_t))) {
+        もし (multiboot_mmap_length > (SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * sizeof(seL4_X86_mb_mmap_t))) {
             printf("Warning: Multiboot has reported more memory map entries, %zd, "
                    "than the max amount that will be passed in the bootinfo, %d. "
                    "These extra regions will still be turned into untyped caps.",
@@ -570,21 +570,21 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
         }
         memcpy(&boot_state.mb_mmap_info.mmap, (void *)(word_t)mbi->part2.mmap_addr, multiboot_mmap_length);
         boot_state.mb_mmap_info.mmap_length = multiboot_mmap_length;
-    } else {
+    } 否则 {
         /* calculate memory the old way */
         p_region_t avail;
         avail.start = HIGHMEM_PADDR;
         avail.end = ROUND_DOWN(avail.start + (mbi->part1.mem_upper << 10), PAGE_BITS);
-        if (!add_mem_p_regs(avail)) {
-            return false;
+        もし (!add_mem_p_regs(avail)) {
+            戻る false;
         }
     }
 
     /* copy VESA information from multiboot header */
-    if ((mbi->part1.flags & MULTIBOOT_INFO_GRAPHICS_FLAG) == 0) {
+    もし ((mbi->part1.flags & MULTIBOOT_INFO_GRAPHICS_FLAG) == 0) {
         boot_state.vbe_info.vbeMode = -1;
         printf("Multiboot gave us no video information\n");
-    } else {
+    } 否则 {
         boot_state.vbe_info.vbeInfoBlock = *(seL4_VBEInfoBlock_t *)(seL4_Word)mbi->part2.vbe_control_info;
         boot_state.vbe_info.vbeModeInfoBlock = *(seL4_VBEModeInfoBlock_t *)(seL4_Word)mbi->part2.vbe_mode_info;
         boot_state.vbe_info.vbeMode = mbi->part2.vbe_mode;
@@ -599,18 +599,18 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
     boot_state.boot_module_end = modules->end;
 
     /* Initialize ACPI */
-    if (!acpi_init(&boot_state.acpi_rsdp)) {
-        return false;
+    もし (!acpi_init(&boot_state.acpi_rsdp)) {
+        戻る false;
     }
 
-    return true;
+    戻る true;
 }
 
 static BOOT_CODE bool_t try_boot_sys_mbi2(
     multiboot2_header_t *mbi2
 )
 {
-    int mod_count                  = 0;
+    整数 mod_count                  = 0;
     multiboot2_tag_t const *tag   = (multiboot2_tag_t *)(mbi2 + 1);
     multiboot2_tag_t const *tag_e = (multiboot2_tag_t *)((word_t)mbi2 + mbi2->total_size);
 
@@ -623,21 +623,21 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
     boot_state.mb_mmap_info.mmap_length = 0;
     boot_state.vbe_info.vbeMode = -1;
 
-    while (tag < tag_e && tag->type != MULTIBOOT2_TAG_END) {
+    ながら (tag < tag_e && tag->type != MULTIBOOT2_TAG_END) {
         word_t const behind_tag = (word_t)tag + sizeof(*tag);
 
-        if (tag->type == MULTIBOOT2_TAG_CMDLINE) {
+        もし (tag->type == MULTIBOOT2_TAG_CMDLINE) {
             char const *const cmdline = (char const * const)(behind_tag);
             cmdline_parse(cmdline, &cmdline_opt);
-        } else if (tag->type == MULTIBOOT2_TAG_ACPI_1) {
-            if (ACPI_V1_SIZE == tag->size - sizeof(*tag)) {
+        } 否则 もし (tag->type == MULTIBOOT2_TAG_ACPI_1) {
+            もし (ACPI_V1_SIZE == tag->size - sizeof(*tag)) {
                 memcpy(&boot_state.acpi_rsdp, (void *)behind_tag, tag->size - sizeof(*tag));
             }
-        } else if (tag->type == MULTIBOOT2_TAG_ACPI_2) {
-            if (sizeof(boot_state.acpi_rsdp) == tag->size - sizeof(*tag)) {
+        } 否则 もし (tag->type == MULTIBOOT2_TAG_ACPI_2) {
+            もし (sizeof(boot_state.acpi_rsdp) == tag->size - sizeof(*tag)) {
                 memcpy(&boot_state.acpi_rsdp, (void *)behind_tag, sizeof(boot_state.acpi_rsdp));
             }
-        } else if (tag->type == MULTIBOOT2_TAG_MODULE) {
+        } 否则 もし (tag->type == MULTIBOOT2_TAG_MODULE) {
             multiboot2_module_t const *module = (multiboot2_module_t const *)behind_tag;
             printf(
                 "  module #%d: start=0x%x end=0x%x size=0x%x name='%s'\n",
@@ -648,42 +648,42 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
                 module->string
             );
 
-            if (mod_count == 0) {
+            もし (mod_count == 0) {
                 boot_state.boot_module_start = module->start;
                 boot_state.boot_module_end = module->end;
             }
 
             mod_count ++;
-            if ((sword_t)(module->end - module->start) <= 0) {
+            もし ((sword_t)(module->end - module->start) <= 0) {
                 printf("Invalid boot module size! Possible cause: boot module file not found\n");
-                return false;
+                戻る false;
             }
-            if (boot_state.mods_end_paddr < module->end) {
+            もし (boot_state.mods_end_paddr < module->end) {
                 boot_state.mods_end_paddr = module->end;
             }
-        } else if (tag->type == MULTIBOOT2_TAG_MEMORY) {
+        } 否则 もし (tag->type == MULTIBOOT2_TAG_MEMORY) {
             multiboot2_memory_t const *s = (multiboot2_memory_t *)(behind_tag + 8);
             multiboot2_memory_t const *e = (multiboot2_memory_t *)((word_t)tag + tag->size);
 
-            for (multiboot2_memory_t const *m = s; m < e; m++) {
-                if (!m->addr) {
+            ために (multiboot2_memory_t const *m = s; m < e; m++) {
+                もし (!m->addr) {
                     boot_state.mem_lower = m->size;
                 }
 
                 printf("\tPhysical Memory Region from %llx size %llx type %u\n", m->addr, m->size, m->type);
-                if (m->addr != (uint64_t)(word_t)m->addr) {
+                もし (m->addr != (uint64_t)(word_t)m->addr) {
                     printf("\t\tPhysical memory region not addressable\n");
                     continue;
                 }
 
-                if (m->type == MULTIBOOT_MMAP_USEABLE_TYPE && m->addr >= HIGHMEM_PADDR) {
-                    if (!add_mem_p_regs((p_region_t) {
+                もし (m->type == MULTIBOOT_MMAP_USEABLE_TYPE && m->addr >= HIGHMEM_PADDR) {
+                    もし (!add_mem_p_regs((p_region_t) {
                     m->addr, m->addr + m->size
                 }))
-                    return false;
+                    戻る false;
                 }
             }
-        } else if (tag->type == MULTIBOOT2_TAG_FB) {
+        } 否则 もし (tag->type == MULTIBOOT2_TAG_FB) {
             multiboot2_fb_t const *fb = (multiboot2_fb_t const *)behind_tag;
             printf("Got framebuffer info in multiboot2. Current video mode is at physical address=%llx pitch=%u resolution=%ux%u@%u type=%u\n",
                    fb->addr, fb->pitch, fb->width, fb->height, fb->bpp, fb->type);
@@ -695,12 +695,12 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
 
     printf("Detected %d boot module(s):\n", mod_count);
 
-    if (mod_count < 1) {
+    もし (mod_count < 1) {
         printf("Expect at least one boot module (containing a userland image)\n");
-        return false;
+        戻る false;
     }
 
-    return true;
+    戻る true;
 }
 
 BOOT_CODE VISIBLE void boot_sys(
@@ -709,19 +709,19 @@ BOOT_CODE VISIBLE void boot_sys(
 {
     bool_t result = false;
 
-    if (multiboot_magic == MULTIBOOT_MAGIC) {
+    もし (multiboot_magic == MULTIBOOT_MAGIC) {
         result = try_boot_sys_mbi1(mbi);
-    } else if (multiboot_magic == MULTIBOOT2_MAGIC) {
+    } 否则 もし (multiboot_magic == MULTIBOOT2_MAGIC) {
         result = try_boot_sys_mbi2(mbi);
-    } else {
+    } 否则 {
         printf("Boot loader is not multiboot 1 or 2 compliant %lx\n", multiboot_magic);
     }
 
-    if (result) {
+    もし (result) {
         result = try_boot_sys();
     }
 
-    if (!result) {
+    もし (!result) {
         fail("boot_sys failed for some reason :(\n");
     }
 

@@ -18,6 +18,6 @@ void kernel_putDebugChar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char kernel_getDebugChar(void)
 {
-    return uart_drv_getchar();
+    戻る uart_drv_getchar();
 }
 #endif /* CONFIG_DEBUG_BUILD */
