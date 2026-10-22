@@ -22,12 +22,12 @@ BOOT_BSS static cpu_identity_t cpu_identity;
 
 BOOT_CODE cpu_identity_t *x86_cpuid_get_identity(void)
 {
-    return &cpu_identity;
+    вернуть &cpu_identity;
 }
 
 BOOT_CODE x86_cpu_identity_t *x86_cpuid_get_model_info(void)
 {
-    return &cpu_identity.display;
+    вернуть &cpu_identity.display;
 }
 
 /** Extracts the vendor string from CPUID_000H.E[BCD]X.
@@ -38,8 +38,8 @@ BOOT_CODE static void x86_cpuid_fill_vendor_string(cpu_identity_t *ci)
 {
     MAY_ALIAS uint32_t *vendor_string32 = (uint32_t *)ci->vendor_string;
 
-    if (ci == NULL) {
-        return;
+    если (ci == NULL) {
+        вернуть;
     }
 
     vendor_string32[0] = x86_cpuid_ebx(0, 0);
@@ -62,9 +62,9 @@ BOOT_CODE static void x86_cpuid_intel_identity_initialize(cpu_identity_t *ci,
      *
      * See Intel manuals vol2, section 3.2 for the literal constants.
      */
-    if (original.family != 0x0F) {
+    если (original.family != 0x0F) {
         ci->display.family = original.family;
-    } else {
+    } иначе {
         ci->display.family = ci->display.extended_family + original.family;
     }
 
@@ -87,9 +87,9 @@ BOOT_CODE static void x86_cpuid_intel_identity_initialize(cpu_identity_t *ci,
      * See Linux source at: /arch/x86/lib/cpu.c:
      *      http://lxr.free-electrons.com/source/arch/x86/lib/cpu.c
      */
-    if (ci->display.family == 0x06 || ci->display.family == 0x0F) {
+    если (ci->display.family == 0x06 || ci->display.family == 0x0F) {
         ci->display.model = (ci->display.extended_model << 4u) + original.model;
-    } else {
+    } иначе {
         ci->display.model = original.model;
     }
 }
@@ -104,10 +104,10 @@ BOOT_CODE static void x86_cpuid_amd_identity_initialize(cpu_identity_t *ci,
      * Intel says that if family == 0xF || family == 0x6, then adjustments are
      * needed.
      */
-    if (original.family < 0xF) {
+    если (original.family < 0xF) {
         ci->display.family = original.family;
         ci->display.model = original.model;
-    } else {
+    } иначе {
         ci->display.family = original.family + ci->display.extended_family;
         ci->display.model = (ci->display.extended_model << 4u) + original.model;
     }
@@ -143,24 +143,24 @@ BOOT_CODE bool_t x86_cpuid_initialize(void)
     /* Also store the brand index value given in EBX */
     ci->display.brand = cpuid_001h_ebx_get_brand(ebx);
 
-    if (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_INTEL,
+    если (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_INTEL,
                 X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0) {
         ci->vendor = X86_VENDOR_INTEL;
         x86_cpuid_intel_identity_initialize(ci, original);
-        return true;
-    } else if (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD_LEGACY,
+        вернуть true;
+    } иначе если (strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD_LEGACY,
                        X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0
                || strncmp(ci->vendor_string, X86_CPUID_VENDOR_STRING_AMD,
                           X86_CPUID_VENDOR_STRING_MAXLENGTH) == 0) {
         ci->vendor = X86_VENDOR_AMD;
         x86_cpuid_amd_identity_initialize(ci, original);
-        return true;
-    } else {
+        вернуть true;
+    } иначе {
         /* CPU from unsupported vendor. Examples could be Cyrix, Centaur, etc.
          * The old time x86 clones. Return false to the boot and let the upper
          * level caller decide what to do.
          */
         ci->vendor = X86_VENDOR_OTHER;
-        return false;
+        вернуть false;
     }
 }

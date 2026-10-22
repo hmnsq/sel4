@@ -11,10 +11,10 @@
 #include <plat/machine/io.h>
 #include <drivers/uart.h>
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+#если defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
 void serial_init(uint16_t port)
 {
-    while (!(in8(port + 5) & 0x60)); /* wait until not busy */
+    пока (!(in8(port + 5) & 0x60)); /* wait until not busy */
 
     out8(port + 1, 0x00); /* disable generating interrupts */
     out8(port + 3, 0x80); /* line control register: command: set divisor */
@@ -37,7 +37,7 @@ void serial_init(uint16_t port)
 void uart_drv_putchar(
     unsigned char c)
 {
-    while (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
+    пока (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
     out8(x86KSdebugPort, c);
 }
 
@@ -52,7 +52,7 @@ void kernel_putDebugChar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char kernel_getDebugChar(void)
 {
-    while ((in8(x86KSdebugPort + 5) & 1) == 0);
-    return in8(x86KSdebugPort);
+    пока ((in8(x86KSdebugPort + 5) & 1) == 0);
+    вернуть in8(x86KSdebugPort);
 }
 #endif /* CONFIG_DEBUG_BUILD */

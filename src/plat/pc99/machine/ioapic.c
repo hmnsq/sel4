@@ -61,7 +61,7 @@ static void ioapic_write(uint32_t ioapic, word_t reg, uint32_t value)
 
 static uint32_t ioapic_read(uint32_t ioapic, word_t reg)
 {
-    return *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg);
+    вернуть *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg);
 }
 
 static void single_ioapic_init(word_t ioapic)
@@ -77,7 +77,7 @@ static void single_ioapic_init(word_t ioapic)
      * The MRE field of the IOAPICVER register is supposed to only be able to
      * return a max value of 239, which means a max nirqs value of IOAPIC_IRQ_LINES.
      */
-    if (nirqs > IOAPIC_IRQ_LINES) {
+    если (nirqs > IOAPIC_IRQ_LINES) {
         userError("%s: ioapic %lu has %u IRQs,\n"
                   "which is greater than the max handled (%u)\n",
                   __func__, ioapic, nirqs, IOAPIC_IRQ_LINES);
@@ -88,7 +88,7 @@ static void single_ioapic_init(word_t ioapic)
      * the vector to 0, which we can assert against in
      * mask_interrupt to ensure a vector is assigned
      * before we unmask */
-    for (i = 0; i < nirqs; i++) {
+    для (i = 0; i < nirqs; i++) {
         /* Send to ioapic_target_cpu, mask, and set 0 vector */
         ioapic_map_pin_to_vector(ioapic, i, 0, 0, 0);
     }
@@ -101,7 +101,7 @@ void ioapic_init(uint32_t num_nodes, cpu_id_t *cpu_list, uint32_t num_ioapic)
     num_ioapics = num_ioapic;
     ioapic_target_cpu = cpu_list[0];
 
-    for (ioapic = 0; ioapic < num_ioapic; ioapic++) {
+    для (ioapic = 0; ioapic < num_ioapic; ioapic++) {
         /* Init this ioapic */
         single_ioapic_init(ioapic);
     }
@@ -109,14 +109,14 @@ void ioapic_init(uint32_t num_nodes, cpu_id_t *cpu_list, uint32_t num_ioapic)
 
 void ioapic_mask(bool_t mask, uint32_t ioapic, uint32_t pin)
 {
-    int index = ioapic * IOAPIC_IRQ_LINES + pin;
-    if (ioapic >= num_ioapics || pin >= ioapic_nirqs[ioapic]) {
+    целое index = ioapic * IOAPIC_IRQ_LINES + pin;
+    если (ioapic >= num_ioapics || pin >= ioapic_nirqs[ioapic]) {
         /* silently ignore requests to non existent parts of the interrupt space */
-        return;
+        вернуть;
     }
-    if (mask) {
+    если (mask) {
         ioredtbl_state[index] |= IOREDTBL_LOW_INTERRUPT_MASK;
-    } else {
+    } иначе {
         ioredtbl_state[index] &= ~IOREDTBL_LOW_INTERRUPT_MASK;
         /* it should not be possible to be unmasking an interrupt, without
          * it having been mapped to a vector, assert that this is the case */
@@ -129,41 +129,41 @@ void ioapic_mask(bool_t mask, uint32_t ioapic, uint32_t pin)
 exception_t ioapic_decode_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,
                                             word_t polarity, word_t vector)
 {
-    if (num_ioapics == 0) {
+    если (num_ioapics == 0) {
         userError("System has no IOAPICs");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        вернуть EXCEPTION_SYSCALL_ERROR;
     }
-    if (ioapic >= num_ioapics) {
+    если (ioapic >= num_ioapics) {
         userError("Invalid IOAPIC %ld, only have %ld", (long)ioapic, (long)num_ioapics);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = num_ioapics - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        вернуть EXCEPTION_SYSCALL_ERROR;
     }
-    if (pin >= ioapic_nirqs[ioapic]) {
+    если (pin >= ioapic_nirqs[ioapic]) {
         userError("Invalid IOAPIC pin %ld, there are %d pins", (long)pin, ioapic_nirqs[ioapic]);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = ioapic_nirqs[ioapic] - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        вернуть EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (level != 0 && level != 1) {
-        userError("Level should be 0 or 1, not %d", (int)level);
+    если (level != 0 && level != 1) {
+        userError("Level should be 0 or 1, not %d", (целое)level);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        вернуть EXCEPTION_SYSCALL_ERROR;
     }
-    if (polarity != 0 && polarity != 1) {
-        userError("Polarity should be 0 or 1, not %d", (int)polarity);
+    если (polarity != 0 && polarity != 1) {
+        userError("Polarity should be 0 or 1, not %d", (целое)polarity);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        вернуть EXCEPTION_SYSCALL_ERROR;
     }
-    return EXCEPTION_NONE;
+    вернуть EXCEPTION_NONE;
 }
 
 void ioapic_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,

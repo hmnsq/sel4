@@ -12,7 +12,7 @@
 void _fail(
     const char  *s,
     const char  *file,
-    unsigned int line,
+    unsigned целое line,
     const char  *function)
 {
     printf(
@@ -28,7 +28,7 @@ void _fail(
 void _assert_fail(
     const char  *assertion,
     const char  *file,
-    unsigned int line,
+    unsigned целое line,
     const char  *function)
 {
     printf("seL4 failed assertion '%s' at %s:%u in function %s\n",

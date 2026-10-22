@@ -61,7 +61,7 @@ UP_STATE_DEFINE(struct vmxon_region, x86KSVMXOnRegion);
 #ifdef CONFIG_PRINTING
 uint16_t x86KSconsolePort;
 #endif
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+#если defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
 uint16_t x86KSdebugPort;
 #endif
 
