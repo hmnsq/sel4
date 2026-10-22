@@ -20,7 +20,7 @@ asid_pool_t *riscvKSASIDTable[nASIDPools];
 /* Kernel Page Tables */
 pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
-#if __riscv_xlen != 32
+#ຖ້າ __riscv_xlen != 32
 pte_t kernel_image_level1_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 pte_t kernel_image_level1_dev_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 #elif defined(CONFIG_KERNEL_LOG_BUFFER)

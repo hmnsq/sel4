@@ -52,10 +52,10 @@ static bool_t byte8_bps_supported = false;
 
 bool_t byte8BreakpointsSupported(void)
 {
-    return byte8_bps_supported;
+    ສົ່ງຄືນ byte8_bps_supported;
 }
 
-static inline void bitwiseAndDr6Reg(word_t mask)
+static anta_hstha void bitwiseAndDr6Reg(word_t mask)
 {
     word_t tmp;
 
@@ -63,17 +63,17 @@ static inline void bitwiseAndDr6Reg(word_t mask)
     writeDr6Reg(tmp);
 }
 
-static inline word_t readDr7Context(tcb_t *t)
+static anta_hstha word_t readDr7Context(tcb_t *t)
 {
-    return t->tcbArch.tcbContext.breakpointState.dr[5];
+    ສົ່ງຄືນ t->tcbArch.tcbContext.breakpointState.dr[5];
 }
 
-static inline void bitwiseOrDr7Context(tcb_t *t, word_t val)
+static anta_hstha void bitwiseOrDr7Context(tcb_t *t, word_t val)
 {
     t->tcbArch.tcbContext.breakpointState.dr[5] |= val;
 }
 
-static inline void bitwiseAndDr7Context(tcb_t *t, word_t mask)
+static anta_hstha void bitwiseAndDr7Context(tcb_t *t, word_t mask)
 {
     t->tcbArch.tcbContext.breakpointState.dr[5] &= mask;
 }
@@ -83,19 +83,19 @@ static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
     word_t mask;
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         mask = (0x3u << X86_DEBUG_BP0_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         mask = (0x3u << X86_DEBUG_BP1_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         mask = (0x3u << X86_DEBUG_BP2_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        break;
+        bha_nga;
     default: /* 3 */
         assert(bp_num == 3);
         mask = (0x3u << X86_DEBUG_BP3_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        break;
+        bha_nga;
     }
 
     mask = ~mask;
@@ -109,12 +109,12 @@ static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
  * @param rw Access trigger condition (read/write).
  * @return Hardware specific register value representing the inputs.
  */
-PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t type, word_t rw)
+PURE static anta_hstha word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t type, word_t rw)
 {
     switch (type) {
-    case seL4_InstructionBreakpoint:
+    pak_sa seL4_InstructionBreakpoint:
         type = X86_DEBUG_BP_TYPE_INSTR;
-        break;
+        bha_nga;
     default: /* seL4_DataBreakpoint */
         assert(type == seL4_DataBreakpoint);
         type = (rw == seL4_BreakOnWrite)
@@ -123,15 +123,15 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
     }
 
     switch (bp_num) {
-    case 0:
-        return type << X86_DEBUG_BP0_TYPE_SHIFT;
-    case 1:
-        return type << X86_DEBUG_BP1_TYPE_SHIFT;
-    case 2:
-        return type << X86_DEBUG_BP2_TYPE_SHIFT;
+    pak_sa 0:
+        ສົ່ງຄືນ type << X86_DEBUG_BP0_TYPE_SHIFT;
+    pak_sa 1:
+        ສົ່ງຄືນ type << X86_DEBUG_BP1_TYPE_SHIFT;
+    pak_sa 2:
+        ສົ່ງຄືນ type << X86_DEBUG_BP2_TYPE_SHIFT;
     default: /* 3 */
         assert(bp_num == 3);
-        return type << X86_DEBUG_BP3_TYPE_SHIFT;
+        ສົ່ງຄືນ type << X86_DEBUG_BP3_TYPE_SHIFT;
     }
 }
 
@@ -142,27 +142,27 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
  * @param type[out] Converted type value.
  * @param rw[out] Converted output access trigger value.
  */
-typedef struct {
+typedef sa_nracanaa {
     word_t type, rw;
 } convertedTypeAndAccess_t;
 
-PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr7, uint16_t bp_num)
+PURE static anta_hstha convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr7, uint16_t bp_num)
 {
     convertedTypeAndAccess_t ret;
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_SHIFT;
         dr7 >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_SHIFT;
         dr7 >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_SHIFT;
         dr7 >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        break;
+        bha_nga;
     default: /* 3 */
         assert(bp_num == 3);
         dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_SHIFT;
@@ -170,21 +170,21 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
     }
 
     switch (dr7) {
-    case X86_DEBUG_BP_TYPE_INSTR:
+    pak_sa X86_DEBUG_BP_TYPE_INSTR:
         ret.type = seL4_InstructionBreakpoint;
         ret.rw = seL4_BreakOnRead;
-        break;
-    case X86_DEBUG_BP_TYPE_DATA_WRITE:
+        bha_nga;
+    pak_sa X86_DEBUG_BP_TYPE_DATA_WRITE:
         ret.type = seL4_DataBreakpoint;
         ret.rw = seL4_BreakOnWrite;
-        break;
+        bha_nga;
     default: /* Read-write */
         assert(dr7 == X86_DEBUG_BP_TYPE_DATA_READWRITE);
         ret.type = seL4_DataBreakpoint;
         ret.rw = seL4_BreakOnReadWrite;
-        break;
+        bha_nga;
     }
-    return ret;
+    ສົ່ງຄືນ ret;
 }
 
 /** Converts an integer size number into an equivalent hardware register value.
@@ -193,25 +193,25 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
  * @param size An integer for the operand size of the breakpoint.
  * @return Converted, hardware-specific value.
  */
-PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
+PURE static anta_hstha word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
 {
-    if (type == seL4_InstructionBreakpoint) {
+    ຖ້າ (type == seL4_InstructionBreakpoint) {
         /* Intel manual vol3 17.2.4:
          * "If the corresponding RWn field in register DR7 is 00 (instruction
          * execution), then the LENn field should also be 00"
          */
         size = 0;
-    } else {
+    } ບໍ່ດັ່ງນັ້ນ {
         switch (size) {
-        case 1:
+        pak_sa 1:
             size = X86_DEBUG_BP_SIZE_1B;
-            break;
-        case 2:
+            bha_nga;
+        pak_sa 2:
             size = X86_DEBUG_BP_SIZE_2B;
-            break;
-        case 8:
+            bha_nga;
+        pak_sa 8:
             size = X86_DEBUG_BP_SIZE_8B;
-            break;
+            bha_nga;
         default: /* 4B */
             assert(size == 4);
             size = X86_DEBUG_BP_SIZE_4B;
@@ -219,15 +219,15 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
     }
 
     switch (bp_num) {
-    case 0:
-        return size << X86_DEBUG_BP0_SIZE_SHIFT;
-    case 1:
-        return size << X86_DEBUG_BP1_SIZE_SHIFT;
-    case 2:
-        return size << X86_DEBUG_BP2_SIZE_SHIFT;
+    pak_sa 0:
+        ສົ່ງຄືນ size << X86_DEBUG_BP0_SIZE_SHIFT;
+    pak_sa 1:
+        ສົ່ງຄືນ size << X86_DEBUG_BP1_SIZE_SHIFT;
+    pak_sa 2:
+        ສົ່ງຄືນ size << X86_DEBUG_BP2_SIZE_SHIFT;
     default: /* 3 */
         assert(bp_num == 3);
-        return size << X86_DEBUG_BP3_SIZE_SHIFT;
+        ສົ່ງຄືນ size << X86_DEBUG_BP3_SIZE_SHIFT;
     }
 }
 
@@ -237,29 +237,29 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
  * @param n Breakpoint number.
  * @return Converted size value.
  */
-PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
+PURE static anta_hstha word_t convertArchToSize(word_t dr7, uint16_t bp_num)
 {
     word_t type;
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
         type >>= X86_DEBUG_BP0_TYPE_SHIFT;
         dr7 &= 0x3u << X86_DEBUG_BP0_SIZE_SHIFT;
         dr7 >>= X86_DEBUG_BP0_SIZE_SHIFT;
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
         type >>= X86_DEBUG_BP1_TYPE_SHIFT;
         dr7 &= 0x3u << X86_DEBUG_BP1_SIZE_SHIFT;
         dr7 >>= X86_DEBUG_BP1_SIZE_SHIFT;
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
         type >>= X86_DEBUG_BP2_TYPE_SHIFT;
         dr7 &= 0x3u << X86_DEBUG_BP2_SIZE_SHIFT;
         dr7 >>= X86_DEBUG_BP2_SIZE_SHIFT;
-        break;
+        bha_nga;
     default: /* 3 */
         assert(bp_num == 3);
         type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
@@ -269,20 +269,20 @@ PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
     }
 
     /* Force size to 0 if type is instruction breakpoint. */
-    if (type == X86_DEBUG_BP_TYPE_INSTR) {
-        return 0;
+    ຖ້າ (type == X86_DEBUG_BP_TYPE_INSTR) {
+        ສົ່ງຄືນ 0;
     }
 
     switch (dr7) {
-    case X86_DEBUG_BP_SIZE_1B:
-        return 1;
-    case X86_DEBUG_BP_SIZE_2B:
-        return 2;
-    case X86_DEBUG_BP_SIZE_8B:
-        return 8;
+    pak_sa X86_DEBUG_BP_SIZE_1B:
+        ສົ່ງຄືນ 1;
+    pak_sa X86_DEBUG_BP_SIZE_2B:
+        ສົ່ງຄືນ 2;
+    pak_sa X86_DEBUG_BP_SIZE_8B:
+        ສົ່ງຄືນ 8;
     default: /* 4B */
         assert(dr7 == X86_DEBUG_BP_SIZE_4B);
-        return 4;
+        ສົ່ງຄືນ 4;
     }
 }
 
@@ -297,18 +297,18 @@ static void enableBreakpoint(tcb_t *t, uint16_t bp_num)
     assert(bp_num < X86_DEBUG_BP_N_REGS);
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         enable_bit = X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         enable_bit = X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         enable_bit = X86_DEBUG_BP2_ENABLE_BIT;
-        break;
+        bha_nga;
     default:
         enable_bit = X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+        bha_nga;
     }
 
     bitwiseOrDr7Context(t, enable_bit);
@@ -325,18 +325,18 @@ static void disableBreakpoint(tcb_t *t, uint16_t bp_num)
     assert(bp_num < X86_DEBUG_BP_N_REGS);
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         disable_mask = ~X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         disable_mask = ~X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         disable_mask = ~X86_DEBUG_BP2_ENABLE_BIT;
-        break;
+        bha_nga;
     default:
         disable_mask = ~X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+        bha_nga;
     }
 
     bitwiseAndDr7Context(t, disable_mask);
@@ -354,14 +354,14 @@ static bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_num)
 
     dr7 = readDr7Context(t);
     switch (bp_num) {
-    case 0:
-        return !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
-    case 1:
-        return !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
-    case 2:
-        return !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
+    pak_sa 0:
+        ສົ່ງຄືນ !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
+    pak_sa 1:
+        ສົ່ງຄືນ !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
+    pak_sa 2:
+        ສົ່ງຄືນ !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
     default:
-        return !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
+        ສົ່ງຄືນ !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
     }
 }
 
@@ -371,21 +371,21 @@ static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
     switch (bp_num) {
-    case 0:
+    pak_sa 0:
         ubs->dr[0] = vaddr;
-        break;
-    case 1:
+        bha_nga;
+    pak_sa 1:
         ubs->dr[1] = vaddr;
-        break;
-    case 2:
+        bha_nga;
+    pak_sa 2:
         ubs->dr[2] = vaddr;
-        break;
+        bha_nga;
     default:
         assert(bp_num == 3);
         ubs->dr[3] = vaddr;
-        break;
+        bha_nga;
     }
-    return;
+    ສົ່ງຄືນ;
 }
 
 /** Backend for the seL4_TCB_SetBreakpoint invocation.
@@ -421,15 +421,15 @@ static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
     switch (bp_num) {
-    case 0:
-        return ubs->dr[0];
-    case 1:
-        return ubs->dr[1];
-    case 2:
-        return ubs->dr[2];
+    pak_sa 0:
+        ສົ່ງຄືນ ubs->dr[0];
+    pak_sa 1:
+        ສົ່ງຄືນ ubs->dr[1];
+    pak_sa 2:
+        ສົ່ງຄືນ ubs->dr[2];
     default:
         assert(bp_num == 3);
-        return ubs->dr[3];
+        ສົ່ງຄືນ ubs->dr[3];
     }
 }
 
@@ -455,7 +455,7 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
     ret.type = res.type;
     ret.rw = res.rw;
     ret.is_enabled = breakpointIsEnabled(t, bp_num);
-    return ret;
+    ສົ່ງຄືນ ret;
 }
 
 /** Backend for the x86 seL4_TCB_UnsetBreakpoint invocation.
@@ -478,7 +478,7 @@ void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
  * @return a structure stating whether or not the exception was caused by
  *          hardware single-stepping, and what the instruction vaddr was.
  */
-typedef struct {
+typedef sa_nracanaa {
     bool_t ret;
     word_t instr_vaddr;
 } testAndResetSingleStepException_t;
@@ -489,9 +489,9 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
     word_t dr6;
 
     dr6 = readDr6Reg();
-    if (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
+    ຖ້າ (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
         ret.ret = false;
-        return ret;
+        ສົ່ງຄືນ ret;
     }
 
     ret.ret = true;
@@ -511,25 +511,25 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
      */
     /* This will automatically be popped by restore_user_context() */
     t->tcbArch.tcbContext.registers[FLAGS] |= X86_DEBUG_EFLAGS_RESUME_FLAG;
-    return ret;
+    ສົ່ງຄືນ ret;
 }
 
 bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
                                UNUSED bool_t is_reply)
 {
     /* On x86 no hardware breakpoints are needed for single stepping. */
-    if (n_instr == 0) {
+    ຖ້າ (n_instr == 0) {
         /* If n_instr (number of instructions to single-step) is 0, that is the
           * same as requesting that single-stepping be disabled.
           */
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
         t->tcbArch.tcbContext.registers[FLAGS] &= ~X86_DEBUG_EFLAGS_TRAP_FLAG;
-    } else {
+    } ບໍ່ດັ່ງນັ້ນ {
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return false;
+    ສົ່ງຄືນ false;
 }
 
 /** Used in the exception path to determine which breakpoint triggered the
@@ -548,8 +548,8 @@ bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
  *          breakpoint was triggered, and gives information describing the
  *          breakpoint.
  */
-typedef struct {
-    int bp_num;
+typedef sa_nracanaa {
+    ຈຳນວນເຕັມ bp_num;
     word_t vaddr, reason;
 } getAndResetActiveBreakpoint_t;
 
@@ -560,17 +560,17 @@ static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
 
     /* Read from the hardware regs, not user context */
     word_t dr6 = readDr6Reg();
-    if (dr6 & BIT(0)) {
+    ຖ້າ (dr6 & BIT(0)) {
         ret.bp_num = 0;
-    } else if (dr6 & BIT(1)) {
+    } ບໍ່ດັ່ງນັ້ນ ຖ້າ (dr6 & BIT(1)) {
         ret.bp_num = 1;
-    } else if (dr6 & BIT(2)) {
+    } ບໍ່ດັ່ງນັ້ນ ຖ້າ (dr6 & BIT(2)) {
         ret.bp_num = 2;
-    } else if (dr6 & BIT(3)) {
+    } ບໍ່ດັ່ງນັ້ນ ຖ້າ (dr6 & BIT(3)) {
         ret.bp_num = 3;
-    } else {
+    } ບໍ່ດັ່ງນັ້ນ {
         ret.bp_num = -1;
-        return ret;
+        ສົ່ງຄືນ ret;
     }
 
     tmp = convertArchToTypeAndAccess(readDr7Context(t), ret.bp_num);
@@ -578,10 +578,10 @@ static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
     ret.reason = tmp.type;
 
     bitwiseAndDr6Reg(~BIT(ret.bp_num));
-    return ret;
+    ສົ່ງຄືນ ret;
 }
 
-exception_t handleUserLevelDebugException(int int_vector)
+exception_t handleUserLevelDebugException(ຈຳນວນເຕັມ int_vector)
 {
     tcb_t *ct;
     getAndResetActiveBreakpoint_t active_bp;
@@ -599,31 +599,31 @@ exception_t handleUserLevelDebugException(int int_vector)
     ct = NODE_STATE(ksCurThread);
 
     /* Software break request (INT3) is detected by the vector number */
-    if (int_vector == int_software_break_request) {
+    ຖ້າ (int_vector == int_software_break_request) {
         current_fault = seL4_Fault_DebugException_new(getRestartPC(NODE_STATE(ksCurThread)),
                                                       0, seL4_SoftwareBreakRequest);
-    } else {
+    } ບໍ່ດັ່ງນັ້ນ {
         /* Hardware breakpoint trigger is detected using DR6 */
         active_bp = getAndResetActiveBreakpoint(ct);
-        if (active_bp.bp_num >= 0) {
+        ຖ້າ (active_bp.bp_num >= 0) {
             current_fault = seL4_Fault_DebugException_new(active_bp.vaddr,
                                                           active_bp.bp_num,
                                                           active_bp.reason);
-        } else {
+        } ບໍ່ດັ່ງນັ້ນ {
             single_step_info = testAndResetSingleStepException(ct);
-            if (single_step_info.ret == true) {
+            ຖ້າ (single_step_info.ret == true) {
                 /* If the caller asked us to skip over N instructions before
                  * generating the next single-step breakpoint, we shouldn't
                  * bother to construct a fault message until we've skipped N
                  * instructions.
                  */
-                if (singleStepFaultCounterReady(ct) == false) {
-                    return EXCEPTION_NONE;
+                ຖ້າ (singleStepFaultCounterReady(ct) == false) {
+                    ສົ່ງຄືນ EXCEPTION_NONE;
                 }
                 current_fault = seL4_Fault_DebugException_new(single_step_info.instr_vaddr,
                                                               0, seL4_SingleStep);
-            } else {
-                return EXCEPTION_SYSCALL_ERROR;
+            } ບໍ່ດັ່ງນັ້ນ {
+                ສົ່ງຄືນ EXCEPTION_SYSCALL_ERROR;
             }
         }
     }
@@ -633,7 +633,7 @@ exception_t handleUserLevelDebugException(int int_vector)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    ສົ່ງຄືນ EXCEPTION_NONE;
 }
 
 BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
@@ -642,24 +642,24 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
 
     modelinfo = x86_cpuid_get_model_info();
     /* Intel manuals, vol3, section 17.2.4, "NOTES". */
-    if (modelinfo->family == 15) {
-        if (modelinfo->model == 3 || modelinfo->model == 4
+    ຖ້າ (modelinfo->family == 15) {
+        ຖ້າ (modelinfo->model == 3 || modelinfo->model == 4
             || modelinfo->model == 6) {
             byte8_bps_supported = true;
         }
     }
-    if (modelinfo->family == 6) {
-        if (modelinfo->model == 15 || modelinfo->model == 23
+    ຖ້າ (modelinfo->family == 6) {
+        ຖ້າ (modelinfo->model == 15 || modelinfo->model == 23
             || modelinfo->model == 0x1C) {
             byte8_bps_supported = true;
         }
     }
-    return true;
+    ສົ່ງຄືນ true;
 }
 
 void Arch_initBreakpointContext(user_breakpoint_state_t *uds)
 {
-    memset(uds, 0, sizeof(*uds));
+    memset(uds, 0, parimaa_na(*uds));
 
     /* Preload reserved values into register context */
     uds->dr[4] = readDr6Reg() &

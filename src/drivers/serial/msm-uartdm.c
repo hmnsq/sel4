@@ -18,12 +18,12 @@
 #define USR_TXRDY             BIT(2)
 #define USR_TXEMP             BIT(3)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#define UART_REG(X) ((ca_ncala uint32_t *)(UART_PPTR + (X)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while ((*UART_REG(USR) & USR_TXEMP) == 0);
+    ໃນຂະນະທີ່ ((*UART_REG(USR) & USR_TXEMP) == 0);
     /* Tell the peripheral how many characters to send */
     *UART_REG(UNTX) = 1;
     /* Write the character into the FIFO */
@@ -32,10 +32,10 @@ void uart_drv_putchar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    while ((*UART_REG(USR) & USR_RXRDY) == 0);
+    ໃນຂະນະທີ່ ((*UART_REG(USR) & USR_RXRDY) == 0);
 
-    return *UART_REG(UTF) & 0xff;
+    ສົ່ງຄືນ *UART_REG(UTF) & 0xff;
 }
 #endif /* CONFIG_DEBUG_BUILD */

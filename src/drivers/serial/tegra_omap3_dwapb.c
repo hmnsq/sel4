@@ -16,22 +16,22 @@
 #define ULSR_THRE   BIT(5)
 #define ULSR_RDR    BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ca_ncala uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    ໃນຂະນະທີ່ ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    ໃນຂະນະທີ່ ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    ສົ່ງຄືນ *UART_REG(UTHR);
 }
 #endif /* CONFIG_DEBUG_BUILD */
