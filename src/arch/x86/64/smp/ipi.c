@@ -18,7 +18,7 @@ void Mode_handleRemoteCall(IpiModeRemoteCall_t call, word_t arg0, word_t arg1, w
         break;
 
     case IpiRemoteCall_InvalidateASID:
-        invalidateLocalASID((vspace_root_t *)arg0, arg1);
+        invalidateLocalASID((vspace_उगात_t *)arg0, arg1);
         break;
 
     default:

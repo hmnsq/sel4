@@ -21,7 +21,7 @@
 /** DONT_TRANSLATE */
 void VISIBLE NORETURN restore_user_context(void)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers;
+    word_t cur_thread_reg = (word_t) बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers;
     c_exit_hook();
 
 #ifdef ENABLE_SMP_SUPPORT
@@ -31,10 +31,10 @@ void VISIBLE NORETURN restore_user_context(void)
 #endif
 
 #ifdef CONFIG_HAVE_FPU
-    set_tcb_fs_state(NODE_STATE(ksCurThread), isFpuEnable());
+    set_tcb_fs_state(बुहोल_STATE(ksCurThread), isFpuEnable());
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    बुहोल_UNLOCK_IF_HELD;
 
     asm volatile(
         "mv t0, %[cur_thread]       \n"
@@ -95,7 +95,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
 void VISIBLE NORETURN c_handle_interrupt(void)
 {
-    NODE_LOCK_IRQ_IF(getActiveIRQ() != irq_remote_call_ipi);
+    बुहोल_LOCK_IRQ_IF(getActiveIRQ() != irq_remote_call_ipi);
 
     c_entry_hook();
 
@@ -118,7 +118,7 @@ void VISIBLE NORETURN c_handle_exception(void)
         halt();
     }
 
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 
@@ -163,52 +163,52 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
 }
 
 #ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
+ALIGN(L1_CACHE_लिन्या_SIZE)
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
+void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info, word_t reply)
 #else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
+void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info)
 #endif
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, SysReplyRecv);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 #ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
+    fastpath_reply_recv(cptr, मेनसाहे_Info, reply);
 #else
-    fastpath_reply_recv(cptr, msgInfo);
+    fastpath_reply_recv(cptr, मेनसाहे_Info);
 #endif
     UNREACHABLE();
 }
 
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_लिन्या_SIZE)
+void VISIBLE c_handle_fastpath_call(word_t cptr, word_t मेनसाहे_Info)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, मेनसाहे_Info);
 
     UNREACHABLE();
 }
 #endif
 
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t मेनसाहे_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, syscall);
     ksKernelEntry.is_fastpath = 0;
 #endif /* DEBUG */
     slowpath(syscall);

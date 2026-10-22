@@ -15,15 +15,15 @@
 void switchLocalFpuOwner(tcb_t *new_owner)
 {
     enableFpu();
-    if (NODE_STATE(ksCurFPUOwner)) {
-        saveFpuState(NODE_STATE(ksCurFPUOwner));
+    if (बुहोल_STATE(ksCurFPUOwner)) {
+        saveFpuState(बुहोल_STATE(ksCurFPUOwner));
     }
     if (new_owner) {
         loadFpuState(new_owner);
     } else {
         disableFpu();
     }
-    NODE_STATE(ksCurFPUOwner) = new_owner;
+    बुहोल_STATE(ksCurFPUOwner) = new_owner;
 }
 
 void switchFpuOwner(tcb_t *new_owner, word_t cpu)

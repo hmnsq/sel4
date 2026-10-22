@@ -82,7 +82,7 @@ BOOT_CODE bool_t Arch_initFpu(void)
             }
         }
         /* Init MXCSR */
-        unsigned int mxcsr = MXCSR_INIT_VALUE;
+        unsigned int mxcsr = MXCSR_INIT_हालागा;
         asm volatile("ldmxcsr %0" :: "m"(mxcsr));
     }
     return true;

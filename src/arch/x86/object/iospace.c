@@ -39,10 +39,10 @@ BOOT_CODE cap_t master_iospace_cap(void)
 
 static vtd_cte_t *lookup_vtd_context_slot(cap_t cap)
 {
-    uint32_t   vtd_root_index;
+    uint32_t   vtd_उगात_index;
     uint32_t   vtd_context_index;
     uint32_t   pci_request_id;
-    vtd_rte_t *vtd_root_slot;
+    vtd_rte_t *vtd_उगात_slot;
     vtd_cte_t *vtd_context;
     vtd_cte_t *vtd_context_slot;
 
@@ -63,10 +63,10 @@ static vtd_cte_t *lookup_vtd_context_slot(cap_t cap)
         fail("Invalid cap type");
     }
 
-    vtd_root_index = get_pci_bus(pci_request_id);
-    vtd_root_slot = x86KSvtdRootTable + vtd_root_index;
+    vtd_उगात_index = get_pci_bus(pci_request_id);
+    vtd_उगात_slot = x86_KSvtd_उगात_Table + vtd_उगात_index;
 
-    vtd_context = (vtd_cte_t *)paddr_to_pptr(vtd_rte_ptr_get_ctp(vtd_root_slot));
+    vtd_context = (vtd_cte_t *)paddr_to_pptr(vtd_rte_ptr_get_ctp(vtd_उगात_slot));
     vtd_context_index = (get_pci_dev(pci_request_id) << 3) | get_pci_fun(pci_request_id);
     vtd_context_slot = &vtd_context[vtd_context_index];
 
@@ -134,7 +134,7 @@ void unmapVTDContextEntry(cap_t cap)
 
     flushCacheRange(cte, VTD_CTE_SIZE_BITS);
     invalidate_iotlb();
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return;
 }
 
@@ -147,7 +147,7 @@ static exception_t performX86IOPTInvocationUnmap(cap_t cap, cte_t *ctSlot)
     return EXCEPTION_NONE;
 }
 
-static exception_t performX86IOPTInvocationMapContextRoot(cap_t cap, cte_t *ctSlot, vtd_cte_t vtd_cte,
+static exception_t perform_X86_IOPTInvocation_Map_Context_उगात(cap_t cap, cte_t *ctSlot, vtd_cte_t vtd_cte,
                                                           vtd_cte_t *vtd_context_slot)
 {
     *vtd_context_slot = vtd_cte;
@@ -188,7 +188,7 @@ exception_t decodeX86IOPTInvocation(
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performX86IOPTInvocationUnmap(cap, slot);
     }
 
@@ -210,14 +210,14 @@ exception_t decodeX86IOPTInvocation(
     if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
         userError("X86IOPageTableMap: IO page table is already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     if (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("X86IOPageTableMap: Invalid IO space capability.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -225,7 +225,7 @@ exception_t decodeX86IOPTInvocation(
     domain_id = cap_io_space_cap_get_capDomainID(io_space);
     if (pci_request_id == asidInvalid) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -249,8 +249,8 @@ exception_t decodeX86IOPTInvocation(
         cap = cap_io_page_table_cap_set_capIOPTLevel(cap, 0);
         cap = cap_io_page_table_cap_set_capIOPTIOASID(cap, pci_request_id);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86IOPTInvocationMapContextRoot(cap, slot, vtd_cte, vtd_context_slot);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+        return perform_X86_IOPTInvocation_Map_Context_उगात(cap, slot, vtd_cte, vtd_context_slot);
     } else {
         lookupIOPTSlot_ret_t lu_ret;
         vtd_pte_t   iopte;
@@ -282,7 +282,7 @@ exception_t decodeX86IOPTInvocation(
         cap = cap_io_page_table_cap_set_capIOPTIOASID(cap, pci_request_id);
         cap = cap_io_page_table_cap_set_capIOPTMappedAddress(cap, io_address);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performX86IOPTInvocationMapPT(cap, slot, iopte, lu_ret.ioptSlot);
     }
 }
@@ -324,14 +324,14 @@ exception_t decodeX86IOMapInvocation(
     if (cap_frame_cap_get_capFSize(cap) != X86_SmallPage) {
         userError("X86PageMapIO: Invalid page size.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
         userError("X86PageMapIO: Page already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -342,7 +342,7 @@ exception_t decodeX86IOMapInvocation(
     if (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("X86PageMapIO: Invalid IO space capability.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -351,7 +351,7 @@ exception_t decodeX86IOMapInvocation(
     if (pci_request_id == asidInvalid) {
         userError("X86PageMapIO: Invalid PCI device.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -386,7 +386,7 @@ exception_t decodeX86IOMapInvocation(
         iopte = vtd_pte_new(paddr, !!write, !!read);
     } else {
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -394,7 +394,7 @@ exception_t decodeX86IOMapInvocation(
     cap = cap_frame_cap_set_capFMappedASID(cap, pci_request_id);
     cap = cap_frame_cap_set_capFMappedAddress(cap, io_address);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return performX86IOInvocationMap(cap, slot, iopte, lu_ret.ioptSlot);
 }
 

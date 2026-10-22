@@ -7,16 +7,16 @@
 #include <benchmark/benchmark.h>
 #include <arch/benchmark.h>
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
-bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
+#if CONFIG_MAX_नुमेरो_TRACE_POINTS > 0
+timestamp_t ksEntries[CONFIG_MAX_नुमेरो_TRACE_POINTS];
+bool_t ksStarted[CONFIG_MAX_नुमेरो_TRACE_POINTS];
 timestamp_t ksExit;
 seL4_Word ksLogIndex = 0;
 seL4_Word ksLogIndexFinalized = 0;
 #endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 
 #ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-UP_STATE_DEFINE(uint64_t, ccnt_num_overflows);
+UP_STATE_DEFINE(uint64_t, ccnt_नुमेरो_overflows);
 #endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 
 #ifdef CONFIG_ENABLE_BENCHMARKS

@@ -9,23 +9,23 @@
 #include <arch/machine/hardware.h>
 #include <arch/machine/l2c_310.h>
 
-#define LINE_START(a) ROUND_DOWN(a, L1_CACHE_LINE_SIZE_BITS)
-#define LINE_INDEX(a) (LINE_START(a)>>L1_CACHE_LINE_SIZE_BITS)
+#define लिन्या_START(a) ROUND_DOWN(a, L1_CACHE_लिन्या_SIZE_BITS)
+#define लिन्या_INDEX(a) (लिन्या_START(a)>>L1_CACHE_लिन्या_SIZE_BITS)
 
 static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        cleanByVA(लिन्या, pstart + (लिन्या - start));
     }
 }
 
 void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -44,9 +44,9 @@ void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanInvalByVA(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        cleanInvalByVA(लिन्या, pstart + (लिन्या - start));
     }
     /* ensure clean and invalidate complete */
     dsb();
@@ -76,7 +76,7 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 
 void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -84,15 +84,15 @@ void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA_PoU(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        cleanByVA_PoU(लिन्या, pstart + (लिन्या - start));
     }
 }
 
 void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
 
     /* If the start and end are not aligned to a cache line boundary
@@ -100,12 +100,12 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
+    if (start != लिन्या_START(start)) {
         cleanCacheRange_RAM(start, start, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
-        line = LINE_START(end);
-        cleanCacheRange_RAM(line, line, pstart + (line - start));
+    if (end + 1 != लिन्या_START(end + 1)) {
+        लिन्या = लिन्या_START(end);
+        cleanCacheRange_RAM(लिन्या, लिन्या, pstart + (लिन्या - start));
     }
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -124,9 +124,9 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        invalidateByVA(लिन्या, pstart + (लिन्या - start));
     }
     /* Ensure invalidate completes */
     dsb();
@@ -146,24 +146,24 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      */
     invalidate_I_PoU();
 #else
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA_I(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        invalidateByVA_I(लिन्या, pstart + (लिन्या - start));
     }
 #endif
 }
 
 void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
+    vptr_t लिन्या;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        branchFlush(line, pstart + (line - start));
+    for (index = लिन्या_INDEX(start); index < लिन्या_INDEX(end) + 1; index++) {
+        लिन्या = index << L1_CACHE_लिन्या_SIZE_BITS;
+        branchFlush(लिन्या, pstart + (लिन्या - start));
     }
 }
 

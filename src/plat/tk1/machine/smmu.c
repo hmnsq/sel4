@@ -66,7 +66,7 @@
 
 static volatile tk1_mc_regs_t *smmu_regs = (volatile tk1_mc_regs_t *)(SMMU_PPTR);
 
-static char smmu_pds[ARM_PLAT_NUM_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
+static char smmu_pds[ARM_PLAT_नुमेरो_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
 
 static void do_smmu_enable(void)
 {
@@ -210,7 +210,7 @@ BOOT_CODE int plat_smmu_init(void)
     } else {
         smmu_regs->intmask = 0;
     }
-    return ARM_PLAT_NUM_SMMU;
+    return ARM_PLAT_नुमेरो_SMMU;
 }
 
 iopde_t *plat_smmu_lookup_iopd_by_asid(uint32_t asid)

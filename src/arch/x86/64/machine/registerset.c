@@ -9,12 +9,12 @@
 #include <machine/fpu.h>
 #include <arch/object/structures.h>
 
-const register_t msgRegisters[] = {
+const register_t मेनसाहे_Registers[] = {
     R10, R8, R9, R15
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    sizeof(मेनसाहे_Registers) / sizeof(मेनसाहे_Registers[0]) == n_मेनसाहे_Registers
 );
 
 const register_t frameRegisters[] = {
@@ -69,6 +69,6 @@ word_t Mode_sanitiseRegister(register_t reg, word_t v)
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    return getRegister(बुहोल_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

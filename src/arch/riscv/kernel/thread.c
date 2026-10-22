@@ -13,7 +13,7 @@
 #include <arch/kernel/thread.h>
 #include <linker.h>
 
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+extern char kernel_सालानसान_alloc[CONFIG_MAX_नुमेरो_NODES][BIT(CONFIG_KERNEL_सालानसान_BITS)];
 
 void Arch_switchToThread(tcb_t *tcb)
 {
@@ -27,20 +27,20 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
     /* Enable interrupts and keep working in supervisor mode */
     setRegister(tcb, SSTATUS, (word_t) SSTATUS_SPP | SSTATUS_SPIE);
 #ifdef ENABLE_SMP_SUPPORT
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        if (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
-            setRegister(tcb, SP, (word_t)kernel_stack_alloc + (i + 1) * BIT(CONFIG_KERNEL_STACK_BITS));
+    for (int i = 0; i < CONFIG_MAX_नुमेरो_NODES; i++) {
+        if (बुहोल_STATE_ON_CORE(ksIdleThread, i) == tcb) {
+            setRegister(tcb, SP, (word_t)kernel_सालानसान_alloc + (i + 1) * BIT(CONFIG_KERNEL_सालानसान_BITS));
             break;
         }
     }
 #else
-    setRegister(tcb, SP, (word_t)kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS));
+    setRegister(tcb, SP, (word_t)kernel_सालानसान_alloc + BIT(CONFIG_KERNEL_सालानसान_BITS));
 #endif
 }
 
 void Arch_switchToIdleThread(void)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = बुहोल_STATE(ksIdleThread);
 
     /* Force the idle thread to run on kernel page table */
     setVMRoot(tcb);

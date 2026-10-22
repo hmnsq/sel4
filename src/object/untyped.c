@@ -18,21 +18,21 @@
 #include <kernel/thread.h>
 #include <util.h>
 
-static word_t alignUp(word_t baseValue, word_t alignment)
+static word_t alignUp(word_t base_हालागा, word_t alignment)
 {
-    return (baseValue + (BIT(alignment) - 1)) & ~MASK(alignment);
+    return (base_हालागा + (BIT(alignment) - 1)) & ~MASK(alignment);
 }
 
 exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
                                     cap_t cap, bool_t call, word_t *buffer)
 {
-    word_t newType, userObjSize, nodeIndex;
-    word_t nodeDepth, nodeOffset, nodeWindow;
-    cte_t *rootSlot;
+    word_t newType, userObjSize, बुहोल_Index;
+    word_t बुहोल_Depth, बुहोल_Offset, बुहोल_Window;
+    cte_t *उगात_Slot;
     exception_t status;
-    cap_t nodeCap;
+    cap_t बुहोल_Cap;
     lookupSlot_ret_t lu_ret;
-    word_t nodeSize;
+    word_t बुहोल_Size;
     word_t i;
     cte_t *destCNode;
     word_t freeRef, alignedFreeRef, objectSize, untypedFreeBytes;
@@ -57,17 +57,17 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     /* Fetch arguments. */
     newType     = getSyscallArg(0, buffer);
     userObjSize = getSyscallArg(1, buffer);
-    nodeIndex   = getSyscallArg(2, buffer);
-    nodeDepth   = getSyscallArg(3, buffer);
-    nodeOffset  = getSyscallArg(4, buffer);
-    nodeWindow  = getSyscallArg(5, buffer);
-    rootSlot = current_extra_caps.excaprefs[0];
+    बुहोल_Index   = getSyscallArg(2, buffer);
+    बुहोल_Depth   = getSyscallArg(3, buffer);
+    बुहोल_Offset  = getSyscallArg(4, buffer);
+    बुहोल_Window  = getSyscallArg(5, buffer);
+    उगात_Slot = current_extra_caps.excaprefs[0];
 
     /* Is the requested object type valid? */
-    if (newType >= seL4_ObjectTypeCount) {
+    if (newType >= se_L4_Object_Type_बिलांग) {
         userError("Untyped Retype: Invalid object type.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -88,7 +88,7 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     if (newType == seL4_CapTableObject && userObjSize == 0) {
         userError("Untyped Retype: Requested CapTable size too small.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -96,7 +96,7 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     if (newType == seL4_UntypedObject && userObjSize < seL4_MinUntypedBits) {
         userError("Untyped Retype: Requested UntypedItem size too small.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -104,62 +104,62 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     if (newType == seL4_SchedContextObject && userObjSize < seL4_MinSchedContextBits) {
         userError("Untyped retype: Requested a scheduling context too small.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 #endif
 
     /* Lookup the destination CNode (where our caps will be placed in). */
-    if (nodeDepth == 0) {
-        nodeCap = rootSlot->cap;
+    if (बुहोल_Depth == 0) {
+        बुहोल_Cap = उगात_Slot->cap;
     } else {
-        cap_t rootCap = rootSlot->cap;
-        lu_ret = lookupTargetSlot(rootCap, nodeIndex, nodeDepth);
+        cap_t उगात_Cap = उगात_Slot->cap;
+        lu_ret = lookupTargetSlot(उगात_Cap, बुहोल_Index, बुहोल_Depth);
         if (lu_ret.status != EXCEPTION_NONE) {
             userError("Untyped Retype: Invalid destination address.");
             return lu_ret.status;
         }
-        nodeCap = lu_ret.slot->cap;
+        बुहोल_Cap = lu_ret.slot->cap;
     }
 
     /* Is the destination actually a CNode? */
-    if (cap_get_capType(nodeCap) != cap_cnode_cap) {
+    if (cap_get_capType(बुहोल_Cap) != cap_cnode_cap) {
         userError("Untyped Retype: Destination cap invalid or read-only.");
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = 0;
-        current_lookup_fault = lookup_fault_missing_capability_new(nodeDepth);
+        current_lookup_fault = lookup_fault_missing_capability_new(बुहोल_Depth);
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Is the region where the user wants to put the caps valid? */
-    nodeSize = 1ul << cap_cnode_cap_get_capCNodeRadix(nodeCap);
-    if (nodeOffset > nodeSize - 1) {
+    बुहोल_Size = 1ul << cap_cnode_cap_get_capCNodeRadix(बुहोल_Cap);
+    if (बुहोल_Offset > बुहोल_Size - 1) {
         userError("Untyped Retype: Destination node offset #%d too large.",
-                  (int)nodeOffset);
+                  (int)बुहोल_Offset);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = nodeSize - 1;
+        current_syscall_error.rangeErrorMax = बुहोल_Size - 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow < 1 || nodeWindow > CONFIG_RETYPE_FAN_OUT_LIMIT) {
+    if (बुहोल_Window < 1 || बुहोल_Window > CONFIG_RETYPE_FAN_OUT_LIMIT) {
         userError("Untyped Retype: Number of requested objects (%d) too small or large.",
-                  (int)nodeWindow);
+                  (int)बुहोल_Window);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
         current_syscall_error.rangeErrorMax = CONFIG_RETYPE_FAN_OUT_LIMIT;
         return EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow > nodeSize - nodeOffset) {
+    if (बुहोल_Window > बुहोल_Size - बुहोल_Offset) {
         userError("Untyped Retype: Requested destination window overruns size of node.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = nodeSize - nodeOffset;
+        current_syscall_error.rangeErrorMax = बुहोल_Size - बुहोल_Offset;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Ensure that the destination slots are all empty. */
-    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap));
-    for (i = nodeOffset; i < nodeOffset + nodeWindow; i++) {
+    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(बुहोल_Cap));
+    for (i = बुहोल_Offset; i < बुहोल_Offset + बुहोल_Window; i++) {
         status = ensureEmptySlot(destCNode + i);
         if (status != EXCEPTION_NONE) {
             userError("Untyped Retype: Slot #%d in destination window non-empty.",
@@ -200,14 +200,14 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     untypedFreeBytes = BIT(cap_untyped_cap_get_capBlockSize(cap)) -
                        FREE_INDEX_TO_OFFSET(freeIndex);
 
-    if ((untypedFreeBytes >> objectSize) < nodeWindow) {
+    if ((untypedFreeBytes >> objectSize) < बुहोल_Window) {
         userError("Untyped Retype: Insufficient memory "
                   "(%lu * %lu bytes needed, %lu bytes available).",
-                  (word_t)nodeWindow,
+                  (word_t)बुहोल_Window,
                   (objectSize >= wordBits ? -1 : (1ul << objectSize)),
                   (word_t)(untypedFreeBytes));
         current_syscall_error.type = seL4_NotEnoughMemory;
-        current_syscall_error.memoryLeft = untypedFreeBytes;
+        current_syscall_error.memory_कालिवा = untypedFreeBytes;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -216,7 +216,7 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
         && newType != seL4_UntypedObject) {
         userError("Untyped Retype: Creating kernel objects with device untyped");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -225,10 +225,10 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
     alignedFreeRef = alignUp(freeRef, objectSize);
 
     /* Perform the retype. */
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeUntyped_Retype(slot, reset,
                                 (void *)alignedFreeRef, newType, userObjSize,
-                                destCNode, nodeOffset, nodeWindow, deviceMemory);
+                                destCNode, बुहोल_Offset, बुहोल_Window, deviceMemory);
 }
 
 static exception_t resetUntypedCap(cte_t *srcSlot)

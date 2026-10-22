@@ -32,7 +32,7 @@
 
 word_t getObjectSize(word_t t, word_t userObjSize)
 {
-    if (t >= seL4_NonArchObjectTypeCount) {
+    if (t >= se_L4_Non_Arch_Object_Type_बिलांग) {
         return Arch_getObjectSize(t);
     } else {
         switch (t) {
@@ -277,15 +277,15 @@ bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
     switch (cap_get_capType(cap_a)) {
     case cap_untyped_cap:
         if (cap_get_capIsPhysical(cap_b)) {
-            word_t aBase, bBase, aTop, bTop;
+            word_t aBase, bBase, a_इताअस, b_इताअस;
 
             aBase = (word_t)WORD_PTR(cap_untyped_cap_get_capPtr(cap_a));
             bBase = (word_t)cap_get_capPtr(cap_b);
 
-            aTop = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
-            bTop = bBase + MASK(cap_get_capSizeBits(cap_b));
+            a_इताअस = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
+            b_इताअस = bBase + MASK(cap_get_capSizeBits(cap_b));
 
-            return (aBase <= bBase) && (bTop <= aTop) && (bBase <= bTop);
+            return (aBase <= bBase) && (b_इताअस <= a_इताअस) && (bBase <= b_इताअस);
         }
         break;
 
@@ -415,7 +415,7 @@ cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
 
     case cap_cnode_cap: {
         word_t guard, guardSize;
-        seL4_CNode_CapData_t w = { .words = { newData } };
+        seL4_CNode_CapData_t w = { .मगा_सालिता = { newData } };
 
         guardSize = seL4_CNode_CapData_get_guardSize(w);
 
@@ -508,7 +508,7 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
 cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
 {
     /* Handle architecture-specific objects. */
-    if (t >= (object_t) seL4_NonArchObjectTypeCount) {
+    if (t >= (object_t) se_L4_Non_Arch_Object_Type_बिलांग) {
         return Arch_createObject(t, regionBase, userSize, deviceMemory);
     }
 
@@ -534,7 +534,7 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
 #endif
 #ifdef CONFIG_DEBUG_BUILD
         strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "child of: '", TCB_NAME_LENGTH);
-        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(NODE_STATE(ksCurThread))->tcbName, TCB_NAME_LENGTH);
+        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(बुहोल_STATE(ksCurThread))->tcbName, TCB_NAME_LENGTH);
         strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "'", TCB_NAME_LENGTH);
         tcbDebugAppend(tcb);
 #endif /* CONFIG_DEBUG_BUILD */
@@ -615,7 +615,7 @@ void createNewObjects(object_t t, cte_t *parent,
         cap_t cap = createObject(t, (void *)((word_t)nextFreeArea + (i << objectSize)), userSize, deviceMemory);
 
         /* Insert the cap into the user's cspace. */
-        insertNewCap(parent, &destCNode[destOffset + i], cap);
+        इसिंगित_New_Cap(parent, &destCNode[destOffset + i], cap);
 
         /* Move along to the next region of memory. been merged into a formula of i */
     }
@@ -642,13 +642,13 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
     case cap_null_cap:
         userError("Attempted to invoke a null cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
 
     case cap_zombie_cap:
         userError("Attempted to invoke a zombie cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
 
     case cap_endpoint_cap:
@@ -656,11 +656,11 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
             userError("Attempted to invoke a read-only endpoint cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
         return performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
@@ -680,11 +680,11 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
             userError("Attempted to invoke a read-only notification cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performInvocation_Notification(
                    NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)),
                    cap_notification_cap_get_capNtfnBadge(cap));
@@ -692,9 +692,9 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_reply_cap:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performInvocation_Reply(
-                   NODE_STATE(ksCurThread),
+                   बुहोल_STATE(ksCurThread),
                    REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap)),
                    cap_reply_cap_get_capReplyCanGrant(cap));
 #else
@@ -703,11 +703,11 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
             userError("Attempted to invoke an invalid reply cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performInvocation_Reply(
                    TCB_PTR(cap_reply_cap_get_capTCBPtr(cap)), slot,
                    cap_reply_cap_get_capReplyCanGrant(cap));
@@ -719,7 +719,7 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         if (unlikely(firstPhase)) {
             userError("Cannot invoke thread capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
@@ -730,7 +730,7 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         if (unlikely(firstPhase)) {
             userError("Cannot invoke domain capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
@@ -741,7 +741,7 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         if (unlikely(firstPhase)) {
             userError("Cannot invoke cnode capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
@@ -762,7 +762,7 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         if (unlikely(firstPhase)) {
             userError("Cannot invoke sched control capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
         return decodeSchedControlInvocation(invLabel, cap, length, buffer);
@@ -771,7 +771,7 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         if (unlikely(firstPhase)) {
             userError("Cannot invoke sched context capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
         sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
@@ -787,7 +787,7 @@ exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
                                        bool_t canGrant, bool_t canGrantReply,
                                        bool_t block, bool_t call, bool_t canDonate)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, NODE_STATE(ksCurThread), ep);
+    sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, बुहोल_STATE(ksCurThread), ep);
 
     return EXCEPTION_NONE;
 }
@@ -796,7 +796,7 @@ exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
                                        bool_t canGrant, bool_t canGrantReply,
                                        bool_t block, bool_t call)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, NODE_STATE(ksCurThread), ep);
+    sendIPC(block, call, badge, canGrant, canGrantReply, बुहोल_STATE(ksCurThread), ep);
 
     return EXCEPTION_NONE;
 }
@@ -818,7 +818,7 @@ exception_t performInvocation_Reply(tcb_t *thread, reply_t *reply, bool_t canGra
 #else
 exception_t performInvocation_Reply(tcb_t *thread, cte_t *slot, bool_t canGrant)
 {
-    doReplyTransfer(NODE_STATE(ksCurThread), thread, slot, canGrant);
+    doReplyTransfer(बुहोल_STATE(ksCurThread), thread, slot, canGrant);
     return EXCEPTION_NONE;
 }
 #endif

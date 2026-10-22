@@ -80,7 +80,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
     } else {
         current_syscall_error.type = seL4_IllegalOperation;

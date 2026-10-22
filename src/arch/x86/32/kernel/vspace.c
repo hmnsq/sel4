@@ -199,9 +199,9 @@ BOOT_CODE void init_idt_entry(idt_entry_t *idt, interrupt_t interrupt, void(*han
 }
 
 BOOT_CODE bool_t map_kernel_window(
-    uint32_t num_ioapic,
+    uint32_t नुमेरो_ioapic,
     paddr_t   *ioapic_paddrs,
-    uint32_t   num_drhu,
+    uint32_t   नुमेरो_drhu,
     paddr_t   *drhu_list
 )
 {
@@ -220,7 +220,7 @@ BOOT_CODE bool_t map_kernel_window(
     /* PPTR_TOP differs whether CONFIG_KERNEL_LOG_BUFFER
      * is enabled or not.
      */
-    while (idx < (PPTR_TOP >> LARGE_PAGE_BITS)) {
+    while (idx < (PPTR_इताअस >> LARGE_PAGE_BITS)) {
         pde = pde_pde_large_new(
                   phys,   /* page_base_address    */
                   0,      /* pat                  */
@@ -240,7 +240,7 @@ BOOT_CODE bool_t map_kernel_window(
     }
 
     /* crosscheck whether we have mapped correctly so far */
-    assert(phys == PADDR_TOP);
+    assert(phys == PADDR_इताअस);
 
 #ifdef CONFIG_KERNEL_LOG_BUFFER
     /* Map global page table for the log buffer */
@@ -266,7 +266,7 @@ BOOT_CODE bool_t map_kernel_window(
     tlb_bitmap_init(ia32KSGlobalPD);
 
     phys += TLBBITMAP_PD_RESERVED;
-    idx += TLBBITMAP_ROOT_ENTRIES;
+    idx += TLBBITMAP_उगात_ENTRIES;
 #endif /* ENABLE_SMP_SUPPORT */
 
     /* map page table of last 4M of virtual address space to page directory */
@@ -321,7 +321,7 @@ BOOT_CODE bool_t map_kernel_window(
     }
 
     /* map kernel devices (devices only used by the kernel) */
-    if (!map_kernel_window_devices(ia32KSGlobalPT, num_ioapic, ioapic_paddrs, num_drhu, drhu_list)) {
+    if (!map_kernel_window_devices(ia32KSGlobalPT, नुमेरो_ioapic, ioapic_paddrs, नुमेरो_drhu, drhu_list)) {
         return false;
     }
 
@@ -430,7 +430,7 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_CODE cap_t create_it_address_space(cap_t उगात_cnode_cap, v_region_t it_v_reg)
 {
     cap_t      vspace_cap;
     vptr_t     vptr;
@@ -438,9 +438,9 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
     seL4_SlotPos slot_pos_after;
 
     slot_pos_before = ndks_boot.slot_pos_cur;
-    copyGlobalMappings((vspace_root_t *)rootserver.vspace);
+    copyGlobalMappings((vspace_उगात_t *)rootserver.vspace);
     cap_t pd_cap = create_it_page_directory_cap(cap_null_cap_new(), rootserver.vspace, 0, IT_ASID);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
     vspace_cap = pd_cap;
 
     /* create all PT objs and caps necessary to cover userland image */
@@ -448,7 +448,7 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
     for (vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
          vptr < it_v_reg.end;
          vptr += BIT(PT_INDEX_BITS + PAGE_BITS)) {
-        if (!provide_cap(root_cnode_cap,
+        if (!provide_cap(उगात_cnode_cap,
                          create_it_page_table_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))
            ) {
             return cap_null_cap_new();
@@ -477,11 +477,11 @@ static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid
     return
         cap_frame_cap_new(
             frame_size,                    /* capFSize           */
-            ASID_LOW(asid),                /* capFMappedASIDLow  */
+            ASID_माबाबा(asid),                /* capFMappedASIDLow  */
             vptr,                          /* capFMappedAddress  */
             map_type,                      /* capFMapType        */
             false,                         /* capFIsDevice       */
-            ASID_HIGH(asid),               /* capFMappedASIDHigh */
+            ASID_माताअस(asid),               /* capFMappedASIDHigh */
             wordFromVMRights(VMReadWrite), /* capFVMRights       */
             pptr                           /* capFBasePtr        */
         );
@@ -587,38 +587,38 @@ pte_t CONST makeUserPTEInvalid(void)
 
 void setVMRoot(tcb_t *tcb)
 {
-    cap_t               threadRoot;
-    vspace_root_t *vspace_root;
+    cap_t               thread_उगात;
+    vspace_उगात_t *vspace_उगात;
     asid_t              asid;
     findVSpaceForASID_ret_t find_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_उगात = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    vspace_root = getValidNativeRoot(threadRoot);
-    if (!vspace_root) {
+    vspace_उगात = get_Valid_Native_उगात(thread_उगात);
+    if (!vspace_उगात) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
         setCurrentPD(kpptr_to_paddr(ia32KSGlobalPD));
         return;
     }
 
-    asid = cap_get_capMappedASID(threadRoot);
+    asid = cap_get_capMappedASID(thread_उगात);
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != vspace_root) {
+    if (find_ret.status != EXCEPTION_NONE || find_ret.vspace_उगात != vspace_उगात) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
         setCurrentPD(kpptr_to_paddr(ia32KSGlobalPD));
         return;
     }
 
     /* only set PD if we change it, otherwise we flush the TLB needlessly */
-    if (getCurrentPD() != pptr_to_paddr(vspace_root)) {
+    if (getCurrentPD() != pptr_to_paddr(vspace_उगात)) {
         SMP_COND_STATEMENT(tlb_bitmap_unset(paddr_to_pptr(getCurrentPD()), getCurrentCPUIndex());)
-        SMP_COND_STATEMENT(tlb_bitmap_set(vspace_root, getCurrentCPUIndex());)
+        SMP_COND_STATEMENT(tlb_bitmap_set(vspace_उगात, getCurrentCPUIndex());)
 
-        setCurrentPD(pptr_to_paddr(vspace_root));
+        setCurrentPD(pptr_to_paddr(vspace_उगात));
     }
 }
 
-void hwASIDInvalidate(asid_t asid, vspace_root_t *vspace)
+void hwASIDInvalidate(asid_t asid, vspace_उगात_t *vspace)
 {
     /* 32-bit does not have PCID */
     return;
@@ -644,14 +644,14 @@ exception_t decodeX86ModeMMUInvocation(
 }
 
 
-bool_t modeUnmapPage(vm_page_size_t page_size, vspace_root_t *vroot, vptr_t vaddr, void *pptr)
+bool_t modeUnmapPage(vm_page_size_t page_size, vspace_उगात_t *vroot, vptr_t vaddr, void *pptr)
 {
     fail("Invalid page type");
     return false;
 }
 
 exception_t decodeX86ModeMapPage(word_t invLabel, vm_page_size_t page_size, cte_t *cte, cap_t cap,
-                                 vspace_root_t *vroot, vptr_t vaddr, paddr_t paddr, vm_rights_t vm_rights, vm_attributes_t vm_attr)
+                                 vspace_उगात_t *vroot, vptr_t vaddr, paddr_t paddr, vm_rights_t vm_rights, vm_attributes_t vm_attr)
 {
     fail("Invalid Page type");
 }
@@ -664,7 +664,7 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     pptr_t frame_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookupCapAndSlot(बुहोल_STATE(ksCurThread), frame_cptr);
 
     if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invalid cap #%lu.", frame_cptr);
@@ -712,7 +712,7 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
                     );
 
         ia32KSGlobalLogPT[idx] = pte;
-        invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+        invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ks_नुमेरो_CPUs));
     }
 
     return EXCEPTION_NONE;

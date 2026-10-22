@@ -24,7 +24,7 @@ static BOOT_CODE uint32_t apic_measure_freq(void)
 
     /* start APIC timer countdown */
     apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
-    apic_write_reg(APIC_TIMER_COUNT, 0xffffffff);
+    apic_write_reg(APIC_TIMER_बिलांग, 0xffffffff);
 
     /* wait for 2nd PIT wraparound */
     pit_wait_wraparound();
@@ -37,14 +37,14 @@ BOOT_CODE paddr_t apic_get_base_paddr(void)
 {
     apic_base_msr_t apic_base_msr;
 
-    apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
+    apic_base_msr.मगा_सालिता[0] = x86_rdmsr_माबाबा(IA32_APIC_BASE_MSR);
     return apic_base_msr_get_base_addr(apic_base_msr);
 }
 
 BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 {
     apic_version_t apic_version;
-    uint32_t num_lvt_entries;
+    uint32_t नुमेरो_lvt_entries;
     uint32_t apic_khz;
 
     if (!apic_enable()) {
@@ -68,7 +68,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 #else
     apic_khz = apic_measure_freq();
 #endif
-    apic_version.words[0] = apic_read_reg(APIC_VERSION);
+    apic_version.मगा_सालिता[0] = apic_read_reg(APIC_VERSION);
 
     /* check for correct version (both APIC and x2APIC): 0x1X */
     if (apic_version_get_version(apic_version) >> 4 != 1) {
@@ -84,9 +84,9 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 #endif
 
     /* check for correct number of LVT entries */
-    num_lvt_entries = apic_version_get_max_lvt_entry(apic_version) + 1;
-    if (num_lvt_entries < 3) {
-        printf("APIC: number of LVT entries: %d\n", num_lvt_entries);
+    नुमेरो_lvt_entries = apic_version_get_max_lvt_entry(apic_version) + 1;
+    if (नुमेरो_lvt_entries < 3) {
+        printf("APIC: number of LVT entries: %d\n", नुमेरो_lvt_entries);
         printf("APIC: number of LVT entries must be >= 3\n");
         return false;
     }
@@ -94,7 +94,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 #ifndef CONFIG_KERNEL_MCS
     /* initialise APIC timer */
     apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
-    apic_write_reg(APIC_TIMER_COUNT, apic_khz * CONFIG_TIMER_TICK_MS);
+    apic_write_reg(APIC_TIMER_बिलांग, apic_khz * CONFIG_TIMER_TICK_MS);
 #endif
 
     /* enable APIC using SVR register */
@@ -104,7 +104,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,           /* focus_processor_chk */
             1,           /* enabled             */
             int_spurious /* spurious_vector     */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 
     /* mask/unmask LINT0 (used for legacy IRQ delivery) */
@@ -119,7 +119,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,                /* delivery_status */
             7,                /* delivery_mode   */
             0                 /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 
     /* mask LINT1 (used for NMI delivery) */
@@ -134,7 +134,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,  /* delivery_status */
             0,  /* delivery_mode   */
             0   /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 
     /* initialise timer */
@@ -155,7 +155,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
             0,        /* delivery_status */
             0,        /* delivery_mode   */
             int_timer /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 
     /*

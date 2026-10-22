@@ -17,27 +17,27 @@ word_t get_tcb_sp(tcb_t *tcb)
     return tcb->tcbArch.tcbContext.registers[ESP];
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+void इलिम्बाग_ipc_buffer_slot(tcb_t *tcb)
 {
     printf("print_ipc_buffer_slot not implemented for IA32\n");
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+void obj_vtable_इलिम्बाग_slots(tcb_t *tcb)
 {
     printf("obj_vtable_print_slots not implemented for IA32\n");
 }
 
-void print_cap_arch(cap_t cap)
+void इलिम्बाग_cap_arch(cap_t cap)
 {
     printf("print_cap_arch not implemented for IA32\n");
 }
 
-void print_object_arch(cap_t cap)
+void इलिम्बाग_object_arch(cap_t cap)
 {
     printf("print_object_arch not implemented for IA32\n");
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+void obj_tcb_इलिम्बाग_vtable(tcb_t *tcb)
 {
     printf("obj_tcb_print_vtable not implemented for IA32\n");
 }

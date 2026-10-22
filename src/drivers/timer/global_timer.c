@@ -14,8 +14,8 @@ BOOT_CODE void initTimer(void)
     /* disable the timer */
     globalTimer->control = 0;
     /* zero the timer */
-    globalTimer->countLower = 0;
-    globalTimer->countUpper = 0;
+    globalTimer->बिलांग_Lower = 0;
+    globalTimer->बिलांग_Upper = 0;
     /* turn it on again, with interrupts on, comparator register off,
      * in one-shot mode, with standard prescaler */
     globalTimer->control = BIT(ENABLE) | BIT(IRQ_ENABLE);

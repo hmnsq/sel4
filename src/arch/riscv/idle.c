@@ -14,7 +14,7 @@ void VISIBLE NO_INLINE halt(void)
 #ifdef CONFIG_PRINTING
     printf("halting...");
 #ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
+    debug_इलिम्बाग_Kernel_Entry_Reason();
 #endif /* CONFIG_DEBUG_BUILD */
 #endif /* CONFIG_PRINTING */
 

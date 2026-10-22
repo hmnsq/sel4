@@ -57,12 +57,12 @@ static inline void addToBitmap(word_t cpu, word_t dom, word_t prio)
     l1index = prio_to_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
 
-    NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= BIT(l1index);
+    बुहोल_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= BIT(l1index);
     /* we invert the l1 index when accessed the 2nd level of the bitmap in
        order to increase the likelihood that high prio threads l2 index word will
        be on the same cache line as the l1 index word - this makes sure the
        fastpath is fastest for high prio threads */
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= BIT(prio & MASK(wordRadix));
+    बुहोल_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= BIT(prio & MASK(wordRadix));
 }
 
 static inline void removeFromBitmap(word_t cpu, word_t dom, word_t prio)
@@ -72,9 +72,9 @@ static inline void removeFromBitmap(word_t cpu, word_t dom, word_t prio)
 
     l1index = prio_to_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~BIT(prio & MASK(wordRadix));
-    if (unlikely(!NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
-        NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~BIT(l1index);
+    बुहोल_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~BIT(prio & MASK(wordRadix));
+    if (unlikely(!बुहोल_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
+        बुहोल_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~BIT(l1index);
     }
 }
 
@@ -128,13 +128,13 @@ void tcbSchedEnqueue(tcb_t *tcb)
         dom = tcb->tcbDomain;
         prio = tcb->tcbPriority;
         idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        queue = बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
         if (tcb_queue_empty(queue)) {
             addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
+        बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
 
         thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
     }
@@ -157,13 +157,13 @@ void tcbSchedAppend(tcb_t *tcb)
         dom = tcb->tcbDomain;
         prio = tcb->tcbPriority;
         idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        queue = बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
         if (tcb_queue_empty(queue)) {
             addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
+        बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
 
         thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
     }
@@ -182,11 +182,11 @@ void tcbSchedDequeue(tcb_t *tcb)
         dom = tcb->tcbDomain;
         prio = tcb->tcbPriority;
         idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        queue = बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
         new_queue = tcb_queue_remove(queue, tcb);
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_queue;
+        बुहोल_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_queue;
 
         thread_state_ptr_set_tcbQueued(&tcb->tcbState, false);
 
@@ -203,22 +203,22 @@ void tcbDebugAppend(tcb_t *tcb)
     /* prepend to the list */
     debug_tcb->tcbDebugPrev = NULL;
 
-    debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
+    debug_tcb->tcbDebugNext = बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
 
-    if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
+    if (बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        TCB_PTR_DEBUG_PTR(बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
     }
 
-    NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
+    बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
 }
 
 void tcbDebugRemove(tcb_t *tcb)
 {
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
 
-    assert(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != NULL);
-    if (tcb == NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs,
+    assert(बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != NULL);
+    if (tcb == बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        बुहोल_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(बुहोल_STATE_ON_CORE(ksDebugTCBs,
                                                                                                  tcb->tcbAffinity))->tcbDebugNext;
     } else {
         assert(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
@@ -274,13 +274,13 @@ tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
 void tcbReleaseRemove(tcb_t *tcb)
 {
     if (likely(thread_state_get_tcbInReleaseQueue(tcb->tcbState))) {
-        tcb_queue_t queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
+        tcb_queue_t queue = बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
 
         if (queue.head == tcb) {
-            NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+            बुहोल_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
         }
 
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_remove(queue, tcb);
+        बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_remove(queue, tcb);
 
         thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, false);
     }
@@ -315,38 +315,38 @@ void tcbReleaseEnqueue(tcb_t *tcb)
     ticks_t new_time;
     tcb_queue_t queue;
 
-    queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
+    queue = बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
     new_time = tcbReadyTime(tcb);
 
     if (tcb_queue_empty(queue) || new_time < tcbReadyTime(queue.head)) {
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
+        बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
     } else {
         if (tcbReadyTime(queue.end) <= new_time) {
-            NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
+            बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
         } else {
             tcb_t *after;
             after = find_time_after(queue.head, new_time);
-            tcb_queue_insert(tcb, after);
+            tcb_queue_इसिंगित(tcb, after);
         }
     }
 
     thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, true);
 
-    if (queue.head != NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity).head) {
-        NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+    if (queue.head != बुहोल_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity).head) {
+        बुहोल_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
     }
 }
 #endif
 
 cptr_t PURE getExtraCPtr(word_t *bufferPtr, word_t i)
 {
-    return (cptr_t)bufferPtr[seL4_MsgMaxLength + 2 + i];
+    return (cptr_t)bufferPtr[se_L4_मेनसाहे_Max_Length + 2 + i];
 }
 
 void setExtraBadge(word_t *bufferPtr, word_t badge,
                    word_t i)
 {
-    bufferPtr[seL4_MsgMaxLength + 2 + i] = badge;
+    bufferPtr[se_L4_मेनसाहे_Max_Length + 2 + i] = badge;
 }
 
 #ifndef CONFIG_KERNEL_MCS
@@ -367,7 +367,7 @@ void setupCallerCap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
     callerCap = callerSlot->cap;
     /* Haskell error: "Caller cap must not already exist" */
     assert(cap_get_capType(callerCap) == cap_null_cap);
-    cteInsert(cap_reply_cap_new(canGrant, false, TCB_REF(sender)),
+    cte_इसिंगित(cap_reply_cap_new(canGrant, false, TCB_REF(sender)),
               replySlot, callerSlot);
 }
 
@@ -407,7 +407,7 @@ exception_t lookupExtraCaps(tcb_t *thread, word_t *bufferPtr, seL4_MessageInfo_t
 
         current_extra_caps.excaprefs[i] = lu_ret.slot;
     }
-    if (i < seL4_MsgMaxExtraCaps) {
+    if (i < se_L4_मेनसाहे_Max_Extra_Caps) {
         current_extra_caps.excaprefs[i] = NULL;
     }
 
@@ -421,9 +421,9 @@ word_t copyMRs(tcb_t *sender, word_t *sendBuf, tcb_t *receiver,
     word_t i;
 
     /* Copy inline words */
-    for (i = 0; i < n && i < n_msgRegisters; i++) {
-        setRegister(receiver, msgRegisters[i],
-                    getRegister(sender, msgRegisters[i]));
+    for (i = 0; i < n && i < n_मेनसाहे_Registers; i++) {
+        setRegister(receiver, मेनसाहे_Registers[i],
+                    getRegister(sender, मेनसाहे_Registers[i]));
     }
 
     if (!recvBuf || !sendBuf) {
@@ -445,17 +445,17 @@ void remoteQueueUpdate(tcb_t *tcb)
 {
     /* only ipi if the target is for the current domain */
     if (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain) {
-        tcb_t *targetCurThread = NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
+        tcb_t *targetCurThread = बुहोल_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
 
         /* reschedule if the target core is idle or we are waking a higher priority thread (or
          * if a new irq would need to be set on MCS) */
-        if (targetCurThread == NODE_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
+        if (targetCurThread == बुहोल_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
             tcb->tcbPriority > targetCurThread->tcbPriority
 #ifdef CONFIG_KERNEL_MCS
-            || NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
+            || बुहोल_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
 #endif
            ) {
-            ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+            ARCH_बुहोल_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
         }
     }
 }
@@ -471,9 +471,9 @@ void remoteTCBStall(tcb_t *tcb)
         tcb->tcbSchedContext &&
 #endif
         tcb->tcbAffinity != getCurrentCPUIndex() &&
-        NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
+        बुहोल_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
         doRemoteStall(tcb->tcbAffinity);
-        ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+        ARCH_बुहोल_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
     }
 }
 
@@ -488,7 +488,7 @@ static exception_t invokeTCB_SetAffinity(tcb_t *thread, word_t affinity)
         SCHED_APPEND(thread);
     }
     /* reschedule current cpu if tcb moves itself */
-    if (thread == NODE_STATE(ksCurThread)) {
+    if (thread == बुहोल_STATE(ksCurThread)) {
         rescheduleRequired();
     }
     return EXCEPTION_NONE;
@@ -508,13 +508,13 @@ static exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
     affinity = getSyscallArg(0, buffer);
-    if (affinity >= ksNumCPUs) {
+    if (affinity >= ks_नुमेरो_CPUs) {
         userError("TCB SetAffinity: Requested CPU does not exist.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_SetAffinity(tcb, affinity);
 }
 #endif
@@ -522,76 +522,76 @@ static exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
 
 #ifdef CONFIG_HARDWARE_DEBUG_API
 static exception_t invokeConfigureSingleStepping(bool_t call, word_t *buffer, tcb_t *t,
-                                                 uint16_t bp_num, word_t n_instrs)
+                                                 uint16_t bp_नुमेरो, word_t n_instrs)
 {
     bool_t bp_was_consumed;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    word_t value;
+    thread = बुहोल_STATE(ksCurThread);
+    word_t हालागा;
 
-    bp_was_consumed = configureSingleStepping(t, bp_num, n_instrs, false);
+    bp_was_consumed = configureSingleStepping(t, bp_नुमेरो, n_instrs, false);
     if (n_instrs == 0) {
 #ifndef CONFIG_ARCH_AARCH64
-        unsetBreakpointUsedFlag(t, bp_num);
+        unsetBreakpointUsedFlag(t, bp_नुमेरो);
 #endif /* CONFIG_ARCH_AARCH64 */
-        value = false;
+        हालागा = false;
     } else {
 #ifndef CONFIG_ARCH_AARCH64
-        setBreakpointUsedFlag(t, bp_num);
+        setBreakpointUsedFlag(t, bp_नुमेरो);
 #endif /* CONFIG_ARCH_AARCH64 */
-        value = bp_was_consumed;
+        हालागा = bp_was_consumed;
     }
 
     if (call) {
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        unsigned int length = setMR(thread, buffer, 0, हालागा);
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
 static exception_t decodeConfigureSingleStepping(cap_t cap, bool_t call, word_t *buffer)
 {
-    uint16_t bp_num;
+    uint16_t bp_नुमेरो;
     word_t n_instrs;
     tcb_t *tcb;
     syscall_error_t syserr;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    bp_num = getSyscallArg(0, buffer);
+    bp_नुमेरो = getSyscallArg(0, buffer);
     n_instrs = getSyscallArg(1, buffer);
 
-    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_num, n_instrs, false);
+    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_नुमेरो, n_instrs, false);
     if (syserr.type != seL4_NoError) {
         current_syscall_error = syserr;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeConfigureSingleStepping(call, buffer, tcb, bp_num, n_instrs);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+    return invokeConfigureSingleStepping(call, buffer, tcb, bp_नुमेरो, n_instrs);
 }
 
-static exception_t invokeSetBreakpoint(tcb_t *tcb, uint16_t bp_num,
+static exception_t invokeSetBreakpoint(tcb_t *tcb, uint16_t bp_नुमेरो,
                                        word_t vaddr, word_t type, word_t size, word_t rw)
 {
-    setBreakpoint(tcb, bp_num, vaddr, type, size, rw);
+    setBreakpoint(tcb, bp_नुमेरो, vaddr, type, size, rw);
     /* Signal restore_user_context() to pop the breakpoint context on return. */
-    setBreakpointUsedFlag(tcb, bp_num);
+    setBreakpointUsedFlag(tcb, bp_नुमेरो);
     return EXCEPTION_NONE;
 }
 
 static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
 {
-    uint16_t bp_num;
+    uint16_t bp_नुमेरो;
     word_t vaddr, type, size, rw;
     tcb_t *tcb;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_नुमेरो = getSyscallArg(0, buffer);
     vaddr = getSyscallArg(1, buffer);
     type = getSyscallArg(2, buffer);
     size = getSyscallArg(3, buffer);
@@ -600,58 +600,58 @@ static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
     /* We disallow the user to set breakpoint addresses that are in the kernel
      * vaddr range.
      */
-    if (vaddr >= (word_t)USER_TOP) {
+    if (vaddr >= (word_t)USER_इताअस) {
         userError("Debug: Invalid address %lx: bp addresses must be userspace "
                   "addresses.",
                   vaddr);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     if (type != seL4_InstructionBreakpoint && type != seL4_DataBreakpoint) {
         userError("Debug: Unknown breakpoint type %lx.", type);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
+        current_syscall_error.invalid_Argument_नुमेरो = 2;
         return EXCEPTION_SYSCALL_ERROR;
     } else if (type == seL4_InstructionBreakpoint) {
         if (size != 0) {
             userError("Debug: Instruction bps must have size of 0.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
+            current_syscall_error.invalid_Argument_नुमेरो = 3;
             return EXCEPTION_SYSCALL_ERROR;
         }
         if (rw != seL4_BreakOnRead) {
             userError("Debug: Instruction bps must be break-on-read.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 4;
+            current_syscall_error.invalid_Argument_नुमेरो = 4;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        if ((seL4_FirstWatchpoint == -1 || bp_num >= seL4_FirstWatchpoint)
+        if ((seL4_FirstWatchpoint == -1 || bp_नुमेरो >= seL4_FirstWatchpoint)
             && seL4_FirstBreakpoint != seL4_FirstWatchpoint) {
             userError("Debug: Can't specify a watchpoint ID with type seL4_InstructionBreakpoint.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
+            current_syscall_error.invalid_Argument_नुमेरो = 2;
             return EXCEPTION_SYSCALL_ERROR;
         }
     } else if (type == seL4_DataBreakpoint) {
         if (size == 0) {
             userError("Debug: Data bps cannot have size of 0.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
+            current_syscall_error.invalid_Argument_नुमेरो = 3;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        if (seL4_FirstWatchpoint != -1 && bp_num < seL4_FirstWatchpoint) {
+        if (seL4_FirstWatchpoint != -1 && bp_नुमेरो < seL4_FirstWatchpoint) {
             userError("Debug: Data watchpoints cannot specify non-data watchpoint ID.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
+            current_syscall_error.invalid_Argument_नुमेरो = 2;
             return EXCEPTION_SYSCALL_ERROR;
         }
     } else if (type == seL4_SoftwareBreakRequest) {
         userError("Debug: Use a software breakpoint instruction to trigger a "
                   "software breakpoint.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
+        current_syscall_error.invalid_Argument_नुमेरो = 2;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -659,13 +659,13 @@ static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
         && rw != seL4_BreakOnReadWrite) {
         userError("Debug: Unknown access-type %lu.", rw);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
+        current_syscall_error.invalid_Argument_नुमेरो = 3;
         return EXCEPTION_SYSCALL_ERROR;
     }
     if (size != 0 && size != 1 && size != 2 && size != 4 && size != 8) {
         userError("Debug: Invalid size %lu.", size);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
+        current_syscall_error.invalid_Argument_नुमेरो = 3;
         return EXCEPTION_SYSCALL_ERROR;
     }
     if (size > 0 && vaddr & (size - 1)) {
@@ -689,88 +689,88 @@ static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    error = Arch_decodeSetBreakpoint(tcb, bp_num, vaddr, type, size, rw);
+    error = Arch_decodeSetBreakpoint(tcb, bp_नुमेरो, vaddr, type, size, rw);
     if (error.type != seL4_NoError) {
         current_syscall_error = error;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSetBreakpoint(tcb, bp_num,
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+    return invokeSetBreakpoint(tcb, bp_नुमेरो,
                                vaddr, type, size, rw);
 }
 
-static exception_t invokeGetBreakpoint(bool_t call, word_t *buffer, tcb_t *tcb, uint16_t bp_num)
+static exception_t invokeGetBreakpoint(bool_t call, word_t *buffer, tcb_t *tcb, uint16_t bp_नुमेरो)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = बुहोल_STATE(ksCurThread);
     getBreakpoint_t res;
-    res = getBreakpoint(tcb, bp_num);
+    res = getBreakpoint(tcb, bp_नुमेरो);
     if (call) {
         setRegister(thread, badgeRegister, 0);
-        setMR(NODE_STATE(ksCurThread), buffer, 0, res.vaddr);
-        setMR(NODE_STATE(ksCurThread), buffer, 1, res.type);
-        setMR(NODE_STATE(ksCurThread), buffer, 2, res.size);
-        setMR(NODE_STATE(ksCurThread), buffer, 3, res.rw);
-        setMR(NODE_STATE(ksCurThread), buffer, 4, res.is_enabled);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        setMR(बुहोल_STATE(ksCurThread), buffer, 0, res.vaddr);
+        setMR(बुहोल_STATE(ksCurThread), buffer, 1, res.type);
+        setMR(बुहोल_STATE(ksCurThread), buffer, 2, res.size);
+        setMR(बुहोल_STATE(ksCurThread), buffer, 3, res.rw);
+        setMR(बुहोल_STATE(ksCurThread), buffer, 4, res.is_enabled);
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, 5)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
 static exception_t decodeGetBreakpoint(cap_t cap, bool_t call, word_t *buffer)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_नुमेरो;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_नुमेरो = getSyscallArg(0, buffer);
 
-    error = Arch_decodeGetBreakpoint(tcb, bp_num);
+    error = Arch_decodeGetBreakpoint(tcb, bp_नुमेरो);
     if (error.type != seL4_NoError) {
         current_syscall_error = error;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeGetBreakpoint(call, buffer, tcb, bp_num);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+    return invokeGetBreakpoint(call, buffer, tcb, bp_नुमेरो);
 }
 
-static exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_num)
+static exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_नुमेरो)
 {
     /* Maintain the bitfield of in-use breakpoints. */
-    unsetBreakpoint(tcb, bp_num);
-    unsetBreakpointUsedFlag(tcb, bp_num);
+    unsetBreakpoint(tcb, bp_नुमेरो);
+    unsetBreakpointUsedFlag(tcb, bp_नुमेरो);
     return EXCEPTION_NONE;
 }
 
 static exception_t decodeUnsetBreakpoint(cap_t cap, word_t *buffer)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_नुमेरो;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_नुमेरो = getSyscallArg(0, buffer);
 
-    error = Arch_decodeUnsetBreakpoint(tcb, bp_num);
+    error = Arch_decodeUnsetBreakpoint(tcb, bp_नुमेरो);
     if (error.type != seL4_NoError) {
         current_syscall_error = error;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeUnsetBreakpoint(tcb, bp_num);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+    return invokeUnsetBreakpoint(tcb, bp_नुमेरो);
 }
 #endif /* CONFIG_HARDWARE_DEBUG_API */
 
 static exception_t invokeSetTLSBase(tcb_t *thread, word_t tls_base)
 {
     setRegister(thread, TLS_BASE, tls_base);
-    if (thread == NODE_STATE(ksCurThread)) {
+    if (thread == बुहोल_STATE(ksCurThread)) {
         /* If this is the current thread force a reschedule to ensure that any changes
          * to the TLS_BASE are realized */
         rescheduleRequired();
@@ -791,13 +791,13 @@ static exception_t decodeSetTLSBase(cap_t cap, word_t length, word_t *buffer)
 
     tls_base = getSyscallArg(0, buffer);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSetTLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_base);
 }
 
 static void invokeSetFlags(tcb_t *thread, word_t clear, word_t set, bool_t call)
 {
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
+    tcb_t *cur_thread = बुहोल_STATE(ksCurThread);
     word_t flags = thread->tcbFlags;
 
     flags &= ~clear;
@@ -817,7 +817,7 @@ static void invokeSetFlags(tcb_t *thread, word_t clear, word_t set, bool_t call)
         word_t *ipcBuffer = lookupIPCBuffer(true, cur_thread);
         setRegister(cur_thread, badgeRegister, 0);
         unsigned int length = setMR(cur_thread, ipcBuffer, 0, flags);
-        setRegister(cur_thread, msgInfoRegister, wordFromMessageInfo(
+        setRegister(cur_thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(cur_thread, ThreadState_Running);
@@ -836,7 +836,7 @@ static exception_t decodeSetFlags(cap_t cap, word_t length, bool_t call, word_t 
     word_t clear = getSyscallArg(0, buffer);
     word_t set   = getSyscallArg(1, buffer);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     invokeSetFlags(thread, clear, set, call);
     return EXCEPTION_NONE;
 }
@@ -864,12 +864,12 @@ exception_t decodeTCBInvocation(word_t invLabel, word_t length, cap_t cap,
 
     case TCBSuspend:
         /* Jump straight to the invoke */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeTCB_Suspend(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
     case TCBResume:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeTCB_Resume(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
@@ -976,11 +976,11 @@ exception_t decodeCopyRegisters(cap_t cap, word_t length, word_t *buffer)
     } else {
         userError("TCB CopyRegisters: Invalid source TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_CopyRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), srcTCB,
                flags & BIT(CopyRegisters_suspendSource),
@@ -1023,13 +1023,13 @@ exception_t decodeReadRegisters(cap_t cap, word_t length, bool_t call,
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    if (thread == बुहोल_STATE(ksCurThread)) {
         userError("TCB ReadRegisters: Attempted to read our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_ReadRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)),
                flags & BIT(ReadRegisters_suspend),
@@ -1065,13 +1065,13 @@ exception_t decodeWriteRegisters(cap_t cap, word_t length, word_t *buffer)
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    if (thread == बुहोल_STATE(ksCurThread)) {
         userError("TCB WriteRegisters: Attempted to write our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_WriteRegisters(thread,
                                     flags & BIT(WriteRegisters_resume),
                                     w, transferArch, buffer);
@@ -1097,16 +1097,16 @@ bool_t validFaultHandler(cap_t cap)
 /* TCBConfigure batches SetIPCBuffer and parts of SetSpace. */
 exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
 {
-    cte_t *bufferSlot, *cRootSlot, *vRootSlot;
-    cap_t bufferCap, cRootCap, vRootCap;
+    cte_t *bufferSlot, *c_उगात_Slot, *v_उगात_Slot;
+    cap_t bufferCap, c_उगात_Cap, v_उगात_Cap;
     deriveCap_ret_t dc_ret;
-    word_t cRootData, vRootData, bufferAddr;
+    word_t c_उगात_Data, v_उगात_Data, bufferAddr;
 #ifdef CONFIG_KERNEL_MCS
-#define TCBCONFIGURE_ARGS 3
+#define TCBCONFIGURE_मगा_कातविरान 3
 #else
-#define TCBCONFIGURE_ARGS 4
+#define TCBCONFIGURE_मगा_कातविरान 4
 #endif
-    if (length < TCBCONFIGURE_ARGS || current_extra_caps.excaprefs[0] == NULL
+    if (length < TCBCONFIGURE_मगा_कातविरान || current_extra_caps.excaprefs[0] == NULL
         || current_extra_caps.excaprefs[1] == NULL
         || current_extra_caps.excaprefs[2] == NULL) {
         userError("TCB Configure: Truncated message.");
@@ -1115,20 +1115,20 @@ exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *bu
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    cRootData     = getSyscallArg(0, buffer);
-    vRootData     = getSyscallArg(1, buffer);
+    c_उगात_Data     = getSyscallArg(0, buffer);
+    v_उगात_Data     = getSyscallArg(1, buffer);
     bufferAddr    = getSyscallArg(2, buffer);
 #else
     cptr_t faultEP       = getSyscallArg(0, buffer);
-    cRootData     = getSyscallArg(1, buffer);
-    vRootData     = getSyscallArg(2, buffer);
+    c_उगात_Data     = getSyscallArg(1, buffer);
+    v_उगात_Data     = getSyscallArg(2, buffer);
     bufferAddr    = getSyscallArg(3, buffer);
 #endif
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
+    c_उगात_Slot  = current_extra_caps.excaprefs[0];
+    c_उगात_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_उगात_Slot  = current_extra_caps.excaprefs[1];
+    v_उगात_Cap   = current_extra_caps.excaprefs[1]->cap;
     bufferSlot = current_extra_caps.excaprefs[2];
     bufferCap  = current_extra_caps.excaprefs[2]->cap;
 
@@ -1156,46 +1156,46 @@ exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *bu
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    if (c_उगात_Data != 0) {
+        c_उगात_Cap = updateCapData(false, c_उगात_Data, c_उगात_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
+    dc_ret = deriveCap(c_उगात_Slot, c_उगात_Cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         return dc_ret.status;
     }
-    cRootCap = dc_ret.cap;
+    c_उगात_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    if (cap_get_capType(c_उगात_Cap) != cap_cnode_cap) {
         userError("TCB Configure: CSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    if (v_उगात_Data != 0) {
+        v_उगात_Cap = updateCapData(false, v_उगात_Data, v_उगात_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
+    dc_ret = deriveCap(v_उगात_Slot, v_उगात_Cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         return dc_ret.status;
     }
-    vRootCap = dc_ret.cap;
+    v_उगात_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    if (!is_Valid_VTable_उगात(v_उगात_Cap)) {
         userError("TCB Configure: VSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlCaps(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
                cap_null_cap_new(), NULL,
                cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
+               c_उगात_Cap, c_उगात_Slot,
+               v_उगात_Cap, v_उगात_Slot,
                bufferAddr, bufferCap,
                bufferSlot, thread_control_caps_update_space |
                thread_control_caps_update_ipc_buffer);
@@ -1203,8 +1203,8 @@ exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *bu
     return invokeTCB_ThreadControl(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
                faultEP, NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
+               c_उगात_Cap, c_उगात_Slot,
+               v_उगात_Cap, v_उगात_Slot,
                bufferAddr, bufferCap,
                bufferSlot, thread_control_update_space |
                thread_control_update_ipc_buffer);
@@ -1225,7 +1225,7 @@ exception_t decodeSetPriority(cap_t cap, word_t length, word_t *buffer)
     if (cap_get_capType(authCap) != cap_thread_cap) {
         userError("Set priority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -1237,7 +1237,7 @@ exception_t decodeSetPriority(cap_t cap, word_t length, word_t *buffer)
         return status;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlSched(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
@@ -1269,7 +1269,7 @@ exception_t decodeSetMCPriority(cap_t cap, word_t length, word_t *buffer)
     if (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetMCPriority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -1281,7 +1281,7 @@ exception_t decodeSetMCPriority(cap_t cap, word_t length, word_t *buffer)
         return status;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlSched(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
@@ -1315,11 +1315,11 @@ exception_t decodeSetTimeoutEndpoint(cap_t cap, cte_t *slot)
     if (!validFaultHandler(thCap)) {
         userError("TCB SetTimeoutEndpoint: timeout endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_ThreadControlCaps(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
                cap_null_cap_new(), NULL,
@@ -1359,7 +1359,7 @@ exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
     if (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetSchedParams: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -1406,7 +1406,7 @@ exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
         }
         break;
     case cap_null_cap:
-        if (tcb == NODE_STATE(ksCurThread)) {
+        if (tcb == बुहोल_STATE(ksCurThread)) {
             userError("TCB SetSchedParams: Cannot change sched_context of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
@@ -1415,7 +1415,7 @@ exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
     default:
         userError("TCB Configure: sched context cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 2;
+        current_syscall_error.invalid_Cap_नुमेरो = 2;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -1427,11 +1427,11 @@ exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
     if (!validFaultHandler(fhCap)) {
         userError("TCB Configure: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 3;
+        current_syscall_error.invalid_Cap_नुमेरो = 3;
         return EXCEPTION_SYSCALL_ERROR;
     }
 #endif
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlSched(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
@@ -1484,7 +1484,7 @@ exception_t decodeSetIPCBuffer(cap_t cap, word_t length, cte_t *slot, word_t *bu
         }
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlCaps(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
@@ -1513,9 +1513,9 @@ exception_t decodeSetIPCBuffer(cap_t cap, word_t length, cte_t *slot, word_t *bu
 #endif
 exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
 {
-    word_t cRootData, vRootData;
-    cte_t *cRootSlot, *vRootSlot;
-    cap_t cRootCap, vRootCap;
+    word_t c_उगात_Data, v_उगात_Data;
+    cte_t *c_उगात_Slot, *v_उगात_Slot;
+    cap_t c_उगात_Cap, v_उगात_Cap;
     deriveCap_ret_t dc_ret;
 
     if (length < DECODE_SET_SPACE_PARAMS || current_extra_caps.excaprefs[0] == NULL
@@ -1530,24 +1530,24 @@ exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    cRootData = getSyscallArg(0, buffer);
-    vRootData = getSyscallArg(1, buffer);
+    c_उगात_Data = getSyscallArg(0, buffer);
+    v_उगात_Data = getSyscallArg(1, buffer);
 
     cte_t *fhSlot     = current_extra_caps.excaprefs[0];
     cap_t fhCap      = current_extra_caps.excaprefs[0]->cap;
-    cRootSlot  = current_extra_caps.excaprefs[1];
-    cRootCap   = current_extra_caps.excaprefs[1]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[2];
-    vRootCap   = current_extra_caps.excaprefs[2]->cap;
+    c_उगात_Slot  = current_extra_caps.excaprefs[1];
+    c_उगात_Cap   = current_extra_caps.excaprefs[1]->cap;
+    v_उगात_Slot  = current_extra_caps.excaprefs[2];
+    v_उगात_Cap   = current_extra_caps.excaprefs[2]->cap;
 #else
     cptr_t faultEP   = getSyscallArg(0, buffer);
-    cRootData = getSyscallArg(1, buffer);
-    vRootData = getSyscallArg(2, buffer);
+    c_उगात_Data = getSyscallArg(1, buffer);
+    v_उगात_Data = getSyscallArg(2, buffer);
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
+    c_उगात_Slot  = current_extra_caps.excaprefs[0];
+    c_उगात_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_उगात_Slot  = current_extra_caps.excaprefs[1];
+    v_उगात_Cap   = current_extra_caps.excaprefs[1]->cap;
 #endif
 
     if (slotCapLongRunningDelete(
@@ -1559,33 +1559,33 @@ exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    if (c_उगात_Data != 0) {
+        c_उगात_Cap = updateCapData(false, c_उगात_Data, c_उगात_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
+    dc_ret = deriveCap(c_उगात_Slot, c_उगात_Cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         return dc_ret.status;
     }
-    cRootCap = dc_ret.cap;
+    c_उगात_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    if (cap_get_capType(c_उगात_Cap) != cap_cnode_cap) {
         userError("TCB SetSpace: Invalid CNode cap.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    if (v_उगात_Data != 0) {
+        v_उगात_Cap = updateCapData(false, v_उगात_Data, v_उगात_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
+    dc_ret = deriveCap(v_उगात_Slot, v_उगात_Cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         return dc_ret.status;
     }
-    vRootCap = dc_ret.cap;
+    v_उगात_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    if (!is_Valid_VTable_उगात(v_उगात_Cap)) {
         userError("TCB SetSpace: Invalid VSpace cap.");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
@@ -1596,27 +1596,27 @@ exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer
     if (!validFaultHandler(fhCap)) {
         userError("TCB SetSpace: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 #endif
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
     return invokeTCB_ThreadControlCaps(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
                fhCap, fhSlot,
                cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
+               c_उगात_Cap, c_उगात_Slot,
+               v_उगात_Cap, v_उगात_Slot,
                0, cap_null_cap_new(), NULL, thread_control_caps_update_space | thread_control_caps_update_fault);
 #else
     return invokeTCB_ThreadControl(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
                faultEP,
                NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
+               c_उगात_Cap, c_उगात_Slot,
+               v_उगात_Cap, v_उगात_Slot,
                0, cap_null_cap_new(), NULL, thread_control_update_space);
 #endif
 }
@@ -1665,7 +1665,7 @@ exception_t decodeBindNotification(cap_t cap)
     }
 
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_NotificationControl(tcb, ntfnPtr);
 }
 
@@ -1681,7 +1681,7 @@ exception_t decodeUnbindNotification(cap_t cap)
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeTCB_NotificationControl(tcb, NULL);
 }
 
@@ -1703,8 +1703,8 @@ exception_t invokeTCB_Resume(tcb_t *thread)
 static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
                                         tcb_cnode_index_t index, cap_t newCap, cte_t *srcSlot)
 {
-    cte_t *rootSlot = TCB_PTR_CTE_PTR(target, index);
-    UNUSED exception_t e = cteDelete(rootSlot, true);
+    cte_t *उगात_Slot = TCB_PTR_CTE_PTR(target, index);
+    UNUSED exception_t e = cteDelete(उगात_Slot, true);
     if (e != EXCEPTION_NONE) {
         return e;
     }
@@ -1713,7 +1713,7 @@ static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
     if (cap_get_capType(newCap) != cap_null_cap) {
         if (sameObjectAs(newCap, srcSlot->cap) &&
             sameObjectAs(tCap, slot->cap)) {
-            cteInsert(newCap, srcSlot, rootSlot);
+            cte_इसिंगित(newCap, srcSlot, उगात_Slot);
         }
     }
     return e;
@@ -1724,8 +1724,8 @@ static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
 exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
                                         cap_t fh_newCap, cte_t *fh_srcSlot,
                                         cap_t th_newCap, cte_t *th_srcSlot,
-                                        cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                        cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
+                                        cap_t c_उगात_new_Cap, cte_t *c_उगात_src_Slot,
+                                        cap_t v_उगात_new_Cap, cte_t *v_उगात_src_Slot,
                                         word_t bufferAddr, cap_t bufferCap,
                                         cte_t *bufferSrcSlot,
                                         thread_control_flag_t updateFlags)
@@ -1749,12 +1749,12 @@ exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
     }
 
     if (updateFlags & thread_control_caps_update_space) {
-        e = installTCBCap(target, tCap, slot, tcbCTable, cRoot_newCap, cRoot_srcSlot);
+        e = installTCBCap(target, tCap, slot, tcbCTable, c_उगात_new_Cap, c_उगात_src_Slot);
         if (e != EXCEPTION_NONE) {
             return e;
         }
 
-        e = installTCBCap(target, tCap, slot, tcbVTable, vRoot_newCap, vRoot_srcSlot);
+        e = installTCBCap(target, tCap, slot, tcbVTable, v_उगात_new_Cap, v_उगात_src_Slot);
         if (e != EXCEPTION_NONE) {
             return e;
         }
@@ -1772,10 +1772,10 @@ exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
 
         if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
             sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+            cte_इसिंगित(bufferCap, bufferSrcSlot, bufferSlot);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        if (target == बुहोल_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
@@ -1785,8 +1785,8 @@ exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
 #else
 exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
                                     cptr_t faultep, prio_t mcp, prio_t priority,
-                                    cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                    cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
+                                    cap_t c_उगात_new_Cap, cte_t *c_उगात_src_Slot,
+                                    cap_t v_उगात_new_Cap, cte_t *v_उगात_src_Slot,
                                     word_t bufferAddr, cap_t bufferCap,
                                     cte_t *bufferSrcSlot,
                                     thread_control_flag_t updateFlags)
@@ -1803,30 +1803,30 @@ exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
     }
 
     if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
+        cte_t *उगात_Slot;
 
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbCTable);
-        e = cteDelete(rootSlot, true);
+        उगात_Slot = TCB_PTR_CTE_PTR(target, tcbCTable);
+        e = cteDelete(उगात_Slot, true);
         if (e != EXCEPTION_NONE) {
             return e;
         }
-        if (sameObjectAs(cRoot_newCap, cRoot_srcSlot->cap) &&
+        if (sameObjectAs(c_उगात_new_Cap, c_उगात_src_Slot->cap) &&
             sameObjectAs(tCap, slot->cap)) {
-            cteInsert(cRoot_newCap, cRoot_srcSlot, rootSlot);
+            cte_इसिंगित(c_उगात_new_Cap, c_उगात_src_Slot, उगात_Slot);
         }
     }
 
     if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
+        cte_t *उगात_Slot;
 
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbVTable);
-        e = cteDelete(rootSlot, true);
+        उगात_Slot = TCB_PTR_CTE_PTR(target, tcbVTable);
+        e = cteDelete(उगात_Slot, true);
         if (e != EXCEPTION_NONE) {
             return e;
         }
-        if (sameObjectAs(vRoot_newCap, vRoot_srcSlot->cap) &&
+        if (sameObjectAs(v_उगात_new_Cap, v_उगात_src_Slot->cap) &&
             sameObjectAs(tCap, slot->cap)) {
-            cteInsert(vRoot_newCap, vRoot_srcSlot, rootSlot);
+            cte_इसिंगित(v_उगात_new_Cap, v_उगात_src_Slot, उगात_Slot);
         }
     }
 
@@ -1842,10 +1842,10 @@ exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
 
         if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
             sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+            cte_इसिंगित(bufferCap, bufferSrcSlot, bufferSlot);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        if (target == बुहोल_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
@@ -1932,7 +1932,7 @@ exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
 
     Arch_postModifyRegisters(dest);
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    if (dest == बुहोल_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
@@ -1954,13 +1954,13 @@ exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
     exception_t e;
     tcb_t *thread;
 
-    thread = NODE_STATE(ksCurThread);
+    thread = बुहोल_STATE(ksCurThread);
 
     if (suspendSource) {
         suspend(tcb_src);
     }
 
-    e = Arch_performTransfer(arch, tcb_src, NODE_STATE(ksCurThread));
+    e = Arch_performTransfer(arch, tcb_src, बुहोल_STATE(ksCurThread));
     if (e != EXCEPTION_NONE) {
         return e;
     }
@@ -1972,8 +1972,8 @@ exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
 
         setRegister(thread, badgeRegister, 0);
 
-        for (i = 0; i < n && i < n_frameRegisters && i < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i],
+        for (i = 0; i < n && i < n_frameRegisters && i < n_मेनसाहे_Registers; i++) {
+            setRegister(thread, मेनसाहे_Registers[i],
                         getRegister(tcb_src, frameRegisters[i]));
         }
 
@@ -1986,8 +1986,8 @@ exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
         j = i;
 
         for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n
-             && i + n_frameRegisters < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i + n_frameRegisters],
+             && i + n_frameRegisters < n_मेनसाहे_Registers; i++) {
+            setRegister(thread, मेनसाहे_Registers[i + n_frameRegisters],
                         getRegister(tcb_src, gpRegisters[i]));
         }
 
@@ -1999,7 +1999,7 @@ exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
             }
         }
 
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, i + j)));
     }
     setThreadState(thread, ThreadState_Running);
@@ -2015,7 +2015,7 @@ exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resumeTarget,
     exception_t e;
     bool_t archInfo;
 
-    e = Arch_performTransfer(arch, NODE_STATE(ksCurThread), dest);
+    e = Arch_performTransfer(arch, बुहोल_STATE(ksCurThread), dest);
     if (e != EXCEPTION_NONE) {
         return e;
     }
@@ -2049,7 +2049,7 @@ exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resumeTarget,
         restart(dest);
     }
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    if (dest == बुहोल_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
@@ -2081,11 +2081,11 @@ word_t setMRs_syscall_error(tcb_t *thread, word_t *receiveIPCBuffer)
     switch (current_syscall_error.type) {
     case seL4_InvalidArgument:
         return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidArgumentNumber);
+                     current_syscall_error.invalid_Argument_नुमेरो);
 
     case seL4_InvalidCapability:
         return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidCapNumber);
+                     current_syscall_error.invalid_Cap_नुमेरो);
 
     case seL4_IllegalOperation:
         return 0;
@@ -2111,7 +2111,7 @@ word_t setMRs_syscall_error(tcb_t *thread, word_t *receiveIPCBuffer)
         return 0;
     case seL4_NotEnoughMemory:
         return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.memoryLeft);
+                     current_syscall_error.memory_कालिवा);
     default:
         fail("Invalid syscall error");
     }

@@ -39,10 +39,10 @@ BOOT_CODE void initTimer(void)
     /* Configure the comparator */
     mct->global.comp0_add_inc = TIMER_RELOAD;
 
-    uint64_t  comparator_value = ((((uint64_t) mct->global.cnth) << 32llu)
+    uint64_t  comparator_हालागा = ((((uint64_t) mct->global.cnth) << 32llu)
                                   | mct->global.cntl) + TIMER_RELOAD;
-    mct->global.comp0h = (uint32_t)(comparator_value >> 32u);
-    mct->global.comp0l = (uint32_t) comparator_value;
+    mct->global.comp0h = (uint32_t)(comparator_हालागा >> 32u);
+    mct->global.comp0l = (uint32_t) comparator_हालागा;
     /* Enable interrupts */
     mct->global.int_en = GINT_COMP0_IRQ;
 

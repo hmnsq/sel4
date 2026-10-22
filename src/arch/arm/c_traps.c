@@ -19,12 +19,12 @@
 
 void VISIBLE NORETURN c_handle_undefined_instruction(void)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
     ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
+    ksKernelEntry.word = getRegister(बुहोल_STATE(ksCurThread), NextIP);
 #endif
 
     /* There's only one user-level fault on ARM, and the code is (0,0) */
@@ -56,12 +56,12 @@ void NORETURN vm_fault_slowpath(vm_fault_type_t type)
 
 static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
     ksKernelEntry.path = Entry_VMFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
+    ksKernelEntry.word = getRegister(बुहोल_STATE(ksCurThread), NextIP);
     ksKernelEntry.is_fastpath = false;
 #endif
 
@@ -86,7 +86,7 @@ void VISIBLE NORETURN c_handle_instruction_fault(void)
 
 void VISIBLE NORETURN c_handle_interrupt(void)
 {
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
+    बुहोल_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
@@ -121,13 +121,13 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+void VISIBLE c_handle_syscall(word_t cptr, word_t मेनसाहे_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, syscall);
     ksKernelEntry.is_fastpath = 0;
 #endif /* DEBUG */
 
@@ -136,58 +136,58 @@ void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
 }
 
 #ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_लिन्या_SIZE)
+void VISIBLE c_handle_fastpath_call(word_t cptr, word_t मेनसाहे_Info)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, मेनसाहे_Info);
     UNREACHABLE();
 }
 
 #ifdef CONFIG_KERNEL_MCS
 #ifdef CONFIG_SIGNAL_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_लिन्या_SIZE)
+void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t मेनसाहे_Info)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, SysCall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
-    fastpath_signal(cptr, msgInfo);
+    fastpath_signal(cptr, मेनसाहे_Info);
     UNREACHABLE();
 }
 #endif /* CONFIG_SIGNAL_FASTPATH */
 #endif /* CONFIG_KERNEL_MCS */
 
-ALIGN(L1_CACHE_LINE_SIZE)
+ALIGN(L1_CACHE_लिन्या_SIZE)
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
+void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info, word_t reply)
 #else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
+void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info)
 #endif
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, SysReplyRecv);
     ksKernelEntry.is_fastpath = 1;
 #endif /* DEBUG */
 
 #ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
+    fastpath_reply_recv(cptr, मेनसाहे_Info, reply);
 #else
-    fastpath_reply_recv(cptr, msgInfo);
+    fastpath_reply_recv(cptr, मेनसाहे_Info);
 #endif
     UNREACHABLE();
 }
@@ -197,7 +197,7 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 

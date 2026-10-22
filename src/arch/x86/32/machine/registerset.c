@@ -12,7 +12,7 @@
 #include <arch/object/structures.h>
 #include <machine/debug.h>
 
-const register_t msgRegisters[] = {
+const register_t मेनसाहे_Registers[] = {
     EDI,
 #ifndef CONFIG_KERNEL_MCS
     EBP
@@ -20,7 +20,7 @@ const register_t msgRegisters[] = {
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    sizeof(मेनसाहे_Registers) / sizeof(मेनसाहे_Registers[0]) == n_मेनसाहे_Registers
 );
 
 const register_t frameRegisters[] = {
@@ -59,7 +59,7 @@ word_t Mode_sanitiseRegister(register_t reg, word_t v)
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
+    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, बुहोल_STATE(ksCurThread));
     if (buffer != NULL) {
         return buffer->userData;
     } else {

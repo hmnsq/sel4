@@ -52,7 +52,7 @@ BOOT_CODE void start_boot_aps(void)
 #endif /* CONFIG_USE_LOGICAL_IDS */
 
     /* startup APs one at a time as we use shared kernel boot stack */
-    while (smp_aps_index < boot_state.num_cpus) {
+    while (smp_aps_index < boot_state.नुमेरो_cpus) {
         word_t current_ap_index = smp_aps_index;
 
         printf("Starting node #%lu with APIC ID %lu \n",
@@ -62,12 +62,12 @@ BOOT_CODE void start_boot_aps(void)
          * as APIC ID are not continoius e.g. 0,2,1,3 for 4 cores with hyperthreading
          * we need to store a mapping to translate the index to real APIC ID */
         cpu_mapping.index_to_cpu_id[current_ap_index] = boot_state.cpus[current_ap_index];
-        start_cpu(boot_state.cpus[current_ap_index], BOOT_NODE_PADDR);
+        start_cpu(boot_state.cpus[current_ap_index], BOOT_बुहोल_PADDR);
 
         /* wait for current AP to boot up */
         while (smp_aps_index == current_ap_index) {
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-            NODE_STATE(ksCurTime) = getCurrentTime();
+            बुहोल_STATE(ksCurTime) = getCurrentTime();
             __atomic_thread_fence(__ATOMIC_ACQ_REL);
 #endif
         }
@@ -82,27 +82,27 @@ BOOT_CODE bool_t copy_boot_code_aps(uint32_t mem_lower)
      * is free according to multiboot. As boot_cpu_end and boot_cpu_start are link time
      * symbols (and not compile time) this cannot be a compile time check */
     word_t boot_size = (word_t)(boot_cpu_end - boot_cpu_start);
-    word_t boot_node_top = BOOT_NODE_PADDR + boot_size;
+    word_t boot_बुहोल_इताअस = BOOT_बुहोल_PADDR + boot_size;
     word_t mem_lower_bytes = mem_lower << 10;
-    if (boot_node_top > BOOT_NODE_MAX_PADDR) {
+    if (boot_बुहोल_इताअस > BOOT_बुहोल_MAX_PADDR) {
         printf("AP boot code does not fit in chosen memory hole. Can be at most %lu, is %lu\n",
-               (word_t)(BOOT_NODE_MAX_PADDR - BOOT_NODE_PADDR), boot_size);
+               (word_t)(BOOT_बुहोल_MAX_PADDR - BOOT_बुहोल_PADDR), boot_size);
         return false;
     }
-    if (mem_lower_bytes < boot_node_top) {
+    if (mem_lower_bytes < boot_बुहोल_इताअस) {
         printf("Need lower physical memory up to %lu to be free. Multiboot reports only up to %lu\n",
-               boot_node_top, mem_lower_bytes);
+               boot_बुहोल_इताअस, mem_lower_bytes);
         return false;
     }
 
     /* copy CPU bootup code to lower memory */
-    memcpy((void *)BOOT_NODE_PADDR, boot_cpu_start, boot_size);
+    memcpy((void *)BOOT_बुहोल_PADDR, boot_cpu_start, boot_size);
     return true;
 }
 
-static BOOT_CODE bool_t try_boot_node(void)
+static BOOT_CODE bool_t try_boot_बुहोल(void)
 {
-    setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
+    set_Current_VSpace_उगात(kpptr_to_paddr(X86_KERNEL_VSPACE_उगात), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
      * be set *right now* instead of delayed */
     asm volatile("" ::: "memory");
@@ -121,12 +121,12 @@ static BOOT_CODE bool_t try_boot_node(void)
 /* This is the entry function for APs. However, it is not a BOOT_CODE as
  * there is a race between exiting this function and root task running on
  * node #0 to possibly reallocate this memory */
-VISIBLE void boot_node(void)
+VISIBLE void boot_बुहोल(void)
 {
     bool_t result;
 
     mode_init_tls(smp_aps_index);
-    result = try_boot_node();
+    result = try_boot_बुहोल();
 
     if (!result) {
         fail("boot_node failed for some reason :(\n");
@@ -136,11 +136,11 @@ VISIBLE void boot_node(void)
     smp_aps_index++;
 
     /* grab BKL before leaving the kernel */
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     init_core_state(SchedulerAction_ChooseNewThread);
-    ARCH_NODE_STATE(x86KScurInterrupt) = int_invalid;
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = int_invalid;
+    ARCH_बुहोल_STATE(x86KScurInterrupt) = int_invalid;
+    ARCH_बुहोल_STATE(x86KSPendingInterrupt) = int_invalid;
 
     schedule();
     activateThread();

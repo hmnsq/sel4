@@ -43,12 +43,12 @@ void deleteEPTASID(asid_t asid, ept_pml4e_t *ept)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
+    poolPtr = x86KSASIDTable[ASID_माताअस(asid)];
     if (poolPtr != NULL) {
-        asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
+        asid_map_t asid_map = poolPtr->array[ASID_माबाबा(asid)];
         if (asid_map_get_type(asid_map) == asid_map_asid_map_ept &&
-            (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_root(asid_map) == ept) {
-            poolPtr->array[ASID_LOW(asid)] = asid_map_asid_map_none_new();
+            (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_उगात(asid_map) == ept) {
+            poolPtr->array[ASID_माबाबा(asid)] = asid_map_asid_map_none_new();
         }
     }
 }
@@ -76,14 +76,14 @@ findEPTForASID_ret_t findEPTForASID(asid_t asid)
 
     asid_map = findMapForASID(asid);
     if (asid_map_get_type(asid_map) != asid_map_asid_map_ept) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+        current_lookup_fault = lookup_fault_invalid_उगात_new();
 
         ret.ept = NULL;
         ret.status = EXCEPTION_LOOKUP_FAULT;
         return ret;
     }
 
-    ret.ept = (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_root(asid_map);
+    ret.ept = (ept_pml4e_t *)asid_map_asid_map_ept_get_ept_उगात(asid_map);
     ret.status = EXCEPTION_NONE;
     return ret;
 }
@@ -180,7 +180,7 @@ static lookupEPTPTSlot_ret_t lookupEPTPTSlot(ept_pml4e_t *pml4, vptr_t vptr)
 static ept_cache_options_t eptCacheFromVmAttr(vm_attributes_t vmAttr)
 {
     /* Need to sanitise user input, vmAttr will not have been verified at this point. */
-    ept_cache_options_t option = vmAttr.words[0];
+    ept_cache_options_t option = vmAttr.मगा_सालिता[0];
     if (option != EPTUncacheable &&
         option != EPTWriteCombining &&
         option != EPTWriteThrough &&
@@ -279,7 +279,7 @@ static exception_t decodeX86EPTPDPTInvocation(
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performEPTPDPTInvocationUnmap(cap, cte);
     }
 
@@ -298,7 +298,7 @@ static exception_t decodeX86EPTPDPTInvocation(
     if (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
         userError("X86EPTPDPTMap: EPT PDPT is already mapped to a PML4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -313,7 +313,7 @@ static exception_t decodeX86EPTPDPTInvocation(
     if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
         userError("X86EPTPDPTMap: Not a valid EPT PML4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -331,7 +331,7 @@ static exception_t decodeX86EPTPDPTInvocation(
 
     if (find_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -356,7 +356,7 @@ static exception_t decodeX86EPTPDPTInvocation(
     cap = cap_ept_pdpt_cap_set_capPDPTMappedASID(cap, asid);
     cap = cap_ept_pdpt_cap_set_capPDPTMappedAddress(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return performEPTPDPTInvocationMap(cap, cte, pml4e, pml4Slot, pml4);
 }
 
@@ -482,7 +482,7 @@ exception_t decodeX86EPTPDInvocation(
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performEPTPDInvocationUnmap(cap, cte);
     }
 
@@ -502,7 +502,7 @@ exception_t decodeX86EPTPDInvocation(
         userError("X86EPTPDMap: EPT Page directory is already mapped to a PDPT.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -514,7 +514,7 @@ exception_t decodeX86EPTPDInvocation(
     if (cap_get_capType(pml4Cap) != cap_ept_pml4_cap) {
         userError("X86EPTPDMap: Not a valid EPT pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -534,7 +534,7 @@ exception_t decodeX86EPTPDInvocation(
     if (find_ret.ept != pml4) {
         userError("X86EPTPDMap: EPT PML4 asid is invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -565,7 +565,7 @@ exception_t decodeX86EPTPDInvocation(
     cap = cap_ept_pd_cap_set_capPDMappedASID(cap, asid);
     cap = cap_ept_pd_cap_set_capPDMappedAddress(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return performEPTPDInvocationMap(cap, cte, pdpte, lu_ret.pdptSlot, pml4);
 }
 
@@ -669,7 +669,7 @@ exception_t decodeX86EPTPTInvocation(
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performEPTPTInvocationUnmap(cap, cte);
     }
 
@@ -689,7 +689,7 @@ exception_t decodeX86EPTPTInvocation(
         userError("X86EPTPT EPT Page table is already mapped to an EPT page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -702,7 +702,7 @@ exception_t decodeX86EPTPTInvocation(
         !cap_ept_pml4_cap_get_capPML4IsMapped(pml4Cap)) {
         userError("X86EPTPTMap: Not a valid EPT pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -720,7 +720,7 @@ exception_t decodeX86EPTPTInvocation(
 
     if (find_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -755,7 +755,7 @@ exception_t decodeX86EPTPTInvocation(
     cap = cap_ept_pt_cap_set_capPTMappedASID(cap, asid);
     cap = cap_ept_pt_cap_set_capPTMappedAddress(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return performEPTPTInvocationMap(cap, cte, pde, lu_ret.pdSlot, pml4);
 }
 
@@ -811,7 +811,7 @@ exception_t decodeX86EPTPageMap(
     if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
         userError("X86EPTPageMap: Frame already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -822,7 +822,7 @@ exception_t decodeX86EPTPageMap(
         !cap_ept_pml4_cap_get_capPML4IsMapped(pml4Cap)) {
         userError("X86EPTPageMap: Attempting to map frame into invalid ept pml4.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -840,7 +840,7 @@ exception_t decodeX86EPTPageMap(
 
     if (find_ret.ept != pml4) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -889,7 +889,7 @@ exception_t decodeX86EPTPageMap(
                   WritableFromVMRights(vmRights),
                   1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performEPTPageMapPTE(cap, cte, lu_ret.ptSlot, pte, pml4);
     }
 
@@ -945,7 +945,7 @@ exception_t decodeX86EPTPageMap(
                              WritableFromVMRights(vmRights),
                              1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performEPTPageMapPDE(cap, cte, lu_ret.pdSlot, pde1, pde2, pml4);
     }
 
@@ -954,7 +954,7 @@ exception_t decodeX86EPTPageMap(
          * pages, so we must disallow attempting to use any other */
         userError("X86EPTPageMap: Attempted to map unsupported page size.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 }

@@ -94,9 +94,9 @@ static void restore_virt_timer(vcpu_t *vcpu)
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTV_CVAL);
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTKCTL_EL1);
 #else
-    uint32_t cval_high = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALhigh);
-    uint32_t cval_low = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALlow);
-    uint64_t cval = ((uint64_t)cval_high << 32) | (uint64_t) cval_low;
+    uint32_t cval_माताअस = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALhigh);
+    uint32_t cval_माबाबा = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTV_CVALlow);
+    uint64_t cval = ((uint64_t)cval_माताअस << 32) | (uint64_t) cval_माबाबा;
     set_cntv_cval_64(cval);
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTKCTL);
 #endif
@@ -115,9 +115,9 @@ static void restore_virt_timer(vcpu_t *vcpu)
 #endif
     vcpu_restore_reg(vcpu, seL4_VCPUReg_CNTVOFF);
 #else
-    uint32_t offset_high = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh);
-    uint32_t offset_low = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFlow);
-    uint64_t offset = ((uint64_t)offset_high << 32) | (uint64_t) offset_low;
+    uint32_t offset_माताअस = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh);
+    uint32_t offset_माबाबा = vcpu_read_reg(vcpu, seL4_VCPUReg_CNTVOFFlow);
+    uint64_t offset = ((uint64_t)offset_माताअस << 32) | (uint64_t) offset_माबाबा;
 #ifdef CONFIG_VTIMER_UPDATE_VOFFSET
     offset += pcount_delta;
     vcpu_write_reg(vcpu, seL4_VCPUReg_CNTVOFFhigh, (word_t)(offset >> 32));

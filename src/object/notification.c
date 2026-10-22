@@ -81,8 +81,8 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                      * associated with the current thread, or no thread.
                      * This check is added here to reduce the cost of
                      * proving this to be true as a short-term stop-gap. */
-                    assert(tcb->tcbSchedContext != NODE_STATE(ksCurSC));
-                    if (tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                    assert(tcb->tcbSchedContext != बुहोल_STATE(ksCurSC));
+                    if (tcb->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                         refill_unblock_check(tcb->tcbSchedContext);
                     }
                 }
@@ -105,7 +105,7 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
 #ifdef CONFIG_KERNEL_MCS
                     if (tcb->tcbSchedContext != NULL && sc_active(tcb->tcbSchedContext)) {
                         sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-                        if (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                        if (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                             /* We know that the tcb can't have the current SC
                              * as its own SC as this point as it should still be
                              * associated with the current thread, or no thread.
@@ -170,8 +170,8 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
              * associated with the current thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(dest->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            assert(dest->tcbSchedContext != बुहोल_STATE(ksCurSC));
+            if (dest->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                 refill_unblock_check(dest->tcbSchedContext);
             }
         }
@@ -182,10 +182,10 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
     case NtfnState_Active: {
         word_t badge2;
 
-        badge2 = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
+        badge2 = notification_ptr_get_ntfn_मेनसाहे_Identifier(ntfnPtr);
         badge2 |= badge;
 
-        notification_ptr_set_ntfnMsgIdentifier(ntfnPtr, badge2);
+        notification_ptr_set_ntfn_मेनसाहे_Identifier(ntfnPtr, badge2);
         break;
     }
     }
@@ -234,13 +234,13 @@ void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
     case NtfnState_Active:
         setRegister(
             thread, badgeRegister,
-            notification_ptr_get_ntfnMsgIdentifier(ntfnPtr));
+            notification_ptr_get_ntfn_मेनसाहे_Identifier(ntfnPtr));
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
 #ifdef CONFIG_KERNEL_MCS
         maybeDonateSchedContext(thread, ntfnPtr);
         // If the SC has been donated to the current thread (in a reply_recv, send_recv scenario) then
         // we may need to perform refill_unblock_check if the SC is becoming activated.
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
+        if (thread->tcbSchedContext != बुहोल_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
 #endif
@@ -258,8 +258,8 @@ static inline void removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_
          * this point as it should still be associated with the current thread,
          * or no thread. This check is added here to reduce the cost of proving
          * this to be true as a short-term stop-gap. */
-        assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+        assert(thread->tcbSchedContext != बुहोल_STATE(ksCurSC));
+        if (thread->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
     }
@@ -327,14 +327,14 @@ void completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
     word_t badge;
 
     if (likely(tcb && notification_ptr_get_state(ntfnPtr) == NtfnState_Active)) {
-        badge = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
+        badge = notification_ptr_get_ntfn_मेनसाहे_Identifier(ntfnPtr);
         setRegister(tcb, badgeRegister, badge);
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
 #ifdef CONFIG_KERNEL_MCS
         maybeDonateSchedContext(tcb, ntfnPtr);
         if (sc_sporadic(tcb->tcbSchedContext)) {
             sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-            if (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            if (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                 /* We know that the tcb can't have the current SC
                  * as its own SC as this point as it should still be
                  * associated with the current thread, or no thread.

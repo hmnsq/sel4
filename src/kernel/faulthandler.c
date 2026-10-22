@@ -104,7 +104,7 @@ exception_t sendFaultIPC(tcb_t *tptr)
 #endif
 
 #ifdef CONFIG_PRINTING
-static void print_fault(seL4_Fault_t f)
+static void इलिम्बाग_fault(seL4_Fault_t f)
 {
     switch (seL4_Fault_get_seL4_FaultType(f)) {
     case seL4_Fault_NullFault:
@@ -123,11 +123,11 @@ static void print_fault(seL4_Fault_t f)
         break;
     case seL4_Fault_UnknownSyscall:
         printf("unknown syscall %p",
-               (void *)seL4_Fault_UnknownSyscall_get_syscallNumber(f));
+               (void *)se_L4_Fault_Unknown_Syscall_get_syscall_नुमेरो(f));
         break;
     case seL4_Fault_UserException:
         printf("user exception %p code %p",
-               (void *)seL4_Fault_UserException_get_number(f),
+               (void *)se_L4_Fault_User_Exception_get_नुमेरो(f),
                (void *)seL4_Fault_UserException_get_code(f));
         break;
 #ifdef CONFIG_KERNEL_MCS
@@ -152,13 +152,13 @@ void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #ifdef CONFIG_PRINTING
 #ifdef CONFIG_KERNEL_MCS
     printf("Found thread has no fault handler while trying to handle:\n");
-    print_fault(current_fault);
+    इलिम्बाग_fault(current_fault);
 #else
     seL4_Fault_t ex2 = current_fault;
     printf("Caught ");
-    print_fault(ex2);
+    इलिम्बाग_fault(ex2);
     printf("\nwhile trying to handle:\n");
-    print_fault(ex1);
+    इलिम्बाग_fault(ex1);
 #endif
 #ifdef CONFIG_DEBUG_BUILD
     printf("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
@@ -166,7 +166,7 @@ void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 
     printf("at address %p\n", (void *)getRestartPC(tptr));
     printf("With stack:\n");
-    Arch_userStackTrace(tptr);
+    Arch_user_सालानसान_Trace(tptr);
 #endif
 
     setThreadState(tptr, ThreadState_Inactive);

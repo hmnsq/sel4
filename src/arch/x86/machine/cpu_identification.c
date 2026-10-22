@@ -126,8 +126,8 @@ BOOT_CODE bool_t x86_cpuid_initialize(void)
     x86_cpuid_fill_vendor_string(ci);
 
     /* Need both eax and ebx output values. */
-    eax.words[0] = x86_cpuid_eax(1, 0);
-    ebx.words[0] = x86_cpuid_ebx(1, 0);
+    eax.मगा_सालिता[0] = x86_cpuid_eax(1, 0);
+    ebx.मगा_सालिता[0] = x86_cpuid_ebx(1, 0);
 
     /* We now use EAX for the family, model, stepping values, and EBX for the
      * brand index. Store the original values from CPUID_001H.EAX.

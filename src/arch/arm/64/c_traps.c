@@ -21,10 +21,10 @@ void VISIBLE NORETURN restore_user_context(void)
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(बुहोल_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    बुहोल_UNLOCK_IF_HELD;
 
     asm volatile(
         "mov     sp, %0                     \n"
@@ -59,7 +59,7 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );

@@ -42,20 +42,20 @@ static inline pde_t pde_pde_large_new_phys(uint32_t page_base_address,
                                            uint32_t super_user, uint32_t read_write, uint32_t present)
 {
     pde_t pde;
-    pde.words[0] = 0;
+    pde.मगा_सालिता[0] = 0;
 
-    pde.words[0] |= (page_base_address & 0xffc00000) >> 0;
-    pde.words[0] |= (pat & 0x1) << 12;
-    pde.words[0] |= (avl & 0x7) << 9;
-    pde.words[0] |= (global & 0x1) << 8;
-    pde.words[0] |= (pde_pde_large & 0x1) << 7;
-    pde.words[0] |= (dirty & 0x1) << 6;
-    pde.words[0] |= (accessed & 0x1) << 5;
-    pde.words[0] |= (cache_disabled & 0x1) << 4;
-    pde.words[0] |= (write_through & 0x1) << 3;
-    pde.words[0] |= (super_user & 0x1) << 2;
-    pde.words[0] |= (read_write & 0x1) << 1;
-    pde.words[0] |= (present & 0x1) << 0;
+    pde.मगा_सालिता[0] |= (page_base_address & 0xffc00000) >> 0;
+    pde.मगा_सालिता[0] |= (pat & 0x1) << 12;
+    pde.मगा_सालिता[0] |= (avl & 0x7) << 9;
+    pde.मगा_सालिता[0] |= (global & 0x1) << 8;
+    pde.मगा_सालिता[0] |= (pde_pde_large & 0x1) << 7;
+    pde.मगा_सालिता[0] |= (dirty & 0x1) << 6;
+    pde.मगा_सालिता[0] |= (accessed & 0x1) << 5;
+    pde.मगा_सालिता[0] |= (cache_disabled & 0x1) << 4;
+    pde.मगा_सालिता[0] |= (write_through & 0x1) << 3;
+    pde.मगा_सालिता[0] |= (super_user & 0x1) << 2;
+    pde.मगा_सालिता[0] |= (read_write & 0x1) << 1;
+    pde.मगा_सालिता[0] |= (present & 0x1) << 0;
 
     return pde;
 }
@@ -153,7 +153,7 @@ BOOT_CODE void map_it_frame_cap(cap_t pd_cap, cap_t frame_cap)
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
-lookupPDSlot_ret_t lookupPDSlot(vspace_root_t *vspace, vptr_t vptr)
+lookupPDSlot_ret_t lookupPDSlot(vspace_उगात_t *vspace, vptr_t vptr)
 {
     lookupPDSlot_ret_t pdSlot;
     pde_t *pd = PDE_PTR(vspace);
@@ -165,26 +165,26 @@ lookupPDSlot_ret_t lookupPDSlot(vspace_root_t *vspace, vptr_t vptr)
     return pdSlot;
 }
 
-bool_t CONST isVTableRoot(cap_t cap)
+bool_t CONST is_VTable_उगात(cap_t cap)
 {
     return cap_get_capType(cap) == cap_page_directory_cap;
 }
 
-bool_t CONST isValidNativeRoot(cap_t cap)
+bool_t CONST is_Valid_Native_उगात(cap_t cap)
 {
-    return isVTableRoot(cap) &&
+    return is_VTable_उगात(cap) &&
            cap_page_directory_cap_get_capPDIsMapped(cap);
 }
 
-vspace_root_t *getValidNativeRoot(cap_t vspace_cap)
+vspace_उगात_t *get_Valid_Native_उगात(cap_t vspace_cap)
 {
-    if (isValidNativeRoot(vspace_cap)) {
+    if (is_Valid_Native_उगात(vspace_cap)) {
         return PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(vspace_cap));
     }
     return NULL;
 }
 
-void copyGlobalMappings(vspace_root_t *new_vspace)
+void copyGlobalMappings(vspace_उगात_t *new_vspace)
 {
     word_t i;
     pde_t *newPD = (pde_t *)new_vspace;
@@ -210,7 +210,7 @@ exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr, cte_t *
         cap_page_directory_cap_ptr_set_capPDIsMapped(&vspaceCapSlot->cap, 1);
         asid_map = asid_map_asid_map_vspace_new(cap_page_directory_cap_get_capPDBasePtr(vspaceCapSlot->cap));
     }
-    poolPtr->array[ASID_LOW(asid)] = asid_map;
+    poolPtr->array[ASID_माबाबा(asid)] = asid_map;
 
     return EXCEPTION_NONE;
 }
@@ -224,23 +224,23 @@ static exception_t performIA32PageDirectoryGetStatusBits(lookupPTSlot_ret_t ptSl
                                                          bool_t call, word_t *buffer)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = बुहोल_STATE(ksCurThread);
     if (call) {
         setRegister(thread, badgeRegister, 0);
         if (pdSlot.status == EXCEPTION_NONE &&
             ((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_large) &&
              pde_pde_large_ptr_get_present(pdSlot.pdSlot))) {
 
-            setMR(NODE_STATE(ksCurThread), buffer, 0, pde_pde_large_ptr_get_accessed(pdSlot.pdSlot));
-            setMR(NODE_STATE(ksCurThread), buffer, 1, pde_pde_large_ptr_get_dirty(pdSlot.pdSlot));
+            setMR(बुहोल_STATE(ksCurThread), buffer, 0, pde_pde_large_ptr_get_accessed(pdSlot.pdSlot));
+            setMR(बुहोल_STATE(ksCurThread), buffer, 1, pde_pde_large_ptr_get_dirty(pdSlot.pdSlot));
         } else {
             assert(ptSlot.status == EXCEPTION_NONE && pte_ptr_get_present(ptSlot.ptSlot));
-            setMR(NODE_STATE(ksCurThread), buffer, 0, pte_ptr_get_accessed(ptSlot.ptSlot));
-            setMR(NODE_STATE(ksCurThread), buffer, 1, pte_ptr_get_dirty(ptSlot.ptSlot));
+            setMR(बुहोल_STATE(ksCurThread), buffer, 0, pte_ptr_get_accessed(ptSlot.ptSlot));
+            setMR(बुहोल_STATE(ksCurThread), buffer, 1, pte_ptr_get_dirty(ptSlot.ptSlot));
         }
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, 2)));
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, 2)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
@@ -257,7 +257,7 @@ exception_t decodeIA32PageDirectoryInvocation(
     switch (invLabel) {
     case X86PageDirectoryGetStatusBits: {
         word_t vaddr;
-        vspace_root_t *vspace;
+        vspace_उगात_t *vspace;
         lookupPTSlot_ret_t ptSlot;
         lookupPDSlot_ret_t pdSlot;
 
@@ -270,15 +270,15 @@ exception_t decodeIA32PageDirectoryInvocation(
 
         vaddr = getSyscallArg(0, buffer);
 
-        if (vaddr > USER_TOP) {
+        if (vaddr > USER_इताअस) {
             userError("X86PageDirectoryGetStatusBits: address inside kernel window");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
+            current_syscall_error.invalid_Argument_नुमेरो = 0;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        vspace = (vspace_root_t *)pptr_of_cap(cap);
+        vspace = (vspace_उगात_t *)pptr_of_cap(cap);
 
         /* perform both lookups */
         pdSlot = lookupPDSlot(vspace, vaddr);
@@ -293,12 +293,12 @@ exception_t decodeIA32PageDirectoryInvocation(
             userError("X86PageDirectoryGetStatusBits: No mapping found");
 
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
+            current_syscall_error.invalid_Argument_नुमेरो = 1;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performIA32PageDirectoryGetStatusBits(ptSlot, pdSlot, call, buffer);
     }
 
@@ -313,10 +313,10 @@ exception_t decodeIA32PageDirectoryInvocation(
 #ifdef CONFIG_PRINTING
 typedef struct readWordFromVSpace_ret {
     exception_t status;
-    word_t value;
+    word_t हालागा;
 } readWordFromVSpace_ret_t;
 
-static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *vspace, word_t vaddr)
+static readWordFromVSpace_ret_t readWordFromVSpace(vspace_उगात_t *vspace, word_t vaddr)
 {
     readWordFromVSpace_ret_t ret;
     lookupPTSlot_ret_t ptSlot;
@@ -324,7 +324,7 @@ static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *vspace, word_t
     paddr_t paddr;
     word_t offset;
     pptr_t kernel_vaddr;
-    word_t *value;
+    word_t *हालागा;
 
     pdSlot = lookupPDSlot(vspace, vaddr);
     if (pdSlot.status == EXCEPTION_NONE &&
@@ -346,28 +346,28 @@ static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *vspace, word_t
 
 
     kernel_vaddr = (word_t)paddr_to_pptr(paddr);
-    value = (word_t *)(kernel_vaddr + offset);
+    हालागा = (word_t *)(kernel_vaddr + offset);
     ret.status = EXCEPTION_NONE;
-    ret.value = *value;
+    ret.हालागा = *हालागा;
     return ret;
 }
 
-void Arch_userStackTrace(tcb_t *tptr)
+void Arch_user_सालानसान_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot;
-    vspace_root_t *vspace_root;
+    cap_t thread_उगात;
+    vspace_उगात_t *vspace_उगात;
     word_t sp;
     int i;
 
-    threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    thread_उगात = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the PD */
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap) {
+    if (cap_get_capType(thread_उगात) != cap_page_directory_cap) {
         printf("Invalid vspace\n");
         return;
     }
 
-    vspace_root = (vspace_root_t *)pptr_of_cap(threadRoot);
+    vspace_उगात = (vspace_उगात_t *)pptr_of_cap(thread_उगात);
 
     sp = getRegister(tptr, ESP);
     /* check for alignment so we don't have to worry about accessing
@@ -377,12 +377,12 @@ void Arch_userStackTrace(tcb_t *tptr)
         return;
     }
 
-    for (i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
+    for (i = 0; i < CONFIG_USER_सालानसान_TRACE_LENGTH; i++) {
         word_t address = sp + (i * sizeof(word_t));
         readWordFromVSpace_ret_t result;
-        result = readWordFromVSpace(vspace_root, address);
+        result = readWordFromVSpace(vspace_उगात, address);
         if (result.status == EXCEPTION_NONE) {
-            printf("0x%lx: 0x%lx\n", (long)address, (long)result.value);
+            printf("0x%lx: 0x%lx\n", (long)address, (long)result.हालागा);
         } else {
             printf("0x%lx: INVALID\n", (long)address);
         }

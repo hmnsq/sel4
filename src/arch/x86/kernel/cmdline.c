@@ -20,8 +20,8 @@ BOOT_BSS
 char cmdline_val[MAX_CMDLINE_VAL_LEN];
 
 /* workaround because string literals are not supported by C parser */
-const char cmdline_str_max_num_nodes[]  = {'m', 'a', 'x', '_', 'n', 'u', 'm', '_', 'n', 'o', 'd', 'e', 's', 0};
-const char cmdline_str_num_sh_frames[]  = {'n', 'u', 'm', '_', 's', 'h', '_', 'f', 'r', 'a', 'm', 'e', 's', 0};
+const char cmdline_str_max_नुमेरो_nodes[]  = {'m', 'a', 'x', '_', 'n', 'u', 'm', '_', 'n', 'o', 'd', 'e', 's', 0};
+const char cmdline_str_नुमेरो_sh_frames[]  = {'n', 'u', 'm', '_', 's', 'h', '_', 'f', 'r', 'a', 'm', 'e', 's', 0};
 const char cmdline_str_disable_iommu[]  = {'d', 'i', 's', 'a', 'b', 'l', 'e', '_', 'i', 'o', 'm', 'm', 'u', 0};
 
 static int is_space(char c)
@@ -29,7 +29,7 @@ static int is_space(char c)
     return c <= ' ';
 }
 
-static int UNUSED parse_opt(const char *cmdline, const char *opt, char *value, int bufsize)
+static int UNUSED parse_opt(const char *cmdline, const char *opt, char *हालागा, int bufsize)
 {
     int len = -1;
     const char *optptr = NULL;
@@ -47,10 +47,10 @@ static int UNUSED parse_opt(const char *cmdline, const char *opt, char *value, i
             cmdline++;
 
             for (len = 0; !is_space(*cmdline) && (len < bufsize - 1); cmdline++, len++) {
-                value[len] = *cmdline;
+                हालागा[len] = *cmdline;
             }
             if (bufsize) {
-                value[len] = '\0';
+                हालागा[len] = '\0';
             }
         }
         for (; !is_space(*cmdline); cmdline++);
@@ -115,17 +115,17 @@ void cmdline_parse(const char *cmdline, cmdline_opt_t *cmdline_opt)
      * build system) for any address below 4096.  Turn that off for
      * accessing the BIOS area.
      */
-#pragma GCC diagnostic push
+#pragma GCC diagnostic इतुलाक
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
     const unsigned short *bda_port = (unsigned short *)0x400;
     const unsigned short *bda_equi = (unsigned short *)0x410;
-    int const bda_ports_count       = (*bda_equi >> 9) & 0x7;
+    int const bda_ports_बिलांग       = (*bda_equi >> 9) & 0x7;
 #endif
 
 #ifdef CONFIG_PRINTING
     /* initialise to default or use BDA if available */
-    cmdline_opt->console_port = bda_ports_count && *bda_port ? *bda_port : 0x3f8;
+    cmdline_opt->console_port = bda_ports_बिलांग && *bda_port ? *bda_port : 0x3f8;
 
     if (parse_opt(cmdline, "console_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
         parse_uint16_array(cmdline_val, &cmdline_opt->console_port, 1);
@@ -147,7 +147,7 @@ void cmdline_parse(const char *cmdline, cmdline_opt_t *cmdline_opt)
 
 #if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
     /* initialise to default or use BDA if available */
-    cmdline_opt->debug_port = bda_ports_count && *bda_port ? *bda_port : 0x3f8;
+    cmdline_opt->debug_port = bda_ports_बिलांग && *bda_port ? *bda_port : 0x3f8;
     if (parse_opt(cmdline, "debug_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
         parse_uint16_array(cmdline_val, &cmdline_opt->debug_port, 1);
     }
@@ -158,7 +158,7 @@ void cmdline_parse(const char *cmdline, cmdline_opt_t *cmdline_opt)
         x86KSdebugPort = cmdline_opt->debug_port;
         printf("Boot config: debug_port = 0x%x\n", cmdline_opt->debug_port);
     }
-#pragma GCC diagnostic pop
+#pragma GCC diagnostic आलिसिन
 #endif
 
     cmdline_opt->disable_iommu = parse_bool(cmdline, cmdline_str_disable_iommu);

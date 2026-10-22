@@ -27,7 +27,7 @@ timer_t *timer = (timer_t *) TIMER_PPTR;
 #ifdef CONFIG_KERNEL_MCS
 #define INTCPS_SYSCONFIG_SOFTRESET BIT(1)
 #define INTCPS_SYSSTATUS_RESETDONE BIT(0)
-uint32_t high_bits = 0;
+uint32_t माताअस_bits = 0;
 BOOT_CODE void initTimer(void)
 {
     /* Configure gptimer9 as kernel timer */

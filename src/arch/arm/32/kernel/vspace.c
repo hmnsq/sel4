@@ -158,7 +158,7 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
 {
     word_t idx = (vaddr & MASK(pageBitsForSize(ARMSection))) >> pageBitsForSize(ARMSmallPage);
 
-    assert(vaddr >= PPTR_TOP); /* vaddr lies in the region the global PT covers */
+    assert(vaddr >= PPTR_इताअस); /* vaddr lies in the region the global PT covers */
 #ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
     word_t tex;
     if (vm_attributes_get_armPageCacheable(attributes)) {
@@ -232,7 +232,7 @@ BOOT_CODE void map_kernel_window(void)
         idx += SECTIONS_PER_SUPER_SECTION;
     }
 
-    while (idx < (PPTR_TOP >> pageBitsForSize(ARMSection))) {
+    while (idx < (PPTR_इताअस >> pageBitsForSize(ARMSection))) {
         pde = pde_pde_section_new(
                   phys,
                   0, /* Section */
@@ -253,7 +253,7 @@ BOOT_CODE void map_kernel_window(void)
     }
 
     /* crosscheck whether we have mapped correctly so far */
-    assert(phys == PADDR_TOP);
+    assert(phys == PADDR_इताअस);
 
 #ifdef CONFIG_KERNEL_LOG_BUFFER
     /* map log buffer page table. PTEs to be filled by user later by calling seL4_BenchmarkSetLogBuffer() */
@@ -315,7 +315,7 @@ BOOT_CODE void map_kernel_window(void)
 
     /* Initialise PMD */
     /* Invalidate up until USER_TOP */
-    for (idx = 0; idx < (USER_TOP - 0xC0000000) >> (PT_INDEX_BITS + PAGE_BITS); idx++) {
+    for (idx = 0; idx < (USER_इताअस - 0xC0000000) >> (PT_INDEX_BITS + PAGE_BITS); idx++) {
         pde = pdeS1_pdeS1_invalid_new();
         armHSGlobalPD[idx] = pde;
     }
@@ -425,24 +425,24 @@ static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid
         return
             cap_frame_cap_new(
                 ARMSection,                    /* capFSize           */
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
+                ASID_माबाबा(asid),                /* capFMappedASIDLow  */
                 wordFromVMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+                ASID_माताअस(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
     else
         return
             cap_small_frame_cap_new(
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
+                ASID_माबाबा(asid),                /* capFMappedASIDLow  */
                 wordFromVMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
 #ifdef CONFIG_TK1_SMMU
                 0,                             /* IOSpace            */
 #endif
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+                ASID_माताअस(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
 }
@@ -491,7 +491,7 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_CODE cap_t create_it_address_space(cap_t उगात_cnode_cap, v_region_t it_v_reg)
 {
     vptr_t     pt_vptr;
     seL4_SlotPos slot_pos_before;
@@ -508,13 +508,13 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
             rootserver.vspace  /* capPDBasePtr    */
         );
     slot_pos_before = ndks_boot.slot_pos_cur;
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
 
     /* create all PT caps necessary to cover userland image */
     for (pt_vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
          pt_vptr < it_v_reg.end;
          pt_vptr += BIT(PT_INDEX_BITS + PAGE_BITS)) {
-        if (!provide_cap(root_cnode_cap,
+        if (!provide_cap(उगात_cnode_cap,
                          create_it_page_table_cap(pd_cap, it_alloc_paging(), pt_vptr, IT_ASID))
            ) {
             return cap_null_cap_new();
@@ -593,8 +593,8 @@ BOOT_CODE void activate_kernel_vspace(void)
 BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_pd_cap)
 {
     asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
-    ap->array[ASID_LOW(IT_ASID)] = PDE_PTR(pptr_of_cap(it_pd_cap));
-    armKSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    ap->array[ASID_माबाबा(IT_ASID)] = PDE_PTR(pptr_of_cap(it_pd_cap));
+    armKSASIDTable[ASID_माताअस(IT_ASID)] = ap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
@@ -605,18 +605,18 @@ findPDForASID_ret_t findPDForASID(asid_t asid)
     asid_pool_t *poolPtr;
     pde_t *pd;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
+    poolPtr = armKSASIDTable[ASID_माताअस(asid)];
     if (unlikely(!poolPtr)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+        current_lookup_fault = lookup_fault_invalid_उगात_new();
 
         ret.pd = NULL;
         ret.status = EXCEPTION_LOOKUP_FAULT;
         return ret;
     }
 
-    pd = poolPtr->array[ASID_LOW(asid)];
+    pd = poolPtr->array[ASID_माबाबा(asid)];
     if (unlikely(!pd)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+        current_lookup_fault = lookup_fault_invalid_उगात_new();
 
         ret.pd = NULL;
         ret.status = EXCEPTION_LOOKUP_FAULT;
@@ -984,7 +984,7 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
 #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_उगात(cap_t cap)
 {
     return cap_get_capType(cap) == cap_page_directory_cap &&
            cap_page_directory_cap_get_capPDIsMapped(cap);
@@ -1020,21 +1020,21 @@ static void setGlobalPD(void)
 
 void setVMRoot(tcb_t *tcb)
 {
-    cap_t threadRoot;
+    cap_t thread_उगात;
     asid_t asid;
     pde_t *pd;
     findPDForASID_ret_t find_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_उगात = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap ||
-        !cap_page_directory_cap_get_capPDIsMapped(threadRoot)) {
+    if (cap_get_capType(thread_उगात) != cap_page_directory_cap ||
+        !cap_page_directory_cap_get_capPDIsMapped(thread_उगात)) {
         setGlobalPD();
         return;
     }
 
-    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot));
-    asid = cap_page_directory_cap_get_capPDMappedASID(threadRoot);
+    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(thread_उगात));
+    asid = cap_page_directory_cap_get_capPDMappedASID(thread_उगात);
     find_ret = findPDForASID(asid);
     if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.pd != pd)) {
         setGlobalPD();
@@ -1046,13 +1046,13 @@ void setVMRoot(tcb_t *tcb)
 
 static bool_t setVMRootForFlush(pde_t *pd, asid_t asid)
 {
-    cap_t threadRoot;
+    cap_t thread_उगात;
 
-    threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
+    thread_उगात = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) == cap_page_directory_cap &&
-        cap_page_directory_cap_get_capPDIsMapped(threadRoot) &&
-        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot)) == pd) {
+    if (cap_get_capType(thread_उगात) == cap_page_directory_cap &&
+        cap_page_directory_cap_get_capPDIsMapped(thread_उगात) &&
+        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(thread_उगात)) == pd) {
         return false;
     }
 
@@ -1088,10 +1088,10 @@ static void invalidateASID(asid_t asid)
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
+    asidPool = armKSASIDTable[ASID_माताअस(asid)];
     assert(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
+    pd = asidPool->array[ASID_माबाबा(asid)];
     assert(pd);
 
     pd[PD_ASID_SLOT] = pde_pde_invalid_new(0, false);
@@ -1102,10 +1102,10 @@ static pde_t PURE loadHWASID(asid_t asid)
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
+    asidPool = armKSASIDTable[ASID_माताअस(asid)];
     assert(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
+    pd = asidPool->array[ASID_माबाबा(asid)];
     assert(pd);
 
     return pd[PD_ASID_SLOT];
@@ -1116,10 +1116,10 @@ static void storeHWASID(asid_t asid, hw_asid_t hw_asid)
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
+    asidPool = armKSASIDTable[ASID_माताअस(asid)];
     assert(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
+    pd = asidPool->array[ASID_माबाबा(asid)];
     assert(pd);
 
     /* Store HW ASID in the last entry
@@ -1294,17 +1294,17 @@ void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
     unsigned int offset;
 
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
+    assert((asid_base & MASK(asid_माबाबा_Bits)) == 0);
 
-    if (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (offset = 0; offset < BIT(asidLowBits); offset++) {
+    if (armKSASIDTable[ASID_माताअस(asid_base)] == pool) {
+        for (offset = 0; offset < BIT(asid_माबाबा_Bits); offset++) {
             if (pool->array[offset]) {
                 flushSpace(asid_base + offset);
                 invalidateASIDEntry(asid_base + offset);
             }
         }
-        armKSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        armKSASIDTable[ASID_माताअस(asid_base)] = NULL;
+        setVMRoot(बुहोल_STATE(ksCurThread));
     }
 }
 
@@ -1312,13 +1312,13 @@ void deleteASID(asid_t asid, pde_t *pd)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
+    poolPtr = armKSASIDTable[ASID_माताअस(asid)];
 
-    if (poolPtr != NULL && poolPtr->array[ASID_LOW(asid)] == pd) {
+    if (poolPtr != NULL && poolPtr->array[ASID_माबाबा(asid)] == pd) {
         flushSpace(asid);
         invalidateASIDEntry(asid);
-        poolPtr->array[ASID_LOW(asid)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        poolPtr->array[ASID_माबाबा(asid)] = NULL;
+        setVMRoot(बुहोल_STATE(ksCurThread));
     }
 }
 
@@ -1477,12 +1477,12 @@ void flushPage(vm_page_size_t page_size, pde_t *pd, asid_t asid, word_t vptr)
 {
     pde_t stored_hw_asid;
     word_t base_addr;
-    bool_t root_switched;
+    bool_t उगात_switched;
 
     assert((vptr & MASK(pageBitsForSize(page_size))) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
+    उगात_switched = setVMRootForFlush(pd, asid);
     stored_hw_asid = loadHWASID(asid);
 
     if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
@@ -1491,8 +1491,8 @@ void flushPage(vm_page_size_t page_size, pde_t *pd, asid_t asid, word_t vptr)
         /* Do the TLB flush */
         invalidateTranslationSingle(base_addr | pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        if (उगात_switched) {
+            setVMRoot(बुहोल_STATE(ksCurThread));
         }
     }
 }
@@ -1500,18 +1500,18 @@ void flushPage(vm_page_size_t page_size, pde_t *pd, asid_t asid, word_t vptr)
 void flushTable(pde_t *pd, asid_t asid, word_t vptr, pte_t *pt)
 {
     pde_t stored_hw_asid;
-    bool_t root_switched;
+    bool_t उगात_switched;
 
     assert((vptr & MASK(PT_INDEX_BITS + ARMSmallPageBits)) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
+    उगात_switched = setVMRootForFlush(pd, asid);
     stored_hw_asid = loadHWASID(asid);
 
     if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
         invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        if (उगात_switched) {
+            setVMRoot(बुहोल_STATE(ksCurThread));
         }
     }
 }
@@ -1819,16 +1819,16 @@ static void doFlush(int invLabel, vptr_t start, vptr_t end, paddr_t pstart)
 static exception_t performPDFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
                                   vptr_t end, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t उगात_switched;
 
     /* Flush if given a non zero range */
     if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+        उगात_switched = setVMRootForFlush(pd, asid);
 
         doFlush(invLabel, start, end, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        if (उगात_switched) {
+            setVMRoot(बुहोल_STATE(ksCurThread));
         }
     }
 
@@ -1945,16 +1945,16 @@ static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
 static exception_t performPageFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
                                     vptr_t end, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t उगात_switched;
 
     /* now we can flush. But only if we were given a non zero range */
     if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+        उगात_switched = setVMRootForFlush(pd, asid);
 
         doFlush(invLabel, start, end, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        if (उगात_switched) {
+            setVMRoot(बुहोल_STATE(ksCurThread));
         }
     }
 
@@ -1968,15 +1968,15 @@ static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
     capFBasePtr = addrFromPPtr(vbase_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = बुहोल_STATE(ksCurThread);
     if (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
         unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
@@ -1985,7 +1985,7 @@ static exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr,
 {
     cap_page_directory_cap_ptr_set_capPDMappedASID(&pdCapSlot->cap, asid);
     cap_page_directory_cap_ptr_set_capPDIsMapped(&pdCapSlot->cap, 1);
-    poolPtr->array[ASID_LOW(asid)] =
+    poolPtr->array[ASID_माबाबा(asid)] =
         PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCapSlot->cap));
 
     return EXCEPTION_NONE;
@@ -2003,11 +2003,11 @@ static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
     memzero(frame, 1 << ARMSmallPageBits);
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(cap_asid_pool_cap_new(asid_base, WORD_REF(frame)),
+    cte_इसिंगित(cap_asid_pool_cap_new(asid_base, WORD_REF(frame)),
               parent, slot);;
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    armKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    assert((asid_base & MASK(asid_माबाबा_Bits)) == 0);
+    armKSASIDTable[ASID_माताअस(asid_base)] = (asid_pool_t *)frame;
 
     return EXCEPTION_NONE;
 }
@@ -2041,12 +2041,12 @@ static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t leng
         if (end <= start) {
             userError("PD Flush: Invalid range");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
+            current_syscall_error.invalid_Argument_नुमेरो = 1;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Don't let applications flush kernel regions. */
-        if (start >= USER_TOP || end > USER_TOP) {
+        if (start >= USER_इताअस || end > USER_इताअस) {
             userError("PD Flush: Overlaps kernel region.");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
@@ -2056,7 +2056,7 @@ static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t leng
                      !cap_page_directory_cap_get_capPDIsMapped(cap))) {
             userError("PD Flush: Invalid cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -2076,7 +2076,7 @@ static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t leng
         if (unlikely(find_ret.pd != pd)) {
             userError("PD Flush: Invalid PD Cap");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -2088,7 +2088,7 @@ static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t leng
             /* Fail silently, as there can't be any stale cached data (for the
              * given address space), and getting a syscall error because the
              * relevant page is non-resident would be 'astonishing'. */
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
             return EXCEPTION_NONE;
         }
 
@@ -2112,14 +2112,14 @@ static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t leng
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        if (pstart < physBase() || pstart > PADDR_इताअस || (end - start) > PADDR_इताअस - pstart) {
             userError("PD Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performPDFlush(invLabel, pd, asid, start, end - 1, pstart);
     }
 
@@ -2151,7 +2151,7 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performPageTableInvocationUnmap(cap, cte);
     }
 
@@ -2171,7 +2171,7 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
         userError("ARMPageTableMap: Page table is already mapped to page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -2186,7 +2186,7 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
                  !cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
         userError("ARMPageTableMap: Invalid PD cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -2194,11 +2194,11 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
     pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCap));
     asid = cap_page_directory_cap_get_capPDMappedASID(pdCap);
 
-    if (unlikely(vaddr >= USER_TOP)) {
+    if (unlikely(vaddr >= USER_इताअस)) {
         userError("ARMPageTableMap: Virtual address cannot be in kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr,
-                  USER_TOP);
+                  USER_इताअस);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_नुमेरो = 0;
 
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -2219,7 +2219,7 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
             userError("ARMPageTableMap: ASID lookup failed.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
@@ -2250,7 +2250,7 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
     cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
     cap = cap_page_table_cap_set_capPTMappedAddress(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return performPageTableInvocationMap(cap, cte, pde, pdSlot);
 }
 
@@ -2289,7 +2289,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
             userError("ARMPageMap: Bad PageDirectory cap.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
@@ -2300,7 +2300,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         if (generic_frame_cap_get_capFIsMapped(cap)) {
             if (generic_frame_cap_get_capFMappedASID(cap) != asid) {
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_नुमेरो = 1;
 
                 return EXCEPTION_SYSCALL_ERROR;
             }
@@ -2308,18 +2308,18 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
             if (generic_frame_cap_get_capFMappedAddress(cap) != vaddr) {
                 userError("ARMPageMap: Attempting to map frame into multiple addresses");
                 current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.invalid_Argument_नुमेरो = 0;
 
                 return EXCEPTION_SYSCALL_ERROR;
             }
         } else {
             vtop = vaddr + BIT(pageBitsForSize(frameSize)) - 1;
 
-            if (unlikely(vtop >= USER_TOP)) {
-                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_TOP);
+            if (unlikely(vtop >= USER_इताअस)) {
+                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_इताअस);
                 current_syscall_error.type =
                     seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.invalid_Argument_नुमेरो = 0;
 
                 return EXCEPTION_SYSCALL_ERROR;
             }
@@ -2343,7 +2343,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
                 userError("ARMPageMap: ASID lookup failed.");
                 current_syscall_error.type =
                     seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_नुमेरो = 1;
 
                 return EXCEPTION_SYSCALL_ERROR;
             }
@@ -2379,7 +2379,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
                 return map_ret.status;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
             return performPageInvocationMapPTE(asid, cap, cte,
                                                map_ret.pte,
                                                map_ret.pte_entries);
@@ -2397,7 +2397,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
                 return map_ret.status;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
             return performPageInvocationMapPDE(asid, cap, cte,
                                                map_ret.pde,
                                                map_ret.pde_entries);
@@ -2407,12 +2407,12 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
     case ARMPageUnmap: {
 #ifdef CONFIG_TK1_SMMU
         if (isIOSpaceFrameCap(cap)) {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
             return performPageInvocationUnmapIO(cap, cte);
         } else
 #endif
         {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
             return performPageInvocationUnmap(cap, cte);
         }
     }
@@ -2471,7 +2471,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         if (end <= start) {
             userError("PageFlush: Invalid range");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
+            current_syscall_error.invalid_Argument_नुमेरो = 1;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -2489,7 +2489,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
                      resolve_ret.frameBase != page_base)) {
             userError("Page Flush: Attempting to use cap with stale mapping information.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
@@ -2497,7 +2497,7 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         if (start >= page_size || end > page_size) {
             userError("Page Flush: Requested range not inside page");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
+            current_syscall_error.invalid_Argument_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -2509,14 +2509,14 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        if (pstart < physBase() || pstart > PADDR_इताअस || (end - start) > PADDR_इताअस - pstart) {
             userError("Page Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
         }
 #endif
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performPageFlush(invLabel, pd.pd, asid, start, end - 1, pstart);
     }
 
@@ -2524,9 +2524,9 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
 
 
         /* Check that there are enough message registers */
-        assert(n_msgRegisters >= 1);
+        assert(n_मेनसाहे_Registers >= 1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performPageGetAddress((void *)generic_frame_cap_get_capFBasePtr(cap), call);
     }
 
@@ -2557,7 +2557,7 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         word_t i;
         asid_t asid_base;
         word_t index, depth;
-        cap_t untyped, root;
+        cap_t untyped, उगात;
         cte_t *parentSlot, *destSlot;
         lookupSlot_ret_t lu_ret;
         void *frame;
@@ -2582,7 +2582,7 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         depth = getSyscallArg(1, buffer);
         parentSlot = current_extra_caps.excaprefs[0];
         untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        उगात = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
         for (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
@@ -2594,14 +2594,14 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_base = i << asid_माबाबा_Bits;
 
         if (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
                      cap_untyped_cap_get_capBlockSize(untyped) !=
                      seL4_ASIDPoolBits || cap_untyped_cap_get_capIsDevice(untyped))) {
             userError("ASIDControlMakePool: Invalid untyped cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
@@ -2614,7 +2614,7 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
 
         frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
+        lu_ret = lookupTargetSlot(उगात, index, depth);
         if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Failed to lookup destination slot.");
             return lu_ret.status;
@@ -2627,7 +2627,7 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performASIDControlInvocation(frame, destSlot,
                                             parentSlot, asid_base);
     }
@@ -2661,17 +2661,17 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
                 cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
             userError("ASIDPoolAssign: Invalid page directory cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = armKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
+        pool = armKSASIDTable[ASID_माताअस(cap_asid_pool_cap_get_capASIDBase(cap))];
         if (unlikely(!pool)) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
+            current_lookup_fault = lookup_fault_invalid_उगात_new();
 
             return EXCEPTION_SYSCALL_ERROR;
         }
@@ -2679,16 +2679,16 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         if (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
 
             return EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < (1 << asidLowBits) && (asid + i == 0 || pool->array[i]); i++);
+        for (i = 0; i < (1 << asid_माबाबा_Bits) && (asid + i == 0 || pool->array[i]); i++);
 
-        if (unlikely(i == 1 << asidLowBits)) {
+        if (unlikely(i == 1 << asid_माबाबा_Bits)) {
             userError("ASIDPoolAssign: No free ASID.");
             current_syscall_error.type = seL4_DeleteFirst;
 
@@ -2697,7 +2697,7 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return performASIDPoolInvocation(asid, pool, pdCapSlot);
     }
 
@@ -2714,7 +2714,7 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     pptr_t  frame_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookupCapAndSlot(बुहोल_STATE(ksCurThread), frame_cptr);
 
     if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invalid cap #%lu.", frame_cptr);
@@ -2827,7 +2827,7 @@ void kernelDataAbort(word_t pc)
 #ifdef CONFIG_PRINTING
 typedef struct readWordFromVSpace_ret {
     exception_t status;
-    word_t value;
+    word_t हालागा;
 } readWordFromVSpace_ret_t;
 
 static readWordFromVSpace_ret_t readWordFromVSpace(pde_t *pd, word_t vaddr)
@@ -2838,7 +2838,7 @@ static readWordFromVSpace_ret_t readWordFromVSpace(pde_t *pd, word_t vaddr)
     paddr_t paddr;
     word_t offset;
     pptr_t kernel_vaddr;
-    word_t *value;
+    word_t *हालागा;
 
     pdSlot = lookupPDSlot(pd, vaddr);
     if (pde_ptr_get_pdeType(pdSlot) == pde_pde_section) {
@@ -2870,28 +2870,28 @@ static readWordFromVSpace_ret_t readWordFromVSpace(pde_t *pd, word_t vaddr)
 
 
     kernel_vaddr = (word_t)paddr_to_pptr(paddr);
-    value = (word_t *)(kernel_vaddr + offset);
+    हालागा = (word_t *)(kernel_vaddr + offset);
     ret.status = EXCEPTION_NONE;
-    ret.value = *value;
+    ret.हालागा = *हालागा;
     return ret;
 }
 
-void Arch_userStackTrace(tcb_t *tptr)
+void Arch_user_सालानसान_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot;
+    cap_t thread_उगात;
     pde_t *pd;
     word_t sp;
     int i;
 
-    threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    thread_उगात = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the PD */
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap) {
+    if (cap_get_capType(thread_उगात) != cap_page_directory_cap) {
         printf("Invalid vspace\n");
         return;
     }
 
-    pd = (pde_t *)pptr_of_cap(threadRoot);
+    pd = (pde_t *)pptr_of_cap(thread_उगात);
 
     sp = getRegister(tptr, SP);
     /* check for alignment so we don't have to worry about accessing
@@ -2901,12 +2901,12 @@ void Arch_userStackTrace(tcb_t *tptr)
         return;
     }
 
-    for (i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
+    for (i = 0; i < CONFIG_USER_सालानसान_TRACE_LENGTH; i++) {
         word_t address = sp + (i * sizeof(word_t));
         readWordFromVSpace_ret_t result;
         result = readWordFromVSpace(pd, address);
         if (result.status == EXCEPTION_NONE) {
-            printf("0x%lx: 0x%lx\n", (long)address, (long)result.value);
+            printf("0x%lx: 0x%lx\n", (long)address, (long)result.हालागा);
         } else {
             printf("0x%lx: INVALID\n", (long)address);
         }

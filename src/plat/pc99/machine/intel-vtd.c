@@ -95,9 +95,9 @@ static inline uint32_t vtd_read32(drhu_id_t drhu_id, uint32_t offset)
     return *(volatile uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
 }
 
-static inline void vtd_write32(drhu_id_t drhu_id, uint32_t offset, uint32_t value)
+static inline void vtd_write32(drhu_id_t drhu_id, uint32_t offset, uint32_t हालागा)
 {
-    *(volatile uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
+    *(volatile uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = हालागा;
 }
 
 
@@ -106,9 +106,9 @@ static inline uint64_t vtd_read64(drhu_id_t drhu_id, uint32_t offset)
     return *(volatile uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
 }
 
-static inline void vtd_write64(drhu_id_t drhu_id, uint32_t offset, uint64_t value)
+static inline void vtd_write64(drhu_id_t drhu_id, uint32_t offset, uint64_t हालागा)
 {
-    *(volatile uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
+    *(volatile uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = हालागा;
 }
 
 static inline uint32_t get_ivo(drhu_id_t drhu_id)
@@ -213,7 +213,7 @@ static void vtd_process_faults(drhu_id_t i)
     uint32_t fault_type UNUSED;
     uint32_t address[2] UNUSED;
     uint32_t reason UNUSED;
-    uint32_t num_fault_regs;
+    uint32_t नुमेरो_fault_regs;
     uint32_t fr_reg;
     uint32_t fault_status;
     uint32_t fault_record_index;
@@ -223,7 +223,7 @@ static void vtd_process_faults(drhu_id_t i)
     fault_status = (vtd_read32(i, FSTS_REG) >> PPF) & PPF_MASK;
 
     if (fault_status) {
-        num_fault_regs = ((vtd_read32(i, CAP_REG + 4) >> NFR) & NFR_MASK) + 1;
+        नुमेरो_fault_regs = ((vtd_read32(i, CAP_REG + 4) >> NFR) & NFR_MASK) + 1;
         fault_record_index = (vtd_read32(i, FSTS_REG) >> FRI) & FRI_MASK;
         fr_reg = fro_offset + 16 * fault_record_index;
 
@@ -244,7 +244,7 @@ static void vtd_process_faults(drhu_id_t i)
 
             vtd_clear_fault(i, fr_reg);
 
-            fault_record_index = (fault_record_index + 1) % num_fault_regs;
+            fault_record_index = (fault_record_index + 1) % नुमेरो_fault_regs;
             fr_reg = fro_offset + 16 * fault_record_index;
         } while ((vtd_read32(i, fr_reg + 12) >> FAULT) & 1);
 
@@ -274,24 +274,24 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
 
     word_t size = 1; /* one for the root table */
     size += N_VTD_CONTEXTS; /* one for each context */
-    size += rmrr_list->num; /* one for each device */
+    size += rmrr_list->नुमेरो; /* one for each device */
 
-    if (rmrr_list->num == 0) {
+    if (rmrr_list->नुमेरो == 0) {
         return size;
     }
 
     /* filter the identical regions by pci bus id */
     acpi_rmrr_list_t filtered;
     filtered.entries[0] = rmrr_list->entries[0];
-    filtered.num = 1;
+    filtered.नुमेरो = 1;
 
-    for (word_t i = 1; i < rmrr_list->num; i++) {
-        if (vtd_get_root_index(rmrr_list->entries[i].device) !=
-            vtd_get_root_index(filtered.entries[filtered.num - 1].device) &&
-            rmrr_list->entries[i].base != filtered.entries[filtered.num - 1].base &&
-            rmrr_list->entries[i].limit != filtered.entries[filtered.num - 1].limit) {
-            filtered.entries[filtered.num] = rmrr_list->entries[i];
-            filtered.num++;
+    for (word_t i = 1; i < rmrr_list->नुमेरो; i++) {
+        if (vtd_get_उगात_index(rmrr_list->entries[i].device) !=
+            vtd_get_उगात_index(filtered.entries[filtered.नुमेरो - 1].device) &&
+            rmrr_list->entries[i].base != filtered.entries[filtered.नुमेरो - 1].base &&
+            rmrr_list->entries[i].limit != filtered.entries[filtered.नुमेरो - 1].limit) {
+            filtered.entries[filtered.नुमेरो] = rmrr_list->entries[i];
+            filtered.नुमेरो++;
         }
     }
 
@@ -301,7 +301,7 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
         if ((VTD_PT_INDEX_BITS * i + seL4_PageBits) >= 32) {
             size++;
         } else {
-            for (word_t j = 0; j < filtered.num; j++) {
+            for (word_t j = 0; j < filtered.नुमेरो; j++) {
                 v_region_t region = (v_region_t) {
                     .start = filtered.entries[j].base,
                     .end = filtered.entries[j].limit
@@ -376,14 +376,14 @@ BOOT_CODE static void vtd_create_context_table(uint8_t bus, acpi_rmrr_list_t *rm
     printf("IOMMU: Create VTD context table for PCI bus 0x%x (pptr=%p)\n", bus, vtd_context_table);
     flushCacheRange(vtd_context_table, VTD_CT_SIZE_BITS);
 
-    x86KSvtdRootTable[bus] =
+    x86_KSvtd_उगात_Table[bus] =
         vtd_rte_new(
             pptr_to_paddr(vtd_context_table), /* Context Table Pointer */
             true                                           /* Present               */
         );
     /* map in any RMRR regions */
-    for (i = 0; i < rmrr_list->num; i++) {
-        if (vtd_get_root_index(rmrr_list->entries[i].device) == bus) {
+    for (i = 0; i < rmrr_list->नुमेरो; i++) {
+        if (vtd_get_उगात_index(rmrr_list->entries[i].device) == bus) {
             uint32_t addr;
             for (addr = rmrr_list->entries[i].base; addr < rmrr_list->entries[i].limit; addr += BIT(seL4_PageBits)) {
                 vtd_map_reserved_page(vtd_context_table, vtd_get_context_index(rmrr_list->entries[i].device), addr);
@@ -398,7 +398,7 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
     uint32_t status = 0;
 
     for (i = 0; i < x86KSnumDrhu; i++) {
-        pptr_t pa = (pptr_t)pptr_to_paddr((void *)x86KSvtdRootTable);
+        pptr_t pa = (pptr_t)pptr_to_paddr((void *)x86_KSvtd_उगात_Table);
 
         /* Set the Root Table Register */
         vtd_write64(i, RTADDR_REG, pa);
@@ -457,9 +457,9 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
     return true;
 }
 
-BOOT_CODE bool_t vtd_init_num_iopts(uint32_t num_drhu)
+BOOT_CODE bool_t vtd_init_नुमेरो_iopts(uint32_t नुमेरो_drhu)
 {
-    x86KSnumDrhu = num_drhu;
+    x86KSnumDrhu = नुमेरो_drhu;
     x86KSFirstValidIODomain = 0;
 
     if (x86KSnumDrhu == 0) {
@@ -468,28 +468,28 @@ BOOT_CODE bool_t vtd_init_num_iopts(uint32_t num_drhu)
 
     uint32_t aw_bitmask = 0xffffffff;
     /* Start the number of domains at 16 bits */
-    uint32_t  num_domain_id_bits = 16;
+    uint32_t  नुमेरो_domain_id_bits = 16;
     for (drhu_id_t i = 0; i < x86KSnumDrhu; i++) {
         uint32_t bits_supported = 4 + 2 * (vtd_read32(i, CAP_REG) & 7);
         aw_bitmask &= vtd_read32(i, CAP_REG) >> SAGAW;
         printf("IOMMU 0x%x: %d-bit domain IDs supported\n", i, bits_supported);
-        if (bits_supported < num_domain_id_bits) {
-            num_domain_id_bits = bits_supported;
+        if (bits_supported < नुमेरो_domain_id_bits) {
+            नुमेरो_domain_id_bits = bits_supported;
         }
     }
 
-    x86KSnumIODomainIDBits = num_domain_id_bits;
-    UNUSED uint32_t  max_num_iopt_levels;
+    x86KSnumIODomainIDBits = नुमेरो_domain_id_bits;
+    UNUSED uint32_t  max_नुमेरो_iopt_levels;
     if (aw_bitmask & SAGAW_6_LEVEL) {
-        max_num_iopt_levels = 6;
+        max_नुमेरो_iopt_levels = 6;
     } else if (aw_bitmask & SAGAW_5_LEVEL) {
-        max_num_iopt_levels = 5;
+        max_नुमेरो_iopt_levels = 5;
     } else if (aw_bitmask & SAGAW_4_LEVEL) {
-        max_num_iopt_levels = 4;
+        max_नुमेरो_iopt_levels = 4;
     } else if (aw_bitmask & SAGAW_3_LEVEL) {
-        max_num_iopt_levels = 3;
+        max_नुमेरो_iopt_levels = 3;
     } else if (aw_bitmask & SAGAW_2_LEVEL) {
-        max_num_iopt_levels = 2;
+        max_नुमेरो_iopt_levels = 2;
     } else {
         printf("IOMMU: mismatch of supported number of PT levels between IOMMUs\n");
         return false;
@@ -510,7 +510,7 @@ BOOT_CODE bool_t vtd_init_num_iopts(uint32_t num_drhu)
         return false;
     }
 
-    printf("IOMMU: Using %d page-table levels (max. supported: %d)\n", x86KSnumIOPTLevels, max_num_iopt_levels);
+    printf("IOMMU: Using %d page-table levels (max. supported: %d)\n", x86KSnumIOPTLevels, max_नुमेरो_iopt_levels);
     return true;
 }
 
@@ -521,12 +521,12 @@ BOOT_CODE bool_t vtd_init(cpu_id_t  cpu_id, acpi_rmrr_list_t *rmrr_list)
         return true;
     }
 
-    x86KSvtdRootTable = (vtd_rte_t *) it_alloc_paging();
+    x86_KSvtd_उगात_Table = (vtd_rte_t *) it_alloc_paging();
     for (uint32_t bus = 0; bus < N_VTD_CONTEXTS; bus++) {
         vtd_create_context_table(bus, rmrr_list);
     }
 
-    flushCacheRange(x86KSvtdRootTable, VTD_RT_SIZE_BITS);
+    flushCacheRange(x86_KSvtd_उगात_Table, VTD_RT_SIZE_BITS);
 
     if (!vtd_enable(cpu_id)) {
         return false;

@@ -16,7 +16,7 @@ void VISIBLE halt(void)
 #ifdef CONFIG_PRINTING
     printf("halting...");
 #ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
+    debug_इलिम्बाग_Kernel_Entry_Reason();
 #endif
 #endif
     idle_thread();

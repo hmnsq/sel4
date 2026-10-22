@@ -22,8 +22,8 @@ void VISIBLE c_nested_interrupt(int irq)
     /* This is not a real entry point, so we do not grab locks or
      * run c_entry/exit_hooks, since this occurs only if we're already
      * running inside the kernel. Just record the irq and return */
-    assert(ARCH_NODE_STATE(x86KSPendingInterrupt) == int_invalid);
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = irq;
+    assert(ARCH_बुहोल_STATE(x86KSPendingInterrupt) == int_invalid);
+    ARCH_बुहोल_STATE(x86KSPendingInterrupt) = irq;
 }
 
 void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
@@ -37,14 +37,14 @@ void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
 
     /* Only grab the lock if we are not handling 'int_remote_call_ipi' interrupt
      * also flag this lock as IRQ lock if handling the irq interrupts. */
-    NODE_LOCK_IF(irq != int_remote_call_ipi,
+    बुहोल_LOCK_IF(irq != int_remote_call_ipi,
                  irq >= int_irq_min && irq <= int_irq_max);
 
     c_entry_hook();
 
     if (irq == int_page_fault) {
         /* Error code is in Error. Pull out bit 5, which is whether it was instruction or data */
-        vm_fault_type_t type = (NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error] >> 4u) & 1u;
+        vm_fault_type_t type = (बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error] >> 4u) & 1u;
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_VMFault;
         ksKernelEntry.word = type;
@@ -55,7 +55,7 @@ void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
         /* Debug exception */
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_DebugFault;
-        ksKernelEntry.word = NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP];
+        ksKernelEntry.word = बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP];
 #endif
         handleUserLevelDebugException(irq);
 #endif /* CONFIG_HARDWARE_DEBUG_API */
@@ -64,9 +64,9 @@ void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
         ksKernelEntry.path = Entry_UserLevelFault;
         ksKernelEntry.word = irq;
 #endif
-        handleUserLevelFault(irq, NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error]);
+        handleUserLevelFault(irq, बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers[Error]);
     } else if (likely(irq < int_trap_min)) {
-        ARCH_NODE_STATE(x86KScurInterrupt) = irq;
+        ARCH_बुहोल_STATE(x86KScurInterrupt) = irq;
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_Interrupt;
         ksKernelEntry.word = irq;
@@ -80,15 +80,15 @@ void VISIBLE NORETURN c_handle_interrupt(int irq, int syscall)
         /* Interpret a trap as an unknown syscall */
         /* Adjust FaultIP to point to trapping INT
          * instruction by subtracting 2 */
-        int sys_num;
-        NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP] -= 2;
+        int sys_नुमेरो;
+        बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers[FaultIP] -= 2;
         /* trap number is MSBs of the syscall number and the LSBS of EAX */
-        sys_num = (irq << 24) | (syscall & 0x00ffffff);
+        sys_नुमेरो = (irq << 24) | (syscall & 0x00ffffff);
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
-        ksKernelEntry.word = sys_num;
+        ksKernelEntry.word = sys_नुमेरो;
 #endif
-        handleUnknownSyscall(sys_num);
+        handleUnknownSyscall(sys_नुमेरो);
     }
     restore_user_context();
     UNREACHABLE();
@@ -98,18 +98,18 @@ void NORETURN slowpath(syscall_t syscall)
 {
 
 #ifdef CONFIG_VTX
-    if (syscall == SysVMEnter && NODE_STATE(ksCurThread)->tcbArch.tcbVCPU) {
-        vcpu_update_state_sysvmenter(NODE_STATE(ksCurThread)->tcbArch.tcbVCPU);
-        if (NODE_STATE(ksCurThread)->tcbBoundNotification
-            && notification_ptr_get_state(NODE_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active) {
-            completeSignal(NODE_STATE(ksCurThread)->tcbBoundNotification, NODE_STATE(ksCurThread));
-            setRegister(NODE_STATE(ksCurThread), msgInfoRegister, SEL4_VMENTER_RESULT_NOTIF);
+    if (syscall == SysVMEnter && बुहोल_STATE(ksCurThread)->tcbArch.tcbVCPU) {
+        vcpu_update_state_sysvmenter(बुहोल_STATE(ksCurThread)->tcbArch.tcbVCPU);
+        if (बुहोल_STATE(ksCurThread)->tcbBoundNotification
+            && notification_ptr_get_state(बुहोल_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active) {
+            completeSignal(बुहोल_STATE(ksCurThread)->tcbBoundNotification, बुहोल_STATE(ksCurThread));
+            setRegister(बुहोल_STATE(ksCurThread), मेनसाहे_Info_Register, SEL4_VMENTER_RESULT_NOTIF);
             /* Any guest state that we should return is in the same
              * register position as sent to us, so we can just return
              * and let the user pick up the values they put in */
             restore_user_context();
         } else {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_RunningVM);
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_RunningVM);
             restore_user_context();
         }
     }
@@ -136,9 +136,9 @@ void NORETURN slowpath(syscall_t syscall)
 }
 
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall, word_t reply)
+void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t मेनसाहे_Info, syscall_t syscall, word_t reply)
 #else
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t मेनसाहे_Info, syscall_t syscall)
 #endif
 {
     /* need to run this first as the NODE_LOCK code might end up as a function call
@@ -151,30 +151,30 @@ void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t sy
        the correct program counter. */
     if (config_set(CONFIG_SYSENTER)) {
         /* increment NextIP to skip sysenter */
-        NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers[NextIP] += 2;
+        बुहोल_STATE(ksCurThread)->tcbArch.tcbContext.registers[NextIP] += 2;
     } else {
         /* set FaultIP */
-        setRegister(NODE_STATE(ksCurThread), FaultIP, getRegister(NODE_STATE(ksCurThread), NextIP) - 2);
+        setRegister(बुहोल_STATE(ksCurThread), FaultIP, getRegister(बुहोल_STATE(ksCurThread), NextIP) - 2);
     }
 
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 
 #ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+    benchmark_debug_syscall_start(cptr, मेनसाहे_Info, syscall);
     ksKernelEntry.is_fastpath = 1;
 #endif /* TRACK_KERNEL_ENTRIES */
 
 #ifdef CONFIG_FASTPATH
     if (syscall == (syscall_t)SysCall) {
-        fastpath_call(cptr, msgInfo);
+        fastpath_call(cptr, मेनसाहे_Info);
         UNREACHABLE();
     } else if (syscall == (syscall_t)SysReplyRecv) {
 #ifdef CONFIG_KERNEL_MCS
-        fastpath_reply_recv(cptr, msgInfo, reply);
+        fastpath_reply_recv(cptr, मेनसाहे_Info, reply);
 #else
-        fastpath_reply_recv(cptr, msgInfo);
+        fastpath_reply_recv(cptr, मेनसाहे_Info);
 #endif
         UNREACHABLE();
     }
@@ -206,9 +206,9 @@ void VISIBLE NORETURN c_handle_vmexit(void)
      * restore the registers without having a means to determine whether
      * they may have been dirtied by a VM exit. */
 #ifndef CONFIG_X86_64_VTX_64BIT_GUESTS
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-    ARCH_NODE_STATE(x86KSCurrentGSBase) = -(word_t)1;
-    ARCH_NODE_STATE(x86KSCurrentFSBase) = -(word_t)1;
+    tcb_t *cur_thread = बुहोल_STATE(ksCurThread);
+    ARCH_बुहोल_STATE(x86KSCurrentGSBase) = -(word_t)1;
+    ARCH_बुहोल_STATE(x86KSCurrentFSBase) = -(word_t)1;
     x86_load_fsgs_base(cur_thread, CURRENT_CPU_INDEX());
 #endif
 

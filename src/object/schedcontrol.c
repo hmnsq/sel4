@@ -23,7 +23,7 @@ static exception_t invokeSchedControl_ConfigureFlags(sched_context_t *target, wo
         tcbReleaseRemove(thread);
         tcbSchedDequeue(thread);
         /* bill the current consumed amount before adjusting the params */
-        if (NODE_STATE(ksCurSC) == target) {
+        if (बुहोल_STATE(ksCurSC) == target) {
             /* This could potentially mutate state but if it returns
              * true no state was modified, thus removing it should
              * be the same. */
@@ -60,13 +60,13 @@ static exception_t invokeSchedControl_ConfigureFlags(sched_context_t *target, wo
     if (thread) {
         schedContext_resume(target);
         if (SMP_TERNARY(core == CURRENT_CPU_INDEX(), true)) {
-            if (isRunnable(thread) && thread != NODE_STATE(ksCurThread)) {
+            if (isRunnable(thread) && thread != बुहोल_STATE(ksCurThread)) {
                 possibleSwitchTo(thread);
             }
         } else if (isRunnable(thread)) {
             SCHED_ENQUEUE(thread);
         }
-        if (thread == NODE_STATE(ksCurThread)) {
+        if (thread == बुहोल_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
@@ -143,7 +143,7 @@ static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, w
     if (unlikely(cap_get_capType(targetCap) != cap_sched_context_cap)) {
         userError("SchedControl_ConfigureFlags: target cap not a scheduling context cap");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -163,7 +163,7 @@ static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, w
     word_t badge = getSyscallArg(TIME_ARG_SIZE * 2 + 1, buffer);
     word_t flags = getSyscallArg(TIME_ARG_SIZE * 2 + 2, buffer);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSchedControl_ConfigureFlags(SC_PTR(cap_sched_context_cap_get_capSCPtr(targetCap)),
                                              cap_sched_control_cap_get_core(cap),
                                              budget_ticks,

@@ -16,7 +16,7 @@
 #ifdef CONFIG_VTX
 static void NORETURN USED vmlaunch_failed(word_t failInvalid, word_t failValid)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 
@@ -180,13 +180,13 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         : [guest_regs]"r"(vcpu->gp_registers),
         [launched]"r"(&vcpu->launched),
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS)),
+        [सालानसान_size]"i"(BIT(CONFIG_KERNEL_सालानसान_BITS)),
         [guest_msr]"r"(vcpu->guest_msr_registers),
         [host_msr]"r"(&vcpu->host_msr_registers[n_vcpu_msr_register])
 #else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS))
+        [सालानसान_size]"i"(BIT(CONFIG_KERNEL_सालानसान_BITS))
 #ifdef ENABLE_SMP_SUPPORT
-        , [stack_offset]"i"(OFFSETOF(nodeInfo_t, stackTop))
+        , [सालानसान_offset]"i"(OFFSETOF(बुहोल_Info_t, सालानसान_इताअस_2))
 #endif
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         // Clobber memory so the compiler is forced to complete all stores
@@ -202,11 +202,11 @@ void VISIBLE NORETURN restore_user_context(void)
 {
     c_exit_hook();
 
-    NODE_UNLOCK_IF_HELD;
+    बुहोल_UNLOCK_IF_HELD;
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    if (ARCH_बुहोल_STATE(x86KSPendingInterrupt) != int_invalid) {
         interrupt_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
         asm volatile(
@@ -215,14 +215,14 @@ void VISIBLE NORETURN restore_user_context(void)
             "movq %[irq], %%rdi\n"
             "call c_handle_interrupt"
             :
-            : [stack_top] "r"(&(kernel_stack_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_STACK_BITS)])),
+            : [सालानसान_इताअस] "r"(&(kernel_सालानसान_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_सालानसान_BITS)])),
             [syscall] "i"(0), /* syscall is unused for irq path */
             [irq] "r"((seL4_Word)irq)
             : "memory");
         UNREACHABLE();
     }
 
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
+    tcb_t *cur_thread = बुहोल_STATE(ksCurThread);
     word_t *irqstack = x64KSIRQStack[CURRENT_CPU_INDEX()];
 #ifdef CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
@@ -240,7 +240,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
 #ifdef ENABLE_SMP_SUPPORT
 #ifdef CONFIG_KERNEL_SKIM_WINDOW
-    word_t user_cr3 = MODE_NODE_STATE(x64KSCurrentUserCR3);
+    word_t user_cr3 = MODE_बुहोल_STATE(x64KSCurrentUserCR3);
 #endif /* CONFIG_KERNEL_SKIM_WINDOW */
     swapgs();
 #endif /* ENABLE_SMP_SUPPORT */
@@ -446,7 +446,7 @@ void VISIBLE NORETURN restore_user_context(void)
             : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI])
 #if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
             , "c"(user_cr3)
-            , [scratch_offset] "i"(nodeSkimScratchOffset)
+            , [scratch_offset] "i"(बुहोल_Skim_Scratch_Offset)
 #endif
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
@@ -462,16 +462,16 @@ void VISIBLE NORETURN c_x64_handle_interrupt(int irq, int syscall)
     if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_enable_ibrs();
     }
-    word_t *irq_stack = x64KSIRQStack[CURRENT_CPU_INDEX()];
-    setRegister(NODE_STATE(ksCurThread), Error, irq_stack[0]);
+    word_t *irq_सालानसान = x64KSIRQStack[CURRENT_CPU_INDEX()];
+    setRegister(बुहोल_STATE(ksCurThread), Error, irq_सालानसान[0]);
     /* In the case of an interrupt the NextIP and the FaultIP should be the same value,
      * i.e. the address of the instruction the CPU was about to execute before the
      * interrupt. This is the 5th value pushed on by the hardware, so indexing from
      * the bottom is x64KSIRQStack[1] */
-    setRegister(NODE_STATE(ksCurThread), NextIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FaultIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FLAGS, irq_stack[3]);
-    setRegister(NODE_STATE(ksCurThread), RSP, irq_stack[4]);
+    setRegister(बुहोल_STATE(ksCurThread), NextIP, irq_सालानसान[1]);
+    setRegister(बुहोल_STATE(ksCurThread), FaultIP, irq_सालानसान[1]);
+    setRegister(बुहोल_STATE(ksCurThread), FLAGS, irq_सालानसान[3]);
+    setRegister(बुहोल_STATE(ksCurThread), RSP, irq_सालानसान[4]);
     c_handle_interrupt(irq, syscall);
     UNREACHABLE();
 }

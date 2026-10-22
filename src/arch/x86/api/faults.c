@@ -66,9 +66,9 @@ word_t handleKernelException(
     word_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
-        word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
-        ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
+    if (vector == int_gp_fault && ARCH_बुहोल_STATE(x86KSGPExceptReturnTo) != 0) {
+        word_t ret = ARCH_बुहोल_STATE(x86KSGPExceptReturnTo);
+        ARCH_बुहोल_STATE(x86KSGPExceptReturnTo) = 0;
         return ret;
     }
     printf("\n========== KERNEL EXCEPTION ==========\n");
@@ -83,8 +83,8 @@ word_t handleKernelException(
     printf("CR4:     0x%lx\n", cr4);
     printf("\nStack Dump:\n");
     for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
-        printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
+        word_t UNUSED सालानसान = sp + i * sizeof(word_t);
+        printf("*0x%lx == 0x%lx\n", सालानसान, *(word_t *)सालानसान);
     }
     printf("\nHalting...\n");
     halt();

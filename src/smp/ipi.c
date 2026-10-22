@@ -22,7 +22,7 @@
 void ipiStallCoreCallback(bool_t irqPath)
 {
     word_t cpu = getCurrentCPUIndex();
-    clh_node_t *node = &big_kernel_lock.node[cpu];
+    clh_बुहोल_t *बुहोल = &big_kernel_lock.बुहोल[cpu];
 
     if (clh_is_self_in_queue() && !irqPath) {
         /* The current thread is running as we would replace this thread with an idle thread
@@ -31,27 +31,27 @@ void ipiStallCoreCallback(bool_t irqPath)
          * Also, thread in 'ThreadState_RunningVM' should remain in same state.
          * Note that, 'ThreadState_Restart' does not always result in regenerating exception
          * if we are in kernel to handle them, e.g. hardware single step exception. */
-        if (thread_state_ptr_get_tsType(&NODE_STATE(ksCurThread)->tcbState) == ThreadState_Running) {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        if (thread_state_ptr_get_tsType(&बुहोल_STATE(ksCurThread)->tcbState) == ThreadState_Running) {
+            setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         }
 
         SCHED_ENQUEUE_CURRENT_TCB;
         switchToIdleThread();
 #ifdef CONFIG_KERNEL_MCS
         commitTime();
-        NODE_STATE(ksCurSC) = NODE_STATE(ksIdleThread)->tcbSchedContext;
+        बुहोल_STATE(ksCurSC) = बुहोल_STATE(ksIdleThread)->tcbSchedContext;
 #endif
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+        बुहोल_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
 
         /* Let the cpu requesting this IPI continue while we wait on the lock */
-        node->ipi = 0;
+        बुहोल->ipi = 0;
 #ifdef CONFIG_ARCH_RISCV
         ipi_clear_irq(irq_remote_call_ipi);
 #endif
         ipi_wait();
 
         /* Continue waiting on lock */
-        while (node->watch->state != CLHState_Granted) {
+        while (बुहोल->watch->state != CLHState_Granted) {
             __atomic_thread_fence(__ATOMIC_ACQUIRE);
             if (clh_is_ipi_pending(cpu)) {
                 /* Multiple calls for similar reason could result in stack overflow */
@@ -76,9 +76,9 @@ void ipiStallCoreCallback(bool_t irqPath)
         switchToIdleThread();
 #ifdef CONFIG_KERNEL_MCS
         commitTime();
-        NODE_STATE(ksCurSC) = NODE_STATE(ksIdleThread)->tcbSchedContext;
+        बुहोल_STATE(ksCurSC) = बुहोल_STATE(ksIdleThread)->tcbSchedContext;
 #endif
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+        बुहोल_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
     }
 }
 
@@ -87,10 +87,10 @@ void ipi_wait(void)
     ipi_state_t *ipi = &big_kernel_lock.ipi;
     word_t cores = ipi->totalCoreBarrier;
     word_t localsense = ipi->globalsense;
-    word_t *count = &ipi->count;
+    word_t *बिलांग = &ipi->बिलांग;
 
-    if (__atomic_fetch_add(count, 1, __ATOMIC_ACQ_REL) == cores) {
-        *count = 0;
+    if (__atomic_fetch_add(बिलांग, 1, __ATOMIC_ACQ_REL) == cores) {
+        *बिलांग = 0;
         ipi->globalsense++;
         __atomic_thread_fence(__ATOMIC_RELEASE);
     }
@@ -102,16 +102,16 @@ void ipi_wait(void)
     }
 }
 
-static inline void init_ipi_args(IpiRemoteCall_t func,
+static inline void init_ipi_मगा_कातविरान(IpiRemoteCall_t func,
                                  word_t data1, word_t data2, word_t data3,
                                  word_t mask)
 {
     ipi_state_t *ipi = &big_kernel_lock.ipi;
 
     ipi->remoteCall = func;
-    ipi->args[0] = data1;
-    ipi->args[1] = data2;
-    ipi->args[2] = data3;
+    ipi->मगा_कातविरान[0] = data1;
+    ipi->मगा_कातविरान[1] = data2;
+    ipi->मगा_कातविरान[2] = data3;
 
     /* get number of cores involved in this IPI */
     ipi->totalCoreBarrier = popcountl(mask);
@@ -122,7 +122,7 @@ void handleIPI(irq_t irq, bool_t irqPath)
     ipi_state_t *ipi = &big_kernel_lock.ipi;
 
     if (IRQT_TO_IRQ(irq) == irq_remote_call_ipi) {
-        handleRemoteCall(ipi->remoteCall, ipi->args[0], ipi->args[1], ipi->args[2], irqPath);
+        handleRemoteCall(ipi->remoteCall, ipi->मगा_कातविरान[0], ipi->मगा_कातविरान[1], ipi->मगा_कातविरान[2], irqPath);
     } else if (IRQT_TO_IRQ(irq) == irq_reschedule_ipi) {
         rescheduleRequired();
 #ifdef CONFIG_ARCH_RISCV
@@ -141,7 +141,7 @@ void doRemoteMaskOp(IpiRemoteCall_t func, word_t data1, word_t data2, word_t dat
     /* this may happen, e.g. the caller tries to map a pagetable in
      * newly created PD which has not been run yet. Guard against them! */
     if (mask != 0) {
-        init_ipi_args(func, data1, data2, data3, mask);
+        init_ipi_मगा_कातविरान(func, data1, data2, data3, mask);
 
         /* make sure no resource access passes from this point */
         asm volatile("" ::: "memory");
@@ -162,7 +162,7 @@ void doMaskReschedule(word_t mask)
 void generic_ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 {
     word_t nr_target_cores = 0;
-    uint16_t target_cores[CONFIG_MAX_NUM_NODES];
+    uint16_t target_cores[CONFIG_MAX_नुमेरो_NODES];
 
     while (mask) {
         int index = wordBits - 1 - clzl(mask);
@@ -173,7 +173,7 @@ void generic_ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
              * IPI_MEM_BARRIER is too late to prevent reordering
              * between IPI data and flag reads.
              */
-            __atomic_store_n(&big_kernel_lock.node[index].ipi, 1, __ATOMIC_RELEASE);
+            __atomic_store_n(&big_kernel_lock.बुहोल[index].ipi, 1, __ATOMIC_RELEASE);
             target_cores[nr_target_cores] = index;
             nr_target_cores++;
         } else {
@@ -196,9 +196,9 @@ void generic_ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 exception_t handle_SysDebugSendIPI(void)
 {
 #ifdef CONFIG_ARCH_ARM
-    word_t target = getRegister(NODE_STATE(ksCurThread), capRegister);
-    word_t irq = getRegister(NODE_STATE(ksCurThread), msgInfoRegister);
-    if (target > CONFIG_MAX_NUM_NODES) {
+    word_t target = getRegister(बुहोल_STATE(ksCurThread), capRegister);
+    word_t irq = getRegister(बुहोल_STATE(ksCurThread), मेनसाहे_Info_Register);
+    if (target > CONFIG_MAX_नुमेरो_NODES) {
         userError("SysDebugSendIPI: Invalid target, halting");
         halt();
     }

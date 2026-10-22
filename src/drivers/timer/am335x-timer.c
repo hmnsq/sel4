@@ -91,7 +91,7 @@ static BOOT_CODE void enableTimers(void)
 /* The idea here is to use the functionality of overflow interrupts to calculate time
    and use match interrupts for setting a deadline. */
 
-uint32_t high_bits = 0;
+uint32_t माताअस_bits = 0;
 BOOT_CODE void initTimer(void)
 {
     int timeout;

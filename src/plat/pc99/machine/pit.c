@@ -17,27 +17,27 @@
 
 BOOT_CODE void pit_init(void)
 {
-    uint16_t divisor = (PIT_HZ * PIT_WRAPAROUND_MS) / 1000;
+    uint16_t पांगहाति = (PIT_HZ * PIT_WRAPAROUND_MS) / 1000;
 
     out8(PIT_MODE, 0x34);          /* Set mode 2 and wait for divisor bytes */
-    out8(PIT_CH0, divisor & 0xff); /* Set low byte of divisor */
-    out8(PIT_CH0, divisor >> 8);   /* Set high byte of divisor */
+    out8(PIT_CH0, पांगहाति & 0xff); /* Set low byte of divisor */
+    out8(PIT_CH0, पांगहाति >> 8);   /* Set high byte of divisor */
 }
 
 BOOT_CODE void pit_wait_wraparound(void)
 {
-    uint16_t count;
-    uint16_t count_old;
+    uint16_t बिलांग;
+    uint16_t बिलांग_old;
 
     out8(PIT_MODE, 0x00);
-    count = in8(PIT_CH0);
-    count |= (in8(PIT_CH0) << 8);
-    count_old = count;
+    बिलांग = in8(PIT_CH0);
+    बिलांग |= (in8(PIT_CH0) << 8);
+    बिलांग_old = बिलांग;
 
-    while (count <= count_old) {
-        count_old = count;
+    while (बिलांग <= बिलांग_old) {
+        बिलांग_old = बिलांग;
         out8(PIT_MODE, 0x00);
-        count = in8(PIT_CH0);
-        count |= (in8(PIT_CH0) << 8);
+        बिलांग = in8(PIT_CH0);
+        बिलांग |= (in8(PIT_CH0) << 8);
     }
 }

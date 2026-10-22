@@ -22,7 +22,7 @@ BOOT_CODE void init_sysenter_msrs(void)
         /* manually add 4 bytes to x86KStss so that it is valid for both
          * 32-bit and 64-bit, although only ia32 actually requires a valid
          * sysenter esp */
-        x86_wrmsr(IA32_SYSENTER_ESP_MSR, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0]
+        x86_wrmsr(IA32_SYSENTER_ESP_MSR, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.मगा_सालिता[0]
                                                             + 4));
     }
 }
@@ -38,25 +38,25 @@ void setNextPC(tcb_t *thread, word_t v)
 }
 
 /* Returns the size of CPU's cacheline */
-BOOT_CODE uint32_t CONST getCacheLineSizeBits(void)
+BOOT_CODE uint32_t CONST get_Cache_लिन्या_Size_Bits(void)
 {
-    uint32_t line_size;
+    uint32_t लिन्या_size;
     uint32_t n;
 
-    line_size = getCacheLineSize();
-    if (line_size == 0) {
+    लिन्या_size = get_Cache_लिन्या_Size();
+    if (लिन्या_size == 0) {
         printf("Cacheline size must be >0\n");
         return 0;
     }
 
     /* determine size_bits */
     n = 0;
-    while (!(line_size & 1)) {
-        line_size >>= 1;
+    while (!(लिन्या_size & 1)) {
+        लिन्या_size >>= 1;
         n++;
     }
 
-    if (line_size != 1) {
+    if (लिन्या_size != 1) {
         printf("Cacheline size must be a power of two\n");
         return 0;
     }
@@ -75,10 +75,10 @@ void flushCacheRange(void *vaddr, uint32_t size_bits)
 
     x86_mfence();
 
-    for (v = ROUND_DOWN((word_t)vaddr, x86KScacheLineSizeBits);
+    for (v = ROUND_DOWN((word_t)vaddr, x86_KScache_लिन्या_Size_Bits);
          v < (word_t)vaddr + BIT(size_bits);
-         v += BIT(x86KScacheLineSizeBits)) {
-        flushCacheLine((void *)v);
+         v += BIT(x86_KScache_लिन्या_Size_Bits)) {
+        flush_Cache_लिन्या((void *)v);
     }
     x86_mfence();
 }
@@ -87,7 +87,7 @@ void flushCacheRange(void *vaddr, uint32_t size_bits)
 BOOT_CODE bool_t disablePrefetchers(void)
 {
     x86_cpu_identity_t *model_info;
-    uint32_t low, high;
+    uint32_t माबाबा, माताअस;
     word_t i;
 
     uint32_t valid_models[] = { BROADWELL_1_MODEL_ID, BROADWELL_2_MODEL_ID,
@@ -114,15 +114,15 @@ BOOT_CODE bool_t disablePrefetchers(void)
          */
         if (model_info->family == IA32_PREFETCHER_COMPATIBLE_FAMILIES_ID
             && model_info->model == valid_models[i]) {
-            low = x86_rdmsr_low(IA32_PREFETCHER_MSR);
-            high = x86_rdmsr_high(IA32_PREFETCHER_MSR);
+            माबाबा = x86_rdmsr_माबाबा(IA32_PREFETCHER_MSR);
+            माताअस = x86_rdmsr_माताअस(IA32_PREFETCHER_MSR);
 
-            low |= IA32_PREFETCHER_MSR_L2;
-            low |= IA32_PREFETCHER_MSR_L2_ADJACENT;
-            low |= IA32_PREFETCHER_MSR_DCU;
-            low |= IA32_PREFETCHER_MSR_DCU_IP;
+            माबाबा |= IA32_PREFETCHER_MSR_L2;
+            माबाबा |= IA32_PREFETCHER_MSR_L2_ADJACENT;
+            माबाबा |= IA32_PREFETCHER_MSR_DCU;
+            माबाबा |= IA32_PREFETCHER_MSR_DCU_IP;
 
-            x86_wrmsr(IA32_PREFETCHER_MSR, ((uint64_t)high) << 32 | low);
+            x86_wrmsr(IA32_PREFETCHER_MSR, ((uint64_t)माताअस) << 32 | माबाबा);
 
             return true;
         }
@@ -141,7 +141,7 @@ BOOT_CODE void enablePMCUser(void)
 BOOT_CODE bool_t init_ibrs(void)
 {
     cpuid_007h_edx_t edx;
-    edx.words[0] = x86_cpuid_edx(0x7, 0);
+    edx.मगा_सालिता[0] = x86_cpuid_edx(0x7, 0);
     bool_t support_ibrs = cpuid_007h_edx_get_ibrs_ibpb(edx);
     if ((config_set(CONFIG_KERNEL_X86_IBRS_BASIC) || config_set(CONFIG_KERNEL_X86_IBRS_STIBP)) && !support_ibrs) {
         printf("IBRS not supported by CPU\n");
@@ -160,7 +160,7 @@ BOOT_CODE bool_t init_ibrs(void)
     bool_t enhanced_ibrs = false;
     if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
-        cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
+        cap_msr.मगा_सालिता[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
         if (ia32_arch_capabilities_msr_get_ibrs_all(cap_msr)) {
             enhanced_ibrs = true;
         }

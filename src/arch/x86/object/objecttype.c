@@ -298,12 +298,12 @@ bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
     switch (cap_get_capType(cap_a)) {
     case cap_frame_cap:
         if (cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
+            word_t botA, botB, इताअस_A, इताअस_B;
             botA = cap_frame_cap_get_capFBasePtr(cap_a);
             botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b)));
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+            इताअस_A = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
+            इताअस_B = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b)));
+            return ((botA <= botB) && (इताअस_A >= इताअस_B) && (botB <= इताअस_B));
         }
         break;
 

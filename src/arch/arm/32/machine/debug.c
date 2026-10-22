@@ -25,9 +25,9 @@
 /* This bit is always RAO */
 #define DBGLSR_LOCK_IMPLEMENTED       (BIT(0))
 #define DBGLSR_LOCK_ENABLED           (BIT(1))
-#define DBGLAR_UNLOCK_VALUE           (0xC5ACCE55u)
+#define DBGLAR_UNLOCK_हालागा           (0xC5ACCE55u)
 
-#define DBGOSLAR_LOCK_VALUE           (0xC5ACCE55u)
+#define DBGOSLAR_LOCK_हालागा           (0xC5ACCE55u)
 
 #define DBGOSLSR_GET_OSLOCK_MODEL(v)  ((((v) >> 2u) & 0x2u) | ((v) & 0x1u))
 #define DBGOSLSR_LOCK_MODEL_NO_OSLOCK (0u)
@@ -138,7 +138,7 @@ static inline word_t getMethodOfEntry(void)
 {
     dbg_dscr_t dscr;
 
-    dscr.words[0] = readDscrCp();
+    dscr.मगा_सालिता[0] = readDscrCp();
     return dbg_dscr_get_methodOfEntry(dscr);
 }
 
@@ -149,15 +149,15 @@ static inline word_t getMethodOfEntry(void)
  * @param n_instr The number of instructions to step over.
  */
 bool_t configureSingleStepping(tcb_t *t,
-                               uint16_t bp_num,
+                               uint16_t bp_नुमेरो,
                                word_t n_instr,
                                bool_t is_reply)
 {
 
     if (is_reply) {
-        bp_num = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num;
+        bp_नुमेरो = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_नुमेरो;
     } else {
-        bp_num = convertBpNumToArch(bp_num);
+        bp_नुमेरो = convert_Bp_नुमेरो_To_Arch(bp_नुमेरो);
     }
 
     /* On ARM single-stepping is emulated using breakpoint mismatches. So you
@@ -172,7 +172,7 @@ bool_t configureSingleStepping(tcb_t *t,
      */
     dbg_bcr_t bcr;
 
-    bcr.words[0] = readBcrContext(t, bp_num);
+    bcr.मगा_सालिता[0] = readBcrContext(t, bp_नुमेरो);
 
     /* If the user calls us with n_instr == 0, allow them to configure, but
      * leave it disabled.
@@ -192,11 +192,11 @@ bool_t configureSingleStepping(tcb_t *t,
     bcr = dbg_bcr_set_bas(bcr, convertSizeToArch(1));
     bcr = Arch_setupBcr(bcr, false);
 
-    writeBvrContext(t, bp_num, t->tcbArch.tcbContext.registers[FaultIP]);
-    writeBcrContext(t, bp_num, bcr.words[0]);
+    writeBvrContext(t, bp_नुमेरो, t->tcbArch.tcbContext.registers[FaultIP]);
+    writeBcrContext(t, bp_नुमेरो, bcr.मगा_सालिता[0]);
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num = bp_num;
+    t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_नुमेरो = bp_नुमेरो;
     return true;
 }
 
@@ -215,7 +215,7 @@ BOOT_CODE static void initVersionInfo(void)
 {
     dbg_didr_t didr;
 
-    didr.words[0] = getDIDR();
+    didr.मगा_सालिता[0] = getDIDR();
     dbg.oem_revision = dbg_didr_get_revision(didr);
     dbg.oem_variant = dbg_didr_get_variant(didr);
     dbg.didr_version = dbg_didr_get_version(didr);
@@ -350,7 +350,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          */
         MRC(DBGOSLSR, dbgoslsr);
         if (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
-            MCR(DBGOSLAR, ~DBGOSLAR_LOCK_VALUE);
+            MCR(DBGOSLAR, ~DBGOSLAR_LOCK_हालागा);
         }
 
         disableAllBpsAndWps();
@@ -369,10 +369,10 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    for (int i = 0; i < se_L4_नुमेरो_Exclusive_Breakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    for (int i = 0; i < se_L4_नुमेरो_Exclusive_Watchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
@@ -495,17 +495,17 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
          * breakpoint value register used for this is mismatched with the
          * current faultIP
          */
-        tcb_t *curr_thread = NODE_STATE(ksCurThread);
+        tcb_t *curr_thread = बुहोल_STATE(ksCurThread);
         user_context_t *context = &curr_thread->tcbArch.tcbContext;
 
         if (context->breakpointState.single_step_enabled) {
             word_t bvr;
-            word_t bp_num = context->breakpointState.single_step_hw_bp_num;
+            word_t bp_नुमेरो = context->breakpointState.single_step_hw_bp_नुमेरो;
 
-            bvr = readBvrCp(bp_num);
+            bvr = readBvrCp(bp_नुमेरो);
             if (bvr != context->registers[FaultIP]) {
                 bp_reason = seL4_SingleStep;
-                active_bp = bp_num;
+                active_bp = bp_नुमेरो;
                 /* Update the BVR so it doesn't fault on the same address
                  * again (in the case of stepping through multiple instructions)
                  */
@@ -548,7 +548,7 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
      */
     if (bp_reason != seL4_SoftwareBreakRequest) {
         /* Convert the hardware BP num back into an API-ID */
-        active_bp = getBpNumFromType(active_bp, bp_reason);
+        active_bp = get_Bp_नुमेरो_From_Type(active_bp, bp_reason);
     }
     ret = seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
     return ret;

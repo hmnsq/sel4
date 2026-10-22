@@ -11,7 +11,7 @@
 #ifdef CONFIG_XAPIC
 #ifdef CONFIG_USE_LOGICAL_IDS
 /* using flat cluster mode we only support 8 cores */
-compile_assert(number_of_cores_invalid_for_logical_ids, CONFIG_MAX_NUM_NODES <= 8)
+compile_assert(नुमेरो_of_cores_invalid_for_logical_ids, CONFIG_MAX_नुमेरो_NODES <= 8)
 
 BOOT_CODE static void
 init_xapic_ldr(void)
@@ -28,7 +28,7 @@ init_xapic_ldr(void)
 BOOT_CODE bool_t apic_enable(void)
 {
     apic_base_msr_t apic_base_msr;
-    apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
+    apic_base_msr.मगा_सालिता[0] = x86_rdmsr_माबाबा(IA32_APIC_BASE_MSR);
 
     if (!apic_base_msr_get_enabled(apic_base_msr)) {
         printf("APIC: Enabled bit not set\n");
@@ -66,7 +66,7 @@ BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).मगा_सालिता[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             1,          /* trigger_mode    */
@@ -75,12 +75,12 @@ BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
             0,          /* dest_mode       */
             5,          /* delivery_mode   */
             0           /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).मगा_सालिता[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             1,          /* trigger_mode    */
@@ -89,7 +89,7 @@ BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
             0,          /* dest_mode       */
             5,          /* delivery_mode   */
             0           /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 }
 
@@ -104,7 +104,7 @@ BOOT_CODE void apic_send_startup_ipi(cpu_id_t cpu_id, paddr_t startup_addr)
     apic_write_icr(
         apic_icr2_new(
             cpu_id       /* dest */
-        ).words[0],
+        ).मगा_सालिता[0],
         apic_icr1_new(
             0,           /* dest_shorthand  */
             0,           /* trigger_mode    */
@@ -113,7 +113,7 @@ BOOT_CODE void apic_send_startup_ipi(cpu_id_t cpu_id, paddr_t startup_addr)
             0,           /* dest_mode       */
             6,           /* delivery_mode   */
             startup_addr /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 }
 
@@ -122,13 +122,13 @@ void apic_send_ipi_core(irq_t vector, cpu_id_t cpu_id)
     apic_icr1_t icr1;
     /* wait till we can send an IPI */
     do {
-        icr1.words[0] = apic_read_reg(APIC_ICR1);
+        icr1.मगा_सालिता[0] = apic_read_reg(APIC_ICR1);
     } while (apic_icr1_get_delivery_status(icr1));
 
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).मगा_सालिता[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             0,          /* trigger_mode    */
@@ -137,7 +137,7 @@ void apic_send_ipi_core(irq_t vector, cpu_id_t cpu_id)
             0,          /* dest_mode       */
             0,          /* delivery_mode   */
             vector      /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 }
 
@@ -146,13 +146,13 @@ void apic_send_ipi_cluster(irq_t vector, word_t mda)
     apic_icr1_t icr1;
     /* wait till we can send an IPI */
     do {
-        icr1.words[0] = apic_read_reg(APIC_ICR1);
+        icr1.मगा_सालिता[0] = apic_read_reg(APIC_ICR1);
     } while (apic_icr1_get_delivery_status(icr1));
 
     apic_write_icr(
         apic_icr2_new(
             mda         /* message destination address */
-        ).words[0],
+        ).मगा_सालिता[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             0,          /* trigger_mode    */
@@ -161,7 +161,7 @@ void apic_send_ipi_cluster(irq_t vector, word_t mda)
             1,          /* dest_mode       */
             0,          /* delivery_mode   */
             vector      /* vector          */
-        ).words[0]
+        ).मगा_सालिता[0]
     );
 }
 #endif /* CONFIG_XAPIC */

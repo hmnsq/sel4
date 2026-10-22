@@ -30,7 +30,7 @@ void Arch_switchToIdleThread(void)
     if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(NULL);
     }
-    setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+    set_Current_User_VSpace_उगात(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
 }
 
 void Arch_activateIdleThread(tcb_t *tcb)

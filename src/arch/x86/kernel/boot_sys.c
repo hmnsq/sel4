@@ -32,8 +32,8 @@ extern char boot_cpu_start[1];
 extern char boot_cpu_end[1];
 
 /* start/end of boot stack */
-extern char boot_stack_bottom[1];
-extern char boot_stack_top[1];
+extern char boot_सालानसान_bottom[1];
+extern char boot_सालानसान_इताअस[1];
 
 /* locations in kernel image */
 extern char ki_skim_start[1];
@@ -62,7 +62,7 @@ BOOT_CODE static paddr_t find_load_paddr(paddr_t min_paddr, word_t image_size)
 {
     int i;
 
-    for (i = 0; i < boot_state.mem_p_regs.count; i++) {
+    for (i = 0; i < boot_state.mem_p_regs.बिलांग; i++) {
         paddr_t start = MAX(min_paddr, boot_state.mem_p_regs.list[i].start);
         paddr_t end = boot_state.mem_p_regs.list[i].end;
         word_t region_size = end - start;
@@ -106,7 +106,7 @@ BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_
         printf("Userland image virtual start address must be 4KB-aligned\n");
         return 0;
     }
-    if (v_reg.end + 2 * BIT(PAGE_BITS) > USER_TOP) {
+    if (v_reg.end + 2 * BIT(PAGE_BITS) > USER_इताअस) {
         /* for IPC buffer frame and bootinfo frame, need 2*4K of additional userland virtual memory */
         printf("Userland image virtual end address too high\n");
         return 0;
@@ -141,17 +141,17 @@ BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_
     return load_paddr;
 }
 
-static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
+static BOOT_CODE bool_t try_boot_sys_बुहोल(cpu_id_t cpu_id)
 {
     if (!map_kernel_window(
-            boot_state.num_ioapic,
+            boot_state.नुमेरो_ioapic,
             boot_state.ioapic_paddr,
-            boot_state.num_drhu,
+            boot_state.नुमेरो_drhu,
             boot_state.drhu_list
         )) {
         return false;
     }
-    setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
+    set_Current_VSpace_उगात(kpptr_to_paddr(X86_KERNEL_VSPACE_उगात), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
      * be set *right now* instead of delayed */
     asm volatile("" ::: "memory");
@@ -173,7 +173,7 @@ static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
             &boot_state.mem_p_regs,
             boot_state.ui_info,
             /* parameters below not modelled in abstract specification */
-            boot_state.num_drhu,
+            boot_state.नुमेरो_drhu,
             boot_state.drhu_list,
             &boot_state.rmrr_list,
             &boot_state.acpi_rsdp,
@@ -194,23 +194,23 @@ static BOOT_CODE bool_t add_mem_p_regs(p_region_t reg)
         // Some of the callers round down the end address to
         return true;
     }
-    if (reg.end > PADDR_TOP && reg.start >= PADDR_TOP) {
+    if (reg.end > PADDR_इताअस && reg.start >= PADDR_इताअस) {
         /* Return true here as it's not an error for there to exist memory outside the kernel window,
          * we're just going to ignore it and leave it to be given out as device memory */
         return true;
     }
-    if (boot_state.mem_p_regs.count == MAX_NUM_FREEMEM_REG) {
+    if (boot_state.mem_p_regs.बिलांग == MAX_नुमेरो_FREEMEM_REG) {
         printf("Dropping memory region 0x%lx-0x%lx, try increasing MAX_NUM_FREEMEM_REG\n", reg.start, reg.end);
         return false;
     }
-    if (reg.end > PADDR_TOP) {
-        assert(reg.start < PADDR_TOP);
+    if (reg.end > PADDR_इताअस) {
+        assert(reg.start < PADDR_इताअस);
         /* Clamp a region to the top of the kernel window if it extends beyond */
-        reg.end = PADDR_TOP;
+        reg.end = PADDR_इताअस;
     }
     printf("Adding physical memory region 0x%lx-0x%lx\n", reg.start, reg.end);
-    boot_state.mem_p_regs.list[boot_state.mem_p_regs.count] = reg;
-    boot_state.mem_p_regs.count++;
+    boot_state.mem_p_regs.list[boot_state.mem_p_regs.बिलांग] = reg;
+    boot_state.mem_p_regs.बिलांग++;
     return true;
 }
 
@@ -355,12 +355,12 @@ static BOOT_CODE bool_t try_boot_sys(void)
     }
 
     cpuid_007h_edx_t edx;
-    edx.words[0] = x86_cpuid_edx(0x7, 0);
+    edx.मगा_सालिता[0] = x86_cpuid_edx(0x7, 0);
     /* see if we can definitively say whether or not we need the skim window by
      * checking whether the CPU is vulnerable to rogue data cache loads (rdcl) */
     if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
-        cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
+        cap_msr.मगा_सालिता[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
         if (ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
             printf("CPU reports not vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
                    "yet SKIM window is enabled. Performance is needlessly being impacted, consider disabling.\n");
@@ -417,34 +417,34 @@ static BOOT_CODE bool_t try_boot_sys(void)
     }
 
     if (!config_set(CONFIG_IOMMU) || cmdline_opt.disable_iommu) {
-        boot_state.num_drhu = 0;
+        boot_state.नुमेरो_drhu = 0;
     } else {
         /* query available IOMMUs from ACPI */
         acpi_dmar_scan(
             &boot_state.acpi_rsdp,
             boot_state.drhu_list,
-            &boot_state.num_drhu,
-            MAX_NUM_DRHU,
+            &boot_state.नुमेरो_drhu,
+            MAX_नुमेरो_DRHU,
             &boot_state.rmrr_list
         );
     }
 
     /* query available CPUs from ACPI */
-    boot_state.num_cpus = acpi_madt_scan(&boot_state.acpi_rsdp, boot_state.cpus, &boot_state.num_ioapic,
+    boot_state.नुमेरो_cpus = acpi_madt_scan(&boot_state.acpi_rsdp, boot_state.cpus, &boot_state.नुमेरो_ioapic,
                                          boot_state.ioapic_paddr);
-    if (boot_state.num_cpus == 0) {
+    if (boot_state.नुमेरो_cpus == 0) {
         printf("No CPUs detected\n");
         return false;
     }
 
     if (config_set(CONFIG_IRQ_IOAPIC)) {
-        if (boot_state.num_ioapic == 0) {
+        if (boot_state.नुमेरो_ioapic == 0) {
             printf("No IOAPICs detected\n");
             return false;
         }
     } else {
-        if (boot_state.num_ioapic > 0) {
-            printf("Detected %d IOAPICs, but configured to use PIC instead\n", boot_state.num_ioapic);
+        if (boot_state.नुमेरो_ioapic > 0) {
+            printf("Detected %d IOAPICs, but configured to use PIC instead\n", boot_state.नुमेरो_ioapic);
         }
     }
 
@@ -483,15 +483,15 @@ static BOOT_CODE bool_t try_boot_sys(void)
     }
 
     /* Total number of cores we intend to boot */
-    ksNumCPUs = boot_state.num_cpus;
+    ks_नुमेरो_CPUs = boot_state.नुमेरो_cpus;
 
     printf("Starting node #0 with APIC ID %lu\n", boot_state.cpus[0]);
-    if (!try_boot_sys_node(boot_state.cpus[0])) {
+    if (!try_boot_sys_बुहोल(boot_state.cpus[0])) {
         return false;
     }
 
     if (config_set(CONFIG_IRQ_IOAPIC)) {
-        ioapic_init(1, boot_state.cpus, boot_state.num_ioapic);
+        ioapic_init(1, boot_state.cpus, boot_state.नुमेरो_ioapic);
     }
 
     /* initialize BKL before booting up APs */
@@ -499,7 +499,7 @@ static BOOT_CODE bool_t try_boot_sys(void)
     SMP_COND_STATEMENT(start_boot_aps());
 
     /* grab BKL before leaving the kernel */
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     printf("Booting all finished, dropped to user space\n");
 
@@ -525,14 +525,14 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
         return false;
     }
 
-    printf("Detected %d boot module(s):\n", mbi->part1.mod_count);
+    printf("Detected %d boot module(s):\n", mbi->part1.mod_बिलांग);
 
-    if (mbi->part1.mod_count < 1) {
+    if (mbi->part1.mod_बिलांग < 1) {
         printf("Expect at least one boot module (containing a userland image)\n");
         return false;
     }
 
-    for (i = 0; i < mbi->part1.mod_count; i++) {
+    for (i = 0; i < mbi->part1.mod_बिलांग; i++) {
         printf(
             "  module #%ld: start=0x%x end=0x%x size=0x%x name='%s'\n",
             i,
@@ -555,7 +555,7 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
      * not give to the user. Memory regions that must not be given to the user
      * include all the physical memory in the kernel window, but also includes any
      * important or kernel devices. */
-    boot_state.mem_p_regs.count = 0;
+    boot_state.mem_p_regs.बिलांग = 0;
     if (mbi->part1.flags & MULTIBOOT_INFO_MMAP_FLAG) {
         if (!parse_mem_map(mbi->part2.mmap_length, mbi->part2.mmap_addr)) {
             return false;
@@ -610,7 +610,7 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
     multiboot2_header_t *mbi2
 )
 {
-    int mod_count                  = 0;
+    int mod_बिलांग                  = 0;
     multiboot2_tag_t const *tag   = (multiboot2_tag_t *)(mbi2 + 1);
     multiboot2_tag_t const *tag_e = (multiboot2_tag_t *)((word_t)mbi2 + mbi2->total_size);
 
@@ -619,7 +619,7 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
      * not give to the user. Memory regions that must not be given to the user
      * include all the physical memory in the kernel window, but also includes any
      * important or kernel devices. */
-    boot_state.mem_p_regs.count = 0;
+    boot_state.mem_p_regs.बिलांग = 0;
     boot_state.mb_mmap_info.mmap_length = 0;
     boot_state.vbe_info.vbeMode = -1;
 
@@ -641,19 +641,19 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
             multiboot2_module_t const *module = (multiboot2_module_t const *)behind_tag;
             printf(
                 "  module #%d: start=0x%x end=0x%x size=0x%x name='%s'\n",
-                mod_count,
+                mod_बिलांग,
                 module->start,
                 module->end,
                 module->end - module->start,
                 module->string
             );
 
-            if (mod_count == 0) {
+            if (mod_बिलांग == 0) {
                 boot_state.boot_module_start = module->start;
                 boot_state.boot_module_end = module->end;
             }
 
-            mod_count ++;
+            mod_बिलांग ++;
             if ((sword_t)(module->end - module->start) <= 0) {
                 printf("Invalid boot module size! Possible cause: boot module file not found\n");
                 return false;
@@ -693,9 +693,9 @@ static BOOT_CODE bool_t try_boot_sys_mbi2(
         tag = (multiboot2_tag_t const *)((word_t)tag + ROUND_UP(tag->size, 3));
     }
 
-    printf("Detected %d boot module(s):\n", mod_count);
+    printf("Detected %d boot module(s):\n", mod_बिलांग);
 
-    if (mod_count < 1) {
+    if (mod_बिलांग < 1) {
         printf("Expect at least one boot module (containing a userland image)\n");
         return false;
     }
@@ -725,12 +725,12 @@ BOOT_CODE VISIBLE void boot_sys(
         fail("boot_sys failed for some reason :(\n");
     }
 
-    ARCH_NODE_STATE(x86KScurInterrupt) = int_invalid;
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = int_invalid;
+    ARCH_बुहोल_STATE(x86KScurInterrupt) = int_invalid;
+    ARCH_बुहोल_STATE(x86KSPendingInterrupt) = int_invalid;
 
 #ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-    NODE_STATE(ksConsumed) = 0;
+    बुहोल_STATE(ksCurTime) = getCurrentTime();
+    बुहोल_STATE(ksConsumed) = 0;
 #endif
 
     schedule();

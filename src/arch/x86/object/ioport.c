@@ -24,10 +24,10 @@ static inline void apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set
 static inline word_t make_pattern(int start, int end)
 {
     // number of bits we want to have set
-    int num_bits = end - start;
+    int नुमेरो_bits = end - start;
     // shift down to cut off the bits we don't want, then shift up to put the
     // bits into position
-    return (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
+    return (~(word_t)0) >> (CONFIG_WORD_SIZE - नुमेरो_bits) << start;
 }
 
 static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
@@ -56,32 +56,32 @@ void freeIOPortRange(uint16_t first_port, uint16_t last_port)
 
 static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
 {
-    int low_word = first_port >> wordRadix;
-    int high_word = last_port >> wordRadix;
-    int low_index = first_port & MASK(wordRadix);
-    int high_index = last_port & MASK(wordRadix);
+    int माबाबा_word = first_port >> wordRadix;
+    int माताअस_word = last_port >> wordRadix;
+    int माबाबा_index = first_port & MASK(wordRadix);
+    int माताअस_index = last_port & MASK(wordRadix);
 
     // check if we are operating on a partial word
-    if (low_word == high_word) {
-        if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
+    if (माबाबा_word == माताअस_word) {
+        if ((x86KSAllocatedIOPorts[माबाबा_word] & make_pattern(माबाबा_index, माताअस_index + 1)) != 0) {
             return false;
         }
         return true;
     }
     // check the starting word
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
+    if ((x86KSAllocatedIOPorts[माबाबा_word] & make_pattern(माबाबा_index, CONFIG_WORD_SIZE)) != 0) {
         return false;
     }
-    low_word++;
+    माबाबा_word++;
     // check the rest of the whole words
-    while (low_word < high_word) {
-        if (x86KSAllocatedIOPorts[low_word] != 0) {
+    while (माबाबा_word < माताअस_word) {
+        if (x86KSAllocatedIOPorts[माबाबा_word] != 0) {
             return false;
         }
-        low_word++;
+        माबाबा_word++;
     }
     // check any trailing bits
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
+    if ((x86KSAllocatedIOPorts[माबाबा_word] & make_pattern(0, माताअस_index + 1)) != 0) {
         return false;
     }
     return true;
@@ -90,7 +90,7 @@ static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
 static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
 {
     setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, true);
-    cteInsert(cap_io_port_cap_new(first_port, last_port
+    cte_इसिंगित(cap_io_port_cap_new(first_port, last_port
 #ifdef CONFIG_VTX
                                   , VPID_INVALID
 #endif
@@ -139,7 +139,7 @@ exception_t decodeX86PortControlInvocation(
     if (last_port < first_port) {
         userError("IOPortControl: Last port must be > first port.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -162,7 +162,7 @@ exception_t decodeX86PortControlInvocation(
         return status;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeX86PortControl(first_port, last_port, destSlot, slot);
 }
 
@@ -170,7 +170,7 @@ static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
 {
     uint32_t res;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = बुहोल_STATE(ksCurThread);
 
     switch (invLabel) {
     case X86IOPortIn8:
@@ -188,10 +188,10 @@ static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
         unsigned int length = setMR(thread, ipcBuffer, 0, res);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
@@ -246,7 +246,7 @@ exception_t decodeX86PortInvocation(
         if (ret != EXCEPTION_NONE) {
             return ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeX86PortIn(invLabel, port, call);
     } else if (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
         /* Ensure the incoming message is long enough for the write. */
@@ -282,7 +282,7 @@ exception_t decodeX86PortInvocation(
         if (ret != EXCEPTION_NONE) {
             return ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeX86PortOut(invLabel, port, data);
     } else {
         userError("IOPort: Unknown operation.");
@@ -291,30 +291,30 @@ exception_t decodeX86PortInvocation(
     }
 }
 
-void setIOPortMask(void *ioport_bitmap, uint16_t low, uint16_t high, bool_t set)
+void setIOPortMask(void *ioport_bitmap, uint16_t माबाबा, uint16_t माताअस, bool_t set)
 {
     //get an aliasing pointer
     word_t_may_alias *bitmap = ioport_bitmap;
 
-    int low_word = low >> wordRadix;
-    int high_word = high >> wordRadix;
-    int low_index = low & MASK(wordRadix);
-    int high_index = high & MASK(wordRadix);
+    int माबाबा_word = माबाबा >> wordRadix;
+    int माताअस_word = माताअस >> wordRadix;
+    int माबाबा_index = माबाबा & MASK(wordRadix);
+    int माताअस_index = माताअस & MASK(wordRadix);
 
     // see if we are just manipulating bits inside a single word. handling this
     // specially makes reasoning easier
-    if (low_word == high_word) {
-        apply_pattern(bitmap + low_word, make_pattern(low_index, high_index + 1), set);
+    if (माबाबा_word == माताअस_word) {
+        apply_pattern(bitmap + माबाबा_word, make_pattern(माबाबा_index, माताअस_index + 1), set);
     } else {
         // operate on the potentially partial first word
-        apply_pattern(bitmap + low_word, make_pattern(low_index, CONFIG_WORD_SIZE), set);
-        low_word++;
+        apply_pattern(bitmap + माबाबा_word, make_pattern(माबाबा_index, CONFIG_WORD_SIZE), set);
+        माबाबा_word++;
         // iterate over the whole words
-        while (low_word < high_word) {
-            apply_pattern(bitmap + low_word, ~(word_t)0, set);
-            low_word++;
+        while (माबाबा_word < माताअस_word) {
+            apply_pattern(bitmap + माबाबा_word, ~(word_t)0, set);
+            माबाबा_word++;
         }
         // apply to any remaining bits
-        apply_pattern(bitmap + low_word, make_pattern(0, high_index + 1), set);
+        apply_pattern(bitmap + माबाबा_word, make_pattern(0, माताअस_index + 1), set);
     }
 }

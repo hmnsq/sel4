@@ -20,15 +20,15 @@
 /** DONT_TRANSLATE */
 void VISIBLE NORETURN restore_user_context(void)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread);
+    word_t cur_thread_reg = (word_t) बुहोल_STATE(ksCurThread);
 
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(बुहोल_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    बुहोल_UNLOCK_IF_HELD;
 
     if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         asm volatile(

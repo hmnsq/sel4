@@ -36,13 +36,13 @@ typedef struct lookupIOPTSlot_ret {
 static bool_t isIOPDEValid(iopde_t *iopde)
 {
     assert(iopde != 0);
-    return (iopde->words[0] & IOPDE_VALID_MASK) != 0;
+    return (iopde->मगा_सालिता[0] & IOPDE_VALID_MASK) != 0;
 }
 
 static bool_t isIOPTEEmpty(iopte_t *iopte)
 {
     assert(iopte != 0);
-    return (iopte->words[0] & IOPTE_EMPTY_MASK) == 0;
+    return (iopte->मगा_सालिता[0] & IOPTE_EMPTY_MASK) == 0;
 }
 
 
@@ -89,15 +89,15 @@ static lookupIOPTSlot_ret_t lookupIOPTSlot(iopde_t *iopd, word_t io_address)
     return pt_ret;
 }
 
-BOOT_CODE seL4_SlotRegion create_iospace_caps(cap_t root_cnode_cap)
+BOOT_CODE seL4_SlotRegion create_iospace_caps(cap_t उगात_cnode_cap)
 {
     seL4_SlotPos start = ndks_boot.slot_pos_cur;
     seL4_SlotPos end = 0;
     cap_t        io_space_cap;
     int i = 0;
-    int num_smmu = plat_smmu_init();
+    int नुमेरो_smmu = plat_smmu_init();
 
-    if (num_smmu == 0) {
+    if (नुमेरो_smmu == 0) {
         printf("SMMU init failure\n");
         return S_REG_EMPTY;
     }
@@ -106,9 +106,9 @@ BOOT_CODE seL4_SlotRegion create_iospace_caps(cap_t root_cnode_cap)
      * assuming each module is assigned an unique ASID
      * and the ASIDs are contiguous
      * */
-    for (i = 1; i <= num_smmu; i++) {
+    for (i = 1; i <= नुमेरो_smmu; i++) {
         io_space_cap = cap_io_space_cap_new(i, i);
-        if (!provide_cap(root_cnode_cap, io_space_cap)) {
+        if (!provide_cap(उगात_cnode_cap, io_space_cap)) {
             return S_REG_EMPTY;
         }
     }
@@ -186,14 +186,14 @@ exception_t decodeARMIOPTInvocation(
     if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
         userError("IOPTMap: Cap already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     if (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("IOPTMap: Invalid IOSpace cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -272,14 +272,14 @@ exception_t decodeARMIOMapInvocation(
     if (generic_frame_cap_get_capFSize(cap) != ARMSmallPage) {
         userError("IOMap: Invalid cap type.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
     if (cap_small_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
         userError("IOMap: Frame all ready mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -290,7 +290,7 @@ exception_t decodeARMIOMapInvocation(
     if (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("IOMap: Invalid IOSpace cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
@@ -354,7 +354,7 @@ exception_t decodeARMIOMapInvocation(
         } else {
             userError("IOMap: Invalid argument.");
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
+            current_syscall_error.invalid_Argument_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -362,7 +362,7 @@ exception_t decodeARMIOMapInvocation(
         /* VMKernelOnly */
         userError("IOMap: Invalid argument.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 

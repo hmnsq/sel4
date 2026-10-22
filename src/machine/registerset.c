@@ -6,7 +6,7 @@
 
 #include <machine/registerset.h>
 
-const register_t fault_messages[][MAX_MSG_SIZE] = {
+const register_t fault_messages[][MAX_मेनसाहे_SIZE] = {
     [MessageID_Syscall] = SYSCALL_MESSAGE,
     [MessageID_Exception] = EXCEPTION_MESSAGE,
 #ifdef CONFIG_KERNEL_MCS

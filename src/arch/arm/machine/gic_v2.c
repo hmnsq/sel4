@@ -34,7 +34,7 @@ volatile struct gic_cpu_iface_map *const gic_cpuiface =
     (volatile struct gic_cpu_iface_map *)(GIC_V2_CONTROLLER_PPTR);
 #endif /* GIC_CONTROLLER_PPTR */
 
-word_t active_irq[CONFIG_MAX_NUM_NODES];
+word_t active_irq[CONFIG_MAX_नुमेरो_NODES];
 
 /* Get the target id for this processor. We rely on the constraint that the registers
  * for PPI are read only and return only the current processor as the target.
@@ -178,7 +178,7 @@ BOOT_CODE void cpu_initLocalIRQController(void)
 bool_t plat_SGITargetValid(word_t target)
 {
     /* written as <= so that the term is the same as in gic_v3 for the proofs */
-    return target <= GIC_SGI_NUM_TARGETS - 1;
+    return target <= GIC_SGI_नुमेरो_TARGETS - 1;
 }
 
 void plat_sendSGI(word_t irq, word_t target)
@@ -240,6 +240,6 @@ volatile struct gich_vcpu_ctrl_map *gic_vcpu_ctrl =
     (volatile struct gich_vcpu_ctrl_map *)(GIC_V2_VCPUCTRL_PPTR);
 #endif /* GIC_PL400_GICVCPUCTRL_PPTR */
 
-word_t gic_vcpu_num_list_regs;
+word_t gic_vcpu_नुमेरो_list_regs;
 
 #endif /* End of CONFIG_ARM_HYPERVISOR_SUPPORT */

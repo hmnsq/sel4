@@ -26,7 +26,7 @@ unsigned int max_checkpoint;
 profiler_entry_t profiler_entries[MAX_UNIQUE_CHECKPOINTS];
 #else
 /* Number of entries the profiler currently keeps track of */
-int profiler_num_entries;
+int profiler_नुमेरो_entries;
 
 /* Number of instructions the profiler could not record */
 long long profiler_dropped_instructions;
@@ -45,28 +45,28 @@ void profiler_reset(void)
 
     for (i = 0; i < MAX_UNIQUE_CHECKPOINTS; i++) {
         profiler_entries[i].pc = 0;
-        profiler_entries[i].count = 0;
+        profiler_entries[i].बिलांग = 0;
     }
     checkpoint = 0;
 }
 
 void profiler_list(void)
 {
-    unsigned int samples, i, count;
+    unsigned int samples, i, बिलांग;
 
     printf("checkpoint count\n");
 
     samples = 0;
-    count = 0;
+    बिलांग = 0;
     for (i = 0; i <= max_checkpoint; i++) {
         if (profiler_entries[i].pc != 0) {
-            printf("%u %u\n", i, (unsigned int)profiler_entries[i].count);
-            samples += profiler_entries[i].count;
-            count++;
+            printf("%u %u\n", i, (unsigned int)profiler_entries[i].बिलांग);
+            samples += profiler_entries[i].बिलांग;
+            बिलांग++;
         }
     }
 
-    printf("%u checkpoints, %u sample(s)\n", count, samples);
+    printf("%u checkpoints, %u sample(s)\n", बिलांग, samples);
 }
 
 void profiler_record_sample(word_t pc)
@@ -78,7 +78,7 @@ void profiler_record_sample(word_t pc)
     if (!profiler_entries[checkpoint].pc) {
         profiler_entries[checkpoint].pc = 1;
     }
-    profiler_entries[checkpoint].count++;
+    profiler_entries[checkpoint].बिलांग++;
 }
 #else
 /*
@@ -88,9 +88,9 @@ void profiler_reset(void)
 {
     for (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
         profiler_entries[i].pc = 0;
-        profiler_entries[i].count = 0;
+        profiler_entries[i].बिलांग = 0;
     }
-    profiler_num_entries = 0;
+    profiler_नुमेरो_entries = 0;
     profiler_dropped_instructions = 0;
 }
 
@@ -109,14 +109,14 @@ void profiler_list(void)
     for (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
         if (profiler_entries[i].pc != 0) {
             printf("%x %d\n", (unsigned int)profiler_entries[i].pc,
-                   (int)profiler_entries[i].count);
-            samples += profiler_entries[i].count;
+                   (int)profiler_entries[i].बिलांग);
+            samples += profiler_entries[i].बिलांग;
         }
     }
 
     /* Print statistics */
     printf("\n%d unique address(es), %d sample(s)\n",
-           (int)profiler_num_entries, (int)samples);
+           (int)profiler_नुमेरो_entries, (int)samples);
     if (profiler_dropped_instructions > 0) {
         printf("*** WARNING : %d instructions dropped\n",
                (int)profiler_dropped_instructions);
@@ -149,16 +149,16 @@ void profiler_record_sample(word_t pc)
         if (profiler_entries[hash].pc == pc) {
 
             /* Found the correct entry */
-            profiler_entries[hash].count++;
+            profiler_entries[hash].बिलांग++;
             break;
 
         } else if (profiler_entries[hash].pc == 0) {
 
             /* Found a spot for a new entry */
-            if (profiler_num_entries < (MAX_UNIQUE_INSTRUCTIONS / 4) * 3) {
+            if (profiler_नुमेरो_entries < (MAX_UNIQUE_INSTRUCTIONS / 4) * 3) {
                 profiler_entries[hash].pc = pc;
-                profiler_entries[hash].count = 1;
-                profiler_num_entries++;
+                profiler_entries[hash].बिलांग = 1;
+                profiler_नुमेरो_entries++;
                 break;
             } else {
                 /* Too many entries. Abort the record. */

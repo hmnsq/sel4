@@ -37,7 +37,7 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
 void Arch_switchToIdleThread(void)
 {
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    setVMRoot(बुहोल_STATE(ksIdleThread));
 }
 
 void Arch_activateIdleThread(tcb_t *tcb)

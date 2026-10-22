@@ -50,19 +50,19 @@ lookupCapAndSlot_ret_t lookupCapAndSlot(tcb_t *thread, cptr_t cPtr)
 
 lookupSlot_raw_ret_t lookupSlot(tcb_t *thread, cptr_t capptr)
 {
-    cap_t threadRoot;
+    cap_t thread_उगात;
     resolveAddressBits_ret_t res_ret;
     lookupSlot_raw_ret_t ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
-    res_ret = resolveAddressBits(threadRoot, capptr, wordBits);
+    thread_उगात = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
+    res_ret = resolveAddressBits(thread_उगात, capptr, wordBits);
 
     ret.status = res_ret.status;
     ret.slot = res_ret.slot;
     return ret;
 }
 
-lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr,
+lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t उगात, cptr_t capptr,
                                       word_t depth)
 {
     resolveAddressBits_ret_t res_ret;
@@ -70,10 +70,10 @@ lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr
 
     ret.slot = NULL;
 
-    if (unlikely(cap_get_capType(root) != cap_cnode_cap)) {
+    if (unlikely(cap_get_capType(उगात) != cap_cnode_cap)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = isSource;
-        current_lookup_fault = lookup_fault_invalid_root_new();
+        current_lookup_fault = lookup_fault_invalid_उगात_new();
         ret.status = EXCEPTION_SYSCALL_ERROR;
         return ret;
     }
@@ -85,7 +85,7 @@ lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr
         ret.status = EXCEPTION_SYSCALL_ERROR;
         return ret;
     }
-    res_ret = resolveAddressBits(root, capptr, depth);
+    res_ret = resolveAddressBits(उगात, capptr, depth);
     if (unlikely(res_ret.status != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = isSource;
@@ -108,22 +108,22 @@ lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr
     return ret;
 }
 
-lookupSlot_ret_t lookupSourceSlot(cap_t root, cptr_t capptr, word_t depth)
+lookupSlot_ret_t lookupSourceSlot(cap_t उगात, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    return lookupSlotForCNodeOp(true, उगात, capptr, depth);
 }
 
-lookupSlot_ret_t lookupTargetSlot(cap_t root, cptr_t capptr, word_t depth)
+lookupSlot_ret_t lookupTargetSlot(cap_t उगात, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(false, root, capptr, depth);
+    return lookupSlotForCNodeOp(false, उगात, capptr, depth);
 }
 
-lookupSlot_ret_t lookupPivotSlot(cap_t root, cptr_t capptr, word_t depth)
+lookupSlot_ret_t lookupPivotSlot(cap_t उगात, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    return lookupSlotForCNodeOp(true, उगात, capptr, depth);
 }
 
-resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t n_bits)
+resolveAddressBits_ret_t resolveAddressBits(cap_t बुहोल_Cap, cptr_t capptr, word_t n_bits)
 {
     resolveAddressBits_ret_t ret;
     word_t radixBits, guardBits, levelBits, guard;
@@ -133,21 +133,21 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
     ret.bitsRemaining = n_bits;
     ret.slot = NULL;
 
-    if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    if (unlikely(cap_get_capType(बुहोल_Cap) != cap_cnode_cap)) {
+        current_lookup_fault = lookup_fault_invalid_उगात_new();
         ret.status = EXCEPTION_LOOKUP_FAULT;
         return ret;
     }
 
     while (1) {
-        radixBits = cap_cnode_cap_get_capCNodeRadix(nodeCap);
-        guardBits = cap_cnode_cap_get_capCNodeGuardSize(nodeCap);
+        radixBits = cap_cnode_cap_get_capCNodeRadix(बुहोल_Cap);
+        guardBits = cap_cnode_cap_get_capCNodeGuardSize(बुहोल_Cap);
         levelBits = radixBits + guardBits;
 
         /* Haskell error: "All CNodes must resolve bits" */
         assert(levelBits != 0);
 
-        capGuard = cap_cnode_cap_get_capCNodeGuard(nodeCap);
+        capGuard = cap_cnode_cap_get_capCNodeGuard(बुहोल_Cap);
 
         /* The MASK(wordRadix) here is to avoid the case where
          * n_bits = wordBits (=2^wordRadix) and guardBits = 0, as it violates
@@ -169,7 +169,7 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
         }
 
         offset = (capptr >> (n_bits - levelBits)) & MASK(radixBits);
-        slot = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap)) + offset;
+        slot = CTE_PTR(cap_cnode_cap_get_capCNodePtr(बुहोल_Cap)) + offset;
 
         if (likely(n_bits == levelBits)) {
             ret.status = EXCEPTION_NONE;
@@ -181,9 +181,9 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
         /** GHOSTUPD: "(\<acute>levelBits > 0, id)" */
 
         n_bits -= levelBits;
-        nodeCap = slot->cap;
+        बुहोल_Cap = slot->cap;
 
-        if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
+        if (unlikely(cap_get_capType(बुहोल_Cap) != cap_cnode_cap)) {
             ret.status = EXCEPTION_NONE;
             ret.slot = slot;
             ret.bitsRemaining = n_bits;

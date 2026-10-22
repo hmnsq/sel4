@@ -37,9 +37,9 @@
 volatile struct gic_dist_map *const gic_dist = (volatile struct gic_dist_map *)(GICD_PPTR);
 volatile void *const gicr_base = (volatile uint8_t *)(GICR_PPTR);
 
-word_t active_irq[CONFIG_MAX_NUM_NODES];
-volatile struct gic_rdist_map *gic_rdist_map[CONFIG_MAX_NUM_NODES] = { 0 };
-volatile struct gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_NUM_NODES] = { 0 };
+word_t active_irq[CONFIG_MAX_नुमेरो_NODES];
+volatile struct gic_rdist_map *gic_rdist_map[CONFIG_MAX_नुमेरो_NODES] = { 0 };
+volatile struct gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_नुमेरो_NODES] = { 0 };
 
 #ifdef CONFIG_ARCH_AARCH64
 #define MPIDR_AFF0(x) (x & 0xff)
@@ -55,7 +55,7 @@ volatile struct gic_rdist_sgi_ppi_map *gic_rdist_sgi_ppi_map[CONFIG_MAX_NUM_NODE
 #define MPIDR_MT(x)   (x & BIT(24))
 #define MPIDR_AFF_MASK(x) (x & 0xff00ffffff)
 
-static word_t mpidr_map[CONFIG_MAX_NUM_NODES];
+static word_t mpidr_map[CONFIG_MAX_नुमेरो_NODES];
 
 static inline word_t get_mpidr(word_t core_id)
 {
@@ -77,7 +77,7 @@ static inline uint64_t mpidr_to_gic_affinity(void)
     return affinity;
 }
 
-static inline uint64_t sgir_word_from_args(word_t irq, word_t target)
+static inline uint64_t sgir_word_from_मगा_कातविरान(word_t irq, word_t target)
 {
     uint64_t t = target; /* make sure shifts below are on 64 bit */
     return (uint64_t) irq << ICC_SGI1R_INTID_SHIFT
@@ -161,7 +161,7 @@ BOOT_CODE static void dist_init(void)
 {
     word_t i;
     uint32_t type;
-    unsigned int nr_lines;
+    unsigned int nr_मगा_लिन्या;
     uint64_t affinity;
     uint32_t priority;
 
@@ -171,28 +171,28 @@ BOOT_CODE static void dist_init(void)
 
     type = gic_dist->typer;
 
-    nr_lines = GIC_REG_WIDTH * ((type & GICD_TYPE_LINESNR) + 1);
+    nr_मगा_लिन्या = GIC_REG_WIDTH * ((type & GICD_TYPE_LINESNR) + 1);
 
     /* Assume level-triggered */
-    for (i = SPI_START; i < nr_lines; i += 16) {
+    for (i = SPI_START; i < nr_मगा_लिन्या; i += 16) {
         gic_dist->icfgrn[(i / 16)] = 0;
     }
 
     /* Default priority for global interrupts */
     priority = (GIC_PRI_IRQ << 24 | GIC_PRI_IRQ << 16 | GIC_PRI_IRQ << 8 |
                 GIC_PRI_IRQ);
-    for (i = SPI_START; i < nr_lines; i += 4) {
+    for (i = SPI_START; i < nr_मगा_लिन्या; i += 4) {
         gic_dist->ipriorityrn[(i / 4)] = priority;
     }
     /* Disable and clear all global interrupts */
-    for (i = SPI_START; i < nr_lines; i += 32) {
+    for (i = SPI_START; i < nr_मगा_लिन्या; i += 32) {
         gic_dist->icenablern[(i / 32)] = IRQ_SET_ALL;
         gic_dist->icpendrn[(i / 32)] = IRQ_SET_ALL;
     }
 
     /* group 1 for non-secure */
     if (config_set(CONFIG_PLAT_QEMU_ARM_VIRT)) {
-        for (i = SPI_START; i < nr_lines; i += 32) {
+        for (i = SPI_START; i < nr_मगा_लिन्या; i += 32) {
             gic_dist->igrouprn[(i / 32)] = IRQ_SET_ALL;
         }
     }
@@ -202,7 +202,7 @@ BOOT_CODE static void dist_init(void)
 
     /* Route all global IRQs to this CPU */
     affinity = mpidr_to_gic_affinity();
-    for (i = SPI_START; i < nr_lines; i++) {
+    for (i = SPI_START; i < nr_मगा_लिन्या; i++) {
         gic_dist->iroutern[i - SPI_START] = affinity;
     }
 
@@ -343,7 +343,7 @@ BOOT_CODE static void cpu_iface_init(void)
     SYSTEM_WRITE_WORD(ICC_BPR1_EL1, 0);
 
     /* Set priority mask register: ICC_PMR_EL1 */
-    SYSTEM_WRITE_WORD(ICC_PMR_EL1, DEFAULT_PMR_VALUE);
+    SYSTEM_WRITE_WORD(ICC_PMR_EL1, DEFAULT_PMR_हालागा);
 
     /* EOI drops priority of the interrupt, deactivation happens separately: ICC_CTLR_EL1 */
     SYSTEM_READ_WORD(ICC_CTLR_EL1, icc_ctlr);
@@ -421,7 +421,7 @@ bool_t plat_SGITargetValid(word_t target)
 
 void plat_sendSGI(word_t irq, word_t target)
 {
-    uint64_t sgi1r_base = sgir_word_from_args(irq, target);
+    uint64_t sgi1r_base = sgir_word_from_मगा_कातविरान(irq, target);
     SYSTEM_WRITE_64(ICC_SGI1R_EL1, sgi1r_base);
     isb();
 }
@@ -432,10 +432,10 @@ void plat_sendSGI(word_t irq, word_t target)
 void ipi_send_target(irq_t irq, word_t cpuTargetList)
 {
     uint64_t sgi1r_base = ((word_t) IRQT_TO_IRQ(irq)) << ICC_SGI1R_INTID_SHIFT;
-    word_t sgi1r[CONFIG_MAX_NUM_NODES];
+    word_t sgi1r[CONFIG_MAX_नुमेरो_NODES];
     word_t last_aff1 = 0;
 
-    for (word_t i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+    for (word_t i = 0; i < CONFIG_MAX_नुमेरो_NODES; i++) {
         sgi1r[i] = 0;
         if (cpuTargetList & BIT(i)) {
             word_t mpidr = mpidr_map[i];
@@ -443,7 +443,7 @@ void ipi_send_target(irq_t irq, word_t cpuTargetList)
             word_t aff0 = MPIDR_AFF0(mpidr);
             // AFF1 is assumed to be contiguous and less than CONFIG_MAX_NUM_NODES.
             // The targets are grouped by AFF1.
-            assert(aff1 >= 0 && aff1 < CONFIG_MAX_NUM_NODES);
+            assert(aff1 >= 0 && aff1 < CONFIG_MAX_नुमेरो_NODES);
             sgi1r[aff1] |= sgi1r_base | (aff1 << ICC_SGI1R_AFF1_SHIFT) | (1 << aff0);
             if (aff1 > last_aff1) {
                 last_aff1 = aff1;
@@ -473,6 +473,6 @@ void setIRQTarget(irq_t irq, seL4_Word target)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 
-word_t gic_vcpu_num_list_regs;
+word_t gic_vcpu_नुमेरो_list_regs;
 
 #endif /* End of CONFIG_ARM_HYPERVISOR_SUPPORT */

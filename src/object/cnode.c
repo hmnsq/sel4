@@ -76,7 +76,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         word_t srcIndex, srcDepth, capData;
         bool_t isMove;
         seL4_CapRights_t cap_rights;
-        cap_t srcRoot, newCap;
+        cap_t src_उगात, newCap;
         deriveCap_ret_t dc_ret;
         cap_t srcCap;
 
@@ -88,7 +88,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         srcIndex = getSyscallArg(2, buffer);
         srcDepth = getSyscallArg(3, buffer);
 
-        srcRoot = current_extra_caps.excaprefs[0]->cap;
+        src_उगात = current_extra_caps.excaprefs[0]->cap;
 
         status = ensureEmptySlot(destSlot);
         if (status != EXCEPTION_NONE) {
@@ -96,7 +96,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             return status;
         }
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
+        lu_ret = lookupSourceSlot(src_उगात, srcIndex, srcDepth);
         if (lu_ret.status != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Invalid source slot.");
             return lu_ret.status;
@@ -184,21 +184,21 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         if (isMove) {
             return invokeCNodeMove(newCap, srcSlot, destSlot);
         } else {
-            return invokeCNodeInsert(newCap, srcSlot, destSlot);
+            return invoke_CNode_इसिंगित(newCap, srcSlot, destSlot);
         }
     }
 
     if (invLabel == CNodeRevoke) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeCNodeRevoke(destSlot);
     }
 
     if (invLabel == CNodeDelete) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeCNodeDelete(destSlot);
     }
 
@@ -210,7 +210,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeCNodeSaveCaller(destSlot);
     }
 #endif
@@ -225,7 +225,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeCNodeCancelBadgedSends(destCap);
     }
 
@@ -233,7 +233,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         word_t pivotNewData, pivotIndex, pivotDepth;
         word_t srcNewData, srcIndex, srcDepth;
         cte_t *pivotSlot, *srcSlot;
-        cap_t pivotRoot, srcRoot, newSrcCap, newPivotCap;
+        cap_t pivot_उगात, src_उगात, newSrcCap, newPivotCap;
 
         if (length < 8 || current_extra_caps.excaprefs[0] == NULL
             || current_extra_caps.excaprefs[1] == NULL) {
@@ -247,16 +247,16 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         srcIndex     = getSyscallArg(6, buffer);
         srcDepth     = getSyscallArg(7, buffer);
 
-        pivotRoot = current_extra_caps.excaprefs[0]->cap;
-        srcRoot   = current_extra_caps.excaprefs[1]->cap;
+        pivot_उगात = current_extra_caps.excaprefs[0]->cap;
+        src_उगात   = current_extra_caps.excaprefs[1]->cap;
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
+        lu_ret = lookupSourceSlot(src_उगात, srcIndex, srcDepth);
         if (lu_ret.status != EXCEPTION_NONE) {
             return lu_ret.status;
         }
         srcSlot = lu_ret.slot;
 
-        lu_ret = lookupPivotSlot(pivotRoot, pivotIndex, pivotDepth);
+        lu_ret = lookupPivotSlot(pivot_उगात, pivotIndex, pivotDepth);
         if (lu_ret.status != EXCEPTION_NONE) {
             return lu_ret.status;
         }
@@ -304,7 +304,7 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeCNodeRotate(newSrcCap, newPivotCap,
                                  srcSlot, pivotSlot, destSlot);
     }
@@ -333,9 +333,9 @@ exception_t invokeCNodeCancelBadgedSends(cap_t cap)
     return EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeInsert(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invoke_CNode_इसिंगित(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
 {
-    cteInsert(cap, srcSlot, destSlot);
+    cte_इसिंगित(cap, srcSlot, destSlot);
 
     return EXCEPTION_NONE;
 }
@@ -366,7 +366,7 @@ exception_t invokeCNodeSaveCaller(cte_t *destSlot)
     cap_t cap;
     cte_t *srcSlot;
 
-    srcSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
+    srcSlot = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCaller);
     cap = srcSlot->cap;
 
     switch (cap_get_capType(cap)) {
@@ -407,9 +407,9 @@ static void setUntypedCapAsFull(cap_t srcCap, cap_t newCap, cte_t *srcSlot)
     }
 }
 
-void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+void cte_इसिंगित(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
 {
-    mdb_node_t srcMDB, newMDB;
+    mdb_बुहोल_t srcMDB, newMDB;
     cap_t srcCap;
     bool_t newCapIsRevocable;
 
@@ -418,15 +418,15 @@ void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
 
     newCapIsRevocable = isCapRevocable(newCap, srcCap);
 
-    newMDB = mdb_node_set_mdbPrev(srcMDB, CTE_REF(srcSlot));
-    newMDB = mdb_node_set_mdbRevocable(newMDB, newCapIsRevocable);
-    newMDB = mdb_node_set_mdbFirstBadged(newMDB, newCapIsRevocable);
+    newMDB = mdb_बुहोल_set_mdb_Prev(srcMDB, CTE_REF(srcSlot));
+    newMDB = mdb_बुहोल_set_mdb_Revocable(newMDB, newCapIsRevocable);
+    newMDB = mdb_बुहोल_set_mdb_First_Badged(newMDB, newCapIsRevocable);
 
     /* Haskell error: "cteInsert to non-empty destination" */
     assert(cap_get_capType(destSlot->cap) == cap_null_cap);
     /* Haskell error: "cteInsert: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    assert((cte_t *)mdb_बुहोल_get_mdb_Next(destSlot->cteMDBNode) == NULL &&
+           (cte_t *)mdb_बुहोल_get_mdb_Prev(destSlot->cteMDBNode) == NULL);
 
     /* Prevent parent untyped cap from being used again if creating a child
      * untyped from it. */
@@ -434,24 +434,24 @@ void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
 
     destSlot->cap = newCap;
     destSlot->cteMDBNode = newMDB;
-    mdb_node_ptr_set_mdbNext(&srcSlot->cteMDBNode, CTE_REF(destSlot));
-    if (mdb_node_get_mdbNext(newMDB)) {
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(mdb_node_get_mdbNext(newMDB))->cteMDBNode,
+    mdb_बुहोल_ptr_set_mdb_Next(&srcSlot->cteMDBNode, CTE_REF(destSlot));
+    if (mdb_बुहोल_get_mdb_Next(newMDB)) {
+        mdb_बुहोल_ptr_set_mdb_Prev(
+            &CTE_PTR(mdb_बुहोल_get_mdb_Next(newMDB))->cteMDBNode,
             CTE_REF(destSlot));
     }
 }
 
 void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
 {
-    mdb_node_t mdb;
+    mdb_बुहोल_t mdb;
     word_t prev_ptr, next_ptr;
 
     /* Haskell error: "cteMove to non-empty destination" */
     assert(cap_get_capType(destSlot->cap) == cap_null_cap);
     /* Haskell error: "cteMove: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    assert((cte_t *)mdb_बुहोल_get_mdb_Next(destSlot->cteMDBNode) == NULL &&
+           (cte_t *)mdb_बुहोल_get_mdb_Prev(destSlot->cteMDBNode) == NULL);
 
     mdb = srcSlot->cteMDBNode;
     destSlot->cap = newCap;
@@ -459,15 +459,15 @@ void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
     destSlot->cteMDBNode = mdb;
     srcSlot->cteMDBNode = nullMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb);
+    prev_ptr = mdb_बुहोल_get_mdb_Prev(mdb);
     if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+        mdb_बुहोल_ptr_set_mdb_Next(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(destSlot));
 
-    next_ptr = mdb_node_get_mdbNext(mdb);
+    next_ptr = mdb_बुहोल_get_mdb_Next(mdb);
     if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
+        mdb_बुहोल_ptr_set_mdb_Prev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(destSlot));
 }
@@ -488,7 +488,7 @@ void capSwapForDelete(cte_t *slot1, cte_t *slot2)
 
 void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
 {
-    mdb_node_t mdb1, mdb2;
+    mdb_बुहोल_t mdb1, mdb2;
     word_t next_ptr, prev_ptr;
 
     slot1->cap = cap2;
@@ -496,15 +496,15 @@ void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
 
     mdb1 = slot1->cteMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb1);
+    prev_ptr = mdb_बुहोल_get_mdb_Prev(mdb1);
     if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+        mdb_बुहोल_ptr_set_mdb_Next(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
-    next_ptr = mdb_node_get_mdbNext(mdb1);
+    next_ptr = mdb_बुहोल_get_mdb_Next(mdb1);
     if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
+        mdb_बुहोल_ptr_set_mdb_Prev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
@@ -512,15 +512,15 @@ void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
     slot1->cteMDBNode = mdb2;
     slot2->cteMDBNode = mdb1;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb2);
+    prev_ptr = mdb_बुहोल_get_mdb_Prev(mdb2);
     if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+        mdb_बुहोल_ptr_set_mdb_Next(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot1));
 
-    next_ptr = mdb_node_get_mdbNext(mdb2);
+    next_ptr = mdb_बुहोल_get_mdb_Next(mdb2);
     if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
+        mdb_बुहोल_ptr_set_mdb_Prev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(slot1));
 }
@@ -532,9 +532,9 @@ exception_t cteRevoke(cte_t *slot)
 
     /* there is no need to check for a NullCap as NullCaps are
        always accompanied by null mdb pointers */
-    for (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
+    for (nextPtr = CTE_PTR(mdb_बुहोल_get_mdb_Next(slot->cteMDBNode));
          nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
+         nextPtr = CTE_PTR(mdb_बुहोल_get_mdb_Next(slot->cteMDBNode))) {
         status = cteDelete(nextPtr, true);
         if (status != EXCEPTION_NONE) {
             return status;
@@ -567,23 +567,23 @@ exception_t cteDelete(cte_t *slot, bool_t exposed)
 static void emptySlot(cte_t *slot, cap_t cleanupInfo)
 {
     if (cap_get_capType(slot->cap) != cap_null_cap) {
-        mdb_node_t mdbNode;
+        mdb_बुहोल_t mdb_बुहोल;
         cte_t *prev, *next;
 
-        mdbNode = slot->cteMDBNode;
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdbNode));
-        next = CTE_PTR(mdb_node_get_mdbNext(mdbNode));
+        mdb_बुहोल = slot->cteMDBNode;
+        prev = CTE_PTR(mdb_बुहोल_get_mdb_Prev(mdb_बुहोल));
+        next = CTE_PTR(mdb_बुहोल_get_mdb_Next(mdb_बुहोल));
 
         if (prev) {
-            mdb_node_ptr_set_mdbNext(&prev->cteMDBNode, CTE_REF(next));
+            mdb_बुहोल_ptr_set_mdb_Next(&prev->cteMDBNode, CTE_REF(next));
         }
         if (next) {
-            mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(prev));
+            mdb_बुहोल_ptr_set_mdb_Prev(&next->cteMDBNode, CTE_REF(prev));
         }
         if (next)
-            mdb_node_ptr_set_mdbFirstBadged(&next->cteMDBNode,
-                                            mdb_node_get_mdbFirstBadged(next->cteMDBNode) ||
-                                            mdb_node_get_mdbFirstBadged(mdbNode));
+            mdb_बुहोल_ptr_set_mdb_First_Badged(&next->cteMDBNode,
+                                            mdb_बुहोल_get_mdb_First_Badged(next->cteMDBNode) ||
+                                            mdb_बुहोल_get_mdb_First_Badged(mdb_बुहोल));
         slot->cap = cap_null_cap_new();
         slot->cteMDBNode = nullMDBNode;
 
@@ -597,7 +597,7 @@ static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
     case cap_null_cap:
         return true;
     case cap_zombie_cap: {
-        word_t n = cap_zombie_cap_get_capZombieNumber(cap);
+        word_t n = cap_zombie_cap_get_cap_Zombie_नुमेरो(cap);
         cte_t *z_slot = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
         return (n == 0 || (n == 1 && slot == z_slot));
     }
@@ -669,7 +669,7 @@ static exception_t reduceZombie(cte_t *slot, bool_t immediate)
 
     assert(cap_get_capType(slot->cap) == cap_zombie_cap);
     ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
-    n = cap_zombie_cap_get_capZombieNumber(slot->cap);
+    n = cap_zombie_cap_get_cap_Zombie_नुमेरो(slot->cap);
     type = cap_zombie_cap_get_capZombieType(slot->cap);
 
     /* Haskell error: "reduceZombie: expected unremovable zombie" */
@@ -692,11 +692,11 @@ static exception_t reduceZombie(cte_t *slot, bool_t immediate)
                 (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
 
             if (ptr == ptr2 &&
-                cap_zombie_cap_get_capZombieNumber(slot->cap) == n &&
+                cap_zombie_cap_get_cap_Zombie_नुमेरो(slot->cap) == n &&
                 cap_zombie_cap_get_capZombieType(slot->cap) == type) {
                 assert(cap_get_capType(endSlot->cap) == cap_null_cap);
                 slot->cap =
-                    cap_zombie_cap_set_capZombieNumber(slot->cap, n - 1);
+                    cap_zombie_cap_set_cap_Zombie_नुमेरो(slot->cap, n - 1);
             } else {
                 /* Haskell error:
                  * "Expected new Zombie to be self-referential."
@@ -742,17 +742,17 @@ void cteDeleteOne(cte_t *slot)
     }
 }
 
-void insertNewCap(cte_t *parent, cte_t *slot, cap_t cap)
+void इसिंगित_New_Cap(cte_t *parent, cte_t *slot, cap_t cap)
 {
     cte_t *next;
 
-    next = CTE_PTR(mdb_node_get_mdbNext(parent->cteMDBNode));
+    next = CTE_PTR(mdb_बुहोल_get_mdb_Next(parent->cteMDBNode));
     slot->cap = cap;
-    slot->cteMDBNode = mdb_node_new(CTE_REF(next), true, true, CTE_REF(parent));
+    slot->cteMDBNode = mdb_बुहोल_new(CTE_REF(next), true, true, CTE_REF(parent));
     if (next) {
-        mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(slot));
+        mdb_बुहोल_ptr_set_mdb_Prev(&next->cteMDBNode, CTE_REF(slot));
     }
-    mdb_node_ptr_set_mdbNext(&parent->cteMDBNode, CTE_REF(slot));
+    mdb_बुहोल_ptr_set_mdb_Next(&parent->cteMDBNode, CTE_REF(slot));
 }
 
 #ifndef CONFIG_KERNEL_MCS
@@ -766,15 +766,15 @@ void setupReplyMaster(tcb_t *thread)
          * cannot be translated. */
         slot->cap = cap_reply_cap_new(true, true, TCB_REF(thread));
         slot->cteMDBNode = nullMDBNode;
-        mdb_node_ptr_set_mdbRevocable(&slot->cteMDBNode, true);
-        mdb_node_ptr_set_mdbFirstBadged(&slot->cteMDBNode, true);
+        mdb_बुहोल_ptr_set_mdb_Revocable(&slot->cteMDBNode, true);
+        mdb_बुहोल_ptr_set_mdb_First_Badged(&slot->cteMDBNode, true);
     }
 }
 #endif
 
 bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
 {
-    if (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
+    if (!mdb_बुहोल_get_mdb_Revocable(cte_a->cteMDBNode)) {
         return false;
     }
     if (!sameRegionAs(cte_a->cap, cte_b->cap)) {
@@ -784,7 +784,7 @@ bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
        We expect Arch_isMDBParentOf to return true if both caps are not architecture
        specific. */
     if (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
-                            mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode))) {
+                            mdb_बुहोल_get_mdb_First_Badged(cte_b->cteMDBNode))) {
         return false;
     }
     switch (cap_get_capType(cte_a->cap)) {
@@ -796,7 +796,7 @@ bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
             return true;
         }
         return (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
+               !mdb_बुहोल_get_mdb_First_Badged(cte_b->cteMDBNode);
         break;
     }
 
@@ -808,7 +808,7 @@ bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
             return true;
         }
         return (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
+               !mdb_बुहोल_get_mdb_First_Badged(cte_b->cteMDBNode);
         break;
     }
 
@@ -820,10 +820,10 @@ bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
 
 exception_t ensureNoChildren(cte_t *slot)
 {
-    if (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
+    if (mdb_बुहोल_get_mdb_Next(slot->cteMDBNode) != 0) {
         cte_t *next;
 
-        next = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
+        next = CTE_PTR(mdb_बुहोल_get_mdb_Next(slot->cteMDBNode));
         if (isMDBParentOf(slot, next)) {
             current_syscall_error.type = seL4_RevokeFirst;
             return EXCEPTION_SYSCALL_ERROR;
@@ -845,29 +845,29 @@ exception_t ensureEmptySlot(cte_t *slot)
 
 bool_t PURE isFinalCapability(cte_t *cte)
 {
-    mdb_node_t mdb;
+    mdb_बुहोल_t mdb;
     bool_t prevIsSameObject;
 
     mdb = cte->cteMDBNode;
 
-    if (mdb_node_get_mdbPrev(mdb) == 0) {
+    if (mdb_बुहोल_get_mdb_Prev(mdb) == 0) {
         prevIsSameObject = false;
     } else {
         cte_t *prev;
 
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdb));
+        prev = CTE_PTR(mdb_बुहोल_get_mdb_Prev(mdb));
         prevIsSameObject = sameObjectAs(prev->cap, cte->cap);
     }
 
     if (prevIsSameObject) {
         return false;
     } else {
-        if (mdb_node_get_mdbNext(mdb) == 0) {
+        if (mdb_बुहोल_get_mdb_Next(mdb) == 0) {
             return true;
         } else {
             cte_t *next;
 
-            next = CTE_PTR(mdb_node_get_mdbNext(mdb));
+            next = CTE_PTR(mdb_बुहोल_get_mdb_Next(mdb));
             return !sameObjectAs(cte->cap, next->cap);
         }
     }
@@ -906,7 +906,7 @@ cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
     }
 
     ct = loadCapTransfer(buffer);
-    cptr = ct.ctReceiveRoot;
+    cptr = ct.ct_Receive_उगात;
 
     luc_ret = lookupCap(thread, cptr);
     if (luc_ret.status != EXCEPTION_NONE) {
@@ -929,6 +929,6 @@ cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
 
 cap_transfer_t PURE loadCapTransfer(word_t *buffer)
 {
-    const int offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
-    return capTransferFromWords(buffer + offset);
+    const int offset = se_L4_मेनसाहे_Max_Length + se_L4_मेनसाहे_Max_Extra_Caps + 2;
+    return cap_Transfer_From_मगा_सालिता(buffer + offset);
 }

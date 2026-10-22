@@ -94,7 +94,7 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
         if (do_call ||
             seL4_Fault_ptr_get_seL4_FaultType(&thread->tcbFault) != seL4_Fault_NullFault) {
             if (reply != NULL && (canGrant || canGrantReply)) {
-                reply_push(thread, dest, reply, canDonate);
+                reply_इतुलाक(thread, dest, reply, canDonate);
             } else {
                 setThreadState(thread, ThreadState_Inactive);
             }
@@ -107,7 +107,7 @@ void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
         /* blocked threads should have enough budget to get out of the kernel */
         assert(dest_sc == NULL || refill_sufficient(dest_sc, 0));
         assert(dest_sc == NULL || refill_ready(dest_sc));
-        if (sc_sporadic(dest_sc) && dest_sc != NODE_STATE(ksCurSC)) {
+        if (sc_sporadic(dest_sc) && dest_sc != बुहोल_STATE(ksCurSC)) {
             refill_unblock_check(dest_sc);
         }
         possibleSwitchTo(dest);
@@ -258,8 +258,8 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                  * thread that isn't blocked. This check is added here
                  * to reduce the cost of proving this to be true as a
                  * short-term stop-gap. */
-                assert(sender->tcbSchedContext != NODE_STATE(ksCurSC));
-                if (sender->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                assert(sender->tcbSchedContext != बुहोल_STATE(ksCurSC));
+                if (sender->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                     refill_unblock_check(sender->tcbSchedContext);
                 }
             }
@@ -269,7 +269,7 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
                 if ((canGrant || canGrantReply) && replyPtr != NULL) {
                     bool_t canDonate = sender->tcbSchedContext != NULL
                                        && seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_Timeout;
-                    reply_push(sender, thread, replyPtr, canDonate);
+                    reply_इतुलाक(sender, thread, replyPtr, canDonate);
                 } else {
                     setThreadState(sender, ThreadState_Inactive);
                 }
@@ -313,14 +313,14 @@ void replyFromKernel_error(tcb_t *thread)
     len += (add / sizeof(word_t)) + 1;
 #endif
 
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+    setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                     seL4_MessageInfo_new(current_syscall_error.type, 0, 0, len)));
 }
 
 void replyFromKernel_success_empty(tcb_t *thread)
 {
     setRegister(thread, badgeRegister, 0);
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+    setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                     seL4_MessageInfo_new(0, 0, 0, 0)));
 }
 
@@ -386,7 +386,7 @@ void cancelIPC(tcb_t *tptr)
         /* Get the reply cap slot */
         slot = TCB_PTR_CTE_PTR(tptr, tcbReply);
 
-        callerCap = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
+        callerCap = CTE_PTR(mdb_बुहोल_get_mdb_Next(slot->cteMDBNode));
         if (callerCap) {
             /** GHOSTUPD: "(True,
                 gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
@@ -410,8 +410,8 @@ static inline void restart_thread_if_no_fault(tcb_t *thread)
              * associated with the current thread, or no thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            assert(thread->tcbSchedContext != बुहोल_STATE(ksCurSC));
+            if (thread->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
                 refill_unblock_check(thread->tcbSchedContext);
             }
         }

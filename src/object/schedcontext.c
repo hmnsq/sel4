@@ -42,7 +42,7 @@ static exception_t decodeSchedContext_UnbindObject(sched_context_t *sc)
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        if (sc->scTcb == NODE_STATE(ksCurThread)) {
+        if (sc->scTcb == बुहोल_STATE(ksCurThread)) {
             userError("SchedContext UnbindObject: cannot unbind sc of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
@@ -59,12 +59,12 @@ static exception_t decodeSchedContext_UnbindObject(sched_context_t *sc)
     default:
         userError("SchedContext_Unbind: invalid cap");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
 
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSchedContext_UnbindObject(sc, cap);
 }
 
@@ -131,11 +131,11 @@ static exception_t decodeSchedContext_Bind(sched_context_t *sc)
     default:
         userError("SchedContext_Bind: invalid cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSchedContext_Bind(sc, cap);
 }
 
@@ -161,23 +161,23 @@ static inline void replyFromKernel_consumed(tcb_t *thread, time_t consumed)
     word_t *buffer = lookupIPCBuffer(true, thread);
     setRegister(thread, badgeRegister, 0);
     word_t length = mode_setTimeArg(0, consumed, buffer, thread);
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, length)));
+    setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, length)));
 }
 
-static inline void setConsumed(sched_context_t *sc, tcb_t *thread, bool_t write_msg)
+static inline void setConsumed(sched_context_t *sc, tcb_t *thread, bool_t write_मेनसाहे)
 {
     time_t consumed = schedContext_updateConsumed(sc);
 
-    if (write_msg) {
+    if (write_मेनसाहे) {
         replyFromKernel_consumed(thread, consumed);
     }
 }
 
 static exception_t invokeSchedContext_Consumed(sched_context_t *sc, bool_t call)
 {
-    setConsumed(sc, NODE_STATE(ksCurThread), call);
+    setConsumed(sc, बुहोल_STATE(ksCurThread), call);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
@@ -199,15 +199,15 @@ static exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
     bool_t return_now;
     if (isSchedulable(tcb)) {
         if (SMP_COND_STATEMENT(sc->scCore != getCurrentCPUIndex() ||)
-            tcb->tcbPriority < NODE_STATE(ksCurThread)->tcbPriority) {
+            tcb->tcbPriority < बुहोल_STATE(ksCurThread)->tcbPriority) {
             tcbSchedDequeue(tcb);
             SCHED_ENQUEUE(tcb);
             return_now = true;
         } else {
-            NODE_STATE(ksCurThread)->tcbYieldTo = sc;
-            sc->scYieldFrom = NODE_STATE(ksCurThread);
+            बुहोल_STATE(ksCurThread)->tcbYieldTo = sc;
+            sc->scYieldFrom = बुहोल_STATE(ksCurThread);
             tcbSchedDequeue(tcb);
-            tcbSchedEnqueue(NODE_STATE(ksCurThread));
+            tcbSchedEnqueue(बुहोल_STATE(ksCurThread));
             tcbSchedEnqueue(tcb);
             rescheduleRequired();
 
@@ -221,10 +221,10 @@ static exception_t invokeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
     }
 
     if (return_now) {
-        setConsumed(sc, NODE_STATE(ksCurThread), call);
+        setConsumed(sc, बुहोल_STATE(ksCurThread), call);
         /* Only set to Running if there is a kernel reply message for the user.
            Restart will create a default empty success message. */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     }
 
     return EXCEPTION_NONE;
@@ -240,15 +240,15 @@ static exception_t decodeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
 
     tcb_t *tcb = sc->scTcb;
 
-    if (tcb == NODE_STATE(ksCurThread)) {
+    if (tcb == बुहोल_STATE(ksCurThread)) {
         userError("SchedContext_YieldTo: cannot seL4_SchedContext_YieldTo on self");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (tcb->tcbPriority > NODE_STATE(ksCurThread)->tcbMCP) {
+    if (tcb->tcbPriority > बुहोल_STATE(ksCurThread)->tcbMCP) {
         userError("SchedContext_YieldTo: insufficient mcp (%lu) to yield to a thread with prio (%lu)",
-                  NODE_STATE(ksCurThread)->tcbMCP, tcb->tcbPriority);
+                  बुहोल_STATE(ksCurThread)->tcbMCP, tcb->tcbPriority);
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -256,14 +256,14 @@ static exception_t decodeSchedContext_YieldTo(sched_context_t *sc, bool_t call)
     // This should not be possible as the currently running thread
     // should never have a non-null yieldTo, however verifying this
     // invariant is being left to future work.
-    assert(NODE_STATE(ksCurThread)->tcbYieldTo == NULL);
-    if (NODE_STATE(ksCurThread)->tcbYieldTo != NULL) {
+    assert(बुहोल_STATE(ksCurThread)->tcbYieldTo == NULL);
+    if (बुहोल_STATE(ksCurThread)->tcbYieldTo != NULL) {
         userError("SchedContext_YieldTo: cannot seL4_SchedContext_YieldTo to more than on SC at a time");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSchedContext_YieldTo(sc, call);
 }
 
@@ -274,7 +274,7 @@ exception_t decodeSchedContextInvocation(word_t label, sched_context_t *sc, bool
     switch (label) {
     case SchedContextConsumed:
         /* no decode */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeSchedContext_Consumed(sc, call);
     case SchedContextBind:
         return decodeSchedContext_Bind(sc);
@@ -282,12 +282,12 @@ exception_t decodeSchedContextInvocation(word_t label, sched_context_t *sc, bool
         return decodeSchedContext_UnbindObject(sc);
     case SchedContextUnbind:
         /* no decode */
-        if (sc->scTcb == NODE_STATE(ksCurThread)) {
+        if (sc->scTcb == बुहोल_STATE(ksCurThread)) {
             userError("SchedContext UnbindObject: cannot unbind sc of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
             return EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeSchedContext_Unbind(sc);
     case SchedContextYieldTo:
         return decodeSchedContext_YieldTo(sc, call);
@@ -319,7 +319,7 @@ void schedContext_bindTCB(sched_context_t *sc, tcb_t *tcb)
 
     SMP_COND_STATEMENT(migrateTCB(tcb, sc->scCore));
 
-    if (sc_sporadic(sc) && sc_active(sc) && sc != NODE_STATE(ksCurSC)) {
+    if (sc_sporadic(sc) && sc_active(sc) && sc != बुहोल_STATE(ksCurSC)) {
         refill_unblock_check(sc);
     }
     schedContext_resume(sc);
@@ -340,7 +340,7 @@ void schedContext_unbindTCB(sched_context_t *sc)
     assert(tcb != NULL);
 
     /* tcb must already be stalled at this point */
-    if (tcb == NODE_STATE(ksCurThread)) {
+    if (tcb == बुहोल_STATE(ksCurThread)) {
         rescheduleRequired();
     }
 
@@ -371,7 +371,7 @@ void schedContext_donate(sched_context_t *sc, tcb_t *to)
         tcbSchedDequeue(from);
         tcbReleaseRemove(from);
         from->tcbSchedContext = NULL;
-        if (from == NODE_STATE(ksCurThread) || from == NODE_STATE(ksSchedulerAction)) {
+        if (from == बुहोल_STATE(ksCurThread) || from == बुहोल_STATE(ksSchedulerAction)) {
             rescheduleRequired();
         }
     }
@@ -407,8 +407,8 @@ void schedContextMaybeUnbindNtfn(notification_t *ntfnPtr)
 void schedContext_unbindReply(sched_context_t *sc)
 {
     if (sc && sc->scReply) {
-        assert(call_stack_get_isHead(sc->scReply->replyNext));
-        sc->scReply->replyNext = call_stack_new(0, false);
+        assert(call_सालानसान_get_is_Head(sc->scReply->replyNext));
+        sc->scReply->replyNext = call_सालानसान_new(0, false);
         sc->scReply = NULL;
     }
 }

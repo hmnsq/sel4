@@ -8,12 +8,12 @@
 #include <config.h>
 #include <arch/machine/l2c_310.h>
 
-#define L2_LINE_SIZE_BITS 5
-#define L2_LINE_SIZE BIT(L2_LINE_SIZE_BITS) /* 32 byte line size */
+#define L2_लिन्या_SIZE_BITS 5
+#define L2_लिन्या_SIZE BIT(L2_लिन्या_SIZE_BITS) /* 32 byte line size */
 
-#define L2_LINE_START(a) ROUND_DOWN(a, L2_LINE_SIZE_BITS)
+#define L2_लिन्या_START(a) ROUND_DOWN(a, L2_लिन्या_SIZE_BITS)
 
-compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BITS)
+compile_assert(l2_l1_same_लिन्या_size, L2_लिन्या_SIZE_BITS == L1_CACHE_लिन्या_SIZE_BITS)
 
 /* MSHIELD Control */
 #define MSHIELD_SMC_ROM_CTRL_CTRL         0x102
@@ -33,7 +33,7 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 /* Cache ID */
 #define PL310_LOCKDOWN_BY_MASK            (0xf<<25)
 #define PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
-#define PL310_LOCKDOWN_BY_LINE            (0xf<<25)
+#define PL310_LOCKDOWN_BY_लिन्या            (0xf<<25)
 
 /* Primary control */
 #define CTRL_CTRL_EN BIT(0)
@@ -54,8 +54,8 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 #define CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               BIT(13)
 #define CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    BIT(12)
 #define CTRL_AUX_STOREBUFDEV_LIMIT_EN                      BIT(11)
-#define CTRL_AUX_HIGH_PRIO_SODEV_EN                        BIT(10)
-#define CTRL_AUX_FULL_LINE_ZEROS_ENABLE                    BIT( 0)
+#define CTRL_AUX_माताअस_PRIO_SODEV_EN                        BIT(10)
+#define CTRL_AUX_FULL_लिन्या_ZEROS_ENABLE                    BIT( 0)
 
 #define CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
 #define CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
@@ -182,7 +182,7 @@ struct l2cc_map {
         uint32_t d_lockdown7;           /* 0x938 */
         uint32_t i_lockdown7;           /* 0x93C */
         uint32_t res[4];
-        uint32_t lock_line_eng;         /* 0x950 */
+        uint32_t lock_लिन्या_eng;         /* 0x950 */
         uint32_t unlock_wayg;           /* 0x954 */
         uint32_t res1[42];
     } lockdown /* reg9 */;
@@ -322,9 +322,9 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_लिन्या) {
         /* disable lockdown */
-        l2cc->lockdown.lock_line_eng = 0;
+        l2cc->lockdown.lock_लिन्या_eng = 0;
     }
 
     /* 4: write to interrupt clear register to clear any residual raw interrupts set */
@@ -403,9 +403,9 @@ void plat_cleanL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    for (start = L2_लिन्या_START(start);
+         start != L2_लिन्या_START(end + L2_लिन्या_SIZE);
+         start += L2_लिन्या_SIZE) {
         l2cc->maintenance.clean_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
@@ -423,9 +423,9 @@ void plat_invalidateL2Range(paddr_t start, paddr_t end)
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    for (start = L2_लिन्या_START(start);
+         start != L2_लिन्या_START(end + L2_लिन्या_SIZE);
+         start += L2_लिन्या_SIZE) {
         l2cc->maintenance.inv_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
@@ -441,9 +441,9 @@ void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    for (start = L2_लिन्या_START(start);
+         start != L2_लिन्या_START(end + L2_लिन्या_SIZE);
+         start += L2_लिन्या_SIZE) {
         l2cc->maintenance.clean_inv_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }

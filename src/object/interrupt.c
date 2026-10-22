@@ -68,7 +68,7 @@ exception_t decodeIRQControlInvocation(word_t invLabel, word_t length,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return invokeIRQControl(irq, destSlot, srcSlot);
     } else {
         return Arch_decodeIRQControlInvocation(invLabel, length, srcSlot, buffer);
@@ -78,7 +78,7 @@ exception_t decodeIRQControlInvocation(word_t invLabel, word_t length,
 exception_t invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot)
 {
     setIRQState(IRQSignal, irq);
-    cteInsert(cap_irq_handler_cap_new(IRQT_TO_IDX(irq)), controlSlot, handlerSlot);
+    cte_इसिंगित(cap_irq_handler_cap_new(IRQT_TO_IDX(irq)), controlSlot, handlerSlot);
 
     return EXCEPTION_NONE;
 }
@@ -87,7 +87,7 @@ exception_t decodeIRQHandlerInvocation(word_t invLabel, irq_t irq)
 {
     switch (invLabel) {
     case IRQAckIRQ:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_AckIRQ(irq);
         return EXCEPTION_NONE;
 
@@ -110,17 +110,17 @@ exception_t decodeIRQHandlerInvocation(word_t invLabel, irq_t irq)
                 userError("IRQSetHandler: caller does not have send rights on the endpoint.");
             }
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_नुमेरो = 0;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_SetIRQHandler(irq, ntfnCap, slot);
         return EXCEPTION_NONE;
     }
 
     case IRQClearIRQHandler:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_ClearIRQHandler(irq);
         return EXCEPTION_NONE;
 
@@ -171,7 +171,7 @@ void invokeIRQHandler_SetIRQHandler(irq_t irq, cap_t cap, cte_t *slot)
     irqSlot = intStateIRQNode + IRQT_TO_IDX(irq);
     /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (-1))" */
     cteDeleteOne(irqSlot);
-    cteInsert(cap, slot, irqSlot);
+    cte_इसिंगित(cap, slot, irqSlot);
 }
 
 void invokeIRQHandler_ClearIRQHandler(irq_t irq)
@@ -240,7 +240,7 @@ void handleInterrupt(irq_t irq)
     case IRQTimer:
 #ifdef CONFIG_KERNEL_MCS
         ackDeadlineIRQ();
-        NODE_STATE(ksReprogram) = true;
+        बुहोल_STATE(ksReprogram) = true;
 #else
         timerTick();
         resetTimer();

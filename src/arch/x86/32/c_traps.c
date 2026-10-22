@@ -21,7 +21,7 @@
 #ifdef CONFIG_VTX
 USED static void NORETURN vmlaunch_failed(void)
 {
-    NODE_LOCK_SYS;
+    बुहोल_LOCK_SYS;
 
     c_entry_hook();
 
@@ -59,7 +59,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 #endif
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(BIT(CONFIG_KERNEL_सालानसान_BITS) - sizeof(word_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
@@ -86,7 +86,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 #endif
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(BIT(CONFIG_KERNEL_सालानसान_BITS) - sizeof(word_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
@@ -101,11 +101,11 @@ void NORETURN VISIBLE restore_user_context(void)
 {
     c_exit_hook();
 
-    NODE_UNLOCK_IF_HELD;
+    बुहोल_UNLOCK_IF_HELD;
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    if (ARCH_बुहोल_STATE(x86KSPendingInterrupt) != int_invalid) {
         /* put this in service */
         interrupt_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
@@ -115,14 +115,14 @@ void NORETURN VISIBLE restore_user_context(void)
             "push %[irq]\n"
             "call c_handle_interrupt"
             :
-            : [stack_top] "r"(&(kernel_stack_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_STACK_BITS)])),
+            : [सालानसान_इताअस] "r"(&(kernel_सालानसान_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_सालानसान_BITS)])),
             [syscall] "r"(0), /* syscall is unused for irq path */
             [irq] "r"(irq)
             : "memory");
         UNREACHABLE();
     }
 
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
+    tcb_t *cur_thread = बुहोल_STATE(ksCurThread);
 #ifdef CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
     if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
@@ -132,7 +132,7 @@ void NORETURN VISIBLE restore_user_context(void)
         vcpu_fpu_to_host(cur_thread, vcpu);
     }
 #endif
-    setKernelEntryStackPointer(cur_thread);
+    set_Kernel_Entry_सालानसान_Pointer(cur_thread);
 
 #ifdef CONFIG_HARDWARE_DEBUG_API
     restore_user_debug_context(cur_thread);

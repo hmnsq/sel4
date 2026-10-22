@@ -12,7 +12,7 @@ static exception_t checkARMCBVspace(cap_t cap)
 {
     word_t cb = cap_cb_cap_get_capCB(cap);
     cte_t *cbSlot = smmuStateCBNode + cb;
-    if (unlikely(!isVTableRoot(cbSlot->cap))) {
+    if (unlikely(!is_VTable_उगात(cbSlot->cap))) {
         return EXCEPTION_SYSCALL_ERROR;
     }
     return EXCEPTION_NONE;
@@ -31,7 +31,7 @@ exception_t decodeARMSIDControlInvocation(word_t label, word_t length, cptr_t cp
     tcb_t *thread;
 
     if (label == ARMSIDGetFault) {
-        thread = NODE_STATE(ksCurThread);
+        thread = बुहोल_STATE(ksCurThread);
         smmu_read_fault_state(&faultStatus, &faultSyndrome_0, &faultSyndrome_1);
         if (call) {
             word_t *ipcBuffer = lookupIPCBuffer(true, thread);
@@ -39,16 +39,16 @@ exception_t decodeARMSIDControlInvocation(word_t label, word_t length, cptr_t cp
             setMR(thread, ipcBuffer, 0, faultStatus);
             setMR(thread, ipcBuffer, 1, faultSyndrome_0);
             setMR(thread, ipcBuffer, 2, faultSyndrome_1);
-            setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+            setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                             seL4_MessageInfo_new(0, 0, 0, 3)));
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
         return EXCEPTION_NONE;
     }
 
     if (label == ARMSIDClearFault) {
         smmu_clear_fault_state();
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return EXCEPTION_NONE;
     }
 
@@ -93,9 +93,9 @@ exception_t decodeARMSIDControlInvocation(word_t label, word_t length, cptr_t cp
                   getExtraCPtr(buffer, 0), (int)sid);
         return status;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     smmuStateSIDTable[sid] = true;
-    cteInsert(cap_sid_cap_new(sid), srcSlot, destSlot);
+    cte_इसिंगित(cap_sid_cap_new(sid), srcSlot, destSlot);
     return EXCEPTION_NONE;
 }
 
@@ -120,13 +120,13 @@ exception_t decodeARMSIDInvocation(word_t label, word_t length, cptr_t cptr,
         if (unlikely(cap_get_capType(cbCap) != cap_cb_cap)) {
             userError("ARMSIDBindCB: Invalid CB cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
             return EXCEPTION_SYSCALL_ERROR;
         }
         if (unlikely(checkARMCBVspace(cbCap) != EXCEPTION_NONE)) {
             userError("ARMSIDBindCB: Invalid CB cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
             return EXCEPTION_SYSCALL_ERROR;
         }
         sid = cap_sid_cap_get_capSID(cap);
@@ -136,12 +136,12 @@ exception_t decodeARMSIDInvocation(word_t label, word_t length, cptr_t cptr,
             userError("ARMSIDBindCB: The SID is already bound with a context bank.");
             return status;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         /*binding the sid to cb in SMMU*/
         smmu_sid_bind_cb(sid, cap_cb_cap_get_capCB(cbCap));
         /* Building the connection between SID and CB caps by placing a
          * copy of the given cb cap in sid's cnode*/
-        cteInsert(cbCap, cbCapSlot, cbAssignSlot);
+        cte_इसिंगित(cbCap, cbCapSlot, cbAssignSlot);
         /* Recording the SID number in the copied CB cap.
          * Deleting the copied CB cap will trigger unbinding
          * operations. As a CB can be used (bound)
@@ -163,7 +163,7 @@ exception_t decodeARMSIDInvocation(word_t label, word_t length, cptr_t cptr,
             userError("ARMSIDUnbindCB: the Assigned context bank cannot be unassigned.");
             return status;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return EXCEPTION_NONE;
     default:
         userError("ARMSID: Illegal operation.");
@@ -196,7 +196,7 @@ exception_t decodeARMCBControlInvocation(word_t label, word_t length, cptr_t cpt
     exception_t status;
 
     if (label == ARMCBTLBInvalidateAll) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         smmu_tlb_invalidate_all();
         return EXCEPTION_NONE;
     }
@@ -243,9 +243,9 @@ exception_t decodeARMCBControlInvocation(word_t label, word_t length, cptr_t cpt
         return status;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     smmuStateCBTable[cb] = true;
-    cteInsert(cap_cb_cap_new(SID_INVALID, cb), srcSlot, destSlot);
+    cte_इसिंगित(cap_cb_cap_new(SID_INVALID, cb), srcSlot, destSlot);
     return EXCEPTION_NONE;
 }
 
@@ -271,7 +271,7 @@ exception_t decodeARMCBInvocation(word_t label, word_t length, cptr_t cptr,
         }
         cb = cap_cb_cap_get_capCB(cap);
         cbSlot = smmuStateCBNode + cb;
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         smmu_tlb_invalidate_cb(cb, cap_vspace_cap_get_capVSMappedASID(cbSlot->cap));
         return EXCEPTION_NONE;
 
@@ -284,10 +284,10 @@ exception_t decodeARMCBInvocation(word_t label, word_t length, cptr_t cptr,
         vspaceCapSlot = current_extra_caps.excaprefs[0];
         vspaceCap = vspaceCapSlot->cap;
 
-        if (unlikely(!isVTableRoot(vspaceCap) || !cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
+        if (unlikely(!is_VTable_उगात(vspaceCap) || !cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
             userError("ARMCBAssignVspace: the vspace is invalid");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_नुमेरो = 1;
             return EXCEPTION_SYSCALL_ERROR;
         }
 
@@ -300,12 +300,12 @@ exception_t decodeARMCBInvocation(word_t label, word_t length, cptr_t cptr,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         /*setting up vspace for the context bank in SMMU*/
         smmu_cb_assign_vspace(cb, VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceCap)),
                               cap_vspace_cap_get_capVSMappedASID(vspaceCap));
         /*Connecting vspace cap to context bank*/
-        cteInsert(vspaceCap, vspaceCapSlot, cbSlot);
+        cte_इसिंगित(vspaceCap, vspaceCapSlot, cbSlot);
         cap_vspace_cap_ptr_set_capVSMappedCB(&(cbSlot->cap), cb);
         /*set relationship between CB and ASID*/
         smmuStateCBAsidTable[cb] = cap_vspace_cap_get_capVSMappedASID(vspaceCap);
@@ -325,26 +325,26 @@ exception_t decodeARMCBInvocation(word_t label, word_t length, cptr_t cptr,
             userError("ARMCBUnassignVspace: the Assigned VSpace cannot be deleted.");
             return status;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return EXCEPTION_NONE;
 
     case ARMCBGetFault:
-        thread = NODE_STATE(ksCurThread);
+        thread = बुहोल_STATE(ksCurThread);
         smmu_cb_read_fault_state(cap_cb_cap_get_capCB(cap), &faultStatus, &faultAddress);
         if (call) {
             word_t *ipcBuffer = lookupIPCBuffer(true, thread);
             setRegister(thread, badgeRegister, 0);
             setMR(thread, ipcBuffer, 0, faultStatus);
             setMR(thread, ipcBuffer, 1, faultAddress);
-            setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+            setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                             seL4_MessageInfo_new(0, 0, 0, 2)));
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
         return EXCEPTION_NONE;
 
     case ARMCBClearFault:
         smmu_cb_clear_fault_state(cap_cb_cap_get_capCB(cap));
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return EXCEPTION_NONE;
 
     default:

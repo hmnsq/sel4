@@ -28,7 +28,7 @@ BOOT_BSS static region_t reserved[MAX_RESERVED];
 
 /* functions exactly corresponding to abstract specification */
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_CODE static void init_irqs(cap_t उगात_cnode_cap)
 {
     irq_t i;
 
@@ -64,7 +64,7 @@ BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
     }
     Arch_irqStateInit();
     /* provide the IRQ control cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
 }
 
 BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
@@ -77,7 +77,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
     // in the x86 linker script.
     ui_p_reg.start = KERNEL_ELF_PADDR_BASE;
     reserved[0] = paddr_to_pptr_reg(ui_p_reg);
-    return init_freemem(mem_p_regs->count, mem_p_regs->list, MAX_RESERVED,
+    return init_freemem(mem_p_regs->बिलांग, mem_p_regs->list, MAX_RESERVED,
                         reserved, it_v_reg, extra_bi_size_bits);
 }
 
@@ -88,7 +88,7 @@ BOOT_CODE bool_t init_sys_state(
     mem_p_regs_t  *mem_p_regs,
     ui_info_t     ui_info,
     /* parameters below not modeled in abstract specification */
-    uint32_t      num_drhu,
+    uint32_t      नुमेरो_drhu,
     paddr_t      *drhu_list,
     acpi_rmrr_list_t *rmrr_list,
     acpi_rsdp_t      *acpi_rsdp,
@@ -97,7 +97,7 @@ BOOT_CODE bool_t init_sys_state(
     seL4_X86_BootInfo_fb_t *fb_info
 )
 {
-    cap_t         root_cnode_cap;
+    cap_t         उगात_cnode_cap;
     vptr_t        extra_bi_frame_vptr;
     vptr_t        bi_frame_vptr;
     vptr_t        ipcbuf_vptr;
@@ -145,7 +145,7 @@ BOOT_CODE bool_t init_sys_state(
     it_v_reg.end = ROUND_UP(extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0), PAGE_BITS);
 #ifdef CONFIG_IOMMU
     /* calculate the number of io pts before initialising memory */
-    if (!vtd_init_num_iopts(num_drhu)) {
+    if (!vtd_init_नुमेरो_iopts(नुमेरो_drhu)) {
         return false;
     }
 #endif /* CONFIG_IOMMU */
@@ -156,24 +156,24 @@ BOOT_CODE bool_t init_sys_state(
     }
 
     /* create the root cnode */
-    root_cnode_cap = create_root_cnode();
+    उगात_cnode_cap = create_उगात_cnode();
 
     /* create the IO port cap */
     write_slot(
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIOPortControl),
+        SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapIOPortControl),
         cap_io_port_control_cap_new()
     );
 
     /* create the cap for managing thread domains */
-    create_domain_cap(root_cnode_cap);
+    create_domain_cap(उगात_cnode_cap);
 
     /* initialise the IRQ states and provide the IRQ control cap */
-    init_irqs(root_cnode_cap);
+    init_irqs(उगात_cnode_cap);
 
     tsc_freq = tsc_init();
 
     /* populate the bootinfo frame */
-    populate_bi_frame(0, ksNumCPUs, ipcbuf_vptr, extra_bi_size);
+    populate_bi_frame(0, ks_नुमेरो_CPUs, ipcbuf_vptr, extra_bi_size);
     region_t extra_bi_region = {
         .start = rootserver.extra_bi,
         .end = rootserver.extra_bi + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0)
@@ -228,19 +228,19 @@ BOOT_CODE bool_t init_sys_state(
 
 #ifdef CONFIG_KERNEL_MCS
     /* set up sched control for each core */
-    init_sched_control(root_cnode_cap, CONFIG_MAX_NUM_NODES);
+    init_sched_control(उगात_cnode_cap, CONFIG_MAX_नुमेरो_NODES);
 #endif
 
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
-    it_vspace_cap = create_it_address_space(root_cnode_cap, it_v_reg);
+    it_vspace_cap = create_it_address_space(उगात_cnode_cap, it_v_reg);
     if (cap_get_capType(it_vspace_cap) == cap_null_cap) {
         return false;
     }
 
     /* Create and map bootinfo frame cap */
     create_bi_frame_cap(
-        root_cnode_cap,
+        उगात_cnode_cap,
         it_vspace_cap,
         bi_frame_vptr
     );
@@ -248,7 +248,7 @@ BOOT_CODE bool_t init_sys_state(
     /* create and map extra bootinfo region */
     extra_bi_ret =
         create_frames_of_region(
-            root_cnode_cap,
+            उगात_cnode_cap,
             it_vspace_cap,
             extra_bi_region,
             true,
@@ -260,7 +260,7 @@ BOOT_CODE bool_t init_sys_state(
     ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
 
     /* create the initial thread's IPC buffer */
-    ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_vspace_cap, ipcbuf_vptr);
+    ipcbuf_cap = create_ipcbuf_frame_cap(उगात_cnode_cap, it_vspace_cap, ipcbuf_vptr);
     if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
         return false;
     }
@@ -268,7 +268,7 @@ BOOT_CODE bool_t init_sys_state(
     /* create all userland image frames */
     create_frames_ret =
         create_frames_of_region(
-            root_cnode_cap,
+            उगात_cnode_cap,
             it_vspace_cap,
             ui_reg,
             true,
@@ -280,27 +280,27 @@ BOOT_CODE bool_t init_sys_state(
     ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
 
     /* create the initial thread's ASID pool */
-    it_ap_cap = create_it_asid_pool(root_cnode_cap);
+    it_ap_cap = create_it_asid_pool(उगात_cnode_cap);
     if (cap_get_capType(it_ap_cap) == cap_null_cap) {
         return false;
     }
     write_it_asid_pool(it_ap_cap, it_vspace_cap);
 
 #ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
+    बुहोल_STATE(ksCurTime) = getCurrentTime();
 #endif
 
     /* create the idle thread */
     create_idle_thread();
 
     /* copy i387 FPU initial state from FPU */
-    saveFpuState(NODE_STATE(ksIdleThread));
-    x86KSnullFpuState = NODE_STATE(ksIdleThread)->tcbArch.tcbContext.fpuState;
+    saveFpuState(बुहोल_STATE(ksIdleThread));
+    x86KSnullFpuState = बुहोल_STATE(ksIdleThread)->tcbArch.tcbContext.fpuState;
     /* Check that we can load it: */
-    loadFpuState(NODE_STATE(ksIdleThread));
+    loadFpuState(बुहोल_STATE(ksIdleThread));
 
     /* create the initial thread */
-    tcb_t *initial = create_initial_thread(root_cnode_cap,
+    tcb_t *initial = create_initial_thread(उगात_cnode_cap,
                                            it_vspace_cap,
                                            ui_info.v_entry,
                                            bi_frame_vptr,
@@ -318,16 +318,16 @@ BOOT_CODE bool_t init_sys_state(
     }
 
     /* write number of IOMMU PT levels into bootinfo */
-    ndks_boot.bi_frame->numIOPTLevels = x86KSnumIOPTLevels;
+    ndks_boot.bi_frame->नुमेरो_IOPTLevels = x86KSnumIOPTLevels;
 
     /* write IOSpace master cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIOSpace), master_iospace_cap());
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapIOSpace), master_iospace_cap());
 #else
-    ndks_boot.bi_frame->numIOPTLevels = -1;
+    ndks_boot.bi_frame->नुमेरो_IOPTLevels = -1;
 #endif
 
     /* create all of the untypeds. Both devices and kernel window memory */
-    if (!create_untypeds(root_cnode_cap)) {
+    if (!create_untypeds(उगात_cnode_cap)) {
         return false;
     }
 
@@ -371,7 +371,7 @@ BOOT_CODE bool_t init_cpu(
 
     /* check for SMAP and SMEP and enable */
     cpuid_007h_ebx_t ebx_007;
-    ebx_007.words[0] = x86_cpuid_ebx(0x7, 0);
+    ebx_007.मगा_सालिता[0] = x86_cpuid_ebx(0x7, 0);
     if (cpuid_007h_ebx_get_smap(ebx_007)) {
         /* if we have user stack trace enabled or dangerous code injection then we cannot
          * enable this as SMAP will make them fault. */

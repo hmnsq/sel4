@@ -42,10 +42,10 @@ bool_t byte8WatchpointsSupported(void)
 exception_t handleDebugFaultEvent(word_t esr)
 {
     MCS_DO_IF_BUDGET({
-        current_fault = handleUserLevelDebugException(esr, getRestartPC(NODE_STATE(ksCurThread)));
+        current_fault = handleUserLevelDebugException(esr, getRestartPC(बुहोल_STATE(ksCurThread)));
         if (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
         {
-            handleFault(NODE_STATE(ksCurThread));
+            handleFault(बुहोल_STATE(ksCurThread));
         }
     })
     schedule();
@@ -60,7 +60,7 @@ exception_t handleDebugFaultEvent(word_t esr)
  * @param bp_num The hardware ID of the breakpoint register to be used.
  * @param n_instr The number of instructions to step over.
  */
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_नुमेरो, word_t n_instr,
                                bool_t is_reply)
 {
     if (n_instr > 0) {
@@ -120,10 +120,10 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    for (int i = 0; i < se_L4_नुमेरो_Exclusive_Breakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    for (int i = 0; i < se_L4_नुमेरो_Exclusive_Watchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
@@ -211,11 +211,11 @@ seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
     */
     if (bp_reason != seL4_SoftwareBreakRequest && bp_reason != seL4_SingleStep) {
         active_bp = getAndResetActiveBreakpoint(bp_vaddr, bp_reason);
-        active_bp = getBpNumFromType(active_bp, bp_reason);
+        active_bp = get_Bp_नुमेरो_From_Type(active_bp, bp_reason);
         assert(active_bp >= 0);
     }
 
-    if (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(NODE_STATE(ksCurThread))) {
+    if (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(बुहोल_STATE(ksCurThread))) {
         return seL4_Fault_NullFault_new();
     }
 

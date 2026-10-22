@@ -20,7 +20,7 @@ BOOT_CODE bool_t platAddDevices(void)
     /* remove the MSI region as poking at this is undefined and may allow for
      * the user to generate arbitrary MSI interrupts. Only need to consider
      * this if it would actually be in the user device region */
-    if (CONFIG_PADDR_USER_DEVICE_TOP > 0xFFFFFFF8) {
+    if (CONFIG_PADDR_USER_DEVICE_इताअस > 0xFFFFFFF8) {
         if (!reserve_region((p_region_t) {
         (word_t)0xFFFFFFF8, (word_t)0xFFFFFFF8 + 8
         })) {
@@ -102,7 +102,7 @@ BOOT_CODE uint32_t tsc_init(void)
                  * tells through .success whether or not one happened */
                 rdmsr_safe_result_t info = x86_rdmsr_safe(IA32_PLATFORM_INFO_MSR);
                 if (info.success) {
-                    uint32_t ratio = (((uint32_t) info.value) & 0xFF00) >> 8u;
+                    uint32_t ratio = (((uint32_t) info.हालागा) & 0xFF00) >> 8u;
                     /* Ignore hardware that claims a tsc frequency of zero */
                     if (ratio != 0) {
                         /* Convert to MHz */

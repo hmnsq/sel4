@@ -12,13 +12,13 @@
 void _fail(
     const char  *s,
     const char  *file,
-    unsigned int line,
+    unsigned int लिन्या,
     const char  *function)
 {
     printf(
         "seL4 called fail at %s:%u in function %s, saying \"%s\"\n",
         file,
-        line,
+        लिन्या,
         function,
         s
     );
@@ -28,13 +28,13 @@ void _fail(
 void _assert_fail(
     const char  *assertion,
     const char  *file,
-    unsigned int line,
+    unsigned int लिन्या,
     const char  *function)
 {
     printf("seL4 failed assertion '%s' at %s:%u in function %s\n",
            assertion,
            file,
-           line,
+           लिन्या,
            function
           );
     halt();

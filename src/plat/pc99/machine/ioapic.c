@@ -24,20 +24,20 @@
  */
 #define IOAPICVER_MRE_MASK 0xff0000
 
-#define IOREDTBL_LOW(reg) (IOAPIC_REG_IOREDTBL + (reg) * 2)
-#define IOREDTBL_HIGH(reg) (IOREDTBL_LOW(reg) + 1)
+#define IOREDTBL_माबाबा(reg) (IOAPIC_REG_IOREDTBL + (reg) * 2)
+#define IOREDTBL_माताअस(reg) (IOREDTBL_माबाबा(reg) + 1)
 
-#define IOREDTBL_LOW_INTERRUPT_MASK BIT(16)
-#define IOREDTBL_LOW_TRIGGER_MODE_LEVEL BIT(15)
-#define IOREDTBL_LOW_TRIGGER_MODE_SHIFT    15
-#define IOREDTBL_LOW_POLARITY_LOW BIT(13)
-#define IOREDTBL_LOW_POLARITY_SHIFT         13
-#define IOREDTBL_LOW_DEST_MODE_LOGCIAL BIT(11)
+#define IOREDTBL_माबाबा_INTERRUPT_MASK BIT(16)
+#define IOREDTBL_माबाबा_TRIGGER_MODE_LEVEL BIT(15)
+#define IOREDTBL_माबाबा_TRIGGER_MODE_SHIFT    15
+#define IOREDTBL_माबाबा_POLARITY_माबाबा BIT(13)
+#define IOREDTBL_माबाबा_POLARITY_SHIFT         13
+#define IOREDTBL_माबाबा_DEST_MODE_LOGCIAL BIT(11)
 
 #define IOAPICID_ID_BITS 4
 #define IOAPICID_ID_OFFSET 24
 
-#define IOREDTBL_HIGH_RESERVED_BITS 24
+#define IOREDTBL_माताअस_RESERVED_BITS 24
 
 /*
  * Cache what we believe is in the low word of the IOREDTBL. This
@@ -45,18 +45,18 @@
  * IOAPIC_IRQ_LINES is the upper bound on the number of lines
  * per IOAPIC.
  */
-static uint32_t ioredtbl_state[IOAPIC_IRQ_LINES * MAX(1, CONFIG_MAX_NUM_IOAPIC)];
+static uint32_t ioredtbl_state[IOAPIC_IRQ_मगा_लिन्या * MAX(1, CONFIG_MAX_नुमेरो_IOAPIC)];
 /*
  * The number of IRQ lines for each IOAPIC
  */
-static uint8_t ioapic_nirqs[MAX(1, CONFIG_MAX_NUM_IOAPIC)];
+static uint8_t ioapic_nirqs[MAX(1, CONFIG_MAX_नुमेरो_IOAPIC)];
 
 /* Number of IOAPICs in the system */
-static uint32_t num_ioapics = 0;
+static uint32_t नुमेरो_ioapics = 0;
 
-static void ioapic_write(uint32_t ioapic, word_t reg, uint32_t value)
+static void ioapic_write(uint32_t ioapic, word_t reg, uint32_t हालागा)
 {
-    *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg) = value;
+    *(volatile uint32_t *)((word_t)(PPTR_IOAPIC_START + ioapic * BIT(PAGE_BITS)) + reg) = हालागा;
 }
 
 static uint32_t ioapic_read(uint32_t ioapic, word_t reg)
@@ -77,10 +77,10 @@ static void single_ioapic_init(word_t ioapic)
      * The MRE field of the IOAPICVER register is supposed to only be able to
      * return a max value of 239, which means a max nirqs value of IOAPIC_IRQ_LINES.
      */
-    if (nirqs > IOAPIC_IRQ_LINES) {
+    if (nirqs > IOAPIC_IRQ_मगा_लिन्या) {
         userError("%s: ioapic %lu has %u IRQs,\n"
                   "which is greater than the max handled (%u)\n",
-                  __func__, ioapic, nirqs, IOAPIC_IRQ_LINES);
+                  __func__, ioapic, nirqs, IOAPIC_IRQ_मगा_लिन्या);
         halt();
     }
 
@@ -95,13 +95,13 @@ static void single_ioapic_init(word_t ioapic)
 }
 
 static  cpu_id_t ioapic_target_cpu = 0;
-void ioapic_init(uint32_t num_nodes, cpu_id_t *cpu_list, uint32_t num_ioapic)
+void ioapic_init(uint32_t नुमेरो_nodes, cpu_id_t *cpu_list, uint32_t नुमेरो_ioapic)
 {
     uint32_t ioapic;
-    num_ioapics = num_ioapic;
+    नुमेरो_ioapics = नुमेरो_ioapic;
     ioapic_target_cpu = cpu_list[0];
 
-    for (ioapic = 0; ioapic < num_ioapic; ioapic++) {
+    for (ioapic = 0; ioapic < नुमेरो_ioapic; ioapic++) {
         /* Init this ioapic */
         single_ioapic_init(ioapic);
     }
@@ -109,36 +109,36 @@ void ioapic_init(uint32_t num_nodes, cpu_id_t *cpu_list, uint32_t num_ioapic)
 
 void ioapic_mask(bool_t mask, uint32_t ioapic, uint32_t pin)
 {
-    int index = ioapic * IOAPIC_IRQ_LINES + pin;
-    if (ioapic >= num_ioapics || pin >= ioapic_nirqs[ioapic]) {
+    int index = ioapic * IOAPIC_IRQ_मगा_लिन्या + pin;
+    if (ioapic >= नुमेरो_ioapics || pin >= ioapic_nirqs[ioapic]) {
         /* silently ignore requests to non existent parts of the interrupt space */
         return;
     }
     if (mask) {
-        ioredtbl_state[index] |= IOREDTBL_LOW_INTERRUPT_MASK;
+        ioredtbl_state[index] |= IOREDTBL_माबाबा_INTERRUPT_MASK;
     } else {
-        ioredtbl_state[index] &= ~IOREDTBL_LOW_INTERRUPT_MASK;
+        ioredtbl_state[index] &= ~IOREDTBL_माबाबा_INTERRUPT_MASK;
         /* it should not be possible to be unmasking an interrupt, without
          * it having been mapped to a vector, assert that this is the case */
         assert((ioredtbl_state[index] & 0xff) != 0);
     }
-    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_LOW(pin));
+    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_माबाबा(pin));
     ioapic_write(ioapic, IOAPIC_WINDOW, ioredtbl_state[index]);
 }
 
 exception_t ioapic_decode_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,
                                             word_t polarity, word_t vector)
 {
-    if (num_ioapics == 0) {
+    if (नुमेरो_ioapics == 0) {
         userError("System has no IOAPICs");
         current_syscall_error.type = seL4_IllegalOperation;
         return EXCEPTION_SYSCALL_ERROR;
     }
-    if (ioapic >= num_ioapics) {
-        userError("Invalid IOAPIC %ld, only have %ld", (long)ioapic, (long)num_ioapics);
+    if (ioapic >= नुमेरो_ioapics) {
+        userError("Invalid IOAPIC %ld, only have %ld", (long)ioapic, (long)नुमेरो_ioapics);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = num_ioapics - 1;
+        current_syscall_error.rangeErrorMax = नुमेरो_ioapics - 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
     if (pin >= ioapic_nirqs[ioapic]) {
@@ -169,22 +169,22 @@ exception_t ioapic_decode_map_pin_to_vector(word_t ioapic, word_t pin, word_t le
 void ioapic_map_pin_to_vector(word_t ioapic, word_t pin, word_t level,
                               word_t polarity, word_t vector)
 {
-    uint32_t ioredtbl_high = 0;
+    uint32_t ioredtbl_माताअस = 0;
     uint32_t index = 0;
 
-    index = ioapic * IOAPIC_IRQ_LINES + pin;
-    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_HIGH(pin));
-    ioredtbl_high = ioapic_read(ioapic, IOAPIC_WINDOW) & MASK(IOREDTBL_HIGH_RESERVED_BITS);
+    index = ioapic * IOAPIC_IRQ_मगा_लिन्या + pin;
+    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_माताअस(pin));
+    ioredtbl_माताअस = ioapic_read(ioapic, IOAPIC_WINDOW) & MASK(IOREDTBL_माताअस_RESERVED_BITS);
     /* delivery mode: physical mode only, using APIC ID */
-    ioredtbl_high |= (ioapic_target_cpu << IOREDTBL_HIGH_RESERVED_BITS);
-    ioapic_write(ioapic, IOAPIC_WINDOW, ioredtbl_high);
+    ioredtbl_माताअस |= (ioapic_target_cpu << IOREDTBL_माताअस_RESERVED_BITS);
+    ioapic_write(ioapic, IOAPIC_WINDOW, ioredtbl_माताअस);
     /* we do not need to add IRQ_INT_OFFSET to the vector here */
-    ioredtbl_state[index] = IOREDTBL_LOW_INTERRUPT_MASK |
-                            (level << IOREDTBL_LOW_TRIGGER_MODE_SHIFT) |
-                            (polarity << IOREDTBL_LOW_POLARITY_SHIFT) |
+    ioredtbl_state[index] = IOREDTBL_माबाबा_INTERRUPT_MASK |
+                            (level << IOREDTBL_माबाबा_TRIGGER_MODE_SHIFT) |
+                            (polarity << IOREDTBL_माबाबा_POLARITY_SHIFT) |
                             vector;
 
-    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_LOW(pin));
+    ioapic_write(ioapic, IOAPIC_REGSEL, IOREDTBL_माबाबा(pin));
     /* the upper 16 bits are reserved */
     ioredtbl_state[index] |= ioapic_read(ioapic, IOAPIC_WINDOW) & ~MASK(16);
     ioapic_write(ioapic, IOAPIC_WINDOW, ioredtbl_state[index]);

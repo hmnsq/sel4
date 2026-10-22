@@ -49,7 +49,7 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
             tcb_t *tcb = (tcb_t *)arg0;
 
             /* For a running VM notifications are already checked by handleVmexit */
-            if (tcb != NODE_STATE(ksCurThread)) {
+            if (tcb != बुहोल_STATE(ksCurThread)) {
                 VMCheckBoundNotification(tcb);
             }
             break;
@@ -60,19 +60,19 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
             break;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_lock.बुहोल[getCurrentCPUIndex()].ipi = 0;
         ipi_wait();
     }
 }
 
 /* make sure all cpu IDs for number of core fit in bitwise word */
-compile_assert(invalid_number_of_supported_nodes, CONFIG_MAX_NUM_NODES <= wordBits);
+compile_assert(invalid_नुमेरो_of_supported_nodes, CONFIG_MAX_नुमेरो_NODES <= wordBits);
 
 #ifdef CONFIG_USE_LOGICAL_IDS
 static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
 {
     word_t nr_target_clusters = 0;
-    word_t target_clusters[CONFIG_MAX_NUM_NODES];
+    word_t target_clusters[CONFIG_MAX_नुमेरो_NODES];
 
     do {
         int core = wordBits - 1 - clzl(mask);
@@ -82,7 +82,7 @@ static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
         word_t sub_mask = mask & cpu_mapping.other_indexes_in_cluster[core];
         target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[core];
         if (isBlocking) {
-            big_kernel_lock.node[core].ipi = 1;
+            big_kernel_lock.बुहोल[core].ipi = 1;
         }
 
         /* check if there is any other core in this cluster */
@@ -90,7 +90,7 @@ static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
             int index = wordBits - 1 - clzl(sub_mask);
             target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[index];
             if (isBlocking) {
-                big_kernel_lock.node[index].ipi = 1;
+                big_kernel_lock.बुहोल[index].ipi = 1;
             }
             sub_mask &= ~BIT(index);
         }

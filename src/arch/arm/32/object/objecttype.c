@@ -269,12 +269,12 @@ bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
     case cap_frame_cap:
         if (cap_get_capType(cap_b) == cap_small_frame_cap ||
             cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
+            word_t botA, botB, इताअस_A, इताअस_B;
             botA = generic_frame_cap_get_capFBasePtr(cap_a);
             botB = generic_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+            इताअस_A = botA + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_a)));
+            इताअस_B = botB + MASK(pageBitsForSize(generic_frame_cap_get_capFSize(cap_b))) ;
+            return ((botA <= botB) && (इताअस_A >= इताअस_B) && (botB <= इताअस_B));
         }
         break;
 
@@ -429,12 +429,12 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 addrFromPPtr(regionBase));
         }
         return cap_small_frame_cap_new(
-                   ASID_LOW(asidInvalid), VMReadWrite,
+                   ASID_माबाबा(asidInvalid), VMReadWrite,
                    0, !!deviceMemory,
 #ifdef CONFIG_TK1_SMMU
                    0,
 #endif
-                   ASID_HIGH(asidInvalid),
+                   ASID_माताअस(asidInvalid),
                    (word_t)regionBase);
 
     case seL4_ARM_LargePageObject:
@@ -455,8 +455,8 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 addrFromPPtr(regionBase));
         }
         return cap_frame_cap_new(
-                   ARMLargePage, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
+                   ARMLargePage, ASID_माबाबा(asidInvalid), VMReadWrite,
+                   0, !!deviceMemory, ASID_माताअस(asidInvalid),
                    (word_t)regionBase);
 
     case seL4_ARM_SectionObject:
@@ -487,8 +487,8 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 addrFromPPtr(regionBase));
         }
         return cap_frame_cap_new(
-                   ARMSection, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
+                   ARMSection, ASID_माबाबा(asidInvalid), VMReadWrite,
+                   0, !!deviceMemory, ASID_माताअस(asidInvalid),
                    (word_t)regionBase);
 
     case seL4_ARM_SuperSectionObject:
@@ -519,8 +519,8 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                                 addrFromPPtr(regionBase));
         }
         return cap_frame_cap_new(
-                   ARMSuperSection, ASID_LOW(asidInvalid), VMReadWrite,
-                   0, !!deviceMemory, ASID_HIGH(asidInvalid),
+                   ARMSuperSection, ASID_माबाबा(asidInvalid), VMReadWrite,
+                   0, !!deviceMemory, ASID_माताअस(asidInvalid),
                    (word_t)regionBase);
 
     case seL4_ARM_PageTableObject:

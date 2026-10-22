@@ -15,15 +15,15 @@
 #include <benchmark/benchmark_track.h>
 
 /* Collective cpu states, including both pre core architecture dependant and independent data */
-SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES]);
+SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_नुमेरो_NODES]);
 
 /* Global count of how many cpus there are */
-word_t ksNumCPUs;
+word_t ks_नुमेरो_CPUs;
 
 /* Pointer to the head of the scheduler queue for each priority */
-UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
-UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
-UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
+UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[नुमेरो_READY_QUEUES]);
+UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_नुमेरो_DOMAINS]);
+UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_नुमेरो_DOMAINS][L2_BITMAP_SIZE]);
 compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_SIZE - 1) <= wordBits)
 #ifdef CONFIG_KERNEL_MCS
 /* Head of the queue of threads waiting for their budget to be replenished */
@@ -66,8 +66,8 @@ UP_STATE_DEFINE(bool_t, benchmark_log_utilisation_enabled);
 UP_STATE_DEFINE(timestamp_t, benchmark_start_time);
 UP_STATE_DEFINE(timestamp_t, benchmark_end_time);
 UP_STATE_DEFINE(timestamp_t, benchmark_kernel_time);
-UP_STATE_DEFINE(timestamp_t, benchmark_kernel_number_entries);
-UP_STATE_DEFINE(timestamp_t, benchmark_kernel_number_schedules);
+UP_STATE_DEFINE(timestamp_t, benchmark_kernel_नुमेरो_entries);
+UP_STATE_DEFINE(timestamp_t, benchmark_kernel_नुमेरो_schedules);
 #endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
 /* Units of work we have completed since the last time we checked for
@@ -94,11 +94,11 @@ word_t ksDomScheduleIdx;
 word_t ksDomScheduleStart;
 
 /* Idle thread. */
-SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(seL4_TCBBits));
+SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_नुमेरो_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(seL4_TCBBits));
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */
-char ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
+char ksIdleThreadSC[CONFIG_MAX_नुमेरो_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
 #endif
 
 #if (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)

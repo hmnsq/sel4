@@ -59,5 +59,5 @@ user_breakpoint_state_t armKSNullBreakpointState;
 #endif
 
 #ifdef CONFIG_ARM_HAS_TLB_LOCK
-word_t armKSTlbLockCount = 0;
+word_t arm_KSTlb_Lock_बिलांग = 0;
 #endif /* CONFIG_ARM_HAS_TLB_LOCK */

@@ -40,25 +40,25 @@ BOOT_CODE p_region_t get_p_reg_kernel_img(void)
 {
     return (p_region_t) {
         .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
-        .end   = kpptr_to_paddr((const void *)KERNEL_ELF_TOP)
+        .end   = kpptr_to_paddr((const void *)KERNEL_ELF_इताअस)
     };
 }
 
 BOOT_CODE static void merge_regions(void)
 {
     /* Walk through reserved regions and see if any can be merged */
-    word_t top = 0;
-    for (word_t i = 1; i < ndks_boot.resv_count; i++) {
-        if (ndks_boot.reserved[top].end == ndks_boot.reserved[i].start) {
+    word_t इताअस = 0;
+    for (word_t i = 1; i < ndks_boot.resv_बिलांग; i++) {
+        if (ndks_boot.reserved[इताअस].end == ndks_boot.reserved[i].start) {
             /* extend earlier region */
-            ndks_boot.reserved[top].end = ndks_boot.reserved[i].end;
+            ndks_boot.reserved[इताअस].end = ndks_boot.reserved[i].end;
         } else {
             /* add region */
-            top++;
-            ndks_boot.reserved[top] = ndks_boot.reserved[i];
+            इताअस++;
+            ndks_boot.reserved[इताअस] = ndks_boot.reserved[i];
         }
     }
-    ndks_boot.resv_count = ndks_boot.resv_count > 0 ? top + 1 : 0;
+    ndks_boot.resv_बिलांग = ndks_boot.resv_बिलांग > 0 ? इताअस + 1 : 0;
 }
 
 BOOT_CODE bool_t reserve_region(p_region_t reg)
@@ -70,7 +70,7 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
     }
 
     /* keep the regions in order */
-    for (i = 0; i < ndks_boot.resv_count; i++) {
+    for (i = 0; i < ndks_boot.resv_बिलांग; i++) {
         /* Try and merge the region to an existing one, if possible */
         if (ndks_boot.reserved[i].start == reg.end) {
             ndks_boot.reserved[i].start = reg.start;
@@ -85,36 +85,36 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
         /* Otherwise figure out where it should go. */
         if (ndks_boot.reserved[i].start > reg.end) {
             /* move regions down, making sure there's enough room */
-            if (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
+            if (ndks_boot.resv_बिलांग + 1 >= MAX_नुमेरो_RESV_REG) {
                 printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
                        " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-                       reg.start, reg.end, (int)MAX_NUM_RESV_REG);
+                       reg.start, reg.end, (int)MAX_नुमेरो_RESV_REG);
                 return false;
             }
-            for (word_t j = ndks_boot.resv_count; j > i; j--) {
+            for (word_t j = ndks_boot.resv_बिलांग; j > i; j--) {
                 ndks_boot.reserved[j] = ndks_boot.reserved[j - 1];
             }
             /* insert the new region */
             ndks_boot.reserved[i] = reg;
-            ndks_boot.resv_count++;
+            ndks_boot.resv_बिलांग++;
             return true;
         }
     }
 
-    if (i + 1 == MAX_NUM_RESV_REG) {
+    if (i + 1 == MAX_नुमेरो_RESV_REG) {
         printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
                " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-               reg.start, reg.end, (int)MAX_NUM_RESV_REG);
+               reg.start, reg.end, (int)MAX_नुमेरो_RESV_REG);
         return false;
     }
 
     ndks_boot.reserved[i] = reg;
-    ndks_boot.resv_count++;
+    ndks_boot.resv_बिलांग++;
 
     return true;
 }
 
-BOOT_CODE static bool_t insert_region(region_t reg)
+BOOT_CODE static bool_t इसिंगित_region(region_t reg)
 {
     assert(reg.start <= reg.end);
     if (is_reg_empty(reg)) {
@@ -140,7 +140,7 @@ BOOT_CODE static bool_t insert_region(region_t reg)
      */
     printf("no free memory slot left for [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
            " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
-           reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
+           reg.start, reg.end, (unsigned int)MAX_नुमेरो_FREEMEM_REG);
 
     /* For debug builds we consider this a fatal error. Rationale is, that the
      * caller does not check the error code at the moment, but just ignores any
@@ -164,7 +164,7 @@ BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
 
 BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
 {
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
+    word_t cnode_size_bits = CONFIG_उगात_CNODE_SIZE_BITS + seL4_SlotBits;
     word_t max = MAX(cnode_size_bits, seL4_VSpaceBits);
     return MAX(max, extra_bi_size_bits);
 }
@@ -172,7 +172,7 @@ BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
 BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits)
 {
     /* work out how much memory we need for root server objects */
-    word_t size = BIT(CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits);
+    word_t size = BIT(CONFIG_उगात_CNODE_SIZE_BITS + seL4_SlotBits);
     size += BIT(seL4_TCBBits); // root thread tcb
     size += BIT(seL4_PageBits); // ipc buf
     size += BIT(seL4_BootInfoFrameBits); // boot info
@@ -200,7 +200,7 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
                                                 word_t extra_bi_size_bits)
 {
     /* the largest object the PD, the root cnode, or the extra boot info */
-    word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
+    word_t cnode_size_bits = CONFIG_उगात_CNODE_SIZE_BITS + seL4_SlotBits;
     word_t max = rootserver_max_size_bits(extra_bi_size_bits);
 
     word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
@@ -210,7 +210,7 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
     maybe_alloc_extra_bi(max, extra_bi_size_bits);
 
     /* the root cnode is at least 4k, so it could be larger or smaller than a pd. */
-#if (CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
+#if (CONFIG_उगात_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
     rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
     maybe_alloc_extra_bi(seL4_VSpaceBits, extra_bi_size_bits);
     rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
@@ -260,24 +260,24 @@ BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap)
     slot_ptr->cap = cap;
 
     slot_ptr->cteMDBNode = nullMDBNode;
-    mdb_node_ptr_set_mdbRevocable(&slot_ptr->cteMDBNode, true);
-    mdb_node_ptr_set_mdbFirstBadged(&slot_ptr->cteMDBNode, true);
+    mdb_बुहोल_ptr_set_mdb_Revocable(&slot_ptr->cteMDBNode, true);
+    mdb_बुहोल_ptr_set_mdb_First_Badged(&slot_ptr->cteMDBNode, true);
 }
 
 /* Our root CNode needs to be able to fit all the initial caps and not
  * cover all of memory.
  */
-compile_assert(root_cnode_size_valid,
-               CONFIG_ROOT_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= seL4_NumInitialCaps &&
-               CONFIG_ROOT_CNODE_SIZE_BITS >= (seL4_PageBits - seL4_SlotBits))
+compile_assert(उगात_cnode_size_valid,
+               CONFIG_उगात_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
+               BIT(CONFIG_उगात_CNODE_SIZE_BITS) >= se_L4_नुमेरो_Initial_Caps &&
+               CONFIG_उगात_CNODE_SIZE_BITS >= (seL4_PageBits - seL4_SlotBits))
 
 BOOT_CODE cap_t
-create_root_cnode(void)
+create_उगात_cnode(void)
 {
     cap_t cap = cap_cnode_cap_new(
-                    CONFIG_ROOT_CNODE_SIZE_BITS, /* radix */
-                    wordBits - CONFIG_ROOT_CNODE_SIZE_BITS, /* guard size */
+                    CONFIG_उगात_CNODE_SIZE_BITS, /* radix */
+                    wordBits - CONFIG_उगात_CNODE_SIZE_BITS, /* guard size */
                     0, /* guard */
                     rootserver.cnode); /* pptr */
 
@@ -288,34 +288,34 @@ create_root_cnode(void)
 }
 
 /* Check domain scheduler assumptions. */
-compile_assert(num_domains_valid,
-               CONFIG_NUM_DOMAINS >= 1 && CONFIG_NUM_DOMAINS <= 256)
-compile_assert(num_priorities_valid,
-               CONFIG_NUM_PRIORITIES >= 1 && CONFIG_NUM_PRIORITIES <= 256)
+compile_assert(नुमेरो_domains_valid,
+               CONFIG_नुमेरो_DOMAINS >= 1 && CONFIG_नुमेरो_DOMAINS <= 256)
+compile_assert(नुमेरो_priorities_valid,
+               CONFIG_नुमेरो_PRIORITIES >= 1 && CONFIG_नुमेरो_PRIORITIES <= 256)
 
 BOOT_CODE void
-create_domain_cap(cap_t root_cnode_cap)
+create_domain_cap(cap_t उगात_cnode_cap)
 {
     cap_t cap = cap_domain_cap_new();
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapDomain), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapDomain), cap);
 }
 
-BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t उगात_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
     clearMemory((void *)rootserver.ipc_buf, PAGE_BITS);
 
     /* create a cap of it and write it into the root CNode */
     cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
 
     return cap;
 }
 
-BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
+BOOT_CODE void create_bi_frame_cap(cap_t उगात_cnode_cap, cap_t pd_cap, vptr_t vptr)
 {
     /* create a cap of it and write it into the root CNode */
     cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapBootInfoFrame), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapBootInfoFrame), cap);
 }
 
 /**
@@ -344,7 +344,7 @@ BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
     return msb;
 }
 
-BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
+BOOT_CODE void populate_bi_frame(बुहोल_id_t बुहोल_id, word_t नुमेरो_nodes,
                                  vptr_t ipcbuf_vptr, word_t extra_bi_size)
 {
     /* clear boot info memory */
@@ -356,33 +356,33 @@ BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
 
     /* initialise bootinfo-related global state */
     seL4_BootInfo *bi = BI_PTR(rootserver.boot_info);
-    bi->nodeID = node_id;
-    bi->numNodes = num_nodes;
-    bi->numIOPTLevels = 0;
+    bi->बुहोल_ID = बुहोल_id;
+    bi->नुमेरो_Nodes = नुमेरो_nodes;
+    bi->नुमेरो_IOPTLevels = 0;
     bi->ipcBuffer = (seL4_IPCBuffer *)ipcbuf_vptr;
-    bi->initThreadCNodeSizeBits = CONFIG_ROOT_CNODE_SIZE_BITS;
+    bi->initThreadCNodeSizeBits = CONFIG_उगात_CNODE_SIZE_BITS;
     bi->initThreadDomain = 0;
     bi->extraLen = extra_bi_size;
 
     ndks_boot.bi_frame = bi;
-    ndks_boot.slot_pos_cur = seL4_NumInitialCaps;
+    ndks_boot.slot_pos_cur = se_L4_नुमेरो_Initial_Caps;
 }
 
-BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap)
+BOOT_CODE bool_t provide_cap(cap_t उगात_cnode_cap, cap_t cap)
 {
-    if (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
+    if (ndks_boot.slot_pos_cur >= BIT(CONFIG_उगात_CNODE_SIZE_BITS)) {
         printf("ERROR: can't add another cap, all %"SEL4_PRIu_word
                " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
+               BIT(CONFIG_उगात_CNODE_SIZE_BITS));
         return false;
     }
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), ndks_boot.slot_pos_cur), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), ndks_boot.slot_pos_cur), cap);
     ndks_boot.slot_pos_cur++;
     return true;
 }
 
 BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
-    cap_t    root_cnode_cap,
+    cap_t    उगात_cnode_cap,
     cap_t    pd_cap,
     region_t reg,
     bool_t   do_map,
@@ -402,7 +402,7 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
         } else {
             frame_cap = create_unmapped_it_frame_cap(f, false);
         }
-        if (!provide_cap(root_cnode_cap, frame_cap)) {
+        if (!provide_cap(उगात_cnode_cap, frame_cap)) {
             return (create_frames_of_region_ret_t) {
                 .region  = S_REG_EMPTY,
                 .success = false
@@ -421,14 +421,14 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
     };
 }
 
-BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
+BOOT_CODE cap_t create_it_asid_pool(cap_t उगात_cnode_cap)
 {
-    cap_t ap_cap = cap_asid_pool_cap_new(ASID_HIGH(IT_ASID) << asidLowBits, rootserver.asid_pool);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
+    cap_t ap_cap = cap_asid_pool_cap_new(ASID_माताअस(IT_ASID) << asid_माबाबा_Bits, rootserver.asid_pool);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
 
     /* create ASID control cap */
     write_slot(
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapASIDControl),
+        SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapASIDControl),
         cap_asid_control_cap_new()
     );
 
@@ -443,13 +443,13 @@ BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pp
     tcb->tcbSchedContext->scTcb = tcb;
 }
 
-BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
+BOOT_CODE bool_t init_sched_control(cap_t उगात_cnode_cap, word_t नुमेरो_nodes)
 {
     seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
 
     /* create a sched control cap for each core */
-    for (unsigned int i = 0; i < num_nodes; i++) {
-        if (!provide_cap(root_cnode_cap, cap_sched_control_cap_new(i))) {
+    for (unsigned int i = 0; i < नुमेरो_nodes; i++) {
+        if (!provide_cap(उगात_cnode_cap, cap_sched_control_cap_new(i))) {
             printf("can't init sched_control for node %u, provide_cap() failed\n", i);
             return false;
         }
@@ -470,27 +470,27 @@ BOOT_CODE void create_idle_thread(void)
     pptr_t pptr;
 
 #ifdef ENABLE_SMP_SUPPORT
-    for (unsigned int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+    for (unsigned int i = 0; i < CONFIG_MAX_नुमेरो_NODES; i++) {
 #endif /* ENABLE_SMP_SUPPORT */
         pptr = (pptr_t) &ksIdleThreadTCB[SMP_TERNARY(i, 0)];
-        NODE_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
-        configureIdleThread(NODE_STATE_ON_CORE(ksIdleThread, i));
+        बुहोल_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
+        configureIdleThread(बुहोल_STATE_ON_CORE(ksIdleThread, i));
 #ifdef CONFIG_DEBUG_BUILD
-        setThreadName(NODE_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
+        setThreadName(बुहोल_STATE_ON_CORE(ksIdleThread, i), "idle_thread");
 #endif
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
+        SMP_COND_STATEMENT(बुहोल_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
 #ifdef CONFIG_KERNEL_MCS
-        configure_sched_context(NODE_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
+        configure_sched_context(बुहोल_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
                                 MAX_PERIOD_TICKS);
-        SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
-        NODE_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
+        SMP_COND_STATEMENT(बुहोल_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
+        बुहोल_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
 #endif
 #ifdef ENABLE_SMP_SUPPORT
     }
 #endif /* ENABLE_SMP_SUPPORT */
 }
 
-BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
+BOOT_CODE tcb_t *create_initial_thread(cap_t उगात_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
                                        vptr_t ipcbuf_vptr, cap_t ipcbuf_cap)
 {
     tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_OFFSET);
@@ -501,26 +501,26 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
     Arch_initContext(&tcb->tcbArch.tcbContext);
 
     /* derive a copy of the IPC buffer cap for inserting */
-    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
+    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         printf("Failed to derive copy of IPC Buffer\n");
         return NULL;
     }
 
     /* initialise TCB (corresponds directly to abstract specification) */
-    cteInsert(
-        root_cnode_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
+    cte_इसिंगित(
+        उगात_cnode_cap,
+        SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadCNode),
         SLOT_PTR(rootserver.tcb, tcbCTable)
     );
-    cteInsert(
+    cte_इसिंगित(
         it_pd_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
+        SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadVSpace),
         SLOT_PTR(rootserver.tcb, tcbVTable)
     );
-    cteInsert(
+    cte_इसिंगित(
         dc_ret.cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
+        SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadIPCBuffer),
         SLOT_PTR(rootserver.tcb, tcbBuffer)
     );
     tcb->tcbIPCBuffer = ipcbuf_vptr;
@@ -547,11 +547,11 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
 
     /* create initial thread's TCB cap */
     cap_t cap = cap_thread_cap_new(TCB_REF(tcb));
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadTCB), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadTCB), cap);
 
 #ifdef CONFIG_KERNEL_MCS
     cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), seL4_MinSchedContextBits);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadSC), cap);
+    write_slot(SLOT_PTR(pptr_of_cap(उगात_cnode_cap), seL4_CapInitThreadSC), cap);
 #endif
 #ifdef CONFIG_DEBUG_BUILD
     setThreadName(tcb, "rootserver");
@@ -582,11 +582,11 @@ BOOT_CODE void clock_sync_test(void)
     ticks_t margin = usToTicks(CLOCK_SYNC_DELTA) + getTimerPrecision();
 
     assert(getCurrentCPUIndex() != 0);
-    t = NODE_STATE_ON_CORE(ksCurTime, 0);
+    t = बुहोल_STATE_ON_CORE(ksCurTime, 0);
     do {
         /* perform a memory acquire to get new values of ksCurTime */
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
-        t0 = NODE_STATE_ON_CORE(ksCurTime, 0);
+        t0 = बुहोल_STATE_ON_CORE(ksCurTime, 0);
     } while (t0 == t);
     t = getCurrentTime();
     printf("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
@@ -607,26 +607,26 @@ BOOT_CODE void clock_sync_test(void)
 BOOT_CODE void init_core_state(tcb_t *scheduler_action)
 {
 #ifdef CONFIG_HAVE_FPU
-    NODE_STATE(ksCurFPUOwner) = NULL;
+    बुहोल_STATE(ksCurFPUOwner) = NULL;
 #endif
 #ifdef CONFIG_DEBUG_BUILD
     /* add initial threads to the debug queue */
-    NODE_STATE(ksDebugTCBs) = NULL;
+    बुहोल_STATE(ksDebugTCBs) = NULL;
     if (scheduler_action != SchedulerAction_ResumeCurrentThread &&
         scheduler_action != SchedulerAction_ChooseNewThread) {
         tcbDebugAppend(scheduler_action);
     }
-    tcbDebugAppend(NODE_STATE(ksIdleThread));
+    tcbDebugAppend(बुहोल_STATE(ksIdleThread));
 #endif
-    NODE_STATE(ksSchedulerAction) = scheduler_action;
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
+    बुहोल_STATE(ksSchedulerAction) = scheduler_action;
+    बुहोल_STATE(ksCurThread) = बुहोल_STATE(ksIdleThread);
 #ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread->tcbSchedContext);
-    NODE_STATE(ksConsumed) = 0;
-    NODE_STATE(ksReprogram) = true;
-    NODE_STATE(ksReleaseQueue.head) = NULL;
-    NODE_STATE(ksReleaseQueue.end) = NULL;
-    NODE_STATE(ksCurTime) = getCurrentTime();
+    बुहोल_STATE(ksCurSC) = बुहोल_STATE(ksCurThread->tcbSchedContext);
+    बुहोल_STATE(ksConsumed) = 0;
+    बुहोल_STATE(ksReprogram) = true;
+    बुहोल_STATE(ksReleaseQueue.head) = NULL;
+    बुहोल_STATE(ksReleaseQueue.end) = NULL;
+    बुहोल_STATE(ksCurTime) = getCurrentTime();
 #endif
     /* No need for NODE_STATE() as there is no SMP support for domains */
     ksCurDomain = 0;
@@ -647,7 +647,7 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
  */
 BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
 {
-    return pptr >= PPTR_BASE && pptr < PPTR_TOP;
+    return pptr >= PPTR_BASE && pptr < PPTR_इताअस;
 }
 
 /**
@@ -664,7 +664,7 @@ BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
  * @return true on success, false on failure
  */
 BOOT_CODE static bool_t provide_untyped_cap(
-    cap_t      root_cnode_cap,
+    cap_t      उगात_cnode_cap,
     bool_t     device_memory,
     pptr_t     pptr,
     word_t     size_bits,
@@ -706,7 +706,7 @@ BOOT_CODE static bool_t provide_untyped_cap(
     }
 
     word_t i = ndks_boot.slot_pos_cur - first_untyped_slot;
-    if (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
+    if (i < CONFIG_MAX_नुमेरो_BOOTINFO_UNTYPED_CAPS) {
         ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc) {
             .paddr    = pptr_to_paddr((void *)pptr),
             .sizeBits = size_bits,
@@ -715,7 +715,7 @@ BOOT_CODE static bool_t provide_untyped_cap(
         };
         ut_cap = cap_untyped_cap_new(MAX_FREE_INDEX(size_bits),
                                      device_memory, size_bits, pptr);
-        ret = provide_cap(root_cnode_cap, ut_cap);
+        ret = provide_cap(उगात_cnode_cap, ut_cap);
     } else {
         printf("Kernel init: Too many untyped regions for boot info\n");
         ret = true;
@@ -739,7 +739,7 @@ BOOT_CODE static bool_t provide_untyped_cap(
  * @return true on success, false on failure.
  */
 BOOT_CODE static bool_t create_untypeds_for_region(
-    cap_t      root_cnode_cap,
+    cap_t      उगात_cnode_cap,
     bool_t     device_memory,
     region_t   reg,
     seL4_SlotPos first_untyped_slot
@@ -775,7 +775,7 @@ BOOT_CODE static bool_t create_untypeds_for_region(
          * be used anyway.
          */
         if (size_bits >= seL4_MinUntypedBits) {
-            if (!provide_untyped_cap(root_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
+            if (!provide_untyped_cap(उगात_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
                 return false;
             }
         }
@@ -784,17 +784,17 @@ BOOT_CODE static bool_t create_untypeds_for_region(
     return true;
 }
 
-BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
+BOOT_CODE bool_t create_untypeds(cap_t उगात_cnode_cap)
 {
     seL4_SlotPos first_untyped_slot = ndks_boot.slot_pos_cur;
 
     paddr_t start = 0;
-    for (word_t i = 0; i < ndks_boot.resv_count; i++) {
+    for (word_t i = 0; i < ndks_boot.resv_बिलांग; i++) {
         if (start < ndks_boot.reserved[i].start) {
             region_t reg = paddr_to_pptr_reg((p_region_t) {
                 start, ndks_boot.reserved[i].start
             });
-            if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
+            if (!create_untypeds_for_region(उगात_cnode_cap, true, reg, first_untyped_slot)) {
                 printf("ERROR: creation of untypeds for device region #%u at"
                        " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
                        (unsigned int)i, reg.start, reg.end);
@@ -805,14 +805,14 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
         start = ndks_boot.reserved[i].end;
     }
 
-    if (start <= CONFIG_PADDR_USER_DEVICE_TOP - 1) {
+    if (start <= CONFIG_PADDR_USER_DEVICE_इताअस - 1) {
         region_t reg = paddr_to_pptr_reg((p_region_t) {
             /* CONFIG_PADDR_USER_DEVICE_TOP cast to paddr_t can be 0.
              * create_untypeds_for_region() can deal with that correctly. */
-            start, (paddr_t) CONFIG_PADDR_USER_DEVICE_TOP
+            start, (paddr_t) CONFIG_PADDR_USER_DEVICE_इताअस
         });
 
-        if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
+        if (!create_untypeds_for_region(उगात_cnode_cap, true, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for top device region"
                    " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
                    reg.start, reg.end);
@@ -825,7 +825,7 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
      * can be reused.
      */
     region_t boot_mem_reuse_reg = paddr_to_pptr_reg(get_p_reg_kernel_img_boot());
-    if (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
+    if (!create_untypeds_for_region(उगात_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
         printf("ERROR: creation of untypeds for recycled boot memory"
                " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
                boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
@@ -836,7 +836,7 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
     for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
         region_t reg = ndks_boot.freemem[i];
         ndks_boot.freemem[i] = REG_EMPTY;
-        if (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
+        if (!create_untypeds_for_region(उगात_cnode_cap, false, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for free memory region #%u at"
                    " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
                    (unsigned int)i, reg.start, reg.end);
@@ -862,7 +862,7 @@ BOOT_CODE void bi_finalise(void)
 
     ndks_boot.bi_frame->empty = (seL4_SlotRegion) {
         .start = ndks_boot.slot_pos_cur,
-        .end   = BIT(CONFIG_ROOT_CNODE_SIZE_BITS)
+        .end   = BIT(CONFIG_उगात_CNODE_SIZE_BITS)
     };
 }
 
@@ -907,7 +907,7 @@ BOOT_CODE static bool_t check_available_memory(word_t n_available,
 
 /* We can't declare arrays on the stack, so this is space for init_avail_reg()
  * below to populate and init_freemem() to consume. */
-BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
+BOOT_BSS static region_t avail_reg[MAX_नुमेरो_FREEMEM_REG];
 
 /**
  * Initialise avail_reg with the parts of the available memory regions that are
@@ -927,13 +927,13 @@ BOOT_CODE static word_t init_avail_reg(word_t n_available,
     for (word_t i = 0; i < n_available; i++) {
         const p_region_t *r = &available[i];
 
-        if ((r->start >= PADDR_TOP) || (r->end <= PADDR_BASE)) {
+        if ((r->start >= PADDR_इताअस) || (r->end <= PADDR_BASE)) {
             printf("  region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") is outside the kernel"
                    " window, only potentially available as device untypeds\n", r->start, r->end);
         } else {
             p_region_t usable_reg = {
                 .start = MAX(r->start, PADDR_BASE),
-                .end   = MIN(r->end, PADDR_TOP)
+                .end   = MIN(r->end, PADDR_इताअस)
             };
 
             if (cnt >= ARRAY_SIZE(avail_reg)) {
@@ -1026,7 +1026,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
             r++;
         } else if (reserved[r].start >= avail_reg[a].end) {
             /* the reserved region is above the available region - take the whole thing */
-            insert_region(avail_reg[a]);
+            इसिंगित_region(avail_reg[a]);
             a++;
         } else {
             /* the reserved region overlaps with the available region */
@@ -1041,7 +1041,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
                  * the start to the end of the reserved region */
                 region_t m = avail_reg[a];
                 m.end = reserved[r].start;
-                insert_region(m);
+                इसिंगित_region(m);
                 if (avail_reg[a].end > reserved[r].end) {
                     avail_reg[a].start = reserved[r].end;
                     /* we could increment reserved index here, but it's more consistent with the
@@ -1062,7 +1062,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
     /* no more reserved regions - add the rest */
     for (; a < n_available; a++) {
         if (avail_reg[a].start < avail_reg[a].end) {
-            insert_region(avail_reg[a]);
+            इसिंगित_region(avail_reg[a]);
         }
     }
 
@@ -1070,7 +1070,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
     int i = ARRAY_SIZE(ndks_boot.freemem) - 1;
     if (!is_reg_empty(ndks_boot.freemem[i])) {
         printf("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
-               (unsigned int)MAX_NUM_FREEMEM_REG);
+               (unsigned int)MAX_नुमेरो_FREEMEM_REG);
         return false;
     }
     /* skip any empty regions */

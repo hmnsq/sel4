@@ -13,13 +13,13 @@ timestamp_t ksEnter;
 
 void benchmark_track_utilisation_dump(void)
 {
-    uint64_t *buffer = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, NODE_STATE(ksCurThread)))->msg[0]));
+    uint64_t *buffer = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, बुहोल_STATE(ksCurThread)))->मेनसाहे[0]));
     tcb_t *tcb = NULL;
-    word_t tcb_cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    word_t tcb_cptr = getRegister(बुहोल_STATE(ksCurThread), capRegister);
     lookupCap_ret_t lu_ret;
     word_t cap_type;
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
+    lu_ret = lookupCap(बुहोल_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
     if (cap_type != cap_thread_cap) {
@@ -31,47 +31,47 @@ void benchmark_track_utilisation_dump(void)
 
     /* Selected TCB counters */
     buffer[BENCHMARK_TCB_UTILISATION] = tcb->benchmark.utilisation; /* Requested thread utilisation */
-    buffer[BENCHMARK_TCB_NUMBER_SCHEDULES] = tcb->benchmark.number_schedules; /* Number of times scheduled */
+    buffer[BENCHMARK_TCB_नुमेरो_SCHEDULES] = tcb->benchmark.नुमेरो_schedules; /* Number of times scheduled */
     buffer[BENCHMARK_TCB_KERNEL_UTILISATION] = tcb->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_TCB_NUMBER_KERNEL_ENTRIES] = tcb->benchmark.number_kernel_entries; /* Number of kernel entries */
+    buffer[BENCHMARK_TCB_नुमेरो_KERNEL_ENTRIES] = tcb->benchmark.नुमेरो_kernel_entries; /* Number of kernel entries */
 
     /* Idle counters */
-    buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = NODE_STATE(
+    buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = बुहोल_STATE(
                                                       ksIdleThread)->benchmark.utilisation; /* Idle thread utilisation of current CPU */
 #ifdef ENABLE_SMP_SUPPORT
-    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = NODE_STATE_ON_CORE(ksIdleThread,
+    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = बुहोल_STATE_ON_CORE(ksIdleThread,
                                                                    tcb->tcbAffinity)->benchmark.utilisation; /* Idle thread utilisation of CPU the TCB is running on */
 #else
     buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
 #endif
 
-    buffer[BENCHMARK_IDLE_NUMBER_SCHEDULES] = NODE_STATE(
-                                                  ksIdleThread)->benchmark.number_schedules; /* Number of times scheduled */
-    buffer[BENCHMARK_IDLE_KERNEL_UTILISATION] = NODE_STATE(
+    buffer[BENCHMARK_IDLE_नुमेरो_SCHEDULES] = बुहोल_STATE(
+                                                  ksIdleThread)->benchmark.नुमेरो_schedules; /* Number of times scheduled */
+    buffer[BENCHMARK_IDLE_KERNEL_UTILISATION] = बुहोल_STATE(
                                                     ksIdleThread)->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_IDLE_NUMBER_KERNEL_ENTRIES] = NODE_STATE(
-                                                       ksIdleThread)->benchmark.number_kernel_entries; /* Number of kernel entries */
+    buffer[BENCHMARK_IDLE_नुमेरो_KERNEL_ENTRIES] = बुहोल_STATE(
+                                                       ksIdleThread)->benchmark.नुमेरो_kernel_entries; /* Number of kernel entries */
 
 
     /* Total counters */
 #ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
     buffer[BENCHMARK_TOTAL_UTILISATION] =
-        (ARCH_NODE_STATE(ccnt_num_overflows) * 0xFFFFFFFFU) + NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time);
+        (ARCH_बुहोल_STATE(ccnt_नुमेरो_overflows) * 0xFFFFFFFFU) + बुहोल_STATE(benchmark_end_time) - बुहोल_STATE(benchmark_start_time);
 #else
-    buffer[BENCHMARK_TOTAL_UTILISATION] = NODE_STATE(benchmark_end_time) - NODE_STATE(
+    buffer[BENCHMARK_TOTAL_UTILISATION] = बुहोल_STATE(benchmark_end_time) - बुहोल_STATE(
                                               benchmark_start_time); /* Overall time */
 #endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
-    buffer[BENCHMARK_TOTAL_NUMBER_SCHEDULES] = NODE_STATE(benchmark_kernel_number_schedules);
-    buffer[BENCHMARK_TOTAL_KERNEL_UTILISATION] = NODE_STATE(benchmark_kernel_time);
-    buffer[BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES] = NODE_STATE(benchmark_kernel_number_entries);
+    buffer[BENCHMARK_TOTAL_नुमेरो_SCHEDULES] = बुहोल_STATE(benchmark_kernel_नुमेरो_schedules);
+    buffer[BENCHMARK_TOTAL_KERNEL_UTILISATION] = बुहोल_STATE(benchmark_kernel_time);
+    buffer[BENCHMARK_TOTAL_नुमेरो_KERNEL_ENTRIES] = बुहोल_STATE(benchmark_kernel_नुमेरो_entries);
 
 }
 
 void benchmark_track_reset_utilisation(tcb_t *tcb)
 {
     tcb->benchmark.utilisation = 0;
-    tcb->benchmark.number_schedules = 0;
-    tcb->benchmark.number_kernel_entries = 0;
+    tcb->benchmark.नुमेरो_schedules = 0;
+    tcb->benchmark.नुमेरो_kernel_entries = 0;
     tcb->benchmark.kernel_utilisation = 0;
     tcb->benchmark.schedule_start_time = 0;
 }

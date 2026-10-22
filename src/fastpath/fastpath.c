@@ -16,7 +16,7 @@
 static inline
 FORCE_INLINE
 #endif
-void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
+void NORETURN fastpath_call(word_t cptr, word_t मेनसाहे_Info)
 {
     seL4_MessageInfo_t info;
     cap_t ep_cap;
@@ -25,25 +25,25 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     tcb_t *dest;
     word_t badge;
     cap_t newVTable;
-    vspace_root_t *cap_pd;
+    vspace_उगात_t *cap_pd;
     pde_t stored_hw_asid;
     word_t fault_type;
     dom_t dom;
 
     /* Get message info, length, and fault type. */
-    info = messageInfoFromWord_raw(msgInfo);
+    info = messageInfoFromWord_raw(मेनसाहे_Info);
     length = seL4_MessageInfo_get_length(info);
-    fault_type = seL4_Fault_get_seL4_FaultType(NODE_STATE(ksCurThread)->tcbFault);
+    fault_type = seL4_Fault_get_seL4_FaultType(बुहोल_STATE(ksCurThread)->tcbFault);
 
     /* Check there's no extra caps, the length is ok and there's no
      * saved fault. */
-    if (unlikely(fastpath_mi_check(msgInfo) ||
+    if (unlikely(fastpath_mi_check(मेनसाहे_Info) ||
                  fault_type != seL4_Fault_NullFault)) {
         slowpath(SysCall);
     }
 
     /* Lookup the cap */
-    ep_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, cptr);
+    ep_cap = lookup_fp(TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCTable)->cap, cptr);
 
     /* Check it's an endpoint */
     if (unlikely(!cap_capType_equals(ep_cap, cap_endpoint_cap) ||
@@ -74,10 +74,10 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     newVTable = TCB_PTR_CTE_PTR(dest, tcbVTable)->cap;
 
     /* Get vspace root. */
-    cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
+    cap_pd = cap_vtable_cap_get_vspace_उगात_fp(newVTable);
 
     /* Ensure that the destination has a valid VTable. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    if (unlikely(! is_Valid_VTable_उगात_fp(newVTable))) {
         slowpath(SysCall);
     }
 
@@ -88,15 +88,15 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 
 #if defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
     /* Need to test that the ASID is still valid */
-    asid_t asid = vspace_root_getMappedASID_fp(newVTable);
+    asid_t asid = vspace_उगात_get_Mapped_ASID_fp(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
     if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
-                 (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) != cap_pd)) {
+                 (vspace_उगात_t *)asid_map_asid_map_vspace_get_vspace_उगात(asid_map) != cap_pd)) {
         slowpath(SysCall);
     }
     /* Borrow the stored_hw_asid for PCID on x86_64. On ia32 this value will be ignored, but
      * it is passed to a function below, so at least some value needs to be written. */
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 
 #ifdef CONFIG_ARCH_AARCH64
@@ -104,7 +104,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
     if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
-                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
+                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_उगात(asid_map)) != cap_pd)) {
         slowpath(SysCall);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
@@ -113,9 +113,9 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
         slowpath(SysCall);
     }
     /* vmids are the tags used instead of hw_asids in hyp mode */
-    stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
+    stored_hw_asid.मगा_सालिता[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
 #else
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 #endif
 
@@ -126,13 +126,13 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
         slowpath(SysCall);
     }
     /* Get HW ASID */
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 
     /* let gcc optimise this out for 1 domain */
     dom = maxDom ? ksCurDomain : 0;
     /* ensure only the idle thread or lower prio threads are present in the scheduler */
-    if (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
+    if (unlikely(dest->tcbPriority < बुहोल_STATE(ksCurThread->tcbPriority) &&
                  !isHighestPrio(dom, dest->tcbPriority))) {
         slowpath(SysCall);
     }
@@ -168,7 +168,7 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
+    if (unlikely(बुहोल_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
         slowpath(SysCall);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -197,28 +197,28 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     badge = cap_endpoint_cap_get_capEPBadge(ep_cap);
 
     /* Unlink dest <-> reply, link src (cur thread) <-> reply */
-    thread_state_ptr_set_tsType_np(&NODE_STATE(ksCurThread)->tcbState,
+    thread_state_ptr_set_tsType_np(&बुहोल_STATE(ksCurThread)->tcbState,
                                    ThreadState_BlockedOnReply);
 #ifdef CONFIG_KERNEL_MCS
     thread_state_ptr_set_replyObject_np(&dest->tcbState, 0);
-    thread_state_ptr_set_replyObject_np(&NODE_STATE(ksCurThread)->tcbState, REPLY_REF(reply));
-    reply->replyTCB = NODE_STATE(ksCurThread);
+    thread_state_ptr_set_replyObject_np(&बुहोल_STATE(ksCurThread)->tcbState, REPLY_REF(reply));
+    reply->replyTCB = बुहोल_STATE(ksCurThread);
 
-    sched_context_t *sc = NODE_STATE(ksCurThread)->tcbSchedContext;
+    sched_context_t *sc = बुहोल_STATE(ksCurThread)->tcbSchedContext;
     sc->scTcb = dest;
     dest->tcbSchedContext = sc;
-    NODE_STATE(ksCurThread)->tcbSchedContext = NULL;
+    बुहोल_STATE(ksCurThread)->tcbSchedContext = NULL;
 
     reply_t *old_caller = sc->scReply;
-    reply->replyPrev = call_stack_new(REPLY_REF(sc->scReply), false);
+    reply->replyPrev = call_सालानसान_new(REPLY_REF(sc->scReply), false);
     if (unlikely(old_caller)) {
-        old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
+        old_caller->replyNext = call_सालानसान_new(REPLY_REF(reply), false);
     }
-    reply->replyNext = call_stack_new(SC_REF(sc), true);
+    reply->replyNext = call_सालानसान_new(SC_REF(sc), true);
     sc->scReply = reply;
 #else
     /* Get sender reply slot */
-    cte_t *replySlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbReply);
+    cte_t *replySlot = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbReply);
 
     /* Get dest caller slot */
     cte_t *callerSlot = TCB_PTR_CTE_PTR(dest, tcbCaller);
@@ -226,22 +226,22 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
     /* Insert reply cap */
     word_t replyCanGrant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
     cap_reply_cap_ptr_new_np(&callerSlot->cap, replyCanGrant, 0,
-                             TCB_REF(NODE_STATE(ksCurThread)));
-    mdb_node_ptr_set_mdbPrev_np(&callerSlot->cteMDBNode, CTE_REF(replySlot));
-    mdb_node_ptr_mset_mdbNext_mdbRevocable_mdbFirstBadged(
+                             TCB_REF(बुहोल_STATE(ksCurThread)));
+    mdb_बुहोल_ptr_set_mdb_Prev_np(&callerSlot->cteMDBNode, CTE_REF(replySlot));
+    mdb_बुहोल_ptr_mset_mdb_Next_mdb_Revocable_mdb_First_Badged(
         &replySlot->cteMDBNode, CTE_REF(callerSlot), 1, 1);
 #endif
 
-    fastpath_copy_mrs(length, NODE_STATE(ksCurThread), dest);
+    fastpath_copy_mrs(length, बुहोल_STATE(ksCurThread), dest);
 
     /* Dest thread is set Running, but not queued. */
     thread_state_ptr_set_tsType_np(&dest->tcbState,
                                    ThreadState_Running);
     switchToThread_fp(dest, cap_pd, stored_hw_asid);
 
-    msgInfo = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
+    मेनसाहे_Info = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
 
-    fastpath_restore(badge, msgInfo, NODE_STATE(ksCurThread));
+    fastpath_restore(badge, मेनसाहे_Info, बुहोल_STATE(ksCurThread));
 }
 
 #ifdef CONFIG_ARCH_ARM
@@ -249,9 +249,9 @@ static inline
 FORCE_INLINE
 #endif
 #ifdef CONFIG_KERNEL_MCS
-void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
+void NORETURN fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info, word_t reply)
 #else
-void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
+void NORETURN fastpath_reply_recv(word_t cptr, word_t मेनसाहे_Info)
 #endif
 {
     seL4_MessageInfo_t info;
@@ -264,24 +264,24 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     word_t fault_type;
 
     cap_t newVTable;
-    vspace_root_t *cap_pd;
+    vspace_उगात_t *cap_pd;
     pde_t stored_hw_asid;
     dom_t dom;
 
     /* Get message info and length */
-    info = messageInfoFromWord_raw(msgInfo);
+    info = messageInfoFromWord_raw(मेनसाहे_Info);
     length = seL4_MessageInfo_get_length(info);
-    fault_type = seL4_Fault_get_seL4_FaultType(NODE_STATE(ksCurThread)->tcbFault);
+    fault_type = seL4_Fault_get_seL4_FaultType(बुहोल_STATE(ksCurThread)->tcbFault);
 
     /* Check there's no extra caps, the length is ok and there's no
      * saved fault. */
-    if (unlikely(fastpath_mi_check(msgInfo) ||
+    if (unlikely(fastpath_mi_check(मेनसाहे_Info) ||
                  fault_type != seL4_Fault_NullFault)) {
         slowpath(SysReplyRecv);
     }
 
     /* Lookup the cap */
-    ep_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap,
+    ep_cap = lookup_fp(TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCTable)->cap,
                        cptr);
 
     /* Check it's an endpoint */
@@ -292,7 +292,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #ifdef CONFIG_KERNEL_MCS
     /* lookup the reply object */
-    cap_t reply_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, reply);
+    cap_t reply_cap = lookup_fp(TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCTable)->cap, reply);
 
     /* check it's a reply object */
     if (unlikely(!cap_capType_equals(reply_cap, cap_reply_cap))) {
@@ -301,8 +301,8 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 
     /* Check there is nothing waiting on the notification */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbBoundNotification &&
-                 notification_ptr_get_state(NODE_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active)) {
+    if (unlikely(बुहोल_STATE(ksCurThread)->tcbBoundNotification &&
+                 notification_ptr_get_state(बुहोल_STATE(ksCurThread)->tcbBoundNotification) == NtfnState_Active)) {
         slowpath(SysReplyRecv);
     }
 
@@ -320,8 +320,8 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     /* check that its valid and at the head of the call chain
        and that the current thread's SC is going to be donated. */
     if (unlikely(reply_ptr->replyTCB == NULL ||
-                 call_stack_get_isHead(reply_ptr->replyNext) == 0 ||
-                 SC_PTR(call_stack_get_callStackPtr(reply_ptr->replyNext)) != NODE_STATE(ksCurThread)->tcbSchedContext)) {
+                 call_सालानसान_get_is_Head(reply_ptr->replyNext) == 0 ||
+                 SC_PTR(call_सालानसान_get_call_सालानसान_Ptr(reply_ptr->replyNext)) != बुहोल_STATE(ksCurThread)->tcbSchedContext)) {
         slowpath(SysReplyRecv);
     }
 
@@ -329,7 +329,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     caller = reply_ptr->replyTCB;
 #else
     /* Only reply if the reply cap is valid. */
-    cte_t *callerSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
+    cte_t *callerSlot = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCaller);
     cap_t callerCap = callerSlot->cap;
     if (unlikely(!fastpath_reply_cap_check(callerCap))) {
         slowpath(SysReplyRecv);
@@ -365,10 +365,10 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     newVTable = TCB_PTR_CTE_PTR(caller, tcbVTable)->cap;
 
     /* Get vspace root. */
-    cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
+    cap_pd = cap_vtable_cap_get_vspace_उगात_fp(newVTable);
 
     /* Ensure that the destination has a valid MMU. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    if (unlikely(! is_Valid_VTable_उगात_fp(newVTable))) {
         slowpath(SysReplyRecv);
     }
 
@@ -379,15 +379,15 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #if defined(CONFIG_ARCH_X86_64) || defined(CONFIG_ARCH_IA32)
     /* Need to test that the ASID is still valid */
-    asid_t asid = vspace_root_getMappedASID_fp(newVTable);
+    asid_t asid = vspace_उगात_get_Mapped_ASID_fp(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
     if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
-                 (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) != cap_pd)) {
+                 (vspace_उगात_t *)asid_map_asid_map_vspace_get_vspace_उगात(asid_map) != cap_pd)) {
         slowpath(SysReplyRecv);
     }
     /* Borrow the stored_hw_asid for PCID on x86_64. On ia32 this value will be ignored, but
      * it is passed to a function below, so at least some value needs to be written. */
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 
 #ifdef CONFIG_ARCH_AARCH64
@@ -395,7 +395,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
     if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
-                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
+                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_उगात(asid_map)) != cap_pd)) {
         slowpath(SysReplyRecv);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
@@ -405,9 +405,9 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     }
 
     /* vmids are the tags used instead of hw_asids in hyp mode */
-    stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
+    stored_hw_asid.मगा_सालिता[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
 #else
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 #endif
 
@@ -418,7 +418,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
         slowpath(SysReplyRecv);
     }
     /* Get HW ASID */
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 
     /* Ensure the original caller can be scheduled directly. */
@@ -447,7 +447,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != caller->tcbAffinity)) {
+    if (unlikely(बुहोल_STATE(ksCurThread)->tcbAffinity != caller->tcbAffinity)) {
         slowpath(SysReplyRecv);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -464,51 +464,51 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
     /* Set thread state to BlockedOnReceive */
     thread_state_ptr_mset_blockingObject_tsType(
-        &NODE_STATE(ksCurThread)->tcbState, (word_t)ep_ptr, ThreadState_BlockedOnReceive);
+        &बुहोल_STATE(ksCurThread)->tcbState, (word_t)ep_ptr, ThreadState_BlockedOnReceive);
 #ifdef CONFIG_KERNEL_MCS
     /* unlink reply object from caller */
     thread_state_ptr_set_replyObject_np(&caller->tcbState, 0);
     /* set the reply object */
-    thread_state_ptr_set_replyObject_np(&NODE_STATE(ksCurThread)->tcbState, REPLY_REF(reply_ptr));
-    reply_ptr->replyTCB = NODE_STATE(ksCurThread);
+    thread_state_ptr_set_replyObject_np(&बुहोल_STATE(ksCurThread)->tcbState, REPLY_REF(reply_ptr));
+    reply_ptr->replyTCB = बुहोल_STATE(ksCurThread);
 #else
-    thread_state_ptr_set_blockingIPCCanGrant(&NODE_STATE(ksCurThread)->tcbState,
+    thread_state_ptr_set_blockingIPCCanGrant(&बुहोल_STATE(ksCurThread)->tcbState,
                                              cap_endpoint_cap_get_capCanGrant(ep_cap));;
 #endif
 
     /* Place the thread in the endpoint queue */
     endpointTail = endpoint_ptr_get_epQueue_tail_fp(ep_ptr);
     if (likely(!endpointTail)) {
-        NODE_STATE(ksCurThread)->tcbEPPrev = NULL;
-        NODE_STATE(ksCurThread)->tcbEPNext = NULL;
+        बुहोल_STATE(ksCurThread)->tcbEPPrev = NULL;
+        बुहोल_STATE(ksCurThread)->tcbEPNext = NULL;
 
         /* Set head/tail of queue and endpoint state. */
-        endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(NODE_STATE(ksCurThread)));
-        endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(NODE_STATE(ksCurThread)),
+        endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(बुहोल_STATE(ksCurThread)));
+        endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(बुहोल_STATE(ksCurThread)),
                                              EPState_Recv);
     } else {
 #ifdef CONFIG_KERNEL_MCS
         /* Update queue. */
-        tcb_queue_t queue = tcbAppend(NODE_STATE(ksCurThread), ep_ptr_get_queue(ep_ptr));
+        tcb_queue_t queue = tcbAppend(बुहोल_STATE(ksCurThread), ep_ptr_get_queue(ep_ptr));
         endpoint_ptr_set_epQueue_head_np(ep_ptr, TCB_REF(queue.head));
         endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(queue.end), EPState_Recv);
 #else
         /* Append current thread onto the queue. */
-        endpointTail->tcbEPNext = NODE_STATE(ksCurThread);
-        NODE_STATE(ksCurThread)->tcbEPPrev = endpointTail;
-        NODE_STATE(ksCurThread)->tcbEPNext = NULL;
+        endpointTail->tcbEPNext = बुहोल_STATE(ksCurThread);
+        बुहोल_STATE(ksCurThread)->tcbEPPrev = endpointTail;
+        बुहोल_STATE(ksCurThread)->tcbEPNext = NULL;
 
         /* Update tail of queue. */
-        endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(NODE_STATE(ksCurThread)),
+        endpoint_ptr_mset_epQueue_tail_state(ep_ptr, TCB_REF(बुहोल_STATE(ksCurThread)),
                                              EPState_Recv);
 #endif
     }
 
 #ifdef CONFIG_KERNEL_MCS
     /* update call stack */
-    word_t prev_ptr = call_stack_get_callStackPtr(reply_ptr->replyPrev);
-    sched_context_t *sc = NODE_STATE(ksCurThread)->tcbSchedContext;
-    NODE_STATE(ksCurThread)->tcbSchedContext = NULL;
+    word_t prev_ptr = call_सालानसान_get_call_सालानसान_Ptr(reply_ptr->replyPrev);
+    sched_context_t *sc = बुहोल_STATE(ksCurThread)->tcbSchedContext;
+    बुहोल_STATE(ksCurThread)->tcbSchedContext = NULL;
     caller->tcbSchedContext = sc;
     sc->scTcb = caller;
 
@@ -518,12 +518,12 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
     }
 
     /* TODO neccessary? */
-    reply_ptr->replyPrev.words[0] = 0;
-    reply_ptr->replyNext.words[0] = 0;
+    reply_ptr->replyPrev.मगा_सालिता[0] = 0;
+    reply_ptr->replyNext.मगा_सालिता[0] = 0;
 #else
     /* Delete the reply cap. */
-    mdb_node_ptr_mset_mdbNext_mdbRevocable_mdbFirstBadged(
-        &CTE_PTR(mdb_node_get_mdbPrev(callerSlot->cteMDBNode))->cteMDBNode,
+    mdb_बुहोल_ptr_mset_mdb_Next_mdb_Revocable_mdb_First_Badged(
+        &CTE_PTR(mdb_बुहोल_get_mdb_Prev(callerSlot->cteMDBNode))->cteMDBNode,
         0, 1, 1);
     callerSlot->cap = cap_null_cap_new();
     callerSlot->cteMDBNode = nullMDBNode;
@@ -559,15 +559,15 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
         /* Replies don't have a badge. */
         badge = 0;
 
-        fastpath_copy_mrs(length, NODE_STATE(ksCurThread), caller);
+        fastpath_copy_mrs(length, बुहोल_STATE(ksCurThread), caller);
 
         /* Dest thread is set Running, but not queued. */
         thread_state_ptr_set_tsType_np(&caller->tcbState, ThreadState_Running);
         switchToThread_fp(caller, cap_pd, stored_hw_asid);
 
-        msgInfo = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
+        मेनसाहे_Info = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
 
-        fastpath_restore(badge, msgInfo, NODE_STATE(ksCurThread));
+        fastpath_restore(badge, मेनसाहे_Info, बुहोल_STATE(ksCurThread));
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
     }
@@ -579,7 +579,7 @@ void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo)
 static inline
 FORCE_INLINE
 #endif
-void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
+void NORETURN fastpath_signal(word_t cptr, word_t मेनसाहे_Info)
 {
     word_t fault_type;
     sched_context_t *sc = NULL;
@@ -589,7 +589,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     tcb_t *dest = NULL;
 
     /* Get fault type. */
-    fault_type = seL4_Fault_get_seL4_FaultType(NODE_STATE(ksCurThread)->tcbFault);
+    fault_type = seL4_Fault_get_seL4_FaultType(बुहोल_STATE(ksCurThread)->tcbFault);
 
     /* Check there's no saved fault. Can be removed if the current thread can't
      * have a fault while invoking the fastpath */
@@ -598,7 +598,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
     }
 
     /* Lookup the cap */
-    cap_t cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, cptr);
+    cap_t cap = lookup_fp(TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCTable)->cap, cptr);
 
     /* Check it's a notification */
     if (unlikely(!cap_capType_equals(cap, cap_notification_cap))) {
@@ -628,7 +628,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 #ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = true;
 #endif
-        ntfn_set_active(ntfnPtr, badge | notification_ptr_get_ntfnMsgIdentifier(ntfnPtr));
+        ntfn_set_active(ntfnPtr, badge | notification_ptr_get_ntfn_मेनसाहे_Identifier(ntfnPtr));
         restore_user_context();
         UNREACHABLE();
     case NtfnState_Idle:
@@ -673,7 +673,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 
     /* Only fastpath signal to threads which will not become the new highest prio thread on the
      * core of their SC, even if the currently running thread on the core is the idle thread. */
-    if (NODE_STATE_ON_CORE(ksCurThread, sc->scCore)->tcbPriority < dest->tcbPriority) {
+    if (बुहोल_STATE_ON_CORE(ksCurThread, sc->scCore)->tcbPriority < dest->tcbPriority) {
         slowpath(SysSend);
     }
 
@@ -717,8 +717,8 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
 
     /* Left this in the same form as the slowpath. Not sure if optimal */
     if (sc_sporadic(dest->tcbSchedContext)) {
-        assert(dest->tcbSchedContext != NODE_STATE(ksCurSC));
-        if (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
+        assert(dest->tcbSchedContext != बुहोल_STATE(ksCurSC));
+        if (dest->tcbSchedContext != बुहोल_STATE(ksCurSC)) {
             refill_unblock_check(dest->tcbSchedContext);
         }
     }
@@ -727,7 +727,7 @@ void NORETURN fastpath_signal(word_t cptr, word_t msgInfo)
      * the slowpath doesn't seem to do anything special besides just not
      * not scheduling the dest thread. */
     if (schedulable) {
-        if (NODE_STATE(ksCurThread)->tcbPriority > dest->tcbPriority || crossnode) {
+        if (बुहोल_STATE(ksCurThread)->tcbPriority > dest->tcbPriority || crossnode) {
             SCHED_ENQUEUE(dest);
         } else {
             SCHED_APPEND(dest);
@@ -747,20 +747,20 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     endpoint_t *ep_ptr;
     tcb_t *dest;
     cap_t newVTable;
-    vspace_root_t *cap_pd;
+    vspace_उगात_t *cap_pd;
     word_t badge;
     seL4_MessageInfo_t info;
-    word_t msgInfo;
+    word_t मेनसाहे_Info;
     pde_t stored_hw_asid;
     dom_t dom;
 
     /* Get the fault handler endpoint */
 #ifdef CONFIG_KERNEL_MCS
-    handler_cap = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbFaultHandler)->cap;
+    handler_cap = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbFaultHandler)->cap;
 #else
     cptr_t handlerCPtr;
-    handlerCPtr = NODE_STATE(ksCurThread)->tcbFaultHandler;
-    handler_cap = lookup_fp(TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCTable)->cap, handlerCPtr);
+    handlerCPtr = बुहोल_STATE(ksCurThread)->tcbFaultHandler;
+    handler_cap = lookup_fp(TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbCTable)->cap, handlerCPtr);
 #endif
 
     /* Check that the cap is an endpoint cap and on non-mcs, that you can send to it and create the reply cap */
@@ -789,10 +789,10 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     newVTable = TCB_PTR_CTE_PTR(dest, tcbVTable)->cap;
 
     /* Get vspace root. */
-    cap_pd = cap_vtable_cap_get_vspace_root_fp(newVTable);
+    cap_pd = cap_vtable_cap_get_vspace_उगात_fp(newVTable);
 
     /* Ensure that the destination has a valid VTable. */
-    if (unlikely(! isValidVTableRoot_fp(newVTable))) {
+    if (unlikely(! is_Valid_VTable_उगात_fp(newVTable))) {
         vm_fault_slowpath(type);
     }
 
@@ -801,7 +801,7 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     asid_t asid = cap_vspace_cap_get_capVSMappedASID(newVTable);
     asid_map_t asid_map = findMapForASID(asid);
     if (unlikely(asid_map_get_type(asid_map) != asid_map_asid_map_vspace ||
-                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_root(asid_map)) != cap_pd)) {
+                 VSPACE_PTR(asid_map_asid_map_vspace_get_vspace_उगात(asid_map)) != cap_pd)) {
         vm_fault_slowpath(type);
     }
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
@@ -811,16 +811,16 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     }
 
     /* vmids are the tags used instead of hw_asids in hyp mode */
-    stored_hw_asid.words[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
+    stored_hw_asid.मगा_सालिता[0] = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
 #else
-    stored_hw_asid.words[0] = asid;
+    stored_hw_asid.मगा_सालिता[0] = asid;
 #endif
 #endif
 
     /* let gcc optimise this out for 1 domain */
     dom = maxDom ? ksCurDomain : 0;
     /* ensure only the idle thread or lower prio threads are present in the scheduler */
-    if (unlikely(dest->tcbPriority < NODE_STATE(ksCurThread->tcbPriority) &&
+    if (unlikely(dest->tcbPriority < बुहोल_STATE(ksCurThread->tcbPriority) &&
                  !isHighestPrio(dom, dest->tcbPriority))) {
 
         vm_fault_slowpath(type);
@@ -844,7 +844,7 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
 
 #ifdef ENABLE_SMP_SUPPORT
     /* Ensure both threads have the same affinity */
-    if (unlikely(NODE_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
+    if (unlikely(बुहोल_STATE(ksCurThread)->tcbAffinity != dest->tcbAffinity)) {
         vm_fault_slowpath(type);
     }
 #endif /* ENABLE_SMP_SUPPORT */
@@ -878,37 +878,37 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     badge = cap_endpoint_cap_get_capEPBadge(handler_cap);
 
     /* Unlink dest <-> reply, link src (cur thread) <-> reply */
-    thread_state_ptr_set_tsType_np(&NODE_STATE(ksCurThread)->tcbState, ThreadState_BlockedOnReply);
+    thread_state_ptr_set_tsType_np(&बुहोल_STATE(ksCurThread)->tcbState, ThreadState_BlockedOnReply);
 #ifdef CONFIG_KERNEL_MCS
 
     thread_state_ptr_set_replyObject_np(&dest->tcbState, 0);
-    thread_state_ptr_set_replyObject_np(&NODE_STATE(ksCurThread)->tcbState, REPLY_REF(reply));
-    reply->replyTCB = NODE_STATE(ksCurThread);
+    thread_state_ptr_set_replyObject_np(&बुहोल_STATE(ksCurThread)->tcbState, REPLY_REF(reply));
+    reply->replyTCB = बुहोल_STATE(ksCurThread);
 
-    sched_context_t *sc = NODE_STATE(ksCurThread)->tcbSchedContext;
+    sched_context_t *sc = बुहोल_STATE(ksCurThread)->tcbSchedContext;
     sc->scTcb = dest;
     dest->tcbSchedContext = sc;
-    NODE_STATE(ksCurThread)->tcbSchedContext = NULL;
+    बुहोल_STATE(ksCurThread)->tcbSchedContext = NULL;
 
     reply_t *old_caller = sc->scReply;
-    reply->replyPrev = call_stack_new(REPLY_REF(sc->scReply), false);
+    reply->replyPrev = call_सालानसान_new(REPLY_REF(sc->scReply), false);
     if (unlikely(old_caller)) {
-        old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
+        old_caller->replyNext = call_सालानसान_new(REPLY_REF(reply), false);
     }
-    reply->replyNext = call_stack_new(SC_REF(sc), true);
+    reply->replyNext = call_सालानसान_new(SC_REF(sc), true);
     sc->scReply = reply;
 #else
     /* Get sender reply slot */
-    cte_t *replySlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbReply);
+    cte_t *replySlot = TCB_PTR_CTE_PTR(बुहोल_STATE(ksCurThread), tcbReply);
 
     /* Get dest caller slot */
     cte_t *callerSlot = TCB_PTR_CTE_PTR(dest, tcbCaller);
 
     /* Insert reply cap */
     word_t replyCanGrant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
-    cap_reply_cap_ptr_new_np(&callerSlot->cap, replyCanGrant, 0, TCB_REF(NODE_STATE(ksCurThread)));
-    mdb_node_ptr_set_mdbPrev_np(&callerSlot->cteMDBNode, CTE_REF(replySlot));
-    mdb_node_ptr_mset_mdbNext_mdbRevocable_mdbFirstBadged(&replySlot->cteMDBNode, CTE_REF(callerSlot), 1, 1);
+    cap_reply_cap_ptr_new_np(&callerSlot->cap, replyCanGrant, 0, TCB_REF(बुहोल_STATE(ksCurThread)));
+    mdb_बुहोल_ptr_set_mdb_Prev_np(&callerSlot->cteMDBNode, CTE_REF(replySlot));
+    mdb_बुहोल_ptr_mset_mdb_Next_mdb_Revocable_mdb_First_Badged(&replySlot->cteMDBNode, CTE_REF(callerSlot), 1, 1);
 #endif
     /* Set the message registers for the vm fault*/
     fastpath_vm_fault_set_mrs(dest);
@@ -919,8 +919,8 @@ void NORETURN fastpath_vm_fault(vm_fault_type_t type)
     /* Set the fault handler to running */
     thread_state_ptr_set_tsType_np(&dest->tcbState, ThreadState_Running);
     switchToThread_fp(dest, cap_pd, stored_hw_asid);
-    msgInfo = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
+    मेनसाहे_Info = wordFromMessageInfo(seL4_MessageInfo_set_capsUnwrapped(info, 0));
 
-    fastpath_restore(badge, msgInfo, NODE_STATE(ksCurThread));
+    fastpath_restore(badge, मेनसाहे_Info, बुहोल_STATE(ksCurThread));
 }
 #endif

@@ -83,7 +83,7 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
                         clearMemory(ia32KSGlobalLogPT, seL4_PageTableBits);
 
                         for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ks_नुमेरो_CPUs));
                         }
 
                         userError("Log buffer frame is invalidated, kernel can't benchmark anymore\n");
@@ -136,11 +136,11 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     case seL4_X86_4K:
         return cap_frame_cap_new(
                    X86_SmallPage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+                   ASID_माबाबा(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
                    deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   ASID_माताअस(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
                    (word_t)regionBase      /* capFBasePtr          */
                );
@@ -148,11 +148,11 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
     case seL4_X86_LargePageObject:
         return cap_frame_cap_new(
                    X86_LargePage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+                   ASID_माबाबा(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
                    deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   ASID_माताअस(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
                    (word_t)regionBase      /* capFBasePtr          */
                );
@@ -207,7 +207,7 @@ exception_t Mode_decodeInvocation(
         return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
     default:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 }

@@ -7,12 +7,12 @@
 #include <assert.h>
 #include <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+const register_t मेनसाहे_Registers[] = {
     X2, X3, X4, X5
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    sizeof(मेनसाहे_Registers) / sizeof(मेनसाहे_Registers[0]) == n_मेनसाहे_Registers
 );
 
 const register_t frameRegisters[] = {
@@ -37,6 +37,6 @@ compile_assert(
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    return getRegister(बुहोल_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

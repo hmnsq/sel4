@@ -23,7 +23,7 @@ static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *c
 
 static exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *sgiSlot, cte_t *controlSlot)
 {
-    cteInsert(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
+    cte_इसिंगित(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
     return EXCEPTION_NONE;
 }
 
@@ -86,7 +86,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
 #ifndef CONFIG_ENABLE_SMP_SUPPORT
     } else if (invLabel == ARMIRQIssueSGISignal) {
@@ -98,7 +98,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (wrap_config_set(NUM_SGIS) == 0) {
+        if (wrap_config_set(नुमेरो_SGIS) == 0) {
             current_syscall_error.type = seL4_IllegalOperation;
             userError("IRQControl: IssueSGISignal not available on this platform.");
             return EXCEPTION_SYSCALL_ERROR;
@@ -113,17 +113,17 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (irq >= wrap_config_set(NUM_SGIS)) {
+        if (irq >= wrap_config_set(नुमेरो_SGIS)) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
-            current_syscall_error.rangeErrorMax = NUM_SGIS - 1;
+            current_syscall_error.rangeErrorMax = नुमेरो_SGIS - 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI IRQ 0x%lx.", irq);
             return EXCEPTION_SYSCALL_ERROR;
         }
 
         if (!plat_SGITargetValid(target)) {
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
+            current_syscall_error.invalid_Argument_नुमेरो = 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI Target 0x%lx.", target);
             return EXCEPTION_SYSCALL_ERROR;
         }
@@ -142,7 +142,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
                       getExtraCPtr(buffer, 0));
             return status;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
         return Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
 
 #endif
@@ -161,7 +161,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
             return status;
         }
 
-        if (target >= CONFIG_MAX_NUM_NODES) {
+        if (target >= CONFIG_MAX_नुमेरो_NODES) {
             current_syscall_error.type = seL4_InvalidArgument;
             userError("Target core %lu is invalid.", target);
             return EXCEPTION_SYSCALL_ERROR;
@@ -189,7 +189,7 @@ exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
             return status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
 
         /* If the IRQ is not a private interrupt, then the role of the syscall is to set
          * target core to which the shared interrupt will be physically delivered.
@@ -221,7 +221,7 @@ exception_t decodeSGISignalInvocation(word_t invLabel, word_t length,
     word_t irq = cap_sgi_signal_cap_get_capSGIIRQ(cap);
     word_t target = cap_sgi_signal_cap_get_capSGITarget(cap);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeSGISignalGenerate(irq, target);
 }
 #endif /* !CONFIG_ENABLE_SMP_SUPPORT */

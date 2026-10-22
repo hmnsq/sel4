@@ -34,13 +34,13 @@ struct  smmu_feature {
     bool_t vmid16;                    /*16 bits VMIDs are supported*/
     uint32_t supported_trans;         /*supported translation stages*/
     uint32_t supported_fmt;           /*supported translation formats*/
-    uint32_t num_cfault_ints;         /*supported number of context fault interrupts*/
-    uint32_t num_stream_ids;          /*number of stream IDs*/
-    uint32_t num_stream_map_groups;   /*num stream mapping register groups*/
+    uint32_t नुमेरो_cfault_ints;         /*supported number of context fault interrupts*/
+    uint32_t नुमेरो_stream_ids;          /*number of stream IDs*/
+    uint32_t नुमेरो_stream_map_groups;   /*num stream mapping register groups*/
     uint32_t smmu_page_size;          /*page size in SMMU register address space*/
-    uint32_t smmu_num_pages;          /*number of pages in global or context bank address space*/
-    uint32_t num_s2_cbanks;           /*cbanks that support stage 2 only*/
-    uint32_t num_cbanks;              /*total number of context banks*/
+    uint32_t smmu_नुमेरो_pages;          /*number of pages in global or context bank address space*/
+    uint32_t नुमेरो_s2_cbanks;           /*cbanks that support stage 2 only*/
+    uint32_t नुमेरो_cbanks;              /*total number of context banks*/
     uint32_t va_bits;                 /*upstream address size*/
     uint32_t pa_bits;                 /*PA address size*/
     uint32_t ipa_bits;                /*IPA address size*/
@@ -79,14 +79,14 @@ static inline void smmu_write_reg64(pptr_t base, uint32_t index, uint64_t val)
 
 static void smmu_tlb_sync(pptr_t base, uint32_t sync, uint32_t status)
 {
-    int count = 0;
+    int बिलांग = 0;
     smmu_write_reg32(base, sync, SMMU_TLB_SYNC_MASK);
-    while (count < TLBSYNC_LOOP) {
+    while (बिलांग < TLBSYNC_LOOP) {
         /*pulling the active flag, reading the TLB command state.*/
         if (!(smmu_read_reg32(base, status) & TLBSTATUS_GSACTIVE)) {
             break;
         }
-        count++;
+        बिलांग++;
     }
 }
 
@@ -170,7 +170,7 @@ BOOT_CODE static void smmu_mapping_init(void)
                      VMKernelOnly,
                      vm_attributes_new(true, false, false));
     /*map the context banks, each bank maps to a 4K page*/
-    for (int i = 0; i < smmu_dev_knowledge.num_cbanks; i++) {
+    for (int i = 0; i < smmu_dev_knowledge.नुमेरो_cbanks; i++) {
         map_kernel_frame(SMMU_CBn_PADDR(smmu_dev_knowledge.cb_base, i, smmu_dev_knowledge.smmu_page_size),
                          SMMU_CBn_BASE_PPTR(i),
                          VMKernelOnly,
@@ -214,7 +214,7 @@ BOOT_CODE static void smmu_config_prob(void)
     /*number of context fault interrupts
     * However, in smmuv2, each context bank has dedicated interrupt pin
     * hence no requirement to specify implemented interrupts here.*/
-    smmu_dev_knowledge.num_cfault_ints = IDR0_NUMIRPT_VAL(reg & IDR0_NUMIRPT);
+    smmu_dev_knowledge.नुमेरो_cfault_ints = IDR0_NUMIRPT_VAL(reg & IDR0_NUMIRPT);
     /*coherent translation table walk*/
     if (reg & IDR0_CTTW) {
         smmu_dev_knowledge.cotable_walk = true;
@@ -224,9 +224,9 @@ BOOT_CODE static void smmu_config_prob(void)
         smmu_dev_knowledge.broadcast_tlb = true;
     }
     /*number of stream IDs*/
-    smmu_dev_knowledge.num_stream_ids = (1 << IDR0_NUMSIDB_VAL(reg & IDR0_NUMSIDB)) - 1;
+    smmu_dev_knowledge.नुमेरो_stream_ids = (1 << IDR0_NUMSIDB_VAL(reg & IDR0_NUMSIDB)) - 1;
     /*number of stream mapping register groups*/
-    smmu_dev_knowledge.num_stream_map_groups = reg & IDR0_NUMSMRG;
+    smmu_dev_knowledge.नुमेरो_stream_map_groups = reg & IDR0_NUMSMRG;
 
     /*ID1*/
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_IDR1);
@@ -238,14 +238,14 @@ BOOT_CODE static void smmu_config_prob(void)
     }
     /*smmu num pages, 2^(numdxb + 1)*/
     field = IDR1_NUMPAGENDXB_VAL(reg & IDR1_NUMPAGENDXB);
-    smmu_dev_knowledge.smmu_num_pages = 1 << (field + 1);
+    smmu_dev_knowledge.smmu_नुमेरो_pages = 1 << (field + 1);
     /*num of stage 2 context banks*/
-    smmu_dev_knowledge.num_s2_cbanks = IDR1_NUMS2CB_VAL(reg & IDR1_NUMS2CB);
+    smmu_dev_knowledge.नुमेरो_s2_cbanks = IDR1_NUMS2CB_VAL(reg & IDR1_NUMS2CB);
     /*total num of context banks*/
-    smmu_dev_knowledge.num_cbanks = reg & IDR1_NUMCB;
+    smmu_dev_knowledge.नुमेरो_cbanks = reg & IDR1_NUMCB;
     /*calculate the context bank base*/
     smmu_dev_knowledge.cb_base = SMMU_CB_BASE_PADDR(
-                                     SMMU_GLOBAL_SIZE(smmu_dev_knowledge.smmu_num_pages, smmu_dev_knowledge.smmu_page_size));
+                                     SMMU_GLOBAL_SIZE(smmu_dev_knowledge.smmu_नुमेरो_pages, smmu_dev_knowledge.smmu_page_size));
 
     /*ID2*/
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_IDR2);
@@ -296,17 +296,17 @@ BOOT_CODE  static void smmu_dev_reset(void)
     /*the number of stream-to-context is related to the stream indexing method*/
     if (smmu_dev_knowledge.stream_match) {
         /*stream matching*/
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_map_groups; i++) {
+        for (int i = 0; i < smmu_dev_knowledge.नुमेरो_stream_map_groups; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_S2CRn(i), reg);
         }
         /*reset the stream match registers as invalid*/
         reg = SMR_VALID_SET(SMR_VALID_DIS);
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_map_groups; i++) {
+        for (int i = 0; i < smmu_dev_knowledge.नुमेरो_stream_map_groups; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_SMRn(i), reg);
         }
     } else {
         /*stream ID*/
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_ids; i++) {
+        for (int i = 0; i < smmu_dev_knowledge.नुमेरो_stream_ids; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_S2CRn(i), reg);
         }
     }
@@ -326,7 +326,7 @@ BOOT_CODE  static void smmu_dev_reset(void)
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_sACR, reg);
     /*special init requested by the smmu-500: end*/
 
-    for (int i = 0; i < smmu_dev_knowledge.num_cbanks; i++) {
+    for (int i = 0; i < smmu_dev_knowledge.नुमेरो_cbanks; i++) {
         cb_bank_ptr = SMMU_CBn_BASE_PPTR(i);
         /*disable context banks and clear the context bank fault registers*/
         smmu_write_reg32(cb_bank_ptr, SMMU_CBn_SCTLR, 0);
@@ -378,7 +378,7 @@ BOOT_CODE void plat_smmu_init(void)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 static void smmu_config_stage2(struct smmu_table_config *cfg,
-                               vspace_root_t *vspace)
+                               vspace_उगात_t *vspace)
 {
     uint32_t reg = 0;
     /*SMMU_CBn_TCR*/
@@ -400,12 +400,12 @@ static void smmu_config_stage2(struct smmu_table_config *cfg,
     reg |= BIT(31);
     cfg->tcr[0] = reg;
     /*vttbr*/
-    cfg->ttbr[0] = ttbr_new(0, pptr_to_paddr(vspace)).words[0];
+    cfg->ttbr[0] = ttbr_new(0, pptr_to_paddr(vspace)).मगा_सालिता[0];
 }
 #else
 static void smmu_config_stage1(struct smmu_table_config *cfg,
                                bool_t coherence, uint32_t pa_bits,
-                               vspace_root_t *vspace, asid_t asid)
+                               vspace_उगात_t *vspace, asid_t asid)
 {
     uint32_t reg = 0;
     /*SMMU_CBn_TCR*/
@@ -461,13 +461,13 @@ static void smmu_config_stage1(struct smmu_table_config *cfg,
     cfg->mair[1] = reg;
     /*TTBRs*/
     /*The SMMU only uses user-level address space, TTBR0.*/
-    cfg->ttbr[0] = ttbr_new(asid, pptr_to_paddr(vspace)).words[0];
+    cfg->ttbr[0] = ttbr_new(asid, pptr_to_paddr(vspace)).मगा_सालिता[0];
     cfg->ttbr[1] = 0;
 }
 #endif /*CONFIG_ARM_HYPERVISOR_SUPPORT*/
 
 
-void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
+void smmu_cb_assign_vspace(word_t cb, vspace_उगात_t *vspace, asid_t asid)
 {
     uint32_t reg = 0;
     uint32_t vmid = cb;

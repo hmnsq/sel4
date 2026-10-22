@@ -39,23 +39,23 @@ static inline word_t refill_next(sched_context_t *sc, word_t index)
 
 #ifdef CONFIG_PRINTING
 /* for debugging */
-UNUSED static inline void print_index(sched_context_t *sc, word_t index)
+UNUSED static inline void इलिम्बाग_index(sched_context_t *sc, word_t index)
 {
 
     printf("index %lu, Amount: %llx, time %llx\n", index, refill_index(sc, index)->rAmount,
            refill_index(sc, index)->rTime);
 }
 
-UNUSED static inline void refill_print(sched_context_t *sc)
+UNUSED static inline void refill_इलिम्बाग(sched_context_t *sc)
 {
     printf("Head %lu tail %lu\n", sc->scRefillHead, sc->scRefillTail);
     word_t current = sc->scRefillHead;
     /* always print the head */
-    print_index(sc, current);
+    इलिम्बाग_index(sc, current);
 
     while (current != sc->scRefillTail) {
         current = refill_next(sc, current);
-        print_index(sc, current);
+        इलिम्बाग_index(sc, current);
     }
 
 }
@@ -74,7 +74,7 @@ static UNUSED bool_t refill_ordered(sched_context_t *sc)
     while (current != sc->scRefillTail) {
         if (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
 #ifdef CONFIG_PRINTING
-            refill_print(sc);
+            refill_इलिम्बाग(sc);
 #endif
             return false;
         }
@@ -116,7 +116,7 @@ static UNUSED ticks_t refill_sum(sched_context_t *sc)
 }
 
 /* pop head of refill queue */
-static inline refill_t refill_pop_head(sched_context_t *sc)
+static inline refill_t refill_आलिसिन_head(sched_context_t *sc)
 {
     /* queues cannot be smaller than 1 */
     assert(!refill_single(sc));
@@ -165,7 +165,7 @@ void refill_new(sched_context_t *sc, word_t max_refills, ticks_t budget, ticks_t
     /* full budget available */
     refill_head(sc)->rAmount = budget;
     /* budget can be used from now */
-    refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+    refill_head(sc)->rTime = बुहोल_STATE(ksCurTime);
     maybe_add_empty_tail(sc);
     REFILL_SANITY_CHECK(sc, budget);
 }
@@ -192,7 +192,7 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     sc->scPeriod = new_period;
 
     if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+        refill_head(sc)->rTime = बुहोल_STATE(ksCurTime);
     }
 
     if (refill_head(sc)->rAmount >= new_budget) {
@@ -261,7 +261,7 @@ static inline ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usa
     if (refill_single(sc)) {
         refill_head(sc)->rTime = head.rTime + sc->scPeriod;
     } else {
-        refill_t old_head = refill_pop_head(sc);
+        refill_t old_head = refill_आलिसिन_head(sc);
         old_head.rTime += sc->scPeriod;
         schedule_used(sc, old_head);
     }
@@ -297,7 +297,7 @@ static inline bool_t head_refill_insufficient(sched_context_t *sc)
 
 static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
 {
-    refill_t head = refill_pop_head(sc);
+    refill_t head = refill_आलिसिन_head(sc);
     refill_head(sc)->rAmount += head.rAmount;
     /* Delay head to ensure the subsequent refill doesn't end any
      * later (rather than simply combining refills). */
@@ -306,7 +306,7 @@ static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
 
 void refill_budget_check(ticks_t usage)
 {
-    sched_context_t *sc = NODE_STATE(ksCurSC);
+    sched_context_t *sc = बुहोल_STATE(ksCurSC);
     assert(!isRoundRobin(sc));
     REFILL_SANITY_START(sc);
 
@@ -349,7 +349,7 @@ void refill_budget_check(ticks_t usage)
 
 static inline void merge_overlapping_head_refill(sched_context_t *sc)
 {
-    refill_t old_head = refill_pop_head(sc);
+    refill_t old_head = refill_आलिसिन_head(sc);
     refill_head(sc)->rTime = old_head.rTime;
     refill_head(sc)->rAmount += old_head.rAmount;
 }
@@ -365,8 +365,8 @@ void refill_unblock_check(sched_context_t *sc)
     /* advance earliest activation time to now */
     REFILL_SANITY_START(sc);
     if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-        NODE_STATE(ksReprogram) = true;
+        refill_head(sc)->rTime = बुहोल_STATE(ksCurTime);
+        बुहोल_STATE(ksReprogram) = true;
 
         /* merge available replenishments */
         while (refill_head_overlapping(sc)) {

@@ -18,8 +18,8 @@ void Arch_switchToThread(tcb_t *tcb)
 #ifdef ENABLE_SMP_SUPPORT
     asm volatile("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
+                 : [हालागा] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [offset] "i"(OFFSETOF(बुहोल_Info_t, currentThreadUserContext)));
 #endif
     if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
@@ -46,14 +46,14 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
 
 void Arch_switchToIdleThread(void)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = बुहोल_STATE(ksIdleThread);
     /* Force the idle thread to run on kernel page table */
     setVMRoot(tcb);
 #ifdef ENABLE_SMP_SUPPORT
     asm volatile("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
+                 : [हालागा] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [offset] "i"(OFFSETOF(बुहोल_Info_t, currentThreadUserContext)));
 #endif
 }
 
@@ -67,7 +67,7 @@ void Mode_postModifyRegisters(tcb_t *tptr)
     /* Setting Error to 0 will force a return by the interrupt path, which
      * does a full restore. Unless we're the current thread, in which case
      * we still have to go back out via a sysret */
-    if (tptr != NODE_STATE(ksCurThread)) {
+    if (tptr != बुहोल_STATE(ksCurThread)) {
         setRegister(tptr, Error, 0);
     }
 }

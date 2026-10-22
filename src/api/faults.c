@@ -17,12 +17,12 @@
 #endif
 
 /* consistency with libsel4 */
-compile_assert(InvalidRoot, lookup_fault_invalid_root + 1 == seL4_InvalidRoot)
+compile_assert(Invalid_उगात, lookup_fault_invalid_उगात + 1 == se_L4_Invalid_उगात)
 compile_assert(MissingCapability, lookup_fault_missing_capability + 1 == seL4_MissingCapability)
 compile_assert(DepthMismatch, lookup_fault_depth_mismatch + 1 == seL4_DepthMismatch)
 compile_assert(GuardMismatch, lookup_fault_guard_mismatch + 1 == seL4_GuardMismatch)
 compile_assert(seL4_UnknownSyscall_Syscall, (word_t) n_syscallMessage == seL4_UnknownSyscall_Syscall)
-compile_assert(seL4_UserException_Number, (word_t) n_exceptionMessage == seL4_UserException_Number)
+compile_assert(se_L4_User_Exception_नुमेरो, (word_t) n_exceptionMessage == se_L4_User_Exception_नुमेरो)
 compile_assert(seL4_UserException_Code, (word_t) n_exceptionMessage + 1 == seL4_UserException_Code)
 
 static inline unsigned int
@@ -36,7 +36,7 @@ setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
 
     /* check constants match libsel4 */
     if (offset == seL4_CapFault_LookupFailureType) {
-        assert(offset + 1 == seL4_CapFault_BitsLeft);
+        assert(offset + 1 == se_L4_Cap_Fault_Bits_कालिवा);
         assert(offset + 2 == seL4_CapFault_DepthMismatch_BitsFound);
         assert(offset + 2 == seL4_CapFault_GuardMismatch_GuardFound);
         assert(offset + 3 == seL4_CapFault_GuardMismatch_BitsFound);
@@ -45,22 +45,22 @@ setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
     }
 
     switch (lufType) {
-    case lookup_fault_invalid_root:
+    case lookup_fault_invalid_उगात:
         return i;
 
     case lookup_fault_missing_capability:
         return setMR(receiver, receiveIPCBuffer, offset + 1,
-                     lookup_fault_missing_capability_get_bitsLeft(luf));
+                     lookup_fault_missing_capability_get_bits_कालिवा(luf));
 
     case lookup_fault_depth_mismatch:
         setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_depth_mismatch_get_bitsLeft(luf));
+              lookup_fault_depth_mismatch_get_bits_कालिवा(luf));
         return setMR(receiver, receiveIPCBuffer, offset + 2,
                      lookup_fault_depth_mismatch_get_bitsFound(luf));
 
     case lookup_fault_guard_mismatch:
         setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_guard_mismatch_get_bitsLeft(luf));
+              lookup_fault_guard_mismatch_get_bits_कालिवा(luf));
         setMR(receiver, receiveIPCBuffer, offset + 2,
               lookup_fault_guard_mismatch_get_guardFound(luf));
         return setMR(receiver, receiveIPCBuffer, offset + 3,
@@ -78,9 +78,9 @@ static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t
 
     archInfo = Arch_getSanitiseRegisterInfo(receiver);
 
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
+    for (i = 0; i < MIN(length, n_मेनसाहे_Registers); i++) {
         register_t r = fault_messages[id][i];
-        word_t v = getRegister(sender, msgRegisters[i]);
+        word_t v = getRegister(sender, मेनसाहे_Registers[i]);
         setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
     }
 
@@ -100,8 +100,8 @@ static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
                                 word_t length, word_t *receiveIPCBuffer)
 {
     word_t i;
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
-        setRegister(receiver, msgRegisters[i], getRegister(sender, fault_messages[id][i]));
+    for (i = 0; i < MIN(length, n_मेनसाहे_Registers); i++) {
+        setRegister(receiver, मेनसाहे_Registers[i], getRegister(sender, fault_messages[id][i]));
     }
 
     if (receiveIPCBuffer) {
@@ -114,7 +114,7 @@ static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
 bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
 {
     /* These lookups are moved inward from doReplyTransfer */
-    seL4_MessageInfo_t tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
+    seL4_MessageInfo_t tag = messageInfoFromWord(getRegister(sender, मेनसाहे_Info_Register));
     word_t label = seL4_MessageInfo_get_label(tag);
     word_t length = seL4_MessageInfo_get_length(tag);
     seL4_Fault_t fault = receiver->tcbFault;
@@ -163,7 +163,7 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
             n_instrs = 1;
         } else {
             /* If the reply had all expected registers set, proceed as normal */
-            n_instrs = getRegister(sender, msgRegisters[0]);
+            n_instrs = getRegister(sender, मेनसाहे_Registers[0]);
         }
 
         syscall_error_t res;
@@ -205,14 +205,14 @@ word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
                      receiveIPCBuffer);
 
         return setMR(receiver, receiveIPCBuffer, n_syscallMessage,
-                     seL4_Fault_UnknownSyscall_get_syscallNumber(sender->tcbFault));
+                     se_L4_Fault_Unknown_Syscall_get_syscall_नुमेरो(sender->tcbFault));
     }
 
     case seL4_Fault_UserException: {
         copyMRsFault(sender, receiver, MessageID_Exception,
                      n_exceptionMessage, receiveIPCBuffer);
         setMR(receiver, receiveIPCBuffer, n_exceptionMessage,
-              seL4_Fault_UserException_get_number(sender->tcbFault));
+              se_L4_Fault_User_Exception_get_नुमेरो(sender->tcbFault));
         return setMR(receiver, receiveIPCBuffer, n_exceptionMessage + 1u,
                      seL4_Fault_UserException_get_code(sender->tcbFault));
     }
@@ -247,8 +247,8 @@ word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
 
             /* Breakpoint messages also set a "breakpoint number" register. */
             ret = setMR(receiver, receiveIPCBuffer,
-                        seL4_DebugException_BreakpointNumber,
-                        seL4_Fault_DebugException_get_breakpointNumber(sender->tcbFault));
+                        se_L4_Debug_Exception_Breakpoint_नुमेरो,
+                        se_L4_Fault_Debug_Exception_get_breakpoint_नुमेरो(sender->tcbFault));
         }
         return ret;
     }

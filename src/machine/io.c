@@ -102,12 +102,12 @@ static inline bool_t isdigit(char c)
 
 #define ALT_FORM     (1U<<('#'-' '))
 #define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
+#define कालिवा_ADJ     (1U<<('-'-' '))
 #define PAD_POS      (1U<<(' '-' '))
 #define MARK_POS     (1U<<('+'-' '))
 #define GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#define FLAGMASK (ALT_FORM|ZERO_PAD|कालिवा_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
@@ -183,7 +183,7 @@ union arg {
     void *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+static void आलिसिन_arg(union arg *arg, int type, va_list *ap)
 {
     switch (type) {
     case PTR:
@@ -228,7 +228,7 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 static void pad(out_wrap_t *f, char c, int w, int l, int fl)
 {
     char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
+    if (fl & (कालिवा_ADJ | ZERO_PAD) || l >= w) {
         return;
     }
     l = w - l;
@@ -382,7 +382,7 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
                 return -1; /* invalid */
             }
             if (w < 0) {
-                fl |= LEFT_ADJ;
+                fl |= कालिवा_ADJ;
                 w = -w;
             }
         } else if ((w = getint(&s)) < 0) {
@@ -434,7 +434,7 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
             } else if (f) {
-                pop_arg(&arg, st, ap);
+                आलिसिन_arg(&arg, st, ap);
             } else {
                 return 0;
             }
@@ -450,7 +450,7 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        if (fl & कालिवा_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
@@ -562,7 +562,7 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
         out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        pad(f, ' ', w, pl + p, fl ^ कालिवा_ADJ);
 
         l = w;
     }
@@ -576,7 +576,7 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
 
     int i;
     for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
+        आलिसिन_arg(nl_arg + i, nl_type[i], ap);
     }
     for (; i <= NL_ARGMAX && !nl_type[i]; i++);
     if (i <= NL_ARGMAX) {

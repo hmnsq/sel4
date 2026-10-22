@@ -31,8 +31,8 @@ word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
     v = Mode_sanitiseRegister(reg, v);
     if (reg == FLAGS) {
         /* Set architecturally defined high and low bits */
-        v |=  FLAGS_HIGH;
-        v &= ~FLAGS_LOW;
+        v |=  FLAGS_माताअस;
+        v &= ~FLAGS_माबाबा;
         /* require user to have interrupts and no traps */
         v |=  FLAGS_IF;
         v &= ~FLAGS_TF;

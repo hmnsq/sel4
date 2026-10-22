@@ -144,8 +144,8 @@ typedef struct acpi_madt_iso {
     uint8_t            bus; /* always 0 (ISA) */
     uint8_t            source;
     /* Split the u32 into 2x u16 to prevent the compiler from padding the struct. */
-    uint16_t           gsi_low;
-    uint16_t           gsi_high;
+    uint16_t           gsi_माबाबा;
+    uint16_t           gsi_माताअस;
     uint16_t           flags;
 } acpi_madt_iso_t;
 compile_assert(acpi_madt_iso_packed,
@@ -297,14 +297,14 @@ BOOT_CODE static bool_t acpi_madt_valid(acpi_madt_header_t *header, const char *
 BOOT_CODE uint32_t acpi_madt_scan(
     acpi_rsdp_t *acpi_rsdp,
     cpu_id_t    *cpu_list,
-    uint32_t    *num_ioapic,
+    uint32_t    *नुमेरो_ioapic,
     paddr_t     *ioapic_paddrs
 )
 {
     unsigned int        entries;
     unsigned int        entry_size;
-    uint32_t            num_cpu;
-    uint32_t            count;
+    uint32_t            नुमेरो_cpu;
+    uint32_t            बिलांग;
     acpi_madt_t        *acpi_madt;
     acpi_madt_header_t *acpi_madt_header;
 
@@ -313,14 +313,14 @@ BOOT_CODE uint32_t acpi_madt_scan(
 
     acpi_rsdt_mapped = (acpi_rsdt_t *)acpi_table_init((acpi_rsdt_t *)(word_t)acpi_rsdp->rsdt_address, ACPI_RSDT);
 
-    num_cpu = 0;
-    *num_ioapic = 0;
+    नुमेरो_cpu = 0;
+    *नुमेरो_ioapic = 0;
 
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     /* Divide by uint32_t explicitly as this is the size as mandated by the ACPI standard */
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
-        acpi_madt = (acpi_madt_t *)(word_t)acpi_rsdt_mapped->entry[count];
+    for (बिलांग = 0; बिलांग < entries; बिलांग++) {
+        acpi_madt = (acpi_madt_t *)(word_t)acpi_rsdt_mapped->entry[बिलांग];
         acpi_madt_mapped = (acpi_madt_t *)acpi_table_init(acpi_madt, ACPI_RSDT);
 
         if (strncmp(acpi_str_apic, acpi_madt_mapped->header.signature, 4) == 0) {
@@ -354,11 +354,11 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     uint32_t flags  = madt_apic->flags;
                     if (flags == 1) {
                         printf("ACPI: MADT_APIC apic_id=0x%x\n", cpu_id);
-                        if (num_cpu == CONFIG_MAX_NUM_NODES) {
-                            printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_NUM_NODES);
+                        if (नुमेरो_cpu == CONFIG_MAX_नुमेरो_NODES) {
+                            printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_नुमेरो_NODES);
                         } else {
-                            cpu_list[num_cpu] = cpu_id;
-                            num_cpu++;
+                            cpu_list[नुमेरो_cpu] = cpu_id;
+                            नुमेरो_cpu++;
                         }
                     }
                     break;
@@ -373,11 +373,11 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     uint32_t flags  = madt_x2apic->flags;
                     if (flags == 1) {
                         printf("ACPI: MADT_x2APIC apic_id=0x%x\n", cpu_id);
-                        if (num_cpu == CONFIG_MAX_NUM_NODES) {
-                            printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_NUM_NODES);
+                        if (नुमेरो_cpu == CONFIG_MAX_नुमेरो_NODES) {
+                            printf("ACPI: Not recording this APIC, only support %d\n", CONFIG_MAX_नुमेरो_NODES);
                         } else {
-                            cpu_list[num_cpu] = cpu_id;
-                            num_cpu++;
+                            cpu_list[नुमेरो_cpu] = cpu_id;
+                            नुमेरो_cpu++;
                         }
                     }
                     break;
@@ -394,11 +394,11 @@ BOOT_CODE uint32_t acpi_madt_scan(
                         madt_ioapic->ioapic_addr,
                         madt_ioapic->gsib
                     );
-                    if (*num_ioapic == CONFIG_MAX_NUM_IOAPIC) {
-                        printf("ACPI: Not recording this IOAPIC, only support %d\n", CONFIG_MAX_NUM_IOAPIC);
+                    if (*नुमेरो_ioapic == CONFIG_MAX_नुमेरो_IOAPIC) {
+                        printf("ACPI: Not recording this IOAPIC, only support %d\n", CONFIG_MAX_नुमेरो_IOAPIC);
                     } else {
-                        ioapic_paddrs[*num_ioapic] = madt_ioapic->ioapic_addr;
-                        (*num_ioapic)++;
+                        ioapic_paddrs[*नुमेरो_ioapic] = madt_ioapic->ioapic_addr;
+                        (*नुमेरो_ioapic)++;
                     }
                     break;
                 case MADT_ISO: {
@@ -408,7 +408,7 @@ BOOT_CODE uint32_t acpi_madt_scan(
                     UNUSED acpi_madt_iso_t *iso = (acpi_madt_iso_t *) madt_entry;
 
                     printf("ACPI: MADT_ISO bus=%d source=%d gsi=0x%x%02x flags=0x%x\n",
-                           iso->bus, iso->source, iso->gsi_high, iso->gsi_low, iso->flags);
+                           iso->bus, iso->source, iso->gsi_माताअस, iso->gsi_माबाबा, iso->flags);
                     break;
                 }
                 default:
@@ -419,9 +419,9 @@ BOOT_CODE uint32_t acpi_madt_scan(
         }
     }
 
-    printf("ACPI: %d CPU(s) detected\n", num_cpu);
+    printf("ACPI: %d CPU(s) detected\n", नुमेरो_cpu);
 
-    return num_cpu;
+    return नुमेरो_cpu;
 }
 
 BOOT_CODE bool_t acpi_fadt_scan(
@@ -429,7 +429,7 @@ BOOT_CODE bool_t acpi_fadt_scan(
 )
 {
     unsigned int entries;
-    uint32_t            count;
+    uint32_t            बिलांग;
     acpi_fadt_t        *acpi_fadt;
 
     acpi_rsdt_t *acpi_rsdt_mapped;
@@ -439,8 +439,8 @@ BOOT_CODE bool_t acpi_fadt_scan(
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     /* Divide by uint32_t explicitly as this is the size as mandated by the ACPI standard */
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
-        acpi_fadt = (acpi_fadt_t *)(word_t)acpi_rsdt_mapped->entry[count];
+    for (बिलांग = 0; बिलांग < entries; बिलांग++) {
+        acpi_fadt = (acpi_fadt_t *)(word_t)acpi_rsdt_mapped->entry[बिलांग];
         acpi_fadt_mapped = (acpi_fadt_t *)acpi_table_init(acpi_fadt, ACPI_RSDT);
 
         if (strncmp(acpi_str_fadt, acpi_fadt_mapped->header.signature, 4) == 0) {
@@ -462,16 +462,16 @@ BOOT_CODE bool_t acpi_fadt_scan(
 BOOT_CODE void acpi_dmar_scan(
     acpi_rsdp_t *acpi_rsdp,
     paddr_t     *drhu_list,
-    uint32_t    *num_drhu,
+    uint32_t    *नुमेरो_drhu,
     uint32_t     max_drhu_list_len,
     acpi_rmrr_list_t *rmrr_list
 )
 {
     word_t i;
     unsigned int entries;
-    uint32_t count;
+    uint32_t बिलांग;
     uint32_t reg_basel, reg_baseh;
-    int rmrr_count;
+    int rmrr_बिलांग;
     dev_id_t dev_id;
 
     acpi_dmar_t          *acpi_dmar;
@@ -484,13 +484,13 @@ BOOT_CODE void acpi_dmar_scan(
 
     acpi_rsdt_mapped = (acpi_rsdt_t *)acpi_table_init((acpi_rsdt_t *)(word_t)acpi_rsdp->rsdt_address, ACPI_RSDT);
 
-    *num_drhu = 0;
-    rmrr_count = 0;
+    *नुमेरो_drhu = 0;
+    rmrr_बिलांग = 0;
 
     assert(acpi_rsdt_mapped->header.length >= sizeof(acpi_header_t));
     entries = (acpi_rsdt_mapped->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
-    for (count = 0; count < entries; count++) {
-        acpi_dmar = (acpi_dmar_t *)(word_t)acpi_rsdt_mapped->entry[count];
+    for (बिलांग = 0; बिलांग < entries; बिलांग++) {
+        acpi_dmar = (acpi_dmar_t *)(word_t)acpi_rsdt_mapped->entry[बिलांग];
         acpi_dmar_mapped = (acpi_dmar_t *)acpi_table_init(acpi_dmar, ACPI_RSDT);
 
         if (strncmp(acpi_str_dmar, acpi_dmar_mapped->header.signature, 4) == 0) {
@@ -503,10 +503,10 @@ BOOT_CODE void acpi_dmar_scan(
                 switch (acpi_dmar_header->type) {
 
                 case DMAR_DRHD:
-                    if (*num_drhu == max_drhu_list_len) {
+                    if (*नुमेरो_drhu == max_drhu_list_len) {
                         printf("ACPI: too many IOMMUs, disabling IOMMU support\n");
                         /* try to increase MAX_NUM_DRHU in config.h */
-                        *num_drhu = 0; /* report zero IOMMUs */
+                        *नुमेरो_drhu = 0; /* report zero IOMMUs */
                         return;
                     }
                     reg_basel = ((acpi_dmar_drhd_t *)acpi_dmar_header)->reg_base[0];
@@ -515,11 +515,11 @@ BOOT_CODE void acpi_dmar_scan(
                     if (reg_baseh != 0) {
                         printf("ACPI: DMAR_DRHD reg_base exceeds 32 bit, disabling IOMMU support\n");
                         /* try to make BIOS map it below 4G */
-                        *num_drhu = 0; /* report zero IOMMUs */
+                        *नुमेरो_drhu = 0; /* report zero IOMMUs */
                         return;
                     }
-                    drhu_list[*num_drhu] = (paddr_t)reg_basel;
-                    (*num_drhu)++;
+                    drhu_list[*नुमेरो_drhu] = (paddr_t)reg_basel;
+                    (*नुमेरो_drhu)++;
                     break;
 
                 case DMAR_RMRR:
@@ -528,7 +528,7 @@ BOOT_CODE void acpi_dmar_scan(
                     if (acpi_dmar_rmrr->reg_base[1] != 0 ||
                         acpi_dmar_rmrr->reg_limit[1] != 0) {
                         printf("ACPI: RMRR device above 4GiB, disabling IOMMU support\n");
-                        *num_drhu = 0;
+                        *नुमेरो_drhu = 0;
                         return ;
                     }
 
@@ -538,14 +538,14 @@ BOOT_CODE void acpi_dmar_scan(
                         if (acpi_dmar_devscope->type != 1) {
                             /* FIXME - bugzilla bug 170 */
                             printf("ACPI: RMRR device scope: non-PCI-Endpoint-Devices not supported yet, disabling IOMMU support\n");
-                            *num_drhu = 0; /* report zero IOMMUs */
+                            *नुमेरो_drhu = 0; /* report zero IOMMUs */
                             return;
                         }
 
                         if (acpi_dmar_devscope->length > sizeof(acpi_dmar_devscope_t)) {
                             /* FIXME - bugzilla bug 170 */
                             printf("ACPI: RMRR device scope: devices behind bridges not supported yet, disabling IOMMU support\n");
-                            *num_drhu = 0; /* report zero IOMMUs */
+                            *नुमेरो_drhu = 0; /* report zero IOMMUs */
                             return;
                         }
 
@@ -556,9 +556,9 @@ BOOT_CODE void acpi_dmar_scan(
                                 acpi_dmar_devscope->path_0.fun
                             );
 
-                        if (rmrr_count == CONFIG_MAX_RMRR_ENTRIES) {
+                        if (rmrr_बिलांग == CONFIG_MAX_RMRR_ENTRIES) {
                             printf("ACPI: Too many RMRR entries, disabling IOMMU support\n");
-                            *num_drhu = 0;
+                            *नुमेरो_drhu = 0;
                             return;
                         }
                         printf("\tACPI: registering RMRR entry for region for device: bus=0x%x dev=0x%x fun=0x%x\n",
@@ -567,10 +567,10 @@ BOOT_CODE void acpi_dmar_scan(
                                acpi_dmar_devscope->path_0.fun
                               );
 
-                        rmrr_list->entries[rmrr_count].device = dev_id;
-                        rmrr_list->entries[rmrr_count].base = acpi_dmar_rmrr->reg_base[0];
-                        rmrr_list->entries[rmrr_count].limit = acpi_dmar_rmrr->reg_limit[0];
-                        rmrr_count++;
+                        rmrr_list->entries[rmrr_बिलांग].device = dev_id;
+                        rmrr_list->entries[rmrr_बिलांग].base = acpi_dmar_rmrr->reg_base[0];
+                        rmrr_list->entries[rmrr_बिलांग].limit = acpi_dmar_rmrr->reg_limit[0];
+                        rmrr_बिलांग++;
                     }
                     break;
 
@@ -585,6 +585,6 @@ BOOT_CODE void acpi_dmar_scan(
             }
         }
     }
-    rmrr_list->num = rmrr_count;
-    printf("ACPI: %d IOMMUs detected\n", *num_drhu);
+    rmrr_list->नुमेरो = rmrr_बिलांग;
+    printf("ACPI: %d IOMMUs detected\n", *नुमेरो_drhu);
 }

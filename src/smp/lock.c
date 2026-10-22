@@ -17,13 +17,13 @@ BOOT_CODE void clh_lock_init(void)
 {
     /* Check if linker honoured alignment */
     assert(((seL4_Word)&big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        big_kernel_lock.node[i].myreq = &big_kernel_lock.request[i];
+    for (int i = 0; i < CONFIG_MAX_नुमेरो_NODES; i++) {
+        big_kernel_lock.बुहोल[i].myreq = &big_kernel_lock.request[i];
     }
 
     /* Initialize the CLH tail */
-    big_kernel_lock.request[CONFIG_MAX_NUM_NODES].state = CLHState_Granted;
-    big_kernel_lock.tail = &big_kernel_lock.request[CONFIG_MAX_NUM_NODES];
+    big_kernel_lock.request[CONFIG_MAX_नुमेरो_NODES].state = CLHState_Granted;
+    big_kernel_lock.tail = &big_kernel_lock.request[CONFIG_MAX_नुमेरो_NODES];
 }
 
 #endif /* ENABLE_SMP_SUPPORT */

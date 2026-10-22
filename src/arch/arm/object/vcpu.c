@@ -18,21 +18,21 @@
 BOOT_CODE void vcpu_boot_init(void)
 {
     armv_vcpu_boot_init();
-    gic_vcpu_num_list_regs = VGIC_VTR_NLISTREGS(get_gic_vcpu_ctrl_vtr());
-    if (gic_vcpu_num_list_regs > GIC_VCPU_MAX_NUM_LR) {
+    gic_vcpu_नुमेरो_list_regs = VGIC_VTR_NLISTREGS(get_gic_vcpu_ctrl_vtr());
+    if (gic_vcpu_नुमेरो_list_regs > GIC_VCPU_MAX_नुमेरो_LR) {
         printf("Warning: VGIC is reporting more list registers than we support. Truncating\n");
-        gic_vcpu_num_list_regs = GIC_VCPU_MAX_NUM_LR;
+        gic_vcpu_नुमेरो_list_regs = GIC_VCPU_MAX_नुमेरो_LR;
     }
     vcpu_disable(NULL);
-    ARCH_NODE_STATE(armHSCurVCPU) = NULL;
-    ARCH_NODE_STATE(armHSVCPUActive) = false;
+    ARCH_बुहोल_STATE(armHSCurVCPU) = NULL;
+    ARCH_बुहोल_STATE(armHSVCPUActive) = false;
 
 }
 
 static void vcpu_save(vcpu_t *vcpu, bool_t active)
 {
     word_t i;
-    word_t lr_num;
+    word_t lr_नुमेरो;
 
     assert(vcpu);
     dsb();
@@ -47,8 +47,8 @@ static void vcpu_save(vcpu_t *vcpu, bool_t active)
     /* Store GIC VCPU control state */
     vcpu->vgic.vmcr = get_gic_vcpu_ctrl_vmcr();
     vcpu->vgic.apr = get_gic_vcpu_ctrl_apr();
-    lr_num = gic_vcpu_num_list_regs;
-    for (i = 0; i < lr_num; i++) {
+    lr_नुमेरो = gic_vcpu_नुमेरो_list_regs;
+    for (i = 0; i < lr_नुमेरो; i++) {
         vcpu->vgic.lr[i] = get_gic_vcpu_ctrl_lr(i);
     }
     armv_vcpu_save(vcpu, active);
@@ -57,8 +57,8 @@ static void vcpu_save(vcpu_t *vcpu, bool_t active)
 
 static word_t readVCPUReg(vcpu_t *vcpu, word_t field)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        if (vcpu_reg_saved_when_disabled(field) && !ARCH_NODE_STATE(armHSVCPUActive)) {
+    if (likely(ARCH_बुहोल_STATE(armHSCurVCPU) == vcpu)) {
+        if (vcpu_reg_saved_when_disabled(field) && !ARCH_बुहोल_STATE(armHSVCPUActive)) {
             return vcpu_read_reg(vcpu, field);
         } else {
             return vcpu_hw_read_reg(field);
@@ -68,16 +68,16 @@ static word_t readVCPUReg(vcpu_t *vcpu, word_t field)
     }
 }
 
-static void writeVCPUReg(vcpu_t *vcpu, word_t field, word_t value)
+static void writeVCPUReg(vcpu_t *vcpu, word_t field, word_t हालागा)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        if (vcpu_reg_saved_when_disabled(field) && !ARCH_NODE_STATE(armHSVCPUActive)) {
-            vcpu_write_reg(vcpu, field, value);
+    if (likely(ARCH_बुहोल_STATE(armHSCurVCPU) == vcpu)) {
+        if (vcpu_reg_saved_when_disabled(field) && !ARCH_बुहोल_STATE(armHSVCPUActive)) {
+            vcpu_write_reg(vcpu, field, हालागा);
         } else {
-            vcpu_hw_write_reg(field, value);
+            vcpu_hw_write_reg(field, हालागा);
         }
     } else {
-        vcpu_write_reg(vcpu, field, value);
+        vcpu_write_reg(vcpu, field, हालागा);
     }
 }
 
@@ -85,7 +85,7 @@ void vcpu_restore(vcpu_t *vcpu)
 {
     assert(vcpu);
     word_t i;
-    word_t lr_num;
+    word_t lr_नुमेरो;
     /* Turn off the VGIC */
     set_gic_vcpu_ctrl_hcr(0);
     isb();
@@ -93,8 +93,8 @@ void vcpu_restore(vcpu_t *vcpu)
     /* Restore GIC VCPU control state */
     set_gic_vcpu_ctrl_vmcr(vcpu->vgic.vmcr);
     set_gic_vcpu_ctrl_apr(vcpu->vgic.apr);
-    lr_num = gic_vcpu_num_list_regs;
-    for (i = 0; i < lr_num; i++) {
+    lr_नुमेरो = gic_vcpu_नुमेरो_list_regs;
+    for (i = 0; i < lr_नुमेरो; i++) {
         set_gic_vcpu_ctrl_lr(i, vcpu->vgic.lr[i]);
     }
 
@@ -120,23 +120,23 @@ void VPPIEvent(irq_t irq)
      * our timeslice having ended, and we have a timeout fault handler for
      * this thread, we do not want to overwrite that with our VCPU fault.
      */
-    if (thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState) ||
-        !isSchedulable(NODE_STATE(ksCurThread))) {
+    if (thread_state_get_tcbQueued(बुहोल_STATE(ksCurThread)->tcbState) ||
+        !isSchedulable(बुहोल_STATE(ksCurThread))) {
         return;
     }
 #endif
 
-    if (ARCH_NODE_STATE(armHSVCPUActive)) {
+    if (ARCH_बुहोल_STATE(armHSVCPUActive)) {
         maskInterrupt(true, irq);
         assert(irqVPPIEventIndex(irq) != VPPIEventIRQ_invalid);
-        ARCH_NODE_STATE(armHSCurVCPU)->vppi_masked[irqVPPIEventIndex(irq)] = true;
+        ARCH_बुहोल_STATE(armHSCurVCPU)->vppi_masked[irqVPPIEventIndex(irq)] = true;
         current_fault = seL4_Fault_VPPIEvent_new(IRQT_TO_IRQ(irq));
         /* Current VCPU being active should indicate that the current thread
          * is runnable. At present, verification cannot establish this so we
          * perform an extra check. */
-        assert(isRunnable(NODE_STATE(ksCurThread)));
-        if (isRunnable(NODE_STATE(ksCurThread))) {
-            handleFault(NODE_STATE(ksCurThread));
+        assert(isRunnable(बुहोल_STATE(ksCurThread)));
+        if (isRunnable(बुहोल_STATE(ksCurThread))) {
+            handleFault(बुहोल_STATE(ksCurThread));
         }
     }
 }
@@ -148,8 +148,8 @@ void VGICMaintenance(void)
 
 #ifdef CONFIG_KERNEL_MCS
     /* See VPPIEvent for details on this check. */
-    if (thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState) ||
-        !isSchedulable(NODE_STATE(ksCurThread))) {
+    if (thread_state_get_tcbQueued(बुहोल_STATE(ksCurThread)->tcbState) ||
+        !isSchedulable(बुहोल_STATE(ksCurThread))) {
         return;
     }
 #endif
@@ -160,7 +160,7 @@ void VGICMaintenance(void)
      * case we simply return and rely on the interrupt being raised again when
      * the VCPU is reenabled.
      */
-    if (!ARCH_NODE_STATE(armHSVCPUActive)) {
+    if (!ARCH_बुहोल_STATE(armHSVCPUActive)) {
         printf("Received VGIC maintenance without active VCPU!\n");
         return;
     }
@@ -181,7 +181,7 @@ void VGICMaintenance(void)
 
         /* the hardware should never give us an invalid index, but we don't
          * want to trust it that far */
-        if (irq_idx == -1  || irq_idx >= gic_vcpu_num_list_regs) {
+        if (irq_idx == -1  || irq_idx >= gic_vcpu_नुमेरो_list_regs) {
             current_fault = seL4_Fault_VGICMaintenance_new(0, 0);
         } else {
             virq_t virq = get_gic_vcpu_ctrl_lr(irq_idx);
@@ -199,9 +199,9 @@ void VGICMaintenance(void)
             set_gic_vcpu_ctrl_lr(irq_idx, virq);
             /* decodeVCPUInjectIRQ below checks the vgic.lr register,
              * so we should also sync the shadow data structure as well */
-            assert(ARCH_NODE_STATE(armHSCurVCPU) != NULL && ARCH_NODE_STATE(armHSVCPUActive));
-            if (ARCH_NODE_STATE(armHSCurVCPU) != NULL && ARCH_NODE_STATE(armHSVCPUActive)) {
-                ARCH_NODE_STATE(armHSCurVCPU)->vgic.lr[irq_idx] = virq;
+            assert(ARCH_बुहोल_STATE(armHSCurVCPU) != NULL && ARCH_बुहोल_STATE(armHSVCPUActive));
+            if (ARCH_बुहोल_STATE(armHSCurVCPU) != NULL && ARCH_बुहोल_STATE(armHSVCPUActive)) {
+                ARCH_बुहोल_STATE(armHSCurVCPU)->vgic.lr[irq_idx] = virq;
             } else {
                 /* FIXME This should not happen */
             }
@@ -216,9 +216,9 @@ void VGICMaintenance(void)
     /* Current VCPU being active should indicate that the current thread
      * is runnable. At present, verification cannot establish this so we
      * perform an extra check. */
-    assert(isRunnable(NODE_STATE(ksCurThread)));
-    if (isRunnable(NODE_STATE(ksCurThread))) {
-        handleFault(NODE_STATE(ksCurThread));
+    assert(isRunnable(बुहोल_STATE(ksCurThread)));
+    if (isRunnable(बुहोल_STATE(ksCurThread))) {
+        handleFault(बुहोल_STATE(ksCurThread));
     }
 }
 
@@ -235,49 +235,49 @@ void vcpu_init(vcpu_t *vcpu)
 
 void vcpu_switch(vcpu_t *new)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) != new)) {
+    if (likely(ARCH_बुहोल_STATE(armHSCurVCPU) != new)) {
         if (unlikely(new != NULL)) {
-            if (unlikely(ARCH_NODE_STATE(armHSCurVCPU) != NULL)) {
-                vcpu_save(ARCH_NODE_STATE(armHSCurVCPU), ARCH_NODE_STATE(armHSVCPUActive));
+            if (unlikely(ARCH_बुहोल_STATE(armHSCurVCPU) != NULL)) {
+                vcpu_save(ARCH_बुहोल_STATE(armHSCurVCPU), ARCH_बुहोल_STATE(armHSVCPUActive));
             }
             vcpu_restore(new);
-            ARCH_NODE_STATE(armHSCurVCPU) = new;
-            ARCH_NODE_STATE(armHSVCPUActive) = true;
-        } else if (unlikely(ARCH_NODE_STATE(armHSVCPUActive))) {
+            ARCH_बुहोल_STATE(armHSCurVCPU) = new;
+            ARCH_बुहोल_STATE(armHSVCPUActive) = true;
+        } else if (unlikely(ARCH_बुहोल_STATE(armHSVCPUActive))) {
             /* leave the current VCPU state loaded, but disable vgic and mmu */
 #ifdef ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_THREADS
-            saveAllBreakpointState(ARCH_NODE_STATE(armHSCurVCPU)->vcpuTCB);
+            saveAllBreakpointState(ARCH_बुहोल_STATE(armHSCurVCPU)->vcpuTCB);
 #endif
-            vcpu_disable(ARCH_NODE_STATE(armHSCurVCPU));
-            ARCH_NODE_STATE(armHSVCPUActive) = false;
+            vcpu_disable(ARCH_बुहोल_STATE(armHSCurVCPU));
+            ARCH_बुहोल_STATE(armHSVCPUActive) = false;
         }
-    } else if (likely(!ARCH_NODE_STATE(armHSVCPUActive) && new != NULL)) {
+    } else if (likely(!ARCH_बुहोल_STATE(armHSVCPUActive) && new != NULL)) {
         isb();
         vcpu_enable(new);
-        ARCH_NODE_STATE(armHSVCPUActive) = true;
+        ARCH_बुहोल_STATE(armHSVCPUActive) = true;
     }
 }
 
 static void vcpu_invalidate_active(void)
 {
-    if (ARCH_NODE_STATE(armHSVCPUActive)) {
+    if (ARCH_बुहोल_STATE(armHSVCPUActive)) {
         vcpu_disable(NULL);
-        ARCH_NODE_STATE(armHSVCPUActive) = false;
+        ARCH_बुहोल_STATE(armHSVCPUActive) = false;
     }
-    ARCH_NODE_STATE(armHSCurVCPU) = NULL;
+    ARCH_बुहोल_STATE(armHSCurVCPU) = NULL;
 }
 
 void vcpu_flush(void)
 {
-    if (ARCH_NODE_STATE(armHSCurVCPU)) {
-        vcpu_save(ARCH_NODE_STATE(armHSCurVCPU), ARCH_NODE_STATE(armHSVCPUActive));
+    if (ARCH_बुहोल_STATE(armHSCurVCPU)) {
+        vcpu_save(ARCH_बुहोल_STATE(armHSCurVCPU), ARCH_बुहोल_STATE(armHSVCPUActive));
         vcpu_invalidate_active();
     }
 }
 
 void vcpu_flush_if_current(tcb_t *tptr)
 {
-    if (tptr->tcbArch.tcbVCPU == ARCH_NODE_STATE(armHSCurVCPU)) {
+    if (tptr->tcbArch.tcbVCPU == ARCH_बुहोल_STATE(armHSCurVCPU)) {
         vcpu_flush();
     }
 }
@@ -300,7 +300,7 @@ void associateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
     tcb->tcbArch.tcbVCPU = vcpu;
     vcpu->vcpuTCB = tcb;
 
-    if (tcb == NODE_STATE(ksCurThread)) {
+    if (tcb == बुहोल_STATE(ksCurThread)) {
         vcpu_switch(vcpu);
     }
 }
@@ -310,7 +310,7 @@ void dissociateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
     if (tcb->tcbArch.tcbVCPU != vcpu || vcpu->vcpuTCB != tcb) {
         fail("TCB and VCPU not associated.");
     }
-    if (vcpu == ARCH_NODE_STATE(armHSCurVCPU)) {
+    if (vcpu == ARCH_बुहोल_STATE(armHSCurVCPU)) {
         vcpu_invalidate_active();
     }
     tcb->tcbArch.tcbVCPU = NULL;
@@ -327,46 +327,46 @@ void dissociateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
 #endif
 }
 
-exception_t invokeVCPUWriteReg(vcpu_t *vcpu, word_t field, word_t value)
+exception_t invokeVCPUWriteReg(vcpu_t *vcpu, word_t field, word_t हालागा)
 {
-    writeVCPUReg(vcpu, field, value);
+    writeVCPUReg(vcpu, field, हालागा);
     return EXCEPTION_NONE;
 }
 
 exception_t decodeVCPUWriteReg(cap_t cap, word_t length, word_t *buffer)
 {
     word_t field;
-    word_t value;
+    word_t हालागा;
     if (length < 2) {
         userError("VCPUWriteReg: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
         return EXCEPTION_SYSCALL_ERROR;
     }
     field = getSyscallArg(0, buffer);
-    value = getSyscallArg(1, buffer);
-    if (field >= seL4_VCPUReg_Num) {
+    हालागा = getSyscallArg(1, buffer);
+    if (field >= se_L4_VCPUReg_नुमेरो) {
         userError("VCPUWriteReg: Invalid field 0x%lx.", (long)field);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUWriteReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, value);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
+    return invokeVCPUWriteReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, हालागा);
 }
 
 exception_t invokeVCPUReadReg(vcpu_t *vcpu, word_t field, bool_t call)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    word_t value = readVCPUReg(vcpu, field);
+    thread = बुहोल_STATE(ksCurThread);
+    word_t हालागा = readVCPUReg(vcpu, field);
     if (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, value);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        unsigned int length = setMR(thread, ipcBuffer, 0, हालागा);
+        setRegister(thread, मेनसाहे_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Running);
     return EXCEPTION_NONE;
 }
 
@@ -381,25 +381,25 @@ exception_t decodeVCPUReadReg(cap_t cap, word_t length, bool_t call, word_t *buf
 
     field = getSyscallArg(0, buffer);
 
-    if (field >= seL4_VCPUReg_Num) {
+    if (field >= se_L4_VCPUReg_नुमेरो) {
         userError("VCPUReadReg: Invalid field 0x%lx.", (long)field);
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeVCPUReadReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call);
 }
 
 exception_t invokeVCPUInjectIRQ(vcpu_t *vcpu, unsigned long index, virq_t virq)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
+    if (likely(ARCH_बुहोल_STATE(armHSCurVCPU) == vcpu)) {
         set_gic_vcpu_ctrl_lr(index, virq);
 #ifdef ENABLE_SMP_SUPPORT
     } else if (vcpu->vcpuTCB != NULL && vcpu->vcpuTCB->tcbAffinity != getCurrentCPUIndex()) {
         doRemoteOp3Arg(IpiRemoteCall_VCPUInjectInterrupt,
-                       (word_t)vcpu, index, virq.words[0],
+                       (word_t)vcpu, index, virq.मगा_सालिता[0],
                        vcpu->vcpuTCB->tcbAffinity);
 #endif /* CONFIG_ENABLE_SMP */
     } else {
@@ -451,7 +451,7 @@ exception_t decodeVCPUInjectIRQ(cap_t cap, word_t length, word_t *buffer)
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = (1U << 10) - 1;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 1;
         current_syscall_error.type = seL4_RangeError;
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -459,7 +459,7 @@ exception_t decodeVCPUInjectIRQ(cap_t cap, word_t length, word_t *buffer)
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 31;
-        current_syscall_error.invalidArgumentNumber = 2;
+        current_syscall_error.invalid_Argument_नुमेरो = 2;
         current_syscall_error.type = seL4_RangeError;
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -467,16 +467,16 @@ exception_t decodeVCPUInjectIRQ(cap_t cap, word_t length, word_t *buffer)
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        current_syscall_error.invalidArgumentNumber = 3;
+        current_syscall_error.invalid_Argument_नुमेरो = 3;
         current_syscall_error.type = seL4_RangeError;
         return EXCEPTION_SYSCALL_ERROR;
     }
     /* LR index out of range */
-    if (index >= gic_vcpu_num_list_regs) {
+    if (index >= gic_vcpu_नुमेरो_list_regs) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = gic_vcpu_num_list_regs - 1;
-        current_syscall_error.invalidArgumentNumber = 4;
+        current_syscall_error.rangeErrorMax = gic_vcpu_नुमेरो_list_regs - 1;
+        current_syscall_error.invalid_Argument_नुमेरो = 4;
         current_syscall_error.type = seL4_RangeError;
         return EXCEPTION_SYSCALL_ERROR;
     }
@@ -488,7 +488,7 @@ exception_t decodeVCPUInjectIRQ(cap_t cap, word_t length, word_t *buffer)
     }
     virq_t virq = virq_virq_pending_new(group, priority, 1, vid);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeVCPUInjectIRQ(vcpu, index, virq);
 }
 
@@ -540,11 +540,11 @@ exception_t decodeVCPUAckVPPI(cap_t cap, word_t length, word_t *buffer)
     if (vppi == VPPIEventIRQ_invalid) {
         userError("VCPUAckVPPI: Invalid irq number.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_नुमेरो = 0;
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeVCPUAckVPPI(vcpu, vppi);
 }
 
@@ -570,7 +570,7 @@ exception_t decodeVCPUSetTCB(cap_t cap)
         return EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    setThreadState(बुहोल_STATE(ksCurThread), ThreadState_Restart);
     return invokeVCPUSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
 }
 
@@ -590,7 +590,7 @@ void handleVCPUFault(word_t hsr)
             return;
         }
         current_fault = seL4_Fault_VCPUFault_new(hsr);
-        handleFault(NODE_STATE(ksCurThread));
+        handleFault(बुहोल_STATE(ksCurThread));
     })
     schedule();
     activateThread();
@@ -599,7 +599,7 @@ void handleVCPUFault(word_t hsr)
 #ifdef ENABLE_SMP_SUPPORT
 void handleVCPUInjectInterruptIPI(vcpu_t *vcpu, unsigned long index, virq_t virq)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
+    if (likely(ARCH_बुहोल_STATE(armHSCurVCPU) == vcpu)) {
         set_gic_vcpu_ctrl_lr(index, virq);
     } else {
         vcpu->vgic.lr[index] = virq;
