@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ضمن <object.h>
+#ضمن <machine.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <arch/kernel/thread.h>
+#ضمن <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+فراغ Arch_switchToThread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ܐܢ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
     setVMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE فراغ Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, SPSR_EL1, PSTATE_IDLETHREAD);
     setRegister(tcb, ELR_EL1, (word_t)&idle_thread);
 }
 
-void Arch_switchToIdleThread(void)
+فراغ Arch_switchToIdleThread(فراغ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
+    ܐܢ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        vcpu_switch(عدم);
     }
     setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+فراغ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }

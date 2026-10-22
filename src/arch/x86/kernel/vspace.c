@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <kernel/boot.h>
-#include <model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/tlb_bitmap.h>
-#include <mode/kernel/tlb.h>
-#include <mode/kernel/vspace.h>
+#ضمن <config.h>
+#ضمن <api/syscall.h>
+#ضمن <machine/io.h>
+#ضمن <kernel/boot.h>
+#ضمن <model/statedata.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <arch/api/invocation.h>
+#ضمن <arch/kernel/tlb_bitmap.h>
+#ضمن <mode/kernel/tlb.h>
+#ضمن <mode/kernel/vspace.h>
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
+ساكن exception_t performPageGetAddress(فراغ *vbase_ptr, bool_t call)
 {
     /* Get the physical address of this frame. */
     paddr_t capFBasePtr;
@@ -23,36 +23,36 @@ static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
 
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
-    if (call) {
+    ܐܢ (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
+        unsigned صحيح length = setMR(thread, ipcBuffer, 0, capFBasePtr);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+فراغ deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
 {
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert(IS_ALIGNED(asid_base, asidLowBits));
+    أكد(IS_ALIGNED(asid_base, asidLowBits));
 
-    if (x86KSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (unsigned int offset = 0; offset < BIT(asidLowBits); offset++) {
+    ܐܢ (x86KSASIDTable[ASID_HIGH(asid_base)] == pool) {
+        لكل (unsigned صحيح offset = 0; offset < BIT(asidLowBits); offset++) {
             asid_map_t asid_map = pool->array[offset];
-            if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
+            ܐܢ (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
                 vspace_root_t *vspace = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
                 hwASIDInvalidate(asid_base + offset, vspace);
             }
         }
-        x86KSASIDTable[ASID_HIGH(asid_base)] = NULL;
+        x86KSASIDTable[ASID_HIGH(asid_base)] = عدم;
         setVMRoot(NODE_STATE(ksCurThread));
     }
 }
 
-exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
+exception_t performASIDControlInvocation(فراغ *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
 {
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
@@ -71,20 +71,20 @@ exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent
         slot
     );
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
+    أكد((asid_base & MASK(asidLowBits)) == 0);
     x86KSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
 
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-void deleteASID(asid_t asid, vspace_root_t *vspace)
+فراغ deleteASID(asid_t asid, vspace_root_t *vspace)
 {
     asid_pool_t *poolPtr;
 
     poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
-    if (poolPtr != NULL) {
+    ܐܢ (poolPtr != عدم) {
         asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
-        if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
+        ܐܢ (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
             (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) == vspace) {
             hwASIDInvalidate(asid, vspace);
             poolPtr->array[ASID_LOW(asid)] = asid_map_asid_map_none_new();
@@ -102,28 +102,28 @@ word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
     w_bufferPtr = thread->tcbIPCBuffer;
     bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
 
-    if (cap_get_capType(bufferCap) != cap_frame_cap) {
-        return NULL;
+    ܐܢ (cap_get_capType(bufferCap) != cap_frame_cap) {
+        ܦܢܐ عدم;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    ܐܢ (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
+        ܦܢܐ عدم;
     }
 
     vm_rights = cap_frame_cap_get_capFVMRights(bufferCap);
-    if (vm_rights == VMReadWrite || (!isReceiver && vm_rights == VMReadOnly)) {
+    ܐܢ (vm_rights == VMReadWrite || (!isReceiver && vm_rights == VMReadOnly)) {
         word_t basePtr, pageBits;
 
         basePtr = cap_frame_cap_get_capFBasePtr(bufferCap);
         pageBits = pageBitsForSize(cap_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        ܦܢܐ (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
+    } ܐܚܪܢܐ {
+        ܦܢܐ عدم;
     }
 }
 
 bool_t CONST isValidVTableRoot(cap_t cap)
 {
-    return isValidNativeRoot(cap);
+    ܦܢܐ isValidNativeRoot(cap);
 }
 
 
@@ -133,76 +133,76 @@ BOOT_CODE bool_t map_kernel_window_devices(pte_t *pt, uint32_t num_ioapic, paddr
     word_t idx = (KDEV_BASE & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS;
     paddr_t phys;
     pte_t pte;
-    unsigned int i;
+    unsigned صحيح i;
     /* map kernel devices: APIC */
     phys = apic_get_base_paddr();
-    if (!phys) {
-        return false;
+    ܐܢ (!phys) {
+        ܦܢܐ false;
     }
-    if (!reserve_region((p_region_t) {
+    ܐܢ (!reserve_region((p_region_t) {
     phys, phys + 0x1000
 })) {
-        return false;
+        ܦܢܐ false;
     }
     pte = x86_make_device_pte(phys);
 
-    assert(idx == (PPTR_APIC & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+    أكد(idx == (PPTR_APIC & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
     pt[idx] = pte;
     idx++;
-    for (i = 0; i < num_ioapic; i++) {
+    لكل (i = 0; i < num_ioapic; i++) {
         phys = ioapic_paddrs[i];
-        if (!reserve_region((p_region_t) {
+        ܐܢ (!reserve_region((p_region_t) {
         phys, phys + 0x1000
     })) {
-            return false;
+            ܦܢܐ false;
         }
         pte = x86_make_device_pte(phys);
-        assert(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        أكد(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
-        if (idx == BIT(PT_INDEX_BITS)) {
-            return false;
+        ܐܢ (idx == BIT(PT_INDEX_BITS)) {
+            ܦܢܐ false;
         }
     }
     /* put in null mappings for any extra IOAPICs */
-    for (; i < CONFIG_MAX_NUM_IOAPIC; i++) {
+    لكل (; i < CONFIG_MAX_NUM_IOAPIC; i++) {
         pte = x86_make_empty_pte();
-        assert(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        أكد(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
     }
 
     /* map kernel devices: IOMMUs */
-    for (i = 0; i < num_drhu; i++) {
+    لكل (i = 0; i < num_drhu; i++) {
         phys = (paddr_t)drhu_list[i];
-        if (!reserve_region((p_region_t) {
+        ܐܢ (!reserve_region((p_region_t) {
         phys, phys + 0x1000
     })) {
-            return false;
+            ܦܢܐ false;
         }
         pte = x86_make_device_pte(phys);
 
-        assert(idx == ((PPTR_DRHU_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        أكد(idx == ((PPTR_DRHU_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
-        if (idx == BIT(PT_INDEX_BITS)) {
-            return false;
+        ܐܢ (idx == BIT(PT_INDEX_BITS)) {
+            ܦܢܐ false;
         }
     }
 
     /* mark unused kernel-device pages as 'not present' */
-    while (idx < BIT(PT_INDEX_BITS)) {
+    ܟܡܐ (idx < BIT(PT_INDEX_BITS)) {
         pte = x86_make_empty_pte();
         pt[idx] = pte;
         idx++;
     }
 
     /* Check we haven't added too many kernel-device mappings.*/
-    assert(idx == BIT(PT_INDEX_BITS));
-    return true;
+    أكد(idx == BIT(PT_INDEX_BITS));
+    ܦܢܐ true;
 }
 
-BOOT_CODE static void init_idt(idt_entry_t *idt)
+BOOT_CODE ساكن فراغ init_idt(idt_entry_t *idt)
 {
     init_idt_entry(idt, 0x00, int_00);
     init_idt_entry(idt, 0x01, int_01);
@@ -477,40 +477,40 @@ BOOT_CODE static void init_idt(idt_entry_t *idt)
     init_idt_entry(idt, 0xff, int_ff);
 }
 
-BOOT_CODE bool_t init_vm_state(void)
+BOOT_CODE bool_t init_vm_state(فراغ)
 {
     word_t cacheLineSize;
     x86KScacheLineSizeBits = getCacheLineSizeBits();
-    if (!x86KScacheLineSizeBits) {
-        return false;
+    ܐܢ (!x86KScacheLineSizeBits) {
+        ܦܢܐ false;
     }
 
     cacheLineSize = BIT(x86KScacheLineSizeBits);
-    if (cacheLineSize != L1_CACHE_LINE_SIZE) {
+    ܐܢ (cacheLineSize != L1_CACHE_LINE_SIZE) {
         printf("Configured cache line size is %d but detected size is %lu\n",
                L1_CACHE_LINE_SIZE, cacheLineSize);
-        SMP_COND_STATEMENT(return false);
+        SMP_COND_STATEMENT(ܦܢܐ false);
     }
 
     /*
      * Work around -Waddress-of-packed-member. TSS is the first thing
      * in the struct and so it's safe to take its address.
      */
-    void *tss_ptr = &x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss;
+    فراغ *tss_ptr = &x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss;
     init_tss(tss_ptr);
     init_gdt(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSgdt, tss_ptr);
     init_idt(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt);
-    return true;
+    ܦܢܐ true;
 }
 
-BOOT_CODE bool_t init_pat_msr(void)
+BOOT_CODE bool_t init_pat_msr(فراغ)
 {
     x86_pat_msr_t pat_msr;
     /* First verify PAT is supported by the machine.
      *      See section 11.12.1 of Volume 3 of the Intel manual */
-    if ((x86_cpuid_edx(0x1, 0x0) & BIT(16)) == 0) {
+    ܐܢ ((x86_cpuid_edx(0x1, 0x0) & BIT(16)) == 0) {
         printf("PAT support not found\n");
-        return false;
+        ܦܢܐ false;
     }
     pat_msr.words[0] = x86_rdmsr_low(IA32_PAT_MSR);
     pat_msr.words[1] = x86_rdmsr_high(IA32_PAT_MSR);
@@ -523,10 +523,10 @@ BOOT_CODE bool_t init_pat_msr(void)
     /* Add the WriteCombining cache type to the PAT */
     pat_msr = x86_pat_msr_set_pa4(pat_msr, IA32_PAT_MT_WRITE_COMBINING);
     x86_wrmsr(IA32_PAT_MSR, ((uint64_t)pat_msr.words[1]) << 32 | pat_msr.words[0]);
-    return true;
+    ܦܢܐ true;
 }
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
+BOOT_CODE فراغ write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
 {
     asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
     ap->array[ASID_LOW(IT_ASID)] = asid_map_asid_map_vspace_new(pptr_of_cap(it_vspace_cap));
@@ -538,11 +538,11 @@ asid_map_t findMapForASID(asid_t asid)
     asid_pool_t        *poolPtr;
 
     poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
-    if (!poolPtr) {
-        return asid_map_asid_map_none_new();
+    ܐܢ (!poolPtr) {
+        ܦܢܐ asid_map_asid_map_none_new();
     }
 
-    return poolPtr->array[ASID_LOW(asid)];
+    ܦܢܐ poolPtr->array[ASID_LOW(asid)];
 }
 
 findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
@@ -551,17 +551,17 @@ findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
+    ܐܢ (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
         current_lookup_fault = lookup_fault_invalid_root_new();
 
-        ret.vspace_root = NULL;
+        ret.vspace_root = عدم;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ܦܢܐ ret;
     }
 
     ret.vspace_root = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
     ret.status = EXCEPTION_NONE;
-    return ret;
+    ܦܢܐ ret;
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
@@ -572,46 +572,46 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
     addr = getFaultAddr();
     fault = getRegister(thread, Error);
 
-    switch (vm_faultType) {
-    case X86DataFault:
+    بدل (vm_faultType) {
+    حالة X86DataFault:
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        ܦܢܐ EXCEPTION_FAULT;
 
-    case X86InstructionFault:
+    حالة X86InstructionFault:
         current_fault = seL4_Fault_VMFault_new(addr, fault, true);
-        return EXCEPTION_FAULT;
+        ܦܢܐ EXCEPTION_FAULT;
 
-    default:
+    افتراضي:
         fail("Invalid VM fault type");
     }
 }
 
 uint32_t CONST WritableFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMReadOnly:
-        return 0;
+    بدل (vm_rights) {
+    حالة VMReadOnly:
+        ܦܢܐ 0;
 
-    case VMKernelOnly:
-    case VMReadWrite:
-        return 1;
+    حالة VMKernelOnly:
+    حالة VMReadWrite:
+        ܦܢܐ 1;
 
-    default:
+    افتراضي:
         fail("Invalid VM rights");
     }
 }
 
 uint32_t CONST SuperUserFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-        return 0;
+    بدل (vm_rights) {
+    حالة VMKernelOnly:
+        ܦܢܐ 0;
 
-    case VMReadOnly:
-    case VMReadWrite:
-        return 1;
+    حالة VMReadOnly:
+    حالة VMReadWrite:
+        ܦܢܐ 1;
 
-    default:
+    افتراضي:
         fail("Invalid VM rights");
     }
 }
@@ -622,18 +622,18 @@ lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
     lookupPDSlot_ret_t pdSlot;
 
     pdSlot = lookupPDSlot(vspace, vptr);
-    if (pdSlot.status != EXCEPTION_NONE) {
-        ret.ptSlot = NULL;
+    ܐܢ (pdSlot.status != EXCEPTION_NONE) {
+        ret.ptSlot = عدم;
         ret.status = pdSlot.status;
-        return ret;
+        ܦܢܐ ret;
     }
-    if ((pde_ptr_get_page_size(pdSlot.pdSlot) != pde_pde_pt) ||
+    ܐܢ ((pde_ptr_get_page_size(pdSlot.pdSlot) != pde_pde_pt) ||
         !pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) {
         current_lookup_fault = lookup_fault_missing_capability_new(PAGE_BITS + PT_INDEX_BITS);
-        ret.ptSlot = NULL;
+        ret.ptSlot = عدم;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
-    } else {
+        ܦܢܐ ret;
+    } ܐܚܪܢܐ {
         pte_t *pt;
         pte_t *ptSlot;
         word_t ptIndex;
@@ -644,65 +644,65 @@ lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
 
         ret.ptSlot = ptSlot;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        ܦܢܐ ret;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (cap_get_capType(cap) != cap_frame_cap) {
+    ܐܢ (cap_get_capType(cap) != cap_frame_cap) {
         userError("IPC Buffer is an invalid cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
+    ܐܢ (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
-        userError("IPC Buffer vaddr 0x%x is not aligned.", (int)vptr);
+    ܐܢ (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
+        userError("IPC Buffer vaddr 0x%x is not aligned.", (صحيح)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
 vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
 {
-    if (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    ܐܢ (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        ܦܢܐ VMReadOnly;
     }
-    if (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    ܐܢ (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        ܐܢ (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+            ܦܢܐ VMReadOnly;
+        } ܐܚܪܢܐ {
+            ܦܢܐ VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
+    ܐܢ (vm_rights == VMReadWrite &&
         !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
         seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    ܦܢܐ VMKernelOnly;
 }
 
-void flushTable(vspace_root_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
+فراغ flushTable(vspace_root_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
 {
     word_t i;
     cap_t        threadRoot;
 
-    assert(IS_ALIGNED(vptr, PT_INDEX_BITS + PAGE_BITS));
+    أكد(IS_ALIGNED(vptr, PT_INDEX_BITS + PAGE_BITS));
 
     /* check if page table belongs to current address space */
     threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
     /* find valid mappings */
-    for (i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        if (pte_get_present(pt[i])) {
-            if (config_set(CONFIG_SUPPORT_PCID) || (isValidNativeRoot(threadRoot)
+    لكل (i = 0; i < BIT(PT_INDEX_BITS); i++) {
+        ܐܢ (pte_get_present(pt[i])) {
+            ܐܢ (config_set(CONFIG_SUPPORT_PCID) || (isValidNativeRoot(threadRoot)
                                                     && (vspace_root_t *)pptr_of_cap(threadRoot) == vspace)) {
                 invalidateTranslationSingleASID(vptr + (i << PAGE_BITS), asid,
                                                 SMP_TERNARY(tlb_bitmap_get(vspace), 0));
@@ -712,7 +712,7 @@ void flushTable(vspace_root_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
 }
 
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
+فراغ unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, فراغ *pptr)
 {
     findVSpaceForASID_ret_t find_ret;
     lookupPTSlot_ret_t  lu_ret;
@@ -720,70 +720,70 @@ void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
     pde_t               *pde;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    ܐܢ (find_ret.status != EXCEPTION_NONE) {
+        ܦܢܐ;
     }
 
-    switch (page_size) {
-    case X86_SmallPage:
+    بدل (page_size) {
+    حالة X86_SmallPage:
         lu_ret = lookupPTSlot(find_ret.vspace_root, vptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return;
+        ܐܢ (lu_ret.status != EXCEPTION_NONE) {
+            ܦܢܐ;
         }
-        if (!(pte_ptr_get_present(lu_ret.ptSlot)
+        ܐܢ (!(pte_ptr_get_present(lu_ret.ptSlot)
               && (pte_ptr_get_page_base_address(lu_ret.ptSlot)
                   == pptr_to_paddr(pptr)))) {
-            return;
+            ܦܢܐ;
         }
         *lu_ret.ptSlot = makeUserPTEInvalid();
-        break;
+        اكسر;
 
-    case X86_LargePage:
+    حالة X86_LargePage:
         pd_ret = lookupPDSlot(find_ret.vspace_root, vptr);
-        if (pd_ret.status != EXCEPTION_NONE) {
-            return;
+        ܐܢ (pd_ret.status != EXCEPTION_NONE) {
+            ܦܢܐ;
         }
         pde = pd_ret.pdSlot;
-        if (!(pde_ptr_get_page_size(pde) == pde_pde_large
+        ܐܢ (!(pde_ptr_get_page_size(pde) == pde_pde_large
               && pde_pde_large_ptr_get_present(pde)
               && (pde_pde_large_ptr_get_page_base_address(pde)
                   == pptr_to_paddr(pptr)))) {
-            return;
+            ܦܢܐ;
         }
         *pde = makeUserPDEInvalid();
-        break;
+        اكسر;
 
-    default:
-        if (!modeUnmapPage(page_size, find_ret.vspace_root, vptr, pptr)) {
-            return;
+    افتراضي:
+        ܐܢ (!modeUnmapPage(page_size, find_ret.vspace_root, vptr, pptr)) {
+            ܦܢܐ;
         }
-        break;
+        اكسر;
     }
 
     invalidateTranslationSingleASID(vptr, asid,
                                     SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_root), 0));
 }
 
-void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+فراغ unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
     findVSpaceForASID_ret_t find_ret;
     lookupPDSlot_ret_t    lu_ret;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    ܐܢ (find_ret.status != EXCEPTION_NONE) {
+        ܦܢܐ;
     }
 
     lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return;
+    ܐܢ (lu_ret.status != EXCEPTION_NONE) {
+        ܦܢܐ;
     }
 
     /* check if the PD actually refers to the PT */
-    if (!(pde_ptr_get_page_size(lu_ret.pdSlot) == pde_pde_pt &&
+    ܐܢ (!(pde_ptr_get_page_size(lu_ret.pdSlot) == pde_pde_pt &&
           pde_pde_pt_ptr_get_present(lu_ret.pdSlot) &&
           (pde_pde_pt_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt)))) {
-        return;
+        ܦܢܐ;
     }
 
     flushTable(find_ret.vspace_root, vaddr, pt, asid);
@@ -794,40 +794,40 @@ void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
                                      SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_root), 0));
 }
 
-static exception_t performX86PageInvocationMapPTE(cap_t cap, cte_t *ctSlot, pte_t *ptSlot, pte_t pte,
+ساكن exception_t performX86PageInvocationMapPTE(cap_t cap, cte_t *ctSlot, pte_t *ptSlot, pte_t pte,
                                                   vspace_root_t *vspace)
 {
     ctSlot->cap = cap;
     *ptSlot = pte;
     invalidatePageStructureCacheASID(pptr_to_paddr(vspace), cap_frame_cap_get_capFMappedASID(cap),
                                      SMP_TERNARY(tlb_bitmap_get(vspace), 0));
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-static exception_t performX86PageInvocationMapPDE(cap_t cap, cte_t *ctSlot, pde_t *pdSlot, pde_t pde,
+ساكن exception_t performX86PageInvocationMapPDE(cap_t cap, cte_t *ctSlot, pde_t *pdSlot, pde_t pde,
                                                   vspace_root_t *vspace)
 {
     ctSlot->cap = cap;
     *pdSlot = pde;
     invalidatePageStructureCacheASID(pptr_to_paddr(vspace), cap_frame_cap_get_capFMappedASID(cap),
                                      SMP_TERNARY(tlb_bitmap_get(vspace), 0));
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
 
-static exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ساكن exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    assert(cap_frame_cap_get_capFMappedASID(cap));
-    assert(cap_frame_cap_get_capFMapType(cap) == X86_MappingVSpace);
+    أكد(cap_frame_cap_get_capFMappedASID(cap));
+    أكد(cap_frame_cap_get_capFMapType(cap) == X86_MappingVSpace);
     // We have this `if` for something we just asserted to be true for simplicity of verification
     // This has no performance implications as when this function is inlined this `if` will be
     // inside an identical `if` and will therefore be elided
-    if (cap_frame_cap_get_capFMappedASID(cap)) {
+    ܐܢ (cap_frame_cap_get_capFMappedASID(cap)) {
         unmapPage(
             cap_frame_cap_get_capFSize(cap),
             cap_frame_cap_get_capFMappedASID(cap),
             cap_frame_cap_get_capFMappedAddress(cap),
-            (void *)cap_frame_cap_get_capFBasePtr(cap)
+            (فراغ *)cap_frame_cap_get_capFBasePtr(cap)
         );
     }
 
@@ -835,40 +835,40 @@ static exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
     cap_frame_cap_ptr_set_capFMappedASID(&ctSlot->cap, asidInvalid);
     cap_frame_cap_ptr_set_capFMapType(&ctSlot->cap, X86_MappingNone);
 
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-static exception_t performX86FrameInvocationUnmap(cap_t cap, cte_t *cte)
+ساكن exception_t performX86FrameInvocationUnmap(cap_t cap, cte_t *cte)
 {
-    if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
-        switch (cap_frame_cap_get_capFMapType(cap)) {
-        case X86_MappingVSpace:
-            return performX86PageInvocationUnmap(cap, cte);
+    ܐܢ (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+        بدل (cap_frame_cap_get_capFMapType(cap)) {
+        حالة X86_MappingVSpace:
+            ܦܢܐ performX86PageInvocationUnmap(cap, cte);
 #ifdef CONFIG_IOMMU
-        case X86_MappingIOSpace:
-            return performX86IOUnMapInvocation(cap, cte);
+        حالة X86_MappingIOSpace:
+            ܦܢܐ performX86IOUnMapInvocation(cap, cte);
 #endif
 #ifdef CONFIG_VTX
-        case X86_MappingEPT:
-            return performX86EPTPageInvocationUnmap(cap, cte);
+        حالة X86_MappingEPT:
+            ܦܢܐ performX86EPTPageInvocationUnmap(cap, cte);
 #endif
-        case X86_MappingNone:
+        حالة X86_MappingNone:
             fail("Mapped frame cap was not mapped");
-            break;
+            اكسر;
         }
     }
 
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-struct create_mapping_pte_return {
+بنية create_mapping_pte_return {
     exception_t status;
     pte_t pte;
     pte_t *ptSlot;
 };
-typedef struct create_mapping_pte_return create_mapping_pte_return_t;
+تعريفنوع بنية create_mapping_pte_return create_mapping_pte_return_t;
 
-static create_mapping_pte_return_t createSafeMappingEntries_PTE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
+ساكن create_mapping_pte_return_t createSafeMappingEntries_PTE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
                                                                 vm_attributes_t attr,
                                                                 vspace_root_t *vspace)
 {
@@ -876,28 +876,28 @@ static create_mapping_pte_return_t createSafeMappingEntries_PTE(paddr_t base, wo
     lookupPTSlot_ret_t          lu_ret;
 
     lu_ret = lookupPTSlot(vspace, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    ܐܢ (lu_ret.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
         ret.status = EXCEPTION_SYSCALL_ERROR;
         /* current_lookup_fault will have been set by lookupPTSlot */
-        return ret;
+        ܦܢܐ ret;
     }
 
     ret.pte = makeUserPTE(base, attr, vmRights);
     ret.ptSlot = lu_ret.ptSlot;
     ret.status = EXCEPTION_NONE;
-    return ret;
+    ܦܢܐ ret;
 }
 
-struct create_mapping_pde_return {
+بنية create_mapping_pde_return {
     exception_t status;
     pde_t pde;
     pde_t *pdSlot;
 };
-typedef struct create_mapping_pde_return create_mapping_pde_return_t;
+تعريفنوع بنية create_mapping_pde_return create_mapping_pde_return_t;
 
-static create_mapping_pde_return_t createSafeMappingEntries_PDE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
+ساكن create_mapping_pde_return_t createSafeMappingEntries_PDE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
                                                                 vm_attributes_t attr,
                                                                 vspace_root_t *vspace)
 {
@@ -905,27 +905,27 @@ static create_mapping_pde_return_t createSafeMappingEntries_PDE(paddr_t base, wo
     lookupPDSlot_ret_t          lu_ret;
 
     lu_ret = lookupPDSlot(vspace, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    ܐܢ (lu_ret.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
         ret.status = EXCEPTION_SYSCALL_ERROR;
         /* current_lookup_fault will have been set by lookupPDSlot */
-        return ret;
+        ܦܢܐ ret;
     }
     ret.pdSlot = lu_ret.pdSlot;
 
     /* check for existing page table */
-    if ((pde_ptr_get_page_size(ret.pdSlot) == pde_pde_pt) &&
+    ܐܢ ((pde_ptr_get_page_size(ret.pdSlot) == pde_pde_pt) &&
         (pde_pde_pt_ptr_get_present(ret.pdSlot))) {
         current_syscall_error.type = seL4_DeleteFirst;
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ܦܢܐ ret;
     }
 
 
     ret.pde = makeUserPDELargePage(base, attr, vmRights);
     ret.status = EXCEPTION_NONE;
-    return ret;
+    ܦܢܐ ret;
 }
 
 
@@ -938,8 +938,8 @@ exception_t decodeX86FrameInvocation(
     word_t *buffer
 )
 {
-    switch (invLabel) {
-    case X86PageMap: { /* Map */
+    بدل (invLabel) {
+    حالة X86PageMap: { /* Map */
         word_t          vaddr;
         word_t          vtop;
         word_t          w_rightsMask;
@@ -952,10 +952,10 @@ exception_t decodeX86FrameInvocation(
         vm_page_size_t  frameSize;
         asid_t          asid;
 
-        if (length < 3 || current_extra_caps.excaprefs[0] == NULL) {
+        ܐܢ (length < 3 || current_extra_caps.excaprefs[0] == عدم) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         frameSize = cap_frame_cap_get_capFSize(cap);
@@ -966,48 +966,48 @@ exception_t decodeX86FrameInvocation(
 
         capVMRights = cap_frame_cap_get_capFVMRights(cap);
 
-        if (!isValidNativeRoot(vspaceCap)) {
+        ܐܢ (!isValidNativeRoot(vspaceCap)) {
             userError("X86FrameMap: Attempting to map frame into invalid page directory cap.");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
         vspace = (vspace_root_t *)pptr_of_cap(vspaceCap);
         asid = cap_get_capMappedASID(vspaceCap);
 
-        if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
-            if (cap_frame_cap_get_capFMappedASID(cap) != asid) {
+        ܐܢ (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+            ܐܢ (cap_frame_cap_get_capFMappedASID(cap) != asid) {
                 current_syscall_error.type = seL4_InvalidCapability;
                 current_syscall_error.invalidCapNumber = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (cap_frame_cap_get_capFMapType(cap) != X86_MappingVSpace) {
+            ܐܢ (cap_frame_cap_get_capFMapType(cap) != X86_MappingVSpace) {
                 userError("X86Frame: Attempting to remap frame with different mapping type");
                 current_syscall_error.type = seL4_IllegalOperation;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            ܐܢ (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
                 userError("X86Frame: Attempting to map frame into multiple addresses");
                 current_syscall_error.type = seL4_InvalidArgument;
                 current_syscall_error.invalidArgumentNumber = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
+        } ܐܚܪܢܐ {
             vtop = vaddr + BIT(pageBitsForSize(frameSize));
 
             /* check vaddr and vtop against USER_TOP to catch case where vaddr + frame_size wrapped around */
-            if (vaddr > USER_TOP || vtop > USER_TOP) {
+            ܐܢ (vaddr > USER_TOP || vtop > USER_TOP) {
                 userError("X86Frame: Mapping address too high.");
                 current_syscall_error.type = seL4_InvalidArgument;
                 current_syscall_error.invalidArgumentNumber = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
         }
 
@@ -1015,129 +1015,129 @@ exception_t decodeX86FrameInvocation(
             findVSpaceForASID_ret_t find_ret;
 
             find_ret = findVSpaceForASID(asid);
-            if (find_ret.status != EXCEPTION_NONE) {
+            ܐܢ (find_ret.status != EXCEPTION_NONE) {
                 current_syscall_error.type = seL4_FailedLookup;
                 current_syscall_error.failedLookupWasSource = false;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (find_ret.vspace_root != vspace) {
+            ܐܢ (find_ret.vspace_root != vspace) {
                 current_syscall_error.type = seL4_InvalidCapability;
                 current_syscall_error.invalidCapNumber = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                ܦܢܐ EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         vmRights = maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
 
-        if (!checkVPAlignment(frameSize, vaddr)) {
+        ܐܢ (!checkVPAlignment(frameSize, vaddr)) {
             current_syscall_error.type = seL4_AlignmentError;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
-        paddr = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
+        paddr = pptr_to_paddr((فراغ *)cap_frame_cap_get_capFBasePtr(cap));
 
         cap = cap_frame_cap_set_capFMappedASID(cap, asid);
         cap = cap_frame_cap_set_capFMappedAddress(cap, vaddr);
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingVSpace);
 
-        switch (frameSize) {
+        بدل (frameSize) {
         /* PTE mappings */
-        case X86_SmallPage: {
+        حالة X86_SmallPage: {
             create_mapping_pte_return_t map_ret;
 
             map_ret = createSafeMappingEntries_PTE(paddr, vaddr, vmRights, vmAttr, vspace);
-            if (map_ret.status != EXCEPTION_NONE) {
-                return map_ret.status;
+            ܐܢ (map_ret.status != EXCEPTION_NONE) {
+                ܦܢܐ map_ret.status;
             }
 
             setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performX86PageInvocationMapPTE(cap, cte, map_ret.ptSlot, map_ret.pte, vspace);
+            ܦܢܐ performX86PageInvocationMapPTE(cap, cte, map_ret.ptSlot, map_ret.pte, vspace);
         }
 
         /* PDE mappings */
-        case X86_LargePage: {
+        حالة X86_LargePage: {
             create_mapping_pde_return_t map_ret;
 
             map_ret = createSafeMappingEntries_PDE(paddr, vaddr, vmRights, vmAttr, vspace);
-            if (map_ret.status != EXCEPTION_NONE) {
-                return map_ret.status;
+            ܐܢ (map_ret.status != EXCEPTION_NONE) {
+                ܦܢܐ map_ret.status;
             }
 
             setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performX86PageInvocationMapPDE(cap, cte, map_ret.pdSlot, map_ret.pde, vspace);
+            ܦܢܐ performX86PageInvocationMapPDE(cap, cte, map_ret.pdSlot, map_ret.pde, vspace);
         }
 
-        default: {
-            return decodeX86ModeMapPage(invLabel, frameSize, cte, cap, vspace, vaddr, paddr, vmRights, vmAttr);
+        افتراضي: {
+            ܦܢܐ decodeX86ModeMapPage(invLabel, frameSize, cte, cap, vspace, vaddr, paddr, vmRights, vmAttr);
         }
         }
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    case X86PageUnmap: { /* Unmap */
+    حالة X86PageUnmap: { /* Unmap */
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86FrameInvocationUnmap(cap, cte);
+        ܦܢܐ performX86FrameInvocationUnmap(cap, cte);
     }
 
 #ifdef CONFIG_IOMMU
-    case X86PageMapIO: { /* MapIO */
-        return decodeX86IOMapInvocation(length, cte, cap, buffer);
+    حالة X86PageMapIO: { /* MapIO */
+        ܦܢܐ decodeX86IOMapInvocation(length, cte, cap, buffer);
     }
 #endif
 
 #ifdef CONFIG_VTX
-    case X86PageMapEPT:
-        return decodeX86EPTPageMap(invLabel, length, cte, cap, buffer);
+    حالة X86PageMapEPT:
+        ܦܢܐ decodeX86EPTPageMap(invLabel, length, cte, cap, buffer);
 #endif
 
-    case X86PageGetAddress: {
+    حالة X86PageGetAddress: {
         /* Return it in the first message register. */
-        assert(n_msgRegisters >= 1);
+        أكد(n_msgRegisters >= 1);
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress((void *)cap_frame_cap_get_capFBasePtr(cap), call);
+        ܦܢܐ performPageGetAddress((فراغ *)cap_frame_cap_get_capFBasePtr(cap), call);
     }
 
-    default:
+    افتراضي:
         current_syscall_error.type = seL4_IllegalOperation;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-static exception_t performX86PageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ساكن exception_t performX86PageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
 
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ܐܢ (cap_page_table_cap_get_capPTIsMapped(cap)) {
         pte_t *pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
         unmapPageTable(
             cap_page_table_cap_get_capPTMappedASID(cap),
             cap_page_table_cap_get_capPTMappedAddress(cap),
             pt
         );
-        clearMemory((void *)pt, cap_get_capSizeBits(cap));
+        clearMemory((فراغ *)pt, cap_get_capSizeBits(cap));
     }
     cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
 
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-static exception_t performX86PageTableInvocationMap(cap_t cap, cte_t *ctSlot, pde_t pde, pde_t *pdSlot,
+ساكن exception_t performX86PageTableInvocationMap(cap_t cap, cte_t *ctSlot, pde_t pde, pde_t *pdSlot,
                                                     vspace_root_t *root)
 {
     ctSlot->cap = cap;
     *pdSlot = pde;
     invalidatePageStructureCacheASID(pptr_to_paddr(root), cap_page_table_cap_get_capPTMappedASID(cap),
                                      SMP_TERNARY(tlb_bitmap_get(root), 0));
-    return EXCEPTION_NONE;
+    ܦܢܐ EXCEPTION_NONE;
 }
 
-static exception_t decodeX86PageTableInvocation(
+ساكن exception_t decodeX86PageTableInvocation(
     word_t invLabel,
     word_t length,
     cte_t *cte, cap_t cap,
@@ -1153,91 +1153,91 @@ static exception_t decodeX86PageTableInvocation(
     paddr_t         paddr;
     asid_t          asid;
 
-    if (invLabel == X86PageTableUnmap) {
-        if (! isFinalCapability(cte)) {
+    ܐܢ (invLabel == X86PageTableUnmap) {
+        ܐܢ (! isFinalCapability(cte)) {
             current_syscall_error.type = seL4_RevokeFirst;
             userError("X86PageTable: Cannot unmap if more than one cap exists.");
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86PageTableInvocationUnmap(cap, cte);
+        ܦܢܐ performX86PageTableInvocationUnmap(cap, cte);
     }
 
-    if (invLabel != X86PageTableMap) {
+    ܐܢ (invLabel != X86PageTableMap) {
         userError("X86PageTable: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL) {
+    ܐܢ (length < 2 || current_extra_caps.excaprefs[0] == عدم) {
         userError("X86PageTable: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ܐܢ (cap_page_table_cap_get_capPTIsMapped(cap)) {
         userError("X86PageTable: Page table is already mapped to a page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
     vaddr = getSyscallArg(0, buffer) & (~MASK(PT_INDEX_BITS + PAGE_BITS));
     attr = vmAttributesFromWord(getSyscallArg(1, buffer));
     vspaceCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (!isValidNativeRoot(vspaceCap)) {
+    ܐܢ (!isValidNativeRoot(vspaceCap)) {
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
     vspace = (vspace_root_t *)pptr_of_cap(vspaceCap);
     asid = cap_get_capMappedASID(vspaceCap);
 
-    if (vaddr > USER_TOP) {
+    ܐܢ (vaddr > USER_TOP) {
         userError("X86PageTable: Mapping address too high.");
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
     {
         findVSpaceForASID_ret_t find_ret;
 
         find_ret = findVSpaceForASID(asid);
-        if (find_ret.status != EXCEPTION_NONE) {
+        ܐܢ (find_ret.status != EXCEPTION_NONE) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (find_ret.vspace_root != vspace) {
+        ܐܢ (find_ret.vspace_root != vspace) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
     }
 
     pdSlot = lookupPDSlot(vspace, vaddr);
-    if (pdSlot.status != EXCEPTION_NONE) {
+    ܐܢ (pdSlot.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) ||
+    ܐܢ (((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) ||
         ((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot.pdSlot))) {
         current_syscall_error.type = seL4_DeleteFirst;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ܦܢܐ EXCEPTION_SYSCALL_ERROR;
     }
 
     paddr = pptr_to_paddr(PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
@@ -1248,7 +1248,7 @@ static exception_t decodeX86PageTableInvocation(
     cap = cap_page_table_cap_set_capPTMappedAddress(cap, vaddr);
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performX86PageTableInvocationMap(cap, cte, pde, pdSlot.pdSlot, vspace);
+    ܦܢܐ performX86PageTableInvocationMap(cap, cte, pde, pdSlot.pdSlot, vspace);
 }
 
 exception_t decodeX86MMUInvocation(
@@ -1261,15 +1261,15 @@ exception_t decodeX86MMUInvocation(
     word_t *buffer
 )
 {
-    switch (cap_get_capType(cap)) {
+    بدل (cap_get_capType(cap)) {
 
-    case cap_frame_cap:
-        return decodeX86FrameInvocation(invLabel, length, cte, cap, call, buffer);
+    حالة cap_frame_cap:
+        ܦܢܐ decodeX86FrameInvocation(invLabel, length, cte, cap, call, buffer);
 
-    case cap_page_table_cap:
-        return decodeX86PageTableInvocation(invLabel, length, cte, cap, buffer);
+    حالة cap_page_table_cap:
+        ܦܢܐ decodeX86PageTableInvocation(invLabel, length, cte, cap, buffer);
 
-    case cap_asid_control_cap: {
+    حالة cap_asid_control_cap: {
         word_t     i;
         asid_t           asid_base;
         word_t           index;
@@ -1279,19 +1279,19 @@ exception_t decodeX86MMUInvocation(
         cte_t           *parentSlot;
         cte_t           *destSlot;
         lookupSlot_ret_t lu_ret;
-        void            *frame;
+        فراغ            *frame;
         exception_t      status;
 
-        if (invLabel != X86ASIDControlMakePool) {
+        ܐܢ (invLabel != X86ASIDControlMakePool) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
+        ܐܢ (length < 2 || current_extra_caps.excaprefs[0] == عدم
+            || current_extra_caps.excaprefs[1] == عدم) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         index = getSyscallArg(0, buffer);
@@ -1301,111 +1301,111 @@ exception_t decodeX86MMUInvocation(
         root = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && x86KSASIDTable[i]; i++);
+        لكل (i = 0; i < nASIDPools && x86KSASIDTable[i]; i++);
 
-        if (i == nASIDPools) {
+        ܐܢ (i == nASIDPools) {
             userError("ASIDControlMakePool: No unallocated pools found.");
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         asid_base = i << asidLowBits;
 
 
-        if (cap_get_capType(untyped) != cap_untyped_cap ||
+        ܐܢ (cap_get_capType(untyped) != cap_untyped_cap ||
             cap_untyped_cap_get_capBlockSize(untyped) != seL4_ASIDPoolBits ||
             cap_untyped_cap_get_capIsDevice(untyped)) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         status = ensureNoChildren(parentSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ܐܢ (status != EXCEPTION_NONE) {
+            ܦܢܐ status;
         }
 
         frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
 
         lu_ret = lookupTargetSlot(root, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        ܐܢ (lu_ret.status != EXCEPTION_NONE) {
+            ܦܢܐ lu_ret.status;
         }
         destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ܐܢ (status != EXCEPTION_NONE) {
+            ܦܢܐ status;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
+        ܦܢܐ performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
     }
 
-    case cap_asid_pool_cap: {
+    حالة cap_asid_pool_cap: {
         cap_t        vspaceCap;
         cte_t       *vspaceCapSlot;
         asid_pool_t *pool;
         word_t i;
         asid_t       asid;
 
-        if (invLabel != X86ASIDPoolAssign) {
+        ܐܢ (invLabel != X86ASIDPoolAssign) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
-        if (current_extra_caps.excaprefs[0] == NULL) {
+        ܐܢ (current_extra_caps.excaprefs[0] == عدم) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         vspaceCapSlot = current_extra_caps.excaprefs[0];
         vspaceCap = vspaceCapSlot->cap;
 
-        if (!(isVTableRoot(vspaceCap) || VTX_TERNARY(cap_get_capType(vspaceCap) == cap_ept_pml4_cap, 0))
+        ܐܢ (!(isVTableRoot(vspaceCap) || VTX_TERNARY(cap_get_capType(vspaceCap) == cap_ept_pml4_cap, 0))
             || cap_get_capMappedASID(vspaceCap) != asidInvalid) {
             userError("X86ASIDPool: Invalid vspace root.");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         pool = x86KSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
-        if (!pool) {
+        ܐܢ (!pool) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
             current_lookup_fault = lookup_fault_invalid_root_new();
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
+        ܐܢ (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < BIT(asidLowBits) && (asid + i == 0
+        لكل (i = 0; i < BIT(asidLowBits) && (asid + i == 0
                                              || asid_map_get_type(pool->array[i]) != asid_map_asid_map_none); i++);
 
-        if (i == BIT(asidLowBits)) {
+        ܐܢ (i == BIT(asidLowBits)) {
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ܦܢܐ EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, vspaceCapSlot);
+        ܦܢܐ performASIDPoolInvocation(asid, pool, vspaceCapSlot);
     }
 
-    default:
-        return decodeX86ModeMMUInvocation(invLabel, length, cptr, cte, cap, call, buffer);
+    افتراضي:
+        ܦܢܐ decodeX86ModeMMUInvocation(invLabel, length, cptr, cte, cap, call, buffer);
     }
 }

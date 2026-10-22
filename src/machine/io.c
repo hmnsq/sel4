@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#ضمن <config.h>
+#ضمن <machine/io.h>
 
 #ifdef CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#ضمن <stdarg.h>
+#ضمن <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,15 +24,15 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+تعريفنوع بنية _out_wrap_t  out_wrap_t;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+تعريفنوع فراغ (*out_write_fn)(out_wrap_t *out, ثابت حرف *buf, word_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
+بنية _out_wrap_t {
+    ثابت out_write_fn اكتب;
+    حرف *ثابت buf;
+    ثابت word_t maxlen;
     word_t used;
 };
 
@@ -40,23 +40,23 @@ struct _out_wrap_t {
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+ساكن فراغ out(out_wrap_t *out_wrap, ثابت حرف *buf, word_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    ܐܢ (out_wrap) {
+        out_wrap->اكتب(out_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
+ساكن فراغ do_output_to_putchar(
     UNUSED out_wrap_t *out,
-    const char *buf,
+    ثابت حرف *buf,
     word_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
+    ܐܢ (buf) {
+        ܟܡܐ (len-- > 0) {
             putchar(*buf++);
         }
     }
@@ -65,18 +65,18 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
+ساكن فراغ do_output_to_buffer(
     out_wrap_t *out,
-    const char *buf,
+    ثابت حرف *buf,
     word_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    ܐܢ (buf && (out->used < out->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        word_t حرر = out->maxlen - out->used;
+        ܐܢ (len > حرر) {
+            len = حرر;
         }
         memcpy(&out->buf[out->used], buf, len);
         out->used += len;
@@ -89,9 +89,9 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+ساكن مضمن bool_t isdigit(حرف c)
 {
-    return c >= '0' &&
+    ܦܢܐ c >= '0' &&
            c <= '9';
 }
 
@@ -113,7 +113,7 @@ static inline bool_t isdigit(char c)
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+تعداد {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -131,7 +131,7 @@ enum {
 
 #define S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+ساكن ثابت unsigned حرف states[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -177,92 +177,92 @@ static const unsigned char states[]['z' - 'A' + 1] = {
 #define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
 #define DIGIT(c) (c - '0')
 
-union arg {
+اتحاد arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    long مزدوج f;
+    فراغ *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+ساكن فراغ pop_arg(اتحاد arg *arg, صحيح type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
+    بدل (type) {
+    حالة PTR:
+        arg->p = va_arg(*ap, فراغ *);
+        اكسر;
+    حالة INT:
+        arg->i = va_arg(*ap, صحيح);
+        اكسر;
+    حالة UINT:
+        arg->i = va_arg(*ap, unsigned صحيح);
+        اكسر;
+    حالة LONG:
         arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
+        اكسر;
+    حالة ULONG:
         arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
+        اكسر;
+    حالة LLONG:
         arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
+        اكسر;
+    حالة ULLONG:
         arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
+        اكسر;
+    حالة SHORT:
+        arg->i = (short)va_arg(*ap, صحيح);
+        اكسر;
+    حالة USHORT:
+        arg->i = (unsigned short)va_arg(*ap, صحيح);
+        اكسر;
+    حالة CHAR:
+        arg->i = (signed حرف)va_arg(*ap, صحيح);
+        اكسر;
+    حالة UCHAR:
+        arg->i = (unsigned حرف)va_arg(*ap, صحيح);
+        اكسر;
+    حالة WORDT:
         arg->i = va_arg(*ap, word_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+ساكن فراغ pad(out_wrap_t *f, حرف c, صحيح w, صحيح l, صحيح fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    حرف pad[32]; /* good enough for what the kernel prints */
+    ܐܢ (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
+        ܦܢܐ;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > حجم(pad) ? حجم(pad) : l);
+    لكل (; l >= حجم(pad); l -= حجم(pad)) {
+        out(f, pad, حجم(pad));
     }
     out(f, pad, l);
 }
 
-static const char xdigits[16] = {
+ساكن ثابت حرف xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+ساكن حرف *fmt_x(uintmax_t x, حرف *s, صحيح lower)
 {
-    for (; x; x >>= 4) {
+    لكل (; x; x >>= 4) {
         *--s = xdigits[(x & 15)] | lower;
     }
-    return s;
+    ܦܢܐ s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+ساكن حرف *fmt_o(uintmax_t x, حرف *s)
 {
-    for (; x; x >>= 3) {
+    لكل (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    ܦܢܐ s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+ساكن حرف *fmt_u(uintmax_t x, حرف *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    ܟܡܐ (0 != x) {
+#ܐܢ defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,20 +277,20 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        unsigned صحيح rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        ܐܢ (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            أكد(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#ܐܚܪܢܐ
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
+        unsigned صحيح rem = x % 10;
 #endif
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    ܦܢܐ s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
@@ -300,261 +300,261 @@ static char *fmt_u(uintmax_t x, char *s)
 
 #define NL_ARGMAX 9
 
-static int getint(char **s)
+ساكن صحيح getint(حرف **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    صحيح i;
+    لكل (i = 0; isdigit(**s); (*s)++) {
+        ܐܢ (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } ܐܚܪܢܐ {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    ܦܢܐ i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+ساكن صحيح printf_core(out_wrap_t *f, ثابت حرف *fmt, va_list *ap, اتحاد arg *nl_arg, صحيح *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
+    حرف *a, *z, *s = (حرف *)fmt;
     unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
+    صحيح w, p, xp;
+    اتحاد arg arg;
+    صحيح argpos;
     unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    صحيح cnt = 0, l = 0;
+    حرف buf[حجم(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    ثابت حرف *prefix;
+    صحيح t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    لكل (;;) {
+        ܐܢ (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            ܦܢܐ -1; /* overflow */
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        ܐܢ (!*s) {
+            اكسر;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        لكل (a = s; *s && *s != '%'; s++);
+        لكل (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        ܐܢ (z - a > INTMAX_MAX - cnt) {
+            ܦܢܐ -1; /* overflow */
         }
         l = z - a;
         out(f, a, l);
-        if (l) {
-            continue;
+        ܐܢ (l) {
+            استمر;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        ܐܢ (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } ܐܚܪܢܐ {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
+        لكل (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
             fl |= MASK_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        ܐܢ (*s == '*') {
+            ܐܢ (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } ܐܚܪܢܐ ܐܢ (!l10n) {
+                w = f ? va_arg(*ap, صحيح) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } ܐܚܪܢܐ {
+                ܦܢܐ -1; /* invalid */
             }
-            if (w < 0) {
+            ܐܢ (w < 0) {
                 fl |= LEFT_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } ܐܚܪܢܐ ܐܢ ((w = getint(&s)) < 0) {
+            ܦܢܐ -1; /* overflow */
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        ܐܢ (*s == '.' && s[1] == '*') {
+            ܐܢ (isdigit(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } ܐܚܪܢܐ ܐܢ (!l10n) {
+                p = f ? va_arg(*ap, صحيح) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } ܐܚܪܢܐ {
+                ܦܢܐ -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } ܐܚܪܢܐ ܐܢ (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } ܐܚܪܢܐ {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        ܥܒܕ {
+            ܐܢ (OOB(*s)) {
+                ܦܢܐ -1; /* invalid */
             }
             ps = st;
             st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+        } ܟܡܐ (st - 1 < STOP);
+        ܐܢ (!st) {
+            ܦܢܐ -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        ܐܢ (st == NOARG) {
+            ܐܢ (argpos >= 0) {
+                ܦܢܐ -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } ܐܚܪܢܐ {
+            ܐܢ (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
+            } ܐܚܪܢܐ ܐܢ (f) {
                 pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } ܐܚܪܢܐ {
+                ܦܢܐ 0;
             }
         }
 
-        if (!f) {
-            continue;
+        ܐܢ (!f) {
+            استمر;
         }
 
-        z = buf + sizeof(buf);
+        z = buf + حجم(buf);
         prefix = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        ܐܢ (fl & LEFT_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        ܐܢ (t == 'n') {
+            ܐܢ (!arg.p) {
+                استمر;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
+            بدل (ps) {
+            حالة BARE:
+                *(صحيح *)arg.p = cnt;
+                اكسر;
+            حالة LPRE:
                 *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
+                اكسر;
+            حالة LLPRE:
                 *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
+                اكسر;
+            حالة HPRE:
                 *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
+                اكسر;
+            حالة HHPRE:
+                *(unsigned حرف *)arg.p = cnt;
+                اكسر;
+            حالة ZTPRE:
                 *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
+                اكسر;
+            حالة JPRE:
                 *(word_t *)arg.p = cnt;
-                break;
+                اكسر;
             }
-            continue;
-        } else if (t == 'c') {
+            استمر;
+        } ܐܚܪܢܐ ܐܢ (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } ܐܚܪܢܐ ܐܢ (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            ܐܢ (p < 0 && *z) {
+                ܦܢܐ -1; /* overflow */
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } ܐܚܪܢܐ {
+            بدل (t) {
+            حالة 'p':
+                p = MAX(p, 2 * حجم(فراغ *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            حالة 'x':
+            حالة 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
+                ܐܢ (arg.i && (fl & ALT_FORM)) {
                     prefix += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                اكسر;
+            حالة 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                ܐܢ ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                اكسر;
+            حالة 'd':
+            حالة 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                ܐܢ (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
+                } ܐܚܪܢܐ ܐܢ (fl & MARK_POS) {
                     prefix++;
-                } else if (fl & PAD_POS) {
+                } ܐܚܪܢܐ ܐܢ (fl & PAD_POS) {
                     prefix += 2;
-                } else {
+                } ܐܚܪܢܐ {
                     pl = 0;
                 }
-            case 'u':
+            حالة 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                اكسر;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            ܐܢ (xp && p < 0) {
+                ܦܢܐ -1; /* overflow */
             }
-            if (xp) {
+            ܐܢ (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            ܐܢ (!arg.i && !p) {
                 a = z;
-            } else {
+            } ܐܚܪܢܐ {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        ܐܢ (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        ܐܢ (p > INTMAX_MAX - pl) {
+            ܦܢܐ -1; /* overflow */
         }
-        if (w < pl + p) {
+        ܐܢ (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        ܐܢ (w > INTMAX_MAX - cnt) {
+            ܦܢܐ -1; /* overflow */
         }
 
         pad(f, ' ', w, pl + p, fl);
@@ -567,42 +567,42 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    ܐܢ (f) {
+        ܦܢܐ cnt;
     }
-    if (!l10n) {
-        return 0;
+    ܐܢ (!l10n) {
+        ܦܢܐ 0;
     }
 
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+    صحيح i;
+    لكل (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
         pop_arg(nl_arg + i, nl_type[i], ap);
     }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    لكل (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    ܐܢ (i <= NL_ARGMAX) {
+        ܦܢܐ -1; /* invalid */
     }
 
-    return 1;
+    ܦܢܐ 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+ساكن صحيح vprintf(out_wrap_t *out, ثابت حرف *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    صحيح nl_type[NL_ARGMAX + 1] = {0};
+    اتحاد arg nl_arg[NL_ARGMAX + 1];
+    صحيح ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
+    ܐܢ (printf_core(عدم, fmt, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
-        return -1;
+        ܦܢܐ -1;
     }
 
     ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
     va_end(ap2);
-    return ret;
+    ܦܢܐ ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+صحيح impl_kvprintf(ثابت حرف *format, va_list ap)
 {
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+        .اكتب  = do_output_to_putchar,
+        .buf    = عدم,
         .maxlen = 0,
         .used   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    ܦܢܐ vprintf(&out_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+صحيح impl_ksnvprintf(حرف *str, word_t size, ثابت حرف *format, va_list ap)
 {
-    if (!str) {
+    ܐܢ (!str) {
         size = 0;
     }
 
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+        .اكتب  = do_output_to_buffer,
         .buf    = str,
         .maxlen = size,
         .used   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    صحيح ret = vprintf(&out_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
+    ܐܢ ((ret > 0) && (size > 0)) {
         str[(ret < size) ? ret : size - 1] = '\0';
     }
 
-    return ret;
+    ܦܢܐ ret;
 }
 
 #endif /* CONFIG_PRINTING */

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
+#ضمن <config.h>
+#ضمن <util.h>
+#ضمن <api/types.h>
+#ضمن <arch/types.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/object/structures.h>
 
 /* ==== read/write kernel state not preserved across kernel entries ==== */
 
@@ -55,13 +55,13 @@ uint32_t x86KSFirstValidIODomain;
 
 #ifdef CONFIG_VTX
 UP_STATE_DEFINE(vcpu_t *, x86KSCurrentVCPU);
-UP_STATE_DEFINE(struct vmxon_region, x86KSVMXOnRegion);
+UP_STATE_DEFINE(بنية vmxon_region, x86KSVMXOnRegion);
 #endif
 
 #ifdef CONFIG_PRINTING
 uint16_t x86KSconsolePort;
 #endif
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+#ܐܢ defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
 uint16_t x86KSdebugPort;
 #endif
 
