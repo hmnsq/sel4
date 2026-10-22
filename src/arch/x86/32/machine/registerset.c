@@ -53,17 +53,17 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    return v;
+    врати v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
     seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    ако (buffer != NULL) {
+        врати buffer->userData;
+    } инако {
+        врати 0;
     }
 }
 #endif

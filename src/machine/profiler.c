@@ -19,14 +19,14 @@
 
 #ifdef CHECKPOINT_PROFILER
 /* The current checkpoint value */
-volatile unsigned int checkpoint VISIBLE;
-unsigned int max_checkpoint;
+volatile unsigned цео checkpoint VISIBLE;
+unsigned цео max_checkpoint;
 
 /* Event count for each checkpoint value */
 profiler_entry_t profiler_entries[MAX_UNIQUE_CHECKPOINTS];
-#else
+#инако
 /* Number of entries the profiler currently keeps track of */
-int profiler_num_entries;
+цео profiler_num_entries;
 
 /* Number of instructions the profiler could not record */
 long long profiler_dropped_instructions;
@@ -43,7 +43,7 @@ void profiler_reset(void)
 {
     word_t i;
 
-    for (i = 0; i < MAX_UNIQUE_CHECKPOINTS; i++) {
+    за (i = 0; i < MAX_UNIQUE_CHECKPOINTS; i++) {
         profiler_entries[i].pc = 0;
         profiler_entries[i].count = 0;
     }
@@ -52,15 +52,15 @@ void profiler_reset(void)
 
 void profiler_list(void)
 {
-    unsigned int samples, i, count;
+    unsigned цео samples, i, count;
 
     printf("checkpoint count\n");
 
     samples = 0;
     count = 0;
-    for (i = 0; i <= max_checkpoint; i++) {
-        if (profiler_entries[i].pc != 0) {
-            printf("%u %u\n", i, (unsigned int)profiler_entries[i].count);
+    за (i = 0; i <= max_checkpoint; i++) {
+        ако (profiler_entries[i].pc != 0) {
+            printf("%u %u\n", i, (unsigned цео)profiler_entries[i].count);
             samples += profiler_entries[i].count;
             count++;
         }
@@ -71,22 +71,22 @@ void profiler_list(void)
 
 void profiler_record_sample(word_t pc)
 {
-    if (checkpoint > max_checkpoint) {
+    ако (checkpoint > max_checkpoint) {
         max_checkpoint = checkpoint;
     }
 
-    if (!profiler_entries[checkpoint].pc) {
+    ако (!profiler_entries[checkpoint].pc) {
         profiler_entries[checkpoint].pc = 1;
     }
     profiler_entries[checkpoint].count++;
 }
-#else
+#инако
 /*
  * Reset all counters
  */
 void profiler_reset(void)
 {
-    for (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
+    за (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
         profiler_entries[i].pc = 0;
         profiler_entries[i].count = 0;
     }
@@ -106,20 +106,20 @@ void profiler_list(void)
 
     /* Print out each address */
     samples = 0;
-    for (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
-        if (profiler_entries[i].pc != 0) {
-            printf("%x %d\n", (unsigned int)profiler_entries[i].pc,
-                   (int)profiler_entries[i].count);
+    за (word_t i = 0; i < MAX_UNIQUE_INSTRUCTIONS; i++) {
+        ако (profiler_entries[i].pc != 0) {
+            printf("%x %d\n", (unsigned цео)profiler_entries[i].pc,
+                   (цео)profiler_entries[i].count);
             samples += profiler_entries[i].count;
         }
     }
 
     /* Print statistics */
     printf("\n%d unique address(es), %d sample(s)\n",
-           (int)profiler_num_entries, (int)samples);
-    if (profiler_dropped_instructions > 0) {
+           (цео)profiler_num_entries, (цео)samples);
+    ако (profiler_dropped_instructions > 0) {
         printf("*** WARNING : %d instructions dropped\n",
-               (int)profiler_dropped_instructions);
+               (цео)profiler_dropped_instructions);
     }
 }
 
@@ -133,34 +133,34 @@ void profiler_record_sample(word_t pc)
      *
      * As MAX_UNIQUE_INSTRUCTIONS is prime, this can be ensured mearly by
      * having hashVal < MAX_UNIQUE_INSTRUCTIONS. */
-    const int hashVal = 1024;
+    const цео hashVal = 1024;
 
     /* Hash optimised for valid ARM instruction addresses, which are always
      * word aligned. */
     word_t hash = (pc >> 2) % MAX_UNIQUE_INSTRUCTIONS;
     word_t hash2 = ((pc >> 2) % hashVal) + 1;
 
-    if (!profiler_enabled) {
-        return;
+    ако (!profiler_enabled) {
+        врати;
     }
 
-    while (true) {
+    док (true) {
 
-        if (profiler_entries[hash].pc == pc) {
+        ако (profiler_entries[hash].pc == pc) {
 
             /* Found the correct entry */
             profiler_entries[hash].count++;
             break;
 
-        } else if (profiler_entries[hash].pc == 0) {
+        } инако ако (profiler_entries[hash].pc == 0) {
 
             /* Found a spot for a new entry */
-            if (profiler_num_entries < (MAX_UNIQUE_INSTRUCTIONS / 4) * 3) {
+            ако (profiler_num_entries < (MAX_UNIQUE_INSTRUCTIONS / 4) * 3) {
                 profiler_entries[hash].pc = pc;
                 profiler_entries[hash].count = 1;
                 profiler_num_entries++;
                 break;
-            } else {
+            } инако {
                 /* Too many entries. Abort the record. */
                 profiler_dropped_instructions++;
                 break;

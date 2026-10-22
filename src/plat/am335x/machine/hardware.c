@@ -11,7 +11,7 @@
 BOOT_CODE void initIRQController(void)
 {
     intc->intcps_sysconfig = INTCPS_SYSCONFIG_SOFTRESET;
-    while (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
+    док (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
 }
 
 BOOT_CODE void cpu_initLocalIRQController(void) {}

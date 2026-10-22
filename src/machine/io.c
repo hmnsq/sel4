@@ -42,7 +42,7 @@ struct _out_wrap_t {
  */
 static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
 {
-    if (out_wrap) {
+    ако (out_wrap) {
         out_wrap->write(out_wrap, buf, len);
     }
 }
@@ -55,8 +55,8 @@ static void do_output_to_putchar(
     const char *buf,
     word_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
+    ако (buf) {
+        док (len-- > 0) {
             putchar(*buf++);
         }
     }
@@ -72,10 +72,10 @@ static void do_output_to_buffer(
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    ако (buf && (out->used < out->maxlen)) {
         /* there is still space in the buffer*/
         word_t free = out->maxlen - out->used;
-        if (len > free) {
+        ако (len > free) {
             len = free;
         }
         memcpy(&out->buf[out->used], buf, len);
@@ -91,7 +91,7 @@ static void do_output_to_buffer(
 
 static inline bool_t isdigit(char c)
 {
-    return c >= '0' &&
+    врати c >= '0' &&
            c <= '9';
 }
 
@@ -183,17 +183,17 @@ union arg {
     void *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+static void pop_arg(union arg *arg, цео type, va_list *ap)
 {
     switch (type) {
     case PTR:
         arg->p = va_arg(*ap, void *);
         break;
     case INT:
-        arg->i = va_arg(*ap, int);
+        arg->i = va_arg(*ap, цео);
         break;
     case UINT:
-        arg->i = va_arg(*ap, unsigned int);
+        arg->i = va_arg(*ap, unsigned цео);
         break;
     case LONG:
         arg->i = va_arg(*ap, long);
@@ -208,16 +208,16 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
         arg->i = va_arg(*ap, unsigned long long);
         break;
     case SHORT:
-        arg->i = (short)va_arg(*ap, int);
+        arg->i = (short)va_arg(*ap, цео);
         break;
     case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
+        arg->i = (unsigned short)va_arg(*ap, цео);
         break;
     case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
+        arg->i = (signed char)va_arg(*ap, цео);
         break;
     case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
+        arg->i = (unsigned char)va_arg(*ap, цео);
         break;
     case WORDT:
         arg->i = va_arg(*ap, word_t);
@@ -225,15 +225,15 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+static void pad(out_wrap_t *f, char c, цео w, цео l, цео fl)
 {
     char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    ако (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
+        врати;
     }
     l = w - l;
     memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
+    за (; l >= sizeof(pad); l -= sizeof(pad)) {
         out(f, pad, sizeof(pad));
     }
     out(f, pad, l);
@@ -243,26 +243,26 @@ static const char xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+static char *fmt_x(uintmax_t x, char *s, цео lower)
 {
-    for (; x; x >>= 4) {
+    за (; x; x >>= 4) {
         *--s = xdigits[(x & 15)] | lower;
     }
-    return s;
+    врати s;
 }
 
 static char *fmt_o(uintmax_t x, char *s)
 {
-    for (; x; x >>= 3) {
+    за (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    врати s;
 }
 
 static char *fmt_u(uintmax_t x, char *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    док (0 != x) {
+#ако defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,20 +277,20 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        unsigned цео rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        ако (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
             assert(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#инако
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
+        unsigned цео rem = x % 10;
 #endif
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    врати s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
@@ -300,113 +300,113 @@ static char *fmt_u(uintmax_t x, char *s)
 
 #define NL_ARGMAX 9
 
-static int getint(char **s)
+static цео getint(char **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    цео i;
+    за (i = 0; isdigit(**s); (*s)++) {
+        ако (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } инако {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    врати i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+static цео printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, цео *nl_type)
 {
     char *a, *z, *s = (char *)fmt;
     unsigned l10n = 0, fl;
-    int w, p, xp;
+    цео w, p, xp;
     union arg arg;
-    int argpos;
+    цео argpos;
     unsigned st, ps;
-    int cnt = 0, l = 0;
+    цео cnt = 0, l = 0;
     char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
     const char *prefix;
-    int t, pl;
+    цео t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    за (;;) {
+        ако (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            врати -1; /* overflow */
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
+        ако (!*s) {
             break;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        за (a = s; *s && *s != '%'; s++);
+        за (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        ако (z - a > INTMAX_MAX - cnt) {
+            врати -1; /* overflow */
         }
         l = z - a;
         out(f, a, l);
-        if (l) {
+        ако (l) {
             continue;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        ако (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } инако {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
+        за (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
             fl |= MASK_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        ако (*s == '*') {
+            ако (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } инако ако (!l10n) {
+                w = f ? va_arg(*ap, цео) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } инако {
+                врати -1; /* invalid */
             }
-            if (w < 0) {
+            ако (w < 0) {
                 fl |= LEFT_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } инако ако ((w = getint(&s)) < 0) {
+            врати -1; /* overflow */
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        ако (*s == '.' && s[1] == '*') {
+            ако (isdigit(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } инако ако (!l10n) {
+                p = f ? va_arg(*ap, цео) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } инако {
+                врати -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } инако ако (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } инако {
             p = -1;
             xp = 0;
         }
@@ -414,33 +414,33 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         /* Format specifier state machine */
         st = 0;
         do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+            ако (OOB(*s)) {
+                врати -1; /* invalid */
             }
             ps = st;
             st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+        } док (st - 1 < STOP);
+        ако (!st) {
+            врати -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        ако (st == NOARG) {
+            ако (argpos >= 0) {
+                врати -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } инако {
+            ако (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
+            } инако ако (f) {
                 pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } инако {
+                врати 0;
             }
         }
 
-        if (!f) {
+        ако (!f) {
             continue;
         }
 
@@ -450,17 +450,17 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        ако (fl & LEFT_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
+        ако (t == 'n') {
+            ако (!arg.p) {
                 continue;
             }
             switch (ps) {
             case BARE:
-                *(int *)arg.p = cnt;
+                *(цео *)arg.p = cnt;
                 break;
             case LPRE:
                 *(long *)arg.p = cnt;
@@ -482,20 +482,20 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
                 break;
             }
             continue;
-        } else if (t == 'c') {
+        } инако ако (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } инако ако (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            ако (p < 0 && *z) {
+                врати -1; /* overflow */
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
+        } инако {
             switch (t) {
             case 'p':
                 p = MAX(p, 2 * sizeof(void *));
@@ -504,57 +504,57 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
+                ако (arg.i && (fl & ALT_FORM)) {
                     prefix += (t >> 4);
                     pl = 2;
                 }
                 break;
             case 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                ако ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
                 break;
             case 'd':
             case 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                ако (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
+                } инако ако (fl & MARK_POS) {
                     prefix++;
-                } else if (fl & PAD_POS) {
+                } инако ако (fl & PAD_POS) {
                     prefix += 2;
-                } else {
+                } инако {
                     pl = 0;
                 }
             case 'u':
                 a = fmt_u(arg.i, z);
                 break;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            ако (xp && p < 0) {
+                врати -1; /* overflow */
             }
-            if (xp) {
+            ако (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            ако (!arg.i && !p) {
                 a = z;
-            } else {
+            } инако {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        ако (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        ако (p > INTMAX_MAX - pl) {
+            врати -1; /* overflow */
         }
-        if (w < pl + p) {
+        ако (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        ако (w > INTMAX_MAX - cnt) {
+            врати -1; /* overflow */
         }
 
         pad(f, ' ', w, pl + p, fl);
@@ -567,42 +567,42 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    ако (f) {
+        врати cnt;
     }
-    if (!l10n) {
-        return 0;
+    ако (!l10n) {
+        врати 0;
     }
 
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+    цео i;
+    за (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
         pop_arg(nl_arg + i, nl_type[i], ap);
     }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    за (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    ако (i <= NL_ARGMAX) {
+        врати -1; /* invalid */
     }
 
-    return 1;
+    врати 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+static цео vprintf(out_wrap_t *out, const char *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
+    цео nl_type[NL_ARGMAX + 1] = {0};
     union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    цео ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
+    ако (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
-        return -1;
+        врати -1;
     }
 
     ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
     va_end(ap2);
-    return ret;
+    врати ret;
 }
 
 /*
@@ -611,7 +611,7 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+цео impl_kvprintf(const char *format, va_list ap)
 {
     out_wrap_t out_wrap =  {
         .write  = do_output_to_putchar,
@@ -620,12 +620,12 @@ int impl_kvprintf(const char *format, va_list ap)
         .used   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    врати vprintf(&out_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+цео impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
 {
-    if (!str) {
+    ако (!str) {
         size = 0;
     }
 
@@ -636,7 +636,7 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
         .used   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    цео ret = vprintf(&out_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
+    ако ((ret > 0) && (size > 0)) {
         str[(ret < size) ? ret : size - 1] = '\0';
     }
 
-    return ret;
+    врати ret;
 }
 
 #endif /* CONFIG_PRINTING */

@@ -21,15 +21,15 @@ BOOT_CODE void initTimer(void)
     mct->global.comp0_add_inc = 0;
     /* Enable interrupts */
     mct->global.int_en = GINT_COMP0_IRQ;
-    while (mct->global.wstat != (GWSTAT_COMP0_ADD_INC));
+    док (mct->global.wstat != (GWSTAT_COMP0_ADD_INC));
     mct->global.wstat = (GWSTAT_COMP0_ADD_INC);
     /* enable interrupts */
     mct->global.tcon = GTCON_EN | GTCON_COMP0_EN;
-    while (mct->global.wstat != GWSTAT_TCON);
+    док (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 }
 
-#else /* CONFIG_KERNEL_MCS */
+#инако /* CONFIG_KERNEL_MCS */
 
 BOOT_CODE void initTimer(void)
 {
@@ -47,12 +47,12 @@ BOOT_CODE void initTimer(void)
     mct->global.int_en = GINT_COMP0_IRQ;
 
     /* Wait for update */
-    while (mct->global.wstat != (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_ADD_INC));
+    док (mct->global.wstat != (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_ADD_INC));
     mct->global.wstat = (GWSTAT_COMP0H | GWSTAT_COMP0L | GWSTAT_COMP0_ADD_INC);
 
     /* enable interrupts */
     mct->global.tcon = GTCON_EN | GTCON_COMP0_EN | GTCON_COMP0_AUTOINC;
-    while (mct->global.wstat != GWSTAT_TCON);
+    док (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 }
 #endif /* CONFIG_KERNEL_MCS */

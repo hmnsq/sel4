@@ -110,24 +110,24 @@ static word_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
     switch (vm_rights) {
     case VMKernelOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 0;
-        } else {
-            return 0;
+        ако (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            врати 0;
+        } инако {
+            врати 0;
         }
 
     case VMReadWrite:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 3;
-        } else {
-            return 1;
+        ако (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            врати 3;
+        } инако {
+            врати 1;
         }
 
     case VMReadOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 1;
-        } else {
-            return 3;
+        ако (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            врати 1;
+        } инако {
+            врати 3;
         }
 
     default:
@@ -141,13 +141,13 @@ static inline CONST word_t pte_get_AP(pte_t pte)
     assert(pte_is_page_type(pte));
     switch (pte_get_pte_type(pte)) {
     case pte_pte_4k_page:
-        return pte_pte_4k_page_get_AP(pte);
+        врати pte_pte_4k_page_get_AP(pte);
 
     case pte_pte_page:
-        return pte_pte_page_get_AP(pte);
+        врати pte_pte_page_get_AP(pte);
 
     default:
-        return 0;
+        врати 0;
     }
 }
 
@@ -157,11 +157,11 @@ static vm_rights_t CONST vmRightsFromPTE(pte_t pte)
     switch (access_perms) {
     case 0:
     case 2:
-        return VMKernelOnly;
+        врати VMKernelOnly;
     case 1:
-        return VMReadWrite;
+        врати VMReadWrite;
     case 3:
-        return VMReadOnly;
+        врати VMReadOnly;
     default:
         fail("Invalid AP bit");
     }
@@ -170,24 +170,24 @@ static vm_rights_t CONST vmRightsFromPTE(pte_t pte)
 
 vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
 {
-    if (vm_rights == VMReadOnly &&
+    ако (vm_rights == VMReadOnly &&
         seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+        врати VMReadOnly;
     }
-    if (vm_rights == VMReadWrite &&
+    ако (vm_rights == VMReadWrite &&
         seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+        ако (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+            врати VMReadOnly;
+        } инако {
+            врати VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
+    ако (vm_rights == VMReadWrite &&
         !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
         seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    врати VMKernelOnly;
 }
 
 /* ==================== BOOT CODE STARTS HERE ==================== */
@@ -213,15 +213,15 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     word_t uxn = vm_attributes_get_armExecuteNever(attributes);
-#else
+#инако
     word_t uxn = 1; /* unprivileged execute never */
 #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
     word_t attr_index;
     word_t shareable;
-    if (vm_attributes_get_armPageCacheable(attributes)) {
+    ако (vm_attributes_get_armPageCacheable(attributes)) {
         attr_index = NORMAL;
         shareable = SMP_TERNARY(SMP_SHARE, 0);
-    } else {
+    } инако {
         attr_index = DEVICE_nGnRnE;
         shareable = 0;
     }
@@ -292,13 +292,13 @@ BOOT_CODE void map_kernel_elf_image(pte_t kernel_mapping_pds[])
     paddr_t paddr = KERNEL_ELF_PADDR_BASE;
     UNUSED pptr_t vaddr = KERNEL_ELF_BASE;
 
-    for (word_t pd = pd_start; pd < pd_end; pd++) {
+    за (word_t pd = pd_start; pd < pd_end; pd++) {
         assert(pd == GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2)));
 
         kernel_mapping_pds[pd] = pte_pte_page_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                      /* XN */ 0,
-#else
+#инако
                                      /* UXN */ 1,
 #endif
                                      /* page_base_address */ paddr,
@@ -318,7 +318,7 @@ BOOT_CODE void map_kernel_elf_image(pte_t kernel_mapping_pds[])
 /* verify that the physical memory window as at the second entry of the PGD */
 compile_assert(physical_window_pgd_location,
                GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == 1);
-#else
+#инако
 /* verify that the physical memory window as at the last entry of the PGD */
 compile_assert(physical_window_pgd_location,
                GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == BIT(PT_INDEX_BITS) - 1);
@@ -344,7 +344,7 @@ BOOT_CODE void map_kernel_physical_window(void)
     word_t idx;
 
     /* place all PDs except the last one in PUD */
-    for (idx = GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1));
+    за (idx = GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1));
          idx++) {
         armKSGlobalKernelPUD[idx] = pte_pte_table_new(
                                         addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
@@ -353,12 +353,12 @@ BOOT_CODE void map_kernel_physical_window(void)
 
     /* map the kernel window using large pages */
     vaddr = PPTR_BASE;
-    for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
+    за (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
         armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr,
                                                                                          KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_page_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                                                                                         1, // XN
-#else
+#инако
                                                                                                                         1, // UXN
 #endif
                                                                                                                         paddr,
@@ -417,7 +417,7 @@ static BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t
 
 #ifdef AARCH64_VSPACE_S2_START_L1
     pud = vspaceRoot;
-#else
+#инако
     vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
     assert(pte_pte_table_ptr_get_present(vspaceRoot));
     pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
@@ -433,7 +433,7 @@ static BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t
                                                               pptr_to_paddr(pptr),            /* page_base_address    */
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                               0,
-#else
+#инако
                                                               1,                              /* not global */
 #endif
                                                               1,                              /* access flag */
@@ -441,7 +441,7 @@ static BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t
                                                               APFromVMRights(VMReadWrite),
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                               S2_NORMAL
-#else
+#инако
                                                               NORMAL
 #endif
                                                           );
@@ -450,12 +450,12 @@ static BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t
 static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
 {
     vm_page_size_t frame_size;
-    if (use_large) {
+    ако (use_large) {
         frame_size = ARMLargePage;
-    } else {
+    } инако {
         frame_size = ARMSmallPage;
     }
-    return
+    врати
         cap_frame_cap_new(
             asid,                          /* capFMappedASID */
             pptr,                          /* capFBasePtr */
@@ -478,7 +478,7 @@ static BOOT_CODE void map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
 
 #ifdef AARCH64_VSPACE_S2_START_L1
     pud = vspaceRoot;
-#else
+#инако
     vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
     assert(pte_pte_table_ptr_get_present(vspaceRoot));
     pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
@@ -501,7 +501,7 @@ static BOOT_CODE cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vp
               vptr                    /* capPTMappedAddress */
           );
     map_it_pt_cap(vspace_cap, cap);
-    return cap;
+    врати cap;
 }
 
 static BOOT_CODE void map_it_pd_cap(cap_t vspace_cap, cap_t pd_cap)
@@ -515,7 +515,7 @@ static BOOT_CODE void map_it_pd_cap(cap_t vspace_cap, cap_t pd_cap)
 
 #ifdef AARCH64_VSPACE_S2_START_L1
     pud = vspaceRoot;
-#else
+#инако
     vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
     assert(pte_pte_table_ptr_get_present(vspaceRoot));
     pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
@@ -535,7 +535,7 @@ static BOOT_CODE cap_t create_it_pd_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vp
               vptr                    /* capPTMappedAddress */
           );
     map_it_pd_cap(vspace_cap, cap);
-    return cap;
+    врати cap;
 }
 
 #ifndef AARCH64_VSPACE_S2_START_L1
@@ -561,12 +561,12 @@ static BOOT_CODE cap_t create_it_pud_cap(cap_t vspace_cap, pptr_t pptr, vptr_t v
               vptr                /* capPTMappedAddress */
           );
     map_it_pud_cap(vspace_cap, cap);
-    return cap;
+    врати cap;
 }
 #endif /* AARCH64_VSPACE_S2_START_L1 */
 BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 {
-    return
+    врати
 #ifndef AARCH64_VSPACE_S2_START_L1
         get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0))) +
 #endif
@@ -595,29 +595,29 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
 
 #ifndef AARCH64_VSPACE_S2_START_L1
     /* Create any PUDs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0)));
+    за (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0)));
          vptr < it_v_reg.end;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(0))) {
-        if (!provide_cap(root_cnode_cap, create_it_pud_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ако (!provide_cap(root_cnode_cap, create_it_pud_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            врати cap_null_cap_new();
         }
     }
 #endif
     /* Create any PDs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1)));
+    за (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1)));
          vptr < it_v_reg.end;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(1))) {
-        if (!provide_cap(root_cnode_cap, create_it_pd_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ако (!provide_cap(root_cnode_cap, create_it_pd_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            врати cap_null_cap_new();
         }
     }
 
     /* Create any PTs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
+    за (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
          vptr < it_v_reg.end;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(2))) {
-        if (!provide_cap(root_cnode_cap, create_it_pt_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ако (!provide_cap(root_cnode_cap, create_it_pt_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            врати cap_null_cap_new();
         }
     }
 
@@ -625,12 +625,12 @@ BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_re
     ndks_boot.bi_frame->userImagePaging = (seL4_SlotRegion) {
         slot_pos_before, slot_pos_after
     };
-    return vspace_cap;
+    врати vspace_cap;
 }
 
 BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
 {
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+    врати create_it_frame_cap(pptr, 0, asidInvalid, use_large);
 }
 
 BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
@@ -638,7 +638,7 @@ BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vpt
 {
     cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
     map_it_frame_cap(pd_cap, cap, executable);
-    return cap;
+    врати cap;
 }
 
 BOOT_CODE void activate_kernel_vspace(void)
@@ -679,11 +679,11 @@ asid_map_t findMapForASID(asid_t asid)
     asid_pool_t *poolPtr;
 
     poolPtr = armKSASIDTable[ASID_HIGH(asid)];
-    if (!poolPtr) {
-        return asid_map_asid_map_none_new();
+    ако (!poolPtr) {
+        врати asid_map_asid_map_none_new();
     }
 
-    return poolPtr->array[ASID_LOW(asid)];
+    врати poolPtr->array[ASID_LOW(asid)];
 }
 
 static findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
@@ -692,17 +692,17 @@ static findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
+    ако (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
         current_lookup_fault = lookup_fault_invalid_root_new();
 
         ret.vspace_root = NULL;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        врати ret;
     }
 
     ret.vspace_root = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
     ret.status = EXCEPTION_NONE;
-    return ret;
+    врати ret;
 }
 
 word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
@@ -714,48 +714,48 @@ word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
     w_bufferPtr = thread->tcbIPCBuffer;
     bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
 
-    if (unlikely(cap_get_capType(bufferCap) != cap_frame_cap)) {
-        return NULL;
+    ако (unlikely(cap_get_capType(bufferCap) != cap_frame_cap)) {
+        врати NULL;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    ако (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
+        врати NULL;
     }
 
     vm_rights = cap_frame_cap_get_capFVMRights(bufferCap);
-    if (likely(vm_rights == VMReadWrite ||
+    ако (likely(vm_rights == VMReadWrite ||
                (!isReceiver && vm_rights == VMReadOnly))) {
         word_t basePtr;
-        unsigned int pageBits;
+        unsigned цео pageBits;
 
         basePtr = cap_frame_cap_get_capFBasePtr(bufferCap);
         pageBits = pageBitsForSize(cap_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        врати (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
+    } инако {
+        врати NULL;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (cap_get_capType(cap) != cap_frame_cap) {
+    ако (cap_get_capType(cap) != cap_frame_cap) {
         userError("IPC Buffer is an invalid cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
+    ако (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
-        userError("IPC Buffer vaddr 0x%x is not aligned.", (int)vptr);
+    ако (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
+        userError("IPC Buffer vaddr 0x%x is not aligned.", (цео)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
@@ -773,14 +773,14 @@ static lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
     ret.ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
     ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(seL4_VSpaceIndexBits));
 
-    while (pte_pte_table_ptr_get_present(ret.ptSlot) && likely(level > 0)) {
+    док (pte_pte_table_ptr_get_present(ret.ptSlot) && likely(level > 0)) {
         level--;
         ret.ptBitsLeft -= PT_INDEX_BITS;
         pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ret.ptSlot));
         ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
     }
 
-    return ret;
+    врати ret;
 }
 
 /* Note that if the hypervisor support is enabled, the user page tables use
@@ -795,7 +795,7 @@ static pte_t makeUserPagePTE(paddr_t paddr, vm_rights_t vm_rights, bool_t cap_re
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     word_t nG = 0; /* not global */
     word_t attridx = cacheable ? S2_NORMAL : S2_DEVICE_nGnRnE;
-#else
+#инако
     word_t nG = 1; /* not global */
     word_t attridx = cacheable ? NORMAL : DEVICE_nGnRnE;
 #endif
@@ -803,11 +803,11 @@ static pte_t makeUserPagePTE(paddr_t paddr, vm_rights_t vm_rights, bool_t cap_re
     /* Inner-shareable if SMP enabled, otherwise unshared (ignored for devices) */
     word_t shareable = cacheable ? SMP_TERNARY(SMP_SHARE, 0) : 0;
 
-    if (page_size == ARMSmallPage) {
-        return pte_pte_4k_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
+    ако (page_size == ARMSmallPage) {
+        врати pte_pte_4k_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
                                    shareable, APFromVMRights(vm_rights), attridx);
-    } else {
-        return pte_pte_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
+    } инако {
+        врати pte_pte_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
                                 shareable, APFromVMRights(vm_rights), attridx);
     }
 }
@@ -823,12 +823,12 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* use the IPA */
-        if (ARCH_NODE_STATE(armHSVCPUActive)) {
+        ако (ARCH_NODE_STATE(armHSVCPUActive)) {
             addr = GET_PAR_ADDR(addressTranslateS1(addr)) | (addr & MASK(PAGE_BITS));
         }
 #endif
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        врати EXCEPTION_FAULT;
     }
 
     case ARMPrefetchAbort: {
@@ -838,12 +838,12 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
         fault = getIFSR();
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (ARCH_NODE_STATE(armHSVCPUActive)) {
+        ако (ARCH_NODE_STATE(armHSVCPUActive)) {
             pc = GET_PAR_ADDR(addressTranslateS1(pc)) | (pc & MASK(PAGE_BITS));
         }
 #endif
         current_fault = seL4_Fault_VMFault_new(pc, fault, true);
-        return EXCEPTION_FAULT;
+        врати EXCEPTION_FAULT;
     }
 
     default:
@@ -853,18 +853,18 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 
 bool_t CONST isVTableRoot(cap_t cap)
 {
-    return cap_get_capType(cap) == cap_vspace_cap;
+    врати cap_get_capType(cap) == cap_vspace_cap;
 }
 
 bool_t CONST isValidNativeRoot(cap_t cap)
 {
-    return isVTableRoot(cap) &&
+    врати isVTableRoot(cap) &&
            cap_vspace_cap_get_capVSIsMapped(cap);
 }
 
 bool_t CONST isValidVTableRoot(cap_t cap)
 {
-    return isValidNativeRoot(cap);
+    врати isValidNativeRoot(cap);
 }
 
 void setVMRoot(tcb_t *tcb)
@@ -879,17 +879,17 @@ void setVMRoot(tcb_t *tcb)
     /* ASID/VMID 0 is never allocated to a real VSpace (see findFreeHWASID()
      * for the hypervisor case), so the empty global VSpace can be installed
      * under it without flushing the TLB. */
-    if (!isValidNativeRoot(threadRoot)) {
+    ако (!isValidNativeRoot(threadRoot)) {
         setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
-        return;
+        врати;
     }
 
     vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot));
     asid = cap_vspace_cap_get_capVSMappedASID(threadRoot);
     find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != vspaceRoot)) {
+    ако (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != vspaceRoot)) {
         setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
-        return;
+        врати;
     }
 
     armv_contextSwitch(vspaceRoot, asid);
@@ -901,14 +901,14 @@ static bool_t setVMRootForFlush(vspace_root_t *vspace, asid_t asid)
 
     threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) == cap_vspace_cap &&
+    ако (cap_get_capType(threadRoot) == cap_vspace_cap &&
         cap_vspace_cap_get_capVSIsMapped(threadRoot) &&
         VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot)) == vspace) {
-        return false;
+        врати false;
     }
 
     armv_contextSwitch(vspace, asid);
-    return true;
+    врати true;
 }
 
 
@@ -916,13 +916,13 @@ static bool_t setVMRootForFlush(vspace_root_t *vspace, asid_t asid)
 
 static inline asid_pool_t *getPoolPtr(asid_t asid)
 {
-    return armKSASIDTable[ASID_HIGH(asid)];
+    врати armKSASIDTable[ASID_HIGH(asid)];
 }
 
 static inline asid_map_t getASIDMap(asid_pool_t *poolPtr, asid_t asid)
 {
     assert(poolPtr != NULL);
-    return poolPtr->array[ASID_LOW(asid)];
+    врати poolPtr->array[ASID_LOW(asid)];
 }
 
 static inline void setASIDMap(asid_pool_t *poolPtr, asid_t asid, asid_map_t asid_map)
@@ -968,12 +968,12 @@ static hw_asid_t findFreeHWASID(void)
     hw_asid_t hw_asid;
 
     /* Find a free hardware ASID */
-    for (hw_asid_offset = 0;
+    за (hw_asid_offset = 0;
          hw_asid_offset <= (word_t)((hw_asid_t) - 1);
          hw_asid_offset++) {
         hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_offset);
-        if (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
-            return hw_asid;
+        ако (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
+            врати hw_asid;
         }
     }
     /* If we've scanned the table without finding a free ASID */
@@ -986,10 +986,10 @@ static hw_asid_t findFreeHWASID(void)
 
     /* Increment the NextASID index, skipping the reserved VMID 0 on wrap */
     armKSNextASID++;
-    if (armKSNextASID == hwASIDReserved) {
+    ако (armKSNextASID == hwASIDReserved) {
         armKSNextASID = hwASIDMin;
     }
-    return hw_asid;
+    врати hw_asid;
 }
 
 hw_asid_t getHWASID(asid_t asid)
@@ -997,14 +997,14 @@ hw_asid_t getHWASID(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-    } else {
+    ако (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        врати asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
+    } инако {
         hw_asid_t new_hw_asid;
 
         new_hw_asid = findFreeHWASID();
         storeHWASID(asid, new_hw_asid);
-        return new_hw_asid;
+        врати new_hw_asid;
     }
 }
 
@@ -1013,7 +1013,7 @@ static void invalidateASIDEntry(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+    ако (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
         armKSHWASIDTable[asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map)] =
             asidInvalid;
     }
@@ -1033,7 +1033,7 @@ static word_t getASIDBindCB(asid_t asid)
     asid_map_t asid_map = asidPool->array[ASID_LOW(asid)];
     assert(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
 
-    return asid_map_asid_map_vspace_get_bind_cb(asid_map);
+    врати asid_map_asid_map_vspace_get_bind_cb(asid_map);
 }
 
 void increaseASIDBindCB(asid_t asid)
@@ -1067,7 +1067,7 @@ static inline void invalidateTLBByASID(asid_t asid)
 {
 #ifdef CONFIG_ARM_SMMU
     word_t bind_cb = getASIDBindCB(asid);
-    if (unlikely(bind_cb)) {
+    ако (unlikely(bind_cb)) {
         invalidateSMMUTLBByASID(asid, bind_cb);
     }
 #endif
@@ -1075,11 +1075,11 @@ static inline void invalidateTLBByASID(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return;
+    ако (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        врати;
     }
     invalidateTranslationASID(asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map));
-#else
+#инако
     invalidateTranslationASID(asid);
 #endif
 }
@@ -1088,7 +1088,7 @@ static inline void invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
 {
 #ifdef CONFIG_ARM_SMMU
     word_t bind_cb = getASIDBindCB(asid);
-    if (unlikely(bind_cb)) {
+    ако (unlikely(bind_cb)) {
         invalidateSMMUTLBByASIDVA(asid, vaddr, bind_cb);
     }
 #endif
@@ -1096,12 +1096,12 @@ static inline void invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return;
+    ако (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        врати;
     }
     uint64_t hw_asid = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
     invalidateTranslationSingle((hw_asid << 48) | vaddr >> seL4_PageBits);
-#else
+#инако
     invalidateTranslationSingle((asid << 48) | vaddr >> seL4_PageBits);
 #endif
 }
@@ -1110,25 +1110,25 @@ static inline void invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
 void unmapPageTable(asid_t asid, vptr_t vptr, pte_t *target_pt)
 {
     findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    ако (unlikely(find_ret.status != EXCEPTION_NONE)) {
         /* nothing to do */
-        return;
+        врати;
     }
     pte_t *ptSlot = NULL;
     pte_t *pt = (pte_t *)find_ret.vspace_root;
 
-    for (word_t i = 0; i < UPT_LEVELS - 1 && pt != target_pt; i++) {
+    за (word_t i = 0; i < UPT_LEVELS - 1 && pt != target_pt; i++) {
         ptSlot = pt + GET_UPT_INDEX(vptr, i);
-        if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
+        ако (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
             /* couldn't find it */
-            return;
+            врати;
         }
         pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
     }
 
-    if (pt != target_pt) {
+    ако (pt != target_pt) {
         /* didn't find it */
-        return;
+        врати;
     }
     /* If we found a pt then ptSlot won't be null */
     assert(ptSlot != NULL);
@@ -1144,25 +1144,25 @@ void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
     pte_t pte;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    ако (find_ret.status != EXCEPTION_NONE) {
+        врати;
     }
 
     lu_ret = lookupPTSlot(find_ret.vspace_root, vptr);
-    if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(page_size))) {
+    ако (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(page_size))) {
         /* Do nothing if the wrong size object was returned */
-        return;
+        врати;
     }
 
     pte = *(lu_ret.ptSlot);
-    if (!pte_is_page_type(pte)) {
+    ако (!pte_is_page_type(pte)) {
         /* Do nothing if no page is present */
-        return;
+        врати;
     }
 
-    if (pte_get_page_base_address(pte) != pptr_to_paddr((void *)pptr)) {
+    ако (pte_get_page_base_address(pte) != pptr_to_paddr((void *)pptr)) {
         /* Do nothing if the mapped page is not the same physical frame */
-        return;
+        врати;
     }
 
     *(lu_ret.ptSlot) = pte_pte_invalid_new();
@@ -1177,9 +1177,9 @@ void deleteASID(asid_t asid, vspace_root_t *vspace)
 
     poolPtr = armKSASIDTable[ASID_HIGH(asid)];
 
-    if (poolPtr != NULL) {
+    ако (poolPtr != NULL) {
         asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
-        if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
+        ако (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
             (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) == vspace) {
             invalidateTLBByASID(asid);
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
@@ -1197,10 +1197,10 @@ void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
 
     assert((asid_base & MASK(asidLowBits)) == 0);
 
-    if (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (offset = 0; offset < BIT(asidLowBits); offset++) {
+    ако (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
+        за (offset = 0; offset < BIT(asidLowBits); offset++) {
             asid_map_t asid_map = pool->array[offset];
-            if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
+            ако (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
                 invalidateTLBByASID(asid_base + offset);
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                 invalidateASIDEntry(asid_base + offset);
@@ -1255,26 +1255,26 @@ static exception_t performVSpaceFlush(word_t invLabel, vspace_root_t *vspaceRoot
                                       vptr_t start, vptr_t end, paddr_t pstart)
 {
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ако (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         word_t size = end - start;
         start = (vptr_t)paddr_to_pptr(pstart);
         end = start + size;
-        if (start < end) {
+        ако (start < end) {
             doFlush(invLabel, start, end, pstart);
         }
-    } else {
+    } инако {
         bool_t root_switched;
 
         /* Flush if given a non zero range */
-        if (start < end) {
+        ако (start < end) {
             root_switched = setVMRootForFlush(vspaceRoot, asid);
             doFlush(invLabel, start, end, pstart);
-            if (root_switched) {
+            ако (root_switched) {
                 setVMRoot(NODE_STATE(ksCurThread));
             }
         }
     }
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 
@@ -1284,12 +1284,12 @@ static exception_t performPageTableInvocationMap(cap_t cap, cte_t *ctSlot, pte_t
     *ptSlot = pte;
     cleanByVA_PoU((vptr_t)ptSlot, pptr_to_paddr(ptSlot));
 
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ако (cap_page_table_cap_get_capPTIsMapped(cap)) {
         pte_t *pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
         unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
                        cap_page_table_cap_get_capPTMappedAddress(cap), pt);
@@ -1297,7 +1297,7 @@ static exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
     }
 
     cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performPageInvocationMap(asid_t asid, cap_t cap, cte_t *ctSlot,
@@ -1309,17 +1309,17 @@ static exception_t performPageInvocationMap(asid_t asid, cap_t cap, cte_t *ctSlo
     *ptSlot = pte;
 
     cleanByVA_PoU((vptr_t)ptSlot, pptr_to_paddr(ptSlot));
-    if (unlikely(tlbflush_required)) {
+    ако (unlikely(tlbflush_required)) {
         assert(asid < BIT(16));
         invalidateTLBByASIDVA(asid, cap_frame_cap_get_capFMappedAddress(cap));
     }
 
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    if (cap_frame_cap_get_capFMappedASID(cap) != 0) {
+    ако (cap_frame_cap_get_capFMappedASID(cap) != 0) {
 
         unmapPage(cap_frame_cap_get_capFSize(cap),
                   cap_frame_cap_get_capFMappedASID(cap),
@@ -1333,13 +1333,13 @@ static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
     ctSlot->cap = slotCap;
 
 
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performPageFlush(word_t invLabel, vspace_root_t *vspaceRoot, asid_t asid,
                                     vptr_t start, vptr_t end, paddr_t pstart)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ако (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* We flush the cache with kernel virtual addresses since
          * the user virtual addresses are not valid in EL2.
          * Switching VMRoot is not required.
@@ -1348,21 +1348,21 @@ static exception_t performPageFlush(word_t invLabel, vspace_root_t *vspaceRoot, 
         start = (vptr_t)paddr_to_pptr(pstart);
         end = start + size;
 
-        if (start < end) {
+        ако (start < end) {
             doFlush(invLabel, start, end, pstart);
         }
-    } else {
+    } инако {
         bool_t root_switched;
 
-        if (start < end) {
+        ако (start < end) {
             root_switched = setVMRootForFlush(vspaceRoot, asid);
             doFlush(invLabel, start, end, pstart);
-            if (root_switched) {
+            ако (root_switched) {
                 setVMRoot(NODE_STATE(ksCurThread));
             }
         }
     }
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performPageGetAddress(pptr_t base_ptr, bool_t call)
@@ -1371,15 +1371,15 @@ static exception_t performPageGetAddress(pptr_t base_ptr, bool_t call)
 
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
-    if (call) {
+    ако (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, base);
+        unsigned цео length = setMR(thread, ipcBuffer, 0, base);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
@@ -1402,7 +1402,7 @@ static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
     assert((asid_base & MASK(asidLowBits)) == 0);
     armKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
 
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 
 static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
@@ -1422,34 +1422,34 @@ static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
     case ARMVSpaceCleanInvalidate_Data:
     case ARMVSpaceUnify_Instruction:
 
-        if (length < 2) {
+        ако (length < 2) {
             userError("VSpaceRoot Flush: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         start = getSyscallArg(0, buffer);
         end =   getSyscallArg(1, buffer);
 
         /* Check sanity of arguments */
-        if (end <= start) {
+        ако (end <= start) {
             userError("VSpaceRoot Flush: Invalid range.");
             current_syscall_error.type = seL4_InvalidArgument;
             current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Don't let applications flush kernel regions. */
-        if (end > USER_TOP) {
+        ако (end > USER_TOP) {
             userError("VSpaceRoot Flush: Exceed the user addressable region.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(!isValidNativeRoot(cap))) {
+        ако (unlikely(!isValidNativeRoot(cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Make sure that the supplied pgd is ok */
@@ -1457,18 +1457,18 @@ static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
         asid = cap_vspace_cap_get_capVSMappedASID(cap);
 
         find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ако (unlikely(find_ret.status != EXCEPTION_NONE)) {
             userError("VSpaceRoot Flush: No VSpace for ASID");
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+        ако (unlikely(find_ret.vspace_root != vspaceRoot)) {
             userError("VSpaceRoot Flush: Invalid VSpace Cap");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Look up the frame containing 'start'. */
@@ -1476,32 +1476,32 @@ static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
         pte = *resolve_ret.ptSlot;
 
         /* Check that the returned slot is a page. */
-        if (!pte_is_page_type(pte)) {
+        ако (!pte_is_page_type(pte)) {
 
             /* Fail silently, as there can't be any stale cached data (for the
              * given address space), and getting a syscall error because the
              * relevant page is non-resident would be 'astonishing'. */
             setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return EXCEPTION_NONE;
+            врати EXCEPTION_NONE;
         }
 
         /* Refuse to cross a page boundary. */
-        if (ROUND_DOWN(start, resolve_ret.ptBitsLeft) != ROUND_DOWN(end - 1, resolve_ret.ptBitsLeft)) {
+        ако (ROUND_DOWN(start, resolve_ret.ptBitsLeft) != ROUND_DOWN(end - 1, resolve_ret.ptBitsLeft)) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = start;
             current_syscall_error.rangeErrorMax = ROUND_DOWN(start, resolve_ret.ptBitsLeft) +
                                                   MASK(resolve_ret.ptBitsLeft);
             userError("VSpaceRoot Flush: cannot cross page boundary, valid range is [0x%lx..0x%lx)",
                       current_syscall_error.rangeErrorMin, current_syscall_error.rangeErrorMax);
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
 #ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* When in EL1, the mapping must be write-able for ARMVSpaceInvalidate_Data */
-        if (invLabel == ARMVSpaceInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
+        ако (invLabel == ARMVSpaceInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
             userError("ARMVSpaceInvalidate_Data: Cannot call on mapping without write rights.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 #endif
 
@@ -1512,19 +1512,19 @@ static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window */
-        if (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
+        ако (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
             userError("VSpaceRoot Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 #endif
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performVSpaceFlush(invLabel, vspaceRoot, asid, start, end - 1, pstart);
+        врати performVSpaceFlush(invLabel, vspaceRoot, asid, start, end - 1, pstart);
 
     default:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 }
 
@@ -1540,68 +1540,68 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
     lookupPTSlot_ret_t ptSlot;
     findVSpaceForASID_ret_t find_ret;
 
-    if (invLabel == ARMPageTableUnmap) {
-        if (unlikely(!isFinalCapability(cte))) {
+    ако (invLabel == ARMPageTableUnmap) {
+        ако (unlikely(!isFinalCapability(cte))) {
             current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageTableInvocationUnmap(cap, cte);
+        врати performPageTableInvocationUnmap(cap, cte);
     }
 
-    if (unlikely(invLabel != ARMPageTableMap)) {
+    ако (unlikely(invLabel != ARMPageTableMap)) {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
+    ако (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+    ако (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     vaddr = getSyscallArg(0, buffer);
     vspaceRootCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (unlikely(!isValidNativeRoot(vspaceRootCap))) {
+    ако (unlikely(!isValidNativeRoot(vspaceRootCap))) {
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceRootCap));
     asid = cap_vspace_cap_get_capVSMappedASID(vspaceRootCap);
 
-    if (unlikely(vaddr > USER_TOP)) {
+    ако (unlikely(vaddr > USER_TOP)) {
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    ако (unlikely(find_ret.status != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+    ако (unlikely(find_ret.vspace_root != vspaceRoot)) {
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     ptSlot = lookupPTSlot(vspaceRoot, vaddr);
 
-    if (unlikely(ptSlot.ptBitsLeft == seL4_PageBits || pte_ptr_get_valid(ptSlot.ptSlot))) {
+    ако (unlikely(ptSlot.ptBitsLeft == seL4_PageBits || pte_ptr_get_valid(ptSlot.ptSlot))) {
         current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     pte = pte_pte_table_new(pptr_to_paddr(PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap))));
@@ -1611,12 +1611,12 @@ static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
     cap = cap_page_table_cap_set_capPTMappedAddress(cap, (vaddr & ~MASK(ptSlot.ptBitsLeft)));
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performPageTableInvocationMap(cap, cte, pte, ptSlot.ptSlot);
+    врати performPageTableInvocationMap(cap, cte, pte, ptSlot.ptSlot);
 }
 
 static inline bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
 {
-    return (w & MASK(pageBitsForSize(sz))) == 0;
+    врати (w & MASK(pageBitsForSize(sz))) == 0;
 }
 
 static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
@@ -1634,9 +1634,9 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         vm_attributes_t attributes;
         findVSpaceForASID_ret_t find_ret;
 
-        if (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
+        ако (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         vaddr = getSyscallArg(0, buffer);
@@ -1647,54 +1647,54 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         capRights = cap_frame_cap_get_capFVMRights(cap);
         vmRights = maskVMRights(capRights, rightsFromWord(getSyscallArg(1, buffer)));
 
-        if (unlikely(!isValidNativeRoot(vspaceRootCap))) {
+        ако (unlikely(!isValidNativeRoot(vspaceRootCap))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceRootCap));
         asid = cap_vspace_cap_get_capVSMappedASID(vspaceRootCap);
 
         find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ако (unlikely(find_ret.status != EXCEPTION_NONE)) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+        ако (unlikely(find_ret.vspace_root != vspaceRoot)) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(!checkVPAlignment(frameSize, vaddr))) {
+        ако (unlikely(!checkVPAlignment(frameSize, vaddr))) {
             current_syscall_error.type = seL4_AlignmentError;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* In the case of remap, the cap should have a valid asid */
         frame_asid = cap_frame_cap_get_capFMappedASID(cap);
 
-        if (frame_asid != asidInvalid) {
-            if (frame_asid != asid) {
+        ако (frame_asid != asidInvalid) {
+            ако (frame_asid != asid) {
                 userError("ARMPageMap: Attempting to remap a frame that does not belong to the passed address space");
                 current_syscall_error.type = seL4_InvalidCapability;
                 current_syscall_error.invalidCapNumber = 1;
-                return EXCEPTION_SYSCALL_ERROR;
+                врати EXCEPTION_SYSCALL_ERROR;
 
-            } else if (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            } инако ако (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
                 userError("ARMPageMap: Attempting to map frame into multiple addresses");
                 current_syscall_error.type = seL4_InvalidArgument;
                 current_syscall_error.invalidArgumentNumber = 0;
-                return EXCEPTION_SYSCALL_ERROR;
+                врати EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
-            if (unlikely(vaddr + BIT(pageBitsForSize(frameSize)) - 1 > USER_TOP)) {
+        } инако {
+            ако (unlikely(vaddr + BIT(pageBitsForSize(frameSize)) - 1 > USER_TOP)) {
                 current_syscall_error.type = seL4_InvalidArgument;
                 current_syscall_error.invalidArgumentNumber = 0;
-                return EXCEPTION_SYSCALL_ERROR;
+                врати EXCEPTION_SYSCALL_ERROR;
             }
         }
 
@@ -1704,23 +1704,23 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         base = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
 
         lookupPTSlot_ret_t lu_ret = lookupPTSlot(vspaceRoot, vaddr);
-        if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(frameSize))) {
+        ако (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(frameSize))) {
             current_lookup_fault = lookup_fault_missing_capability_new(lu_ret.ptBitsLeft);
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         bool_t cap_read = (capRights == VMReadOnly || capRights == VMReadWrite);
         pte_t pte = makeUserPagePTE(base, vmRights, cap_read, attributes, frameSize);
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationMap(asid, cap, cte, pte, lu_ret.ptSlot);
+        врати performPageInvocationMap(asid, cap, cte, pte, lu_ret.ptSlot);
     }
 
     case ARMPageUnmap:
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationUnmap(cap, cte);
+        врати performPageInvocationUnmap(cap, cte);
 
     case ARMPageClean_Data:
     case ARMPageInvalidate_Data:
@@ -1732,91 +1732,91 @@ static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
         word_t page_size;
         findVSpaceForASID_ret_t find_ret;
 
-        if (length < 2) {
+        ако (length < 2) {
             userError("Page Flush: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(cap_frame_cap_get_capFMappedASID(cap) == 0)) {
+        ако (unlikely(cap_frame_cap_get_capFMappedASID(cap) == 0)) {
             userError("Page Flush: Frame is not mapped.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         vaddr = cap_frame_cap_get_capFMappedAddress(cap);
         asid = cap_frame_cap_get_capFMappedASID(cap);
 
         find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ако (unlikely(find_ret.status != EXCEPTION_NONE)) {
             userError("Page Flush: No PGD for ASID");
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         start = getSyscallArg(0, buffer);
         end =   getSyscallArg(1, buffer);
 
         /* check that the range is sane */
-        if (end <= start) {
+        ако (end <= start) {
             userError("PageFlush: Invalid range");
             current_syscall_error.type = seL4_InvalidArgument;
             current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* start and end are currently relative inside this page */
         page_size = BIT(pageBitsForSize(cap_frame_cap_get_capFSize(cap)));
-        if (start >= page_size || end > page_size) {
+        ако (start >= page_size || end > page_size) {
             userError("Page Flush: Requested range not inside page");
             current_syscall_error.type = seL4_InvalidArgument;
             current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         word_t pstart = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) + start;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window */
-        if (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
+        ако (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
             userError("Page Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
-#else
+#инако
         /* When in EL1, we are using the user page table for flushing and need to make sure
            the mapping info in the cap is not stale. */
         lookupPTSlot_ret_t lu_ret = lookupPTSlot(find_ret.vspace_root, vaddr);
         pte_t pte = *lu_ret.ptSlot;
         void *base_ptr = (void *) cap_frame_cap_get_capFBasePtr(cap);
-        if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(cap_frame_cap_get_capFSize(cap)) ||
+        ако (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(cap_frame_cap_get_capFSize(cap)) ||
                      !pte_is_page_type(pte) ||
                      pte_get_page_base_address(pte) != pptr_to_paddr(base_ptr))) {
             userError("Page Flush: Attempting to use cap with stale mapping information.");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* When in EL1, the mapping must be writeable for DC IVAC */
-        if (invLabel == ARMPageInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
+        ако (invLabel == ARMPageInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
             userError("ARMPageInvalidate_Data: Cannot call on mapping without write rights.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 #endif
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageFlush(invLabel, find_ret.vspace_root, asid, vaddr + start, vaddr + end - 1,
+        врати performPageFlush(invLabel, find_ret.vspace_root, asid, vaddr + start, vaddr + end - 1,
                                 pstart);
     }
 
     case ARMPageGetAddress:
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress(cap_frame_cap_get_capFBasePtr(cap), call);
+        врати performPageGetAddress(cap_frame_cap_get_capFBasePtr(cap), call);
 
     default:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 }
 
@@ -1825,12 +1825,12 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
 {
     switch (cap_get_capType(cap)) {
     case cap_vspace_cap:
-        return decodeARMVSpaceRootInvocation(invLabel, length, cte, cap, buffer);
+        врати decodeARMVSpaceRootInvocation(invLabel, length, cte, cap, buffer);
     case cap_page_table_cap:
-        return decodeARMPageTableInvocation(invLabel, length, cte, cap, buffer);
+        врати decodeARMPageTableInvocation(invLabel, length, cte, cap, buffer);
 
     case cap_frame_cap:
-        return decodeARMFrameInvocation(invLabel, length, cte, cap, call, buffer);
+        врати decodeARMFrameInvocation(invLabel, length, cte, cap, call, buffer);
 
     case cap_asid_control_cap: {
         word_t i;
@@ -1842,18 +1842,18 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         void *frame;
         exception_t status;
 
-        if (unlikely(invLabel != ARMASIDControlMakePool)) {
+        ако (unlikely(invLabel != ARMASIDControlMakePool)) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(length < 2 ||
+        ако (unlikely(length < 2 ||
                      current_extra_caps.excaprefs[0] == NULL ||
                      current_extra_caps.excaprefs[1] == NULL)) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         index = getSyscallArg(0, buffer);
@@ -1863,46 +1863,46 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         root = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
+        за (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
 
-        if (unlikely(i == nASIDPools)) {
+        ако (unlikely(i == nASIDPools)) {
             userError("ASIDControlMakePool: No unallocated pools found.");
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         asid_base = i << asidLowBits;
 
-        if (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
+        ако (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
                      cap_untyped_cap_get_capBlockSize(untyped) != seL4_ASIDPoolBits ||
                      cap_untyped_cap_get_capIsDevice(untyped))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         status = ensureNoChildren(parentSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            return status;
+        ако (unlikely(status != EXCEPTION_NONE)) {
+            врати status;
         }
 
         frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
 
         lu_ret = lookupTargetSlot(root, index, depth);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return lu_ret.status;
+        ако (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+            врати lu_ret.status;
         }
         destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            return status;
+        ако (unlikely(status != EXCEPTION_NONE)) {
+            врати status;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
+        врати performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
     }
 
     case cap_asid_pool_cap: {
@@ -1912,60 +1912,60 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
         word_t i;
         asid_t asid;
 
-        if (unlikely(invLabel != ARMASIDPoolAssign)) {
+        ако (unlikely(invLabel != ARMASIDPoolAssign)) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+        ако (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         vspaceCapSlot = current_extra_caps.excaprefs[0];
         vspaceCap = vspaceCapSlot->cap;
 
-        if (unlikely(!isVTableRoot(vspaceCap) || cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
+        ако (unlikely(!isVTableRoot(vspaceCap) || cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         pool = armKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
 
-        if (unlikely(!pool)) {
+        ако (unlikely(!pool)) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
             current_lookup_fault = lookup_fault_invalid_root_new();
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
+        ако (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < (1 << asidLowBits) && (asid + i == 0
+        за (i = 0; i < (1 << asidLowBits) && (asid + i == 0
                                                || (asid_map_get_type(pool->array[i]) != asid_map_asid_map_none)); i++);
 
-        if (unlikely(i == 1 << asidLowBits)) {
+        ако (unlikely(i == 1 << asidLowBits)) {
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            врати EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, vspaceCapSlot);
+        врати performASIDPoolInvocation(asid, pool, vspaceCapSlot);
     }
 
     default:
@@ -2011,10 +2011,10 @@ static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *pd, word_t vad
     lookupPTSlot_ret_t lookup_ret = lookupPTSlot(pd, vaddr);
 
     /* Check that the returned slot is a page. */
-    if (!pte_ptr_get_valid(lookup_ret.ptSlot) ||
+    ако (!pte_ptr_get_valid(lookup_ret.ptSlot) ||
         (pte_pte_table_ptr_get_present(lookup_ret.ptSlot) && lookup_ret.ptBitsLeft > PAGE_BITS)) {
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        врати ret;
     }
 
     offset = vaddr & MASK(lookup_ret.ptBitsLeft);
@@ -2023,7 +2023,7 @@ static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *pd, word_t vad
 
     ret.status = EXCEPTION_NONE;
     ret.value = *value;
-    return ret;
+    врати ret;
 }
 
 void Arch_userStackTrace(tcb_t *tptr)
@@ -2035,9 +2035,9 @@ void Arch_userStackTrace(tcb_t *tptr)
     threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the vspace root */
-    if (cap_get_capType(threadRoot) != cap_vspace_cap) {
+    ако (cap_get_capType(threadRoot) != cap_vspace_cap) {
         printf("Invalid vspace\n");
-        return;
+        врати;
     }
 
     vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot));
@@ -2045,26 +2045,26 @@ void Arch_userStackTrace(tcb_t *tptr)
 
     /* check for alignment so we don't have to worry about accessing
      * words that might be on two different pages */
-    if (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
+    ако (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
         printf("SP not aligned\n");
-        return;
+        врати;
     }
 
-    for (unsigned int i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
+    за (unsigned цео i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
         word_t address = sp + (i * sizeof(word_t));
         readWordFromVSpace_ret_t result = readWordFromVSpace(vspaceRoot,
                                                              address);
-        if (result.status == EXCEPTION_NONE) {
+        ако (result.status == EXCEPTION_NONE) {
             printf("0x%"SEL4_PRIx_word": 0x%"SEL4_PRIx_word"\n",
                    address, result.value);
-        } else {
+        } инако {
             printf("0x%"SEL4_PRIx_word": INVALID\n", address);
         }
     }
 }
 #endif /* CONFIG_PRINTING */
 
-#if defined(CONFIG_KERNEL_LOG_BUFFER)
+#ако defined(CONFIG_KERNEL_LOG_BUFFER)
 exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
 {
     lookupCapAndSlot_ret_t lu_ret;
@@ -2074,27 +2074,27 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     /* faulting section */
     lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    ако (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invalid cap #%lu.", frame_cptr);
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    ако (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     frameSize = cap_frame_cap_get_capFSize(lu_ret.cap);
 
-    if (frameSize != ARMLargePage) {
+    ако (frameSize != ARMLargePage) {
         userError("Invalid frame size. The kernel expects 2M log buffer");
         current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        врати EXCEPTION_SYSCALL_ERROR;
     }
 
     frame_pptr = cap_frame_cap_get_capFBasePtr(lu_ret.cap);
@@ -2104,7 +2104,7 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
     *armKSGlobalLogPTE = pte_pte_page_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                              0, // XN
-#else
+#инако
                              1, // UXN
 #endif
                              ksUserLogBuffer,
@@ -2116,6 +2116,6 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
 
     cleanByVA_PoU((vptr_t)armKSGlobalLogPTE, addrFromKPPtr(armKSGlobalLogPTE));
     invalidateTranslationSingle(KS_LOG_PPTR);
-    return EXCEPTION_NONE;
+    врати EXCEPTION_NONE;
 }
 #endif /* CONFIG_KERNEL_LOG_BUFFER */

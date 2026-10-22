@@ -22,7 +22,7 @@
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)
 {
-    while ((*UART_REG(UART_STATUS) & UART_TX_FULL));
+    док ((*UART_REG(UART_STATUS) & UART_TX_FULL));
 
     /* Add character to the buffer. */
     *UART_REG(UART_WFIFO) = c;
@@ -32,7 +32,7 @@ void uart_drv_putchar(unsigned char c)
 #ifdef CONFIG_DEBUG_BUILD
 unsigned char uart_drv_getchar(void)
 {
-    while ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
-    return *UART_REG(UART_RFIFO);
+    док ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
+    врати *UART_REG(UART_RFIFO);
 }
 #endif /* CONFIG_DEBUG_BUILD */

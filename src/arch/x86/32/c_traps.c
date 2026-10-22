@@ -37,7 +37,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
     loadAllDisabledBreakpointState(cur_thread);
 #endif
     word_t *guest_regs_ptr = vcpu->gp_registers;
-    if (vcpu->launched) {
+    ако (vcpu->launched) {
         /* attempt to do a vmresume */
         asm volatile(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
@@ -54,7 +54,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // if we get here we failed
 #ifdef ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#инако
             "leal kernel_stack_alloc + %c1, %%esp\n"
 #endif
             "call vmlaunch_failed\n"
@@ -64,7 +64,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
         );
-    } else {
+    } инако {
         /* attempt to do a vmlaunch */
         asm volatile(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
@@ -81,7 +81,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // if we get here we failed
 #ifdef ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#инако
             "leal kernel_stack_alloc + %c1, %%esp\n"
 #endif
             "call vmlaunch_failed\n"
@@ -105,7 +105,7 @@ void NORETURN VISIBLE restore_user_context(void)
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    ако (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
         /* put this in service */
         interrupt_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
@@ -125,10 +125,10 @@ void NORETURN VISIBLE restore_user_context(void)
     tcb_t *cur_thread = NODE_STATE(ksCurThread);
 #ifdef CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
-    if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
+    ако (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
         vcpu_fpu_to_guest(cur_thread, vcpu);
         restore_vmx(cur_thread, vcpu);
-    } else if (vcpu) {
+    } инако ако (vcpu) {
         vcpu_fpu_to_host(cur_thread, vcpu);
     }
 #endif
@@ -138,12 +138,12 @@ void NORETURN VISIBLE restore_user_context(void)
     restore_user_debug_context(cur_thread);
 #endif
 
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    ако (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_disable_ibrs();
     }
 
     /* see if we entered via syscall */
-    if (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
+    ако (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
         cur_thread->tcbArch.tcbContext.registers[FLAGS] &= ~FLAGS_IF;
         asm volatile(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
@@ -178,7 +178,7 @@ void NORETURN VISIBLE restore_user_context(void)
             // before running this assembler
             : "memory"
         );
-    } else {
+    } инако {
         asm volatile(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %0, %%esp\n"

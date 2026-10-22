@@ -82,7 +82,7 @@ static debug_state_t dbg;
 
 bool_t byte8WatchpointsSupported(void)
 {
-    return dbg.watchpoint_8b_supported;
+    врати dbg.watchpoint_8b_supported;
 }
 
 #define SCR "p15, 0, %0, c1, c1, 0"
@@ -139,7 +139,7 @@ static inline word_t getMethodOfEntry(void)
     dbg_dscr_t dscr;
 
     dscr.words[0] = readDscrCp();
-    return dbg_dscr_get_methodOfEntry(dscr);
+    врати dbg_dscr_get_methodOfEntry(dscr);
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -154,9 +154,9 @@ bool_t configureSingleStepping(tcb_t *t,
                                bool_t is_reply)
 {
 
-    if (is_reply) {
+    ако (is_reply) {
         bp_num = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num;
-    } else {
+    } инако {
         bp_num = convertBpNumToArch(bp_num);
     }
 
@@ -177,10 +177,10 @@ bool_t configureSingleStepping(tcb_t *t,
     /* If the user calls us with n_instr == 0, allow them to configure, but
      * leave it disabled.
      */
-    if (n_instr > 0) {
+    ако (n_instr > 0) {
         bcr = dbg_bcr_set_enabled(bcr, 1);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+    } инако {
         bcr = dbg_bcr_set_enabled(bcr, 0);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
     }
@@ -197,7 +197,7 @@ bool_t configureSingleStepping(tcb_t *t,
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
     t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num = bp_num;
-    return true;
+    врати true;
 }
 
 /** Using the DBGDIDR register, detects the debug architecture version, and
@@ -249,7 +249,7 @@ BOOT_CODE static void initVersionInfo(void)
     default:
         dbg.is_available = false;
         dbg.debug_armv = 0;
-        return;
+        врати;
     }
 
     dbg.is_available = true;
@@ -297,19 +297,19 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
     memset(&dbg, 0, sizeof(dbg));
 
     initVersionInfo();
-    if (dbg.is_available == false) {
+    ако (dbg.is_available == false) {
         printf("Debug architecture not implemented.\n");
-        return false;
+        врати false;
     }
 
     printf("DIDRv: %x, armv %x, coproc baseline only? %s.\n",
            dbg.didr_version, dbg.debug_armv,
            ((dbg.coprocessor_is_baseline_only) ? "yes" : "no"));
 
-    if (dbg.debug_armv > 0x61) {
-        if (dbg.coprocessor_is_baseline_only) {
+    ако (dbg.debug_armv > 0x61) {
+        ако (dbg.coprocessor_is_baseline_only) {
             printf("ARMDBG: No reliable access to DBG regs.\n");
-            return dbg.is_available = false;
+            врати dbg.is_available = false;
         }
 
         /* Interestingly, since the debug features have so many bits that
@@ -319,7 +319,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          * this feature.
          */
         dbg.cpu_is_in_secure_mode = !(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED);
-        if (dbg.cpu_is_in_secure_mode) {
+        ако (dbg.cpu_is_in_secure_mode) {
             word_t sder;
 
             printf("CPU is in secure mode. Enabling debugging in secure user mode.\n");
@@ -329,13 +329,13 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
         }
 
         /* Deal with OS Double-lock: */
-        if (dbg.debug_armv == 0x71) {
+        ако (dbg.debug_armv == 0x71) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7.1 Debug, this register is required in all implementations."
              */
             MRC(DBGOSDLR, dbgosdlr);
             MCR(DBGOSDLR, dbgosdlr & ~DBGOSDLR_LOCK_ENABLE);
-        } else if (dbg.debug_armv == 0x70) {
+        } инако ако (dbg.debug_armv == 0x70) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7 Debug, this register is not implemented."
              *
@@ -349,18 +349,18 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          *   not implemented the read of DBGOSLSR.OSLM returns zero."
          */
         MRC(DBGOSLSR, dbgoslsr);
-        if (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
+        ако (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
             MCR(DBGOSLAR, ~DBGOSLAR_LOCK_VALUE);
         }
 
         disableAllBpsAndWps();
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ако (!enableMonitorMode()) {
+            врати dbg.is_available = false;
         }
-    } else {
+    } инако {
         /* On v6 you have to enable monitor mode first. */
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ако (!enableMonitorMode()) {
+            врати dbg.is_available = false;
         }
         disableAllBpsAndWps();
     }
@@ -369,15 +369,15 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    за (цео i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    за (цео i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
     dbg.watchpoint_8b_supported = watchpoint8bSupported();
-    return true;
+    врати true;
 }
 
 /** Abstract wrapper around the IFSR/DFSR fault status values.
@@ -400,13 +400,13 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     ret.is_long_desc_format = true;
     /* FSR[5:0]. */
     ret.status = hsr_or_fsr & 0x3F;
-#else
+#инако
     /* Non-hyp uses IFSR/DFSR */
-    if (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
+    ако (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
         ret.is_long_desc_format = true;
         /* FSR[5:0] */
         ret.status = hsr_or_fsr & 0x3F;
-    } else {
+    } инако {
         ret.is_long_desc_format = false;
         /* FSR[10] | FSR[3:0]. */
         ret.status = (hsr_or_fsr & BIT(FSR_STATUS_BIT4_SHIFT)) >> FSR_STATUS_BIT4_SHIFT;
@@ -415,7 +415,7 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     }
 #endif
 
-    return ret;
+    врати ret;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -435,21 +435,21 @@ bool_t isDebugFault(word_t hsr_or_fsr)
     fault_status_t fs;
 
     fs = getFaultStatus(hsr_or_fsr);
-    if (fs.is_long_desc_format) {
-        if (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    ако (fs.is_long_desc_format) {
+        ако (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
+            врати true;
         }
-    } else {
-        if (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    } инако {
+        ако (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
+            врати true;
         }
     }
 
-    if (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
+    ако (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
         userError("Debug: Watchpoint delivered as async abort.");
-        return true;
+        врати true;
     }
-    return false;
+    врати false;
 }
 
 /** Called to process a debug exception.
@@ -476,7 +476,7 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
 #endif
 
     word_t method_of_entry = getMethodOfEntry();
-    int active_bp;
+    цео active_bp;
     seL4_Fault_t ret;
     word_t bp_reason, bp_vaddr;
 
@@ -498,12 +498,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
         tcb_t *curr_thread = NODE_STATE(ksCurThread);
         user_context_t *context = &curr_thread->tcbArch.tcbContext;
 
-        if (context->breakpointState.single_step_enabled) {
+        ако (context->breakpointState.single_step_enabled) {
             word_t bvr;
             word_t bp_num = context->breakpointState.single_step_hw_bp_num;
 
             bvr = readBvrCp(bp_num);
-            if (bvr != context->registers[FaultIP]) {
+            ако (bvr != context->registers[FaultIP]) {
                 bp_reason = seL4_SingleStep;
                 active_bp = bp_num;
                 /* Update the BVR so it doesn't fault on the same address
@@ -518,7 +518,7 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Sync watchpoint sets the BP vaddr in HDFAR. */
         bp_vaddr = getHDFAR();
-#else
+#инако
         bp_vaddr = getFAR();
 #endif
         break;
@@ -536,7 +536,7 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
         active_bp = 0;
     }
 
-    if (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
+    ако (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
         && bp_reason != seL4_SingleStep) {
         active_bp = getAndResetActiveBreakpoint(bp_vaddr,
                                                 bp_reason);
@@ -546,12 +546,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
     /* There is no hardware register associated with BKPT instruction
      * triggers.
      */
-    if (bp_reason != seL4_SoftwareBreakRequest) {
+    ако (bp_reason != seL4_SoftwareBreakRequest) {
         /* Convert the hardware BP num back into an API-ID */
         active_bp = getBpNumFromType(active_bp, bp_reason);
     }
     ret = seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
-    return ret;
+    врати ret;
 }
 
 #endif /* CONFIG_HARDWARE_DEBUG_API */

@@ -13,14 +13,14 @@
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    врати tcb->tcbArch.tcbContext.registers[SP];
 }
 
 #ifdef CONFIG_PRINTING
 
 static void obj_asidpool_print_attrs(cap_t asid_cap);
 static void obj_frame_print_attrs(paddr_t paddr);
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level);
+static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, цео level);
 static void cap_frame_print_attrs_vptr(word_t vptr, pte_t *lvl1pt);
 static void cap_frame_print_attrs_pt(pte_t *ptSlot);
 
@@ -40,13 +40,13 @@ void print_ipc_buffer_slot(tcb_t *tcb)
     cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
 }
 
-static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int level)
+static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, цео level)
 {
     pte_t *pt;
-    if (level == CONFIG_PT_LEVELS) {
+    ако (level == CONFIG_PT_LEVELS) {
         printf("%p_pd {\n", upperPtSlot);
         pt = upperPtSlot;
-    } else {
+    } инако {
         printf("pt_%p_%04lu {\n", upperPtSlot, ptIndex);
         pt = getPPtrFromHWPTE(upperPtSlot);
     }
@@ -55,13 +55,13 @@ static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int lev
     word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
 
     /* - 1 to avoid overflowing */
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
+    за (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
         word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
         pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
+        ако (pte_ptr_get_valid(ptSlot)) {
+            ако (level) { /* pt */
                 printf("0x%lx: pt_%p_%04lu\n", ptSlotIndex, ptSlot, ptSlotIndex);
-            } else { /* frame */
+            } инако { /* frame */
                 printf("0x%lx: frame_%p_%04lu", ptSlotIndex, ptSlot, ptSlotIndex);
                 cap_frame_print_attrs_pt(ptSlot);
             }
@@ -69,11 +69,11 @@ static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int lev
     }
     printf("}\n"); /* lvl1pt/pt */
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
+    за (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
         word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
         pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
+        ако (pte_ptr_get_valid(ptSlot)) {
+            ако (level) { /* pt */
                 riscv_cap_pt_print_slots(ptSlot, ptSlotIndex, level);
             }
         }
@@ -82,7 +82,7 @@ static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int lev
 
 void obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    ако (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_LEVELS);
@@ -94,15 +94,15 @@ static void cap_frame_print_attrs_pt(pte_t *ptSlot)
     printf("(");
 
     /* rights */
-    if (pte_ptr_get_read(ptSlot)) {
+    ако (pte_ptr_get_read(ptSlot)) {
         printf("R");
     }
 
-    if (pte_ptr_get_write(ptSlot)) {
+    ако (pte_ptr_get_write(ptSlot)) {
         printf("W");
     }
 
-    if (pte_ptr_get_execute(ptSlot)) {
+    ако (pte_ptr_get_execute(ptSlot)) {
         printf("X");
     }
 
@@ -131,10 +131,10 @@ void print_cap_arch(cap_t cap)
 
         word_t ptBitsLeft = PT_INDEX_BITS * CONFIG_PT_LEVELS + seL4_PageBits;
         word_t slot = ((vptr >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        if (asid) {
+        ако (asid) {
             printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot, (long unsigned int)asid);
-        } else {
+                   lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot, (long unsigned цео)asid);
+        } инако {
             printf("pt_%p_%04lu\n", lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot);
         }
         break;
@@ -159,7 +159,7 @@ void print_cap_arch(cap_t cap)
     /* riscv specific caps */
     /* nothing */
     default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown cap %lu]\n", (long unsigned цео)cap_get_capType(cap));
         break;
     }
     }
@@ -187,24 +187,24 @@ void print_object_arch(cap_t cap)
     /* riscv specific caps */
     /* nothing */
     default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown object %lu]\n", (long unsigned цео)cap_get_capType(cap));
         break;
     }
     }
 }
 
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level)
+static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, цео level)
 {
     word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS); i += (1 << (ptBitsLeft))) {
+    за (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS); i += (1 << (ptBitsLeft))) {
         word_t ptIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
         pte_t *ptSlot = pt + ptIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
+        ако (pte_ptr_get_valid(ptSlot)) {
+            ако (level) { /* pt */
                 printf("pt_%p_%04lu = pt\n", ptSlot, ptIndex);
                 riscv_obj_pt_print_slots(lvl1pt, getPPtrFromHWPTE(ptSlot), level - 1);
-            } else { /* frame */
+            } инако { /* frame */
                 paddr_t paddr = pte_ptr_get_ppn(ptSlot);
                 printf("frame_%p_%04lu = frame ", ptSlot, ptIndex);
                 obj_frame_print_attrs(paddr);
@@ -215,7 +215,7 @@ static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level)
 
 void obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    ако (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         printf("%p_pd = pt\n", lvl1pt);
