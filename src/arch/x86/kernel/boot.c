@@ -4,61 +4,61 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <kernel/boot.h>
-#include <machine/io.h>
-#include <model/statedata.h>
-#include <object/interrupt.h>
-#include <arch/object/interrupt.h>
-#include <arch/machine.h>
-#include <arch/kernel/apic.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/kernel/vspace.h>
-#include <machine/fpu.h>
-#include <arch/machine/timer.h>
-#include <arch/object/ioport.h>
-#include <linker.h>
-#include <util.h>
+#ضمن <config.h>
+#ضمن <kernel/boot.h>
+#ضمن <machine/io.h>
+#ضمن <model/statedata.h>
+#ضمن <object/interrupt.h>
+#ضمن <arch/object/interrupt.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/kernel/apic.h>
+#ضمن <arch/kernel/boot.h>
+#ضمن <arch/kernel/boot_sys.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <machine/fpu.h>
+#ضمن <arch/machine/timer.h>
+#ضمن <arch/object/ioport.h>
+#ضمن <linker.h>
+#ضمن <util.h>
 
-#include <plat/machine/intel-vtd.h>
+#ضمن <plat/machine/intel-vtd.h>
 
 #define MAX_RESERVED 1
-BOOT_BSS static region_t reserved[MAX_RESERVED];
+BOOT_BSS ساكن region_t reserved[MAX_RESERVED];
 
 /* functions exactly corresponding to abstract specification */
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_CODE ساكن فراغ init_irqs(cap_t root_cnode_cap)
 {
     irq_t i;
 
-    for (i = 0; i <= maxIRQ; i++) {
-        if (i == irq_timer) {
+    لكل (i = 0; i <= maxIRQ; i++) {
+        𐤀𐤌 (i == irq_timer) {
             setIRQState(IRQTimer, i);
 #ifdef ENABLE_SMP_SUPPORT
-        } else if (i == irq_remote_call_ipi || i == irq_reschedule_ipi) {
+        } وإلا 𐤀𐤌 (i == irq_remote_call_ipi || i == irq_reschedule_ipi) {
             setIRQState(IRQIPI, i);
 #endif /* ENABLE_SMP_SUPPORT */
 #ifdef CONFIG_IOMMU
-        } else if (i == irq_iommu) {
+        } وإلا 𐤀𐤌 (i == irq_iommu) {
             setIRQState(IRQReserved, i);
 #endif
-        } else if (i == 2 && config_set(CONFIG_IRQ_PIC)) {
+        } وإلا 𐤀𐤌 (i == 2 && config_set(CONFIG_IRQ_PIC)) {
             /* cascaded legacy PIC */
             setIRQState(IRQReserved, i);
-        } else if (i >= irq_isa_min && i <= irq_isa_max) {
-            if (config_set(CONFIG_IRQ_PIC)) {
+        } وإلا 𐤀𐤌 (i >= irq_isa_min && i <= irq_isa_max) {
+            𐤀𐤌 (config_set(CONFIG_IRQ_PIC)) {
                 setIRQState(IRQInactive, i);
-            } else {
+            } وإلا {
                 setIRQState(IRQReserved, i);
             }
-        } else if (i >= irq_user_min && i <= irq_user_max) {
-            if (config_set(CONFIG_IRQ_IOAPIC)) {
+        } وإلا 𐤀𐤌 (i >= irq_user_min && i <= irq_user_max) {
+            𐤀𐤌 (config_set(CONFIG_IRQ_IOAPIC)) {
                 setIRQState(IRQInactive, i);
-            } else {
+            } وإلا {
                 setIRQState(IRQReserved, i);
             }
-        } else {
+        } وإلا {
             setIRQState(IRQReserved, i);
         }
     }
@@ -67,7 +67,7 @@ BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
 }
 
-BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
+BOOT_CODE ساكن bool_t arch_init_freemem(p_region_t ui_p_reg,
                                           v_region_t it_v_reg,
                                           mem_p_regs_t *mem_p_regs,
                                           word_t extra_bi_size_bits)
@@ -77,7 +77,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
     // in the x86 linker script.
     ui_p_reg.start = KERNEL_ELF_PADDR_BASE;
     reserved[0] = paddr_to_pptr_reg(ui_p_reg);
-    return init_freemem(mem_p_regs->count, mem_p_regs->list, MAX_RESERVED,
+    أرجع init_freemem(mem_p_regs->count, mem_p_regs->list, MAX_RESERVED,
                         reserved, it_v_reg, extra_bi_size_bits);
 }
 
@@ -123,21 +123,21 @@ BOOT_CODE bool_t init_sys_state(
     bi_frame_vptr = ipcbuf_vptr + BIT(PAGE_BITS);
     extra_bi_frame_vptr = bi_frame_vptr + BIT(seL4_BootInfoFrameBits);
 
-    if (vbe->vbeMode != -1) {
-        extra_bi_size += sizeof(seL4_X86_BootInfo_VBE);
+    𐤀𐤌 (vbe->vbeMode != -1) {
+        extra_bi_size += حجم(seL4_X86_BootInfo_VBE);
     }
-    if (acpi_rsdp) {
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + sizeof(*acpi_rsdp);
+    𐤀𐤌 (acpi_rsdp) {
+        extra_bi_size += حجم(seL4_BootInfoHeader) + حجم(*acpi_rsdp);
     }
-    if (fb_info && fb_info->addr) {
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + sizeof(*fb_info);
+    𐤀𐤌 (fb_info && fb_info->addr) {
+        extra_bi_size += حجم(seL4_BootInfoHeader) + حجم(*fb_info);
     }
 
-    word_t mb_mmap_size = sizeof(seL4_X86_BootInfo_mmap_t);
+    word_t mb_mmap_size = حجم(seL4_X86_BootInfo_mmap_t);
     extra_bi_size += mb_mmap_size;
 
     // room for tsc frequency
-    extra_bi_size += sizeof(seL4_BootInfoHeader) + 4;
+    extra_bi_size += حجم(seL4_BootInfoHeader) + 4;
     word_t extra_bi_size_bits = calculate_extra_bi_size_bits(extra_bi_size);
 
     /* The region of the initial thread is the user image + ipcbuf and boot info */
@@ -145,14 +145,14 @@ BOOT_CODE bool_t init_sys_state(
     it_v_reg.end = ROUND_UP(extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0), PAGE_BITS);
 #ifdef CONFIG_IOMMU
     /* calculate the number of io pts before initialising memory */
-    if (!vtd_init_num_iopts(num_drhu)) {
-        return false;
+    𐤀𐤌 (!vtd_init_num_iopts(num_drhu)) {
+        أرجع false;
     }
 #endif /* CONFIG_IOMMU */
 
-    if (!arch_init_freemem(ui_info.p_reg, it_v_reg, mem_p_regs, extra_bi_size_bits)) {
+    𐤀𐤌 (!arch_init_freemem(ui_info.p_reg, it_v_reg, mem_p_regs, extra_bi_size_bits)) {
         printf("ERROR: free memory management initialization failed\n");
-        return false;
+        أرجع false;
     }
 
     /* create the root cnode */
@@ -180,48 +180,48 @@ BOOT_CODE bool_t init_sys_state(
     };
 
     /* populate vbe info block */
-    if (vbe->vbeMode != -1) {
+    𐤀𐤌 (vbe->vbeMode != -1) {
         vbe->header.id = SEL4_BOOTINFO_HEADER_X86_VBE;
-        vbe->header.len = sizeof(seL4_X86_BootInfo_VBE);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), vbe, sizeof(seL4_X86_BootInfo_VBE));
-        extra_bi_offset += sizeof(seL4_X86_BootInfo_VBE);
+        vbe->header.len = حجم(seL4_X86_BootInfo_VBE);
+        memcpy((فراغ *)(rootserver.extra_bi + extra_bi_offset), vbe, حجم(seL4_X86_BootInfo_VBE));
+        extra_bi_offset += حجم(seL4_X86_BootInfo_VBE);
     }
 
     /* populate acpi rsdp block */
-    if (acpi_rsdp) {
+    𐤀𐤌 (acpi_rsdp) {
         seL4_BootInfoHeader header;
         header.id = SEL4_BOOTINFO_HEADER_X86_ACPI_RSDP;
-        header.len = sizeof(header) + sizeof(*acpi_rsdp);
+        header.len = حجم(header) + حجم(*acpi_rsdp);
         *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), acpi_rsdp, sizeof(*acpi_rsdp));
-        extra_bi_offset += sizeof(*acpi_rsdp);
+        extra_bi_offset += حجم(header);
+        memcpy((فراغ *)(rootserver.extra_bi + extra_bi_offset), acpi_rsdp, حجم(*acpi_rsdp));
+        extra_bi_offset += حجم(*acpi_rsdp);
     }
 
     /* populate framebuffer information block */
-    if (fb_info && fb_info->addr) {
+    𐤀𐤌 (fb_info && fb_info->addr) {
         seL4_BootInfoHeader header;
         header.id = SEL4_BOOTINFO_HEADER_X86_FRAMEBUFFER;
-        header.len = sizeof(header) + sizeof(*fb_info);
+        header.len = حجم(header) + حجم(*fb_info);
         *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), fb_info, sizeof(*fb_info));
-        extra_bi_offset += sizeof(*fb_info);
+        extra_bi_offset += حجم(header);
+        memcpy((فراغ *)(rootserver.extra_bi + extra_bi_offset), fb_info, حجم(*fb_info));
+        extra_bi_offset += حجم(*fb_info);
     }
 
     /* populate multiboot mmap block */
     mb_mmap->header.id = SEL4_BOOTINFO_HEADER_X86_MBMMAP;
     mb_mmap->header.len = mb_mmap_size;
-    memcpy((void *)(rootserver.extra_bi + extra_bi_offset), mb_mmap, mb_mmap_size);
+    memcpy((فراغ *)(rootserver.extra_bi + extra_bi_offset), mb_mmap, mb_mmap_size);
     extra_bi_offset += mb_mmap_size;
 
     /* populate tsc frequency block */
     {
         seL4_BootInfoHeader header;
         header.id = SEL4_BOOTINFO_HEADER_X86_TSC_FREQ;
-        header.len = sizeof(header) + 4;
+        header.len = حجم(header) + 4;
         *(seL4_BootInfoHeader *)(extra_bi_region.start + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
+        extra_bi_offset += حجم(header);
         *(uint32_t *)(extra_bi_region.start + extra_bi_offset) = tsc_freq;
         extra_bi_offset += 4;
     }
@@ -234,8 +234,8 @@ BOOT_CODE bool_t init_sys_state(
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
     it_vspace_cap = create_it_address_space(root_cnode_cap, it_v_reg);
-    if (cap_get_capType(it_vspace_cap) == cap_null_cap) {
-        return false;
+    𐤀𐤌 (cap_get_capType(it_vspace_cap) == cap_null_cap) {
+        أرجع false;
     }
 
     /* Create and map bootinfo frame cap */
@@ -252,17 +252,17 @@ BOOT_CODE bool_t init_sys_state(
             it_vspace_cap,
             extra_bi_region,
             true,
-            pptr_to_paddr((void *)(extra_bi_region.start - extra_bi_frame_vptr))
+            pptr_to_paddr((فراغ *)(extra_bi_region.start - extra_bi_frame_vptr))
         );
-    if (!extra_bi_ret.success) {
-        return false;
+    𐤀𐤌 (!extra_bi_ret.success) {
+        أرجع false;
     }
     ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
 
     /* create the initial thread's IPC buffer */
     ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_vspace_cap, ipcbuf_vptr);
-    if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
-        return false;
+    𐤀𐤌 (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
+        أرجع false;
     }
 
     /* create all userland image frames */
@@ -274,15 +274,15 @@ BOOT_CODE bool_t init_sys_state(
             true,
             ui_info.pv_offset
         );
-    if (!create_frames_ret.success) {
-        return false;
+    𐤀𐤌 (!create_frames_ret.success) {
+        أرجع false;
     }
     ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
 
     /* create the initial thread's ASID pool */
     it_ap_cap = create_it_asid_pool(root_cnode_cap);
-    if (cap_get_capType(it_ap_cap) == cap_null_cap) {
-        return false;
+    𐤀𐤌 (cap_get_capType(it_ap_cap) == cap_null_cap) {
+        أرجع false;
     }
     write_it_asid_pool(it_ap_cap, it_vspace_cap);
 
@@ -306,15 +306,15 @@ BOOT_CODE bool_t init_sys_state(
                                            bi_frame_vptr,
                                            ipcbuf_vptr,
                                            ipcbuf_cap);
-    if (initial == NULL) {
-        return false;
+    𐤀𐤌 (initial == عدم) {
+        أرجع false;
     }
     init_core_state(initial);
 
 #ifdef CONFIG_IOMMU
     /* initialise VTD-related data structures and the IOMMUs */
-    if (!vtd_init(cpu_id, rmrr_list)) {
-        return false;
+    𐤀𐤌 (!vtd_init(cpu_id, rmrr_list)) {
+        أرجع false;
     }
 
     /* write number of IOMMU PT levels into bootinfo */
@@ -322,19 +322,19 @@ BOOT_CODE bool_t init_sys_state(
 
     /* write IOSpace master cap */
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIOSpace), master_iospace_cap());
-#else
+#وإلا
     ndks_boot.bi_frame->numIOPTLevels = -1;
 #endif
 
     /* create all of the untypeds. Both devices and kernel window memory */
-    if (!create_untypeds(root_cnode_cap)) {
-        return false;
+    𐤀𐤌 (!create_untypeds(root_cnode_cap)) {
+        أرجع false;
     }
 
     /* finalise the bootinfo frame */
     bi_finalise();
 
-    return true;
+    أرجع true;
 }
 
 /* This function initialises the CPU. It does NOT initialise any kernel state. */
@@ -344,25 +344,25 @@ BOOT_CODE bool_t init_cpu(
 )
 {
     /* initialise virtual-memory-related data structures */
-    if (!init_vm_state()) {
-        return false;
+    𐤀𐤌 (!init_vm_state()) {
+        أرجع false;
     }
 
     /* initialise CPU's descriptor table registers (GDTR, IDTR, LDTR, TR) */
     init_dtrs();
 
-    if (config_set(CONFIG_SYSENTER)) {
+    𐤀𐤌 (config_set(CONFIG_SYSENTER)) {
         /* initialise MSRs (needs an initialised TSS) */
         init_sysenter_msrs();
-    } else if (config_set(CONFIG_SYSCALL)) {
+    } وإلا 𐤀𐤌 (config_set(CONFIG_SYSCALL)) {
         init_syscall_msrs();
-    } else {
-        return false;
+    } وإلا {
+        أرجع false;
     }
 
     /* setup additional PAT MSR */
-    if (!init_pat_msr()) {
-        return false;
+    𐤀𐤌 (!init_pat_msr()) {
+        أرجع false;
     }
 
     /* enable the Write Protect bit in cr0. This prevents the kernel from writing to
@@ -372,23 +372,23 @@ BOOT_CODE bool_t init_cpu(
     /* check for SMAP and SMEP and enable */
     cpuid_007h_ebx_t ebx_007;
     ebx_007.words[0] = x86_cpuid_ebx(0x7, 0);
-    if (cpuid_007h_ebx_get_smap(ebx_007)) {
+    𐤀𐤌 (cpuid_007h_ebx_get_smap(ebx_007)) {
         /* if we have user stack trace enabled or dangerous code injection then we cannot
          * enable this as SMAP will make them fault. */
-        if (!config_set(CONFIG_PRINTING) && !config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
+        𐤀𐤌 (!config_set(CONFIG_PRINTING) && !config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
             write_cr4(read_cr4() | CR4_SMAP);
         }
     }
-    if (cpuid_007h_ebx_get_smep(ebx_007)) {
+    𐤀𐤌 (cpuid_007h_ebx_get_smep(ebx_007)) {
         /* similar to smap we cannot enable smep if using dangerous code injection. it
          * does not affect stack trace printing though */
-        if (!config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
+        𐤀𐤌 (!config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
             write_cr4(read_cr4() | CR4_SMEP);
         }
     }
 
-    if (!init_ibrs()) {
-        return false;
+    𐤀𐤌 (!init_ibrs()) {
+        أرجع false;
     }
 
 #ifdef CONFIG_HARDWARE_DEBUG_API
@@ -397,31 +397,31 @@ BOOT_CODE bool_t init_cpu(
 #endif
 
     /* initialise floating-point unit */
-    if (!Arch_initFpu()) {
-        return false;
+    𐤀𐤌 (!Arch_initFpu()) {
+        أرجع false;
     }
 
     /* initialise local APIC */
-    if (!apic_init(mask_legacy_irqs)) {
-        return false;
+    𐤀𐤌 (!apic_init(mask_legacy_irqs)) {
+        أرجع false;
     }
 
 #ifdef CONFIG_DEBUG_DISABLE_PREFETCHERS
-    if (!disablePrefetchers()) {
-        return false;
+    𐤀𐤌 (!disablePrefetchers()) {
+        أرجع false;
     }
 #endif
 
-    if (config_set(CONFIG_EXPORT_PMC_USER)) {
+    𐤀𐤌 (config_set(CONFIG_EXPORT_PMC_USER)) {
         enablePMCUser();
     }
 
 #ifdef CONFIG_VTX
     /* initialise Intel VT-x extensions */
-    if (!vtx_init()) {
-        return false;
+    𐤀𐤌 (!vtx_init()) {
+        أرجع false;
     }
 #endif
 
-    return true;
+    أرجع true;
 }

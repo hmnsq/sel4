@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/traps.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/registerset.h>
-#include <api/syscall.h>
-#include <machine/fpu.h>
-#include <mode/machine/debug.h>
+#ضمن <config.h>
+#ضمن <arch/kernel/traps.h>
+#ضمن <arch/object/vcpu.h>
+#ضمن <arch/machine/registerset.h>
+#ضمن <api/syscall.h>
+#ضمن <machine/fpu.h>
+#ضمن <mode/machine/debug.h>
 
-#include <sel4/benchmark_track_types.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <arch/machine.h>
+#ضمن <sel4/benchmark_track_types.h>
+#ضمن <benchmark/benchmark_track.h>
+#ضمن <benchmark/benchmark_utilisation.h>
+#ضمن <arch/machine.h>
 
-void VISIBLE NORETURN c_handle_undefined_instruction(void)
+فراغ VISIBLE NORETURN c_handle_undefined_instruction(فراغ)
 {
     NODE_LOCK_SYS;
     c_entry_hook();
@@ -30,12 +30,12 @@ void VISIBLE NORETURN c_handle_undefined_instruction(void)
     /* There's only one user-level fault on ARM, and the code is (0,0) */
 #ifdef CONFIG_ARCH_AARCH32
     handleUserLevelFault(0, 0);
-#elif CONFIG_ARCH_AARCH64
+#وإلاإذا CONFIG_ARCH_AARCH64
     word_t esr = getESR();
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+    𐤀𐤌 (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
+    } وإلا
 #endif
     {
         handleUserLevelFault(esr, 0);
@@ -46,7 +46,7 @@ void VISIBLE NORETURN c_handle_undefined_instruction(void)
 }
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
-void NORETURN vm_fault_slowpath(vm_fault_type_t type)
+فراغ NORETURN vm_fault_slowpath(vm_fault_type_t type)
 {
     handleVMFaultEvent(type);
     restore_user_context();
@@ -54,7 +54,7 @@ void NORETURN vm_fault_slowpath(vm_fault_type_t type)
 }
 #endif
 
-static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
+ساكن مضمن فراغ NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
     NODE_LOCK_SYS;
     c_entry_hook();
@@ -67,24 +67,24 @@ static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
 
 #ifdef CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# وإلا
     handleVMFaultEvent(type);
     restore_user_context();
 #endif
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_data_fault(void)
+فراغ VISIBLE NORETURN c_handle_data_fault(فراغ)
 {
     c_handle_vm_fault(seL4_DataFault);
 }
 
-void VISIBLE NORETURN c_handle_instruction_fault(void)
+فراغ VISIBLE NORETURN c_handle_instruction_fault(فراغ)
 {
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+فراغ VISIBLE NORETURN c_handle_interrupt(فراغ)
 {
     NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
     c_entry_hook();
@@ -99,9 +99,9 @@ void VISIBLE NORETURN c_handle_interrupt(void)
     restore_user_context();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+فراغ NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    𐤀𐤌 (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
         /* ksKernelEntry.word word is already set to syscall */
@@ -110,7 +110,7 @@ void NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } وإلا {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -121,7 +121,7 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+فراغ VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
 {
     NODE_LOCK_SYS;
 
@@ -137,7 +137,7 @@ void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
 
 #ifdef CONFIG_FASTPATH
 ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+فراغ VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
 {
     NODE_LOCK_SYS;
 
@@ -154,7 +154,7 @@ void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
 #ifdef CONFIG_KERNEL_MCS
 #ifdef CONFIG_SIGNAL_FASTPATH
 ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+فراغ VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
 {
     NODE_LOCK_SYS;
 
@@ -171,9 +171,9 @@ void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
 
 ALIGN(L1_CACHE_LINE_SIZE)
 #ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
+فراغ VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
+#وإلا
+فراغ VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 {
     NODE_LOCK_SYS;
@@ -186,7 +186,7 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 
 #ifdef CONFIG_KERNEL_MCS
     fastpath_reply_recv(cptr, msgInfo, reply);
-#else
+#وإلا
     fastpath_reply_recv(cptr, msgInfo);
 #endif
     UNREACHABLE();
@@ -195,7 +195,7 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
+VISIBLE NORETURN فراغ c_handle_vcpu_fault(word_t hsr)
 {
     NODE_LOCK_SYS;
 
