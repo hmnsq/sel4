@@ -12,12 +12,12 @@ BOOT_CODE bool_t x2apic_is_enabled(void)
     apic_base_msr_t apic_base_msr;
     apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
 
-    if ((x86_cpuid_ecx(1, 0) & BIT(21)) &&
+    ပေႃး ((x86_cpuid_ecx(1, 0) & BIT(21)) &&
         apic_base_msr_get_enabled(apic_base_msr) &&
         apic_base_msr_get_x2apic(apic_base_msr)) {
-        return true;
+        ပွၵ်ႈ true;
     }
-    return false;
+    ပွၵ်ႈ false;
 }
 
 #ifdef CONFIG_X2APIC
@@ -26,20 +26,20 @@ BOOT_CODE bool_t apic_enable(void)
     apic_base_msr_t apic_base_msr;
     apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
 
-    if (!apic_base_msr_get_enabled(apic_base_msr)) {
+    ပေႃး (!apic_base_msr_get_enabled(apic_base_msr)) {
         printf("APIC: Enabled bit not set\n");
-        return false;
+        ပွၵ်ႈ false;
     }
 
-    if (x86_cpuid_ecx(1, 0) & BIT(21)) {
+    ပေႃး (x86_cpuid_ecx(1, 0) & BIT(21)) {
         apic_base_msr = apic_base_msr_set_x2apic(apic_base_msr, 1);
         x86_wrmsr(IA32_APIC_BASE_MSR, apic_base_msr.words[0]);
-    } else {
+    } ပေႃးဢမ်ႇ {
         printf("APIC: x2APIC is not supported on this machine\n");
-        return false;
+        ပွၵ်ႈ false;
     }
 
-    return true;
+    ပွၵ်ႈ true;
 }
 
 bool_t apic_is_interrupt_pending(void)
@@ -48,11 +48,11 @@ bool_t apic_is_interrupt_pending(void)
 
     assert(int_irq_min % 32 == 0);
     for (i = int_irq_min; i <= int_irq_max; i += 32) {
-        if (apic_read_reg(APIC_IRR_BASE + ((i / 32) - 1)) != 0) {
-            return true;
+        ပေႃး (apic_read_reg(APIC_IRR_BASE + ((i / 32) - 1)) != 0) {
+            ပွၵ်ႈ true;
         }
     }
-    return false;
+    ပွၵ်ႈ false;
 }
 
 BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)

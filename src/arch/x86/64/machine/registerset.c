@@ -14,7 +14,7 @@ const register_t msgRegisters[] = {
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    parimaa_na(msgRegisters) / parimaa_na(msgRegisters[0]) == n_msgRegisters
 );
 
 const register_t frameRegisters[] = {
@@ -23,7 +23,7 @@ const register_t frameRegisters[] = {
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    parimaa_na(frameRegisters) / parimaa_na(frameRegisters[0]) == n_frameRegisters
 );
 
 const register_t gpRegisters[] = {
@@ -31,7 +31,7 @@ const register_t gpRegisters[] = {
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    parimaa_na(gpRegisters) / parimaa_na(gpRegisters[0]) == n_gpRegisters
 );
 
 void Mode_initContext(user_context_t *context)
@@ -56,19 +56,19 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    ပေႃး (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        ပေႃး (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    ပွၵ်ႈ v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ပွၵ်ႈ getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

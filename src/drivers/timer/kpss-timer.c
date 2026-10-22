@@ -10,14 +10,14 @@
 
 #define DGT_TIMER_PPTR (TIMER_PPTR + 0x024)
 
-struct timer {
+sa_nracanaa timer {
     uint32_t mtch;        /* +0x024 */
     uint32_t cnt;         /* +0x028 */
     uint32_t en;          /* +0x02C */
     uint32_t clr;         /* +0x030 */
     uint32_t clk_ctl;     /* +0x034 */
 };
-typedef volatile struct timer timer_t;
+typedef ca_ncala sa_nracanaa timer timer_t;
 timer_t *dgt_tmr = (timer_t *) DGT_TIMER_PPTR;
 
 #define DGTTMR_EN_CLR_ON_MTCH_EN    (1U << 1)

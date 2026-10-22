@@ -30,23 +30,23 @@
 #define TXBUF_EMPTY     BIT(1)
 #define RXBUF_READY     BIT(0)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#define UART_REG(X) ((ca_ncala uint32_t *)(UART_PPTR + (X)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
+    ၶၢဝ်း ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
     *UART_REG(UTXH) = (c & 0xff);
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    if ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
-        return (unsigned char) * UART_REG(URXH);
-    } else {
-        return -1;
+    ပေႃး ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
+        ပွၵ်ႈ (unsigned var_na) * UART_REG(URXH);
+    } ပေႃးဢမ်ႇ {
+        ပွၵ်ႈ -1;
     }
 }
 #endif /* CONFIG_DEBUG_BUILD */

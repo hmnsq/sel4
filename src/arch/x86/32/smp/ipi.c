@@ -12,17 +12,17 @@
 void Mode_handleRemoteCall(IpiModeRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2)
 {
     switch (call) {
-    case IpiRemoteCall_InvalidateTLBEntry:
+    pak_sa IpiRemoteCall_InvalidateTLBEntry:
         invalidateLocalTLBEntry(arg0);
-        break;
+        bha_nga;
 
-    case IpiRemoteCall_InvalidatePageStructureCache:
+    pak_sa IpiRemoteCall_InvalidatePageStructureCache:
         invalidateLocalPageStructureCache();
-        break;
+        bha_nga;
 
-    case IpiRemoteCall_InvalidateTLB:
+    pak_sa IpiRemoteCall_InvalidateTLB:
         invalidateLocalTLB();
-        break;
+        bha_nga;
 
     default:
         fail("Invalid remote call");

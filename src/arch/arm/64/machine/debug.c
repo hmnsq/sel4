@@ -36,14 +36,14 @@
 
 bool_t byte8WatchpointsSupported(void)
 {
-    return true;
+    ပွၵ်ႈ true;
 }
 
 exception_t handleDebugFaultEvent(word_t esr)
 {
     MCS_DO_IF_BUDGET({
         current_fault = handleUserLevelDebugException(esr, getRestartPC(NODE_STATE(ksCurThread)));
-        if (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
+        ပေႃး (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
         {
             handleFault(NODE_STATE(ksCurThread));
         }
@@ -51,7 +51,7 @@ exception_t handleDebugFaultEvent(word_t esr)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    ပွၵ်ႈ EXCEPTION_NONE;
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -63,16 +63,16 @@ exception_t handleDebugFaultEvent(word_t esr)
 bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
                                bool_t is_reply)
 {
-    if (n_instr > 0) {
+    ပေႃး (n_instr > 0) {
         /* Enable single stepping */
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+    } ပေႃးဢမ်ႇ {
         /* Disable single stepping */
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return true;
+    ပွၵ်ႈ true;
 }
 
 /* Guides the debug hardware initialization sequence. */
@@ -120,21 +120,21 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    for (puur_naa_nka i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    for (puur_naa_nka i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
-    return true;
+    ပွၵ်ႈ true;
 }
 
 /* Abstract wrapper around the ESR fault status value */
 
 static word_t getFaultStatus(word_t esr)
 {
-    return (esr & ESR_EXCEPTION_CLASS_MASK) >> ESR_EXCEPTION_CLASS_OFF;
+    ပွၵ်ႈ (esr & ESR_EXCEPTION_CLASS_MASK) >> ESR_EXCEPTION_CLASS_OFF;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -152,7 +152,7 @@ static word_t getFaultStatus(word_t esr)
 bool_t isDebugFault(word_t esr)
 {
     word_t exception_class = getFaultStatus(esr);
-    return (exception_class == DEBUG_ENTRY_BREAKPOINT ||
+    ပွၵ်ႈ (exception_class == DEBUG_ENTRY_BREAKPOINT ||
             exception_class == DEBUG_ENTRY_SINGLE_STEP ||
             exception_class == DEBUG_ENTRY_WATCHPOINT ||
             exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
@@ -176,7 +176,7 @@ bool_t isDebugFault(word_t esr)
  */
 seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
 {
-    int active_bp;
+    puur_naa_nka active_bp;
     word_t bp_reason, bp_vaddr;
     word_t exception_class = getFaultStatus(esr);
 
@@ -186,19 +186,19 @@ seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
 #endif
 
     switch (exception_class) {
-    case DEBUG_ENTRY_BREAKPOINT:
+    pak_sa DEBUG_ENTRY_BREAKPOINT:
         bp_reason = seL4_InstructionBreakpoint;
         bp_vaddr = fault_vaddr;
-        break;
-    case DEBUG_ENTRY_WATCHPOINT:
+        bha_nga;
+    pak_sa DEBUG_ENTRY_WATCHPOINT:
         bp_reason = seL4_DataBreakpoint;
         bp_vaddr = getFAR();
-        break;
-    case DEBUG_ENTRY_SINGLE_STEP:
+        bha_nga;
+    pak_sa DEBUG_ENTRY_SINGLE_STEP:
         bp_reason = seL4_SingleStep;
         bp_vaddr = fault_vaddr;
         active_bp = 0;
-        break;
+        bha_nga;
     default: /* EXPLICIT_BKPT: BKPT instruction */
         assert(exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
         bp_reason = seL4_SoftwareBreakRequest;
@@ -209,17 +209,17 @@ seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
     /* There is no hardware register associated with BKPT instruction
     * triggers or single stepping.
     */
-    if (bp_reason != seL4_SoftwareBreakRequest && bp_reason != seL4_SingleStep) {
+    ပေႃး (bp_reason != seL4_SoftwareBreakRequest && bp_reason != seL4_SingleStep) {
         active_bp = getAndResetActiveBreakpoint(bp_vaddr, bp_reason);
         active_bp = getBpNumFromType(active_bp, bp_reason);
         assert(active_bp >= 0);
     }
 
-    if (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(NODE_STATE(ksCurThread))) {
-        return seL4_Fault_NullFault_new();
+    ပေႃး (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(NODE_STATE(ksCurThread))) {
+        ပွၵ်ႈ seL4_Fault_NullFault_new();
     }
 
-    return seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
+    ပွၵ်ႈ seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
 }
 
 #endif /* CONFIG_HARDWARE_DEBUG_API */
@@ -238,11 +238,11 @@ void aarch64_restore_user_debug_context(tcb_t *target_thread)
     word_t mdscr = 0, spsr = 0;
     MRS("MDSCR_EL1", mdscr);
     spsr = getRegister(target_thread, SPSR_EL1);
-    if (target_thread->tcbArch.tcbContext.breakpointState.single_step_enabled) {
+    ပေႃး (target_thread->tcbArch.tcbContext.breakpointState.single_step_enabled) {
         /* Enable single stepping */
         mdscr |= MDSCR_SS;
         spsr |= SPSR_SS;
-    } else {
+    } ပေႃးဢမ်ႇ {
         /* Disable single stepping */
         mdscr &= ~MDSCR_SS;
         spsr &= ~SPSR_SS;

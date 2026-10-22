@@ -18,15 +18,15 @@ lookupCap_ret_t lookupCap(tcb_t *thread, cptr_t cPtr)
     lookupCap_ret_t ret;
 
     lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    ပေႃး (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         ret.status = lu_ret.status;
         ret.cap = cap_null_cap_new();
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
     ret.status = EXCEPTION_NONE;
     ret.cap = lu_ret.slot->cap;
-    return ret;
+    ပွၵ်ႈ ret;
 }
 
 lookupCapAndSlot_ret_t lookupCapAndSlot(tcb_t *thread, cptr_t cPtr)
@@ -35,17 +35,17 @@ lookupCapAndSlot_ret_t lookupCapAndSlot(tcb_t *thread, cptr_t cPtr)
     lookupCapAndSlot_ret_t ret;
 
     lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    ပေႃး (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         ret.status = lu_ret.status;
         ret.slot = NULL;
         ret.cap = cap_null_cap_new();
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
     ret.status = EXCEPTION_NONE;
     ret.slot = lu_ret.slot;
     ret.cap = lu_ret.slot->cap;
-    return ret;
+    ပွၵ်ႈ ret;
 }
 
 lookupSlot_raw_ret_t lookupSlot(tcb_t *thread, cptr_t capptr)
@@ -59,7 +59,7 @@ lookupSlot_raw_ret_t lookupSlot(tcb_t *thread, cptr_t capptr)
 
     ret.status = res_ret.status;
     ret.slot = res_ret.slot;
-    return ret;
+    ပွၵ်ႈ ret;
 }
 
 lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr,
@@ -70,57 +70,57 @@ lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr
 
     ret.slot = NULL;
 
-    if (unlikely(cap_get_capType(root) != cap_cnode_cap)) {
+    ပေႃး (unlikely(cap_get_capType(root) != cap_cnode_cap)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = isSource;
         current_lookup_fault = lookup_fault_invalid_root_new();
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
-    if (unlikely(depth < 1 || depth > wordBits)) {
+    ပေႃး (unlikely(depth < 1 || depth > wordBits)) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
         current_syscall_error.rangeErrorMax = wordBits;
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ပွၵ်ႈ ret;
     }
     res_ret = resolveAddressBits(root, capptr, depth);
-    if (unlikely(res_ret.status != EXCEPTION_NONE)) {
+    ပေႃး (unlikely(res_ret.status != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = isSource;
         /* current_lookup_fault will have been set by resolveAddressBits */
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
-    if (unlikely(res_ret.bitsRemaining != 0)) {
+    ပေႃး (unlikely(res_ret.bitsRemaining != 0)) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = isSource;
         current_lookup_fault =
             lookup_fault_depth_mismatch_new(0, res_ret.bitsRemaining);
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
     ret.slot = res_ret.slot;
     ret.status = EXCEPTION_NONE;
-    return ret;
+    ပွၵ်ႈ ret;
 }
 
 lookupSlot_ret_t lookupSourceSlot(cap_t root, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    ပွၵ်ႈ lookupSlotForCNodeOp(true, root, capptr, depth);
 }
 
 lookupSlot_ret_t lookupTargetSlot(cap_t root, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(false, root, capptr, depth);
+    ပွၵ်ႈ lookupSlotForCNodeOp(false, root, capptr, depth);
 }
 
 lookupSlot_ret_t lookupPivotSlot(cap_t root, cptr_t capptr, word_t depth)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    ပွၵ်ႈ lookupSlotForCNodeOp(true, root, capptr, depth);
 }
 
 resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t n_bits)
@@ -133,13 +133,13 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
     ret.bitsRemaining = n_bits;
     ret.slot = NULL;
 
-    if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
+    ပေႃး (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
         current_lookup_fault = lookup_fault_invalid_root_new();
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ပွၵ်ႈ ret;
     }
 
-    while (1) {
+    ၶၢဝ်း (1) {
         radixBits = cap_cnode_cap_get_capCNodeRadix(nodeCap);
         guardBits = cap_cnode_cap_get_capCNodeGuardSize(nodeCap);
         levelBits = radixBits + guardBits;
@@ -154,28 +154,28 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
          * the C spec to shift right by more than wordBits-1.
          */
         guard = (capptr >> ((n_bits - guardBits) & MASK(wordRadix))) & MASK(guardBits);
-        if (unlikely(guardBits > n_bits || guard != capGuard)) {
+        ပေႃး (unlikely(guardBits > n_bits || guard != capGuard)) {
             current_lookup_fault =
                 lookup_fault_guard_mismatch_new(capGuard, n_bits, guardBits);
             ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+            ပွၵ်ႈ ret;
         }
 
-        if (unlikely(levelBits > n_bits)) {
+        ပေႃး (unlikely(levelBits > n_bits)) {
             current_lookup_fault =
                 lookup_fault_depth_mismatch_new(levelBits, n_bits);
             ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+            ပွၵ်ႈ ret;
         }
 
         offset = (capptr >> (n_bits - levelBits)) & MASK(radixBits);
         slot = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap)) + offset;
 
-        if (likely(n_bits == levelBits)) {
+        ပေႃး (likely(n_bits == levelBits)) {
             ret.status = EXCEPTION_NONE;
             ret.slot = slot;
             ret.bitsRemaining = 0;
-            return ret;
+            ပွၵ်ႈ ret;
         }
 
         /** GHOSTUPD: "(\<acute>levelBits > 0, id)" */
@@ -183,11 +183,11 @@ resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t
         n_bits -= levelBits;
         nodeCap = slot->cap;
 
-        if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
+        ပေႃး (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
             ret.status = EXCEPTION_NONE;
             ret.slot = slot;
             ret.bitsRemaining = n_bits;
-            return ret;
+            ပွၵ်ႈ ret;
         }
     }
 }
