@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <machine/timer.h>
-#include <mode/api/ipc_buffer.h>
-#include <object/schedcontext.h>
-#include <object/schedcontrol.h>
-#include <kernel/sporadic.h>
+#ضمن <machine/timer.h>
+#ضمن <mode/api/ipc_buffer.h>
+#ضمن <object/schedcontext.h>
+#ضمن <object/schedcontrol.h>
+#ضمن <kernel/sporadic.h>
 
-static exception_t invokeSchedControl_ConfigureFlags(sched_context_t *target, word_t core, ticks_t budget,
-                                                     ticks_t period, word_t max_refills, word_t badge, word_t flags)
+ساكن exception_t invokeSchedControl_ConfigureFlags(sched_context_t *موخه, کلمه_t core, ticks_t budget,
+                                                     ticks_t period, کلمه_t max_refills, کلمه_t badge, کلمه_t flags)
 {
-    tcb_t *thread = target->scTcb;
+    tcb_t *thread = موخه->scTcb;
 
     /* don't modify parameters of thread while it is in a sorted queue */
-    if (thread) {
+    إذا (thread) {
         /* possibly stall a remote core */
         SMP_COND_STATEMENT(remoteTCBStall(thread));
         /* remove from scheduler */
         tcbReleaseRemove(thread);
-        tcbSchedDequeue(thread);
+        tcb_Sched_له_کتار_ایستل(thread);
         /* bill the current consumed amount before adjusting the params */
-        if (NODE_STATE(ksCurSC) == target) {
+        إذا (غوټه_STATE(ksCurSC) == موخه) {
             /* This could potentially mutate state but if it returns
              * true no state was modified, thus removing it should
              * be the same. */
-            assert(checkBudget());
-            commitTime();
+            أكد(checkBudget());
+            commit_وخت();
         }
     }
 
-    if (budget == period) {
+    إذا (budget == period) {
         /* this is a cool hack: for round robin, we set the
          * period to 0, which means that the budget will always be ready to be refilled
          * and avoids some special casing.
          */
-        refill_new(target, MIN_REFILLS, budget, 0);
-    } else if (SMP_COND_STATEMENT(core == target->scCore &&) sc_active(target) && thread
+        refill_new(موخه, MIN_REFILLS, budget, 0);
+    } وإلا إذا (SMP_COND_STATEMENT(core == موخه->scCore &&) sc_فعال(موخه) && thread
                && isRunnable(thread)) {
         /* the scheduling context is active - it can be used, so
          * we need to preserve the bandwidth */
-        refill_update(target, period, budget, max_refills);
-    } else {
+        refill_update(موخه, period, budget, max_refills);
+    } وإلا {
         /* the scheduling context isn't active - it's budget is not being used, so
          * we can just populate the parameters from now */
-        refill_new(target, max_refills, budget, period);
+        refill_new(موخه, max_refills, budget, period);
     }
 
-#ifdef ENABLE_SMP_SUPPORT
-    target->scCore = core;
-    if (thread) {
-        migrateTCB(thread, target->scCore);
+#که_تعریف_شوی ENABLE_SMP_SUPPORT
+    موخه->scCore = core;
+    إذا (thread) {
+        migrateTCB(thread, موخه->scCore);
     }
-#endif /* ENABLE_SMP_SUPPORT */
+#د_که_پای /* ENABLE_SMP_SUPPORT */
 
-    assert(sc_active(target));
-    if (thread) {
-        schedContext_resume(target);
-        if (SMP_TERNARY(core == CURRENT_CPU_INDEX(), true)) {
-            if (isRunnable(thread) && thread != NODE_STATE(ksCurThread)) {
-                possibleSwitchTo(thread);
+    أكد(sc_فعال(موخه));
+    إذا (thread) {
+        schedContext_resume(موخه);
+        إذا (SMP_TERNARY(core == CURRENT_CPU_شاخص(), true)) {
+            إذا (isRunnable(thread) && thread != غوټه_STATE(ksCurThread)) {
+                possible_Switch_منزل(thread);
             }
-        } else if (isRunnable(thread)) {
-            SCHED_ENQUEUE(thread);
+        } وإلا إذا (isRunnable(thread)) {
+            SCHED_کتار_ته_ورزیاتول(thread);
         }
-        if (thread == NODE_STATE(ksCurThread)) {
+        إذا (thread == غوټه_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    target->scBadge = badge;
-    target->scSporadic = (flags & seL4_SchedContext_Sporadic) != 0;
+    موخه->scBadge = badge;
+    موخه->scSporadic = (flags & seL4_SchedContext_Sporadic) != 0;
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, word_t *buffer)
+ساكن exception_t decodeSchedControl_ConfigureFlags(کلمه_t اوږدتیا, cap_t cap, کلمه_t *بفر)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    إذا (current_extra_caps.excaprefs[0] == عدم) {
         userError("SchedControl_ConfigureFlags: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < (TIME_ARG_SIZE * 2) + 3) {
+    إذا (اوږدتیا < (وخت_ARG_اندازه * 2) + 3) {
         userError("SchedControl_configureFlags: truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    time_t budget_us = mode_parseTimeArg(0, buffer);
+    وخت_t budget_us = ډېرپېښ_parse_وخت_Arg(0, بفر);
 
-    if (budget_us > MAX_PERIOD_US) {
+    إذا (budget_us > MAX_PERIOD_US) {
         userError("SchedControl_ConfigureFlags: budget out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    ticks_t budget_ticks = usToTicks(budget_us);
+    ticks_t budget_ticks = us_منزل_Ticks(budget_us);
 
-    time_t period_us = mode_parseTimeArg(TIME_ARG_SIZE, buffer);
+    وخت_t period_us = ډېرپېښ_parse_وخت_Arg(وخت_ARG_اندازه, بفر);
 
-    if (period_us > MAX_PERIOD_US) {
+    إذا (period_us > MAX_PERIOD_US) {
         userError("SchedControl_ConfigureFlags: period out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    ticks_t period_ticks = usToTicks(period_us);
+    ticks_t period_ticks = us_منزل_Ticks(period_us);
 
-    if (budget_ticks < MIN_BUDGET) {
+    إذا (budget_ticks < MIN_BUDGET) {
         userError("SchedControl_ConfigureFlags: budget out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (period_ticks < MIN_BUDGET) {
+    إذا (period_ticks < MIN_BUDGET) {
         userError("SchedControl_ConfigureFlags: period out of range.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = MAX_PERIOD_US;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (budget_ticks > period_ticks) {
+    إذا (budget_ticks > period_ticks) {
         userError("SchedControl_ConfigureFlags: budget must be <= period");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = MIN_BUDGET_US;
         current_syscall_error.rangeErrorMax = period_us;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    cap_t targetCap = current_extra_caps.excaprefs[0]->cap;
-    if (unlikely(cap_get_capType(targetCap) != cap_sched_context_cap)) {
+    cap_t موخه_Cap = current_extra_caps.excaprefs[0]->cap;
+    إذا (unlikely(cap_get_capType(موخه_Cap) != cap_sched_context_cap)) {
         userError("SchedControl_ConfigureFlags: target cap not a scheduling context cap");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_شمېره = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t extra_refills = getSyscallArg(TIME_ARG_SIZE * 2, buffer);
-    word_t max_refills = refill_absolute_max(targetCap);
+    کلمه_t extra_refills = getSyscallArg(وخت_ARG_اندازه * 2, بفر);
+    کلمه_t max_refills = refill_absolute_max(موخه_Cap);
 
-    if (extra_refills > max_refills - MIN_REFILLS) {
+    إذا (extra_refills > max_refills - MIN_REFILLS) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = max_refills - MIN_REFILLS;
         userError("Max refills invalid, got %lu, max %lu",
                   extra_refills,
                   current_syscall_error.rangeErrorMax);
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t badge = getSyscallArg(TIME_ARG_SIZE * 2 + 1, buffer);
-    word_t flags = getSyscallArg(TIME_ARG_SIZE * 2 + 2, buffer);
+    کلمه_t badge = getSyscallArg(وخت_ARG_اندازه * 2 + 1, بفر);
+    کلمه_t flags = getSyscallArg(وخت_ARG_اندازه * 2 + 2, بفر);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSchedControl_ConfigureFlags(SC_PTR(cap_sched_context_cap_get_capSCPtr(targetCap)),
+    سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+    أرجع invokeSchedControl_ConfigureFlags(SC_PTR(cap_sched_context_cap_get_capSCPtr(موخه_Cap)),
                                              cap_sched_control_cap_get_core(cap),
                                              budget_ticks,
                                              period_ticks,
@@ -173,14 +173,14 @@ static exception_t decodeSchedControl_ConfigureFlags(word_t length, cap_t cap, w
                                              flags);
 }
 
-exception_t decodeSchedControlInvocation(word_t label, cap_t cap, word_t length, word_t *buffer)
+exception_t decodeSchedControlInvocation(کلمه_t label, cap_t cap, کلمه_t اوږدتیا, کلمه_t *بفر)
 {
-    switch (label) {
-    case SchedControlConfigureFlags:
-        return  decodeSchedControl_ConfigureFlags(length, cap, buffer);
-    default:
+    بدل (label) {
+    حالة SchedControlConfigureFlags:
+        أرجع  decodeSchedControl_ConfigureFlags(اوږدتیا, cap, بفر);
+    افتراضي:
         userError("SchedControl invocation: Illegal operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 }

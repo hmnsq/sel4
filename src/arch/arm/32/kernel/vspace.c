@@ -4,166 +4,166 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <benchmark/benchmark.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <kernel/boot.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/stack.h>
-#include <machine/io.h>
-#include <machine/debug.h>
-#include <model/statedata.h>
-#include <object/cnode.h>
-#include <object/untyped.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <armv/context_switch.h>
-#include <arch/object/iospace.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/tlb.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <benchmark/benchmark.h>
+#ضمن <api/failures.h>
+#ضمن <api/syscall.h>
+#ضمن <kernel/boot.h>
+#ضمن <kernel/cspace.h>
+#ضمن <kernel/thread.h>
+#ضمن <kernel/stack.h>
+#ضمن <machine/io.h>
+#ضمن <machine/debug.h>
+#ضمن <model/statedata.h>
+#ضمن <object/cnode.h>
+#ضمن <object/untyped.h>
+#ضمن <arch/api/invocation.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/hardware.h>
+#ضمن <armv/context_switch.h>
+#ضمن <arch/object/iospace.h>
+#ضمن <arch/object/vcpu.h>
+#ضمن <arch/machine/tlb.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
-#include <benchmark/benchmark_track.h>
-#endif
+#که_تعریف_شوی CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+#ضمن <benchmark/benchmark_track.h>
+#د_که_پای
 
 /* ARM uses multiple identical mappings in a page table / page directory to construct
  * large mappings. In both cases it happens to be 16 entries, which can be calculated by
  * looking at the size difference of the mappings, and is done this way to remove magic
  * numbers littering this code and make it clear what is going on */
-#define SECTIONS_PER_SUPER_SECTION BIT(ARMSuperSectionBits - ARMSectionBits)
-#define PAGES_PER_LARGE_PAGE BIT(ARMLargePageBits - ARMSmallPageBits)
+#تعریف_کړه SECTIONS_فی_SUPER_SECTION بټ(ARMSuper_Section_بټونه - ARMSection_بټونه)
+#تعریف_کړه پاڼې_فی_LARGE_پاڼه بټ(ARMLarge_پاڼه_بټونه - ARMSmall_پاڼه_بټونه)
 
 /* helper stuff to avoid fencepost errors when
  * getting the last byte of a PTE or PDE */
-#define LAST_BYTE_PTE(PTE,LENGTH) ((word_t)&(PTE)[(LENGTH)-1] + (BIT(PTE_SIZE_BITS)-1))
-#define LAST_BYTE_PDE(PDE,LENGTH) ((word_t)&(PDE)[(LENGTH)-1] + (BIT(PDE_SIZE_BITS)-1))
+#تعریف_کړه وروستی_BYTE_PTE(PTE,اوږدتیا_2) ((کلمه_t)&(PTE)[(اوږدتیا_2)-1] + (بټ(PTE_اندازه_بټونه)-1))
+#تعریف_کړه وروستی_BYTE_PDE(PDE,اوږدتیا_2) ((کلمه_t)&(PDE)[(اوږدتیا_2)-1] + (بټ(PDE_اندازه_بټونه)-1))
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
 /* Stage 2 */
-#define MEMATTR_CACHEABLE    0xf /* Inner and Outer write-back */
-#define MEMATTR_NONCACHEABLE 0x0 /* Strongly ordered or device memory */
+#تعریف_کړه MEMATTR_CACHEABLE    0xf /* Inner and Outer write-back */
+#تعریف_کړه MEMATTR_NONCACHEABLE 0x0 /* Strongly ordered or device memory */
 
 /* STage 1 hyp */
-#define ATTRINDX_CACHEABLE    0xff /* Inner and Outer RW write-back non-transient */
-#define ATTRINDX_NONCACHEABLE 0x0  /* strongly ordered or device memory */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#تعریف_کړه ATTRINDX_CACHEABLE    0xff /* Inner and Outer RW write-back non-transient */
+#تعریف_کړه ATTRINDX_NONCACHEABLE 0x0  /* strongly ordered or device memory */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-static void setGlobalPD(void);
+ساكن فراغ سېټ_Global_PD(فراغ);
 
-struct resolve_ret {
-    paddr_t frameBase;
-    vm_page_size_t frameSize;
+بنية resolve_ret {
+    paddr_t چوکاټ_بنسټ;
+    vm_پاڼه_اندازه_t چوکاټ_اندازه;
     bool_t valid;
 };
-typedef struct resolve_ret resolve_ret_t;
+تعريفنوع بنية resolve_ret resolve_ret_t;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-static bool_t PURE pteCheckIfMapped(pte_t *pte);
-static bool_t PURE pdeCheckIfMapped(pde_t *pde);
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+ساكن bool_t خالص pteCheckIfMapped(pte_t *pte);
+ساكن bool_t خالص pdeCheckIfMapped(pde_t *pde);
 
-static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+ساكن کلمه_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMNoAccess:
-        return 0;
+    بدل (vm_rights) {
+    حالة VMNoAccess:
+        أرجع 0;
 
-    case VMKernelOnly:
-        return 1;
+    حالة VMKernelOnly:
+        أرجع 1;
 
-    case VMReadOnly:
-        return 2;
+    حالة VMReadOnly:
+        أرجع 2;
 
-    case VMReadWrite:
-        return 3;
+    حالة VMReadWrite:
+        أرجع 3;
 
-    default:
+    افتراضي:
         fail("Invalid VM rights");
     }
 }
 
-#else
+#وإلا
 /* AP encoding slightly different. AP only used for kernel mappings which are fixed after boot time */
-BOOT_CODE
-static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+BOOT_کوډ
+ساكن کلمه_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-        return 0;
-    case VMReadWrite:
-        return 1;
-    case VMNoAccess:
+    بدل (vm_rights) {
+    حالة VMKernelOnly:
+        أرجع 0;
+    حالة VMReadWrite:
+        أرجع 1;
+    حالة VMNoAccess:
         /* RO at PL1 only */
-        return 2;
-    case VMReadOnly:
-        return 3;
-    default:
+        أرجع 2;
+    حالة VMReadOnly:
+        أرجع 3;
+    افتراضي:
         fail("Invalid VM rights");
     }
 }
 
-static word_t CONST HAPFromVMRights(vm_rights_t vm_rights)
+ساكن کلمه_t CONST HAPFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-    case VMNoAccess:
-        return 0;
-    case VMReadOnly:
-        return 1;
+    بدل (vm_rights) {
+    حالة VMKernelOnly:
+    حالة VMNoAccess:
+        أرجع 0;
+    حالة VMReadOnly:
+        أرجع 1;
     /*
     case VMWriteOnly:
         return 2;
     */
-    case VMReadWrite:
-        return 3;
-    default:
+    حالة VMReadWrite:
+        أرجع 3;
+    افتراضي:
         fail("Invalid VM rights");
     }
 }
 
-#endif
+#د_که_پای
 
-vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
+vm_rights_t CONST ماسک_VMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_ماسک)
 {
-    if (vm_rights == VMNoAccess) {
-        return VMNoAccess;
+    إذا (vm_rights == VMNoAccess) {
+        أرجع VMNoAccess;
     }
-    if (vm_rights == VMReadOnly &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    إذا (vm_rights == VMReadOnly &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ماسک)) {
+        أرجع VMReadOnly;
     }
-    if (vm_rights == VMReadWrite &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    إذا (vm_rights == VMReadWrite &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ماسک)) {
+        إذا (!seL4_CapRights_get_capAllowWrite(cap_rights_ماسک)) {
+            أرجع VMReadOnly;
+        } وإلا {
+            أرجع VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
-        !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
-        seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+    إذا (vm_rights == VMReadWrite &&
+        !seL4_CapRights_get_capAllowRead(cap_rights_ماسک) &&
+        seL4_CapRights_get_capAllowWrite(cap_rights_ماسک)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    أرجع VMKernelOnly;
 }
 
 /* ==================== BOOT CODE STARTS HERE ==================== */
 
-BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
+BOOT_کوډ فراغ map_kernel_چوکاټ(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_ځانګړتیاوې_t ځانګړتیاوې)
 {
-    word_t idx = (vaddr & MASK(pageBitsForSize(ARMSection))) >> pageBitsForSize(ARMSmallPage);
+    کلمه_t idx = (vaddr & ماسک(پاڼه_بټونه_For_اندازه(ARMSection))) >> پاڼه_بټونه_For_اندازه(ARMSmall_پاڼه);
 
-    assert(vaddr >= PPTR_TOP); /* vaddr lies in the region the global PT covers */
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t tex;
-    if (vm_attributes_get_armPageCacheable(attributes)) {
+    أكد(vaddr >= PPTR_سر); /* vaddr lies in the region the global PT covers */
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t tex;
+    إذا (vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(ځانګړتیاوې)) {
         tex = 5; /* TEX = 0b1(Cached)01(Outer Write Allocate) */
-    } else {
+    } وإلا {
         tex = 0;
     }
     armKSGlobalPT[idx] =
@@ -178,7 +178,7 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
             1, /* B (Inner write allocate) */
             0  /* executable */
         );
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#وإلا /* CONFIG_ARM_HYPERVISOR_SUPPORT */
     armHSGlobalPT[idx] =
         pteS1_pteS1_small_new(
             0, /* Executable */
@@ -190,26 +190,26 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
             0, /* Not shared */
             APFromVMRights(vm_rights),
             0, /* non secure */
-            vm_attributes_get_armPageCacheable(attributes)
+            vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(ځانګړتیاوې)
         );
-#endif /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-BOOT_CODE void map_kernel_window(void)
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+BOOT_کوډ فراغ map_kernel_کړکۍ(فراغ)
 {
     paddr_t  phys;
-    word_t idx;
+    کلمه_t idx;
     pde_t    pde;
 
     /* mapping of KERNEL_ELF_BASE (virtual address) to kernel's
      * KERNEL_ELF_PHYS_BASE  */
     /* up to end of virtual address space minus 16M using 16M frames */
-    phys = physBase();
-    idx = PPTR_BASE >> pageBitsForSize(ARMSection);
+    phys = phys_بنسټ();
+    idx = PPTR_بنسټ >> پاڼه_بټونه_For_اندازه(ARMSection);
 
-    while (idx < BIT(PD_INDEX_BITS) - SECTIONS_PER_SUPER_SECTION) {
-        word_t idx2;
+    طالما (idx < بټ(PD_شاخص_بټونه) - SECTIONS_فی_SUPER_SECTION) {
+        کلمه_t idx2;
 
         pde = pde_pde_section_new(
                   phys,
@@ -225,14 +225,14 @@ BOOT_CODE void map_kernel_window(void)
                   0, /* C (Inner write allocate) */
                   1  /* B (Inner write allocate) */
               );
-        for (idx2 = idx; idx2 < idx + SECTIONS_PER_SUPER_SECTION; idx2++) {
+        لكل (idx2 = idx; idx2 < idx + SECTIONS_فی_SUPER_SECTION; idx2++) {
             armKSGlobalPD[idx2] = pde;
         }
-        phys += BIT(pageBitsForSize(ARMSuperSection));
-        idx += SECTIONS_PER_SUPER_SECTION;
+        phys += بټ(پاڼه_بټونه_For_اندازه(ARMSuperSection));
+        idx += SECTIONS_فی_SUPER_SECTION;
     }
 
-    while (idx < (PPTR_TOP >> pageBitsForSize(ARMSection))) {
+    طالما (idx < (PPTR_سر >> پاڼه_بټونه_For_اندازه(ARMSection))) {
         pde = pde_pde_section_new(
                   phys,
                   0, /* Section */
@@ -248,45 +248,45 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* B (Inner write allocate) */
               );
         armKSGlobalPD[idx] = pde;
-        phys += BIT(pageBitsForSize(ARMSection));
+        phys += بټ(پاڼه_بټونه_For_اندازه(ARMSection));
         idx++;
     }
 
     /* crosscheck whether we have mapped correctly so far */
-    assert(phys == PADDR_TOP);
+    أكد(phys == PADDR_سر);
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
+#که_تعریف_شوی CONFIG_KERNEL_LOG_بفر
     /* map log buffer page table. PTEs to be filled by user later by calling seL4_BenchmarkSetLogBuffer() */
     armKSGlobalPD[idx] =
         pde_pde_coarse_new(
-            addrFromKPPtr(armKSGlobalLogPT), /* address */
+            addrFromKPPtr(armKSGlobalLogPT), /*پته*/
             true,                           /* P       */
             0                               /* Domain  */
         );
 
-    memzero(armKSGlobalLogPT, BIT(seL4_PageTableBits));
+    memzero(armKSGlobalLogPT, بټ(se_L4_پاڼه_جدول_بټونه));
 
-    phys += BIT(pageBitsForSize(ARMSection));
+    phys += بټ(پاڼه_بټونه_For_اندازه(ARMSection));
     idx++;
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#د_که_پای /* CONFIG_KERNEL_LOG_BUFFER */
 
     /* map page table covering last 1M of virtual address space to page directory */
     armKSGlobalPD[idx] =
         pde_pde_coarse_new(
-            addrFromKPPtr(armKSGlobalPT), /* address */
+            addrFromKPPtr(armKSGlobalPT), /*پته*/
             true,                        /* P       */
             0                            /* Domain  */
         );
 
     /* now start initialising the page table */
-    memzero(armKSGlobalPT, 1 << seL4_PageTableBits);
+    memzero(armKSGlobalPT, 1 << se_L4_پاڼه_جدول_بټونه);
 
     /* map vector table */
-    map_kernel_frame(
-        addrFromKPPtr(arm_vector_table),
-        PPTR_VECTOR_TABLE,
+    map_kernel_چوکاټ(
+        addrFromKPPtr(arm_ویکټور_جدول),
+        PPTR_ویکټور_جدول,
         VMKernelOnly,
-        vm_attributes_new(
+        vm_ځانګړتیاوې_new(
             false, /* armExecuteNever */
             true,  /* armParityEnabled */
             true   /* armPageCacheable */
@@ -296,17 +296,17 @@ BOOT_CODE void map_kernel_window(void)
     map_kernel_devices();
 }
 
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#وإلا /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-BOOT_CODE void map_kernel_window(void)
+BOOT_کوډ فراغ map_kernel_کړکۍ(فراغ)
 {
     paddr_t    phys;
     uint32_t   idx;
     pdeS1_t pde;
-    pte_t UNUSED pteS2;
+    pte_t ناکارول_شوی pteS2;
 
     /* Initialise PGD */
-    for (idx = 0; idx < 3; idx++) {
+    لكل (idx = 0; idx < 3; idx++) {
         pde = pdeS1_pdeS1_invalid_new();
         armHSGlobalPGD[idx] = pde;
     }
@@ -315,14 +315,14 @@ BOOT_CODE void map_kernel_window(void)
 
     /* Initialise PMD */
     /* Invalidate up until USER_TOP */
-    for (idx = 0; idx < (USER_TOP - 0xC0000000) >> (PT_INDEX_BITS + PAGE_BITS); idx++) {
+    لكل (idx = 0; idx < (USER_سر - 0xC0000000) >> (PT_شاخص_بټونه + پاڼه_بټونه); idx++) {
         pde = pdeS1_pdeS1_invalid_new();
         armHSGlobalPD[idx] = pde;
     }
     /* mapping of PPTR_BASE (virtual address) to kernel's physBase  */
     /* up to end of virtual address space minus 2M using 2M frames */
-    phys = physBase();
-    for (; idx < BIT(PT_INDEX_BITS) - 1; idx++) {
+    phys = phys_بنسټ();
+    لكل (; idx < بټ(PT_شاخص_بټونه) - 1; idx++) {
         pde = pdeS1_pdeS1_section_new(
                   0, /* Executable */
                   0, /* Executable in PL1 */
@@ -336,15 +336,15 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* outer write-back Cacheable */
               );
         armHSGlobalPD[idx] = pde;
-        phys += BIT(PT_INDEX_BITS + PAGE_BITS);
+        phys += بټ(PT_شاخص_بټونه + پاڼه_بټونه);
     }
     /* map page table covering last 2M of virtual address space */
     pde = pdeS1_pdeS1_coarse_new(0, 0, 0, 0, addrFromKPPtr(armHSGlobalPT));
     armHSGlobalPD[idx] = pde;
 
     /* now start initialising the page table */
-    memzero(armHSGlobalPT, 1 << seL4_PageTableBits);
-    for (idx = 0; idx < 256; idx++) {
+    memzero(armHSGlobalPT, 1 << se_L4_پاڼه_جدول_بټونه);
+    لكل (idx = 0; idx < 256; idx++) {
         pteS1_t pte;
         pte = pteS1_pteS1_small_new(
                   0, /* Executable */
@@ -359,14 +359,14 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* outer write-back Cacheable */
               );
         armHSGlobalPT[idx] = pte;
-        phys += BIT(PAGE_BITS);
+        phys += بټ(پاڼه_بټونه);
     }
     /* map vector table */
-    map_kernel_frame(
-        addrFromKPPtr(arm_vector_table),
-        PPTR_VECTOR_TABLE,
+    map_kernel_چوکاټ(
+        addrFromKPPtr(arm_ویکټور_جدول),
+        PPTR_ویکټور_جدول,
         VMKernelOnly,
-        vm_attributes_new(
+        vm_ځانګړتیاوې_new(
             false, /* armExecuteNever */
             true,  /* armParityEnabled */
             true   /* armPageCacheable */
@@ -376,25 +376,25 @@ BOOT_CODE void map_kernel_window(void)
     map_kernel_devices();
 }
 
-#endif /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-static BOOT_CODE void map_it_frame_cap(cap_t pd_cap, cap_t frame_cap, bool_t executable)
+ساكن BOOT_کوډ فراغ map_it_چوکاټ_cap(cap_t pd_cap, cap_t چوکاټ_cap, bool_t executable)
 {
     pte_t *pt;
-    pte_t *targetSlot;
-    pde_t *pd    = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pd_cap));
-    void  *frame = (void *)generic_frame_cap_get_capFBasePtr(frame_cap);
-    vptr_t vptr  = generic_frame_cap_get_capFMappedAddress(frame_cap);
+    pte_t *موخه_خونه;
+    pde_t *pd    = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(pd_cap));
+    فراغ  *چوکاټ = (فراغ *)generic_چوکاټ_cap_get_cap_FBase_Ptr(چوکاټ_cap);
+    vptr_t vptr  = generic_چوکاټ_cap_get_cap_FMapped_پته(چوکاټ_cap);
 
-    assert(generic_frame_cap_get_capFMappedASID(frame_cap) != 0);
+    أكد(generic_چوکاټ_cap_get_cap_FMapped_ASID(چوکاټ_cap) != 0);
 
-    pd += (vptr >> pageBitsForSize(ARMSection));
-    pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pd));
-    targetSlot = pt + ((vptr & MASK(pageBitsForSize(ARMSection)))
-                       >> pageBitsForSize(ARMSmallPage));
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    *targetSlot = pte_pte_small_new(
-                      addrFromPPtr(frame),
+    pd += (vptr >> پاڼه_بټونه_For_اندازه(ARMSection));
+    pt = ptrFromPAddr(pde_pde_coarse_ptr_get_پته(pd));
+    موخه_خونه = pt + ((vptr & ماسک(پاڼه_بټونه_For_اندازه(ARMSection)))
+                       >> پاڼه_بټونه_For_اندازه(ARMSmall_پاڼه));
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    *موخه_خونه = pte_pte_small_new(
+                      addrFromPPtr(چوکاټ),
                       1, /* not global */
                       SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
                       0, /* APX = 0, privileged full access */
@@ -404,161 +404,161 @@ static BOOT_CODE void map_it_frame_cap(cap_t pd_cap, cap_t frame_cap, bool_t exe
                       1, /* B (Inner write allocate) */
                       !executable
                   );
-#else
-    *targetSlot = pte_pte_small_new(
+#وإلا
+    *موخه_خونه = pte_pte_small_new(
                       0, /* Executable */
                       0, /* Not contiguous */
-                      addrFromPPtr(frame),
+                      addrFromPPtr(چوکاټ),
                       1, /* AF -- always set */
                       0, /* Not shared */
                       HAPFromVMRights(VMReadWrite),
                       MEMATTR_CACHEABLE  /* Cacheable */
                   );
-#endif
+#د_که_پای
 }
 
 /* Create a frame cap for the initial thread. */
 
-static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
+ساكن BOOT_کوډ cap_t create_it_چوکاټ_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
 {
-    if (use_large)
-        return
-            cap_frame_cap_new(
+    إذا (use_large)
+        أرجع
+            cap_چوکاټ_cap_new(
                 ARMSection,                    /* capFSize           */
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
-                wordFromVMRights(VMReadWrite), /* capFVMRights       */
+                ASID_ټیټ(asid),                /* capFMappedASIDLow  */
+                کلمه_From_VMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+                ASID_لوړ(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
-    else
-        return
-            cap_small_frame_cap_new(
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
-                wordFromVMRights(VMReadWrite), /* capFVMRights       */
+    وإلا
+        أرجع
+            cap_small_چوکاټ_cap_new(
+                ASID_ټیټ(asid),                /* capFMappedASIDLow  */
+                کلمه_From_VMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
-#ifdef CONFIG_TK1_SMMU
+#که_تعریف_شوی CONFIG_TK1_SMMU
                 0,                             /* IOSpace            */
-#endif
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+#د_که_پای
+                ASID_لوړ(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
 }
 
-static BOOT_CODE void map_it_pt_cap(cap_t pd_cap, cap_t pt_cap)
+ساكن BOOT_کوډ فراغ map_it_pt_cap(cap_t pd_cap, cap_t pt_cap)
 {
-    pde_t *pd   = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pd_cap));
-    pte_t *pt   = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(pt_cap));
-    vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(pt_cap);
-    pde_t *targetSlot = pd + (vptr >> pageBitsForSize(ARMSection));
+    pde_t *pd   = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(pd_cap));
+    pte_t *pt   = PTE_PTR(cap_پاڼه_جدول_cap_get_cap_PTBase_Ptr(pt_cap));
+    vptr_t vptr = cap_پاڼه_جدول_cap_get_cap_PTMapped_پته(pt_cap);
+    pde_t *موخه_خونه = pd + (vptr >> پاڼه_بټونه_For_اندازه(ARMSection));
 
-    assert(cap_page_table_cap_get_capPTIsMapped(pt_cap));
+    أكد(cap_پاڼه_جدول_cap_get_cap_PTIs_Mapped(pt_cap));
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    *targetSlot = pde_pde_coarse_new(
-                      addrFromPPtr(pt), /* address */
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    *موخه_خونه = pde_pde_coarse_new(
+                      addrFromPPtr(pt), /*پته*/
                       true,             /* P       */
                       0                 /* Domain  */
                   );
-#else
-    *targetSlot = pde_pde_coarse_new(addrFromPPtr(pt));
-#endif
+#وإلا
+    *موخه_خونه = pde_pde_coarse_new(addrFromPPtr(pt));
+#د_که_پای
 }
 
 /* Create a page table for the initial thread */
 
-static BOOT_CODE cap_t create_it_page_table_cap(cap_t pd, pptr_t pptr, vptr_t vptr, asid_t asid)
+ساكن BOOT_کوډ cap_t create_it_پاڼه_جدول_cap(cap_t pd, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
-    cap = cap_page_table_cap_new(
+    cap = cap_پاڼه_جدول_cap_new(
               1,    /* capPTIsMapped      */
               asid, /* capPTMappedASID    */
               vptr, /* capPTMappedAddress */
               pptr  /* capPTBasePtr       */
           );
-    if (asid != asidInvalid) {
+    إذا (asid != asidInvalid) {
         map_it_pt_cap(pd, cap);
     }
-    return cap;
+    أرجع cap;
 }
 
-BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
+BOOT_کوډ کلمه_t arch_get_n_paging(v_region_t it_v_reg)
 {
-    return get_n_paging(it_v_reg, PT_INDEX_BITS + PAGE_BITS);
+    أرجع get_n_paging(it_v_reg, PT_شاخص_بټونه + پاڼه_بټونه);
 }
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_کوډ cap_t create_it_پته_space(cap_t ریښه_cnode_cap, v_region_t it_v_reg)
 {
     vptr_t     pt_vptr;
-    seL4_SlotPos slot_pos_before;
-    seL4_SlotPos slot_pos_after;
+    se_L4_خونه_Pos خونه_pos_before;
+    se_L4_خونه_Pos خونه_pos_after;
 
     /* create PD cap */
     copyGlobalMappings(PDE_PTR(rootserver.vspace));
-    cleanCacheRange_PoU(rootserver.vspace, rootserver.vspace + (1 << seL4_PageDirBits) - 1,
-                        addrFromPPtr((void *)rootserver.vspace));
+    cleanCacheRange_PoU(rootserver.vspace, rootserver.vspace + (1 << se_L4_پاڼه_Dir_بټونه) - 1,
+                        addrFromPPtr((فراغ *)rootserver.vspace));
     cap_t pd_cap =
-        cap_page_directory_cap_new(
+        cap_پاڼه_directory_cap_new(
             true,    /* capPDIsMapped   */
             IT_ASID, /* capPDMappedASID */
             rootserver.vspace  /* capPDBasePtr    */
         );
-    slot_pos_before = ndks_boot.slot_pos_cur;
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
+    خونه_pos_before = ndks_boot.خونه_pos_cur;
+    write_خونه(خونه_PTR(pptr_د_cap(ریښه_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
 
     /* create all PT caps necessary to cover userland image */
-    for (pt_vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
-         pt_vptr < it_v_reg.end;
-         pt_vptr += BIT(PT_INDEX_BITS + PAGE_BITS)) {
-        if (!provide_cap(root_cnode_cap,
-                         create_it_page_table_cap(pd_cap, it_alloc_paging(), pt_vptr, IT_ASID))
+    لكل (pt_vptr = پړاو_ښکته(it_v_reg.پیل, PT_شاخص_بټونه + پاڼه_بټونه);
+         pt_vptr < it_v_reg.پای_ټکی;
+         pt_vptr += بټ(PT_شاخص_بټونه + پاڼه_بټونه)) {
+        إذا (!provide_cap(ریښه_cnode_cap,
+                         create_it_پاڼه_جدول_cap(pd_cap, it_alloc_paging(), pt_vptr, IT_ASID))
            ) {
-            return cap_null_cap_new();
+            أرجع cap_null_cap_new();
         }
     }
 
-    slot_pos_after = ndks_boot.slot_pos_cur;
-    ndks_boot.bi_frame->userImagePaging = (seL4_SlotRegion) {
-        slot_pos_before, slot_pos_after
+    خونه_pos_after = ndks_boot.خونه_pos_cur;
+    ndks_boot.bi_چوکاټ->userImagePaging = (se_L4_خونه_Region) {
+        خونه_pos_before, خونه_pos_after
     };
 
-    return pd_cap;
+    أرجع pd_cap;
 }
 
-BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
+BOOT_کوډ cap_t create_unmapped_it_چوکاټ_cap(pptr_t pptr, bool_t use_large)
 {
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+    أرجع create_it_چوکاټ_cap(pptr, 0, asidInvalid, use_large);
 }
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
+BOOT_کوډ cap_t create_mapped_it_چوکاټ_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
                                            bool_t executable)
 {
-    cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
-    map_it_frame_cap(pd_cap, cap, executable);
-    return cap;
+    cap_t cap = create_it_چوکاټ_cap(pptr, vptr, asid, use_large);
+    map_it_چوکاټ_cap(pd_cap, cap, executable);
+    أرجع cap;
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_کوډ فراغ activate_kernel_vspace(فراغ)
 {
     /* Ensure that there's nothing stale in newly-mapped regions, and
        that everything we've written (particularly the kernel page tables)
        is committed. */
     cleanInvalidateL1Caches();
-    setGlobalPD();
+    سېټ_Global_PD();
     invalidateLocalTLB();
-    lockTLBEntry(PPTR_BASE);
-    lockTLBEntry(PPTR_VECTOR_TABLE);
+    قلف_TLBEntry(PPTR_بنسټ);
+    قلف_TLBEntry(PPTR_ویکټور_جدول);
 }
 
-#else
+#وإلا
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_کوډ فراغ activate_kernel_vspace(فراغ)
 {
     uint32_t r;
     /* Ensure that there's nothing stale in newly-mapped regions, and
@@ -566,13 +566,13 @@ BOOT_CODE void activate_kernel_vspace(void)
        is committed. */
     cleanInvalidateL1Caches();
     /* Setup the memory attributes: We use 2 indices (cachable/non-cacheable) */
-    setHMAIR((ATTRINDX_NONCACHEABLE << 0) | (ATTRINDX_CACHEABLE << 8), 0);
-    setCurrentHypPD(addrFromKPPtr(armHSGlobalPGD));
+    سېټ_HMAIR((ATTRINDX_NONCACHEABLE << 0) | (ATTRINDX_CACHEABLE << 8), 0);
+    سېټ_Current_Hyp_PD(addrFromKPPtr(armHSGlobalPGD));
     invalidateHypTLB();
-#if 0 /* Can't lock entries on A15 */
-    lockTLBEntry(PPTR_BASE);
-    lockTLBEntry(PPTR_VECTOR_TABLE);
-#endif
+#إذا 0 /* Can't lock entries on A15 */
+    قلف_TLBEntry(PPTR_بنسټ);
+    قلف_TLBEntry(PPTR_ویکټور_جدول);
+#د_که_پای
     /* TODO find a better place to init the VMMU */
     r = 0;
     /* Translation range */
@@ -581,230 +581,230 @@ BOOT_CODE void activate_kernel_vspace(void)
     /* starting level */
     r |= (0x0 << 6);     /* Start at second level */
     /* Sharability of tables */
-    r |= BIT(8);       /* Inner write-back, write-allocate */
-    r |= BIT(10);      /* Outer write-back, write-allocate */
+    r |= بټ(8);       /* Inner write-back, write-allocate */
+    r |= بټ(10);      /* Outer write-back, write-allocate */
     /* Long descriptor format (not that we have a choice) */
-    r |= BIT(31);
-    setVTCR(r);
+    r |= بټ(31);
+    سېټ_VTCR(r);
 }
 
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_pd_cap)
+BOOT_کوډ فراغ write_it_asid_pool(cap_t it_ap_cap, cap_t it_pd_cap)
 {
-    asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
-    ap->array[ASID_LOW(IT_ASID)] = PDE_PTR(pptr_of_cap(it_pd_cap));
-    armKSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    asid_pool_t *ap = ASID_POOL_PTR(pptr_د_cap(it_ap_cap));
+    ap->array[ASID_ټیټ(IT_ASID)] = PDE_PTR(pptr_د_cap(it_pd_cap));
+    armKSASIDTable[ASID_لوړ(IT_ASID)] = ap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
-findPDForASID_ret_t findPDForASID(asid_t asid)
+پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_PDFor_ASID(asid_t asid)
 {
-    findPDForASID_ret_t ret;
+    پیدا_کړه_PDFor_ASID_ret_t ret;
     asid_pool_t *poolPtr;
     pde_t *pd;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
-    if (unlikely(!poolPtr)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    poolPtr = armKSASIDTable[ASID_لوړ(asid)];
+    إذا (unlikely(!poolPtr)) {
+        current_lookup_fault = lookup_fault_invalid_ریښه_new();
 
-        ret.pd = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd = عدم;
+        ret.حالت = EXCEPTION_LOOKUP_FAULT;
+        أرجع ret;
     }
 
-    pd = poolPtr->array[ASID_LOW(asid)];
-    if (unlikely(!pd)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    pd = poolPtr->array[ASID_ټیټ(asid)];
+    إذا (unlikely(!pd)) {
+        current_lookup_fault = lookup_fault_invalid_ریښه_new();
 
-        ret.pd = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd = عدم;
+        ret.حالت = EXCEPTION_LOOKUP_FAULT;
+        أرجع ret;
     }
 
     ret.pd = pd;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.حالت = EXCEPTION_NONE;
+    أرجع ret;
 }
 
-word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
+کلمه_t *خالص lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
 {
-    word_t w_bufferPtr;
-    cap_t bufferCap;
+    کلمه_t w_بفر_Ptr;
+    cap_t بفر_Cap;
     vm_rights_t vm_rights;
 
-    w_bufferPtr = thread->tcbIPCBuffer;
-    bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
+    w_بفر_Ptr = thread->tcbIPCBuffer;
+    بفر_Cap = TCB_PTR_CTE_PTR(thread, tcb_بفر)->cap;
 
-    if (unlikely(cap_get_capType(bufferCap) != cap_small_frame_cap &&
-                 cap_get_capType(bufferCap) != cap_frame_cap)) {
-        return NULL;
+    إذا (unlikely(cap_get_capType(بفر_Cap) != cap_small_چوکاټ_cap &&
+                 cap_get_capType(بفر_Cap) != cap_چوکاټ_cap)) {
+        أرجع عدم;
     }
-    if (unlikely(generic_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    إذا (unlikely(generic_چوکاټ_cap_get_cap_FIs_Device(بفر_Cap))) {
+        أرجع عدم;
     }
 
-    vm_rights = generic_frame_cap_get_capFVMRights(bufferCap);
-    if (likely(vm_rights == VMReadWrite ||
+    vm_rights = generic_چوکاټ_cap_get_cap_FVMRights(بفر_Cap);
+    إذا (likely(vm_rights == VMReadWrite ||
                (!isReceiver && vm_rights == VMReadOnly))) {
-        word_t basePtr;
-        unsigned int pageBits;
+        کلمه_t بنسټ_Ptr;
+        بینښه صحيح پاڼه_بټونه_2;
 
-        basePtr = generic_frame_cap_get_capFBasePtr(bufferCap);
-        pageBits = pageBitsForSize(generic_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        بنسټ_Ptr = generic_چوکاټ_cap_get_cap_FBase_Ptr(بفر_Cap);
+        پاڼه_بټونه_2 = پاڼه_بټونه_For_اندازه(generic_چوکاټ_cap_get_cap_FSize(بفر_Cap));
+        أرجع (کلمه_t *)(بنسټ_Ptr + (w_بفر_Ptr & ماسک(پاڼه_بټونه_2)));
+    } وإلا {
+        أرجع عدم;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (unlikely(cap_get_capType(cap) != cap_small_frame_cap &&
-                 cap_get_capType(cap) != cap_frame_cap)) {
+    إذا (unlikely(cap_get_capType(cap) != cap_small_چوکاټ_cap &&
+                 cap_get_capType(cap) != cap_چوکاټ_cap)) {
         userError("Requested IPC Buffer is not a frame cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-    if (unlikely(generic_frame_cap_get_capFIsDevice(cap))) {
+    إذا (unlikely(generic_چوکاټ_cap_get_cap_FIs_Device(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(vptr & MASK(seL4_IPCBufferSizeBits))) {
+    إذا (unlikely(vptr & ماسک(se_L4_IPCBuffer_اندازه_بټونه))) {
         userError("Requested IPC Buffer location 0x%x is not aligned.",
-                  (int)vptr);
+                  (صحيح)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
 pde_t *CONST lookupPDSlot(pde_t *pd, vptr_t vptr)
 {
-    unsigned int pdIndex;
+    بینښه صحيح pd_شاخص;
 
-    pdIndex = vptr >> (PAGE_BITS + PT_INDEX_BITS);
-    return pd + pdIndex;
+    pd_شاخص = vptr >> (پاڼه_بټونه + PT_شاخص_بټونه);
+    أرجع pd + pd_شاخص;
 }
 
 lookupPTSlot_ret_t lookupPTSlot(pde_t *pd, vptr_t vptr)
 {
     lookupPTSlot_ret_t ret;
-    pde_t *pdSlot;
+    pde_t *pd_خونه;
 
-    pdSlot = lookupPDSlot(pd, vptr);
+    pd_خونه = lookupPDSlot(pd, vptr);
 
-    if (unlikely(pde_ptr_get_pdeType(pdSlot) != pde_pde_coarse)) {
-        current_lookup_fault = lookup_fault_missing_capability_new(PT_INDEX_BITS + PAGE_BITS);
+    إذا (unlikely(pde_ptr_get_pdeType(pd_خونه) != pde_pde_coarse)) {
+        current_lookup_fault = lookup_fault_missing_capability_new(PT_شاخص_بټونه + پاڼه_بټونه);
 
-        ret.ptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
-    } else {
-        pte_t *pt, *ptSlot;
-        unsigned int ptIndex;
+        ret.pt_خونه = عدم;
+        ret.حالت = EXCEPTION_LOOKUP_FAULT;
+        أرجع ret;
+    } وإلا {
+        pte_t *pt, *pt_خونه;
+        بینښه صحيح pt_شاخص;
 
-        pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pdSlot));
-        ptIndex = (vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS);
-        ptSlot = pt + ptIndex;
+        pt = ptrFromPAddr(pde_pde_coarse_ptr_get_پته(pd_خونه));
+        pt_شاخص = (vptr >> پاڼه_بټونه) & ماسک(PT_شاخص_بټونه);
+        pt_خونه = pt + pt_شاخص;
 
-        ret.ptSlot = ptSlot;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.pt_خونه = pt_خونه;
+        ret.حالت = EXCEPTION_NONE;
+        أرجع ret;
     }
 }
 
-static pte_t *lookupPTSlot_nofail(pte_t *pt, vptr_t vptr)
+ساكن pte_t *lookupPTSlot_nofail(pte_t *pt, vptr_t vptr)
 {
-    unsigned int ptIndex;
+    بینښه صحيح pt_شاخص;
 
-    ptIndex = (vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS);
-    return pt + ptIndex;
+    pt_شاخص = (vptr >> پاڼه_بټونه) & ماسک(PT_شاخص_بټونه);
+    أرجع pt + pt_شاخص;
 }
 
-static const resolve_ret_t default_resolve_ret_t;
+ساكن ثابت resolve_ret_t default_resolve_ret_t;
 
-static resolve_ret_t resolveVAddr(pde_t *pd, vptr_t vaddr)
+ساكن resolve_ret_t resolveVAddr(pde_t *pd, vptr_t vaddr)
 {
     pde_t *pde = lookupPDSlot(pd, vaddr);
     resolve_ret_t ret = default_resolve_ret_t;
 
     ret.valid = true;
 
-    switch (pde_ptr_get_pdeType(pde)) {
-    case pde_pde_section:
-        ret.frameBase = pde_pde_section_ptr_get_address(pde);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (pde_pde_section_ptr_get_size(pde)) {
-            ret.frameSize = ARMSuperSection;
-        } else {
-            ret.frameSize = ARMSection;
+    بدل (pde_ptr_get_pdeType(pde)) {
+    حالة pde_pde_section:
+        ret.چوکاټ_بنسټ = pde_pde_section_ptr_get_پته(pde);
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (pde_pde_section_ptr_get_اندازه(pde)) {
+            ret.چوکاټ_اندازه = ARMSuperSection;
+        } وإلا {
+            ret.چوکاټ_اندازه = ARMSection;
         }
-#else
-        if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#وإلا
+        إذا (pde_pde_section_ptr_get_contiguous_hint(pde)) {
             /* Entries are represented as 16 contiguous sections. We need to mask
                to get the super section frame base */
-            ret.frameBase &= ~MASK(pageBitsForSize(ARMSuperSection));
-            ret.frameSize = ARMSuperSection;
-        } else {
-            ret.frameSize = ARMSection;
+            ret.چوکاټ_بنسټ &= ~ماسک(پاڼه_بټونه_For_اندازه(ARMSuperSection));
+            ret.چوکاټ_اندازه = ARMSuperSection;
+        } وإلا {
+            ret.چوکاټ_اندازه = ARMSection;
         }
-#endif
-        return ret;
+#د_که_پای
+        أرجع ret;
 
-    case pde_pde_coarse: {
-        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
+    حالة pde_pde_coarse: {
+        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_پته(pde));
         pte_t *pte = lookupPTSlot_nofail(pt, vaddr);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small:
-            ret.frameBase = pte_pte_small_ptr_get_address(pte);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+        بدل (pte_ptr_get_pteType(pte)) {
+        حالة pte_pte_small:
+            ret.چوکاټ_بنسټ = pte_pte_small_ptr_get_پته(pte);
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+            إذا (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 /* Entries are represented as 16 contiguous small frames. We need to mask
                    to get the large frame base */
-                ret.frameBase &= ~MASK(pageBitsForSize(ARMLargePage));
-                ret.frameSize = ARMLargePage;
-            } else {
-                ret.frameSize = ARMSmallPage;
+                ret.چوکاټ_بنسټ &= ~ماسک(پاڼه_بټونه_For_اندازه(ARMLarge_پاڼه));
+                ret.چوکاټ_اندازه = ARMLarge_پاڼه;
+            } وإلا {
+                ret.چوکاټ_اندازه = ARMSmall_پاڼه;
             }
-#else
-            ret.frameSize = ARMSmallPage;
-#endif
-            return ret;
+#وإلا
+            ret.چوکاټ_اندازه = ARMSmall_پاڼه;
+#د_که_پای
+            أرجع ret;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large:
-            ret.frameBase = pte_pte_large_ptr_get_address(pte);
-            ret.frameSize = ARMLargePage;
-            return ret;
-#endif
-        default:
-            break;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        حالة pte_pte_large:
+            ret.چوکاټ_بنسټ = pte_pte_large_ptr_get_پته(pte);
+            ret.چوکاټ_اندازه = ARMLarge_پاڼه;
+            أرجع ret;
+#د_که_پای
+        افتراضي:
+            اكسر;
         }
-        break;
+        اكسر;
     }
     }
 
     ret.valid = false;
-    return ret;
+    أرجع ret;
 }
 
-static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
+ساكن pte_t CONST makeUserPTE(vm_پاڼه_اندازه_t پاڼه_اندازه, paddr_t paddr,
                                bool_t cacheable, bool_t nonexecutable, vm_rights_t vm_rights)
 {
     pte_t pte;
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t ap;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t ap;
 
     ap = APFromVMRights(vm_rights);
 
-    switch (page_size) {
-    case ARMSmallPage: {
-        if (cacheable) {
+    بدل (پاڼه_اندازه) {
+    حالة ARMSmall_پاڼه: {
+        إذا (cacheable) {
             pte = pte_pte_small_new(paddr,
                                     1, /* not global */
                                     SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
@@ -813,7 +813,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     ap,
                                     0, 1, /* Inner write-back, write-allocate */
                                     nonexecutable);
-        } else {
+        } وإلا {
             pte = pte_pte_small_new(paddr,
                                     1, /* not global */
                                     1, /* shared */
@@ -823,11 +823,11 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     0, 0,
                                     nonexecutable);
         }
-        break;
+        اكسر;
     }
 
-    case ARMLargePage: {
-        if (cacheable) {
+    حالة ARMLarge_پاڼه: {
+        إذا (cacheable) {
             pte = pte_pte_large_new(paddr,
                                     nonexecutable,
                                     5, /* TEX = 0b101, outer write-back, write-allocate */
@@ -837,7 +837,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     ap,
                                     0, 1, /* Inner write-back, write-allocate */
                                     1 /* reserved */);
-        } else {
+        } وإلا {
             pte = pte_pte_large_new(paddr,
                                     nonexecutable,
                                     0, /* TEX = 0b000, strongly-ordered */
@@ -848,22 +848,22 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     0, 0,
                                     1 /* reserved */);
         }
-        break;
+        اكسر;
     }
 
-    default:
+    افتراضي:
         fail("Invalid PTE frame type");
     }
 
-#else
+#وإلا
 
-    word_t hap;
+    کلمه_t hap;
 
     hap = HAPFromVMRights(vm_rights);
 
-    switch (page_size) {
-    case ARMSmallPage: {
-        if (cacheable) {
+    بدل (پاڼه_اندازه) {
+    حالة ARMSmall_پاڼه: {
+        إذا (cacheable) {
             pte = pte_pte_small_new(
                       nonexecutable, /* Executable */
                       0,      /* Not contiguous */
@@ -872,7 +872,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       0,      /* not shared */
                       hap,    /* HAP - access */
                       MEMATTR_CACHEABLE /* Cacheable */);
-        } else {
+        } وإلا {
             pte = pte_pte_small_new(
                       nonexecutable, /* Executable */
                       0,      /* Not contiguous */
@@ -882,11 +882,11 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       hap,    /* HAP - access */
                       MEMATTR_NONCACHEABLE /* Not cacheable */);
         }
-        break;
+        اكسر;
     }
 
-    case ARMLargePage: {
-        if (cacheable) {
+    حالة ARMLarge_پاڼه: {
+        إذا (cacheable) {
             pte = pte_pte_small_new(
                       nonexecutable,   /* Executable */
                       1,   /* 16 contiguous */
@@ -895,7 +895,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       0,   /* not shared */
                       hap, /* HAP - access */
                       MEMATTR_CACHEABLE  /* Cacheable */);
-        } else {
+        } وإلا {
             pte = pte_pte_small_new(
                       nonexecutable,   /* Executable */
                       1,   /* 16 contiguous */
@@ -905,55 +905,55 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       hap, /* HAP - access */
                       MEMATTR_NONCACHEABLE /* Not cacheable */);
         }
-        break;
+        اكسر;
     }
-    default:
+    افتراضي:
         fail("Invalid PTE frame type");
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-    return pte;
+    أرجع pte;
 }
 
-static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t parity,
-                               bool_t cacheable, bool_t nonexecutable, word_t domain,
+ساكن pde_t CONST makeUserPDE(vm_پاڼه_اندازه_t پاڼه_اندازه, paddr_t paddr, bool_t parity,
+                               bool_t cacheable, bool_t nonexecutable, کلمه_t domain,
                                vm_rights_t vm_rights)
 {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t ap, size2;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t ap, size2;
 
     ap = APFromVMRights(vm_rights);
-#else
-    word_t hap, size2;
+#وإلا
+    کلمه_t hap, size2;
 
-    (void)domain;
+    (فراغ)domain;
     hap = HAPFromVMRights(vm_rights);
-#endif
+#د_که_پای
 
-    switch (page_size) {
-    case ARMSection:
+    بدل (پاڼه_اندازه) {
+    حالة ARMSection:
         size2 = 0;
-        break;
+        اكسر;
 
-    case ARMSuperSection:
+    حالة ARMSuperSection:
         size2 = 1;
-        break;
+        اكسر;
 
-    default:
+    افتراضي:
         fail("Invalid PDE frame type");
     }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    if (cacheable) {
-        return pde_pde_section_new(paddr, size2,
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    إذا (cacheable) {
+        أرجع pde_pde_section_new(paddr, size2,
                                    1, /* not global */
                                    SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
                                    0, /* APX = 0, privileged full access */
                                    5, /* TEX = 0b101, outer write-back, write-allocate */
                                    ap, parity, domain, nonexecutable,
                                    0, 1 /* Inner write-back, write-allocate */);
-    } else {
-        return pde_pde_section_new(paddr, size2,
+    } وإلا {
+        أرجع pde_pde_section_new(paddr, size2,
                                    1, /* not global */
                                    1, /* shared */
                                    0, /* APX = 0, privileged full access */
@@ -961,9 +961,9 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                                    ap, parity, domain, nonexecutable,
                                    0, 0);
     }
-#else
-    if (cacheable) {
-        return pde_pde_section_new(
+#وإلا
+    إذا (cacheable) {
+        أرجع pde_pde_section_new(
                    nonexecutable, /* Executable */
                    size2, /* contiguous */
                    paddr,
@@ -971,8 +971,8 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                    0, /* not shared */
                    hap,
                    MEMATTR_CACHEABLE /* Cacheable */);
-    } else {
-        return pde_pde_section_new(
+    } وإلا {
+        أرجع pde_pde_section_new(
                    nonexecutable, /* Executable */
                    size2, /* contiguous */
                    paddr,
@@ -981,30 +981,30 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                    hap,
                    MEMATTR_NONCACHEABLE /* Not cacheable */);
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_ریښه(cap_t cap)
 {
-    return cap_get_capType(cap) == cap_page_directory_cap &&
-           cap_page_directory_cap_get_capPDIsMapped(cap);
+    أرجع cap_get_capType(cap) == cap_پاڼه_directory_cap &&
+           cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(cap);
 }
 
-bool_t CONST isIOSpaceFrameCap(cap_t cap)
+bool_t CONST is_IOSpace_چوکاټ_Cap(cap_t cap)
 {
-#ifdef CONFIG_TK1_SMMU
-    return cap_get_capType(cap) == cap_small_frame_cap && cap_small_frame_cap_get_capFIsIOSpace(cap);
-#else
-    return false;
-#endif
+#که_تعریف_شوی CONFIG_TK1_SMMU
+    أرجع cap_get_capType(cap) == cap_small_چوکاټ_cap && cap_small_چوکاټ_cap_get_cap_FIs_IOSpace(cap);
+#وإلا
+    أرجع false;
+#د_که_پای
 }
 
 /** Switch to the empty PD on the reserved HW ASID */
-static void setGlobalPD(void)
+ساكن فراغ سېټ_Global_PD(فراغ)
 {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
     writeContextIDAndPD(hwASIDReserved, addrFromKPPtr(armUSGlobalPD));
-#else
+#وإلا
     /* Before changing the PD ensure all memory accesses have completed */
     dsb();
     /* First switch to global PD on old ASID. Stale TLB entries may exist
@@ -1014,133 +1014,133 @@ static void setGlobalPD(void)
     isb();
     /* Switch to reserved HW ASID. Only empty/global kernel mappings are
        now available from the TLB. */
-    setHardwareASID(hwASIDReserved);
-#endif
+    سېټ_Hardware_ASID(hwASIDReserved);
+#د_که_پای
 }
 
-void setVMRoot(tcb_t *tcb)
+فراغ سېټ_VMRoot(tcb_t *tcb)
 {
-    cap_t threadRoot;
+    cap_t thread_ریښه;
     asid_t asid;
     pde_t *pd;
-    findPDForASID_ret_t find_ret;
+    پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_ریښه = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap ||
-        !cap_page_directory_cap_get_capPDIsMapped(threadRoot)) {
-        setGlobalPD();
-        return;
+    إذا (cap_get_capType(thread_ریښه) != cap_پاڼه_directory_cap ||
+        !cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(thread_ریښه)) {
+        سېټ_Global_PD();
+        أرجع;
     }
 
-    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot));
-    asid = cap_page_directory_cap_get_capPDMappedASID(threadRoot);
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.pd != pd)) {
-        setGlobalPD();
-        return;
+    pd = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(thread_ریښه));
+    asid = cap_پاڼه_directory_cap_get_cap_PDMapped_ASID(thread_ریښه);
+    پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+    إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE || پیدا_کړه_ret.pd != pd)) {
+        سېټ_Global_PD();
+        أرجع;
     }
 
     armv_contextSwitch(pd, asid);
 }
 
-static bool_t setVMRootForFlush(pde_t *pd, asid_t asid)
+ساكن bool_t سېټ_VMRoot_For_Flush(pde_t *pd, asid_t asid)
 {
-    cap_t threadRoot;
+    cap_t thread_ریښه;
 
-    threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
+    thread_ریښه = TCB_PTR_CTE_PTR(غوټه_STATE(ksCurThread), tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) == cap_page_directory_cap &&
-        cap_page_directory_cap_get_capPDIsMapped(threadRoot) &&
-        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot)) == pd) {
-        return false;
+    إذا (cap_get_capType(thread_ریښه) == cap_پاڼه_directory_cap &&
+        cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(thread_ریښه) &&
+        PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(thread_ریښه)) == pd) {
+        أرجع false;
     }
 
     armv_contextSwitch(pd, asid);
 
-    return true;
+    أرجع true;
 }
 
-pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
+pde_t *پاڼه_جدول_Mapped(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
-    findPDForASID_ret_t find_ret;
+    پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
     pde_t pde;
-    unsigned int pdIndex;
+    بینښه صحيح pd_شاخص;
 
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
-        return NULL;
+    پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+    إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE)) {
+        أرجع عدم;
     }
 
-    pdIndex = vaddr >> (PAGE_BITS + PT_INDEX_BITS);
-    pde = find_ret.pd[pdIndex];
+    pd_شاخص = vaddr >> (پاڼه_بټونه + PT_شاخص_بټونه);
+    pde = پیدا_کړه_ret.pd[pd_شاخص];
 
-    if (likely(pde_get_pdeType(pde) == pde_pde_coarse
-               && ptrFromPAddr(pde_pde_coarse_get_address(pde)) == pt)) {
-        return find_ret.pd;
-    } else {
-        return NULL;
+    إذا (likely(pde_get_pdeType(pde) == pde_pde_coarse
+               && ptrFromPAddr(pde_pde_coarse_get_پته(pde)) == pt)) {
+        أرجع پیدا_کړه_ret.pd;
+    } وإلا {
+        أرجع عدم;
     }
 }
 
-static void invalidateASID(asid_t asid)
+ساكن فراغ invalidateASID(asid_t asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_لوړ(asid)];
+    أكد(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_ټیټ(asid)];
+    أكد(pd);
 
-    pd[PD_ASID_SLOT] = pde_pde_invalid_new(0, false);
+    pd[PD_ASID_خونه] = pde_pde_invalid_new(0, false);
 }
 
-static pde_t PURE loadHWASID(asid_t asid)
+ساكن pde_t خالص بارول_HWASID(asid_t asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_لوړ(asid)];
+    أكد(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_ټیټ(asid)];
+    أكد(pd);
 
-    return pd[PD_ASID_SLOT];
+    أرجع pd[PD_ASID_خونه];
 }
 
-static void storeHWASID(asid_t asid, hw_asid_t hw_asid)
+ساكن فراغ storeHWASID(asid_t asid, hw_asid_t hw_asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_لوړ(asid)];
+    أكد(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_ټیټ(asid)];
+    أكد(pd);
 
     /* Store HW ASID in the last entry
        Masquerade as an invalid PDE */
-    pd[PD_ASID_SLOT] = pde_pde_invalid_new(hw_asid, true);
+    pd[PD_ASID_خونه] = pde_pde_invalid_new(hw_asid, true);
 
     armKSHWASIDTable[hw_asid] = asid;
 }
 
-hw_asid_t findFreeHWASID(void)
+hw_asid_t پیدا_کړه_Free_HWASID(فراغ)
 {
-    word_t hw_asid_offset;
+    کلمه_t hw_asid_دننه_واټن;
     hw_asid_t hw_asid;
 
     /* Find a free hardware ASID */
-    for (hw_asid_offset = 0;
-         hw_asid_offset <= (word_t)((hw_asid_t) - 1);
-         hw_asid_offset ++) {
-        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_offset);
-        if (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
-            return hw_asid;
+    لكل (hw_asid_دننه_واټن = 0;
+         hw_asid_دننه_واټن <= (کلمه_t)((hw_asid_t) - 1);
+         hw_asid_دننه_واټن ++) {
+        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_دننه_واټن);
+        إذا (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
+            أرجع hw_asid;
         }
     }
 
@@ -1154,88 +1154,88 @@ hw_asid_t findFreeHWASID(void)
 
     /* Increment the NextASID index, skipping the reserved ASID 0 on wrap */
     armKSNextASID++;
-    if (armKSNextASID == hwASIDReserved) {
+    إذا (armKSNextASID == hwASIDReserved) {
         armKSNextASID = hwASIDMin;
     }
-    return hw_asid;
+    أرجع hw_asid;
 }
 
 hw_asid_t getHWASID(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return pde_pde_invalid_get_stored_hw_asid(stored_hw_asid);
-    } else {
+    stored_hw_asid = بارول_HWASID(asid);
+    إذا (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        أرجع pde_pde_invalid_get_stored_hw_asid(stored_hw_asid);
+    } وإلا {
         hw_asid_t new_hw_asid;
 
-        new_hw_asid = findFreeHWASID();
+        new_hw_asid = پیدا_کړه_Free_HWASID();
         storeHWASID(asid, new_hw_asid);
-        return new_hw_asid;
+        أرجع new_hw_asid;
     }
 }
 
-static void invalidateASIDEntry(asid_t asid)
+ساكن فراغ invalidateASIDEntry(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+    stored_hw_asid = بارول_HWASID(asid);
+    إذا (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
         armKSHWASIDTable[pde_pde_invalid_get_stored_hw_asid(stored_hw_asid)] =
             asidInvalid;
     }
     invalidateASID(asid);
 }
 
-void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+فراغ unmap_پاڼه_جدول(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
-    pde_t *pd, *pdSlot;
-    unsigned int pdIndex;
+    pde_t *pd, *pd_خونه;
+    بینښه صحيح pd_شاخص;
 
-    pd = pageTableMapped(asid, vaddr, pt);
+    pd = پاڼه_جدول_Mapped(asid, vaddr, pt);
 
-    if (likely(pd != NULL)) {
-        pdIndex = vaddr >> (PT_INDEX_BITS + PAGE_BITS);
-        pdSlot = pd + pdIndex;
+    إذا (likely(pd != عدم)) {
+        pd_شاخص = vaddr >> (PT_شاخص_بټونه + پاڼه_بټونه);
+        pd_خونه = pd + pd_شاخص;
 
-        *pdSlot = pde_pde_invalid_new(0, 0);
-        cleanByVA_PoU((word_t)pdSlot, addrFromPPtr(pdSlot));
-        flushTable(pd, asid, vaddr, pt);
+        *pd_خونه = pde_pde_invalid_new(0, 0);
+        cleanByVA_PoU((کلمه_t)pd_خونه, addrFromPPtr(pd_خونه));
+        flush_جدول(pd, asid, vaddr, pt);
     }
 }
 
-void copyGlobalMappings(pde_t *newPD)
+فراغ copyGlobalMappings(pde_t *newPD)
 {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t i;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t i;
     pde_t *global_pd = armKSGlobalPD;
 
-    for (i = PPTR_BASE >> ARMSectionBits; i < BIT(PD_INDEX_BITS); i++) {
-        if (i != PD_ASID_SLOT) {
+    لكل (i = PPTR_بنسټ >> ARMSection_بټونه; i < بټ(PD_شاخص_بټونه); i++) {
+        إذا (i != PD_ASID_خونه) {
             newPD[i] = global_pd[i];
         }
     }
-#endif
+#د_که_پای
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 {
-    switch (vm_faultType) {
-    case ARMDataAbort: {
-        word_t addr, fault;
+    بدل (vm_faultType) {
+    حالة ARMDataAbort: {
+        کلمه_t addr, fault;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
         addr = getHDFAR();
-        addr = (addressTranslateS1(addr) & ~MASK(PAGE_BITS)) | (addr & MASK(PAGE_BITS));
+        addr = (پته_Translate_S1(addr) & ~ماسک(پاڼه_بټونه)) | (addr & ماسک(پاڼه_بټونه));
         /* MSBs tell us that this was a DataAbort */
         fault = getHSR() & 0x3ffffff;
-#else
+#وإلا
         addr = getFAR();
         fault = getDFSR();
-#endif
+#د_که_پای
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#که_تعریف_شوی CONFIG_HARDWARE_DEBUG_API
         /* Debug exceptions come in on the Prefetch and Data abort vectors.
          * We have to test the fault-status bits in the IFSR/DFSR to determine
          * if it's a debug exception when one occurs.
@@ -1243,284 +1243,284 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
          * If it is a debug exception, return early and don't fallthrough to the
          * normal VM Fault handling path.
          */
-        if (isDebugFault(fault)) {
+        إذا (isDebugFault(fault)) {
             current_fault = handleUserLevelDebugException(0);
-            return EXCEPTION_FAULT;
+            أرجع EXCEPTION_FAULT;
         }
-#endif
+#د_که_پای
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        أرجع EXCEPTION_FAULT;
     }
 
-    case ARMPrefetchAbort: {
-        word_t pc, fault;
+    حالة ARMPrefetchAbort: {
+        کلمه_t pc, fault;
 
         pc = getRestartPC(thread);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pc = (addressTranslateS1(pc) & ~MASK(PAGE_BITS)) | (pc & MASK(PAGE_BITS));
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        pc = (پته_Translate_S1(pc) & ~ماسک(پاڼه_بټونه)) | (pc & ماسک(پاڼه_بټونه));
         /* MSBs tell us that this was a PrefetchAbort */
         fault = getHSR() & 0x3ffffff;
-#else
+#وإلا
         fault = getIFSR();
-#endif
+#د_که_پای
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-        if (isDebugFault(fault)) {
+#که_تعریف_شوی CONFIG_HARDWARE_DEBUG_API
+        إذا (isDebugFault(fault)) {
             current_fault = handleUserLevelDebugException(pc);
 
-            if (seL4_Fault_DebugException_get_exceptionReason(current_fault) == seL4_SingleStep
-                && !singleStepFaultCounterReady(thread)) {
+            إذا (seL4_Fault_DebugException_get_exceptionReason(current_fault) == se_L4_Single_ګام
+                && !single_ګام_Fault_Counter_Ready(thread)) {
                 /* Don't send a fault message to the thread yet if we were asked
                  * to step through N instructions and the counter isn't depleted
                  * yet.
                  */
-                return EXCEPTION_NONE;
+                أرجع EXCEPTION_NONE;
             }
-            return EXCEPTION_FAULT;
+            أرجع EXCEPTION_FAULT;
         }
-#endif
+#د_که_پای
         current_fault = seL4_Fault_VMFault_new(pc, fault, true);
-        return EXCEPTION_FAULT;
+        أرجع EXCEPTION_FAULT;
     }
 
-    default:
+    افتراضي:
         fail("Invalid VM fault type");
     }
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+فراغ deleteASIDPool(asid_t asid_بنسټ, asid_pool_t *pool)
 {
-    unsigned int offset;
+    بینښه صحيح دننه_واټن;
 
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
+    أكد((asid_بنسټ & ماسک(asid_ټیټ_بټونه)) == 0);
 
-    if (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (offset = 0; offset < BIT(asidLowBits); offset++) {
-            if (pool->array[offset]) {
-                flushSpace(asid_base + offset);
-                invalidateASIDEntry(asid_base + offset);
+    إذا (armKSASIDTable[ASID_لوړ(asid_بنسټ)] == pool) {
+        لكل (دننه_واټن = 0; دننه_واټن < بټ(asid_ټیټ_بټونه); دننه_واټن++) {
+            إذا (pool->array[دننه_واټن]) {
+                flushSpace(asid_بنسټ + دننه_واټن);
+                invalidateASIDEntry(asid_بنسټ + دننه_واټن);
             }
         }
-        armKSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        armKSASIDTable[ASID_لوړ(asid_بنسټ)] = عدم;
+        سېټ_VMRoot(غوټه_STATE(ksCurThread));
     }
 }
 
-void deleteASID(asid_t asid, pde_t *pd)
+فراغ deleteASID(asid_t asid, pde_t *pd)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
+    poolPtr = armKSASIDTable[ASID_لوړ(asid)];
 
-    if (poolPtr != NULL && poolPtr->array[ASID_LOW(asid)] == pd) {
+    إذا (poolPtr != عدم && poolPtr->array[ASID_ټیټ(asid)] == pd) {
         flushSpace(asid);
         invalidateASIDEntry(asid);
-        poolPtr->array[ASID_LOW(asid)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        poolPtr->array[ASID_ټیټ(asid)] = عدم;
+        سېټ_VMRoot(غوټه_STATE(ksCurThread));
     }
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-static pte_t pte_pte_invalid_new(void)
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+ساكن pte_t pte_pte_invalid_new(فراغ)
 {
     /* Invalid as every PTE must have bit 0 set (large PTE) or bit 1 set (small
      * PTE). 0 == 'translation fault' in ARM parlance.
      */
-    return (pte_t) {
+    أرجع (pte_t) {
         {
             0
         }
     };
 }
-#endif
+#د_که_پای
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
+فراغ unmap_پاڼه(vm_پاڼه_اندازه_t پاڼه_اندازه, asid_t asid, vptr_t vptr, فراغ *pptr)
 {
-    findPDForASID_ret_t find_ret;
+    پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
     paddr_t addr = addrFromPPtr(pptr);
 
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
-        return;
+    پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+    إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE)) {
+        أرجع;
     }
 
-    switch (page_size) {
-    case ARMSmallPage: {
+    بدل (پاڼه_اندازه) {
+    حالة ARMSmall_پاڼه: {
         lookupPTSlot_ret_t lu_ret;
 
-        lu_ret = lookupPTSlot(find_ret.pd, vptr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return;
+        lu_ret = lookupPTSlot(پیدا_کړه_ret.pd, vptr);
+        إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
+            أرجع;
         }
 
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_small)) {
-            return;
+        إذا (unlikely(pte_ptr_get_pteType(lu_ret.pt_خونه) != pte_pte_small)) {
+            أرجع;
         }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.ptSlot) != 0)) {
-            return;
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.pt_خونه) != 0)) {
+            أرجع;
         }
-#endif
-        if (unlikely(pte_pte_small_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+#د_که_پای
+        إذا (unlikely(pte_pte_small_ptr_get_پته(lu_ret.pt_خونه) != addr)) {
+            أرجع;
         }
 
-        *(lu_ret.ptSlot) = pte_pte_invalid_new();
-        cleanByVA_PoU((word_t)lu_ret.ptSlot, addrFromPPtr(lu_ret.ptSlot));
+        *(lu_ret.pt_خونه) = pte_pte_invalid_new();
+        cleanByVA_PoU((کلمه_t)lu_ret.pt_خونه, addrFromPPtr(lu_ret.pt_خونه));
 
-        break;
+        اكسر;
     }
 
-    case ARMLargePage: {
+    حالة ARMLarge_پاڼه: {
         lookupPTSlot_ret_t lu_ret;
-        word_t i;
+        کلمه_t i;
 
-        lu_ret = lookupPTSlot(find_ret.pd, vptr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return;
+        lu_ret = lookupPTSlot(پیدا_کړه_ret.pd, vptr);
+        إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
+            أرجع;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_large)) {
-            return;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (unlikely(pte_ptr_get_pteType(lu_ret.pt_خونه) != pte_pte_large)) {
+            أرجع;
         }
-        if (unlikely(pte_pte_large_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+        إذا (unlikely(pte_pte_large_ptr_get_پته(lu_ret.pt_خونه) != addr)) {
+            أرجع;
         }
-#else
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_small)) {
-            return;
+#وإلا
+        إذا (unlikely(pte_ptr_get_pteType(lu_ret.pt_خونه) != pte_pte_small)) {
+            أرجع;
         }
-        if (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.ptSlot) != 1)) {
-            return;
+        إذا (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.pt_خونه) != 1)) {
+            أرجع;
         }
-        if (unlikely(pte_pte_small_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+        إذا (unlikely(pte_pte_small_ptr_get_پته(lu_ret.pt_خونه) != addr)) {
+            أرجع;
         }
-#endif
+#د_که_پای
 
-        for (i = 0; i < PAGES_PER_LARGE_PAGE; i++) {
-            lu_ret.ptSlot[i] = pte_pte_invalid_new();
+        لكل (i = 0; i < پاڼې_فی_LARGE_پاڼه; i++) {
+            lu_ret.pt_خونه[i] = pte_pte_invalid_new();
         }
-        cleanCacheRange_PoU((word_t)&lu_ret.ptSlot[0],
-                            LAST_BYTE_PTE(lu_ret.ptSlot, PAGES_PER_LARGE_PAGE),
-                            addrFromPPtr(&lu_ret.ptSlot[0]));
+        cleanCacheRange_PoU((کلمه_t)&lu_ret.pt_خونه[0],
+                            وروستی_BYTE_PTE(lu_ret.pt_خونه, پاڼې_فی_LARGE_پاڼه),
+                            addrFromPPtr(&lu_ret.pt_خونه[0]));
 
-        break;
+        اكسر;
     }
 
-    case ARMSection: {
+    حالة ARMSection: {
         pde_t *pd;
 
-        pd = lookupPDSlot(find_ret.pd, vptr);
+        pd = lookupPDSlot(پیدا_کړه_ret.pd, vptr);
 
-        if (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
-            return;
+        إذا (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
+            أرجع;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pde_pde_section_ptr_get_size(pd) != 0)) {
-#else
-        if (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 0)) {
-#endif
-            return;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (unlikely(pde_pde_section_ptr_get_اندازه(pd) != 0)) {
+#وإلا
+        إذا (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 0)) {
+#د_که_پای
+            أرجع;
         }
-        if (unlikely(pde_pde_section_ptr_get_address(pd) != addr)) {
-            return;
+        إذا (unlikely(pde_pde_section_ptr_get_پته(pd) != addr)) {
+            أرجع;
         }
 
         *pd = pde_pde_invalid_new(0, 0);
-        cleanByVA_PoU((word_t)pd, addrFromPPtr(pd));
+        cleanByVA_PoU((کلمه_t)pd, addrFromPPtr(pd));
 
-        break;
+        اكسر;
     }
 
-    case ARMSuperSection: {
+    حالة ARMSuperSection: {
         pde_t *pd;
-        word_t i;
+        کلمه_t i;
 
-        pd = lookupPDSlot(find_ret.pd, vptr);
+        pd = lookupPDSlot(پیدا_کړه_ret.pd, vptr);
 
-        if (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
-            return;
+        إذا (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
+            أرجع;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pde_pde_section_ptr_get_size(pd) != 1)) {
-#else
-        if (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 1)) {
-#endif
-            return;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (unlikely(pde_pde_section_ptr_get_اندازه(pd) != 1)) {
+#وإلا
+        إذا (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 1)) {
+#د_که_پای
+            أرجع;
         }
-        if (unlikely(pde_pde_section_ptr_get_address(pd) != addr)) {
-            return;
+        إذا (unlikely(pde_pde_section_ptr_get_پته(pd) != addr)) {
+            أرجع;
         }
 
-        for (i = 0; i < SECTIONS_PER_SUPER_SECTION; i++) {
+        لكل (i = 0; i < SECTIONS_فی_SUPER_SECTION; i++) {
             pd[i] = pde_pde_invalid_new(0, 0);
         }
-        cleanCacheRange_PoU((word_t)&pd[0], LAST_BYTE_PDE(pd, SECTIONS_PER_SUPER_SECTION),
+        cleanCacheRange_PoU((کلمه_t)&pd[0], وروستی_BYTE_PDE(pd, SECTIONS_فی_SUPER_SECTION),
                             addrFromPPtr(&pd[0]));
 
-        break;
+        اكسر;
     }
 
-    default:
+    افتراضي:
         fail("Invalid ARM page type");
-        break;
+        اكسر;
     }
 
     /* Flush the page now that the mapping has been updated */
-    flushPage(page_size, find_ret.pd, asid, vptr);
+    flush_پاڼه(پاڼه_اندازه, پیدا_کړه_ret.pd, asid, vptr);
 }
 
-void flushPage(vm_page_size_t page_size, pde_t *pd, asid_t asid, word_t vptr)
+فراغ flush_پاڼه(vm_پاڼه_اندازه_t پاڼه_اندازه, pde_t *pd, asid_t asid, کلمه_t vptr)
 {
     pde_t stored_hw_asid;
-    word_t base_addr;
-    bool_t root_switched;
+    کلمه_t بنسټ_addr;
+    bool_t ریښه_switched;
 
-    assert((vptr & MASK(pageBitsForSize(page_size))) == 0);
+    أكد((vptr & ماسک(پاڼه_بټونه_For_اندازه(پاڼه_اندازه))) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
-    stored_hw_asid = loadHWASID(asid);
+    ریښه_switched = سېټ_VMRoot_For_Flush(pd, asid);
+    stored_hw_asid = بارول_HWASID(asid);
 
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        base_addr = vptr & ~MASK(12);
+    إذا (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        بنسټ_addr = vptr & ~ماسک(12);
 
         /* Do the TLB flush */
-        invalidateTranslationSingle(base_addr | pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
+        invalidateTranslationSingle(بنسټ_addr | pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        إذا (ریښه_switched) {
+            سېټ_VMRoot(غوټه_STATE(ksCurThread));
         }
     }
 }
 
-void flushTable(pde_t *pd, asid_t asid, word_t vptr, pte_t *pt)
+فراغ flush_جدول(pde_t *pd, asid_t asid, کلمه_t vptr, pte_t *pt)
 {
     pde_t stored_hw_asid;
-    bool_t root_switched;
+    bool_t ریښه_switched;
 
-    assert((vptr & MASK(PT_INDEX_BITS + ARMSmallPageBits)) == 0);
+    أكد((vptr & ماسک(PT_شاخص_بټونه + ARMSmall_پاڼه_بټونه)) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
-    stored_hw_asid = loadHWASID(asid);
+    ریښه_switched = سېټ_VMRoot_For_Flush(pd, asid);
+    stored_hw_asid = بارول_HWASID(asid);
 
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+    إذا (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
         invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        إذا (ریښه_switched) {
+            سېټ_VMRoot(غوټه_STATE(ksCurThread));
         }
     }
 }
 
-void flushSpace(asid_t asid)
+فراغ flushSpace(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
+    stored_hw_asid = بارول_HWASID(asid);
 
     /* Clean the entire data cache, to guarantee that any VAs mapped
      * in the deleted space are clean (because we can't clean by VA after
@@ -1529,1226 +1529,1226 @@ void flushSpace(asid_t asid)
 
     /* If the given ASID doesn't have a hardware ASID
      * assigned, then it can't have any mappings in the TLB */
-    if (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return;
+    إذا (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        أرجع;
     }
 
     /* Do the TLB flush */
     invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 }
 
-void invalidateTLBByASID(asid_t asid)
+فراغ invalidateTLBByASID(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
+    stored_hw_asid = بارول_HWASID(asid);
 
     /* If the given ASID doesn't have a hardware ASID
      * assigned, then it can't have any mappings in the TLB */
-    if (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return;
+    إذا (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        أرجع;
     }
 
     /* Do the TLB flush */
     invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 }
 
-static inline bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
+ساكن مضمن bool_t CONST checkVPAlignment(vm_پاڼه_اندازه_t sz, کلمه_t w)
 {
-    return (w & MASK(pageBitsForSize(sz))) == 0;
+    أرجع (w & ماسک(پاڼه_بټونه_For_اندازه(sz))) == 0;
 }
 
-struct create_mappings_pte_return {
-    exception_t status;
+بنية create_mappings_pte_return {
+    exception_t حالت;
     pte_t pte;
     pte_range_t pte_entries;
 };
-typedef struct create_mappings_pte_return create_mappings_pte_return_t;
+تعريفنوع بنية create_mappings_pte_return create_mappings_pte_return_t;
 
-struct create_mappings_pde_return {
-    exception_t status;
+بنية create_mappings_pde_return {
+    exception_t حالت;
     pde_t pde;
     pde_range_t pde_entries;
 };
-typedef struct create_mappings_pde_return create_mappings_pde_return_t;
+تعريفنوع بنية create_mappings_pde_return create_mappings_pde_return_t;
 
-static create_mappings_pte_return_t
-createSafeMappingEntries_PTE
-(paddr_t base, word_t vaddr, vm_page_size_t frameSize,
- vm_rights_t vmRights, vm_attributes_t attr, pde_t *pd)
+ساكن create_mappings_pte_return_t
+create_خوندي_Mapping_Entries_PTE
+(paddr_t بنسټ, کلمه_t vaddr, vm_پاڼه_اندازه_t چوکاټ_اندازه,
+ vm_rights_t vmRights, vm_ځانګړتیاوې_t attr, pde_t *pd)
 {
 
     create_mappings_pte_return_t ret;
     lookupPTSlot_ret_t lu_ret;
-    word_t i;
+    کلمه_t i;
 
-    switch (frameSize) {
+    بدل (چوکاټ_اندازه) {
 
-    case ARMSmallPage:
+    حالة ARMSmall_پاڼه:
 
-        ret.pte_entries.base = NULL; /* to avoid uninitialised warning */
-        ret.pte_entries.length = 1;
+        ret.pte_entries.بنسټ = عدم; /* to avoid uninitialised warning */
+        ret.pte_entries.اوږدتیا = 1;
 
-        ret.pte = makeUserPTE(ARMSmallPage, base,
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pte = makeUserPTE(ARMSmall_پاڼه, بنسټ,
+                              vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(attr),
+                              vm_ځانګړتیاوې_get_arm_Execute_Never(attr),
                               vmRights);
 
         lu_ret = lookupPTSlot(pd, vaddr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource =
+            current_syscall_error.failed_Lookup_Was_سرچینه =
                 false;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.حالت = EXCEPTION_SYSCALL_ERROR;
             /* current_lookup_fault will have been set by
              * lookupPTSlot */
-            return ret;
+            أرجع ret;
         }
 
-        ret.pte_entries.base = lu_ret.ptSlot;
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_ptr_get_pteType(ret.pte_entries.base) ==
+        ret.pte_entries.بنسټ = lu_ret.pt_خونه;
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (unlikely(pte_ptr_get_pteType(ret.pte_entries.بنسټ) ==
                      pte_pte_large)) {
-#else
-        if (unlikely(pte_ptr_get_pteType(ret.pte_entries.base) == pte_pte_small
-                     && pte_pte_small_ptr_get_contiguous_hint(ret.pte_entries.base))) {
-#endif
+#وإلا
+        إذا (unlikely(pte_ptr_get_pteType(ret.pte_entries.بنسټ) == pte_pte_small
+                     && pte_pte_small_ptr_get_contiguous_hint(ret.pte_entries.بنسټ))) {
+#د_که_پای
             current_syscall_error.type =
-                seL4_DeleteFirst;
+                se_L4_Delete_لومړی;
 
-            ret.status = EXCEPTION_SYSCALL_ERROR;
-            return ret;
+            ret.حالت = EXCEPTION_SYSCALL_ERROR;
+            أرجع ret;
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.حالت = EXCEPTION_NONE;
+        أرجع ret;
 
-    case ARMLargePage:
+    حالة ARMLarge_پاڼه:
 
-        ret.pte_entries.base = NULL; /* to avoid uninitialised warning */
-        ret.pte_entries.length = PAGES_PER_LARGE_PAGE;
+        ret.pte_entries.بنسټ = عدم; /* to avoid uninitialised warning */
+        ret.pte_entries.اوږدتیا = پاڼې_فی_LARGE_پاڼه;
 
-        ret.pte = makeUserPTE(ARMLargePage, base,
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pte = makeUserPTE(ARMLarge_پاڼه, بنسټ,
+                              vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(attr),
+                              vm_ځانګړتیاوې_get_arm_Execute_Never(attr),
                               vmRights);
 
         lu_ret = lookupPTSlot(pd, vaddr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource =
+            current_syscall_error.failed_Lookup_Was_سرچینه =
                 false;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.حالت = EXCEPTION_SYSCALL_ERROR;
             /* current_lookup_fault will have been set by
              * lookupPTSlot */
-            return ret;
+            أرجع ret;
         }
 
-        ret.pte_entries.base = lu_ret.ptSlot;
+        ret.pte_entries.بنسټ = lu_ret.pt_خونه;
 
-        for (i = 0; i < PAGES_PER_LARGE_PAGE; i++) {
-            if (unlikely(pte_get_pteType(ret.pte_entries.base[i]) ==
+        لكل (i = 0; i < پاڼې_فی_LARGE_پاڼه; i++) {
+            إذا (unlikely(pte_get_pteType(ret.pte_entries.بنسټ[i]) ==
                          pte_pte_small)
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-                && !pte_pte_small_get_contiguous_hint(ret.pte_entries.base[i])
-#endif
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+                && !pte_pte_small_get_contiguous_hint(ret.pte_entries.بنسټ[i])
+#د_که_پای
                ) {
                 current_syscall_error.type =
-                    seL4_DeleteFirst;
+                    se_L4_Delete_لومړی;
 
-                ret.status = EXCEPTION_SYSCALL_ERROR;
-                return ret;
+                ret.حالت = EXCEPTION_SYSCALL_ERROR;
+                أرجع ret;
             }
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.حالت = EXCEPTION_NONE;
+        أرجع ret;
 
-    default:
+    افتراضي:
         fail("Invalid or unexpected ARM page type.");
 
     }
 }
 
-static create_mappings_pde_return_t
-createSafeMappingEntries_PDE
-(paddr_t base, word_t vaddr, vm_page_size_t frameSize,
- vm_rights_t vmRights, vm_attributes_t attr, pde_t *pd)
+ساكن create_mappings_pde_return_t
+create_خوندي_Mapping_Entries_PDE
+(paddr_t بنسټ, کلمه_t vaddr, vm_پاڼه_اندازه_t چوکاټ_اندازه,
+ vm_rights_t vmRights, vm_ځانګړتیاوې_t attr, pde_t *pd)
 {
 
     create_mappings_pde_return_t ret;
-    pde_tag_t currentPDEType;
-    word_t i;
+    pde_نښان_t currentPDEType;
+    کلمه_t i;
 
-    switch (frameSize) {
+    بدل (چوکاټ_اندازه) {
 
     /* PDE mappings */
-    case ARMSection:
-        ret.pde_entries.base = lookupPDSlot(pd, vaddr);
-        ret.pde_entries.length = 1;
+    حالة ARMSection:
+        ret.pde_entries.بنسټ = lookupPDSlot(pd, vaddr);
+        ret.pde_entries.اوږدتیا = 1;
 
-        ret.pde = makeUserPDE(ARMSection, base,
-                              vm_attributes_get_armParityEnabled(attr),
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pde = makeUserPDE(ARMSection, بنسټ,
+                              vm_ځانګړتیاوې_get_arm_Parity_Enabled(attr),
+                              vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(attr),
+                              vm_ځانګړتیاوې_get_arm_Execute_Never(attr),
                               0,
                               vmRights);
 
         currentPDEType =
-            pde_ptr_get_pdeType(ret.pde_entries.base);
-        if (unlikely(currentPDEType != pde_pde_invalid &&
+            pde_ptr_get_pdeType(ret.pde_entries.بنسټ);
+        إذا (unlikely(currentPDEType != pde_pde_invalid &&
                      (currentPDEType != pde_pde_section ||
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                      pde_pde_section_ptr_get_size(ret.pde_entries.base) != 0))) {
-#else
-                      pde_pde_section_ptr_get_contiguous_hint(ret.pde_entries.base) != 0))) {
-#endif
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+                      pde_pde_section_ptr_get_اندازه(ret.pde_entries.بنسټ) != 0))) {
+#وإلا
+                      pde_pde_section_ptr_get_contiguous_hint(ret.pde_entries.بنسټ) != 0))) {
+#د_که_پای
             current_syscall_error.type =
-                seL4_DeleteFirst;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+                se_L4_Delete_لومړی;
+            ret.حالت = EXCEPTION_SYSCALL_ERROR;
 
-            return ret;
+            أرجع ret;
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.حالت = EXCEPTION_NONE;
+        أرجع ret;
 
-    case ARMSuperSection:
-        ret.pde_entries.base = lookupPDSlot(pd, vaddr);
-        ret.pde_entries.length = SECTIONS_PER_SUPER_SECTION;
+    حالة ARMSuperSection:
+        ret.pde_entries.بنسټ = lookupPDSlot(pd, vaddr);
+        ret.pde_entries.اوږدتیا = SECTIONS_فی_SUPER_SECTION;
 
-        ret.pde = makeUserPDE(ARMSuperSection, base,
-                              vm_attributes_get_armParityEnabled(attr),
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pde = makeUserPDE(ARMSuperSection, بنسټ,
+                              vm_ځانګړتیاوې_get_arm_Parity_Enabled(attr),
+                              vm_ځانګړتیاوې_get_arm_پاڼه_Cacheable(attr),
+                              vm_ځانګړتیاوې_get_arm_Execute_Never(attr),
                               0,
                               vmRights);
 
-        for (i = 0; i < SECTIONS_PER_SUPER_SECTION; i++) {
+        لكل (i = 0; i < SECTIONS_فی_SUPER_SECTION; i++) {
             currentPDEType =
-                pde_get_pdeType(ret.pde_entries.base[i]);
-            if (unlikely(currentPDEType != pde_pde_invalid &&
+                pde_get_pdeType(ret.pde_entries.بنسټ[i]);
+            إذا (unlikely(currentPDEType != pde_pde_invalid &&
                          (currentPDEType != pde_pde_section ||
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                          pde_pde_section_get_size(ret.pde_entries.base[i]) != 1))) {
-#else
-                          pde_pde_section_get_contiguous_hint(ret.pde_entries.base[i]) != 1))) {
-#endif
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+                          pde_pde_section_get_اندازه(ret.pde_entries.بنسټ[i]) != 1))) {
+#وإلا
+                          pde_pde_section_get_contiguous_hint(ret.pde_entries.بنسټ[i]) != 1))) {
+#د_که_پای
                 current_syscall_error.type =
-                    seL4_DeleteFirst;
-                ret.status = EXCEPTION_SYSCALL_ERROR;
+                    se_L4_Delete_لومړی;
+                ret.حالت = EXCEPTION_SYSCALL_ERROR;
 
-                return ret;
+                أرجع ret;
             }
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.حالت = EXCEPTION_NONE;
+        أرجع ret;
 
-    default:
+    افتراضي:
         fail("Invalid or unexpected ARM page type.");
 
     }
 }
 
-static inline vptr_t pageBase(vptr_t vaddr, vm_page_size_t size)
+ساكن مضمن vptr_t پاڼه_بنسټ(vptr_t vaddr, vm_پاڼه_اندازه_t اندازه)
 {
-    return vaddr & ~MASK(pageBitsForSize(size));
+    أرجع vaddr & ~ماسک(پاڼه_بټونه_For_اندازه(اندازه));
 }
 
-static bool_t PURE pteCheckIfMapped(pte_t *pte)
+ساكن bool_t خالص pteCheckIfMapped(pte_t *pte)
 {
-    return pte_ptr_get_pteType(pte) != pte_pte_invalid;
+    أرجع pte_ptr_get_pteType(pte) != pte_pte_invalid;
 }
 
-static bool_t PURE pdeCheckIfMapped(pde_t *pde)
+ساكن bool_t خالص pdeCheckIfMapped(pde_t *pde)
 {
-    return pde_ptr_get_pdeType(pde) != pde_pde_invalid;
+    أرجع pde_ptr_get_pdeType(pde) != pde_pde_invalid;
 }
 
-static void doFlush(int invLabel, vptr_t start, vptr_t end, paddr_t pstart)
+ساكن فراغ doFlush(صحيح invLabel, vptr_t پیل, vptr_t پای_ټکی, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end, id)" */
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    إذا (config_سېټ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* The hypervisor does not share an AS with userspace so we must flush
          * by kernel MVA instead. ARMv7 caches are PIPT so it makes no difference */
-        end = (vptr_t)paddr_to_pptr(pstart) + (end - start);
-        start = (vptr_t)paddr_to_pptr(pstart);
+        پای_ټکی = (vptr_t)paddr_منزل_pptr(pstart) + (پای_ټکی - پیل);
+        پیل = (vptr_t)paddr_منزل_pptr(pstart);
     }
-    switch (invLabel) {
-    case ARMPDClean_Data:
-    case ARMPageClean_Data:
-        cleanCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDInvalidate_Data:
-    case ARMPageInvalidate_Data:
-        invalidateCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDCleanInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-        cleanInvalidateCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDUnify_Instruction:
-    case ARMPageUnify_Instruction:
+    بدل (invLabel) {
+    حالة ARMPDClean_معلومات:
+    حالة ARMPage_Clean_معلومات:
+        cleanCacheRange_RAM(پیل, پای_ټکی, pstart);
+        اكسر;
+    حالة ARMPDInvalidate_معلومات:
+    حالة ARMPage_Invalidate_معلومات:
+        invalidateCacheRange_RAM(پیل, پای_ټکی, pstart);
+        اكسر;
+    حالة ARMPDClean_Invalidate_معلومات:
+    حالة ARMPage_Clean_Invalidate_معلومات:
+        cleanInvalidateCacheRange_RAM(پیل, پای_ټکی, pstart);
+        اكسر;
+    حالة ARMPDUnify_Instruction:
+    حالة ARMPageUnify_Instruction:
         /* First clean data lines to point of unification
            (L2 cache)... */
-        cleanCacheRange_PoU(start, end, pstart);
+        cleanCacheRange_PoU(پیل, پای_ټکی, pstart);
         /* Ensure it's been written. */
         dsb();
         /* ...then invalidate the corresponding instruction lines
            to point of unification... */
-        invalidateCacheRange_I(start, end, pstart);
+        invalidateCacheRange_I(پیل, پای_ټکی, pstart);
         /* ...then invalidate branch predictors... */
-        branchFlushRange(start, end, pstart);
+        branchFlushRange(پیل, پای_ټکی, pstart);
         /* ... then wait for the completion of invalidations. */
         dsb();
         /* Ensure new instructions come from fresh cache lines. */
         isb();
-        break;
-    default:
+        اكسر;
+    افتراضي:
         fail("Invalid operation, shouldn't get here.\n");
     }
 }
 
 /* ================= INVOCATION HANDLING STARTS HERE ================== */
 
-static exception_t performPDFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
-                                  vptr_t end, paddr_t pstart)
+ساكن exception_t performPDFlush(صحيح invLabel, pde_t *pd, asid_t asid, vptr_t پیل,
+                                  vptr_t پای_ټکی, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t ریښه_switched;
 
     /* Flush if given a non zero range */
-    if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+    إذا (پیل < پای_ټکی) {
+        ریښه_switched = سېټ_VMRoot_For_Flush(pd, asid);
 
-        doFlush(invLabel, start, end, pstart);
+        doFlush(invLabel, پیل, پای_ټکی, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        إذا (ریښه_switched) {
+            سېټ_VMRoot(غوټه_STATE(ksCurThread));
         }
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageTableInvocationMap(cap_t cap, cte_t *ctSlot,
-                                                 pde_t pde, pde_t *pdSlot)
+ساكن exception_t perform_پاڼه_جدول_Invocation_Map(cap_t cap, cte_t *ct_خونه,
+                                                 pde_t pde, pde_t *pd_خونه)
 {
-    ctSlot->cap = cap;
-    *pdSlot = pde;
-    cleanByVA_PoU((word_t)pdSlot, addrFromPPtr(pdSlot));
+    ct_خونه->cap = cap;
+    *pd_خونه = pde;
+    cleanByVA_PoU((کلمه_t)pd_خونه, addrFromPPtr(pd_خونه));
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ساكن exception_t perform_پاڼه_جدول_Invocation_Unmap(cap_t cap, cte_t *ct_خونه)
 {
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
-        pte_t *pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-        unmapPageTable(
-            cap_page_table_cap_get_capPTMappedASID(cap),
-            cap_page_table_cap_get_capPTMappedAddress(cap),
+    إذا (cap_پاڼه_جدول_cap_get_cap_PTIs_Mapped(cap)) {
+        pte_t *pt = PTE_PTR(cap_پاڼه_جدول_cap_get_cap_PTBase_Ptr(cap));
+        unmap_پاڼه_جدول(
+            cap_پاڼه_جدول_cap_get_cap_PTMapped_ASID(cap),
+            cap_پاڼه_جدول_cap_get_cap_PTMapped_پته(cap),
             pt);
-        clearMemory_PT((void *)pt, cap_get_capSizeBits(cap));
+        clear_حافظه_PT((فراغ *)pt, cap_get_cap_اندازه_بټونه(cap));
     }
-    cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
+    cap_پاڼه_جدول_cap_ptr_سېټ_cap_PTIs_Mapped(&(ct_خونه->cap), 0);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationMapPTE(asid_t asid, cap_t cap, cte_t *ctSlot, pte_t pte,
+ساكن exception_t perform_پاڼه_Invocation_Map_PTE(asid_t asid, cap_t cap, cte_t *ct_خونه, pte_t pte,
                                                pte_range_t pte_entries)
 {
-    word_t i, j UNUSED;
+    کلمه_t i, j ناکارول_شوی;
     bool_t tlbflush_required;
 
-    ctSlot->cap = cap;
+    ct_خونه->cap = cap;
 
     /* we only need to check the first entries because of how createSafeMappingEntries
      * works to preserve the consistency of tables */
-    tlbflush_required = pteCheckIfMapped(pte_entries.base);
+    tlbflush_required = pteCheckIfMapped(pte_entries.بنسټ);
 
-    j = pte_entries.length;
+    j = pte_entries.اوږدتیا;
     /** GHOSTUPD: "(\<acute>j <= 16, id)" */
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t base_address = pte_pte_small_get_address(pte);
-#endif
-    for (i = 0; i < pte_entries.length; i++) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pte = pte_pte_small_set_address(pte, base_address + i * BIT(pageBitsForSize(ARMSmallPage)));
-#endif
-        pte_entries.base[i] = pte;
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t بنسټ_پته = pte_pte_small_get_پته(pte);
+#د_که_پای
+    لكل (i = 0; i < pte_entries.اوږدتیا; i++) {
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        pte = pte_pte_small_سېټ_پته(pte, بنسټ_پته + i * بټ(پاڼه_بټونه_For_اندازه(ARMSmall_پاڼه)));
+#د_که_پای
+        pte_entries.بنسټ[i] = pte;
     }
-    cleanCacheRange_PoU((word_t)pte_entries.base,
-                        LAST_BYTE_PTE(pte_entries.base, pte_entries.length),
-                        addrFromPPtr(pte_entries.base));
-    if (unlikely(tlbflush_required)) {
+    cleanCacheRange_PoU((کلمه_t)pte_entries.بنسټ,
+                        وروستی_BYTE_PTE(pte_entries.بنسټ, pte_entries.اوږدتیا),
+                        addrFromPPtr(pte_entries.بنسټ));
+    إذا (unlikely(tlbflush_required)) {
         invalidateTLBByASID(asid);
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationMapPDE(asid_t asid, cap_t cap, cte_t *ctSlot, pde_t pde,
+ساكن exception_t perform_پاڼه_Invocation_Map_PDE(asid_t asid, cap_t cap, cte_t *ct_خونه, pde_t pde,
                                                pde_range_t pde_entries)
 {
-    word_t i, j UNUSED;
+    کلمه_t i, j ناکارول_شوی;
     bool_t tlbflush_required;
 
-    ctSlot->cap = cap;
+    ct_خونه->cap = cap;
 
     /* we only need to check the first entries because of how createSafeMappingEntries
      * works to preserve the consistency of tables */
-    tlbflush_required = pdeCheckIfMapped(pde_entries.base);
+    tlbflush_required = pdeCheckIfMapped(pde_entries.بنسټ);
 
-    j = pde_entries.length;
+    j = pde_entries.اوږدتیا;
     /** GHOSTUPD: "(\<acute>j <= 16, id)" */
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t base_address = pde_pde_section_get_address(pde);
-#endif
-    for (i = 0; i < pde_entries.length; i++) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pde = pde_pde_section_set_address(pde, base_address + i * BIT(pageBitsForSize(ARMSection)));
-#endif
-        pde_entries.base[i] = pde;
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    کلمه_t بنسټ_پته = pde_pde_section_get_پته(pde);
+#د_که_پای
+    لكل (i = 0; i < pde_entries.اوږدتیا; i++) {
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        pde = pde_pde_section_سېټ_پته(pde, بنسټ_پته + i * بټ(پاڼه_بټونه_For_اندازه(ARMSection)));
+#د_که_پای
+        pde_entries.بنسټ[i] = pde;
     }
-    cleanCacheRange_PoU((word_t)pde_entries.base,
-                        LAST_BYTE_PDE(pde_entries.base, pde_entries.length),
-                        addrFromPPtr(pde_entries.base));
-    if (unlikely(tlbflush_required)) {
+    cleanCacheRange_PoU((کلمه_t)pde_entries.بنسټ,
+                        وروستی_BYTE_PDE(pde_entries.بنسټ, pde_entries.اوږدتیا),
+                        addrFromPPtr(pde_entries.بنسټ));
+    إذا (unlikely(tlbflush_required)) {
         invalidateTLBByASID(asid);
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ساكن exception_t perform_پاڼه_Invocation_Unmap(cap_t cap, cte_t *ct_خونه)
 {
-    if (generic_frame_cap_get_capFIsMapped(cap)) {
-        unmapPage(generic_frame_cap_get_capFSize(cap),
-                  generic_frame_cap_get_capFMappedASID(cap),
-                  generic_frame_cap_get_capFMappedAddress(cap),
-                  (void *)generic_frame_cap_get_capFBasePtr(cap));
+    إذا (generic_چوکاټ_cap_get_cap_FIs_Mapped(cap)) {
+        unmap_پاڼه(generic_چوکاټ_cap_get_cap_FSize(cap),
+                  generic_چوکاټ_cap_get_cap_FMapped_ASID(cap),
+                  generic_چوکاټ_cap_get_cap_FMapped_پته(cap),
+                  (فراغ *)generic_چوکاټ_cap_get_cap_FBase_Ptr(cap));
     }
 
-    generic_frame_cap_ptr_set_capFMappedAddress(&ctSlot->cap, asidInvalid, 0);
+    generic_چوکاټ_cap_ptr_سېټ_cap_FMapped_پته(&ct_خونه->cap, asidInvalid, 0);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
-                                    vptr_t end, paddr_t pstart)
+ساكن exception_t perform_پاڼه_Flush(صحيح invLabel, pde_t *pd, asid_t asid, vptr_t پیل,
+                                    vptr_t پای_ټکی, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t ریښه_switched;
 
     /* now we can flush. But only if we were given a non zero range */
-    if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+    إذا (پیل < پای_ټکی) {
+        ریښه_switched = سېټ_VMRoot_For_Flush(pd, asid);
 
-        doFlush(invLabel, start, end, pstart);
+        doFlush(invLabel, پیل, پای_ټکی, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        إذا (ریښه_switched) {
+            سېټ_VMRoot(غوټه_STATE(ksCurThread));
         }
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
+ساكن exception_t perform_پاڼه_Get_پته(فراغ *vbase_ptr, bool_t call)
 {
     /* Get the physical address of this frame. */
     paddr_t capFBasePtr;
     capFBasePtr = addrFromPPtr(vbase_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    thread = غوټه_STATE(ksCurThread);
+    إذا (call) {
+        کلمه_t *ipc_بفر = lookupIPCBuffer(true, thread);
+        سېټ_ثبتوونکی(thread, badge_ثبتوونکی, 0);
+        بینښه صحيح اوږدتیا = سېټ_MR(thread, ipc_بفر, 0, capFBasePtr);
+        سېټ_ثبتوونکی(thread, پیغام_Info_ثبتوونکی, کلمه_From_پیغام_Info(
+                        se_L4_پیغام_Info_new(0, 0, 0, اوږدتیا)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Running);
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr,
-                                             cte_t *pdCapSlot)
+ساكن exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr,
+                                             cte_t *pd_Cap_خونه)
 {
-    cap_page_directory_cap_ptr_set_capPDMappedASID(&pdCapSlot->cap, asid);
-    cap_page_directory_cap_ptr_set_capPDIsMapped(&pdCapSlot->cap, 1);
-    poolPtr->array[ASID_LOW(asid)] =
-        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCapSlot->cap));
+    cap_پاڼه_directory_cap_ptr_سېټ_cap_PDMapped_ASID(&pd_Cap_خونه->cap, asid);
+    cap_پاڼه_directory_cap_ptr_سېټ_cap_PDIs_Mapped(&pd_Cap_خونه->cap, 1);
+    poolPtr->array[ASID_ټیټ(asid)] =
+        PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(pd_Cap_خونه->cap));
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
-                                                cte_t *parent, asid_t asid_base)
+ساكن exception_t performASIDControlInvocation(فراغ *چوکاټ, cte_t *خونه,
+                                                cte_t *پلار, asid_t asid_بنسټ)
 {
 
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
-    cap_untyped_cap_ptr_set_capFreeIndex(&(parent->cap),
-                                         MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(parent->cap)));
+    cap_untyped_cap_ptr_سېټ_cap_Free_شاخص(&(پلار->cap),
+                                         MAX_FREE_شاخص(cap_untyped_cap_get_cap_بلاک_اندازه(پلار->cap)));
 
-    memzero(frame, 1 << ARMSmallPageBits);
+    memzero(چوکاټ, 1 << ARMSmall_پاڼه_بټونه);
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(cap_asid_pool_cap_new(asid_base, WORD_REF(frame)),
-              parent, slot);;
+    cte_ورننباسه(cap_asid_pool_cap_new(asid_بنسټ, کلمه_REF(چوکاټ)),
+              پلار, خونه);;
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    armKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    أكد((asid_بنسټ & ماسک(asid_ټیټ_بټونه)) == 0);
+    armKSASIDTable[ASID_لوړ(asid_بنسټ)] = (asid_pool_t *)چوکاټ;
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t length,
+ساكن exception_t decodeARMPageDirectoryInvocation(کلمه_t invLabel, کلمه_t اوږدتیا,
                                                     cptr_t cptr, cte_t *cte, cap_t cap,
-                                                    word_t *buffer)
+                                                    کلمه_t *بفر)
 {
-    switch (invLabel) {
-    case ARMPDClean_Data:
-    case ARMPDInvalidate_Data:
-    case ARMPDCleanInvalidate_Data:
-    case ARMPDUnify_Instruction: {
-        vptr_t start, end;
+    بدل (invLabel) {
+    حالة ARMPDClean_معلومات:
+    حالة ARMPDInvalidate_معلومات:
+    حالة ARMPDClean_Invalidate_معلومات:
+    حالة ARMPDUnify_Instruction: {
+        vptr_t پیل, پای_ټکی;
         paddr_t pstart;
-        findPDForASID_ret_t find_ret;
+        پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
         asid_t asid;
         pde_t *pd;
         resolve_ret_t resolve_ret;
 
-        if (length < 2) {
+        إذا (اوږدتیا < 2) {
             userError("PD Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_پیغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        پیل = getSyscallArg(0, بفر);
+        پای_ټکی =   getSyscallArg(1, بفر);
 
         /* Check sanity of arguments */
-        if (end <= start) {
+        إذا (پای_ټکی <= پیل) {
             userError("PD Flush: Invalid range");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_دلیل;
+            current_syscall_error.invalid_دلیل_شمېره = 1;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Don't let applications flush kernel regions. */
-        if (start >= USER_TOP || end > USER_TOP) {
+        إذا (پیل >= USER_سر || پای_ټکی > USER_سر) {
             userError("PD Flush: Overlaps kernel region.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(cap_get_capType(cap) != cap_page_directory_cap ||
-                     !cap_page_directory_cap_get_capPDIsMapped(cap))) {
+        إذا (unlikely(cap_get_capType(cap) != cap_پاڼه_directory_cap ||
+                     !cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(cap))) {
             userError("PD Flush: Invalid cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_شمېره = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* Make sure that the supplied pd is ok */
-        pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap));
-        asid = cap_page_directory_cap_get_capPDMappedASID(cap);
+        pd = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(cap));
+        asid = cap_پاڼه_directory_cap_get_cap_PDMapped_ASID(cap);
 
-        find_ret = findPDForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+        إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE)) {
             userError("PD Flush: No PD for ASID");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_سرچینه = false;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.pd != pd)) {
+        إذا (unlikely(پیدا_کړه_ret.pd != pd)) {
             userError("PD Flush: Invalid PD Cap");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_شمېره = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Look up the frame containing 'start'. */
-        resolve_ret = resolveVAddr(pd, start);
+        resolve_ret = resolveVAddr(pd, پیل);
 
         /* Check that there's actually something there. */
-        if (!resolve_ret.valid) {
+        إذا (!resolve_ret.valid) {
             /* Fail silently, as there can't be any stale cached data (for the
              * given address space), and getting a syscall error because the
              * relevant page is non-resident would be 'astonishing'. */
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return EXCEPTION_NONE;
+            سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+            أرجع EXCEPTION_NONE;
         }
 
         /* Refuse to cross a page boundary. */
-        if (pageBase(start, resolve_ret.frameSize) !=
-            pageBase(end - 1, resolve_ret.frameSize)) {
+        إذا (پاڼه_بنسټ(پیل, resolve_ret.چوکاټ_اندازه) !=
+            پاڼه_بنسټ(پای_ټکی - 1, resolve_ret.چوکاټ_اندازه)) {
             userError("PD Flush: Range is across page boundary.");
             current_syscall_error.type = seL4_RangeError;
-            current_syscall_error.rangeErrorMin = start;
+            current_syscall_error.rangeErrorMin = پیل;
             current_syscall_error.rangeErrorMax =
-                pageBase(start, resolve_ret.frameSize) +
-                MASK(pageBitsForSize(resolve_ret.frameSize));
-            return EXCEPTION_SYSCALL_ERROR;
+                پاڼه_بنسټ(پیل, resolve_ret.چوکاټ_اندازه) +
+                ماسک(پاڼه_بټونه_For_اندازه(resolve_ret.چوکاټ_اندازه));
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* Calculate the physical start address. */
-        pstart = resolve_ret.frameBase
-                 + (start & MASK(pageBitsForSize(resolve_ret.frameSize)));
+        pstart = resolve_ret.چوکاټ_بنسټ
+                 + (پیل & ماسک(پاڼه_بټونه_For_اندازه(resolve_ret.چوکاټ_اندازه)));
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        إذا (pstart < phys_بنسټ() || pstart > PADDR_سر || (پای_ټکی - پیل) > PADDR_سر - pstart) {
             userError("PD Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#د_که_پای
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPDFlush(invLabel, pd, asid, start, end - 1, pstart);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع performPDFlush(invLabel, pd, asid, پیل, پای_ټکی - 1, pstart);
     }
 
-    default:
+    افتراضي:
         userError("PD: Invalid invocation number");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
 }
 
-static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
-                                                cte_t *cte, cap_t cap, word_t *buffer)
+ساكن exception_t decode_ARMPage_جدول_Invocation(کلمه_t invLabel, کلمه_t اوږدتیا,
+                                                cte_t *cte, cap_t cap, کلمه_t *بفر)
 {
-    word_t vaddr, pdIndex;
+    کلمه_t vaddr, pd_شاخص;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    vm_attributes_t attr;
-#endif
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    vm_ځانګړتیاوې_t attr;
+#د_که_پای
     cap_t pdCap;
-    pde_t *pd, *pdSlot;
+    pde_t *pd, *pd_خونه;
     pde_t pde;
     asid_t asid;
     paddr_t paddr;
 
-    if (invLabel == ARMPageTableUnmap) {
-        if (unlikely(! isFinalCapability(cte))) {
+    إذا (invLabel == ARMPage_جدول_Unmap) {
+        إذا (unlikely(! isFinalCapability(cte))) {
             userError("ARMPageTableUnmap: Cannot unmap if more than one cap exists.");
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Revoke_لومړی;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageTableInvocationUnmap(cap, cte);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع perform_پاڼه_جدول_Invocation_Unmap(cap, cte);
     }
 
-    if (unlikely(invLabel != ARMPageTableMap)) {
+    إذا (unlikely(invLabel != ARMPage_جدول_Map)) {
         userError("ARMPageTable: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
+    إذا (unlikely(اوږدتیا < 2 || current_extra_caps.excaprefs[0] == عدم)) {
         userError("ARMPageTableMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پیغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+    إذا (unlikely(cap_پاڼه_جدول_cap_get_cap_PTIs_Mapped(cap))) {
         userError("ARMPageTableMap: Page table is already mapped to page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_شمېره = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    attr = vmAttributesFromWord(getSyscallArg(1, buffer));
-#endif
+    vaddr = getSyscallArg(0, بفر);
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+    attr = vm_ځانګړتیاوې_From_کلمه(getSyscallArg(1, بفر));
+#د_که_پای
     pdCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (unlikely(cap_get_capType(pdCap) != cap_page_directory_cap ||
-                 !cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+    إذا (unlikely(cap_get_capType(pdCap) != cap_پاڼه_directory_cap ||
+                 !cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
         userError("ARMPageTableMap: Invalid PD cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_شمېره = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCap));
-    asid = cap_page_directory_cap_get_capPDMappedASID(pdCap);
+    pd = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(pdCap));
+    asid = cap_پاڼه_directory_cap_get_cap_PDMapped_ASID(pdCap);
 
-    if (unlikely(vaddr >= USER_TOP)) {
+    إذا (unlikely(vaddr >= USER_سر)) {
         userError("ARMPageTableMap: Virtual address cannot be in kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr,
-                  USER_TOP);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+                  USER_سر);
+        current_syscall_error.type = se_L4_Invalid_دلیل;
+        current_syscall_error.invalid_دلیل_شمېره = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     {
-        findPDForASID_ret_t find_ret;
+        پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
 
-        find_ret = findPDForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+        إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE)) {
             userError("ARMPageTableMap: ASID lookup failed.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
+            current_syscall_error.failed_Lookup_Was_سرچینه = false;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.pd != pd)) {
+        إذا (unlikely(پیدا_کړه_ret.pd != pd)) {
             userError("ARMPageTableMap: ASID lookup failed.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_شمېره = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    pdIndex = vaddr >> (PAGE_BITS + PT_INDEX_BITS);
-    pdSlot = &pd[pdIndex];
-    if (unlikely(pde_ptr_get_pdeType(pdSlot) != pde_pde_invalid)) {
+    pd_شاخص = vaddr >> (پاڼه_بټونه + PT_شاخص_بټونه);
+    pd_خونه = &pd[pd_شاخص];
+    إذا (unlikely(pde_ptr_get_pdeType(pd_خونه) != pde_pde_invalid)) {
         userError("ARMPageTableMap: Page directory already has entry for supplied address.");
-        current_syscall_error.type = seL4_DeleteFirst;
+        current_syscall_error.type = se_L4_Delete_لومړی;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     paddr = addrFromPPtr(
-                PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+                PTE_PTR(cap_پاڼه_جدول_cap_get_cap_PTBase_Ptr(cap)));
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
     pde = pde_pde_coarse_new(
               paddr,
-              vm_attributes_get_armParityEnabled(attr),
+              vm_ځانګړتیاوې_get_arm_Parity_Enabled(attr),
               0 /* Domain */
           );
-#else
+#وإلا
     pde = pde_pde_coarse_new(paddr);
-#endif
+#د_که_پای
 
-    cap = cap_page_table_cap_set_capPTIsMapped(cap, 1);
-    cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
-    cap = cap_page_table_cap_set_capPTMappedAddress(cap, vaddr);
+    cap = cap_پاڼه_جدول_cap_سېټ_cap_PTIs_Mapped(cap, 1);
+    cap = cap_پاڼه_جدول_cap_سېټ_cap_PTMapped_ASID(cap, asid);
+    cap = cap_پاڼه_جدول_cap_سېټ_cap_PTMapped_پته(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performPageTableInvocationMap(cap, cte, pde, pdSlot);
+    سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+    أرجع perform_پاڼه_جدول_Invocation_Map(cap, cte, pde, pd_خونه);
 }
 
-static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
-                                            cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+ساكن exception_t decodeARMFrameInvocation(کلمه_t invLabel, کلمه_t اوږدتیا,
+                                            cte_t *cte, cap_t cap, bool_t call, کلمه_t *بفر)
 {
-    switch (invLabel) {
-    case ARMPageMap: {
-        word_t vaddr, vtop, w_rightsMask;
+    بدل (invLabel) {
+    حالة ARMPageMap: {
+        کلمه_t vaddr, vtop, w_rights_ماسک;
         paddr_t capFBasePtr;
         cap_t pdCap;
         pde_t *pd;
         asid_t asid;
         vm_rights_t capVMRights, vmRights;
-        vm_page_size_t frameSize;
-        vm_attributes_t attr;
+        vm_پاڼه_اندازه_t چوکاټ_اندازه;
+        vm_ځانګړتیاوې_t attr;
 
-        if (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
+        إذا (unlikely(اوږدتیا < 3 || current_extra_caps.excaprefs[0] == عدم)) {
             userError("ARMPageMap: Truncated message.");
             current_syscall_error.type =
-                seL4_TruncatedMessage;
+                se_L4_Truncated_پیغام;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        vaddr = getSyscallArg(0, buffer);
-        w_rightsMask = getSyscallArg(1, buffer);
-        attr = vmAttributesFromWord(getSyscallArg(2, buffer));
+        vaddr = getSyscallArg(0, بفر);
+        w_rights_ماسک = getSyscallArg(1, بفر);
+        attr = vm_ځانګړتیاوې_From_کلمه(getSyscallArg(2, بفر));
         pdCap = current_extra_caps.excaprefs[0]->cap;
 
-        frameSize = generic_frame_cap_get_capFSize(cap);
-        capVMRights = generic_frame_cap_get_capFVMRights(cap);
+        چوکاټ_اندازه = generic_چوکاټ_cap_get_cap_FSize(cap);
+        capVMRights = generic_چوکاټ_cap_get_cap_FVMRights(cap);
 
-        if (unlikely(cap_get_capType(pdCap) != cap_page_directory_cap ||
-                     !cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+        إذا (unlikely(cap_get_capType(pdCap) != cap_پاڼه_directory_cap ||
+                     !cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
             userError("ARMPageMap: Bad PageDirectory cap.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_شمېره = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(
+        pd = PDE_PTR(cap_پاڼه_directory_cap_get_cap_PDBase_Ptr(
                          pdCap));
-        asid = cap_page_directory_cap_get_capPDMappedASID(pdCap);
+        asid = cap_پاڼه_directory_cap_get_cap_PDMapped_ASID(pdCap);
 
-        if (generic_frame_cap_get_capFIsMapped(cap)) {
-            if (generic_frame_cap_get_capFMappedASID(cap) != asid) {
+        إذا (generic_چوکاټ_cap_get_cap_FIs_Mapped(cap)) {
+            إذا (generic_چوکاټ_cap_get_cap_FMapped_ASID(cap) != asid) {
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_شمېره = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (generic_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            إذا (generic_چوکاټ_cap_get_cap_FMapped_پته(cap) != vaddr) {
                 userError("ARMPageMap: Attempting to map frame into multiple addresses");
-                current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.type = se_L4_Invalid_دلیل;
+                current_syscall_error.invalid_دلیل_شمېره = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
-            vtop = vaddr + BIT(pageBitsForSize(frameSize)) - 1;
+        } وإلا {
+            vtop = vaddr + بټ(پاڼه_بټونه_For_اندازه(چوکاټ_اندازه)) - 1;
 
-            if (unlikely(vtop >= USER_TOP)) {
-                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_TOP);
+            إذا (unlikely(vtop >= USER_سر)) {
+                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_سر);
                 current_syscall_error.type =
-                    seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                    se_L4_Invalid_دلیل;
+                current_syscall_error.invalid_دلیل_شمېره = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         {
-            findPDForASID_ret_t find_ret;
+            پیدا_کړه_PDFor_ASID_ret_t پیدا_کړه_ret;
 
-            find_ret = findPDForASID(asid);
-            if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+            پیدا_کړه_ret = پیدا_کړه_PDFor_ASID(asid);
+            إذا (unlikely(پیدا_کړه_ret.حالت != EXCEPTION_NONE)) {
                 userError("ARMPageMap: No PD for ASID");
                 current_syscall_error.type =
                     seL4_FailedLookup;
-                current_syscall_error.failedLookupWasSource =
+                current_syscall_error.failed_Lookup_Was_سرچینه =
                     false;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (unlikely(find_ret.pd != pd)) {
+            إذا (unlikely(پیدا_کړه_ret.pd != pd)) {
                 userError("ARMPageMap: ASID lookup failed.");
                 current_syscall_error.type =
                     seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_شمېره = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         vmRights =
-            maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
+            ماسک_VMRights(capVMRights, rights_From_کلمه(w_rights_ماسک));
 
-        if (unlikely(!checkVPAlignment(frameSize, vaddr))) {
+        إذا (unlikely(!checkVPAlignment(چوکاټ_اندازه, vaddr))) {
             userError("ARMPageMap: Virtual address has incorrect alignment.");
             current_syscall_error.type =
                 seL4_AlignmentError;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        capFBasePtr = addrFromPPtr((void *)
-                                   generic_frame_cap_get_capFBasePtr(cap));
+        capFBasePtr = addrFromPPtr((فراغ *)
+                                   generic_چوکاټ_cap_get_cap_FBase_Ptr(cap));
 
-        cap = generic_frame_cap_set_capFMappedAddress(cap, asid,
+        cap = generic_چوکاټ_cap_سېټ_cap_FMapped_پته(cap, asid,
                                                       vaddr);
-        if (frameSize == ARMSmallPage || frameSize == ARMLargePage) {
+        إذا (چوکاټ_اندازه == ARMSmall_پاڼه || چوکاټ_اندازه == ARMLarge_پاڼه) {
             create_mappings_pte_return_t map_ret;
-            map_ret = createSafeMappingEntries_PTE(capFBasePtr, vaddr,
-                                                   frameSize, vmRights,
+            map_ret = create_خوندي_Mapping_Entries_PTE(capFBasePtr, vaddr,
+                                                   چوکاټ_اندازه, vmRights,
                                                    attr, pd);
-            if (unlikely(map_ret.status != EXCEPTION_NONE)) {
-#ifdef CONFIG_PRINTING
-                if (current_syscall_error.type == seL4_DeleteFirst) {
+            إذا (unlikely(map_ret.حالت != EXCEPTION_NONE)) {
+#که_تعریف_شوی CONFIG_PRINTING
+                إذا (current_syscall_error.type == se_L4_Delete_لومړی) {
                     userError("ARMPageMap: Page table entry was not free.");
                 }
-#endif
-                return map_ret.status;
+#د_که_پای
+                أرجع map_ret.حالت;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationMapPTE(asid, cap, cte,
+            سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+            أرجع perform_پاڼه_Invocation_Map_PTE(asid, cap, cte,
                                                map_ret.pte,
                                                map_ret.pte_entries);
-        } else {
+        } وإلا {
             create_mappings_pde_return_t map_ret;
-            map_ret = createSafeMappingEntries_PDE(capFBasePtr, vaddr,
-                                                   frameSize, vmRights,
+            map_ret = create_خوندي_Mapping_Entries_PDE(capFBasePtr, vaddr,
+                                                   چوکاټ_اندازه, vmRights,
                                                    attr, pd);
-            if (unlikely(map_ret.status != EXCEPTION_NONE)) {
-#ifdef CONFIG_PRINTING
-                if (current_syscall_error.type == seL4_DeleteFirst) {
+            إذا (unlikely(map_ret.حالت != EXCEPTION_NONE)) {
+#که_تعریف_شوی CONFIG_PRINTING
+                إذا (current_syscall_error.type == se_L4_Delete_لومړی) {
                     userError("ARMPageMap: Page directory entry was not free.");
                 }
-#endif
-                return map_ret.status;
+#د_که_پای
+                أرجع map_ret.حالت;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationMapPDE(asid, cap, cte,
+            سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+            أرجع perform_پاڼه_Invocation_Map_PDE(asid, cap, cte,
                                                map_ret.pde,
                                                map_ret.pde_entries);
         }
     }
 
-    case ARMPageUnmap: {
-#ifdef CONFIG_TK1_SMMU
-        if (isIOSpaceFrameCap(cap)) {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationUnmapIO(cap, cte);
-        } else
-#endif
+    حالة ARMPageUnmap: {
+#که_تعریف_شوی CONFIG_TK1_SMMU
+        إذا (is_IOSpace_چوکاټ_Cap(cap)) {
+            سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+            أرجع perform_پاڼه_Invocation_Unmap_IO(cap, cte);
+        } وإلا
+#د_که_پای
         {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationUnmap(cap, cte);
+            سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+            أرجع perform_پاڼه_Invocation_Unmap(cap, cte);
         }
     }
 
-#ifdef CONFIG_TK1_SMMU
-    case ARMPageMapIO: {
-        return decodeARMIOMapInvocation(invLabel, length, cte, cap, buffer);
+#که_تعریف_شوی CONFIG_TK1_SMMU
+    حالة ARMPageMapIO: {
+        أرجع decodeARMIOMapInvocation(invLabel, اوږدتیا, cte, cap, بفر);
     }
-#endif
+#د_که_پای
 
-    case ARMPageClean_Data:
-    case ARMPageInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-    case ARMPageUnify_Instruction: {
+    حالة ARMPage_Clean_معلومات:
+    حالة ARMPage_Invalidate_معلومات:
+    حالة ARMPage_Clean_Invalidate_معلومات:
+    حالة ARMPageUnify_Instruction: {
         asid_t asid;
         vptr_t vaddr;
-        findPDForASID_ret_t pd;
-        vptr_t start, end;
+        پیدا_کړه_PDFor_ASID_ret_t pd;
+        vptr_t پیل, پای_ټکی;
         paddr_t pstart;
-        word_t page_size;
-        word_t page_base;
+        کلمه_t پاڼه_اندازه;
+        کلمه_t پاڼه_بنسټ_2;
 
-        if (length < 2) {
+        إذا (اوږدتیا < 2) {
             userError("Page Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_پیغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid = generic_frame_cap_get_capFMappedASID(cap);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        asid = generic_چوکاټ_cap_get_cap_FMapped_ASID(cap);
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Must use kernel vaddr in hyp mode. */
-        vaddr = generic_frame_cap_get_capFBasePtr(cap);
-#else
-        vaddr = generic_frame_cap_get_capFMappedAddress(cap);
-#endif
+        vaddr = generic_چوکاټ_cap_get_cap_FBase_Ptr(cap);
+#وإلا
+        vaddr = generic_چوکاټ_cap_get_cap_FMapped_پته(cap);
+#د_که_پای
 
-        if (unlikely(!generic_frame_cap_get_capFIsMapped(cap))) {
+        إذا (unlikely(!generic_چوکاټ_cap_get_cap_FIs_Mapped(cap))) {
             userError("Page Flush: Frame is not mapped.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        pd = findPDForASID(asid);
-        if (unlikely(pd.status != EXCEPTION_NONE)) {
+        pd = پیدا_کړه_PDFor_ASID(asid);
+        إذا (unlikely(pd.حالت != EXCEPTION_NONE)) {
             userError("Page Flush: No PD for ASID");
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_سرچینه = false;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        پیل = getSyscallArg(0, بفر);
+        پای_ټکی =   getSyscallArg(1, بفر);
 
         /* check that the range is sane */
-        if (end <= start) {
+        إذا (پای_ټکی <= پیل) {
             userError("PageFlush: Invalid range");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_دلیل;
+            current_syscall_error.invalid_دلیل_شمېره = 1;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* start and end are currently relative inside this page */
-        page_size = 1 << pageBitsForSize(generic_frame_cap_get_capFSize(cap));
-        page_base = addrFromPPtr((void *)generic_frame_cap_get_capFBasePtr(cap));
+        پاڼه_اندازه = 1 << پاڼه_بټونه_For_اندازه(generic_چوکاټ_cap_get_cap_FSize(cap));
+        پاڼه_بنسټ_2 = addrFromPPtr((فراغ *)generic_چوکاټ_cap_get_cap_FBase_Ptr(cap));
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_نه_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
         /* When not in hypervisor mode, we flush via user virtual addresses and
            need to make sure the mapping info in the cap is not stale. */
         resolve_ret_t resolve_ret = resolveVAddr(pd.pd, vaddr);
-        if (unlikely(!resolve_ret.valid ||
-                     resolve_ret.frameSize != generic_frame_cap_get_capFSize(cap) ||
-                     resolve_ret.frameBase != page_base)) {
+        إذا (unlikely(!resolve_ret.valid ||
+                     resolve_ret.چوکاټ_اندازه != generic_چوکاټ_cap_get_cap_FSize(cap) ||
+                     resolve_ret.چوکاټ_بنسټ != پاڼه_بنسټ_2)) {
             userError("Page Flush: Attempting to use cap with stale mapping information.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_شمېره = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#د_که_پای
 
-        if (start >= page_size || end > page_size) {
+        إذا (پیل >= پاڼه_اندازه || پای_ټکی > پاڼه_اندازه) {
             userError("Page Flush: Requested range not inside page");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_دلیل;
+            current_syscall_error.invalid_دلیل_شمېره = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
         /* turn start and end into absolute addresses */
-        pstart = page_base + start;
-        start += vaddr;
-        end += vaddr;
+        pstart = پاڼه_بنسټ_2 + پیل;
+        پیل += vaddr;
+        پای_ټکی += vaddr;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        إذا (pstart < phys_بنسټ() || pstart > PADDR_سر || (پای_ټکی - پیل) > PADDR_سر - pstart) {
             userError("Page Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#د_که_پای
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageFlush(invLabel, pd.pd, asid, start, end - 1, pstart);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع perform_پاڼه_Flush(invLabel, pd.pd, asid, پیل, پای_ټکی - 1, pstart);
     }
 
-    case ARMPageGetAddress: {
+    حالة ARMPage_Get_پته: {
 
 
         /* Check that there are enough message registers */
-        assert(n_msgRegisters >= 1);
+        أكد(n_پیغام_Registers >= 1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress((void *)generic_frame_cap_get_capFBasePtr(cap), call);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع perform_پاڼه_Get_پته((فراغ *)generic_چوکاټ_cap_get_cap_FBase_Ptr(cap), call);
     }
 
-    default:
+    افتراضي:
         userError("ARMPage: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
-                                   cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMMMUInvocation(کلمه_t invLabel, کلمه_t اوږدتیا, cptr_t cptr,
+                                   cte_t *cte, cap_t cap, bool_t call, کلمه_t *بفر)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-        return decodeARMPageDirectoryInvocation(invLabel, length, cptr, cte,
-                                                cap, buffer);
+    بدل (cap_get_capType(cap)) {
+    حالة cap_پاڼه_directory_cap:
+        أرجع decodeARMPageDirectoryInvocation(invLabel, اوږدتیا, cptr, cte,
+                                                cap, بفر);
 
-    case cap_page_table_cap:
-        return decodeARMPageTableInvocation(invLabel, length, cte, cap, buffer);
+    حالة cap_پاڼه_جدول_cap:
+        أرجع decode_ARMPage_جدول_Invocation(invLabel, اوږدتیا, cte, cap, بفر);
 
-    case cap_small_frame_cap:
-    case cap_frame_cap:
-        return decodeARMFrameInvocation(invLabel, length, cte, cap, call, buffer);
+    حالة cap_small_چوکاټ_cap:
+    حالة cap_چوکاټ_cap:
+        أرجع decodeARMFrameInvocation(invLabel, اوږدتیا, cte, cap, call, بفر);
 
-    case cap_asid_control_cap: {
-        word_t i;
-        asid_t asid_base;
-        word_t index, depth;
-        cap_t untyped, root;
-        cte_t *parentSlot, *destSlot;
-        lookupSlot_ret_t lu_ret;
-        void *frame;
-        exception_t status;
+    حالة cap_asid_control_cap: {
+        کلمه_t i;
+        asid_t asid_بنسټ;
+        کلمه_t شاخص, ژوروالی;
+        cap_t untyped, ریښه;
+        cte_t *پلار_خونه, *dest_خونه;
+        lookup_خونه_ret_t lu_ret;
+        فراغ *چوکاټ;
+        exception_t حالت;
 
-        if (unlikely(invLabel != ARMASIDControlMakePool)) {
+        إذا (unlikely(invLabel != ARMASIDControlMakePool)) {
             userError("ASIDControl: Illegal operation.");
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL
-                     || current_extra_caps.excaprefs[1] == NULL)) {
+        إذا (unlikely(اوږدتیا < 2 || current_extra_caps.excaprefs[0] == عدم
+                     || current_extra_caps.excaprefs[1] == عدم)) {
             userError("ASIDControlMakePool: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
+            current_syscall_error.type = se_L4_Truncated_پیغام;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        index = getSyscallArg(0, buffer);
-        depth = getSyscallArg(1, buffer);
-        parentSlot = current_extra_caps.excaprefs[0];
-        untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        شاخص = getSyscallArg(0, بفر);
+        ژوروالی = getSyscallArg(1, بفر);
+        پلار_خونه = current_extra_caps.excaprefs[0];
+        untyped = پلار_خونه->cap;
+        ریښه = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
+        لكل (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
 
-        if (unlikely(i == nASIDPools)) {
+        إذا (unlikely(i == nASIDPools)) {
             userError("ASIDControlMakePool: No unallocated pools found.");
-            current_syscall_error.type = seL4_DeleteFirst;
+            current_syscall_error.type = se_L4_Delete_لومړی;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_بنسټ = i << asid_ټیټ_بټونه;
 
-        if (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
-                     cap_untyped_cap_get_capBlockSize(untyped) !=
-                     seL4_ASIDPoolBits || cap_untyped_cap_get_capIsDevice(untyped))) {
+        إذا (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
+                     cap_untyped_cap_get_cap_بلاک_اندازه(untyped) !=
+                     se_L4_ASIDPool_بټونه || cap_untyped_cap_get_capIsDevice(untyped))) {
             userError("ASIDControlMakePool: Invalid untyped cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_شمېره = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        status = ensureNoChildren(parentSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        حالت = ensureNoChildren(پلار_خونه);
+        إذا (unlikely(حالت != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Untyped has children. Revoke first.");
-            return status;
+            أرجع حالت;
         }
 
-        frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
+        چوکاټ = کلمه_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        lu_ret = lookup_موخه_خونه(ریښه, شاخص, ژوروالی);
+        إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Failed to lookup destination slot.");
-            return lu_ret.status;
+            أرجع lu_ret.حالت;
         }
-        destSlot = lu_ret.slot;
+        dest_خونه = lu_ret.خونه;
 
-        status = ensureEmptySlot(destSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        حالت = ensure_تشه_خونه(dest_خونه);
+        إذا (unlikely(حالت != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Destination slot not empty.");
-            return status;
+            أرجع حالت;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot,
-                                            parentSlot, asid_base);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع performASIDControlInvocation(چوکاټ, dest_خونه,
+                                            پلار_خونه, asid_بنسټ);
     }
 
-    case cap_asid_pool_cap: {
+    حالة cap_asid_pool_cap: {
         cap_t pdCap;
-        cte_t *pdCapSlot;
+        cte_t *pd_Cap_خونه;
         asid_pool_t *pool;
-        word_t i;
+        کلمه_t i;
         asid_t asid;
 
-        if (unlikely(invLabel != ARMASIDPoolAssign)) {
+        إذا (unlikely(invLabel != ARMASIDPool_ټاکل)) {
             userError("ASIDPool: Illegal operation.");
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+        إذا (unlikely(current_extra_caps.excaprefs[0] == عدم)) {
             userError("ASIDPoolAssign: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
+            current_syscall_error.type = se_L4_Truncated_پیغام;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        pdCapSlot = current_extra_caps.excaprefs[0];
-        pdCap = pdCapSlot->cap;
+        pd_Cap_خونه = current_extra_caps.excaprefs[0];
+        pdCap = pd_Cap_خونه->cap;
 
-        if (unlikely(
-                cap_get_capType(pdCap) != cap_page_directory_cap ||
-                cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+        إذا (unlikely(
+                cap_get_capType(pdCap) != cap_پاڼه_directory_cap ||
+                cap_پاڼه_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
             userError("ASIDPoolAssign: Invalid page directory cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_شمېره = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = armKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
-        if (unlikely(!pool)) {
+        pool = armKSASIDTable[ASID_لوړ(cap_asid_pool_cap_get_capASIDBase(cap))];
+        إذا (unlikely(!pool)) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
+            current_syscall_error.failed_Lookup_Was_سرچینه = false;
+            current_lookup_fault = lookup_fault_invalid_ریښه_new();
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
+        إذا (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_شمېره = 0;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < (1 << asidLowBits) && (asid + i == 0 || pool->array[i]); i++);
+        لكل (i = 0; i < (1 << asid_ټیټ_بټونه) && (asid + i == 0 || pool->array[i]); i++);
 
-        if (unlikely(i == 1 << asidLowBits)) {
+        إذا (unlikely(i == 1 << asid_ټیټ_بټونه)) {
             userError("ASIDPoolAssign: No free ASID.");
-            current_syscall_error.type = seL4_DeleteFirst;
+            current_syscall_error.type = se_L4_Delete_لومړی;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, pdCapSlot);
+        سېټ_Thread_State(غوټه_STATE(ksCurThread), ThreadState_Restart);
+        أرجع performASIDPoolInvocation(asid, pool, pd_Cap_خونه);
     }
 
-    default:
+    افتراضي:
         fail("Invalid ARM arch cap type");
     }
 }
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
+#که_تعریف_شوی CONFIG_KERNEL_LOG_بفر
+exception_t benchmark_arch_map_log_بفر(کلمه_t چوکاټ_cptr)
 {
-    lookupCapAndSlot_ret_t lu_ret;
-    vm_page_size_t frameSize;
-    pptr_t  frame_pptr;
+    lookup_Cap_And_خونه_ret_t lu_ret;
+    vm_پاڼه_اندازه_t چوکاټ_اندازه;
+    pptr_t  چوکاټ_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookup_Cap_And_خونه(غوټه_STATE(ksCurThread), چوکاټ_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        userError("Invalid cap #%lu.", frame_cptr);
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
+        userError("Invalid cap #%lu.", چوکاټ_cptr);
+        current_fault = seL4_Fault_CapFault_new(چوکاټ_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    إذا (cap_get_capType(lu_ret.cap) != cap_چوکاټ_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(چوکاټ_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    frameSize = generic_frame_cap_get_capFSize(lu_ret.cap);
+    چوکاټ_اندازه = generic_چوکاټ_cap_get_cap_FSize(lu_ret.cap);
 
-    if (frameSize != ARMSection) {
+    إذا (چوکاټ_اندازه != ARMSection) {
         userError("Invalid frame size. The kernel expects 1M log buffer");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(چوکاټ_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    frame_pptr = generic_frame_cap_get_capFBasePtr(lu_ret.cap);
+    چوکاټ_pptr = generic_چوکاټ_cap_get_cap_FBase_Ptr(lu_ret.cap);
 
-    ksUserLogBuffer = pptr_to_paddr((void *) frame_pptr);
+    ks_User_Log_بفر = pptr_منزل_paddr((فراغ *) چوکاټ_pptr);
 
-    for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-        paddr_t physical_address = ksUserLogBuffer + (idx << seL4_PageBits);
+    لكل (صحيح idx = 0; idx < بټ(PT_شاخص_بټونه); idx++) {
+        paddr_t physical_پته = ks_User_Log_بفر + (idx << se_L4_پاڼه_بټونه);
 
         armKSGlobalLogPT[idx] =
             pte_pte_small_new(
-                physical_address,
+                physical_پته,
                 0, /* global */
                 0, /* Not shared */
                 0, /* APX = 0, privileged full access */
@@ -2760,156 +2760,156 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
             );
 
         cleanByVA_PoU((vptr_t)&armKSGlobalLogPT[idx], addrFromKPPtr(&armKSGlobalLogPT[idx]));
-        invalidateTranslationSingle(KS_LOG_PPTR + (idx * BIT(seL4_PageBits)));
+        invalidateTranslationSingle(KS_LOG_PPTR + (idx * بټ(se_L4_پاڼه_بټونه)));
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#د_که_پای /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_DEBUG_BUILD
-void kernelPrefetchAbort(word_t pc, word_t lr) VISIBLE;
-void kernelDataAbort(word_t pc) VISIBLE;
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
+فراغ kernelPrefetchAbort(کلمه_t pc, کلمه_t lr) VISIBLE;
+فراغ kernel_معلومات_Abort(کلمه_t pc) VISIBLE;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
 
-void kernelUndefinedInstruction(word_t pc) VISIBLE;
+فراغ kernelUndefinedInstruction(کلمه_t pc) VISIBLE;
 
-void kernelPrefetchAbort(word_t pc, word_t lr)
+فراغ kernelPrefetchAbort(کلمه_t pc, کلمه_t lr)
 {
-    printf("\n\nKERNEL PREFETCH ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HSR: 0x%"SEL4_PRIx_word"\n", getHSR());
-    printf("LR: 0x%"SEL4_PRIx_word"\n", lr);
+    چاپ_کړه("\n\nKERNEL PREFETCH ABORT!\n");
+    چاپ_کړه("Faulting instruction: 0x%"SEL4_PRIx_کلمه"\n", pc);
+    چاپ_کړه("HSR: 0x%"SEL4_PRIx_کلمه"\n", getHSR());
+    چاپ_کړه("LR: 0x%"SEL4_PRIx_کلمه"\n", lr);
     halt();
 }
 
-void kernelDataAbort(word_t pc)
+فراغ kernel_معلومات_Abort(کلمه_t pc)
 {
-    printf("\n\nKERNEL DATA ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HDFAR: 0x%"SEL4_PRIx_word" HSR: 0x%"SEL4_PRIx_word"\n",
+    چاپ_کړه("\n\nKERNEL DATA ABORT!\n");
+    چاپ_کړه("Faulting instruction: 0x%"SEL4_PRIx_کلمه"\n", pc);
+    چاپ_کړه("HDFAR: 0x%"SEL4_PRIx_کلمه" HSR: 0x%"SEL4_PRIx_کلمه"\n",
            getHDFAR(), getHSR());
     halt();
 }
 
-void kernelUndefinedInstruction(word_t pc)
+فراغ kernelUndefinedInstruction(کلمه_t pc)
 {
-    printf("\n\nKERNEL UNDEFINED INSTRUCTION!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HSR: 0x%"SEL4_PRIx_word"\n", getHSR());
+    چاپ_کړه("\n\nKERNEL UNDEFINED INSTRUCTION!\n");
+    چاپ_کړه("Faulting instruction: 0x%"SEL4_PRIx_کلمه"\n", pc);
+    چاپ_کړه("HSR: 0x%"SEL4_PRIx_کلمه"\n", getHSR());
     halt();
 }
 
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#وإلا /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-void kernelPrefetchAbort(word_t pc, word_t lr)
+فراغ kernelPrefetchAbort(کلمه_t pc, کلمه_t lr)
 {
-    printf("\n\nKERNEL PREFETCH ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("IFSR: 0x%"SEL4_PRIx_word"\n", getIFSR());
-    printf("LR: 0x%"SEL4_PRIx_word"\n", lr);
+    چاپ_کړه("\n\nKERNEL PREFETCH ABORT!\n");
+    چاپ_کړه("Faulting instruction: 0x%"SEL4_PRIx_کلمه"\n", pc);
+    چاپ_کړه("IFSR: 0x%"SEL4_PRIx_کلمه"\n", getIFSR());
+    چاپ_کړه("LR: 0x%"SEL4_PRIx_کلمه"\n", lr);
     halt();
 }
 
-void kernelDataAbort(word_t pc)
+فراغ kernel_معلومات_Abort(کلمه_t pc)
 {
-    printf("\n\nKERNEL DATA ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("FAR: 0x%"SEL4_PRIx_word" DFSR: 0x%"SEL4_PRIx_word"\n",
+    چاپ_کړه("\n\nKERNEL DATA ABORT!\n");
+    چاپ_کړه("Faulting instruction: 0x%"SEL4_PRIx_کلمه"\n", pc);
+    چاپ_کړه("FAR: 0x%"SEL4_PRIx_کلمه" DFSR: 0x%"SEL4_PRIx_کلمه"\n",
            getFAR(), getDFSR());
     halt();
 }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-#endif
+#د_که_پای
 
-#ifdef CONFIG_PRINTING
-typedef struct readWordFromVSpace_ret {
-    exception_t status;
-    word_t value;
-} readWordFromVSpace_ret_t;
+#که_تعریف_شوی CONFIG_PRINTING
+تعريفنوع بنية read_کلمه_From_VSpace_ret {
+    exception_t حالت;
+    کلمه_t ارزښت;
+} read_کلمه_From_VSpace_ret_t;
 
-static readWordFromVSpace_ret_t readWordFromVSpace(pde_t *pd, word_t vaddr)
+ساكن read_کلمه_From_VSpace_ret_t read_کلمه_From_VSpace(pde_t *pd, کلمه_t vaddr)
 {
-    readWordFromVSpace_ret_t ret;
-    lookupPTSlot_ret_t ptSlot;
-    pde_t *pdSlot;
+    read_کلمه_From_VSpace_ret_t ret;
+    lookupPTSlot_ret_t pt_خونه;
+    pde_t *pd_خونه;
     paddr_t paddr;
-    word_t offset;
+    کلمه_t دننه_واټن;
     pptr_t kernel_vaddr;
-    word_t *value;
+    کلمه_t *ارزښت;
 
-    pdSlot = lookupPDSlot(pd, vaddr);
-    if (pde_ptr_get_pdeType(pdSlot) == pde_pde_section) {
-        paddr = pde_pde_section_ptr_get_address(pdSlot);
-        offset = vaddr & MASK(ARMSectionBits);
-    } else {
-        ptSlot = lookupPTSlot(pd, vaddr);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_small) {
-            paddr = pte_pte_small_ptr_get_address(ptSlot.ptSlot);
-            if (pte_pte_small_ptr_get_contiguous_hint(ptSlot.ptSlot)) {
-                offset = vaddr & MASK(ARMLargePageBits);
-            } else {
-                offset = vaddr & MASK(ARMSmallPageBits);
+    pd_خونه = lookupPDSlot(pd, vaddr);
+    إذا (pde_ptr_get_pdeType(pd_خونه) == pde_pde_section) {
+        paddr = pde_pde_section_ptr_get_پته(pd_خونه);
+        دننه_واټن = vaddr & ماسک(ARMSection_بټونه);
+    } وإلا {
+        pt_خونه = lookupPTSlot(pd, vaddr);
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+        إذا (pt_خونه.حالت == EXCEPTION_NONE && pte_ptr_get_pteType(pt_خونه.pt_خونه) == pte_pte_small) {
+            paddr = pte_pte_small_ptr_get_پته(pt_خونه.pt_خونه);
+            إذا (pte_pte_small_ptr_get_contiguous_hint(pt_خونه.pt_خونه)) {
+                دننه_واټن = vaddr & ماسک(ARMLarge_پاڼه_بټونه);
+            } وإلا {
+                دننه_واټن = vaddr & ماسک(ARMSmall_پاڼه_بټونه);
             }
-#else
-        if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_small) {
-            paddr = pte_pte_small_ptr_get_address(ptSlot.ptSlot);
-            offset = vaddr & MASK(ARMSmallPageBits);
-        } else if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_large) {
-            paddr = pte_pte_large_ptr_get_address(ptSlot.ptSlot);
-            offset = vaddr & MASK(ARMLargePageBits);
-#endif
-        } else {
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+#وإلا
+        إذا (pt_خونه.حالت == EXCEPTION_NONE && pte_ptr_get_pteType(pt_خونه.pt_خونه) == pte_pte_small) {
+            paddr = pte_pte_small_ptr_get_پته(pt_خونه.pt_خونه);
+            دننه_واټن = vaddr & ماسک(ARMSmall_پاڼه_بټونه);
+        } وإلا إذا (pt_خونه.حالت == EXCEPTION_NONE && pte_ptr_get_pteType(pt_خونه.pt_خونه) == pte_pte_large) {
+            paddr = pte_pte_large_ptr_get_پته(pt_خونه.pt_خونه);
+            دننه_واټن = vaddr & ماسک(ARMLarge_پاڼه_بټونه);
+#د_که_پای
+        } وإلا {
+            ret.حالت = EXCEPTION_LOOKUP_FAULT;
+            أرجع ret;
         }
     }
 
 
-    kernel_vaddr = (word_t)paddr_to_pptr(paddr);
-    value = (word_t *)(kernel_vaddr + offset);
-    ret.status = EXCEPTION_NONE;
-    ret.value = *value;
-    return ret;
+    kernel_vaddr = (کلمه_t)paddr_منزل_pptr(paddr);
+    ارزښت = (کلمه_t *)(kernel_vaddr + دننه_واټن);
+    ret.حالت = EXCEPTION_NONE;
+    ret.ارزښت = *ارزښت;
+    أرجع ret;
 }
 
-void Arch_userStackTrace(tcb_t *tptr)
+فراغ Arch_user_ډېری_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot;
+    cap_t thread_ریښه;
     pde_t *pd;
-    word_t sp;
-    int i;
+    کلمه_t sp;
+    صحيح i;
 
-    threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    thread_ریښه = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the PD */
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap) {
-        printf("Invalid vspace\n");
-        return;
+    إذا (cap_get_capType(thread_ریښه) != cap_پاڼه_directory_cap) {
+        چاپ_کړه("Invalid vspace\n");
+        أرجع;
     }
 
-    pd = (pde_t *)pptr_of_cap(threadRoot);
+    pd = (pde_t *)pptr_د_cap(thread_ریښه);
 
-    sp = getRegister(tptr, SP);
+    sp = get_ثبتوونکی(tptr, SP);
     /* check for alignment so we don't have to worry about accessing
      * words that might be on two different pages */
-    if (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
-        printf("SP not aligned\n");
-        return;
+    إذا (!IS_ALIGNED(sp, se_L4_کلمه_اندازه_بټونه)) {
+        چاپ_کړه("SP not aligned\n");
+        أرجع;
     }
 
-    for (i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
-        word_t address = sp + (i * sizeof(word_t));
-        readWordFromVSpace_ret_t result;
-        result = readWordFromVSpace(pd, address);
-        if (result.status == EXCEPTION_NONE) {
-            printf("0x%lx: 0x%lx\n", (long)address, (long)result.value);
-        } else {
-            printf("0x%lx: INVALID\n", (long)address);
+    لكل (i = 0; i < CONFIG_USER_ډېری_TRACE_اوږدتیا; i++) {
+        کلمه_t پته = sp + (i * حجم(کلمه_t));
+        read_کلمه_From_VSpace_ret_t پایله;
+        پایله = read_کلمه_From_VSpace(pd, پته);
+        إذا (پایله.حالت == EXCEPTION_NONE) {
+            چاپ_کړه("0x%lx: 0x%lx\n", (اوږد)پته, (اوږد)پایله.ارزښت);
+        } وإلا {
+            چاپ_کړه("0x%lx: INVALID\n", (اوږد)پته);
         }
     }
 }
-#endif
+#د_که_پای

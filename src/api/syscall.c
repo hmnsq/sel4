@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <benchmark/benchmark.h>
-#include <arch/benchmark.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <api/syscall.h>
-#include <api/failures.h>
-#include <api/faults.h>
-#include <kernel/cspace.h>
-#include <kernel/faulthandler.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <machine/io.h>
-#include <plat/machine/hardware.h>
-#include <object/interrupt.h>
-#include <model/statedata.h>
-#include <string.h>
-#include <kernel/traps.h>
-#include <arch/machine.h>
-#ifdef ENABLE_SMP_SUPPORT
-#include <smp/ipi.h>
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-#include <arch/machine/capdl.h>
-#endif
-#ifdef CONFIG_HARDWARE_DEBUG_API
-#include <mode/machine/debug.h>
-#endif
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <benchmark/benchmark.h>
+#ضمن <arch/benchmark.h>
+#ضمن <benchmark/benchmark_track.h>
+#ضمن <benchmark/benchmark_utilisation.h>
+#ضمن <api/syscall.h>
+#ضمن <api/failures.h>
+#ضمن <api/faults.h>
+#ضمن <kernel/cspace.h>
+#ضمن <kernel/faulthandler.h>
+#ضمن <kernel/thread.h>
+#ضمن <kernel/vspace.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/hardware.h>
+#ضمن <object/interrupt.h>
+#ضمن <model/statedata.h>
+#ضمن <string.h>
+#ضمن <kernel/traps.h>
+#ضمن <arch/machine.h>
+#که_تعریف_شوی ENABLE_SMP_SUPPORT
+#ضمن <smp/ipi.h>
+#د_که_پای
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
+#ضمن <arch/machine/capdl.h>
+#د_که_پای
+#که_تعریف_شوی CONFIG_HARDWARE_DEBUG_API
+#ضمن <mode/machine/debug.h>
+#د_که_پای
 
 /**
  * FIXME: This is a temporary hack to prevent the printing of incorrect
@@ -42,626 +42,626 @@
  *        See issue https://github.com/seL4/seL4/issues/1540 and
  *        https://github.com/seL4/seL4/pull/1544.
  **/
-#ifdef CONFIG_IRQ_REPORTING
-static inline void checkInterrupt(bool_t was_interrupt_entry)
-#else
-static inline void checkInterrupt(void)
-#endif
+#که_تعریف_شوی CONFIG_IRQ_REPORTING
+ساكن مضمن فراغ check_مداخله(bool_t was_مداخله_ثبت)
+#وإلا
+ساكن مضمن فراغ check_مداخله(فراغ)
+#د_که_پای
 {
     irq_t irq;
 
-    irq = getActiveIRQ();
-    if (IRQT_TO_IRQ(irq) != IRQT_TO_IRQ(irqInvalid)) {
-        handleInterrupt(irq);
-    } else {
-#ifdef CONFIG_IRQ_REPORTING
-        if (was_interrupt_entry) {
+    irq = get_فعال_IRQ();
+    إذا (IRQT_منزل_IRQ(irq) != IRQT_منزل_IRQ(irqInvalid)) {
+        handle_مداخله(irq);
+    } وإلا {
+#که_تعریف_شوی CONFIG_IRQ_REPORTING
+        إذا (was_مداخله_ثبت) {
             userError("Spurious interrupt!");
         }
-#endif
+#د_که_پای
         handleSpuriousIRQ();
     }
 }
 
-#ifndef CONFIG_IRQ_REPORTING
+#که_نه_تعریف_شوی CONFIG_IRQ_REPORTING
 /** Part of the temporary hack above **/
-#define checkInterrupt(was_interrupt_entry) checkInterrupt()
-#endif
+#تعریف_کړه check_مداخله(was_مداخله_ثبت) check_مداخله()
+#د_که_پای
 
 /* The haskell function 'handleEvent' is split into 'handleXXX' variants
  * for each event causing a kernel entry */
 
-exception_t handleInterruptEntry(void)
+exception_t handle_مداخله_ثبت(فراغ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    إذا (SMP_TERNARY(clh_is_self_دننه_کتار(), 1)) {
         updateTimestamp();
         checkBudget();
     }
-#endif
+#د_که_پای
 
-    checkInterrupt(/* was_interrupt_entry */ true);
+    check_مداخله(/* was_interrupt_entry */ true);
 
-#ifdef CONFIG_KERNEL_MCS
-    if (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
-#endif
-        schedule();
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    إذا (SMP_TERNARY(clh_is_self_دننه_کتار(), 1)) {
+#د_که_پای
+        مهالوېش();
         activateThread();
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
     }
-#endif
+#د_که_پای
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t handleUnknownSyscall(word_t w)
+exception_t handleUnknownSyscall(کلمه_t w)
 {
-#ifdef CONFIG_PRINTING
-    if (w == SysDebugPutChar) {
-        kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
-        return EXCEPTION_NONE;
+#که_تعریف_شوی CONFIG_PRINTING
+    إذا (w == SysDebugPutChar) {
+        kernel_putchar(get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی));
+        أرجع EXCEPTION_NONE;
     }
-    if (w == SysDebugDumpScheduler) {
-#ifdef CONFIG_DEBUG_BUILD
+    إذا (w == SysDebugDumpScheduler) {
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
         debug_dumpScheduler();
-#endif
-        return EXCEPTION_NONE;
+#د_که_پای
+        أرجع EXCEPTION_NONE;
     }
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    if (w == SysDebugHalt) {
-        tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
-        printf("Debug halt syscall from user thread %p \"%s\"\n", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
+#د_که_پای
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
+    إذا (w == SysDebugHalt) {
+        tcb_t *ناکارول_شوی tptr = غوټه_STATE(ksCurThread);
+        چاپ_کړه("Debug halt syscall from user thread %p \"%s\"\n", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
         halt();
     }
-    if (w == SysDebugSnapshot) {
-        tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
-        printf("Debug snapshot syscall from user thread %p \"%s\"\n",
+    إذا (w == SysDebugSnapshot) {
+        tcb_t *ناکارول_شوی tptr = غوټه_STATE(ksCurThread);
+        چاپ_کړه("Debug snapshot syscall from user thread %p \"%s\"\n",
                tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
         debug_capDL();
-        return EXCEPTION_NONE;
+        أرجع EXCEPTION_NONE;
     }
-    if (w == SysDebugCapIdentify) {
-        word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
-        lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
-        word_t cap_type = cap_get_capType(lu_ret.cap);
-        setRegister(NODE_STATE(ksCurThread), capRegister, cap_type);
-        return EXCEPTION_NONE;
+    إذا (w == SysDebugCapIdentify) {
+        کلمه_t cptr = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
+        lookup_Cap_And_خونه_ret_t lu_ret = lookup_Cap_And_خونه(غوټه_STATE(ksCurThread), cptr);
+        کلمه_t cap_type = cap_get_capType(lu_ret.cap);
+        سېټ_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی, cap_type);
+        أرجع EXCEPTION_NONE;
     }
 
-    if (w == SysDebugNameThread) {
+    إذا (w == SysDebugNameThread) {
         /* This is a syscall meant to aid debugging, so if anything goes wrong
          * then assume the system is completely misconfigured and halt */
-        const char *name;
-        word_t len;
-        word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
-        lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
+        ثابت حرف *name;
+        کلمه_t len;
+        کلمه_t cptr = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
+        lookup_Cap_And_خونه_ret_t lu_ret = lookup_Cap_And_خونه(غوټه_STATE(ksCurThread), cptr);
         /* ensure we got a TCB cap */
-        word_t cap_type = cap_get_capType(lu_ret.cap);
-        if (cap_type != cap_thread_cap) {
+        کلمه_t cap_type = cap_get_capType(lu_ret.cap);
+        إذا (cap_type != cap_thread_cap) {
             userError("SysDebugNameThread: cap is not a TCB, halting");
             halt();
         }
         /* Add 1 to the IPC buffer to skip the message info word */
-        name = (const char *)(lookupIPCBuffer(true, NODE_STATE(ksCurThread)) + 1);
-        if (!name) {
+        name = (ثابت حرف *)(lookupIPCBuffer(true, غوټه_STATE(ksCurThread)) + 1);
+        إذا (!name) {
             userError("SysDebugNameThread: Failed to lookup IPC buffer, halting");
             halt();
         }
         /* ensure the name isn't too long */
-        len = strnlen(name, seL4_MsgMaxLength * sizeof(word_t));
-        if (len == seL4_MsgMaxLength * sizeof(word_t)) {
+        len = strnlen(name, se_L4_پیغام_Max_اوږدتیا * حجم(کلمه_t));
+        إذا (len == se_L4_پیغام_Max_اوږدتیا * حجم(کلمه_t)) {
             userError("SysDebugNameThread: Name too long, halting");
             halt();
         }
-        setThreadName(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
-        return EXCEPTION_NONE;
+        سېټ_Thread_Name(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
+        أرجع EXCEPTION_NONE;
     }
-#ifdef ENABLE_SMP_SUPPORT
-    if (w == SysDebugGetThreadAffinity) {
-        word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
-        lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
+#که_تعریف_شوی ENABLE_SMP_SUPPORT
+    إذا (w == SysDebugGetThreadAffinity) {
+        کلمه_t cptr = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
+        lookup_Cap_And_خونه_ret_t lu_ret = lookup_Cap_And_خونه(غوټه_STATE(ksCurThread), cptr);
         /* ensure we got a TCB cap */
-        word_t cap_type = cap_get_capType(lu_ret.cap);
-        if (cap_type != cap_thread_cap) {
+        کلمه_t cap_type = cap_get_capType(lu_ret.cap);
+        إذا (cap_type != cap_thread_cap) {
             userError("SysDebugGetThreadAffinity: cap is not a TCB, halting");
             halt();
         }
-        word_t affinity = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap))->tcbAffinity;
-        setRegister(NODE_STATE(ksCurThread), capRegister, affinity);
-        return EXCEPTION_NONE;
+        کلمه_t affinity = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap))->tcbAffinity;
+        سېټ_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی, affinity);
+        أرجع EXCEPTION_NONE;
     }
-    if (w == SysDebugSendIPI) {
-        return handle_SysDebugSendIPI();
+    إذا (w == SysDebugSendIPI) {
+        أرجع handle_SysDebugSendIPI();
     }
-#endif /* ENABLE_SMP_SUPPORT */
-#endif /* CONFIG_DEBUG_BUILD */
+#د_که_پای /* ENABLE_SMP_SUPPORT */
+#د_که_پای /* CONFIG_DEBUG_BUILD */
 
-#ifdef CONFIG_DANGEROUS_CODE_INJECTION
-    if (w == SysDebugRun) {
-        ((void (*)(void *))getRegister(NODE_STATE(ksCurThread), capRegister))((void *)getRegister(NODE_STATE(ksCurThread),
-                                                                                                  msgInfoRegister));
-        return EXCEPTION_NONE;
+#که_تعریف_شوی CONFIG_DANGEROUS_کوډ_INJECTION
+    إذا (w == Sys_Debug_پرلپسې) {
+        ((فراغ (*)(فراغ *))get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی))((فراغ *)get_ثبتوونکی(غوټه_STATE(ksCurThread),
+                                                                                                  پیغام_Info_ثبتوونکی));
+        أرجع EXCEPTION_NONE;
     }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_KERNEL_X86_DANGEROUS_MSR
-    if (w == SysX86DangerousWRMSR) {
+#که_تعریف_شوی CONFIG_KERNEL_X86_DANGEROUS_MSR
+    إذا (w == SysX86DangerousWRMSR) {
         uint64_t val;
-        uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
-        if (CONFIG_WORD_SIZE == 32) {
-            val = (uint64_t)getSyscallArg(0, NULL) | ((uint64_t)getSyscallArg(1, NULL) << 32);
-        } else {
-            val = getSyscallArg(0, NULL);
+        uint32_t reg = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
+        إذا (CONFIG_کلمه_اندازه == 32) {
+            val = (uint64_t)getSyscallArg(0, عدم) | ((uint64_t)getSyscallArg(1, عدم) << 32);
+        } وإلا {
+            val = getSyscallArg(0, عدم);
         }
         x86_wrmsr(reg, val);
-        return EXCEPTION_NONE;
-    } else if (w == SysX86DangerousRDMSR) {
+        أرجع EXCEPTION_NONE;
+    } وإلا إذا (w == SysX86DangerousRDMSR) {
         uint64_t val;
-        uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
+        uint32_t reg = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
         val = x86_rdmsr(reg);
-        int num = 1;
-        if (CONFIG_WORD_SIZE == 32) {
-            setMR(NODE_STATE(ksCurThread), NULL, 0, val & 0xffffffff);
-            setMR(NODE_STATE(ksCurThread), NULL, 1, val >> 32);
-            num++;
-        } else {
-            setMR(NODE_STATE(ksCurThread), NULL, 0, val);
+        صحيح عدد = 1;
+        إذا (CONFIG_کلمه_اندازه == 32) {
+            سېټ_MR(غوټه_STATE(ksCurThread), عدم, 0, val & 0xffffffff);
+            سېټ_MR(غوټه_STATE(ksCurThread), عدم, 1, val >> 32);
+            عدد++;
+        } وإلا {
+            سېټ_MR(غوټه_STATE(ksCurThread), عدم, 0, val);
         }
-        setRegister(NODE_STATE(ksCurThread), msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, num)));
-        return EXCEPTION_NONE;
+        سېټ_ثبتوونکی(غوټه_STATE(ksCurThread), پیغام_Info_ثبتوونکی, کلمه_From_پیغام_Info(se_L4_پیغام_Info_new(0, 0, 0, عدد)));
+        أرجع EXCEPTION_NONE;
     }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
-    switch (w) {
-    case SysBenchmarkFlushCaches:
-        return handle_SysBenchmarkFlushCaches();
-    case SysBenchmarkResetLog:
-        return handle_SysBenchmarkResetLog();
-    case SysBenchmarkFinalizeLog:
-        return handle_SysBenchmarkFinalizeLog();
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    case SysBenchmarkSetLogBuffer:
-        return handle_SysBenchmarkSetLogBuffer();
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    case SysBenchmarkGetThreadUtilisation:
-        return handle_SysBenchmarkGetThreadUtilisation();
-    case SysBenchmarkResetThreadUtilisation:
-        return handle_SysBenchmarkResetThreadUtilisation();
-#ifdef CONFIG_DEBUG_BUILD
-    case SysBenchmarkDumpAllThreadsUtilisation:
-        return handle_SysBenchmarkDumpAllThreadsUtilisation();
-    case SysBenchmarkResetAllThreadsUtilisation:
-        return handle_SysBenchmarkResetAllThreadsUtilisation();
-#endif /* CONFIG_DEBUG_BUILD */
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
-    case SysBenchmarkNullSyscall:
-        return EXCEPTION_NONE;
-    default:
-        break; /* syscall is not for benchmarking */
+#که_تعریف_شوی CONFIG_ENABLE_BENCHMARKS
+    بدل (w) {
+    حالة SysBenchmarkFlushCaches:
+        أرجع handle_SysBenchmarkFlushCaches();
+    حالة SysBenchmarkResetLog:
+        أرجع handle_SysBenchmarkResetLog();
+    حالة SysBenchmarkFinalizeLog:
+        أرجع handle_SysBenchmarkFinalizeLog();
+#که_تعریف_شوی CONFIG_KERNEL_LOG_بفر
+    حالة Sys_Benchmark_سېټ_Log_بفر:
+        أرجع handle_Sys_Benchmark_سېټ_Log_بفر();
+#د_که_پای /* CONFIG_KERNEL_LOG_BUFFER */
+#که_تعریف_شوی CONFIG_BENCHMARK_TRACK_UTILISATION
+    حالة SysBenchmarkGetThreadUtilisation:
+        أرجع handle_SysBenchmarkGetThreadUtilisation();
+    حالة SysBenchmarkResetThreadUtilisation:
+        أرجع handle_SysBenchmarkResetThreadUtilisation();
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
+    حالة Sys_Benchmark_Dump_All_تارونه_Utilisation:
+        أرجع handle_Sys_Benchmark_Dump_All_تارونه_Utilisation();
+    حالة Sys_Benchmark_Reset_All_تارونه_Utilisation:
+        أرجع handle_Sys_Benchmark_Reset_All_تارونه_Utilisation();
+#د_که_پای /* CONFIG_DEBUG_BUILD */
+#د_که_پای /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+    حالة SysBenchmarkNullSyscall:
+        أرجع EXCEPTION_NONE;
+    افتراضي:
+        اكسر; /* syscall is not for benchmarking */
     } /* end switch(w) */
-#endif /* CONFIG_ENABLE_BENCHMARKS */
+#د_که_پای /* CONFIG_ENABLE_BENCHMARKS */
 
     MCS_DO_IF_BUDGET({
-#ifdef CONFIG_SET_TLS_BASE_SELF
-        if (w == SysSetTLSBase)
+#که_تعریف_شوی CONFIG_سېټ_TLS_بنسټ_SELF
+        إذا (w == Sys_سېټ_TLSBase)
         {
-            word_t tls_base = getRegister(NODE_STATE(ksCurThread), capRegister);
+            کلمه_t tls_بنسټ = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
             /*
              * This updates the real register as opposed to the thread state
              * value. For many architectures, the TLS variables only get
              * updated on a thread switch.
              */
-            return Arch_setTLSRegister(tls_base);
+            أرجع Arch_سېټ_TLSRegister(tls_بنسټ);
         }
-#endif
+#د_که_پای
         current_fault = seL4_Fault_UnknownSyscall_new(w);
-        handleFault(NODE_STATE(ksCurThread));
+        handleFault(غوټه_STATE(ksCurThread));
     })
 
-    schedule();
+    مهالوېش();
     activateThread();
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t handleUserLevelFault(word_t w_a, word_t w_b)
+exception_t handleUserLevelFault(کلمه_t w_a, کلمه_t w_b)
 {
     MCS_DO_IF_BUDGET({
         current_fault = seL4_Fault_UserException_new(w_a, w_b);
-        handleFault(NODE_STATE(ksCurThread));
+        handleFault(غوټه_STATE(ksCurThread));
     })
-    schedule();
+    مهالوېش();
     activateThread();
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
 exception_t handleVMFaultEvent(vm_fault_type_t vm_faultType)
 {
     MCS_DO_IF_BUDGET({
 
-        exception_t status = handleVMFault(NODE_STATE(ksCurThread), vm_faultType);
-        if (status != EXCEPTION_NONE)
+        exception_t حالت = handleVMFault(غوټه_STATE(ksCurThread), vm_faultType);
+        إذا (حالت != EXCEPTION_NONE)
         {
-            handleFault(NODE_STATE(ksCurThread));
+            handleFault(غوټه_STATE(ksCurThread));
         }
     })
 
-    schedule();
+    مهالوېش();
     activateThread();
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t firstPhase, cptr_t cptr)
-#else
-static exception_t handleInvocation(bool_t isCall, bool_t isBlocking)
-#endif
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+ساكن exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t لومړی_Phase, cptr_t cptr)
+#وإلا
+ساكن exception_t handleInvocation(bool_t isCall, bool_t isBlocking)
+#د_که_پای
 {
-    seL4_MessageInfo_t info;
-    lookupCapAndSlot_ret_t lu_ret;
-    word_t *buffer;
-    exception_t status;
-    word_t length;
+    se_L4_پیغام_Info_t info;
+    lookup_Cap_And_خونه_ret_t lu_ret;
+    کلمه_t *بفر;
+    exception_t حالت;
+    کلمه_t اوږدتیا;
     tcb_t *thread;
 
-    thread = NODE_STATE(ksCurThread);
+    thread = غوټه_STATE(ksCurThread);
 
-    info = messageInfoFromWord(getRegister(thread, msgInfoRegister));
-#ifndef CONFIG_KERNEL_MCS
-    cptr_t cptr = getRegister(thread, capRegister);
-#endif
+    info = پیغام_Info_From_کلمه(get_ثبتوونکی(thread, پیغام_Info_ثبتوونکی));
+#که_نه_تعریف_شوی CONFIG_KERNEL_MCS
+    cptr_t cptr = get_ثبتوونکی(thread, cap_ثبتوونکی);
+#د_که_پای
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(thread, cptr);
+    lu_ret = lookup_Cap_And_خونه(thread, cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
         userError("Invocation of invalid cap #%lu.", cptr);
         current_fault = seL4_Fault_CapFault_new(cptr, false);
 
-        if (isBlocking) {
+        إذا (isBlocking) {
             handleFault(thread);
         }
 
-        return EXCEPTION_NONE;
+        أرجع EXCEPTION_NONE;
     }
 
-    buffer = lookupIPCBuffer(false, thread);
+    بفر = lookupIPCBuffer(false, thread);
 
-    status = lookupExtraCaps(thread, buffer, info);
+    حالت = lookupExtraCaps(thread, بفر, info);
 
-    if (unlikely(status != EXCEPTION_NONE)) {
+    إذا (unlikely(حالت != EXCEPTION_NONE)) {
         userError("Lookup of extra caps failed.");
-        if (isBlocking) {
+        إذا (isBlocking) {
             handleFault(thread);
         }
-        return EXCEPTION_NONE;
+        أرجع EXCEPTION_NONE;
     }
 
     /* Syscall error/Preemptible section */
-    length = seL4_MessageInfo_get_length(info);
-    if (unlikely(length > n_msgRegisters && !buffer)) {
+    اوږدتیا = se_L4_پیغام_Info_get_اوږدتیا(info);
+    إذا (unlikely(اوږدتیا > n_پیغام_Registers && !بفر)) {
         /* If no IPC buffer is present the kernel truncates the maximum message length to n_msgRegisters.
          * The kernel truncates rather than returns because not all message transfer points in the kernel
          * are allowed to return an error.
          */
-        userError("Warning: No IPC buffer for thread. Truncating message length to: %d.", n_msgRegisters);
-        length = n_msgRegisters;
+        userError("Warning: No IPC buffer for thread. Truncating message length to: %d.", n_پیغام_Registers);
+        اوږدتیا = n_پیغام_Registers;
     }
-#ifdef CONFIG_KERNEL_MCS
-    status = decodeInvocation(seL4_MessageInfo_get_label(info), length,
-                              cptr, lu_ret.slot, lu_ret.cap,
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    حالت = decodeInvocation(se_L4_پیغام_Info_get_label(info), اوږدتیا,
+                              cptr, lu_ret.خونه, lu_ret.cap,
                               isBlocking, isCall,
-                              canDonate, firstPhase, buffer);
-#else
-    status = decodeInvocation(seL4_MessageInfo_get_label(info), length,
-                              cptr, lu_ret.slot, lu_ret.cap,
-                              isBlocking, isCall, buffer);
-#endif
+                              canDonate, لومړی_Phase, بفر);
+#وإلا
+    حالت = decodeInvocation(se_L4_پیغام_Info_get_label(info), اوږدتیا,
+                              cptr, lu_ret.خونه, lu_ret.cap,
+                              isBlocking, isCall, بفر);
+#د_که_پای
 
-    if (unlikely(status == EXCEPTION_PREEMPTED)) {
-        return status;
+    إذا (unlikely(حالت == EXCEPTION_PREEMPTED)) {
+        أرجع حالت;
     }
 
-    if (unlikely(status == EXCEPTION_SYSCALL_ERROR)) {
-        if (isCall) {
-            replyFromKernel_error(thread);
+    إذا (unlikely(حالت == EXCEPTION_SYSCALL_ERROR)) {
+        إذا (isCall) {
+            ځواب_From_Kernel_error(thread);
         }
-        return EXCEPTION_NONE;
+        أرجع EXCEPTION_NONE;
     }
 
-    if (unlikely(
+    إذا (unlikely(
             thread_state_get_tsType(thread->tcbState) == ThreadState_Restart)) {
-        if (isCall) {
-            replyFromKernel_success_empty(thread);
+        إذا (isCall) {
+            ځواب_From_Kernel_success_تشه(thread);
         }
-        setThreadState(thread, ThreadState_Running);
+        سېټ_Thread_State(thread, ThreadState_Running);
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline lookupCap_ret_t lookupReply(void)
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+ساكن مضمن lookupCap_ret_t lookup_ځواب(فراغ)
 {
-    word_t replyCPtr = getRegister(NODE_STATE(ksCurThread), replyRegister);
-    lookupCap_ret_t lu_ret = lookupCap(NODE_STATE(ksCurThread), replyCPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    کلمه_t ځواب_CPtr = get_ثبتوونکی(غوټه_STATE(ksCurThread), ځواب_ثبتوونکی);
+    lookupCap_ret_t lu_ret = lookupCap(غوټه_STATE(ksCurThread), ځواب_CPtr);
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
         userError("Reply cap lookup failed");
         /* current_lookup_fault has been set by lookupCap */
-        current_fault = seL4_Fault_CapFault_new(replyCPtr, true);
-        return lu_ret;
+        current_fault = seL4_Fault_CapFault_new(ځواب_CPtr, true);
+        أرجع lu_ret;
     }
 
-    if (unlikely(cap_get_capType(lu_ret.cap) != cap_reply_cap)) {
+    إذا (unlikely(cap_get_capType(lu_ret.cap) != cap_ځواب_cap)) {
         userError("Cap in reply slot is not a reply cap");
         current_lookup_fault = lookup_fault_missing_capability_new(0);
-        current_fault = seL4_Fault_CapFault_new(replyCPtr, true);
-        lu_ret.status = EXCEPTION_FAULT;
-        return lu_ret;
+        current_fault = seL4_Fault_CapFault_new(ځواب_CPtr, true);
+        lu_ret.حالت = EXCEPTION_FAULT;
+        أرجع lu_ret;
     }
 
-    return lu_ret;
+    أرجع lu_ret;
 }
-#else
-static void handleReply(void)
+#وإلا
+ساكن فراغ handle_ځواب(فراغ)
 {
-    cte_t *callerSlot;
+    cte_t *caller_خونه;
     cap_t callerCap;
 
-    callerSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
-    callerCap = callerSlot->cap;
+    caller_خونه = TCB_PTR_CTE_PTR(غوټه_STATE(ksCurThread), tcbCaller);
+    callerCap = caller_خونه->cap;
 
-    switch (cap_get_capType(callerCap)) {
-    case cap_reply_cap: {
+    بدل (cap_get_capType(callerCap)) {
+    حالة cap_ځواب_cap: {
         tcb_t *caller;
 
-        if (cap_reply_cap_get_capReplyMaster(callerCap)) {
-            break;
+        إذا (cap_ځواب_cap_get_cap_ځواب_Master(callerCap)) {
+            اكسر;
         }
-        caller = TCB_PTR(cap_reply_cap_get_capTCBPtr(callerCap));
+        caller = TCB_PTR(cap_ځواب_cap_get_cap_TCBPtr(callerCap));
         /* Haskell error:
          * "handleReply: caller must not be the current thread" */
-        assert(caller != NODE_STATE(ksCurThread));
-        doReplyTransfer(NODE_STATE(ksCurThread), caller, callerSlot,
-                        cap_reply_cap_get_capReplyCanGrant(callerCap));
-        return;
+        أكد(caller != غوټه_STATE(ksCurThread));
+        do_ځواب_Transfer(غوټه_STATE(ksCurThread), caller, caller_خونه,
+                        cap_ځواب_cap_get_cap_ځواب_Can_Grant(callerCap));
+        أرجع;
     }
 
-    case cap_null_cap:
+    حالة cap_null_cap:
         /* Do nothing when no caller is pending */
-        return;
+        أرجع;
 
-    default:
-        break;
+    افتراضي:
+        اكسر;
     }
 
     fail("handleReply: invalid caller cap");
 }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_KERNEL_MCS
-static void handleRecv(bool_t isBlocking, bool_t canReply)
-#else
-static void handleRecv(bool_t isBlocking)
-#endif
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+ساكن فراغ handleRecv(bool_t isBlocking, bool_t can_ځواب)
+#وإلا
+ساكن فراغ handleRecv(bool_t isBlocking)
+#د_که_پای
 {
-    word_t epCPtr;
+    کلمه_t epCPtr;
     lookupCap_ret_t lu_ret;
 
-    epCPtr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    epCPtr = get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی);
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), epCPtr);
+    lu_ret = lookupCap(غوټه_STATE(ksCurThread), epCPtr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
         /* current_lookup_fault has been set by lookupCap */
         current_fault = seL4_Fault_CapFault_new(epCPtr, true);
-        handleFault(NODE_STATE(ksCurThread));
-        return;
+        handleFault(غوټه_STATE(ksCurThread));
+        أرجع;
     }
 
-    switch (cap_get_capType(lu_ret.cap)) {
-    case cap_endpoint_cap:
-        if (unlikely(!cap_endpoint_cap_get_capCanReceive(lu_ret.cap))) {
+    بدل (cap_get_capType(lu_ret.cap)) {
+    حالة cap_endpoint_cap:
+        إذا (unlikely(!cap_endpoint_cap_get_capCanReceive(lu_ret.cap))) {
             current_lookup_fault = lookup_fault_missing_capability_new(0);
             current_fault = seL4_Fault_CapFault_new(epCPtr, true);
-            handleFault(NODE_STATE(ksCurThread));
-            break;
+            handleFault(غوټه_STATE(ksCurThread));
+            اكسر;
         }
 
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
         cap_t ep_cap = lu_ret.cap;
-        cap_t reply_cap = cap_null_cap_new();
-        if (canReply) {
-            lu_ret = lookupReply();
-            if (lu_ret.status != EXCEPTION_NONE) {
+        cap_t ځواب_cap = cap_null_cap_new();
+        إذا (can_ځواب) {
+            lu_ret = lookup_ځواب();
+            إذا (lu_ret.حالت != EXCEPTION_NONE) {
                 /* lookup_fault has been set by lookupReply */
-                handleFault(NODE_STATE(ksCurThread));
-                return;
-            } else {
-                reply_cap = lu_ret.cap;
+                handleFault(غوټه_STATE(ksCurThread));
+                أرجع;
+            } وإلا {
+                ځواب_cap = lu_ret.cap;
             }
         }
-        receiveIPC(NODE_STATE(ksCurThread), ep_cap, isBlocking, reply_cap);
-#else
-        deleteCallerCap(NODE_STATE(ksCurThread));
-        receiveIPC(NODE_STATE(ksCurThread), lu_ret.cap, isBlocking);
-#endif
-        break;
+        receiveIPC(غوټه_STATE(ksCurThread), ep_cap, isBlocking, ځواب_cap);
+#وإلا
+        deleteCallerCap(غوټه_STATE(ksCurThread));
+        receiveIPC(غوټه_STATE(ksCurThread), lu_ret.cap, isBlocking);
+#د_که_پای
+        اكسر;
 
-    case cap_notification_cap: {
+    حالة cap_notification_cap: {
         notification_t *ntfnPtr;
         tcb_t *boundTCB;
         ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(lu_ret.cap));
         boundTCB = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
-        if (unlikely(!cap_notification_cap_get_capNtfnCanReceive(lu_ret.cap)
-                     || (boundTCB && boundTCB != NODE_STATE(ksCurThread)))) {
+        إذا (unlikely(!cap_notification_cap_get_capNtfnCanReceive(lu_ret.cap)
+                     || (boundTCB && boundTCB != غوټه_STATE(ksCurThread)))) {
             current_lookup_fault = lookup_fault_missing_capability_new(0);
             current_fault = seL4_Fault_CapFault_new(epCPtr, true);
-            handleFault(NODE_STATE(ksCurThread));
-            break;
+            handleFault(غوټه_STATE(ksCurThread));
+            اكسر;
         }
 
-        receiveSignal(NODE_STATE(ksCurThread), lu_ret.cap, isBlocking);
-        break;
+        receiveSignal(غوټه_STATE(ksCurThread), lu_ret.cap, isBlocking);
+        اكسر;
     }
-    default:
+    افتراضي:
         current_lookup_fault = lookup_fault_missing_capability_new(0);
         current_fault = seL4_Fault_CapFault_new(epCPtr, true);
-        handleFault(NODE_STATE(ksCurThread));
-        break;
+        handleFault(غوټه_STATE(ksCurThread));
+        اكسر;
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline void mcsPreemptionPoint(void)
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+ساكن مضمن فراغ mcs_Preemption_ټکی(فراغ)
 {
     /* at this point we could be handling a timer interrupt which actually ends the current
      * threads timeslice. However, preemption is possible on revoke, which could have deleted
      * the current thread and/or the current scheduling context, rendering them invalid. */
-    if (isSchedulable(NODE_STATE(ksCurThread))) {
+    إذا (isSchedulable(غوټه_STATE(ksCurThread))) {
         /* if the thread is schedulable, the tcb and scheduling context are still valid */
         checkBudget();
-    } else if (sc_active(NODE_STATE(ksCurSC))) {
+    } وإلا إذا (sc_فعال(غوټه_STATE(ksCurSC))) {
         /* otherwise, if the thread is not schedulable, the SC could be valid - charge it if so */
-        chargeBudget(NODE_STATE(ksConsumed), false);
-    } else {
+        chargeBudget(غوټه_STATE(ksConsumed), false);
+    } وإلا {
         /* If the current SC is no longer configured the time can no
          * longer be charged to it. Simply dropping the consumed time
          * here is equivalent to having charged the consumed time and
          * then having cleared the SC. */
-        NODE_STATE(ksConsumed) = 0;
+        غوټه_STATE(ksConsumed) = 0;
     }
 }
-#else
-#define handleRecv(isBlocking, canReply) handleRecv(isBlocking)
-#define mcsPreemptionPoint()
-#define handleInvocation(isCall, isBlocking, canDonate, firstPhase, cptr) handleInvocation(isCall, isBlocking)
-#endif
+#وإلا
+#تعریف_کړه handleRecv(isBlocking, can_ځواب) handleRecv(isBlocking)
+#تعریف_کړه mcs_Preemption_ټکی()
+#تعریف_کړه handleInvocation(isCall, isBlocking, canDonate, لومړی_Phase, cptr) handleInvocation(isCall, isBlocking)
+#د_که_پای
 
-static void handleYield(void)
+ساكن فراغ handleYield(فراغ)
 {
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
     /* Yield the current remaining budget */
-    ticks_t consumed = NODE_STATE(ksCurSC)->scConsumed + NODE_STATE(ksConsumed);
-    refill_t head = *refill_head(NODE_STATE(ksCurSC));
-    chargeBudget(head.rAmount, false);
+    ticks_t consumed = غوټه_STATE(ksCurSC)->scConsumed + غوټه_STATE(ksConsumed);
+    refill_t سر = *refill_سر(غوټه_STATE(ksCurSC));
+    chargeBudget(سر.rAmount, false);
     /* Manually updated the scConsumed so that the full timeslice isn't added, just what was consumed */
-    NODE_STATE(ksCurSC)->scConsumed = consumed;
-#else
-    tcbSchedDequeue(NODE_STATE(ksCurThread));
+    غوټه_STATE(ksCurSC)->scConsumed = consumed;
+#وإلا
+    tcb_Sched_له_کتار_ایستل(غوټه_STATE(ksCurThread));
     SCHED_APPEND_CURRENT_TCB;
     rescheduleRequired();
-#endif
+#د_که_پای
 }
 
 exception_t handleSyscall(syscall_t syscall)
 {
     exception_t ret;
     MCS_DO_IF_BUDGET({
-        switch (syscall)
+        بدل (syscall)
         {
-        case SysSend:
-            ret = handleInvocation(false, true, false, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
+        حالة SysSend:
+            ret = handleInvocation(false, true, false, false, get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی));
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
             }
 
-            break;
+            اكسر;
 
-        case SysNBSend:
-            ret = handleInvocation(false, false, false, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
+        حالة SysNBSend:
+            ret = handleInvocation(false, false, false, false, get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی));
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
             }
-            break;
+            اكسر;
 
-        case SysCall:
-            ret = handleInvocation(true, true, true, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
+        حالة SysCall:
+            ret = handleInvocation(true, true, true, false, get_ثبتوونکی(غوټه_STATE(ksCurThread), cap_ثبتوونکی));
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
             }
-            break;
+            اكسر;
 
-        case SysRecv:
+        حالة SysRecv:
             handleRecv(true, true);
-            break;
-#ifndef CONFIG_KERNEL_MCS
-        case SysReply:
-            handleReply();
-            break;
+            اكسر;
+#که_نه_تعریف_شوی CONFIG_KERNEL_MCS
+        حالة Sys_ځواب:
+            handle_ځواب();
+            اكسر;
 
-        case SysReplyRecv:
-            handleReply();
+        حالة Sys_ځواب_Recv:
+            handle_ځواب();
             handleRecv(true, true);
-            break;
+            اكسر;
 
-#else /* CONFIG_KERNEL_MCS */
-        case SysWait:
+#وإلا /* CONFIG_KERNEL_MCS */
+        حالة SysWait:
             handleRecv(true, false);
-            break;
+            اكسر;
 
-        case SysNBWait:
+        حالة SysNBWait:
             handleRecv(false, false);
-            break;
-        case SysReplyRecv: {
-            cptr_t reply = getRegister(NODE_STATE(ksCurThread), replyRegister);
-            ret = handleInvocation(false, false, true, true, reply);
+            اكسر;
+        حالة Sys_ځواب_Recv: {
+            cptr_t ځواب = get_ثبتوونکی(غوټه_STATE(ksCurThread), ځواب_ثبتوونکی);
+            ret = handleInvocation(false, false, true, true, ځواب);
             /* reply is not preemptible, but to ease verification we check explicitly */
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
-                break;
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
+                اكسر;
             }
             handleRecv(true, true);
-            break;
+            اكسر;
         }
 
-        case SysNBSendRecv: {
+        حالة SysNBSendRecv: {
             cptr_t dest = getNBSendRecvDest();
             ret = handleInvocation(false, false, true, true, dest);
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
-                break;
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
+                اكسر;
             }
             handleRecv(true, true);
-            break;
+            اكسر;
         }
 
-        case SysNBSendWait:
-            ret = handleInvocation(false, false, true, true, getRegister(NODE_STATE(ksCurThread), replyRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
-                mcsPreemptionPoint();
-                checkInterrupt(/* was_interrupt_entry */ false);
-                break;
+        حالة SysNBSendWait:
+            ret = handleInvocation(false, false, true, true, get_ثبتوونکی(غوټه_STATE(ksCurThread), ځواب_ثبتوونکی));
+            إذا (unlikely(ret != EXCEPTION_NONE)) {
+                mcs_Preemption_ټکی();
+                check_مداخله(/* was_interrupt_entry */ false);
+                اكسر;
             }
             handleRecv(true, false);
-            break;
-#endif
-        case SysNBRecv:
+            اكسر;
+#د_که_پای
+        حالة SysNBRecv:
             handleRecv(false, true);
-            break;
+            اكسر;
 
-        case SysYield:
+        حالة SysYield:
             handleYield();
-            break;
+            اكسر;
 
-        default:
+        افتراضي:
             fail("Invalid syscall");
         }
 
     })
 
-    schedule();
+    مهالوېش();
     activateThread();
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }

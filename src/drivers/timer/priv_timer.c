@@ -5,31 +5,31 @@
  */
 
 /* A9 MPCORE private timer */
-#include <machine/timer.h>
-#include <arch/machine/timer.h>
-#include <drivers/timer/arm_priv.h>
+#ضمن <machine/timer.h>
+#ضمن <arch/machine/timer.h>
+#ضمن <drivers/timer/arm_priv.h>
 
-timer_t *const priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
+timer_t *ثابت priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
 
-#define TMR_CTRL_ENABLE      BIT(0)
-#define TMR_CTRL_AUTORELOAD  BIT(1)
-#define TMR_CTRL_IRQEN       BIT(2)
-#define TMR_CTRL_PRESCALE    8
+#تعریف_کړه TMR_CTRL_ENABLE      بټ(0)
+#تعریف_کړه TMR_CTRL_AUTORELOAD  بټ(1)
+#تعریف_کړه TMR_CTRL_IRQEN       بټ(2)
+#تعریف_کړه TMR_CTRL_PRESCALE    8
 
-#define TIMER_INTERVAL_MS    (CONFIG_TIMER_TICK_MS)
-#define TIMER_COUNT_BITS 32
+#تعریف_کړه TIMER_INTERVAL_MS    (CONFIG_TIMER_TICK_MS)
+#تعریف_کړه TIMER_شمېر_بټونه 32
 
-#define PRESCALE ((TIMER_RELOAD) >> TIMER_COUNT_BITS)
-#define TMR_LOAD ((TIMER_RELOAD) / (PRESCALE + 1))
+#تعریف_کړه PRESCALE ((TIMER_RELOAD) >> TIMER_شمېر_بټونه)
+#تعریف_کړه TMR_بارول ((TIMER_RELOAD) / (PRESCALE + 1))
 
-BOOT_CODE void initTimer(void)
+BOOT_کوډ فراغ initTimer(فراغ)
 {
     /* reset */
     priv_timer->ctrl = 0;
     priv_timer->ints = 0;
 
-    /* setup */
-    priv_timer->load = TMR_LOAD;
+    /*تیاری*/
+    priv_timer->بارول = TMR_بارول;
     priv_timer->ctrl |= ((PRESCALE) << (TMR_CTRL_PRESCALE))
                         | TMR_CTRL_AUTORELOAD | TMR_CTRL_IRQEN;
 

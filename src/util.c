@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <stdint.h>
-#include <util.h>
+#ضمن <assert.h>
+#ضمن <stdint.h>
+#ضمن <util.h>
 
 /*
  * memzero needs a custom type that allows us to use a word
  * that has the aliasing properties of a char.
  */
-typedef unsigned long __attribute__((__may_alias__)) ulong_alias;
+تعريفنوع بینښه اوږد __attribute__((__may_alias__)) ulong_alias;
 
 /*
  * Zero 'n' bytes of memory starting from 's'.
  *
  * 'n' and 's' must be word aligned.
  */
-void memzero(void *s, unsigned long n)
+فراغ memzero(فراغ *s, بینښه اوږد n)
 {
     uint8_t *p = s;
 
     /* Ensure alignment constraints are met. */
-    assert((unsigned long)s % sizeof(unsigned long) == 0);
-    assert(n % sizeof(unsigned long) == 0);
+    أكد((بینښه اوږد)s % حجم(بینښه اوږد) == 0);
+    أكد(n % حجم(بینښه اوږد) == 0);
 
     /* We will never memzero an area larger than the largest current
        live object */
@@ -33,14 +33,14 @@ void memzero(void *s, unsigned long n)
         \<or> \<acute>n <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Write out words. */
-    while (n != 0) {
+    طالما (n != 0) {
         *(ulong_alias *)p = 0;
-        p += sizeof(ulong_alias);
-        n -= sizeof(ulong_alias);
+        p += حجم(ulong_alias);
+        n -= حجم(ulong_alias);
     }
 }
 
-void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
+فراغ *VISIBLE memset(فراغ *s, بینښه اوږد c, بینښه اوږد n)
 {
     uint8_t *p;
 
@@ -48,93 +48,93 @@ void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
      * If we are only writing zeros and we are word aligned, we can
      * use the optimized 'memzero' function.
      */
-    if (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
+    إذا (likely(c == 0 && ((بینښه اوږد)s % حجم(بینښه اوږد)) == 0 && (n % حجم(بینښه اوږد)) == 0)) {
         memzero(s, n);
-    } else {
+    } وإلا {
         /* Otherwise, we use a slower, simple memset. */
-        for (p = (uint8_t *)s; n > 0; n--, p++) {
+        لكل (p = (uint8_t *)s; n > 0; n--, p++) {
             *p = (uint8_t)c;
         }
     }
 
-    return s;
+    أرجع s;
 }
 
-void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
+فراغ *VISIBLE حافظه_نقل(فراغ *ptr_dst, ثابت فراغ *ptr_src, بینښه اوږد n)
 {
     uint8_t *p;
-    const uint8_t *q;
+    ثابت uint8_t *q;
 
-    for (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
+    لكل (p = (uint8_t *)ptr_dst, q = (ثابت uint8_t *)ptr_src; n; n--, p++, q++) {
         *p = *q;
     }
 
-    return ptr_dst;
+    أرجع ptr_dst;
 }
 
-int PURE strncmp(const char *s1, const char *s2, int n)
+صحيح خالص مزي_پرتله(ثابت حرف *s1, ثابت حرف *s2, صحيح n)
 {
-    word_t i;
-    int diff;
+    کلمه_t i;
+    صحيح diff;
 
-    for (i = 0; i < n; i++) {
-        diff = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
-        if (diff != 0 || s1[i] == '\0') {
-            return diff;
+    لكل (i = 0; i < n; i++) {
+        diff = ((بینښه حرف *)s1)[i] - ((بینښه حرف *)s2)[i];
+        إذا (diff != 0 || s1[i] == '\0') {
+            أرجع diff;
         }
     }
 
-    return 0;
+    أرجع 0;
 }
 
-long CONST char_to_long(char c)
+اوږد CONST char_منزل_long(حرف c)
 {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+    إذا (c >= '0' && c <= '9') {
+        أرجع c - '0';
+    } وإلا إذا (c >= 'A' && c <= 'F') {
+        أرجع c - 'A' + 10;
+    } وإلا إذا (c >= 'a' && c <= 'f') {
+        أرجع c - 'a' + 10;
     }
-    return -1;
+    أرجع -1;
 }
 
-long PURE str_to_long(const char *str)
+اوږد خالص str_منزل_long(ثابت حرف *str)
 {
-    unsigned int base;
-    long res;
-    long val = 0;
-    char c;
+    بینښه صحيح بنسټ;
+    اوږد res;
+    اوږد val = 0;
+    حرف c;
 
     /* NULL ptr and empty str */
-    if (str == NULL || *str == 0) {
-        return -1;
+    إذا (str == عدم || *str == 0) {
+        أرجع -1;
     }
 
     /* check for "0x", *(str + 1) may be 0, but must be allocated since str is not empty */
-    if (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
-        base = 16;
+    إذا (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
+        بنسټ = 16;
         str += 2;
         /* '0x' on its own is malformed */
-        if (*str == 0) {
-            return -1;
+        إذا (*str == 0) {
+            أرجع -1;
         }
-    } else {
-        base = 10;
+    } وإلا {
+        بنسټ = 10;
     }
 
     c = *str;
-    while (c != '\0') {
-        res = char_to_long(c);
-        if (res == -1 || res >= base) {
-            return -1;
+    طالما (c != '\0') {
+        res = char_منزل_long(c);
+        إذا (res == -1 || res >= بنسټ) {
+            أرجع -1;
         }
-        val = val * base + res;
+        val = val * بنسټ + res;
         str++;
         c = *str;
     }
 
-    return val;
+    أرجع val;
 }
 
 // The following implementations of CLZ (count leading zeros) and CTZ (count
@@ -168,9 +168,9 @@ long PURE str_to_long(const char *str)
 // binary.
 
 // Check some assumptions made by the clzl, clzll, ctzl functions:
-compile_assert(clz_ulong_32_or_64, sizeof(unsigned long) == 4 || sizeof(unsigned long) == 8);
-compile_assert(clz_ullong_64, sizeof(unsigned long long) == 8);
-compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
+compile_assert(clz_ulong_32_or_64, حجم(بینښه اوږد) == 4 || حجم(بینښه اوږد) == 8);
+compile_assert(clz_ullong_64, حجم(بینښه اوږد اوږد) == 8);
+compile_assert(clz_کلمه_اندازه, حجم(بینښه اوږد) * 8 == CONFIG_کلمه_اندازه);
 
 // Count leading zeros.
 // This implementation contains no branches. If the architecture provides an
@@ -183,12 +183,12 @@ compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
 // These functions are potentially `UNUSED` because we want to always expose
 // them to verification without necessarily linking them into the kernel
 // binary.
-static UNUSED CONST inline unsigned clz32(uint32_t x)
+ساكن ناکارول_شوی CONST مضمن بینښه clz32(uint32_t x)
 {
     // Compiler builtins typically return int, but we use unsigned internally
     // to reduce the number of guards we see in the proofs.
-    unsigned count = 32;
-    uint32_t mask = UINT32_MAX;
+    بینښه شمېر = 32;
+    uint32_t ماسک_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -206,109 +206,109 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // while also generating reasonably efficient binary code.
 
     // The `if (1)` blocks make it easier to reason by chunks in the proofs.
-    if (1) {
+    إذا (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x0000ffff
-        count -= bits; // [16, 32]
+        ماسک_2 >>= (1 << 4); // 0x0000ffff
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 4; // [0, 16]
+        x >>= بټونه; // <= 0x0000ffff
+        شمېر -= بټونه; // [16, 32]
     }
-    if (1) {
+    إذا (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x000000ff
-        count -= bits; // [8, 16, 24, 32]
+        ماسک_2 >>= (1 << 3); // 0x000000ff
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 3; // [0, 8]
+        x >>= بټونه; // <= 0x000000ff
+        شمېر -= بټونه; // [8, 16, 24, 32]
     }
-    if (1) {
+    إذا (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x0000000f
-        count -= bits; // [4, 8, 12, ..., 32]
+        ماسک_2 >>= (1 << 2); // 0x0000000f
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 2; // [0, 4]
+        x >>= بټونه; // <= 0x0000000f
+        شمېر -= بټونه; // [4, 8, 12, ..., 32]
     }
-    if (1) {
+    إذا (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x00000003
-        count -= bits; // [2, 4, 6, ..., 32]
+        ماسک_2 >>= (1 << 1); // 0x00000003
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 1; // [0, 2]
+        x >>= بټونه; // <= 0x00000003
+        شمېر -= بټونه; // [2, 4, 6, ..., 32]
     }
-    if (1) {
+    إذا (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x00000001
-        count -= bits; // [1, 2, 3, ..., 32]
+        ماسک_2 >>= (1 << 0); // 0x00000001
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 0; // [0, 1]
+        x >>= بټونه; // <= 0x00000001
+        شمېر -= بټونه; // [1, 2, 3, ..., 32]
     }
 
     // If the original input was zero, there will have been no shifts, so this
     // gives a result of 32. Otherwise, x is now exactly 1, so subtracting from
     // count gives a result from [0, 1, 2, ..., 31].
-    return count - x;
+    أرجع شمېر - x;
 }
 
-static UNUSED CONST inline unsigned clz64(uint64_t x)
+ساكن ناکارول_شوی CONST مضمن بینښه clz64(uint64_t x)
 {
-    unsigned count = 64;
-    uint64_t mask = UINT64_MAX;
+    بینښه شمېر = 64;
+    uint64_t ماسک_2 = UINT64_MAX;
 
     // Although we could implement this using clz32, we spell out the
     // iterations in full for slightly better code generation at low
     // optimisation levels, and to allow us to reuse the proof machinery we
     // developed for clz32.
-    if (1) {
+    إذا (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)(mask < x)) << 5; // [0, 32]
-        x >>= bits; // <= 0x00000000ffffffff
-        count -= bits; // [32, 64]
+        ماسک_2 >>= (1 << 5); // 0x00000000ffffffff
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 5; // [0, 32]
+        x >>= بټونه; // <= 0x00000000ffffffff
+        شمېر -= بټونه; // [32, 64]
     }
-    if (1) {
+    إذا (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x000000000000ffff
-        count -= bits; // [16, 32, 48, 64]
+        ماسک_2 >>= (1 << 4); // 0x000000000000ffff
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 4; // [0, 16]
+        x >>= بټونه; // <= 0x000000000000ffff
+        شمېر -= بټونه; // [16, 32, 48, 64]
     }
-    if (1) {
+    إذا (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x00000000000000ff
-        count -= bits; // [8, 16, 24, ..., 64]
+        ماسک_2 >>= (1 << 3); // 0x00000000000000ff
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 3; // [0, 8]
+        x >>= بټونه; // <= 0x00000000000000ff
+        شمېر -= بټونه; // [8, 16, 24, ..., 64]
     }
-    if (1) {
+    إذا (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x000000000000000f
-        count -= bits; // [4, 8, 12, ..., 64]
+        ماسک_2 >>= (1 << 2); // 0x000000000000000f
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 2; // [0, 4]
+        x >>= بټونه; // <= 0x000000000000000f
+        شمېر -= بټونه; // [4, 8, 12, ..., 64]
     }
-    if (1) {
+    إذا (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x0000000000000003
-        count -= bits; // [2, 4, 6, ..., 64]
+        ماسک_2 >>= (1 << 1); // 0x0000000000000003
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 1; // [0, 2]
+        x >>= بټونه; // <= 0x0000000000000003
+        شمېر -= بټونه; // [2, 4, 6, ..., 64]
     }
-    if (1) {
+    إذا (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x0000000000000001
-        count -= bits; // [1, 2, 3, ..., 64]
+        ماسک_2 >>= (1 << 0); // 0x0000000000000001
+        بینښه بټونه = ((بینښه)(ماسک_2 < x)) << 0; // [0, 1]
+        x >>= بټونه; // <= 0x0000000000000001
+        شمېر -= بټونه; // [1, 2, 3, ..., 64]
     }
 
-    return count - x;
+    أرجع شمېر - x;
 }
 
 // Count trailing zeros.
 // See comments on clz32.
-static UNUSED CONST inline unsigned ctz32(uint32_t x)
+ساكن ناکارول_شوی CONST مضمن بینښه ctz32(uint32_t x)
 {
-    unsigned count = (x == 0);
-    uint32_t mask = UINT32_MAX;
+    بینښه شمېر = (x == 0);
+    uint32_t ماسک_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -328,94 +328,94 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
     // The iterations are given a very regular structure to facilitate proofs,
     // while also generating reasonably efficient binary code.
 
-    if (1) {
+    إذا (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x0000ffff != 0
-        count += bits; // if xi != 0 then [0, 16] else 17
+        ماسک_2 >>= (1 << 4); // 0x0000ffff
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 4; // [0, 16]
+        x >>= بټونه; // xi != 0 --> x & 0x0000ffff != 0
+        شمېر += بټونه; // if xi != 0 then [0, 16] else 17
     }
-    if (1) {
+    إذا (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, 24] else 25
+        ماسک_2 >>= (1 << 3); // 0x000000ff
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 3; // [0, 8]
+        x >>= بټونه; // xi != 0 --> x & 0x000000ff != 0
+        شمېر += بټونه; // if xi != 0 then [0, 8, 16, 24] else 25
     }
-    if (1) {
+    إذا (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x0000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 28] else 29
+        ماسک_2 >>= (1 << 2); // 0x0000000f
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 2; // [0, 4]
+        x >>= بټونه; // xi != 0 --> x & 0x0000000f != 0
+        شمېر += بټونه; // if xi != 0 then [0, 4, 8, ..., 28] else 29
     }
-    if (1) {
+    إذا (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x00000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 30] else 31
+        ماسک_2 >>= (1 << 1); // 0x00000003
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 1; // [0, 2]
+        x >>= بټونه; // xi != 0 --> x & 0x00000003 != 0
+        شمېر += بټونه; // if xi != 0 then [0, 2, 4, ..., 30] else 31
     }
-    if (1) {
+    إذا (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x00000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 31] else 32
+        ماسک_2 >>= (1 << 0); // 0x00000001
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 0; // [0, 1]
+        x >>= بټونه; // xi != 0 --> x & 0x00000001 != 0
+        شمېر += بټونه; // if xi != 0 then [0, 1, 2, ..., 31] else 32
     }
 
-    return count;
+    أرجع شمېر;
 }
 
-static UNUSED CONST inline unsigned ctz64(uint64_t x)
+ساكن ناکارول_شوی CONST مضمن بینښه ctz64(uint64_t x)
 {
-    unsigned count = (x == 0);
-    uint64_t mask = UINT64_MAX;
+    بینښه شمېر = (x == 0);
+    uint64_t ماسک_2 = UINT64_MAX;
 
-    if (1) {
+    إذا (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 5; // [0, 32]
-        x >>= bits; // xi != 0 --> x & 0x00000000ffffffff != 0
-        count += bits; // if xi != 0 then [0, 32] else 33
+        ماسک_2 >>= (1 << 5); // 0x00000000ffffffff
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 5; // [0, 32]
+        x >>= بټونه; // xi != 0 --> x & 0x00000000ffffffff != 0
+        شمېر += بټونه; // if xi != 0 then [0, 32] else 33
     }
-    if (1) {
+    إذا (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x000000000000ffff != 0
-        count += bits; // if xi != 0 then [0, 16, 32, 48] else 49
+        ماسک_2 >>= (1 << 4); // 0x000000000000ffff
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 4; // [0, 16]
+        x >>= بټونه; // xi != 0 --> x & 0x000000000000ffff != 0
+        شمېر += بټونه; // if xi != 0 then [0, 16, 32, 48] else 49
     }
-    if (1) {
+    إذا (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x00000000000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, ..., 56] else 57
+        ماسک_2 >>= (1 << 3); // 0x00000000000000ff
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 3; // [0, 8]
+        x >>= بټونه; // xi != 0 --> x & 0x00000000000000ff != 0
+        شمېر += بټونه; // if xi != 0 then [0, 8, 16, ..., 56] else 57
     }
-    if (1) {
+    إذا (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x000000000000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 60] else 61
+        ماسک_2 >>= (1 << 2); // 0x000000000000000f
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 2; // [0, 4]
+        x >>= بټونه; // xi != 0 --> x & 0x000000000000000f != 0
+        شمېر += بټونه; // if xi != 0 then [0, 4, 8, ..., 60] else 61
     }
-    if (1) {
+    إذا (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 62] else 63
+        ماسک_2 >>= (1 << 1); // 0x0000000000000003
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 1; // [0, 2]
+        x >>= بټونه; // xi != 0 --> x & 0x0000000000000003 != 0
+        شمېر += بټونه; // if xi != 0 then [0, 2, 4, ..., 62] else 63
     }
-    if (1) {
+    إذا (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 63] else 64
+        ماسک_2 >>= (1 << 0); // 0x0000000000000001
+        بینښه بټونه = ((بینښه)((x & ماسک_2) == 0)) << 0; // [0, 1]
+        x >>= بټونه; // xi != 0 --> x & 0x0000000000000001 != 0
+        شمېر += بټونه; // if xi != 0 then [0, 1, 2, ..., 63] else 64
     }
 
-    return count;
+    أرجع شمېر;
 }
 
 // GCC's builtins will emit calls to these functions when the platform does
@@ -423,30 +423,30 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
 // These are only provided when the relevant config items are set.
 // We define these separately from `ctz32` etc. so that we can verify all of
 // `ctz32` etc. without necessarily linking them into the kernel binary.
-#ifdef CONFIG_CLZ_32
-CONST int __clzsi2(uint32_t x)
+#که_تعریف_شوی CONFIG_CLZ_32
+CONST صحيح __clzsi2(uint32_t x)
 {
-    return clz32(x);
+    أرجع clz32(x);
 }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_CLZ_64
-CONST int __clzdi2(uint64_t x)
+#که_تعریف_شوی CONFIG_CLZ_64
+CONST صحيح __clzdi2(uint64_t x)
 {
-    return clz64(x);
+    أرجع clz64(x);
 }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_CTZ_32
-CONST int __ctzsi2(uint32_t x)
+#که_تعریف_شوی CONFIG_CTZ_32
+CONST صحيح __ctzsi2(uint32_t x)
 {
-    return ctz32(x);
+    أرجع ctz32(x);
 }
-#endif
+#د_که_پای
 
-#ifdef CONFIG_CTZ_64
-CONST int __ctzdi2(uint64_t x)
+#که_تعریف_شوی CONFIG_CTZ_64
+CONST صحيح __ctzdi2(uint64_t x)
 {
-    return ctz64(x);
+    أرجع ctz64(x);
 }
-#endif
+#د_که_پای

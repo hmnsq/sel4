@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/smp.h>
-#include <object/tcb.h>
+#ضمن <config.h>
+#ضمن <model/smp.h>
+#ضمن <object/tcb.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#که_تعریف_شوی ENABLE_SMP_SUPPORT
 
-void migrateTCB(tcb_t *tcb, word_t new_core)
+فراغ migrateTCB(tcb_t *tcb, کلمه_t new_core)
 {
-    if (new_core == tcb->tcbAffinity) {
-        return;
+    إذا (new_core == tcb->tcbAffinity) {
+        أرجع;
     }
-#ifdef CONFIG_DEBUG_BUILD
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
     tcbDebugRemove(tcb);
-#endif
-#ifdef CONFIG_HAVE_FPU
+#د_که_پای
+#که_تعریف_شوی CONFIG_HAVE_FPU
     /* If the thread owns the FPU of the core it is currently running on (which
      * is not necessarily the core, that we are now running on), then release
      * that cores's FPU.
      */
     fpuRelease(tcb);
-#endif /* CONFIG_HAVE_FPU */
+#د_که_پای /* CONFIG_HAVE_FPU */
     tcb->tcbAffinity = new_core;
-#ifdef CONFIG_DEBUG_BUILD
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
     tcbDebugAppend(tcb);
-#endif
+#د_که_پای
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#د_که_پای /* ENABLE_SMP_SUPPORT */

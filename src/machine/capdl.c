@@ -4,149 +4,149 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ضمن <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#که_تعریف_شوی CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <machine/registerset.h>
-#include <machine/timer.h>
-#include <string.h>
-#include <kernel/cspace.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <kernel/sporadic.h>
-#endif
+#ضمن <machine/capdl.h>
+#ضمن <machine/registerset.h>
+#ضمن <machine/timer.h>
+#ضمن <string.h>
+#ضمن <kernel/cspace.h>
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+#ضمن <kernel/sporadic.h>
+#د_که_پای
 
-#define SEEN_SZ 256
+#تعریف_کړه کتل_شوی_SZ 256
 
 /* seen list - check this array before we print cnode and vspace */
 /* TBD: This is to avoid traversing the same cnode. It should be applied to object
  * as well since the extractor might comes across multiple caps to the same object.
  */
-cap_t seen_list[SEEN_SZ];
-int watermark = 0;
+cap_t کتل_شوی_list[کتل_شوی_SZ];
+صحيح watermark = 0;
 
-void add_to_seen(cap_t c)
+فراغ جمع_کړه_منزل_کتل_شوی(cap_t c)
 {
     /* Won't work well if there're more than SEEN_SZ cnode */
-    if (watermark < SEEN_SZ) {
-        seen_list[watermark] = c;
+    إذا (watermark < کتل_شوی_SZ) {
+        کتل_شوی_list[watermark] = c;
         watermark++;
     }
 }
 
-void reset_seen_list(void)
+فراغ reset_کتل_شوی_list(فراغ)
 {
-    memset(seen_list, 0, SEEN_SZ * sizeof(seen_list[0]));
+    memset(کتل_شوی_list, 0, کتل_شوی_SZ * حجم(کتل_شوی_list[0]));
     watermark = 0;
 }
 
-bool_t seen(cap_t c)
+bool_t کتل_شوی(cap_t c)
 {
-    for (int i = 0; i < watermark; i++) {
-        if (same_cap(seen_list[i], c)) {
-            return true;
+    لكل (صحيح i = 0; i < watermark; i++) {
+        إذا (same_cap(کتل_شوی_list[i], c)) {
+            أرجع true;
         }
     }
-    return false;
+    أرجع false;
 }
 
 bool_t same_cap(cap_t a, cap_t b)
 {
-    return (a.words[0] == b.words[0] && a.words[1] == b.words[1]);
+    أرجع (a.ټکي[0] == b.ټکي[0] && a.ټکي[1] == b.ټکي[1]);
 }
 
 /* Return true if strings are the same */
-static inline bool_t strings_equal(const char *str1, const char *str2)
+ساكن مضمن bool_t مزي_ګانې_equal(ثابت حرف *str1, ثابت حرف *str2)
 {
-    while (*str1 && *str2 && (*str1 == *str2)) {
+    طالما (*str1 && *str2 && (*str1 == *str2)) {
         str1++;
         str2++;
     }
-    return !(*(const unsigned char *)str1 - * (const unsigned char *)str2);
+    أرجع !(*(ثابت بینښه حرف *)str1 - * (ثابت بینښه حرف *)str2);
 }
 
 /* Return true if the tcb is for rootserver or idle thread */
-bool_t root_or_idle_tcb(tcb_t *tcb)
+bool_t ریښه_or_idle_tcb(tcb_t *tcb)
 {
-    return (strings_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "rootserver")
-            || strings_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "idle_thread"));
+    أرجع (مزي_ګانې_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "rootserver")
+            || مزي_ګانې_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "idle_thread"));
 }
 
 /*
  * Print objects
  */
 
-#ifdef CONFIG_PRINTING
+#که_تعریف_شوی CONFIG_PRINTING
 
-void obj_tcb_print_attrs(tcb_t *tcb)
+فراغ obj_tcb_print_attrs(tcb_t *tcb)
 {
-    printf("(addr: 0x%lx, ip: 0x%lx, sp: 0x%lx, prio: %lu, max_prio: %lu",
-           (long unsigned int)tcb->tcbIPCBuffer,
-           (long unsigned int)getRestartPC(tcb),
-           (long unsigned int)get_tcb_sp(tcb),
-           (long unsigned int)tcb->tcbPriority,
-           (long unsigned int)tcb->tcbMCP);
+    چاپ_کړه("(addr: 0x%lx, ip: 0x%lx, sp: 0x%lx, prio: %lu, max_prio: %lu",
+           (اوږد بینښه صحيح)tcb->tcbIPCBuffer,
+           (اوږد بینښه صحيح)getRestartPC(tcb),
+           (اوږد بینښه صحيح)get_tcb_sp(tcb),
+           (اوږد بینښه صحيح)tcb->tcb_لومړیتوب,
+           (اوږد بینښه صحيح)tcb->tcbMCP);
 
-#ifdef ENABLE_SMP_SUPPORT
-    printf(", affinity: %lu", (long unsigned int)tcb->tcbAffinity);
-#endif /* ENABLE_SMP_SUPPORT */
+#که_تعریف_شوی ENABLE_SMP_SUPPORT
+    چاپ_کړه(", affinity: %lu", (اوږد بینښه صحيح)tcb->tcbAffinity);
+#د_که_پای /* ENABLE_SMP_SUPPORT */
 
     /* init */
 
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
     cap_t ep_cap = TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap;
-    if (cap_get_capType(ep_cap) != cap_null_cap) {
-        printf(", fault_ep: %p", EP_PTR(cap_endpoint_cap_get_capEPPtr(ep_cap)));
+    إذا (cap_get_capType(ep_cap) != cap_null_cap) {
+        چاپ_کړه(", fault_ep: %p", EP_PTR(cap_endpoint_cap_get_capEPPtr(ep_cap)));
     }
-#endif
+#د_که_پای
 
-    printf(", dom: %ld)\n", tcb->tcbDomain);
+    چاپ_کړه(", dom: %ld)\n", tcb->tcbDomain);
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
 
-static inline ticks_t sc_get_budget(sched_context_t *sc)
+ساكن مضمن ticks_t sc_get_budget(sched_context_t *sc)
 {
-    ticks_t sum = refill_head(sc)->rAmount;
-    word_t current = sc->scRefillHead;
+    ticks_t مجموعه_2 = refill_سر(sc)->rAmount;
+    کلمه_t current = sc->sc_Refill_سر;
 
-    while (current != sc->scRefillTail) {
+    طالما (current != sc->sc_Refill_لکۍ) {
         current = ((current == sc->scRefillMax - 1u) ? (0) : current + 1u);
-        sum += refill_index(sc, current)->rAmount;
+        مجموعه_2 += refill_شاخص(sc, current)->rAmount;
     }
 
-    return sum;
+    أرجع مجموعه_2;
 }
 
-void obj_sc_print_attrs(cap_t sc_cap)
+فراغ obj_sc_print_attrs(cap_t sc_cap)
 {
     sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(sc_cap));
     ticks_t period = sc->scPeriod;
     ticks_t budget = sc_get_budget(sc);
-    printf("(period: %"PRIu64" us (%"PRIu64" ticks), budget: %"PRIu64 " us "
-           "(%"PRIu64" ticks), %"SEL4_PRIu_word" bits)\n",
-           ticksToUs(period), period,
-           ticksToUs(budget), budget,
-           (word_t)cap_sched_context_cap_get_capSCSizeBits(sc_cap));
+    چاپ_کړه("(period: %"PRIu64" us (%"PRIu64" ticks), budget: %"PRIu64 " us "
+           "(%"PRIu64" ticks), %"SEL4_PRIu_کلمه" bits)\n",
+           ticks_منزل_Us(period), period,
+           ticks_منزل_Us(budget), budget,
+           (کلمه_t)cap_sched_context_cap_get_cap_SCSize_بټونه(sc_cap));
 }
-#endif /* CONFIG_KERNEL_MCS */
+#د_که_پای /* CONFIG_KERNEL_MCS */
 
-void obj_ut_print_attrs(cte_t *slot, tcb_t *tcb)
+فراغ obj_ut_print_attrs(cte_t *خونه, tcb_t *tcb)
 {
     /* might have two untypeds with the same address but different size */
-    printf("%p_%lu_untyped = ut (%lu bits, paddr: %p) {",
-           (void *)cap_untyped_cap_get_capPtr(slot->cap),
-           (long unsigned int)cap_untyped_cap_get_capBlockSize(slot->cap),
-           (long unsigned int)cap_untyped_cap_get_capBlockSize(slot->cap),
-           WORD_PTR(cap_untyped_cap_get_capPtr(slot->cap)));
+    چاپ_کړه("%p_%lu_untyped = ut (%lu bits, paddr: %p) {",
+           (فراغ *)cap_untyped_cap_get_capPtr(خونه->cap),
+           (اوږد بینښه صحيح)cap_untyped_cap_get_cap_بلاک_اندازه(خونه->cap),
+           (اوږد بینښه صحيح)cap_untyped_cap_get_cap_بلاک_اندازه(خونه->cap),
+           کلمه_PTR(cap_untyped_cap_get_capPtr(خونه->cap)));
 
     /* there is no need to check for a NullCap as NullCaps are
     always accompanied by null mdb pointers */
-    for (cte_t *nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-         nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
-        if (!sameRegionAs(slot->cap, nextPtr->cap)) {
+    لكل (cte_t *بل_Ptr = CTE_PTR(mdb_غوټه_get_mdb_بل(خونه->cteMDBNode));
+         بل_Ptr && is_MDBParent_د(خونه, بل_Ptr);
+         بل_Ptr = CTE_PTR(mdb_غوټه_get_mdb_بل(خونه->cteMDBNode))) {
+        إذا (!sameRegionAs(خونه->cap, بل_Ptr->cap)) {
             /* TBD:
              * - this will print out the attributes of the cap, which it shouldn't
              *
@@ -154,37 +154,37 @@ void obj_ut_print_attrs(cte_t *slot, tcb_t *tcb)
              *   isn't reachable from any of the non root threads. This would result
              *   in an object being mentioned but never properly defined
              */
-            print_cap(nextPtr->cap);
+            print_cap(بل_Ptr->cap);
         }
     }
-    printf("}\n");
+    چاپ_کړه("}\n");
 }
 
-void obj_cnode_print_attrs(cap_t cnode)
+فراغ obj_cnode_print_attrs(cap_t cnode)
 {
-    printf("(%lu bits)\n", (long unsigned int)cap_cnode_cap_get_capCNodeRadix(cnode));
+    چاپ_کړه("(%lu bits)\n", (اوږد بینښه صحيح)cap_cnode_cap_get_capCNodeRadix(cnode));
 }
 
-void obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
+فراغ obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
 {
-    if (seen(cnode)) {
-        return;
+    إذا (کتل_شوی(cnode)) {
+        أرجع;
     }
-    add_to_seen(cnode);
-    printf("%p_cnode = cnode ", (void *)cap_cnode_cap_get_capCNodePtr(cnode));
+    جمع_کړه_منزل_کتل_شوی(cnode);
+    چاپ_کړه("%p_cnode = cnode ", (فراغ *)cap_cnode_cap_get_capCNodePtr(cnode));
     obj_cnode_print_attrs(cnode);
-    word_t radix = cap_cnode_cap_get_capCNodeRadix(cnode);
+    کلمه_t radix = cap_cnode_cap_get_capCNodeRadix(cnode);
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
-        lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) == cap_untyped_cap) {
+    لكل (uint32_t i = 0; i < (1 << radix); i++) {
+        lookup_Cap_And_خونه_ret_t c = lookup_Cap_And_خونه(tcb, i);
+        إذا (cap_get_capType(c.cap) == cap_untyped_cap) {
             /* we need `cte_t *` to print out the slots of an untyped object */
-            obj_ut_print_attrs(c.slot, tcb);
+            obj_ut_print_attrs(c.خونه, tcb);
 
-        } else if (cap_get_capType(c.cap) == cap_cnode_cap) {
+        } وإلا إذا (cap_get_capType(c.cap) == cap_cnode_cap) {
             /* TBD: deal with nested cnodes */
 
-        } else if (cap_get_capType(c.cap) != cap_null_cap) {
+        } وإلا إذا (cap_get_capType(c.cap) != cap_null_cap) {
             print_object(c.cap);
         }
     }
@@ -194,208 +194,208 @@ void obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
  * Caps
  */
 
-void cap_cnode_print_attrs(cap_t cnode)
+فراغ cap_cnode_print_attrs(cap_t cnode)
 {
-    printf("(guard: %lu, guard_size: %lu)\n",
-           (long unsigned int)cap_cnode_cap_get_capCNodeGuard(cnode),
-           (long unsigned int)cap_cnode_cap_get_capCNodeGuardSize(cnode));
+    چاپ_کړه("(guard: %lu, guard_size: %lu)\n",
+           (اوږد بینښه صحيح)cap_cnode_cap_get_capCNodeGuard(cnode),
+           (اوږد بینښه صحيح)cap_cnode_cap_get_cap_CNode_Guard_اندازه(cnode));
 }
 
-void cap_ep_print_attrs(cap_t ep)
+فراغ cap_ep_print_attrs(cap_t ep)
 {
-    printf("(");
-    cap_endpoint_cap_get_capCanReceive(ep) ? putchar('R') : 0;
-    cap_endpoint_cap_get_capCanSend(ep) ? putchar('W') : 0;
-    cap_endpoint_cap_get_capCanGrant(ep) ? putchar('G') : 0;
-    cap_endpoint_cap_get_capCanGrantReply(ep) ? putchar('P') : 0;
-    long unsigned int badge = cap_endpoint_cap_get_capEPBadge(ep);
-    badge ? printf(", badge: %lu)\n", badge) : printf(")\n");
+    چاپ_کړه("(");
+    cap_endpoint_cap_get_capCanReceive(ep) ? توری_چاپ_کړه('R') : 0;
+    cap_endpoint_cap_get_capCanSend(ep) ? توری_چاپ_کړه('W') : 0;
+    cap_endpoint_cap_get_capCanGrant(ep) ? توری_چاپ_کړه('G') : 0;
+    cap_endpoint_cap_get_cap_Can_Grant_ځواب(ep) ? توری_چاپ_کړه('P') : 0;
+    اوږد بینښه صحيح badge = cap_endpoint_cap_get_capEPBadge(ep);
+    badge ? چاپ_کړه(", badge: %lu)\n", badge) : چاپ_کړه(")\n");
 }
 
-void cap_ntfn_print_attrs(cap_t ntfn)
+فراغ cap_ntfn_print_attrs(cap_t ntfn)
 {
-    printf("(");
-    cap_notification_cap_get_capNtfnCanReceive(ntfn) ? putchar('R') : 0;
-    cap_notification_cap_get_capNtfnCanSend(ntfn) ? putchar('W') : 0;
-    long unsigned int badge = cap_notification_cap_get_capNtfnBadge(ntfn);
-    badge ? printf(", badge: %lu)\n", badge) : printf(")\n");
+    چاپ_کړه("(");
+    cap_notification_cap_get_capNtfnCanReceive(ntfn) ? توری_چاپ_کړه('R') : 0;
+    cap_notification_cap_get_capNtfnCanSend(ntfn) ? توری_چاپ_کړه('W') : 0;
+    اوږد بینښه صحيح badge = cap_notification_cap_get_capNtfnBadge(ntfn);
+    badge ? چاپ_کړه(", badge: %lu)\n", badge) : چاپ_کړه(")\n");
 }
 
 /*
  * print object slots
  */
 
-void obj_tcb_print_slots(tcb_t *tcb)
+فراغ obj_tcb_print_slots(tcb_t *tcb)
 {
-    printf("%p_tcb {\n", tcb);
+    چاپ_کړه("%p_tcb {\n", tcb);
 
     /* CSpace root */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap) != cap_null_cap) {
-        printf("cspace: %p_cnode ",
-               (void *)cap_cnode_cap_get_capCNodePtr(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap));
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap) != cap_null_cap) {
+        چاپ_کړه("cspace: %p_cnode ",
+               (فراغ *)cap_cnode_cap_get_capCNodePtr(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap));
         cap_cnode_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap);
     }
 
     /* VSpace root */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) != cap_null_cap) {
-        printf("vspace: %p_pd\n",
-               cap_vtable_cap_get_vspace_root_fp(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) != cap_null_cap) {
+        چاپ_کړه("vspace: %p_pd\n",
+               cap_vtable_cap_get_vspace_ریښه_fp(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
     }
 
     /* IPC buffer cap slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbBuffer)->cap) != cap_null_cap) {
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcb_بفر)->cap) != cap_null_cap) {
         /* TBD: print out the bound vcpu */
-        print_ipc_buffer_slot(tcb);
+        print_ipc_بفر_خونه(tcb);
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_KERNEL_MCS
 
     /* Fault endpoint slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap) != cap_null_cap) {
-        printf("fault_ep_slot: %p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap));
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap) != cap_null_cap) {
+        چاپ_کړه("fault_ep_slot: %p_ep ",
+               (فراغ *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap));
         cap_ep_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap);
     }
 
     /* sc */
-    if (tcb->tcbSchedContext) {
-        printf("sc_slot: %p_sc\n", tcb->tcbSchedContext);
+    إذا (tcb->tcbSchedContext) {
+        چاپ_کړه("sc_slot: %p_sc\n", tcb->tcbSchedContext);
     }
 
     /* Timeout endpoint slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap) != cap_null_cap) {
-        printf("temp_fault_ep_slot: %p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap));
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap) != cap_null_cap) {
+        چاپ_کړه("temp_fault_ep_slot: %p_ep ",
+               (فراغ *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap));
         cap_ep_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap);
     }
 
-# else
+# وإلا
     /* Reply cap slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap) != cap_null_cap) {
-        printf("reply_slot: %p_reply\n",
-               (void *)cap_reply_cap_get_capTCBPtr(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap));
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcb_ځواب)->cap) != cap_null_cap) {
+        چاپ_کړه("reply_slot: %p_reply\n",
+               (فراغ *)cap_ځواب_cap_get_cap_TCBPtr(TCB_PTR_CTE_PTR(tcb, tcb_ځواب)->cap));
     }
 
     /* TCB of most recent IPC sender */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap) != cap_null_cap) {
+    إذا (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap) != cap_null_cap) {
         tcb_t *caller = TCB_PTR(cap_thread_cap_get_capTCBPtr(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap));
-        printf("caller_slot: %p_tcb\n", caller);
+        چاپ_کړه("caller_slot: %p_tcb\n", caller);
     }
-#endif /* CONFIG_KERNEL_MCS */
-    printf("}\n");
+#د_که_پای /* CONFIG_KERNEL_MCS */
+    چاپ_کړه("}\n");
 }
 
 /* TBD: deal with nested cnodes */
-void obj_cnode_print_slots(tcb_t *tcb)
+فراغ obj_cnode_print_slots(tcb_t *tcb)
 {
-    cap_t root = TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap;
-    if (cap_get_capType(root) != cap_cnode_cap) {
-        return;
+    cap_t ریښه = TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap;
+    إذا (cap_get_capType(ریښه) != cap_cnode_cap) {
+        أرجع;
     }
 
-    word_t radix = cap_cnode_cap_get_capCNodeRadix(root);
-    if (seen(root)) {
-        return;
+    کلمه_t radix = cap_cnode_cap_get_capCNodeRadix(ریښه);
+    إذا (کتل_شوی(ریښه)) {
+        أرجع;
     }
-    add_to_seen(root);
+    جمع_کړه_منزل_کتل_شوی(ریښه);
 
-    printf("%p_cnode {\n", (void *)cap_cnode_cap_get_capCNodePtr(root));
+    چاپ_کړه("%p_cnode {\n", (فراغ *)cap_cnode_cap_get_capCNodePtr(ریښه));
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
-        lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) != cap_null_cap) {
-            printf("0x%x: ", i);
+    لكل (uint32_t i = 0; i < (1 << radix); i++) {
+        lookup_Cap_And_خونه_ret_t c = lookup_Cap_And_خونه(tcb, i);
+        إذا (cap_get_capType(c.cap) != cap_null_cap) {
+            چاپ_کړه("0x%x: ", i);
             print_cap(c.cap);
         }
     }
-    printf("}\n");
+    چاپ_کړه("}\n");
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
-        lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) == cap_irq_handler_cap) {
+    لكل (uint32_t i = 0; i < (1 << radix); i++) {
+        lookup_Cap_And_خونه_ret_t c = lookup_Cap_And_خونه(tcb, i);
+        إذا (cap_get_capType(c.cap) == cap_irq_handler_cap) {
             /* TBD: should instead print it from IRQNode */
             obj_irq_print_slots(c.cap);
         }
     }
 }
 
-void obj_irq_print_maps(void)
+فراغ obj_irq_print_maps(فراغ)
 {
-    printf("irq maps {\n");
+    چاپ_کړه("irq maps {\n");
 
-    for (seL4_Word target = 0; target < CONFIG_MAX_NUM_NODES; target++) {
-        for (unsigned i = 0; i <= maxIRQ; i++) {
-            irq_t irq = CORE_IRQ_TO_IRQT(target, i);
-            if (isIRQActive(irq)) {
-                cap_t cap = intStateIRQNode[IRQT_TO_IDX(irq)].cap;
-                if (cap_get_capType(cap) != cap_null_cap) {
-                    printf("%d: 0x%lx_%lu_irq\n",
+    لكل (se_L4_کلمه موخه = 0; موخه < CONFIG_MAX_عدد_NODES; موخه++) {
+        لكل (بینښه i = 0; i <= maxIRQ; i++) {
+            irq_t irq = CORE_IRQ_منزل_IRQT(موخه, i);
+            إذا (isIRQActive(irq)) {
+                cap_t cap = intStateIRQNode[IRQT_منزل_IDX(irq)].cap;
+                إذا (cap_get_capType(cap) != cap_null_cap) {
+                    چاپ_کړه("%d: 0x%lx_%lu_irq\n",
                            i,
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
-                           (long unsigned int)irq.irq,
-#else
-                           (long unsigned int)irq,
-#endif
-                           (long unsigned int)target);
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
+                           (اوږد بینښه صحيح)irq.irq,
+#وإلا
+                           (اوږد بینښه صحيح)irq,
+#د_که_پای
+                           (اوږد بینښه صحيح)موخه);
                 }
             }
         }
     }
-    printf("}\n");
+    چاپ_کړه("}\n");
 }
 
-void obj_irq_print_slots(cap_t irq_cap)
+فراغ obj_irq_print_slots(cap_t irq_cap)
 {
-    irq_t irq = IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(irq_cap));
-    if (isIRQActive(irq)) {
-        printf("0x%lx_%lu_irq {\n",
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
-               (long unsigned int)irq.irq,
-#else
-               (long unsigned int)irq,
-#endif
-               (long unsigned int)IRQT_TO_CORE(irq));
-        cap_t ntfn_cap = intStateIRQNode[IRQT_TO_IDX(irq)].cap;
-        if (cap_get_capType(ntfn_cap) != cap_null_cap) {
-            printf("0x0: ");
+    irq_t irq = IDX_منزل_IRQT(cap_irq_handler_cap_get_capIRQ(irq_cap));
+    إذا (isIRQActive(irq)) {
+        چاپ_کړه("0x%lx_%lu_irq {\n",
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
+               (اوږد بینښه صحيح)irq.irq,
+#وإلا
+               (اوږد بینښه صحيح)irq,
+#د_که_پای
+               (اوږد بینښه صحيح)IRQT_منزل_CORE(irq));
+        cap_t ntfn_cap = intStateIRQNode[IRQT_منزل_IDX(irq)].cap;
+        إذا (cap_get_capType(ntfn_cap) != cap_null_cap) {
+            چاپ_کړه("0x0: ");
             print_cap(ntfn_cap);
         }
-        printf("}\n");
+        چاپ_کړه("}\n");
     }
 }
 
-void print_objects(void)
+فراغ print_objects(فراغ)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    لكل (tcb_t *curr = غوټه_STATE(ksDebugTCBs); curr != عدم; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_بل) {
+        إذا (ریښه_or_idle_tcb(curr)) {
+            استمر;
         }
         /* print the contains of the tcb's vtable as objects */
         obj_tcb_print_vtable(curr);
     }
 
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    لكل (tcb_t *curr = غوټه_STATE(ksDebugTCBs); curr != عدم; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_بل) {
+        إذا (ریښه_or_idle_tcb(curr)) {
+            استمر;
         }
 
         /* print the tcb as objects */
-        printf("%p_tcb = tcb ", curr);
+        چاپ_کړه("%p_tcb = tcb ", curr);
         obj_tcb_print_attrs(curr);
 
         /* print the contains of the tcb's ctable as objects */
-        if (cap_get_capType(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap) == cap_cnode_cap) {
+        إذا (cap_get_capType(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap) == cap_cnode_cap) {
             obj_tcb_print_cnodes(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap, curr);
         }
     }
 }
 
-void print_caps(void)
+فراغ print_caps(فراغ)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    لكل (tcb_t *curr = غوټه_STATE(ksDebugTCBs); curr != عدم; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_بل) {
+        إذا (ریښه_or_idle_tcb(curr)) {
+            استمر;
         }
         obj_cnode_print_slots(curr);
         obj_vtable_print_slots(curr);
@@ -403,116 +403,116 @@ void print_caps(void)
     }
 }
 
-void print_cap(cap_t cap)
+فراغ print_cap(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap: {
-        printf("%p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(cap));
+    بدل (cap_get_capType(cap)) {
+    حالة cap_endpoint_cap: {
+        چاپ_کړه("%p_ep ",
+               (فراغ *)cap_endpoint_cap_get_capEPPtr(cap));
         cap_ep_print_attrs(cap);
-        break;
+        اكسر;
     }
-    case cap_notification_cap: {
-        printf("%p_notification ",
-               (void *)cap_notification_cap_get_capNtfnPtr(cap));
+    حالة cap_notification_cap: {
+        چاپ_کړه("%p_notification ",
+               (فراغ *)cap_notification_cap_get_capNtfnPtr(cap));
         cap_ntfn_print_attrs(cap);
-        break;
+        اكسر;
     }
-    case cap_untyped_cap: {
-        printf("%p_untyped\n",
-               (void *)cap_untyped_cap_get_capPtr(cap));
-        break;
+    حالة cap_untyped_cap: {
+        چاپ_کړه("%p_untyped\n",
+               (فراغ *)cap_untyped_cap_get_capPtr(cap));
+        اكسر;
     }
-    case cap_thread_cap: {
-        printf("%p_tcb\n",
-               (void *)cap_thread_cap_get_capTCBPtr(cap));
-        break;
+    حالة cap_thread_cap: {
+        چاپ_کړه("%p_tcb\n",
+               (فراغ *)cap_thread_cap_get_capTCBPtr(cap));
+        اكسر;
     }
-    case cap_cnode_cap: {
-        printf("%p_cnode ",
-               (void *)cap_cnode_cap_get_capCNodePtr(cap));
+    حالة cap_cnode_cap: {
+        چاپ_کړه("%p_cnode ",
+               (فراغ *)cap_cnode_cap_get_capCNodePtr(cap));
         cap_cnode_print_attrs(cap);
-        break;
+        اكسر;
     }
-#ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap: {
-        printf("%p_reply\n",
-               (void *)cap_reply_cap_get_capReplyPtr(cap));
-        break;
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    حالة cap_ځواب_cap: {
+        چاپ_کړه("%p_reply\n",
+               (فراغ *)cap_ځواب_cap_get_cap_ځواب_Ptr(cap));
+        اكسر;
     }
-    case cap_sched_context_cap: {
-        printf("%p_sc\n",
-               (void *)cap_sched_context_cap_get_capSCPtr(cap));
-        break;
+    حالة cap_sched_context_cap: {
+        چاپ_کړه("%p_sc\n",
+               (فراغ *)cap_sched_context_cap_get_capSCPtr(cap));
+        اكسر;
     }
-    case cap_sched_control_cap: {
-        printf("%lu_sched_control\n",
-               (long unsigned int)cap_sched_control_cap_get_core(cap));
-        break;
+    حالة cap_sched_control_cap: {
+        چاپ_کړه("%lu_sched_control\n",
+               (اوږد بینښه صحيح)cap_sched_control_cap_get_core(cap));
+        اكسر;
     }
-#endif
-    case cap_irq_control_cap: {
-        printf("irq_control\n"); /* only one in the system */
-        break;
+#د_که_پای
+    حالة cap_irq_control_cap: {
+        چاپ_کړه("irq_control\n"); /* only one in the system */
+        اكسر;
     }
-    case cap_irq_handler_cap: {
-        printf("%p_%lu_irq\n",
-               (void *)cap_irq_handler_cap_get_capIRQ(cap),
-               (long unsigned int)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
-        break;
+    حالة cap_irq_handler_cap: {
+        چاپ_کړه("%p_%lu_irq\n",
+               (فراغ *)cap_irq_handler_cap_get_capIRQ(cap),
+               (اوږد بینښه صحيح)IRQT_منزل_CORE(IDX_منزل_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
+        اكسر;
     }
-    default: {
+    افتراضي: {
         print_cap_arch(cap);
-        break;
+        اكسر;
     }
     }
 }
 
-void print_object(cap_t cap)
+فراغ print_object(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap: {
-        printf("%p_ep = ep\n",
-               (void *)cap_endpoint_cap_get_capEPPtr(cap));
-        break;
+    بدل (cap_get_capType(cap)) {
+    حالة cap_endpoint_cap: {
+        چاپ_کړه("%p_ep = ep\n",
+               (فراغ *)cap_endpoint_cap_get_capEPPtr(cap));
+        اكسر;
     }
-    case cap_notification_cap: {
-        printf("%p_notification = notification\n",
-               (void *)cap_notification_cap_get_capNtfnPtr(cap));
-        break;
+    حالة cap_notification_cap: {
+        چاپ_کړه("%p_notification = notification\n",
+               (فراغ *)cap_notification_cap_get_capNtfnPtr(cap));
+        اكسر;
     }
-    case cap_thread_cap: {
+    حالة cap_thread_cap: {
         /* this object has already got handle by `print_objects` */
-        break;
+        اكسر;
     }
-    case cap_cnode_cap: {
-        assert(!"should not happend");
+    حالة cap_cnode_cap: {
+        أكد(!"should not happend");
     }
-#ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap: {
-        printf("%p_reply = rtreply\n",
-               (void *)cap_reply_cap_get_capReplyPtr(cap));
-        break;
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    حالة cap_ځواب_cap: {
+        چاپ_کړه("%p_reply = rtreply\n",
+               (فراغ *)cap_ځواب_cap_get_cap_ځواب_Ptr(cap));
+        اكسر;
     }
-    case cap_sched_context_cap: {
-        printf("%p_sc = sc ",
-               (void *)cap_sched_context_cap_get_capSCPtr(cap));
+    حالة cap_sched_context_cap: {
+        چاپ_کړه("%p_sc = sc ",
+               (فراغ *)cap_sched_context_cap_get_capSCPtr(cap));
         obj_sc_print_attrs(cap);
-        break;
+        اكسر;
     }
-#endif
-    case cap_irq_handler_cap: {
-        printf("%p_%lu_irq = irq\n",
-               (void *)cap_irq_handler_cap_get_capIRQ(cap),
-               (long unsigned int)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
-        break;
+#د_که_پای
+    حالة cap_irq_handler_cap: {
+        چاپ_کړه("%p_%lu_irq = irq\n",
+               (فراغ *)cap_irq_handler_cap_get_capIRQ(cap),
+               (اوږد بینښه صحيح)IRQT_منزل_CORE(IDX_منزل_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
+        اكسر;
     }
-    default:
+    افتراضي:
         print_object_arch(cap);
-        break;
+        اكسر;
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#د_که_پای /* CONFIG_PRINTING */
 
-#endif /* CONFIG_DEBUG_BUILD */
+#د_که_پای /* CONFIG_DEBUG_BUILD */

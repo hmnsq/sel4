@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#ifdef CONFIG_ENABLE_BENCHMARK
+#که_تعریف_شوی CONFIG_ENABLE_BENCHMARK
 
-#endif /* CONFIG_ENABLE_BENCHMARK */
+#د_که_پای /* CONFIG_ENABLE_BENCHMARK */
 
 

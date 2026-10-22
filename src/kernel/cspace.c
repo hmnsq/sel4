@@ -4,190 +4,190 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <object.h>
-#include <api/failures.h>
-#include <kernel/thread.h>
-#include <kernel/cspace.h>
-#include <model/statedata.h>
-#include <arch/machine.h>
+#ضمن <types.h>
+#ضمن <object.h>
+#ضمن <api/failures.h>
+#ضمن <kernel/thread.h>
+#ضمن <kernel/cspace.h>
+#ضمن <model/statedata.h>
+#ضمن <arch/machine.h>
 
 lookupCap_ret_t lookupCap(tcb_t *thread, cptr_t cPtr)
 {
-    lookupSlot_raw_ret_t lu_ret;
+    lookup_خونه_raw_ret_t lu_ret;
     lookupCap_ret_t ret;
 
-    lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        ret.status = lu_ret.status;
+    lu_ret = lookup_خونه(thread, cPtr);
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
+        ret.حالت = lu_ret.حالت;
         ret.cap = cap_null_cap_new();
-        return ret;
+        أرجع ret;
     }
 
-    ret.status = EXCEPTION_NONE;
-    ret.cap = lu_ret.slot->cap;
-    return ret;
+    ret.حالت = EXCEPTION_NONE;
+    ret.cap = lu_ret.خونه->cap;
+    أرجع ret;
 }
 
-lookupCapAndSlot_ret_t lookupCapAndSlot(tcb_t *thread, cptr_t cPtr)
+lookup_Cap_And_خونه_ret_t lookup_Cap_And_خونه(tcb_t *thread, cptr_t cPtr)
 {
-    lookupSlot_raw_ret_t lu_ret;
-    lookupCapAndSlot_ret_t ret;
+    lookup_خونه_raw_ret_t lu_ret;
+    lookup_Cap_And_خونه_ret_t ret;
 
-    lu_ret = lookupSlot(thread, cPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        ret.status = lu_ret.status;
-        ret.slot = NULL;
+    lu_ret = lookup_خونه(thread, cPtr);
+    إذا (unlikely(lu_ret.حالت != EXCEPTION_NONE)) {
+        ret.حالت = lu_ret.حالت;
+        ret.خونه = عدم;
         ret.cap = cap_null_cap_new();
-        return ret;
+        أرجع ret;
     }
 
-    ret.status = EXCEPTION_NONE;
-    ret.slot = lu_ret.slot;
-    ret.cap = lu_ret.slot->cap;
-    return ret;
+    ret.حالت = EXCEPTION_NONE;
+    ret.خونه = lu_ret.خونه;
+    ret.cap = lu_ret.خونه->cap;
+    أرجع ret;
 }
 
-lookupSlot_raw_ret_t lookupSlot(tcb_t *thread, cptr_t capptr)
+lookup_خونه_raw_ret_t lookup_خونه(tcb_t *thread, cptr_t capptr)
 {
-    cap_t threadRoot;
-    resolveAddressBits_ret_t res_ret;
-    lookupSlot_raw_ret_t ret;
+    cap_t thread_ریښه;
+    resolve_پته_بټونه_ret_t res_ret;
+    lookup_خونه_raw_ret_t ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
-    res_ret = resolveAddressBits(threadRoot, capptr, wordBits);
+    thread_ریښه = TCB_PTR_CTE_PTR(thread, tcbCTable)->cap;
+    res_ret = resolve_پته_بټونه(thread_ریښه, capptr, کلمه_بټونه);
 
-    ret.status = res_ret.status;
-    ret.slot = res_ret.slot;
-    return ret;
+    ret.حالت = res_ret.حالت;
+    ret.خونه = res_ret.خونه;
+    أرجع ret;
 }
 
-lookupSlot_ret_t lookupSlotForCNodeOp(bool_t isSource, cap_t root, cptr_t capptr,
-                                      word_t depth)
+lookup_خونه_ret_t lookup_خونه_For_CNode_Op(bool_t is_سرچینه, cap_t ریښه, cptr_t capptr,
+                                      کلمه_t ژوروالی)
 {
-    resolveAddressBits_ret_t res_ret;
-    lookupSlot_ret_t ret;
+    resolve_پته_بټونه_ret_t res_ret;
+    lookup_خونه_ret_t ret;
 
-    ret.slot = NULL;
+    ret.خونه = عدم;
 
-    if (unlikely(cap_get_capType(root) != cap_cnode_cap)) {
+    إذا (unlikely(cap_get_capType(ریښه) != cap_cnode_cap)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
-        current_lookup_fault = lookup_fault_invalid_root_new();
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        current_syscall_error.failed_Lookup_Was_سرچینه = is_سرچینه;
+        current_lookup_fault = lookup_fault_invalid_ریښه_new();
+        ret.حالت = EXCEPTION_SYSCALL_ERROR;
+        أرجع ret;
     }
 
-    if (unlikely(depth < 1 || depth > wordBits)) {
+    إذا (unlikely(ژوروالی < 1 || ژوروالی > کلمه_بټونه)) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = wordBits;
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        current_syscall_error.rangeErrorMax = کلمه_بټونه;
+        ret.حالت = EXCEPTION_SYSCALL_ERROR;
+        أرجع ret;
     }
-    res_ret = resolveAddressBits(root, capptr, depth);
-    if (unlikely(res_ret.status != EXCEPTION_NONE)) {
+    res_ret = resolve_پته_بټونه(ریښه, capptr, ژوروالی);
+    إذا (unlikely(res_ret.حالت != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
+        current_syscall_error.failed_Lookup_Was_سرچینه = is_سرچینه;
         /* current_lookup_fault will have been set by resolveAddressBits */
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        ret.حالت = EXCEPTION_SYSCALL_ERROR;
+        أرجع ret;
     }
 
-    if (unlikely(res_ret.bitsRemaining != 0)) {
+    إذا (unlikely(res_ret.بټونه_پاتې_شوی != 0)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = isSource;
+        current_syscall_error.failed_Lookup_Was_سرچینه = is_سرچینه;
         current_lookup_fault =
-            lookup_fault_depth_mismatch_new(0, res_ret.bitsRemaining);
-        ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+            lookup_fault_ژوروالی_mismatch_new(0, res_ret.بټونه_پاتې_شوی);
+        ret.حالت = EXCEPTION_SYSCALL_ERROR;
+        أرجع ret;
     }
 
-    ret.slot = res_ret.slot;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.خونه = res_ret.خونه;
+    ret.حالت = EXCEPTION_NONE;
+    أرجع ret;
 }
 
-lookupSlot_ret_t lookupSourceSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_خونه_ret_t lookup_سرچینه_خونه(cap_t ریښه, cptr_t capptr, کلمه_t ژوروالی)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    أرجع lookup_خونه_For_CNode_Op(true, ریښه, capptr, ژوروالی);
 }
 
-lookupSlot_ret_t lookupTargetSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_خونه_ret_t lookup_موخه_خونه(cap_t ریښه, cptr_t capptr, کلمه_t ژوروالی)
 {
-    return lookupSlotForCNodeOp(false, root, capptr, depth);
+    أرجع lookup_خونه_For_CNode_Op(false, ریښه, capptr, ژوروالی);
 }
 
-lookupSlot_ret_t lookupPivotSlot(cap_t root, cptr_t capptr, word_t depth)
+lookup_خونه_ret_t lookup_محور_خونه(cap_t ریښه, cptr_t capptr, کلمه_t ژوروالی)
 {
-    return lookupSlotForCNodeOp(true, root, capptr, depth);
+    أرجع lookup_خونه_For_CNode_Op(true, ریښه, capptr, ژوروالی);
 }
 
-resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap, cptr_t capptr, word_t n_bits)
+resolve_پته_بټونه_ret_t resolve_پته_بټونه(cap_t غوټه_Cap, cptr_t capptr, کلمه_t n_بټونه)
 {
-    resolveAddressBits_ret_t ret;
-    word_t radixBits, guardBits, levelBits, guard;
-    word_t capGuard, offset;
-    cte_t *slot;
+    resolve_پته_بټونه_ret_t ret;
+    کلمه_t radix_بټونه, guard_بټونه, level_بټونه, guard;
+    کلمه_t capGuard, دننه_واټن;
+    cte_t *خونه;
 
-    ret.bitsRemaining = n_bits;
-    ret.slot = NULL;
+    ret.بټونه_پاتې_شوی = n_بټونه;
+    ret.خونه = عدم;
 
-    if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+    إذا (unlikely(cap_get_capType(غوټه_Cap) != cap_cnode_cap)) {
+        current_lookup_fault = lookup_fault_invalid_ریښه_new();
+        ret.حالت = EXCEPTION_LOOKUP_FAULT;
+        أرجع ret;
     }
 
-    while (1) {
-        radixBits = cap_cnode_cap_get_capCNodeRadix(nodeCap);
-        guardBits = cap_cnode_cap_get_capCNodeGuardSize(nodeCap);
-        levelBits = radixBits + guardBits;
+    طالما (1) {
+        radix_بټونه = cap_cnode_cap_get_capCNodeRadix(غوټه_Cap);
+        guard_بټونه = cap_cnode_cap_get_cap_CNode_Guard_اندازه(غوټه_Cap);
+        level_بټونه = radix_بټونه + guard_بټونه;
 
         /* Haskell error: "All CNodes must resolve bits" */
-        assert(levelBits != 0);
+        أكد(level_بټونه != 0);
 
-        capGuard = cap_cnode_cap_get_capCNodeGuard(nodeCap);
+        capGuard = cap_cnode_cap_get_capCNodeGuard(غوټه_Cap);
 
         /* The MASK(wordRadix) here is to avoid the case where
          * n_bits = wordBits (=2^wordRadix) and guardBits = 0, as it violates
          * the C spec to shift right by more than wordBits-1.
          */
-        guard = (capptr >> ((n_bits - guardBits) & MASK(wordRadix))) & MASK(guardBits);
-        if (unlikely(guardBits > n_bits || guard != capGuard)) {
+        guard = (capptr >> ((n_بټونه - guard_بټونه) & ماسک(کلمه_Radix))) & ماسک(guard_بټونه);
+        إذا (unlikely(guard_بټونه > n_بټونه || guard != capGuard)) {
             current_lookup_fault =
-                lookup_fault_guard_mismatch_new(capGuard, n_bits, guardBits);
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+                lookup_fault_guard_mismatch_new(capGuard, n_بټونه, guard_بټونه);
+            ret.حالت = EXCEPTION_LOOKUP_FAULT;
+            أرجع ret;
         }
 
-        if (unlikely(levelBits > n_bits)) {
+        إذا (unlikely(level_بټونه > n_بټونه)) {
             current_lookup_fault =
-                lookup_fault_depth_mismatch_new(levelBits, n_bits);
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+                lookup_fault_ژوروالی_mismatch_new(level_بټونه, n_بټونه);
+            ret.حالت = EXCEPTION_LOOKUP_FAULT;
+            أرجع ret;
         }
 
-        offset = (capptr >> (n_bits - levelBits)) & MASK(radixBits);
-        slot = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap)) + offset;
+        دننه_واټن = (capptr >> (n_بټونه - level_بټونه)) & ماسک(radix_بټونه);
+        خونه = CTE_PTR(cap_cnode_cap_get_capCNodePtr(غوټه_Cap)) + دننه_واټن;
 
-        if (likely(n_bits == levelBits)) {
-            ret.status = EXCEPTION_NONE;
-            ret.slot = slot;
-            ret.bitsRemaining = 0;
-            return ret;
+        إذا (likely(n_بټونه == level_بټونه)) {
+            ret.حالت = EXCEPTION_NONE;
+            ret.خونه = خونه;
+            ret.بټونه_پاتې_شوی = 0;
+            أرجع ret;
         }
 
         /** GHOSTUPD: "(\<acute>levelBits > 0, id)" */
 
-        n_bits -= levelBits;
-        nodeCap = slot->cap;
+        n_بټونه -= level_بټونه;
+        غوټه_Cap = خونه->cap;
 
-        if (unlikely(cap_get_capType(nodeCap) != cap_cnode_cap)) {
-            ret.status = EXCEPTION_NONE;
-            ret.slot = slot;
-            ret.bitsRemaining = n_bits;
-            return ret;
+        إذا (unlikely(cap_get_capType(غوټه_Cap) != cap_cnode_cap)) {
+            ret.حالت = EXCEPTION_NONE;
+            ret.خونه = خونه;
+            ret.بټونه_پاتې_شوی = n_بټونه;
+            أرجع ret;
         }
     }
 }

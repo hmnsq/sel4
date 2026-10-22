@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/model/statedata.h>
+#ضمن <arch/model/statedata.h>
 
 /* The privileged kernel mapping PD & PT */
-pml4e_t x64KSKernelPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits)) VISIBLE;
-pdpte_t x64KSKernelPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-#ifdef CONFIG_HUGE_PAGE
-pde_t x64KSKernelPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#else
-pde_t x64KSKernelPDs[BIT(PDPT_INDEX_BITS)][BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
-pte_t x64KSKernelPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
+pml4e_t x64KSKernelPML4[بټ(PML4_شاخص_بټونه)] ALIGN(بټ(se_L4_PML4_بټونه)) VISIBLE;
+pdpte_t x64KSKernelPDPT[بټ(PDPT_شاخص_بټونه)] ALIGN(بټ(seL4_PDPTBits));
+#که_تعریف_شوی CONFIG_HUGE_پاڼه
+pde_t x64KSKernelPD[بټ(PD_شاخص_بټونه)] ALIGN(بټ(se_L4_پاڼه_Dir_بټونه));
+#وإلا
+pde_t x64KSKernelPDs[بټ(PDPT_شاخص_بټونه)][بټ(PD_شاخص_بټونه)] ALIGN(بټ(se_L4_پاڼه_Dir_بټونه));
+#د_که_پای
+pte_t x64KSKernelPT[بټ(PT_شاخص_بټونه)] ALIGN(بټ(se_L4_پاڼه_جدول_بټونه));
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-pml4e_t x64KSSKIMPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits));
-pdpte_t x64KSSKIMPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-pde_t x64KSSKIMPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
+#که_تعریف_شوی CONFIG_KERNEL_SKIM_کړکۍ
+pml4e_t x64KSSKIMPML4[بټ(PML4_شاخص_بټونه)] ALIGN(بټ(se_L4_PML4_بټونه));
+pdpte_t x64KSSKIMPDPT[بټ(PDPT_شاخص_بټونه)] ALIGN(بټ(seL4_PDPTBits));
+pde_t x64KSSKIMPD[بټ(PD_شاخص_بټونه)] ALIGN(بټ(se_L4_پاڼه_Dir_بټونه));
+#د_که_پای
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-UP_STATE_DEFINE(word_t, x64KSCurrentUserCR3);
-#else
-UP_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
-#endif
+#که_تعریف_شوی CONFIG_KERNEL_SKIM_کړکۍ
+پورته_STATE_DEFINE(کلمه_t, x64KSCurrentUserCR3);
+#وإلا
+پورته_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
+#د_که_پای
 
-word_t x64KSIRQStack[CONFIG_MAX_NUM_NODES][IRQ_STACK_SIZE + 2] ALIGN(64) VISIBLE SKIM_BSS;
+کلمه_t x64KSIRQStack[CONFIG_MAX_عدد_NODES][IRQ_ډېری_اندازه + 2] ALIGN(64) VISIBLE SKIM_BSS;

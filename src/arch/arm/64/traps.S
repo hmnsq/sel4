@@ -166,7 +166,7 @@ END_FUNC(cur_el_sync)
 /*
  * This is only called if ksCurThread is idle thread.
  *
- * No need to store the state of idle thread and simply call c_handle_interrupt to
+ * No need to store the state of idle thread and simply نادي c_handle_interrupt to
  * activate ksCurThread when returning from interrupt as long as idle thread is stateless.
  */
 BEGIN_FUNC(cur_el_irq)

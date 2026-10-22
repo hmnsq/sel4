@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#ضمن <config.h>
+#ضمن <util.h>
+#ضمن <api/types.h>
+#ضمن <arch/types.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/object/structures.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/hardware.h>
 
-#ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
-#endif
+#که_تعریف_شوی CONFIG_ARM_SMMU
+#ضمن <arch/object/smmu.h>
+#د_که_پای
 
 
 asid_pool_t *armKSASIDTable[nASIDPools];
@@ -82,50 +82,50 @@ asid_pool_t *armKSASIDTable[nASIDPools];
  * applies.
  */
 
-vspace_root_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
-pte_t armKSGlobalKernelPGD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+vspace_ریښه_t armKSGlobalUserVSpace[بټ(se_L4_VSpace_شاخص_بټونه)] ALIGN_BSS(بټ(se_L4_VSpace_بټونه));
+pte_t armKSGlobalKernelPGD[بټ(PT_شاخص_بټونه)] ALIGN_BSS(بټ(se_L4_پاڼه_جدول_بټونه));
 
-pte_t armKSGlobalKernelPUD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPDs[BIT(PT_INDEX_BITS)][BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPUD[بټ(PT_شاخص_بټونه)] ALIGN_BSS(بټ(se_L4_پاڼه_جدول_بټونه));
+pte_t armKSGlobalKernelPDs[بټ(PT_شاخص_بټونه)][بټ(PT_شاخص_بټونه)] ALIGN_BSS(بټ(se_L4_پاڼه_جدول_بټونه));
+pte_t armKSGlobalKernelPT[بټ(PT_شاخص_بټونه)] ALIGN_BSS(بټ(se_L4_پاڼه_جدول_بټونه));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][BIT(PT_INDEX_BITS) - 2];
+#که_تعریف_شوی CONFIG_KERNEL_LOG_بفر
+pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[بټ(PT_شاخص_بټونه) - 1][بټ(PT_شاخص_بټونه) - 2];
 compile_assert(log_pude_is_correct_preallocated_pude,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+               GET_KPT_شاخص(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == بټ(PT_شاخص_بټونه) - 1);
 compile_assert(log_pde_is_correct_preallocated_pde,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == BIT(PT_INDEX_BITS) - 2);
-#endif
+               GET_KPT_شاخص(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == بټ(PT_شاخص_بټونه) - 2);
+#د_که_پای
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-UP_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
-UP_STATE_DEFINE(bool_t, armHSVCPUActive);
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+پورته_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
+پورته_STATE_DEFINE(bool_t, armHSVCPUActive);
 
 /* The hardware VMID to virtual ASID mapping table.
  * The ARMv8 supports 8-bit VMID which is used as logical ASID
  * when the kernel runs in EL2.
  */
-asid_t armKSHWASIDTable[BIT(hwASIDBits)];
+asid_t armKSHWASIDTable[بټ(hwASIDBits)];
 hw_asid_t armKSNextASID = hwASIDMin;
-#endif
+#د_که_پای
 
-#ifdef CONFIG_ARM_SMMU
+#که_تعریف_شوی CONFIG_ARM_SMMU
 /*recording the state of created SID caps*/
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
-cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+cte_t smmuStateSIDNode[بټ(SMMU_SID_CNODE_خونه_بټونه)] ALIGN(بټ(SMMU_SID_CNODE_خونه_بټونه + se_L4_خونه_بټونه));
+compile_assert(smmu_State_SIDCNode_اندازه, حجم(smmuStateSIDNode) >= ((SMMU_MAX_SID) * حجم(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
-cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+cte_t smmuStateCBNode[بټ(SMMU_CB_CNODE_خونه_بټونه)] ALIGN(بټ(SMMU_CB_CNODE_خونه_بټونه + se_L4_خونه_بټونه));
+compile_assert(smmu_State_CBCNode_اندازه, حجم(smmuStateCBNode) >= ((SMMU_MAX_CB) * حجم(cte_t)));
 /*recording the context bank to ASID relationship*/
-asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
-#endif
+asid_t smmu_State_CBAsid_جدول[SMMU_MAX_CB];
+#د_که_پای
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#که_تعریف_شوی ARM_بنسټ_CP14_SAVE_AND_RESTORE
 /* Null state for the Debug coprocessor's break/watchpoint registers */
 user_breakpoint_state_t armKSNullBreakpointState;
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#د_که_پای /* ARM_BASE_CP14_SAVE_AND_RESTORE */

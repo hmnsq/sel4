@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <benchmark/benchmark.h>
-#include <arch/benchmark.h>
+#ضمن <benchmark/benchmark.h>
+#ضمن <arch/benchmark.h>
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
-bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
+#إذا CONFIG_MAX_عدد_TRACE_POINTS > 0
+timestamp_t ksEntries[CONFIG_MAX_عدد_TRACE_POINTS];
+bool_t ksStarted[CONFIG_MAX_عدد_TRACE_POINTS];
 timestamp_t ksExit;
-seL4_Word ksLogIndex = 0;
-seL4_Word ksLogIndexFinalized = 0;
-#endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
+se_L4_کلمه ks_Log_شاخص = 0;
+se_L4_کلمه ks_Log_شاخص_Finalized = 0;
+#د_که_پای /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-UP_STATE_DEFINE(uint64_t, ccnt_num_overflows);
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+#که_تعریف_شوی CONFIG_ARM_ENABLE_PMU_ډکېدنه_مداخله
+پورته_STATE_DEFINE(uint64_t, ccnt_عدد_overflows);
+#د_که_پای /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
-void arm_init_ccnt(void)
+#که_تعریف_شوی CONFIG_ENABLE_BENCHMARKS
+فراغ arm_init_ccnt(فراغ)
 {
 
-    uint32_t val = (BIT(PMCR_ENABLE) | BIT(PMCR_CCNT_RESET) | BIT(PMCR_ECNT_RESET));
-    SYSTEM_WRITE_WORD(PMCR, val);
+    uint32_t val = (بټ(PMCR_ENABLE) | بټ(PMCR_CCNT_RESET) | بټ(PMCR_ECNT_RESET));
+    SYSTEM_WRITE_کلمه(PMCR, val);
 
-#ifdef PMCNTENSET
+#که_تعریف_شوی PMCNTENSET
     /* turn on the cycle counter */
-    SYSTEM_WRITE_WORD(PMCNTENSET, BIT(CCNT_INDEX));
-#endif
+    SYSTEM_WRITE_کلمه(PMCNTENSET, بټ(CCNT_شاخص));
+#د_که_پای
 
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-    armv_enableOverflowIRQ();
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+#که_تعریف_شوی CONFIG_ARM_ENABLE_PMU_ډکېدنه_مداخله
+    armv_enable_ډکېدنه_IRQ();
+#د_که_پای /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 }
-#endif
+#د_که_پای

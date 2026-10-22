@@ -4,116 +4,116 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/traps.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/registerset.h>
-#include <api/syscall.h>
-#include <machine/fpu.h>
-#include <mode/machine/debug.h>
+#ضمن <config.h>
+#ضمن <arch/kernel/traps.h>
+#ضمن <arch/object/vcpu.h>
+#ضمن <arch/machine/registerset.h>
+#ضمن <api/syscall.h>
+#ضمن <machine/fpu.h>
+#ضمن <mode/machine/debug.h>
 
-#include <sel4/benchmark_track_types.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <arch/machine.h>
+#ضمن <sel4/benchmark_track_types.h>
+#ضمن <benchmark/benchmark_track.h>
+#ضمن <benchmark/benchmark_utilisation.h>
+#ضمن <arch/machine.h>
 
-void VISIBLE NORETURN c_handle_undefined_instruction(void)
+فراغ VISIBLE NORETURN c_handle_undefined_instruction(فراغ)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    غوټه_قلف_SYS;
+    c_ثبت_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-#endif
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    ks_Kernel_ثبت.لار = ثبت_User_Level_Fault;
+    ks_Kernel_ثبت.کلمه = get_ثبتوونکی(غوټه_STATE(ksCurThread), بل_IP);
+#د_که_پای
 
     /* There's only one user-level fault on ARM, and the code is (0,0) */
-#ifdef CONFIG_ARCH_AARCH32
+#که_تعریف_شوی CONFIG_ARCH_AARCH32
     handleUserLevelFault(0, 0);
-#elif CONFIG_ARCH_AARCH64
-    word_t esr = getESR();
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+#وإلاإذا CONFIG_ARCH_AARCH64
+    کلمه_t esr = getESR();
+#که_تعریف_شوی CONFIG_HARDWARE_DEBUG_API
+    إذا (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
-#endif
+    } وإلا
+#د_که_پای
     {
         handleUserLevelFault(esr, 0);
     }
-#endif
+#د_که_پای
     restore_user_context();
     UNREACHABLE();
 }
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
-void NORETURN vm_fault_slowpath(vm_fault_type_t type)
+#که_تعریف_شوی CONFIG_EXCEPTION_FASTPATH
+فراغ NORETURN vm_fault_slowpath(vm_fault_type_t type)
 {
     handleVMFaultEvent(type);
     restore_user_context();
     UNREACHABLE();
 }
-#endif
+#د_که_پای
 
-static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
+ساكن مضمن فراغ NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    غوټه_قلف_SYS;
+    c_ثبت_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VMFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-    ksKernelEntry.is_fastpath = false;
-#endif
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    ks_Kernel_ثبت.لار = ثبت_VMFault;
+    ks_Kernel_ثبت.کلمه = get_ثبتوونکی(غوټه_STATE(ksCurThread), بل_IP);
+    ks_Kernel_ثبت.is_fastpath = false;
+#د_که_پای
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
+#که_تعریف_شوی CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# وإلا
     handleVMFaultEvent(type);
     restore_user_context();
-#endif
+#د_که_پای
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_data_fault(void)
+فراغ VISIBLE NORETURN c_handle_معلومات_fault(فراغ)
 {
-    c_handle_vm_fault(seL4_DataFault);
+    c_handle_vm_fault(se_L4_معلومات_Fault);
 }
 
-void VISIBLE NORETURN c_handle_instruction_fault(void)
+فراغ VISIBLE NORETURN c_handle_instruction_fault(فراغ)
 {
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+فراغ VISIBLE NORETURN c_handle_مداخله(فراغ)
 {
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
-    c_entry_hook();
+    غوټه_قلف_IRQ_IF(IRQT_منزل_IRQ(get_فعال_IRQ()) != irq_remote_call_ipi);
+    c_ثبت_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_Interrupt;
-    ksKernelEntry.word = IRQT_TO_IRQ(getActiveIRQ());
-    ksKernelEntry.core = CURRENT_CPU_INDEX();
-#endif
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    ks_Kernel_ثبت.لار = ثبت_مداخله;
+    ks_Kernel_ثبت.کلمه = IRQT_منزل_IRQ(get_فعال_IRQ());
+    ks_Kernel_ثبت.core = CURRENT_CPU_شاخص();
+#د_که_پای
 
-    handleInterruptEntry();
+    handle_مداخله_ثبت();
     restore_user_context();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+فراغ NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
+    إذا (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+        ks_Kernel_ثبت.لار = ثبت_Unknown_Syscall;
         /* ksKernelEntry.word word is already set to syscall */
-#endif /* TRACK_KERNEL_ENTRIES */
+#د_که_پای /* TRACK_KERNEL_ENTRIES */
         /* Contrary to the name, this handles all non-standard syscalls used in
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
+    } وإلا {
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+        ks_Kernel_ثبت.is_fastpath = 0;
+#د_که_پای /* TRACK KERNEL ENTRIES */
         handleSyscall(syscall);
     }
 
@@ -121,92 +121,92 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+فراغ VISIBLE c_handle_syscall(کلمه_t cptr, کلمه_t پیغام_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    غوټه_قلف_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
+    c_ثبت_hook();
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_پیل(cptr, پیغام_Info, syscall);
+    ks_Kernel_ثبت.is_fastpath = 0;
+#د_که_پای /* DEBUG */
 
     slowpath(syscall);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+#که_تعریف_شوی CONFIG_FASTPATH
+ALIGN(L1_CACHE_کرښه_اندازه)
+فراغ VISIBLE c_handle_fastpath_call(کلمه_t cptr, کلمه_t پیغام_Info)
 {
-    NODE_LOCK_SYS;
+    غوټه_قلف_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_ثبت_hook();
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_پیل(cptr, پیغام_Info, SysCall);
+    ks_Kernel_ثبت.is_fastpath = 1;
+#د_که_پای /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, پیغام_Info);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_KERNEL_MCS
-#ifdef CONFIG_SIGNAL_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+#که_تعریف_شوی CONFIG_SIGNAL_FASTPATH
+ALIGN(L1_CACHE_کرښه_اندازه)
+فراغ VISIBLE c_handle_fastpath_signal(کلمه_t cptr, کلمه_t پیغام_Info)
 {
-    NODE_LOCK_SYS;
+    غوټه_قلف_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
-    fastpath_signal(cptr, msgInfo);
+    c_ثبت_hook();
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_پیل(cptr, پیغام_Info, SysCall);
+    ks_Kernel_ثبت.is_fastpath = 1;
+#د_که_پای /* DEBUG */
+    fastpath_signal(cptr, پیغام_Info);
     UNREACHABLE();
 }
-#endif /* CONFIG_SIGNAL_FASTPATH */
-#endif /* CONFIG_KERNEL_MCS */
+#د_که_پای /* CONFIG_SIGNAL_FASTPATH */
+#د_که_پای /* CONFIG_KERNEL_MCS */
 
-ALIGN(L1_CACHE_LINE_SIZE)
-#ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
-#endif
+ALIGN(L1_CACHE_کرښه_اندازه)
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+فراغ VISIBLE c_handle_fastpath_ځواب_recv(کلمه_t cptr, کلمه_t پیغام_Info, کلمه_t ځواب)
+#وإلا
+فراغ VISIBLE c_handle_fastpath_ځواب_recv(کلمه_t cptr, کلمه_t پیغام_Info)
+#د_که_پای
 {
-    NODE_LOCK_SYS;
+    غوټه_قلف_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_ثبت_hook();
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_پیل(cptr, پیغام_Info, Sys_ځواب_Recv);
+    ks_Kernel_ثبت.is_fastpath = 1;
+#د_که_پای /* DEBUG */
 
-#ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
-#endif
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+    fastpath_ځواب_recv(cptr, پیغام_Info, ځواب);
+#وإلا
+    fastpath_ځواب_recv(cptr, پیغام_Info);
+#د_که_پای
     UNREACHABLE();
 }
 
-#endif
+#د_که_پای
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
+#که_تعریف_شوی CONFIG_ARM_HYPERVISOR_SUPPORT
+VISIBLE NORETURN فراغ c_handle_vcpu_fault(کلمه_t hsr)
 {
-    NODE_LOCK_SYS;
+    غوټه_قلف_SYS;
 
-    c_entry_hook();
+    c_ثبت_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VCPUFault;
-    ksKernelEntry.word = hsr;
-#endif
+#که_تعریف_شوی TRACK_KERNEL_ENTRIES
+    ks_Kernel_ثبت.لار = ثبت_VCPUFault;
+    ks_Kernel_ثبت.کلمه = hsr;
+#د_که_پای
     handleVCPUFault(hsr);
     restore_user_context();
     UNREACHABLE();
 }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#د_که_پای /* CONFIG_ARM_HYPERVISOR_SUPPORT */

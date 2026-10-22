@@ -5,39 +5,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
+#ضمن <assert.h>
+#ضمن <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+ثابت ثبتوونکی_t پیغام_Registers[] = {
     a2, a3, a4, a5
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_پیغام_registers,
+    حجم(پیغام_Registers) / حجم(پیغام_Registers[0]) == n_پیغام_Registers
 );
 
-const register_t frameRegisters[] = {
+ثابت ثبتوونکی_t چوکاټ_Registers[] = {
     FaultIP, ra, sp, gp,
     s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_چوکاټ_registers,
+    حجم(چوکاټ_Registers) / حجم(چوکاټ_Registers[0]) == n_چوکاټ_Registers
 );
 
-const register_t gpRegisters[] = {
+ثابت ثبتوونکی_t gpRegisters[] = {
     a0, a1, a2, a3, a4, a5, a6, a7,
     t0, t1, t2, t3, t4, t5, t6,
     tp,
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    حجم(gpRegisters) / حجم(gpRegisters[0]) == n_gpRegisters
 );
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#که_تعریف_شوی CONFIG_KERNEL_MCS
+کلمه_t getNBSendRecvDest(فراغ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    أرجع get_ثبتوونکی(غوټه_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#د_که_پای
