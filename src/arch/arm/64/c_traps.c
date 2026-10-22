@@ -26,7 +26,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
     NODE_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm ca_ncala(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#དེ་མིན
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
 #endif
@@ -66,45 +66,45 @@ void VISIBLE NORETURN restore_user_context(void)
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#གལ་ཏེ defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED static const var_na *vect_offset_to_name(word_t vect_offset)
 {
     switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
+    pak_sa 0x000:
+        ཕྱིར "Synchronous EL1t/EL2t";
+    pak_sa 0x080:
+        ཕྱིར "IRQ EL1t/EL2t";
+    pak_sa 0x100:
+        ཕྱིར "FIQ EL1t/EL2t";
+    pak_sa 0x180:
+        ཕྱིར "SError EL1t/EL2t";
+    pak_sa 0x200:
+        ཕྱིར "Synchronous Current EL";
+    pak_sa 0x280:
+        ཕྱིར "IRQ Current EL";
+    pak_sa 0x300:
+        ཕྱིར "FIQ Current EL";
+    pak_sa 0x380:
+        ཕྱིར "SError Current EL";
+    pak_sa 0x400:
+        ཕྱིར "Synchronous 64-bit EL0/EL1";
+    pak_sa 0x480:
+        ཕྱིར "IRQ 64-bit EL0/EL1";
+    pak_sa 0x500:
+        ཕྱིར "FIQ 64-bit EL0/EL1";
+    pak_sa 0x580:
+        ཕྱིར "SError 64-bit EL0/EL1";
+    pak_sa 0x600:
+        ཕྱིར "Synchronous 32-bit EL0/EL1";
+    pak_sa 0x680:
+        ཕྱིར "IRQ 32-bit EL0/EL1";
+    pak_sa 0x700:
+        ཕྱིར "FIQ 32-bit EL0/EL1";
+    pak_sa 0x780:
+        ཕྱིར "SError 32-bit EL0/EL1";
     default:
-        return "<Unknown>";
+        ཕྱིར "<Unknown>";
     }
 }
 

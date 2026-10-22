@@ -15,15 +15,15 @@
 
 /* Index of next AP to boot, BSP has index zero */
 BOOT_DATA VISIBLE
-volatile word_t smp_aps_index = 1;
+ca_ncala word_t smp_aps_index = 1;
 
 #ifdef CONFIG_USE_LOGICAL_IDS
 BOOT_CODE static void update_logical_id_mappings(void)
 {
     cpu_mapping.index_to_logical_id[getCurrentCPUIndex()] = apic_get_logical_id();
 
-    for (int i = 0; i < smp_aps_index; i++) {
-        if (apic_get_cluster(cpu_mapping.index_to_logical_id[getCurrentCPUIndex()]) ==
+    ཆེད་དུ (ཧྲིལ i = 0; i < smp_aps_index; i++) {
+        གལ་ཏེ (apic_get_cluster(cpu_mapping.index_to_logical_id[getCurrentCPUIndex()]) ==
             apic_get_cluster(cpu_mapping.index_to_logical_id[i])) {
 
             cpu_mapping.other_indexes_in_cluster[getCurrentCPUIndex()] |= BIT(i);
@@ -52,7 +52,7 @@ BOOT_CODE void start_boot_aps(void)
 #endif /* CONFIG_USE_LOGICAL_IDS */
 
     /* startup APs one at a time as we use shared kernel boot stack */
-    while (smp_aps_index < boot_state.num_cpus) {
+    སྐབས (smp_aps_index < boot_state.num_cpus) {
         word_t current_ap_index = smp_aps_index;
 
         printf("Starting node #%lu with APIC ID %lu \n",
@@ -65,7 +65,7 @@ BOOT_CODE void start_boot_aps(void)
         start_cpu(boot_state.cpus[current_ap_index], BOOT_NODE_PADDR);
 
         /* wait for current AP to boot up */
-        while (smp_aps_index == current_ap_index) {
+        སྐབས (smp_aps_index == current_ap_index) {
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
             NODE_STATE(ksCurTime) = getCurrentTime();
             __atomic_thread_fence(__ATOMIC_ACQ_REL);
@@ -84,20 +84,20 @@ BOOT_CODE bool_t copy_boot_code_aps(uint32_t mem_lower)
     word_t boot_size = (word_t)(boot_cpu_end - boot_cpu_start);
     word_t boot_node_top = BOOT_NODE_PADDR + boot_size;
     word_t mem_lower_bytes = mem_lower << 10;
-    if (boot_node_top > BOOT_NODE_MAX_PADDR) {
+    གལ་ཏེ (boot_node_top > BOOT_NODE_MAX_PADDR) {
         printf("AP boot code does not fit in chosen memory hole. Can be at most %lu, is %lu\n",
                (word_t)(BOOT_NODE_MAX_PADDR - BOOT_NODE_PADDR), boot_size);
-        return false;
+        ཕྱིར false;
     }
-    if (mem_lower_bytes < boot_node_top) {
+    གལ་ཏེ (mem_lower_bytes < boot_node_top) {
         printf("Need lower physical memory up to %lu to be free. Multiboot reports only up to %lu\n",
                boot_node_top, mem_lower_bytes);
-        return false;
+        ཕྱིར false;
     }
 
     /* copy CPU bootup code to lower memory */
     memcpy((void *)BOOT_NODE_PADDR, boot_cpu_start, boot_size);
-    return true;
+    ཕྱིར true;
 }
 
 static BOOT_CODE bool_t try_boot_node(void)
@@ -105,17 +105,17 @@ static BOOT_CODE bool_t try_boot_node(void)
     setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
      * be set *right now* instead of delayed */
-    asm volatile("" ::: "memory");
+    asm ca_ncala("" ::: "memory");
 
     /* initialise the CPU, make sure legacy interrupts are disabled */
-    if (!init_cpu(1)) {
-        return false;
+    གལ་ཏེ (!init_cpu(1)) {
+        ཕྱིར false;
     }
 
 #ifdef CONFIG_USE_LOGICAL_IDS
     update_logical_id_mappings();
 #endif /* CONFIG_USE_LOGICAL_IDS */
-    return true;
+    ཕྱིར true;
 }
 
 /* This is the entry function for APs. However, it is not a BOOT_CODE as
@@ -128,7 +128,7 @@ VISIBLE void boot_node(void)
     mode_init_tls(smp_aps_index);
     result = try_boot_node();
 
-    if (!result) {
+    གལ་ཏེ (!result) {
         fail("boot_node failed for some reason :(\n");
     }
 

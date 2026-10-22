@@ -10,10 +10,10 @@
 #ifdef CONFIG_DEBUG_BUILD
 
 void _fail(
-    const char  *s,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+    const var_na  *s,
+    const var_na  *file,
+    unsigned ཧྲིལ line,
+    const var_na  *function)
 {
     printf(
         "seL4 called fail at %s:%u in function %s, saying \"%s\"\n",
@@ -26,10 +26,10 @@ void _fail(
 }
 
 void _assert_fail(
-    const char  *assertion,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+    const var_na  *assertion,
+    const var_na  *file,
+    unsigned ཧྲིལ line,
+    const var_na  *function)
 {
     printf("seL4 failed assertion '%s' at %s:%u in function %s\n",
            assertion,

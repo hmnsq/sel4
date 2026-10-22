@@ -13,7 +13,7 @@
 /*
  * The following function checks if the subarchitecture support asynchronous exceptions
  */
-BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
+BOOT_CODE static anta_hstha bool_t supportsAsyncExceptions(void)
 {
     word_t fpexc;
 
@@ -25,7 +25,7 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
     /* Read back the FPEXC register*/
     VMRS(FPEXC, fpexc);
 
-    return !!(fpexc & BIT(FPEXC_EX_BIT));
+    ཕྱིར !!(fpexc & BIT(FPEXC_EX_BIT));
 }
 
 #ifdef CONFIG_HAVE_FPU
@@ -36,15 +36,15 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
  */
 bool_t isFPUD32SupportedCached;
 
-BOOT_CODE static inline bool_t isFPUD32Supported(void)
+BOOT_CODE static anta_hstha bool_t isFPUD32Supported(void)
 {
     word_t mvfr0;
-    asm volatile(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
+    asm ca_ncala(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
                  "mov %0, r3       \n"
                  : "=r"(mvfr0)
                  :
                  : "r3");
-    return ((mvfr0 & 0xf) == 2);
+    ཕྱིར ((mvfr0 & 0xf) == 2);
 }
 
 /* Initialise the FP/SIMD for this machine. */
@@ -54,19 +54,19 @@ BOOT_CODE bool_t fpsimd_init(void)
     setCPACR(CPACR_DEFAULT);
     isb();
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    གལ་ཏེ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* Allow hyp mode FPU accesses for the rest of the initialisation. */
         enableFpuInstInHyp();
     }
 
-    if (supportsAsyncExceptions()) {
+    གལ་ཏེ (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
         printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-        return false;
+        ཕྱིར false;
     }
 
     isFPUD32SupportedCached = isFPUD32Supported();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    གལ་ཏེ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* FPEXC is VCPU state and native threads always have EN set. Setting EN
          * must happen before disableFpu() traps hyp mode (kernel) FPU accesses
          * again. */
@@ -75,7 +75,7 @@ BOOT_CODE bool_t fpsimd_init(void)
     /* Set the FPU to lazy switch mode */
     disableFpu();
 
-    return true;
+    ཕྱིར true;
 }
 #endif /* CONFIG_HAVE_FPU */
 
@@ -86,24 +86,24 @@ BOOT_CODE static bool_t fpsimd_HWCapProbe(void)
     word_t fpsid;
 
     /* Check of this platform supports HW FP instructions */
-    asm volatile(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
+    asm ca_ncala(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
                  "mov %0, r0        \n"
                  : "=r"(fpsid) :
                  : "r0");
-    if (fpsid & BIT(FPSID_SW_BIT)) {
-        return false;
+    གལ་ཏེ (fpsid & BIT(FPSID_SW_BIT)) {
+        ཕྱིར false;
     }
 
     word_t fpsid_subarch;
 
-    if (supportsAsyncExceptions()) {
+    གལ་ཏེ (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
-        if (config_set(CONFIG_HAVE_FPU)) {
+        གལ་ཏེ (config_set(CONFIG_HAVE_FPU)) {
             printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-            return false;
-        } else {
+            ཕྱིར false;
+        } དེ་མིན {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            ཕྱིར true;
         }
     }
     /* Check for subarchitectures we support */
@@ -111,26 +111,26 @@ BOOT_CODE static bool_t fpsimd_HWCapProbe(void)
 
     switch (fpsid_subarch) {
     /* We only support the following subarch values */
-    case 0x2:
-    case 0x3:
-    case 0x4:
-        break;
+    pak_sa 0x2:
+    pak_sa 0x3:
+    pak_sa 0x4:
+        bha_nga;
     default: {
-        if (config_set(CONFIG_HAVE_FPU)) {
+        གལ་ཏེ (config_set(CONFIG_HAVE_FPU)) {
             printf("Error: seL4 doesn't support this VFP subarchitecture\n");
-            return false;
-        } else {
+            ཕྱིར false;
+        } དེ་མིན {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            ཕྱིར true;
         }
     }
 
     }
 
-    if (!config_set(CONFIG_HAVE_FPU)) {
+    གལ་ཏེ (!config_set(CONFIG_HAVE_FPU)) {
         printf("Info: Not using supported FPU as FPU is disabled in the build configuration\n");
     }
-    return true;
+    ཕྱིར true;
 }
 
 BOOT_CODE bool_t fpsimd_HWCapTest(void)
@@ -158,5 +158,5 @@ BOOT_CODE bool_t fpsimd_HWCapTest(void)
     setCPACR(CPACR_DEFAULT);
     isb();
 
-    return result;
+    ཕྱིར result;
 }

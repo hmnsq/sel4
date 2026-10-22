@@ -28,7 +28,7 @@ BOOT_CODE static void errata_armA15_773022(void)
     uint32_t part = (proc_id >> 4) & MASK(12);
 
     /* Check that we are running A15 and a revision upto r0p4. */
-    if (part == 0xc0f && variant == 0 && revision <= 4) {
+    གལ་ཏེ (part == 0xc0f && variant == 0 && revision <= 4) {
         /* Disable loop buffer in the auxiliary control register */
         writeAuxiliaryControlRegister(
             readAuxiliaryControlRegister() | BIT(1));

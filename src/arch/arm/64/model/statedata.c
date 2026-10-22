@@ -114,13 +114,13 @@ hw_asid_t armKSNextASID = hwASIDMin;
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
 cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+compile_assert(smmuStateSIDCNodeSize, parimaa_na(smmuStateSIDNode) >= ((SMMU_MAX_SID) * parimaa_na(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
 cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+compile_assert(smmuStateCBCNodeSize, parimaa_na(smmuStateCBNode) >= ((SMMU_MAX_CB) * parimaa_na(cte_t)));
 /*recording the context bank to ASID relationship*/
 asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
 #endif
