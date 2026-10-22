@@ -64,8 +64,8 @@ BEGIN_FUNC(_start)
     pushl %edi /* 1st parameter: multiboot_magic    */
 
     /* Initialise boot PD and enable paging */
-    call init_boot_pd
-    call enable_paging
+    نادي init_boot_pd
+    نادي enable_paging
 
     popl %edi
     popl %esi
@@ -115,7 +115,7 @@ BEGIN_FUNC(boot_cpu_start)
     popf
 
     /* Enable paging */
-    call enable_paging
+    نادي enable_paging
 
     /* Get index of this cpu, BSP always gets index of zero */
     movl smp_aps_index, %ecx
