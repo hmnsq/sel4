@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/fpu.h>
-#include <api/failures.h>
-#include <model/statedata.h>
-#include <arch/object/structures.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <machine/fpu.h>
+#अन्तर्भाव <api/failures.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <arch/object/structures.h>
 
 #ifdef CONFIG_HAVE_FPU
 /* Switch the owner of the FPU to the given thread on local core. */
-void switchLocalFpuOwner(tcb_t *new_owner)
+शून्य switchLocalFpuOwner(tcb_t *new_owner)
 {
     enableFpu();
-    if (NODE_STATE(ksCurFPUOwner)) {
-        saveFpuState(NODE_STATE(ksCurFPUOwner));
+    जर (गाठ_STATE(ksCurFPUOwner)) {
+        saveFpuState(गाठ_STATE(ksCurFPUOwner));
     }
-    if (new_owner) {
+    जर (new_owner) {
         loadFpuState(new_owner);
-    } else {
+    } अन्यथा {
         disableFpu();
     }
-    NODE_STATE(ksCurFPUOwner) = new_owner;
+    गाठ_STATE(ksCurFPUOwner) = new_owner;
 }
 
-void switchFpuOwner(tcb_t *new_owner, word_t cpu)
+शून्य switchFpuOwner(tcb_t *new_owner, word_t cpu)
 {
 #ifdef ENABLE_SMP_SUPPORT
-    if (cpu != getCurrentCPUIndex()) {
+    जर (cpu != getCurrentCPUIndex()) {
         doRemoteswitchFpuOwner(new_owner, cpu);
-    } else
+    } अन्यथा
 #endif /* ENABLE_SMP_SUPPORT */
     {
         switchLocalFpuOwner(new_owner);
@@ -39,12 +39,12 @@ void switchFpuOwner(tcb_t *new_owner, word_t cpu)
 }
 
 /* Prepare for the deletion of the given thread. */
-void fpuRelease(tcb_t *thread)
+शून्य fpuRelease(tcb_t *thread)
 {
     /* If the thread being deleted currently owns the FPU, switch away from it
      * so that 'ksCurFPUOwner' doesn't point to invalid memory. */
-    if (nativeThreadUsingFPU(thread)) {
-        switchFpuOwner(NULL, SMP_TERNARY(thread->tcbAffinity, 0));
+    जर (nativeThreadUsingFPU(thread)) {
+        switchFpuOwner(रिक्त, SMP_TERNARY(thread->tcbAffinity, 0));
     }
 }
 #endif /* CONFIG_HAVE_FPU */

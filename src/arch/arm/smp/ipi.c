@@ -4,71 +4,71 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/lock.h>
-#include <util.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <mode/smp/ipi.h>
+#अन्तर्भाव <smp/lock.h>
+#अन्तर्भाव <util.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+शून्य handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
+    जर (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        निवड (call) {
+        स्थिती IpiRemoteCall_Stall:
             ipiStallCoreCallback(irqPath);
-            break;
+            थांबा;
 
 #ifdef CONFIG_HAVE_FPU
-        case IpiRemoteCall_switchFpuOwner:
+        स्थिती IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
+            थांबा;
 #endif /* CONFIG_HAVE_FPU */
 
-        case IpiRemoteCall_InvalidateTranslationSingle:
+        स्थिती IpiRemoteCall_InvalidateTranslationSingle:
             invalidateTranslationSingleLocal(arg0);
-            break;
+            थांबा;
 
-        case IpiRemoteCall_InvalidateTranslationASID:
+        स्थिती IpiRemoteCall_InvalidateTranslationASID:
             invalidateTranslationASIDLocal(arg0);
-            break;
+            थांबा;
 
-        case IpiRemoteCall_InvalidateTranslationAll:
+        स्थिती IpiRemoteCall_InvalidateTranslationAll:
             invalidateTranslationAllLocal();
-            break;
+            थांबा;
 
-        case IpiRemoteCall_MaskPrivateInterrupt:
+        स्थिती IpiRemoteCall_MaskPrivateInterrupt:
             maskInterrupt(arg0, IDX_TO_IRQT(arg1));
-            break;
+            थांबा;
 
 #ifdef CONFIG_ARM_GIC_V3_SUPPORT
-        case IpiRemoteCall_DeactivatePrivateInterrupt:
+        स्थिती IpiRemoteCall_DeactivatePrivateInterrupt:
             deactivateInterrupt(IDX_TO_IRQT(arg1));
-            break;
+            थांबा;
 #endif
 
-#if defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
-        case IpiRemoteCall_VCPUInjectInterrupt: {
+#जर defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
+        स्थिती IpiRemoteCall_VCPUInjectInterrupt: {
             virq_t virq;
-            virq.words[0] = arg2;
+            virq.शब्द[0] = arg2;
             handleVCPUInjectInterruptIPI((vcpu_t *) arg0, arg1, virq);
-            break;
+            थांबा;
         }
 #endif
 
-        default:
+        पूर्वनिर्धारित:
             fail("Invalid remote call");
-            break;
+            थांबा;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_lock.गाठ[getCurrentCPUIndex()].ipi = 0;
         ipi_wait();
     }
 }
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+शून्य ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 {
     generic_ipi_send_mask(ipi, mask, isBlocking);
 }

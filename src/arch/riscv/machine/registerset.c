@@ -5,39 +5,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
+#अन्तर्भाव <assert.h>
+#अन्तर्भाव <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+स्थिरांक register_t संदेश_Registers[] = {
     a2, a3, a4, a5
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    आकार(संदेश_Registers) / आकार(संदेश_Registers[0]) == n_संदेश_Registers
 );
 
-const register_t frameRegisters[] = {
+स्थिरांक register_t frameRegisters[] = {
     FaultIP, ra, sp, gp,
     s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    आकार(frameRegisters) / आकार(frameRegisters[0]) == n_frameRegisters
 );
 
-const register_t gpRegisters[] = {
+स्थिरांक register_t gpRegisters[] = {
     a0, a1, a2, a3, a4, a5, a6, a7,
     t0, t1, t2, t3, t4, t5, t6,
     tp,
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    आकार(gpRegisters) / आकार(gpRegisters[0]) == n_gpRegisters
 );
 
 #ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+word_t getNBSendRecvDest(शून्य)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    परत getRegister(गाठ_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

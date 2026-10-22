@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <arch/kernel/ept.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <api/failures.h>
+#अन्तर्भाव <kernel/vspace.h>
+#अन्तर्भाव <object/structures.h>
+#अन्तर्भाव <arch/machine.h>
+#अन्तर्भाव <arch/model/statedata.h>
+#अन्तर्भाव <arch/machine/fpu.h>
+#अन्तर्भाव <arch/object/objecttype.h>
+#अन्तर्भाव <arch/object/ioport.h>
+#अन्तर्भाव <arch/kernel/ept.h>
 
-#include <arch/object/iospace.h>
-#include <plat/machine/intel-vtd.h>
+#अन्तर्भाव <arch/object/iospace.h>
+#अन्तर्भाव <plat/machine/intel-vtd.h>
 
 
 bool_t Arch_isFrameType(word_t type)
 {
-    switch (type) {
-    case seL4_X86_4K:
-        return true;
-    case seL4_X86_LargePageObject:
-        return true;
-    default:
-        return false;
+    निवड (type) {
+    स्थिती seL4_X86_4K:
+        परत true;
+    स्थिती seL4_X86_LargePageObject:
+        परत true;
+    पूर्वनिर्धारित:
+        परत false;
     }
 }
 
@@ -36,14 +36,14 @@ deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
+    निवड (cap_get_capType(cap)) {
+    स्थिती cap_frame_cap:
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
         ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
         ret.status = EXCEPTION_NONE;
-        return ret;
+        परत ret;
 
-    default:
+    पूर्वनिर्धारित:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap type");
@@ -54,36 +54,36 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
+    निवड (cap_get_capType(cap)) {
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            switch (cap_frame_cap_get_capFMapType(cap)) {
+    स्थिती cap_frame_cap:
+        जर (cap_frame_cap_get_capFMappedASID(cap)) {
+            निवड (cap_frame_cap_get_capFMapType(cap)) {
 #ifdef CONFIG_VTX
-            case X86_MappingEPT:
+            स्थिती X86_MappingEPT:
                 unmapEPTPage(
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
                     cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    (शून्य *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
+                थांबा;
 #endif
-            case X86_MappingVSpace:
+            स्थिती X86_MappingVSpace:
 
 #ifdef CONFIG_KERNEL_LOG_BUFFER
                 /* If the last cap to the user-level log buffer frame is being revoked,
                  * reset the ksLog so that the kernel doesn't log anymore
                  */
-                if (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
-                    if (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
+                जर (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
+                    जर (pptr_to_paddr((शून्य *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
                         ksUserLogBuffer = 0;
 
                         /* Invalidate log page table entries */
                         clearMemory(ia32KSGlobalLogPT, seL4_PageTableBits);
 
-                        for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+                        साठी (पूर्णांक idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
+                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ks_अंक_CPUs));
                         }
 
                         userError("Log buffer frame is invalidated, kernel can't benchmark anymore\n");
@@ -95,79 +95,79 @@ finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
                     cap_frame_cap_get_capFSize(cap),
                     cap_frame_cap_get_capFMappedASID(cap),
                     cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    (शून्य *)cap_frame_cap_get_capFBasePtr(cap)
                 );
-                break;
+                थांबा;
 #ifdef CONFIG_IOMMU
-            case X86_MappingIOSpace:
+            स्थिती X86_MappingIOSpace:
                 unmapIOPage(cap);
-                break;
+                थांबा;
 #endif
-            default:
+            पूर्वनिर्धारित:
                 fail("No mapping type for mapped cap");
-                break;
+                थांबा;
             }
         }
-        break;
+        थांबा;
 
-    default:
+    पूर्वनिर्धारित:
         fail("Invalid arch cap type");
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    परत fc_ret;
 }
 
 bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    return false;
+    परत false;
 }
 
 word_t Mode_getObjectSize(word_t t)
 {
     fail("Invalid object type");
-    return 0;
+    परत 0;
 }
 
-cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Mode_createObject(object_t t, शून्य *regionBase, word_t userSize, bool_t deviceMemory)
 {
-    switch (t) {
-    case seL4_X86_4K:
-        return cap_frame_cap_new(
+    निवड (t) {
+    स्थिती seL4_X86_4K:
+        परत cap_frame_cap_new(
                    X86_SmallPage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+                   ASID_खालचा(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
                    deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   ASID_वरचा(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
                    (word_t)regionBase      /* capFBasePtr          */
                );
 
-    case seL4_X86_LargePageObject:
-        return cap_frame_cap_new(
+    स्थिती seL4_X86_LargePageObject:
+        परत cap_frame_cap_new(
                    X86_LargePage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+                   ASID_खालचा(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
                    deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   ASID_वरचा(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
                    (word_t)regionBase      /* capFBasePtr          */
                );
 
-    case seL4_X86_PageTableObject:
-        return cap_page_table_cap_new(
+    स्थिती seL4_X86_PageTableObject:
+        परत cap_page_table_cap_new(
                    0,                  /* capPTIsMapped        */
                    asidInvalid,        /* capPTMappedASID      */
                    0,                  /* capPTMappedAddress   */
                    (word_t)regionBase  /* capPTBasePtr         */
                );
 
-    case seL4_X86_PageDirectoryObject:
+    स्थिती seL4_X86_PageDirectoryObject:
         copyGlobalMappings(regionBase);
-        return cap_page_directory_cap_new(
+        परत cap_page_directory_cap_new(
                    0,                  /* capPDIsMapped      */
                    asidInvalid,        /* capPDMappedASID    */
                    0,                  /* capPDMappedAddress */
@@ -175,8 +175,8 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 
 #ifdef CONFIG_IOMMU
-    case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+    स्थिती seL4_X86_IOPageTableObject:
+        परत cap_io_page_table_cap_new(
                    0,  /* capIOPTIsMapped      */
                    0,  /* capIOPTLevel         */
                    0,  /* capIOPTMappedAddress */
@@ -185,7 +185,7 @@ cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 #endif
 
-    default:
+    पूर्वनिर्धारित:
         fail("Mode_createObject got an API type or invalid object type");
     }
 }
@@ -200,14 +200,14 @@ exception_t Mode_decodeInvocation(
     word_t *buffer
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-    case cap_page_table_cap:
-    case cap_frame_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    default:
+    निवड (cap_get_capType(cap)) {
+    स्थिती cap_page_directory_cap:
+    स्थिती cap_page_table_cap:
+    स्थिती cap_frame_cap:
+        परत decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+    पूर्वनिर्धारित:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_संख्या = 0;
+        परत EXCEPTION_SYSCALL_ERROR;
     }
 }

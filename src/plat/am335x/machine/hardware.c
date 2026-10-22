@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <plat/machine/hardware.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <plat/machine/hardware.h>
 
-BOOT_CODE void initIRQController(void)
+BOOT_CODE शून्य initIRQController(शून्य)
 {
     intc->intcps_sysconfig = INTCPS_SYSCONFIG_SOFTRESET;
-    while (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
+    पर्यंत (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_CODE शून्य cpu_initLocalIRQController(शून्य) {}

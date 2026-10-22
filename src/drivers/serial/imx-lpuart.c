@@ -11,30 +11,30 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <stdint.h>
+#अन्तर्भाव <util.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <plat/machine/devices_gen.h>
 
 #define STAT 0x14
 #define TRANSMIT 0x1c
 
 #define STAT_TDRE (1 << 23)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((अस्थिर uint32_t *)(UART_PPTR + (x)))
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void uart_drv_putchar(unsigned char c)
+#जर defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+शून्य uart_drv_putchar(अचिन्हित अक्षर c)
 {
-    while (!(*UART_REG(STAT) & STAT_TDRE)) { }
+    पर्यंत (!(*UART_REG(STAT) & STAT_TDRE)) { }
     *UART_REG(TRANSMIT) = c;
 }
 #endif
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+अचिन्हित अक्षर uart_drv_getchar(शून्य)
 {
-    return 0;
+    परत 0;
 }
 #endif /* CONFIG_DEBUG_BUILD */
