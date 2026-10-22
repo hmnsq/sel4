@@ -33,7 +33,7 @@ void memzero(void *s, unsigned long n)
         \<or> \<acute>n <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Write out words. */
-    while (n != 0) {
+    当 (n != 0) {
         *(ulong_alias *)p = 0;
         p += sizeof(ulong_alias);
         n -= sizeof(ulong_alias);
@@ -48,16 +48,16 @@ void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
      * If we are only writing zeros and we are word aligned, we can
      * use the optimized 'memzero' function.
      */
-    if (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
+    如果 (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
         memzero(s, n);
-    } else {
+    } 否则 {
         /* Otherwise, we use a slower, simple memset. */
-        for (p = (uint8_t *)s; n > 0; n--, p++) {
+        为 (p = (uint8_t *)s; n > 0; n--, p++) {
             *p = (uint8_t)c;
         }
     }
 
-    return s;
+    返回 s;
 }
 
 void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
@@ -65,76 +65,76 @@ void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
     uint8_t *p;
     const uint8_t *q;
 
-    for (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
+    为 (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
         *p = *q;
     }
 
-    return ptr_dst;
+    返回 ptr_dst;
 }
 
-int PURE strncmp(const char *s1, const char *s2, int n)
+整数 PURE strncmp(const char *s1, const char *s2, 整数 n)
 {
     word_t i;
-    int diff;
+    整数 diff;
 
-    for (i = 0; i < n; i++) {
+    为 (i = 0; i < n; i++) {
         diff = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
-        if (diff != 0 || s1[i] == '\0') {
-            return diff;
+        如果 (diff != 0 || s1[i] == '\0') {
+            返回 diff;
         }
     }
 
-    return 0;
+    返回 0;
 }
 
 long CONST char_to_long(char c)
 {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+    如果 (c >= '0' && c <= '9') {
+        返回 c - '0';
+    } 否则 如果 (c >= 'A' && c <= 'F') {
+        返回 c - 'A' + 10;
+    } 否则 如果 (c >= 'a' && c <= 'f') {
+        返回 c - 'a' + 10;
     }
-    return -1;
+    返回 -1;
 }
 
 long PURE str_to_long(const char *str)
 {
-    unsigned int base;
+    unsigned 整数 base;
     long res;
     long val = 0;
     char c;
 
     /* NULL ptr and empty str */
-    if (str == NULL || *str == 0) {
-        return -1;
+    如果 (str == NULL || *str == 0) {
+        返回 -1;
     }
 
     /* check for "0x", *(str + 1) may be 0, but must be allocated since str is not empty */
-    if (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
+    如果 (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
         base = 16;
         str += 2;
         /* '0x' on its own is malformed */
-        if (*str == 0) {
-            return -1;
+        如果 (*str == 0) {
+            返回 -1;
         }
-    } else {
+    } 否则 {
         base = 10;
     }
 
     c = *str;
-    while (c != '\0') {
+    当 (c != '\0') {
         res = char_to_long(c);
-        if (res == -1 || res >= base) {
-            return -1;
+        如果 (res == -1 || res >= base) {
+            返回 -1;
         }
         val = val * base + res;
         str++;
         c = *str;
     }
 
-    return val;
+    返回 val;
 }
 
 // The following implementations of CLZ (count leading zeros) and CTZ (count
@@ -206,35 +206,35 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // while also generating reasonably efficient binary code.
 
     // The `if (1)` blocks make it easier to reason by chunks in the proofs.
-    if (1) {
+    如果 (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x0000ffff
         unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
         x >>= bits; // <= 0x0000ffff
         count -= bits; // [16, 32]
     }
-    if (1) {
+    如果 (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x000000ff
         unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
         x >>= bits; // <= 0x000000ff
         count -= bits; // [8, 16, 24, 32]
     }
-    if (1) {
+    如果 (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x0000000f
         unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
         x >>= bits; // <= 0x0000000f
         count -= bits; // [4, 8, 12, ..., 32]
     }
-    if (1) {
+    如果 (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x00000003
         unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
         x >>= bits; // <= 0x00000003
         count -= bits; // [2, 4, 6, ..., 32]
     }
-    if (1) {
+    如果 (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x00000001
         unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
@@ -245,7 +245,7 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // If the original input was zero, there will have been no shifts, so this
     // gives a result of 32. Otherwise, x is now exactly 1, so subtracting from
     // count gives a result from [0, 1, 2, ..., 31].
-    return count - x;
+    返回 count - x;
 }
 
 static UNUSED CONST inline unsigned clz64(uint64_t x)
@@ -257,42 +257,42 @@ static UNUSED CONST inline unsigned clz64(uint64_t x)
     // iterations in full for slightly better code generation at low
     // optimisation levels, and to allow us to reuse the proof machinery we
     // developed for clz32.
-    if (1) {
+    如果 (1) {
         // iteration 5
         mask >>= (1 << 5); // 0x00000000ffffffff
         unsigned bits = ((unsigned)(mask < x)) << 5; // [0, 32]
         x >>= bits; // <= 0x00000000ffffffff
         count -= bits; // [32, 64]
     }
-    if (1) {
+    如果 (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x000000000000ffff
         unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
         x >>= bits; // <= 0x000000000000ffff
         count -= bits; // [16, 32, 48, 64]
     }
-    if (1) {
+    如果 (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x00000000000000ff
         unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
         x >>= bits; // <= 0x00000000000000ff
         count -= bits; // [8, 16, 24, ..., 64]
     }
-    if (1) {
+    如果 (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x000000000000000f
         unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
         x >>= bits; // <= 0x000000000000000f
         count -= bits; // [4, 8, 12, ..., 64]
     }
-    if (1) {
+    如果 (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x0000000000000003
         unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
         x >>= bits; // <= 0x0000000000000003
         count -= bits; // [2, 4, 6, ..., 64]
     }
-    if (1) {
+    如果 (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x0000000000000001
         unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
@@ -300,7 +300,7 @@ static UNUSED CONST inline unsigned clz64(uint64_t x)
         count -= bits; // [1, 2, 3, ..., 64]
     }
 
-    return count - x;
+    返回 count - x;
 }
 
 // Count trailing zeros.
@@ -328,35 +328,35 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
     // The iterations are given a very regular structure to facilitate proofs,
     // while also generating reasonably efficient binary code.
 
-    if (1) {
+    如果 (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x0000ffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
         x >>= bits; // xi != 0 --> x & 0x0000ffff != 0
         count += bits; // if xi != 0 then [0, 16] else 17
     }
-    if (1) {
+    如果 (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x000000ff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
         x >>= bits; // xi != 0 --> x & 0x000000ff != 0
         count += bits; // if xi != 0 then [0, 8, 16, 24] else 25
     }
-    if (1) {
+    如果 (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x0000000f
         unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
         x >>= bits; // xi != 0 --> x & 0x0000000f != 0
         count += bits; // if xi != 0 then [0, 4, 8, ..., 28] else 29
     }
-    if (1) {
+    如果 (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x00000003
         unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
         x >>= bits; // xi != 0 --> x & 0x00000003 != 0
         count += bits; // if xi != 0 then [0, 2, 4, ..., 30] else 31
     }
-    if (1) {
+    如果 (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x00000001
         unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
@@ -364,7 +364,7 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
         count += bits; // if xi != 0 then [0, 1, 2, ..., 31] else 32
     }
 
-    return count;
+    返回 count;
 }
 
 static UNUSED CONST inline unsigned ctz64(uint64_t x)
@@ -372,42 +372,42 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
     unsigned count = (x == 0);
     uint64_t mask = UINT64_MAX;
 
-    if (1) {
+    如果 (1) {
         // iteration 5
         mask >>= (1 << 5); // 0x00000000ffffffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 5; // [0, 32]
         x >>= bits; // xi != 0 --> x & 0x00000000ffffffff != 0
         count += bits; // if xi != 0 then [0, 32] else 33
     }
-    if (1) {
+    如果 (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x000000000000ffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
         x >>= bits; // xi != 0 --> x & 0x000000000000ffff != 0
         count += bits; // if xi != 0 then [0, 16, 32, 48] else 49
     }
-    if (1) {
+    如果 (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x00000000000000ff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
         x >>= bits; // xi != 0 --> x & 0x00000000000000ff != 0
         count += bits; // if xi != 0 then [0, 8, 16, ..., 56] else 57
     }
-    if (1) {
+    如果 (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x000000000000000f
         unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
         x >>= bits; // xi != 0 --> x & 0x000000000000000f != 0
         count += bits; // if xi != 0 then [0, 4, 8, ..., 60] else 61
     }
-    if (1) {
+    如果 (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x0000000000000003
         unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
         x >>= bits; // xi != 0 --> x & 0x0000000000000003 != 0
         count += bits; // if xi != 0 then [0, 2, 4, ..., 62] else 63
     }
-    if (1) {
+    如果 (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x0000000000000001
         unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
@@ -415,7 +415,7 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
         count += bits; // if xi != 0 then [0, 1, 2, ..., 63] else 64
     }
 
-    return count;
+    返回 count;
 }
 
 // GCC's builtins will emit calls to these functions when the platform does
@@ -424,29 +424,29 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
 // We define these separately from `ctz32` etc. so that we can verify all of
 // `ctz32` etc. without necessarily linking them into the kernel binary.
 #ifdef CONFIG_CLZ_32
-CONST int __clzsi2(uint32_t x)
+CONST 整数 __clzsi2(uint32_t x)
 {
-    return clz32(x);
+    返回 clz32(x);
 }
 #endif
 
 #ifdef CONFIG_CLZ_64
-CONST int __clzdi2(uint64_t x)
+CONST 整数 __clzdi2(uint64_t x)
 {
-    return clz64(x);
+    返回 clz64(x);
 }
 #endif
 
 #ifdef CONFIG_CTZ_32
-CONST int __ctzsi2(uint32_t x)
+CONST 整数 __ctzsi2(uint32_t x)
 {
-    return ctz32(x);
+    返回 ctz32(x);
 }
 #endif
 
 #ifdef CONFIG_CTZ_64
-CONST int __ctzdi2(uint64_t x)
+CONST 整数 __ctzdi2(uint64_t x)
 {
-    return ctz64(x);
+    返回 ctz64(x);
 }
 #endif

@@ -14,10 +14,10 @@
 
 word_t CONST Arch_decodeTransfer(word_t flags)
 {
-    return 0;
+    返回 0;
 }
 
 exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
-    return EXCEPTION_NONE;
+    返回 EXCEPTION_NONE;
 }

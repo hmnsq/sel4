@@ -11,32 +11,32 @@
 word_t strnlen(const char *s, word_t maxlen)
 {
     word_t len;
-    for (len = 0; len < maxlen && s[len]; len++);
-    return len;
+    为 (len = 0; len < maxlen && s[len]; len++);
+    返回 len;
 }
 
 word_t strlcpy(char *dest, const char *src, word_t size)
 {
     word_t len;
-    for (len = 0; len + 1 < size && src[len]; len++) {
+    为 (len = 0; len + 1 < size && src[len]; len++) {
         dest[len] = src[len];
     }
     dest[len] = '\0';
-    return len;
+    返回 len;
 }
 
 word_t strlcat(char *dest, const char *src, word_t size)
 {
     word_t len;
     /* get to the end of dest */
-    for (len = 0; len < size && dest[len]; len++);
+    为 (len = 0; len < size && dest[len]; len++);
     /* check that dest was at least 'size' length to prevent inserting
      * a null byte when we shouldn't */
-    if (len < size) {
-        for (; len + 1 < size && *src; len++, src++) {
+    如果 (len < size) {
+        为 (; len + 1 < size && *src; len++, src++) {
             dest[len] = *src;
         }
         dest[len] = '\0';
     }
-    return len;
+    返回 len;
 }

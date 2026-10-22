@@ -26,6 +26,6 @@ void kernel_putDebugChar(unsigned char c)
 unsigned char kernel_getDebugChar(void)
 {
     /* Don't use UART, but read from the SBI console. */
-    return sbi_console_getchar();
+    返回 sbi_console_getchar();
 }
 #endif /* CONFIG_DEBUG_BUILD */

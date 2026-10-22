@@ -56,19 +56,19 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    如果 (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        如果 (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    返回 v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 word_t getNBSendRecvDest(void)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    返回 getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

@@ -21,11 +21,11 @@ void Arch_switchToThread(tcb_t *tcb)
                  : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
                  [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
 #endif
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+    如果 (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    如果 (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
@@ -67,7 +67,7 @@ void Mode_postModifyRegisters(tcb_t *tptr)
     /* Setting Error to 0 will force a return by the interrupt path, which
      * does a full restore. Unless we're the current thread, in which case
      * we still have to go back out via a sysret */
-    if (tptr != NODE_STATE(ksCurThread)) {
+    如果 (tptr != NODE_STATE(ksCurThread)) {
         setRegister(tptr, Error, 0);
     }
 }

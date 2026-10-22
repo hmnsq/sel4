@@ -20,7 +20,7 @@ static inline word_t readCLID(void)
 {
     word_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    返回 CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -34,7 +34,7 @@ enum arm_cache_type {
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+static inline word_t readCacheSize(整数 level, bool_t instruction)
 {
     word_t size, csselr_old;
     /* Save CSSELR */
@@ -45,7 +45,7 @@ static inline word_t readCacheSize(int level, bool_t instruction)
     MRS("ccsidr_el1", size);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    返回 size;
 }
 
 #define LINEBITS(s)     (((s) & MASK(3)) + 4)
@@ -54,18 +54,18 @@ static inline word_t readCacheSize(int level, bool_t instruction)
 
 void clean_D_PoU(void)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    整数 clid = readCLID();
+    整数 lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    为 (整数 l = 0; l < lou; l++) {
+        如果 (CTYPE(clid, l) > ARMCacheI) {
             word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
+            整数 lbits = LINEBITS(lsize);
+            整数 assoc = ASSOC(lsize);
+            整数 assoc_bits = wordBits - clzl(assoc - 1);
+            整数 nsets = NSETS(lsize);
+            为 (整数 w = 0; w < assoc; w++) {
+                为 (整数 s = 0; s < nsets; s++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (s << lbits) | (l << 1));
                 }
@@ -74,16 +74,16 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+static inline void cleanInvalidate_D_by_level(整数 l)
 {
     word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    整数 lbits = LINEBITS(lsize);
+    整数 assoc = ASSOC(lsize);
+    整数 assoc_bits = wordBits - clzl(assoc - 1);
+    整数 nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
+    为 (整数 w = 0; w < assoc; w++) {
+        为 (整数 s = 0; s < nsets; s++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (s << lbits) | (l << 1));
         }
@@ -92,11 +92,11 @@ static inline void cleanInvalidate_D_by_level(int l)
 
 void cleanInvalidate_D_PoC(void)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    整数 clid = readCLID();
+    整数 loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    为 (整数 l = 0; l < loc; l++) {
+        如果 (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }

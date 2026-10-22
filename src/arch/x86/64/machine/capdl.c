@@ -14,7 +14,7 @@
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[RSP];
+    返回 tcb->tcbArch.tcbContext.registers[RSP];
 }
 
 #ifdef CONFIG_PRINTING
@@ -57,19 +57,19 @@ static void cap_frame_print_attrs_impl(word_t super_user, word_t read_write, wor
     printf("(");
 
     /* rights */
-    if (read_write) {
+    如果 (read_write) {
         printf("RW");
-    } else if (super_user) {
+    } 否则 如果 (super_user) {
         printf("R");
     }
 
-    if (!xd) {
+    如果 (!xd) {
         printf("X");
     }
 
     /* asid, mapping */
 
-    if (cache_disabled) {
+    如果 (cache_disabled) {
         printf(", uncached");
     }
 
@@ -102,10 +102,10 @@ static void x86_64_obj_pt_print_slots(pde_t *pdSlot)
     word_t page_size;
     pte_t *pt = paddr_to_pptr(pde_pde_pt_ptr_get_pt_base_address(pdSlot));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
         pte_t *ptSlot = pt + GET_PT_INDEX(i);
 
-        if (pte_ptr_get_present(ptSlot)) {
+        如果 (pte_ptr_get_present(ptSlot)) {
             paddr = pte_ptr_get_page_base_address(ptSlot);
             page_size = seL4_PageBits;
             printf("frame_%p_%04lu = frame ", ptSlot, GET_PT_INDEX(i));
@@ -120,17 +120,17 @@ static void x86_64_obj_pd_print_slots(pdpte_t *pdptSlot)
     word_t page_size;
     pde_t *pd = paddr_to_pptr(pdpte_pdpte_pd_ptr_get_pd_base_address(pdptSlot));
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
         pde_t *pdSlot = pd + GET_PD_INDEX(i);
 
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
+        如果 ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
             paddr = pde_pde_large_ptr_get_page_base_address(pdSlot);
             page_size = seL4_LargePageBits;
 
             printf("frame_%p_%04lu = frame ", pdSlot, GET_PD_INDEX(i));
             obj_frame_print_attrs(paddr, page_size);
 
-        } else if (pde_pde_pt_ptr_get_present(pdSlot)) {
+        } 否则 如果 (pde_pde_pt_ptr_get_present(pdSlot)) {
             printf("pt_%p_%04lu = pt\n", pdSlot, GET_PD_INDEX(i));
             x86_64_obj_pt_print_slots(pdSlot);
         }
@@ -143,10 +143,10 @@ static void x86_64_obj_pdpt_print_slots(pml4e_t *pml4Slot)
     word_t page_size;
     pdpte_t *pdpt = paddr_to_pptr(pml4e_ptr_get_pdpt_base_address(pml4Slot));
 
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
         pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
+        如果 (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
             pdpte_pdpte_1g_ptr_get_present(pdptSlot)) {
             paddr = pdpte_pdpte_1g_ptr_get_page_base_address(pdptSlot);
             page_size = seL4_HugePageBits;
@@ -154,7 +154,7 @@ static void x86_64_obj_pdpt_print_slots(pml4e_t *pml4Slot)
             printf("frame_%p_%04lu = frame ", pdptSlot, GET_PDPT_INDEX(i));
             obj_frame_print_attrs(paddr, page_size);
 
-        } else if (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
+        } 否则 如果 (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
             printf("pd_%p_%04lu = pd\n", pdptSlot, GET_PDPT_INDEX(i));
             x86_64_obj_pd_print_slots(pdptSlot);
         }
@@ -163,9 +163,9 @@ static void x86_64_obj_pdpt_print_slots(pml4e_t *pml4Slot)
 
 static void x86_64_obj_pml4_print_slots(pml4e_t *pml4)
 {
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
         pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
+        如果 (pml4e_ptr_get_present(pml4Slot)) {
             printf("pdpt_%p_%04lu = pdpt\n", pml4Slot, GET_PML4_INDEX(i));
             x86_64_obj_pdpt_print_slots(pml4Slot);
         }
@@ -175,7 +175,7 @@ static void x86_64_obj_pml4_print_slots(pml4e_t *pml4)
 void obj_tcb_print_vtable(tcb_t *tcb)
 {
     /* levels: PML4 -> PDPT -> PD -> PT */
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    如果 (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         printf("%p_pd = pml4\n", pml4);
@@ -190,19 +190,19 @@ static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
     lookupPTSlot_ret_t ptSlot;
     lookupPDSlot_ret_t pdSlot;
 
-    if (pdptSlot.status == EXCEPTION_NONE &&
+    如果 (pdptSlot.status == EXCEPTION_NONE &&
         pdpte_ptr_get_page_size(pdptSlot.pdptSlot) == pdpte_pdpte_1g &&
         pdpte_pdpte_1g_ptr_get_present(pdptSlot.pdptSlot)) {
         printf("frame_%p_%04lu ", pdptSlot.pdptSlot, GET_PDPT_INDEX(vptr));
         cap_frame_print_attrs_pdpt(pdptSlot.pdptSlot);
-    } else {
+    } 否则 {
         pdSlot = lookupPDSlot(vspace, vptr);
-        if (pdSlot.status == EXCEPTION_NONE &&
+        如果 (pdSlot.status == EXCEPTION_NONE &&
             ((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_large) &&
              pde_pde_large_ptr_get_present(pdSlot.pdSlot))) {
             printf("frame_%p_%04lu ", pdSlot.pdSlot, GET_PD_INDEX(vptr));
             cap_frame_print_attrs_pd(pdSlot.pdSlot);
-        } else {
+        } 否则 {
             ptSlot = lookupPTSlot(vspace, vptr);
             assert(ptSlot.status == EXCEPTION_NONE && pte_ptr_get_present(ptSlot.ptSlot));
             printf("frame_%p_%04lu ", ptSlot.ptSlot, GET_PT_INDEX(vptr));
@@ -226,10 +226,10 @@ void print_cap_arch(cap_t cap)
         asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
         vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        if (asid) {
+        如果 (asid) {
             printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPDSlot(find_ret.vspace_root, vptr).pdSlot, GET_PD_INDEX(vptr), (long unsigned int)asid);
-        } else {
+                   lookupPDSlot(find_ret.vspace_root, vptr).pdSlot, GET_PD_INDEX(vptr), (long unsigned 整数)asid);
+        } 否则 {
             printf("pt_%p_%04lu\n", lookupPDSlot(find_ret.vspace_root, vptr).pdSlot, GET_PD_INDEX(vptr));
         }
         break;
@@ -238,10 +238,10 @@ void print_cap_arch(cap_t cap)
         asid_t asid = cap_page_directory_cap_get_capPDMappedASID(cap);
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
         vptr_t vptr = cap_page_directory_cap_get_capPDMappedAddress(cap);
-        if (asid) {
+        如果 (asid) {
             printf("pd_%p_%04lu (asid: %lu)\n",
-                   lookupPDPTSlot(find_ret.vspace_root, vptr).pdptSlot, GET_PDPT_INDEX(vptr), (long unsigned int)asid);
-        } else {
+                   lookupPDPTSlot(find_ret.vspace_root, vptr).pdptSlot, GET_PDPT_INDEX(vptr), (long unsigned 整数)asid);
+        } 否则 {
             printf("pd_%p_%04lu\n", lookupPDPTSlot(find_ret.vspace_root, vptr).pdptSlot, GET_PDPT_INDEX(vptr));
         }
         break;
@@ -250,10 +250,10 @@ void print_cap_arch(cap_t cap)
         asid_t asid = cap_pdpt_cap_get_capPDPTMappedASID(cap);
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
         vptr_t vptr = cap_pdpt_cap_get_capPDPTMappedAddress(cap);
-        if (asid) {
+        如果 (asid) {
             printf("pdpt_%p_%04lu (asid: %lu)\n",
-                   lookupPML4Slot(find_ret.vspace_root, vptr), GET_PML4_INDEX(vptr), (long unsigned int)asid);
-        } else {
+                   lookupPML4Slot(find_ret.vspace_root, vptr), GET_PML4_INDEX(vptr), (long unsigned 整数)asid);
+        } 否则 {
             printf("pdpt_%p_%04lu\n", lookupPML4Slot(find_ret.vspace_root, vptr), GET_PML4_INDEX(vptr));
         }
         break;
@@ -261,10 +261,10 @@ void print_cap_arch(cap_t cap)
     case cap_pml4_cap: {
         asid_t asid = cap_pml4_cap_get_capPML4MappedASID(cap);
         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (asid) {
+        如果 (asid) {
             printf("%p_pd (asid: %lu)\n",
-                   find_ret.vspace_root, (long unsigned int)asid);
-        } else {
+                   find_ret.vspace_root, (long unsigned 整数)asid);
+        } 否则 {
             printf("%p_pd\n", find_ret.vspace_root);
         }
         break;
@@ -308,7 +308,7 @@ void print_cap_arch(cap_t cap)
     }
 #endif
     default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown cap %lu]\n", (long unsigned 整数)cap_get_capType(cap));
         break;
     }
     }
@@ -365,7 +365,7 @@ void print_object_arch(cap_t cap)
     }
 #endif
     default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
+        printf("[unknown object %lu]\n", (long unsigned 整数)cap_get_capType(cap));
         break;
     }
     }
@@ -383,10 +383,10 @@ static void x86_64_cap_pt_print_slots(pde_t *pdSlot, vptr_t vptr)
     pte_t *pt = paddr_to_pptr(pde_pde_pt_ptr_get_pt_base_address(pdSlot));
     printf("pt_%p_%04lu {\n", pdSlot, GET_PD_INDEX(vptr));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
         pte_t *ptSlot = pt + GET_PT_INDEX(i);
 
-        if (pte_ptr_get_present(ptSlot)) {
+        如果 (pte_ptr_get_present(ptSlot)) {
             printf("0x%lx: frame_%p_%04lu ", GET_PT_INDEX(i), ptSlot, GET_PT_INDEX(i));
             cap_frame_print_attrs_pt(ptSlot);
         }
@@ -399,22 +399,22 @@ static void x86_64_cap_pd_print_slots(pdpte_t *pdptSlot, vptr_t vptr)
     pde_t *pd = paddr_to_pptr(pdpte_pdpte_pd_ptr_get_pd_base_address(pdptSlot));
     printf("pd_%p_%04lu {\n", pdptSlot, GET_PDPT_INDEX(vptr));
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
         pde_t *pdSlot = pd + GET_PD_INDEX(i);
 
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
+        如果 ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
             printf("0x%lx: frame_%p_%04lu ", GET_PD_INDEX(i), pdSlot, GET_PD_INDEX(i));
             cap_frame_print_attrs_pd(pdSlot);
 
-        } else if (pde_pde_pt_ptr_get_present(pdSlot)) {
+        } 否则 如果 (pde_pde_pt_ptr_get_present(pdSlot)) {
             printf("0x%lx: pt_%p_%04lu\n", GET_PD_INDEX(i), pdSlot, GET_PD_INDEX(i));
         }
     }
     printf("}\n"); /* pd */
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
         pde_t *pdSlot = pd + GET_PD_INDEX(i);
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot)) {
+        如果 ((pde_ptr_get_page_size(pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot)) {
             x86_64_cap_pt_print_slots(pdSlot, i);
         }
     }
@@ -425,24 +425,24 @@ static void x86_64_cap_pdpt_print_slots(pml4e_t *pml4Slot, vptr_t vptr)
     pdpte_t *pdpt = paddr_to_pptr(pml4e_ptr_get_pdpt_base_address(pml4Slot));
 
     printf("pdpt_%p_%04lu {\n", pml4Slot, GET_PML4_INDEX(vptr));
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
         pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
+        如果 (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
             pdpte_pdpte_1g_ptr_get_present(pdptSlot)) {
             printf("0x%lx: frame_%p_%04lu ", GET_PDPT_INDEX(i), pdptSlot, GET_PDPT_INDEX(i));
             cap_frame_print_attrs_pdpt(pdptSlot);
 
-        } else if (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
+        } 否则 如果 (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
             printf("0x%lx: pd_%p_%04lu\n", GET_PDPT_INDEX(i), pdptSlot, GET_PDPT_INDEX(i));
         }
     }
     printf("}\n"); /* pdpt */
 
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
         pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_pd && pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
+        如果 (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_pd && pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
             x86_64_cap_pd_print_slots(pdptSlot, i);
         }
     }
@@ -451,17 +451,17 @@ static void x86_64_cap_pdpt_print_slots(pml4e_t *pml4Slot, vptr_t vptr)
 static void x86_64_cap_pml4_print_slots(pml4e_t *pml4)
 {
     printf("%p_pd {\n", pml4);
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
         pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
+        如果 (pml4e_ptr_get_present(pml4Slot)) {
             printf("0x%lx: pdpt_%p_%04lu\n", GET_PML4_INDEX(i), pml4Slot, GET_PML4_INDEX(i));
         }
     }
     printf("}\n"); /* pml4 */
 
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
+    为 (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
         pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
+        如果 (pml4e_ptr_get_present(pml4Slot)) {
             x86_64_cap_pdpt_print_slots(pml4Slot, i);
         }
     }
@@ -470,7 +470,7 @@ static void x86_64_cap_pml4_print_slots(pml4e_t *pml4)
 void obj_vtable_print_slots(tcb_t *tcb)
 {
     /* levels: PML4 -> PDPT -> PD -> PT */
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    如果 (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         x86_64_cap_pml4_print_slots(pml4);
