@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
+#অন্তর্ভাব <assert.h>
 
-#include <types.h>
-#include <kernel/thread.h>
-#include <object/structures.h>
-#include <object/tcb.h>
-#include <object/endpoint.h>
-#include <model/statedata.h>
-#include <machine/io.h>
+#অন্তর্ভাব <types.h>
+#অন্তর্ভাব <kernel/thread.h>
+#অন্তর্ভাব <object/structures.h>
+#অন্তর্ভাব <object/tcb.h>
+#অন্তর্ভাব <object/endpoint.h>
+#অন্তর্ভাব <model/statedata.h>
+#অন্তর্ভাব <machine/io.h>
 
-#include <object/notification.h>
+#অন্তর্ভাব <object/notification.h>
 
-static inline tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr)
+স্থির অন্তঃস্থ tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr)
 {
     tcb_queue_t ntfn_queue;
 
     ntfn_queue.head = (tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr);
     ntfn_queue.end = (tcb_t *)notification_ptr_get_ntfnQueue_tail(ntfnPtr);
 
-    return ntfn_queue;
+    প্রত্যাগম ntfn_queue;
 }
 
-static inline void ntfn_ptr_set_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue)
+স্থির অন্তঃস্থ শূন্য ntfn_ptr_set_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue)
 {
     notification_ptr_set_ntfnQueue_head(ntfnPtr, (word_t)ntfn_queue.head);
     notification_ptr_set_ntfnQueue_tail(ntfnPtr, (word_t)ntfn_queue.end);
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void maybeDonateSchedContext(tcb_t *tcb, notification_t *ntfnPtr)
+স্থির অন্তঃস্থ শূন্য maybeDonateSchedContext(tcb_t *tcb, notification_t *ntfnPtr)
 {
-    if (tcb->tcbSchedContext == NULL) {
+    যদি (tcb->tcbSchedContext == রিক্ত) {
         sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-        if (sc != NULL && sc->scTcb == NULL) {
+        যদি (sc != রিক্ত && sc->scTcb == রিক্ত) {
             schedContext_donate(sc, tcb);
             schedContext_resume(sc);
         }
@@ -49,24 +49,24 @@ static inline void maybeDonateSchedContext(tcb_t *tcb, notification_t *ntfnPtr)
 #ifdef CONFIG_KERNEL_MCS
 #define MCS_DO_IF_SC(tcb, ntfnPtr, _block) \
     maybeDonateSchedContext(tcb, ntfnPtr); \
-    if (isSchedulable(tcb)) { \
+    যদি (isSchedulable(tcb)) { \
         _block \
     }
-#else
+#অন্যথা
 #define MCS_DO_IF_SC(tcb, ntfnPtr, _block) \
     { \
         _block \
     }
 #endif
 
-void sendSignal(notification_t *ntfnPtr, word_t badge)
+শূন্য sendSignal(notification_t *ntfnPtr, word_t badge)
 {
-    switch (notification_ptr_get_state(ntfnPtr)) {
-    case NtfnState_Idle: {
+    বিকল্প (notification_ptr_get_state(ntfnPtr)) {
+    পক্ষ NtfnState_Idle: {
         tcb_t *tcb = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
         /* Check if we are bound and that thread is waiting for a message */
-        if (tcb) {
-            if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_BlockedOnReceive) {
+        যদি (tcb) {
+            যদি (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_BlockedOnReceive) {
                 /* Send and start thread running */
                 cancelIPC(tcb);
                 setThreadState(tcb, ThreadState_Running);
@@ -75,25 +75,25 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                     possibleSwitchTo(tcb);
                 })
 #ifdef CONFIG_KERNEL_MCS
-                if (sc_sporadic(tcb->tcbSchedContext)) {
+                যদি (sc_sporadic(tcb->tcbSchedContext)) {
                     /* We know that the tcb can't have the current SC
                      * as its own SC as this point as it should still be
                      * associated with the current thread, or no thread.
                      * This check is added here to reduce the cost of
                      * proving this to be true as a short-term stop-gap. */
-                    assert(tcb->tcbSchedContext != NODE_STATE(ksCurSC));
-                    if (tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                    প্রতিজ্ঞা(tcb->tcbSchedContext != গ্রন্থি_STATE(ksCurSC));
+                    যদি (tcb->tcbSchedContext != গ্রন্থি_STATE(ksCurSC)) {
                         refill_unblock_check(tcb->tcbSchedContext);
                     }
                 }
 #endif
 #ifdef CONFIG_VTX
-            } else if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM) {
+            } অন্যথা যদি (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM) {
 #ifdef ENABLE_SMP_SUPPORT
-                if (tcb->tcbAffinity != getCurrentCPUIndex()) {
+                যদি (tcb->tcbAffinity != getCurrentCPUIndex()) {
                     ntfn_set_active(ntfnPtr, badge);
                     doRemoteVMCheckBoundNotification(tcb->tcbAffinity, tcb);
-                } else
+                } অন্যথা
 #endif /* ENABLE_SMP_SUPPORT */
                 {
                     setThreadState(tcb, ThreadState_Running);
@@ -103,9 +103,9 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                         possibleSwitchTo(tcb);
                     })
 #ifdef CONFIG_KERNEL_MCS
-                    if (tcb->tcbSchedContext != NULL && sc_active(tcb->tcbSchedContext)) {
+                    যদি (tcb->tcbSchedContext != রিক্ত && sc_active(tcb->tcbSchedContext)) {
                         sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-                        if (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                        যদি (tcb->tcbSchedContext == sc && sc_sporadic(sc) && tcb->tcbSchedContext != গ্রন্থি_STATE(ksCurSC)) {
                             /* We know that the tcb can't have the current SC
                              * as its own SC as this point as it should still be
                              * associated with the current thread, or no thread.
@@ -119,7 +119,7 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
 #endif
                 }
 #endif /* CONFIG_VTX */
-            } else {
+            } অন্যথা {
                 /* In particular, this path is taken when a thread
                  * is waiting on a reply cap since BlockedOnReply
                  * would also trigger this path. I.e, a thread
@@ -129,12 +129,12 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
                  */
                 ntfn_set_active(ntfnPtr, badge);
             }
-        } else {
+        } অন্যথা {
             ntfn_set_active(ntfnPtr, badge);
         }
-        break;
+        ভঙ্গ;
     }
-    case NtfnState_Waiting: {
+    পক্ষ NtfnState_Waiting: {
         tcb_queue_t ntfn_queue;
         tcb_t *dest;
 
@@ -142,17 +142,17 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
         dest = ntfn_queue.head;
 
         /* Haskell error "WaitingNtfn Notification must have non-empty queue" */
-        assert(dest);
+        প্রতিজ্ঞা(dest);
 
         /* Dequeue TCB */
 #ifdef CONFIG_KERNEL_MCS
         tcbNTFNDequeue(dest, ntfnPtr);
-#else
+#অন্যথা
         ntfn_queue = tcbEPDequeue(dest, ntfn_queue);
         ntfn_ptr_set_queue(ntfnPtr, ntfn_queue);
 
         /* set the thread state to idle if the queue is empty */
-        if (!ntfn_queue.head) {
+        যদি (!ntfn_queue.head) {
             notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
         }
 #endif /* CONFIG_KERNEL_MCS */
@@ -164,44 +164,44 @@ void sendSignal(notification_t *ntfnPtr, word_t badge)
         })
 
 #ifdef CONFIG_KERNEL_MCS
-        if (sc_sporadic(dest->tcbSchedContext)) {
+        যদি (sc_sporadic(dest->tcbSchedContext)) {
             /* We know that the receiver can't have the current SC
              * as its own SC as this point as it should still be
              * associated with the current thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(dest->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (dest->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            প্রতিজ্ঞা(dest->tcbSchedContext != গ্রন্থি_STATE(ksCurSC));
+            যদি (dest->tcbSchedContext != গ্রন্থি_STATE(ksCurSC)) {
                 refill_unblock_check(dest->tcbSchedContext);
             }
         }
 #endif
-        break;
+        ভঙ্গ;
     }
 
-    case NtfnState_Active: {
+    পক্ষ NtfnState_Active: {
         word_t badge2;
 
-        badge2 = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
+        badge2 = notification_ptr_get_ntfn_বার্তা_Identifier(ntfnPtr);
         badge2 |= badge;
 
-        notification_ptr_set_ntfnMsgIdentifier(ntfnPtr, badge2);
-        break;
+        notification_ptr_set_ntfn_বার্তা_Identifier(ntfnPtr, badge2);
+        ভঙ্গ;
     }
     }
 }
 
-void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
+শূন্য receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
 {
     notification_t *ntfnPtr;
 
     ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 
-    switch (notification_ptr_get_state(ntfnPtr)) {
-    case NtfnState_Idle:
-    case NtfnState_Waiting: {
+    বিকল্প (notification_ptr_get_state(ntfnPtr)) {
+    পক্ষ NtfnState_Idle:
+    পক্ষ NtfnState_Waiting: {
 
-        if (isBlocking) {
+        যদি (isBlocking) {
             /* Block thread on notification object */
             thread_state_ptr_set_tsType(&thread->tcbState,
                                         ThreadState_BlockedOnNotification);
@@ -212,7 +212,7 @@ void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
             /* Enqueue TCB */
 #ifdef CONFIG_KERNEL_MCS
             tcbNTFNAppend(thread, ntfnPtr);
-#else
+#অন্যথা
             tcb_queue_t ntfn_queue;
             ntfn_queue = ntfn_ptr_get_queue(ntfnPtr);
             ntfn_queue = tcbEPAppend(thread, ntfn_queue);
@@ -224,42 +224,42 @@ void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking)
 #ifdef CONFIG_KERNEL_MCS
             maybeReturnSchedContext(ntfnPtr, thread);
 #endif
-        } else {
+        } অন্যথা {
             doNBRecvFailedTransfer(thread);
         }
 
-        break;
+        ভঙ্গ;
     }
 
-    case NtfnState_Active:
+    পক্ষ NtfnState_Active:
         setRegister(
             thread, badgeRegister,
-            notification_ptr_get_ntfnMsgIdentifier(ntfnPtr));
+            notification_ptr_get_ntfn_বার্তা_Identifier(ntfnPtr));
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
 #ifdef CONFIG_KERNEL_MCS
         maybeDonateSchedContext(thread, ntfnPtr);
         // If the SC has been donated to the current thread (in a reply_recv, send_recv scenario) then
         // we may need to perform refill_unblock_check if the SC is becoming activated.
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
+        যদি (thread->tcbSchedContext != গ্রন্থি_STATE(ksCurSC) && sc_sporadic(thread->tcbSchedContext)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
 #endif
-        break;
+        ভঙ্গ;
     }
 }
 
 #ifdef CONFIG_KERNEL_MCS
-static inline void removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_t *ntfnPtr)
+স্থির অন্তঃস্থ শূন্য removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcbNTFNDequeue(thread, ntfnPtr);
     setThreadState(thread, ThreadState_Restart);
-    if (sc_sporadic(thread->tcbSchedContext)) {
+    যদি (sc_sporadic(thread->tcbSchedContext)) {
         /* We know that the thread can't have the current SC as its own SC at
          * this point as it should still be associated with the current thread,
          * or no thread. This check is added here to reduce the cost of proving
          * this to be true as a short-term stop-gap. */
-        assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-        if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+        প্রতিজ্ঞা(thread->tcbSchedContext != গ্রন্থি_STATE(ksCurSC));
+        যদি (thread->tcbSchedContext != গ্রন্থি_STATE(ksCurSC)) {
             refill_unblock_check(thread->tcbSchedContext);
         }
     }
@@ -267,9 +267,9 @@ static inline void removeAndRestartNTFNQueuedThread(tcb_t *thread, notification_
 }
 #endif
 
-void cancelAllSignals(notification_t *ntfnPtr)
+শূন্য cancelAllSignals(notification_t *ntfnPtr)
 {
-    if (notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting) {
+    যদি (notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting) {
         /* Clear the queue and set all blocked threads to Restart */
 #ifdef CONFIG_KERNEL_MCS
         tcb_queue_t queue;
@@ -277,18 +277,18 @@ void cancelAllSignals(notification_t *ntfnPtr)
 
         queue = ntfn_ptr_get_queue(ntfnPtr);
 
-        for (thread = queue.head; thread; thread = next) {
+        প্রতি (thread = queue.head; thread; thread = next) {
             next = thread->tcbSchedNext;
             removeAndRestartNTFNQueuedThread(thread, ntfnPtr);
         }
-#else
+#অন্যথা
         tcb_t *thread = TCB_PTR(notification_ptr_get_ntfnQueue_head(ntfnPtr));
 
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
         notification_ptr_set_ntfnQueue_head(ntfnPtr, 0);
         notification_ptr_set_ntfnQueue_tail(ntfnPtr, 0);
 
-        for (; thread; thread = thread->tcbEPNext) {
+        প্রতি (; thread; thread = thread->tcbEPNext) {
             setThreadState(thread, ThreadState_Restart);
             SCHED_ENQUEUE(thread);
         }
@@ -297,23 +297,23 @@ void cancelAllSignals(notification_t *ntfnPtr)
     }
 }
 
-void cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr)
+শূন্য cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr)
 {
 
     /* Haskell error "cancelSignal: notification object must be in a waiting" state */
-    assert(notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting);
+    প্রতিজ্ঞা(notification_ptr_get_state(ntfnPtr) == NtfnState_Waiting);
 
     /* Dequeue TCB */
 #ifdef CONFIG_KERNEL_MCS
     tcbNTFNDequeue(threadPtr, ntfnPtr);
-#else
+#অন্যথা
     tcb_queue_t ntfn_queue;
     ntfn_queue = ntfn_ptr_get_queue(ntfnPtr);
     ntfn_queue = tcbEPDequeue(threadPtr, ntfn_queue);
     ntfn_ptr_set_queue(ntfnPtr, ntfn_queue);
 
     /* Make notification object idle */
-    if (!ntfn_queue.head) {
+    যদি (!ntfn_queue.head) {
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
     }
 #endif /* CONFIG_KERNEL_MCS */
@@ -322,19 +322,19 @@ void cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr)
     setThreadState(threadPtr, ThreadState_Inactive);
 }
 
-void completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
+শূন্য completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
 {
     word_t badge;
 
-    if (likely(tcb && notification_ptr_get_state(ntfnPtr) == NtfnState_Active)) {
-        badge = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
+    যদি (likely(tcb && notification_ptr_get_state(ntfnPtr) == NtfnState_Active)) {
+        badge = notification_ptr_get_ntfn_বার্তা_Identifier(ntfnPtr);
         setRegister(tcb, badgeRegister, badge);
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
 #ifdef CONFIG_KERNEL_MCS
         maybeDonateSchedContext(tcb, ntfnPtr);
-        if (sc_sporadic(tcb->tcbSchedContext)) {
+        যদি (sc_sporadic(tcb->tcbSchedContext)) {
             sched_context_t *sc = SC_PTR(notification_ptr_get_ntfnSchedContext(ntfnPtr));
-            if (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            যদি (tcb->tcbSchedContext == sc && tcb->tcbSchedContext != গ্রন্থি_STATE(ksCurSC)) {
                 /* We know that the tcb can't have the current SC
                  * as its own SC as this point as it should still be
                  * associated with the current thread, or no thread.
@@ -346,45 +346,45 @@ void completeSignal(notification_t *ntfnPtr, tcb_t *tcb)
             }
         }
 #endif
-    } else {
+    } অন্যথা {
         fail("tried to complete signal with inactive notification object");
     }
 }
 
-static inline void doUnbindNotification(notification_t *ntfnPtr, tcb_t *tcbptr)
+স্থির অন্তঃস্থ শূন্য doUnbindNotification(notification_t *ntfnPtr, tcb_t *tcbptr)
 {
     notification_ptr_set_ntfnBoundTCB(ntfnPtr, (word_t) 0);
-    tcbptr->tcbBoundNotification = NULL;
+    tcbptr->tcbBoundNotification = রিক্ত;
 }
 
-void unbindMaybeNotification(notification_t *ntfnPtr)
+শূন্য unbindMaybeNotification(notification_t *ntfnPtr)
 {
     tcb_t *boundTCB;
     boundTCB = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
 
-    if (boundTCB) {
+    যদি (boundTCB) {
         doUnbindNotification(ntfnPtr, boundTCB);
     }
 }
 
-void unbindNotification(tcb_t *tcb)
+শূন্য unbindNotification(tcb_t *tcb)
 {
     notification_t *ntfnPtr;
     ntfnPtr = tcb->tcbBoundNotification;
 
-    if (ntfnPtr) {
+    যদি (ntfnPtr) {
         doUnbindNotification(ntfnPtr, tcb);
     }
 }
 
-void bindNotification(tcb_t *tcb, notification_t *ntfnPtr)
+শূন্য bindNotification(tcb_t *tcb, notification_t *ntfnPtr)
 {
     notification_ptr_set_ntfnBoundTCB(ntfnPtr, (word_t)tcb);
     tcb->tcbBoundNotification = ntfnPtr;
 }
 
 #ifdef CONFIG_KERNEL_MCS
-void tcbNTFNAppend(tcb_t *thread, notification_t *ntfnPtr)
+শূন্য tcbNTFNAppend(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
@@ -395,7 +395,7 @@ void tcbNTFNAppend(tcb_t *thread, notification_t *ntfnPtr)
     notification_ptr_set_state(ntfnPtr, NtfnState_Waiting);
 }
 
-void tcbNTFNDequeue(tcb_t *thread, notification_t *ntfnPtr)
+শূন্য tcbNTFNDequeue(tcb_t *thread, notification_t *ntfnPtr)
 {
     tcb_queue_t queue;
     tcb_queue_t new_queue;
@@ -404,12 +404,12 @@ void tcbNTFNDequeue(tcb_t *thread, notification_t *ntfnPtr)
     new_queue = tcb_queue_remove(queue, thread);
     ntfn_ptr_set_queue(ntfnPtr, new_queue);
 
-    if (tcb_queue_empty(new_queue)) {
+    যদি (tcb_queue_empty(new_queue)) {
         notification_ptr_set_state(ntfnPtr, NtfnState_Idle);
     }
 }
 
-void reorderNTFN(notification_t *ntfnPtr, tcb_t *thread)
+শূন্য reorderNTFN(notification_t *ntfnPtr, tcb_t *thread)
 {
     tcb_queue_t queue = ntfn_ptr_get_queue(ntfnPtr);
     queue = tcb_queue_remove(queue, thread);

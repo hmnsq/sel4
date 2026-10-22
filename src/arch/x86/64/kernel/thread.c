@@ -4,33 +4,33 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#অন্তর্ভাব <object.h>
+#অন্তর্ভাব <machine.h>
+#অন্তর্ভাব <arch/model/statedata.h>
+#অন্তর্ভাব <arch/kernel/vspace.h>
+#অন্তর্ভাব <arch/kernel/thread.h>
+#অন্তর্ভাব <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+শূন্য Arch_switchToThread(tcb_t *tcb)
 {
     /* set PD */
     setVMRoot(tcb);
 #ifdef ENABLE_SMP_SUPPORT
-    asm volatile("movq %[value], %%gs:%c[offset]"
+    asm চঞ্চল("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
+                 : [মান] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [offset] "i"(OFFSETOF(গ্রন্থি_Info_t, currentThreadUserContext)));
 #endif
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+    যদি (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    যদি (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE শূন্য Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, FLAGS, FLAGS_USER_DEFAULT);
     setRegister(tcb, NextIP, (word_t)&idle_thread);
@@ -44,30 +44,30 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
     setRegister(tcb, RSP, 0);
 }
 
-void Arch_switchToIdleThread(void)
+শূন্য Arch_switchToIdleThread(শূন্য)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = গ্রন্থি_STATE(ksIdleThread);
     /* Force the idle thread to run on kernel page table */
     setVMRoot(tcb);
 #ifdef ENABLE_SMP_SUPPORT
-    asm volatile("movq %[value], %%gs:%c[offset]"
+    asm চঞ্চল("movq %[value], %%gs:%c[offset]"
                  :
-                 : [value] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
-                 [offset] "i"(OFFSETOF(nodeInfo_t, currentThreadUserContext)));
+                 : [মান] "r"(&tcb->tcbArch.tcbContext.registers[Error + 1]),
+                 [offset] "i"(OFFSETOF(গ্রন্থি_Info_t, currentThreadUserContext)));
 #endif
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+শূন্য Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Mode_postModifyRegisters(tcb_t *tptr)
+শূন্য Mode_postModifyRegisters(tcb_t *tptr)
 {
     /* Setting Error to 0 will force a return by the interrupt path, which
      * does a full restore. Unless we're the current thread, in which case
      * we still have to go back out via a sysret */
-    if (tptr != NODE_STATE(ksCurThread)) {
+    যদি (tptr != গ্রন্থি_STATE(ksCurThread)) {
         setRegister(tptr, Error, 0);
     }
 }

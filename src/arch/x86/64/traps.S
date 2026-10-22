@@ -148,7 +148,7 @@
 #define _expand_except_(except) EXPAND_EXCEPT_##except
 
 #define INT_HANDLER_COMMON(number,error_code,except) \
-.global int_##number;                               \
+.বৈশ্বিক int_##number;                               \
 .type   int_##number, %function;                    \
 int_##number:                                       \
     error_code;                                     \
@@ -457,15 +457,15 @@ BEGIN_FUNC(handle_interrupt)
     movq    %rax, %rsi
 
     # gtfo to C land, we will not return
-    call    c_x64_handle_interrupt
+    আহ্বান    c_x64_handle_interrupt
 END_FUNC(handle_interrupt)
 
 BEGIN_FUNC(nested_interrupt)
-    # we got an interrupt from the kernel, call into c to save the irq number,
+    # we got an interrupt from the kernel, আহ্বান into c to save the irq number,
     # then return back to where we were
     INT_SAVE_STATE
     movq    %rcx, %rdi
-    call    c_nested_interrupt
+    আহ্বান    c_nested_interrupt
     # disable the interrupt flag so we don't take any more interrupts
     LOAD_IRQ_STACK(rbx)
     andq    $~0x200, 24(%rbx)
@@ -579,7 +579,7 @@ BEGIN_FUNC(kernel_exception)
     push    %r11
     movq    %cr2, %r11
     push    %r11
-    call    handleKernelException
+    আহ্বান    handleKernelException
     addq    $32, %rsp
     # Set RIP in the saved register context to the new IP returned from handleKernelException
     LOAD_IRQ_STACK(r8)
@@ -668,7 +668,7 @@ BEGIN_FUNC(handle_syscall)
     # mov reply to correct register for calling c_handle_syscall
     movq   %r12, %rcx
 #endif
-    call    c_handle_syscall
+    আহ্বান    c_handle_syscall
 END_FUNC(handle_syscall)
 
 # Handle vmexit
@@ -739,6 +739,6 @@ BEGIN_FUNC(handle_vmexit)
     # switch to kernel stack
     LOAD_KERNEL_STACK
     # Handle the vmexit, we will not return
-    call    c_handle_vmexit
+    আহ্বান    c_handle_vmexit
 END_FUNC(handle_vmexit)
 #endif /* CONFIG_VTX */

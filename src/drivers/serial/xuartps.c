@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <stdint.h>
+#অন্তর্ভাব <util.h>
+#অন্তর্ভাব <machine/io.h>
+#অন্তর্ভাব <plat/machine/devices_gen.h>
 
 #define UART_CONTROL                 0x00
 #define UART_MODE                    0x04
@@ -30,20 +30,20 @@
 #define UART_INTRPT_MASK_TXEMPTY     BIT(3)
 #define UART_CHANNEL_STS_TXEMPTY     BIT(3)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((চঞ্চল uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+শূন্য uart_drv_putchar(unsigned বর্ণ c)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
+    যাবত্ (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
     *UART_REG(UART_TX_RX_FIFO) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned বর্ণ uart_drv_getchar(শূন্য)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & BIT(UART_CHANNEL_STS_TXEMPTY)));
-    return *UART_REG(UART_TX_RX_FIFO);
+    যাবত্ (!(*UART_REG(UART_CHANNEL_STS) & BIT(UART_CHANNEL_STS_TXEMPTY)));
+    প্রত্যাগম *UART_REG(UART_TX_RX_FIFO);
 }
 #endif /* CONFIG_DEBUG_BUILD */

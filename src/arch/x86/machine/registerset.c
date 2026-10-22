@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/registerset.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <arch/machine/registerset.h>
 
-void Arch_initContext(user_context_t *context)
+শূন্য Arch_initContext(user_context_t *context)
 {
     Mode_initContext(context);
     context->registers[FS_BASE] = 0;
@@ -29,15 +29,15 @@ word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
 {
     /* First perform any mode specific sanitization */
     v = Mode_sanitiseRegister(reg, v);
-    if (reg == FLAGS) {
+    যদি (reg == FLAGS) {
         /* Set architecturally defined high and low bits */
-        v |=  FLAGS_HIGH;
-        v &= ~FLAGS_LOW;
+        v |=  FLAGS_উপরের;
+        v &= ~FLAGS_নিচের;
         /* require user to have interrupts and no traps */
         v |=  FLAGS_IF;
         v &= ~FLAGS_TF;
         /* remove any other bits that shouldn't be set */
         v &=  FLAGS_MASK;
     }
-    return v;
+    প্রত্যাগম v;
 }

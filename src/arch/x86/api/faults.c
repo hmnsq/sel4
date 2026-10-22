@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <util.h>
+#অন্তর্ভাব <types.h>
+#অন্তর্ভাব <machine/io.h>
+#অন্তর্ভাব <api/faults.h>
+#অন্তর্ভাব <api/syscall.h>
+#অন্তর্ভাব <util.h>
 
 bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    বিকল্প (faultType) {
+    পক্ষ seL4_Fault_VMFault:
+        প্রত্যাগম true;
 
-    default:
+    স্বভাব:
         fail("Invalid fault");
     }
 }
 
 word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
+    বিকল্প (faultType) {
+    পক্ষ seL4_Fault_VMFault: {
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
               seL4_Fault_VMFault_get_address(sender->tcbFault));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        প্রত্যাগম setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
-    default:
+    স্বভাব:
         fail("Invalid fault");
     }
 }
@@ -66,10 +66,10 @@ word_t handleKernelException(
     word_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
-        word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
-        ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
-        return ret;
+    যদি (vector == int_gp_fault && ARCH_গ্রন্থি_STATE(x86KSGPExceptReturnTo) != 0) {
+        word_t ret = ARCH_গ্রন্থি_STATE(x86KSGPExceptReturnTo);
+        ARCH_গ্রন্থি_STATE(x86KSGPExceptReturnTo) = 0;
+        প্রত্যাগম ret;
     }
     printf("\n========== KERNEL EXCEPTION ==========\n");
     printf("Vector:  0x%lx\n", vector);
@@ -82,9 +82,9 @@ word_t handleKernelException(
     printf("CR3:     0x%lx (page-directory physical address)\n", cr3);
     printf("CR4:     0x%lx\n", cr4);
     printf("\nStack Dump:\n");
-    for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
-        printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
+    প্রতি (i = 0; i < 20; i++) {
+        word_t UNUSED স্তূপ = sp + i * পরিমাণ(word_t);
+        printf("*0x%lx == 0x%lx\n", স্তূপ, *(word_t *)স্তূপ);
     }
     printf("\nHalting...\n");
     halt();
