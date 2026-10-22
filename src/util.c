@@ -24,8 +24,8 @@ void memzero(void *s, unsigned long n)
     uint8_t *p = s;
 
     /* Ensure alignment constraints are met. */
-    assert((unsigned long)s % sizeof(unsigned long) == 0);
-    assert(n % sizeof(unsigned long) == 0);
+    assert((unsigned long)s % parimaa_na(unsigned long) == 0);
+    assert(n % parimaa_na(unsigned long) == 0);
 
     /* We will never memzero an area larger than the largest current
        live object */
@@ -33,10 +33,10 @@ void memzero(void *s, unsigned long n)
         \<or> \<acute>n <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Write out words. */
-    while (n != 0) {
+    နေစဉ် (n != 0) {
         *(ulong_alias *)p = 0;
-        p += sizeof(ulong_alias);
-        n -= sizeof(ulong_alias);
+        p += parimaa_na(ulong_alias);
+        n -= parimaa_na(ulong_alias);
     }
 }
 
@@ -48,16 +48,16 @@ void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
      * If we are only writing zeros and we are word aligned, we can
      * use the optimized 'memzero' function.
      */
-    if (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
+    အကယ်၍ (likely(c == 0 && ((unsigned long)s % parimaa_na(unsigned long)) == 0 && (n % parimaa_na(unsigned long)) == 0)) {
         memzero(s, n);
-    } else {
+    } မဟုတ်ပါက {
         /* Otherwise, we use a slower, simple memset. */
-        for (p = (uint8_t *)s; n > 0; n--, p++) {
+        အတွက် (p = (uint8_t *)s; n > 0; n--, p++) {
             *p = (uint8_t)c;
         }
     }
 
-    return s;
+    ပြန်ပေး s;
 }
 
 void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
@@ -65,76 +65,76 @@ void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
     uint8_t *p;
     const uint8_t *q;
 
-    for (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
+    အတွက် (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
         *p = *q;
     }
 
-    return ptr_dst;
+    ပြန်ပေး ptr_dst;
 }
 
-int PURE strncmp(const char *s1, const char *s2, int n)
+ကိန်းပြည့် PURE strncmp(const var_na *s1, const var_na *s2, ကိန်းပြည့် n)
 {
     word_t i;
-    int diff;
+    ကိန်းပြည့် diff;
 
-    for (i = 0; i < n; i++) {
-        diff = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
-        if (diff != 0 || s1[i] == '\0') {
-            return diff;
+    အတွက် (i = 0; i < n; i++) {
+        diff = ((unsigned var_na *)s1)[i] - ((unsigned var_na *)s2)[i];
+        အကယ်၍ (diff != 0 || s1[i] == '\0') {
+            ပြန်ပေး diff;
         }
     }
 
-    return 0;
+    ပြန်ပေး 0;
 }
 
-long CONST char_to_long(char c)
+long CONST char_to_long(var_na c)
 {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+    အကယ်၍ (c >= '0' && c <= '9') {
+        ပြန်ပေး c - '0';
+    } မဟုတ်ပါက အကယ်၍ (c >= 'A' && c <= 'F') {
+        ပြန်ပေး c - 'A' + 10;
+    } မဟုတ်ပါက အကယ်၍ (c >= 'a' && c <= 'f') {
+        ပြန်ပေး c - 'a' + 10;
     }
-    return -1;
+    ပြန်ပေး -1;
 }
 
-long PURE str_to_long(const char *str)
+long PURE str_to_long(const var_na *str)
 {
-    unsigned int base;
+    unsigned ကိန်းပြည့် base;
     long res;
     long val = 0;
-    char c;
+    var_na c;
 
     /* NULL ptr and empty str */
-    if (str == NULL || *str == 0) {
-        return -1;
+    အကယ်၍ (str == NULL || *str == 0) {
+        ပြန်ပေး -1;
     }
 
     /* check for "0x", *(str + 1) may be 0, but must be allocated since str is not empty */
-    if (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
+    အကယ်၍ (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
         base = 16;
         str += 2;
         /* '0x' on its own is malformed */
-        if (*str == 0) {
-            return -1;
+        အကယ်၍ (*str == 0) {
+            ပြန်ပေး -1;
         }
-    } else {
+    } မဟုတ်ပါက {
         base = 10;
     }
 
     c = *str;
-    while (c != '\0') {
+    နေစဉ် (c != '\0') {
         res = char_to_long(c);
-        if (res == -1 || res >= base) {
-            return -1;
+        အကယ်၍ (res == -1 || res >= base) {
+            ပြန်ပေး -1;
         }
         val = val * base + res;
         str++;
         c = *str;
     }
 
-    return val;
+    ပြန်ပေး val;
 }
 
 // The following implementations of CLZ (count leading zeros) and CTZ (count
@@ -168,9 +168,9 @@ long PURE str_to_long(const char *str)
 // binary.
 
 // Check some assumptions made by the clzl, clzll, ctzl functions:
-compile_assert(clz_ulong_32_or_64, sizeof(unsigned long) == 4 || sizeof(unsigned long) == 8);
-compile_assert(clz_ullong_64, sizeof(unsigned long long) == 8);
-compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
+compile_assert(clz_ulong_32_or_64, parimaa_na(unsigned long) == 4 || parimaa_na(unsigned long) == 8);
+compile_assert(clz_ullong_64, parimaa_na(unsigned long long) == 8);
+compile_assert(clz_word_size, parimaa_na(unsigned long) * 8 == CONFIG_WORD_SIZE);
 
 // Count leading zeros.
 // This implementation contains no branches. If the architecture provides an
@@ -183,7 +183,7 @@ compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
 // These functions are potentially `UNUSED` because we want to always expose
 // them to verification without necessarily linking them into the kernel
 // binary.
-static UNUSED CONST inline unsigned clz32(uint32_t x)
+static UNUSED CONST anta_hstha unsigned clz32(uint32_t x)
 {
     // Compiler builtins typically return int, but we use unsigned internally
     // to reduce the number of guards we see in the proofs.
@@ -206,35 +206,35 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // while also generating reasonably efficient binary code.
 
     // The `if (1)` blocks make it easier to reason by chunks in the proofs.
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x0000ffff
         unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
         x >>= bits; // <= 0x0000ffff
         count -= bits; // [16, 32]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x000000ff
         unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
         x >>= bits; // <= 0x000000ff
         count -= bits; // [8, 16, 24, 32]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x0000000f
         unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
         x >>= bits; // <= 0x0000000f
         count -= bits; // [4, 8, 12, ..., 32]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x00000003
         unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
         x >>= bits; // <= 0x00000003
         count -= bits; // [2, 4, 6, ..., 32]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x00000001
         unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
@@ -245,10 +245,10 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // If the original input was zero, there will have been no shifts, so this
     // gives a result of 32. Otherwise, x is now exactly 1, so subtracting from
     // count gives a result from [0, 1, 2, ..., 31].
-    return count - x;
+    ပြန်ပေး count - x;
 }
 
-static UNUSED CONST inline unsigned clz64(uint64_t x)
+static UNUSED CONST anta_hstha unsigned clz64(uint64_t x)
 {
     unsigned count = 64;
     uint64_t mask = UINT64_MAX;
@@ -257,42 +257,42 @@ static UNUSED CONST inline unsigned clz64(uint64_t x)
     // iterations in full for slightly better code generation at low
     // optimisation levels, and to allow us to reuse the proof machinery we
     // developed for clz32.
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 5
         mask >>= (1 << 5); // 0x00000000ffffffff
         unsigned bits = ((unsigned)(mask < x)) << 5; // [0, 32]
         x >>= bits; // <= 0x00000000ffffffff
         count -= bits; // [32, 64]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x000000000000ffff
         unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
         x >>= bits; // <= 0x000000000000ffff
         count -= bits; // [16, 32, 48, 64]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x00000000000000ff
         unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
         x >>= bits; // <= 0x00000000000000ff
         count -= bits; // [8, 16, 24, ..., 64]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x000000000000000f
         unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
         x >>= bits; // <= 0x000000000000000f
         count -= bits; // [4, 8, 12, ..., 64]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x0000000000000003
         unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
         x >>= bits; // <= 0x0000000000000003
         count -= bits; // [2, 4, 6, ..., 64]
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x0000000000000001
         unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
@@ -300,12 +300,12 @@ static UNUSED CONST inline unsigned clz64(uint64_t x)
         count -= bits; // [1, 2, 3, ..., 64]
     }
 
-    return count - x;
+    ပြန်ပေး count - x;
 }
 
 // Count trailing zeros.
 // See comments on clz32.
-static UNUSED CONST inline unsigned ctz32(uint32_t x)
+static UNUSED CONST anta_hstha unsigned ctz32(uint32_t x)
 {
     unsigned count = (x == 0);
     uint32_t mask = UINT32_MAX;
@@ -328,35 +328,35 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
     // The iterations are given a very regular structure to facilitate proofs,
     // while also generating reasonably efficient binary code.
 
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x0000ffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
         x >>= bits; // xi != 0 --> x & 0x0000ffff != 0
         count += bits; // if xi != 0 then [0, 16] else 17
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x000000ff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
         x >>= bits; // xi != 0 --> x & 0x000000ff != 0
         count += bits; // if xi != 0 then [0, 8, 16, 24] else 25
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x0000000f
         unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
         x >>= bits; // xi != 0 --> x & 0x0000000f != 0
         count += bits; // if xi != 0 then [0, 4, 8, ..., 28] else 29
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x00000003
         unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
         x >>= bits; // xi != 0 --> x & 0x00000003 != 0
         count += bits; // if xi != 0 then [0, 2, 4, ..., 30] else 31
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x00000001
         unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
@@ -364,50 +364,50 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
         count += bits; // if xi != 0 then [0, 1, 2, ..., 31] else 32
     }
 
-    return count;
+    ပြန်ပေး count;
 }
 
-static UNUSED CONST inline unsigned ctz64(uint64_t x)
+static UNUSED CONST anta_hstha unsigned ctz64(uint64_t x)
 {
     unsigned count = (x == 0);
     uint64_t mask = UINT64_MAX;
 
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 5
         mask >>= (1 << 5); // 0x00000000ffffffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 5; // [0, 32]
         x >>= bits; // xi != 0 --> x & 0x00000000ffffffff != 0
         count += bits; // if xi != 0 then [0, 32] else 33
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 4
         mask >>= (1 << 4); // 0x000000000000ffff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
         x >>= bits; // xi != 0 --> x & 0x000000000000ffff != 0
         count += bits; // if xi != 0 then [0, 16, 32, 48] else 49
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 3
         mask >>= (1 << 3); // 0x00000000000000ff
         unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
         x >>= bits; // xi != 0 --> x & 0x00000000000000ff != 0
         count += bits; // if xi != 0 then [0, 8, 16, ..., 56] else 57
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 2
         mask >>= (1 << 2); // 0x000000000000000f
         unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
         x >>= bits; // xi != 0 --> x & 0x000000000000000f != 0
         count += bits; // if xi != 0 then [0, 4, 8, ..., 60] else 61
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 1
         mask >>= (1 << 1); // 0x0000000000000003
         unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
         x >>= bits; // xi != 0 --> x & 0x0000000000000003 != 0
         count += bits; // if xi != 0 then [0, 2, 4, ..., 62] else 63
     }
-    if (1) {
+    အကယ်၍ (1) {
         // iteration 0
         mask >>= (1 << 0); // 0x0000000000000001
         unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
@@ -415,7 +415,7 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
         count += bits; // if xi != 0 then [0, 1, 2, ..., 63] else 64
     }
 
-    return count;
+    ပြန်ပေး count;
 }
 
 // GCC's builtins will emit calls to these functions when the platform does
@@ -424,29 +424,29 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
 // We define these separately from `ctz32` etc. so that we can verify all of
 // `ctz32` etc. without necessarily linking them into the kernel binary.
 #ifdef CONFIG_CLZ_32
-CONST int __clzsi2(uint32_t x)
+CONST ကိန်းပြည့် __clzsi2(uint32_t x)
 {
-    return clz32(x);
+    ပြန်ပေး clz32(x);
 }
 #endif
 
 #ifdef CONFIG_CLZ_64
-CONST int __clzdi2(uint64_t x)
+CONST ကိန်းပြည့် __clzdi2(uint64_t x)
 {
-    return clz64(x);
+    ပြန်ပေး clz64(x);
 }
 #endif
 
 #ifdef CONFIG_CTZ_32
-CONST int __ctzsi2(uint32_t x)
+CONST ကိန်းပြည့် __ctzsi2(uint32_t x)
 {
-    return ctz32(x);
+    ပြန်ပေး ctz32(x);
 }
 #endif
 
 #ifdef CONFIG_CTZ_64
-CONST int __ctzdi2(uint64_t x)
+CONST ကိန်းပြည့် __ctzdi2(uint64_t x)
 {
-    return ctz64(x);
+    ပြန်ပေး ctz64(x);
 }
 #endif

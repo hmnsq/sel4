@@ -13,8 +13,8 @@
 bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
 {
     switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    pak_sa seL4_Fault_VMFault:
+        ပြန်ပေး true;
 
     default:
         fail("Invalid fault");
@@ -24,13 +24,13 @@ bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
 word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
 {
     switch (faultType) {
-    case seL4_Fault_VMFault: {
+    pak_sa seL4_Fault_VMFault: {
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
               seL4_Fault_VMFault_get_address(sender->tcbFault));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        ပြန်ပေး setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
     default:
@@ -66,10 +66,10 @@ word_t handleKernelException(
     word_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
+    အကယ်၍ (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
         word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
         ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
-        return ret;
+        ပြန်ပေး ret;
     }
     printf("\n========== KERNEL EXCEPTION ==========\n");
     printf("Vector:  0x%lx\n", vector);
@@ -82,8 +82,8 @@ word_t handleKernelException(
     printf("CR3:     0x%lx (page-directory physical address)\n", cr3);
     printf("CR4:     0x%lx\n", cr4);
     printf("\nStack Dump:\n");
-    for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
+    အတွက် (i = 0; i < 20; i++) {
+        word_t UNUSED stack = sp + i * parimaa_na(word_t);
         printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
     }
     printf("\nHalting...\n");

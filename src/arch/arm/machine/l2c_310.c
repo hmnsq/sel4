@@ -99,15 +99,15 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 #define CTRL2_PFET_PREFETCH_OFFSET(X)    ((X) * BIT( 0) )
 
 
-struct l2cc_map {
+sa_nracanaa l2cc_map {
 
-    struct {
+    sa_nracanaa {
         uint32_t cache_id;              /* 0x000 */
         uint32_t cache_type;            /* 0x004 */
         uint32_t res[62];
     } id /* reg0 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t control;               /* 0x100 */
         uint32_t aux_control;           /* 0x104 */
         uint32_t tag_ram_control;       /* 0x108 */
@@ -115,7 +115,7 @@ struct l2cc_map {
         uint32_t res[60];
     } control /* reg1 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t ev_counter_ctrl;       /* 0x200 */
         uint32_t ev_counter1_cfg;       /* 0x204 */
         uint32_t ev_counter0_cfg;       /* 0x208 */
@@ -128,20 +128,20 @@ struct l2cc_map {
         uint32_t res[55];
     } interrupt /* reg2 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg3;
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg4;
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg5;
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg6;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[12];
         uint32_t cache_sync;            /* 0x730 */
         uint32_t res1[15];
@@ -160,11 +160,11 @@ struct l2cc_map {
         uint32_t clean_inv_way;         /* 0x7FC */
     } maintenance /* reg7 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg8;
 
-    struct {
+    sa_nracanaa {
         uint32_t d_lockdown0;           /* 0x900 */
         uint32_t i_lockdown0;           /* 0x904 */
         uint32_t d_lockdown1;           /* 0x908 */
@@ -187,27 +187,27 @@ struct l2cc_map {
         uint32_t res1[42];
     } lockdown /* reg9 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg10;
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg11;
 
-    struct {
+    sa_nracanaa {
         uint32_t addr_filtering_start;  /* 0xC00 */
         uint32_t addr_filtering_end;    /* 0xC04 */
         uint32_t res[62];
     } filter /* reg12 */;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg13;
-    struct {
+    sa_nracanaa {
         uint32_t res[64];
     } reg14;
 
-    struct {
+    sa_nracanaa {
         uint32_t res[16];
         uint32_t debug_ctrl;            /* 0xF40 */
         uint32_t res1[7];
@@ -220,20 +220,20 @@ struct l2cc_map {
 
 
 #ifndef L2CC_L2C310_PPTR
-#error L2CC_L2C310_PPTR must be defined for virtual memory access to the L2 cache controller
-#else  /* L2CC_PPTR */
-volatile struct l2cc_map *const l2cc
-    = (volatile struct l2cc_map *)L2CC_L2C310_PPTR;
+#error L2CC_L2C310_PPTR must be defined အတွက် virtual memory access to the L2 cache controller
+#မဟုတ်ပါက  /* L2CC_PPTR */
+ca_ncala sa_nracanaa l2cc_map *const l2cc
+    = (ca_ncala sa_nracanaa l2cc_map *)L2CC_L2C310_PPTR;
 #endif /* !L2CC_PPTR */
 
 
 #ifdef TI_MSHIELD
 BOOT_CODE static void mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
 {
-    register uint32_t _arg1 asm("r0") = arg1;
-    register uint32_t _arg2 asm("r1") = arg2;
-    register uint32_t _callid asm("r12") = callid;
-    asm volatile("push {r2-r12, lr}\n"
+    pa_njikaa uint32_t _arg1 asm("r0") = arg1;
+    pa_njikaa uint32_t _arg2 asm("r1") = arg2;
+    pa_njikaa uint32_t _callid asm("r12") = callid;
+    asm ca_ncala("push {r2-r12, lr}\n"
                  "dsb\n"
                  "smc #0\n"
                  "pop {r2-r12, lr}"
@@ -255,10 +255,10 @@ BOOT_CODE void initL2Cache(void)
 #endif
 
     prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_DATA_PREFETCH_EN;
-#if defined(CONFIG_PLAT_IMX6)
+#အကယ်၍ defined(CONFIG_PLAT_IMX6)
     tag_ram  = CTRL_RAM_LATENCY(1, 2, 1);
     data_ram = CTRL_RAM_LATENCY(1, 2, 1);
-#else
+#မဟုတ်ပါက
     tag_ram  = CTRL_RAM_LATENCY(1, 1, 0);
     data_ram = CTRL_RAM_LATENCY(1, 2, 0);
 #endif
@@ -271,14 +271,14 @@ BOOT_CODE void initL2Cache(void)
                | CTRL_AUX_ASSOCIATIVITY_16WAY
                | CTRL_AUS_REPLPOLICY_RROBIN;
 
-#if defined(CONFIG_PLAT_IMX6SX)
+#အကယ်၍ defined(CONFIG_PLAT_IMX6SX)
     aux |= CTRL_AUX_WAYSIZE_16K;
 #elif defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
     aux |= CTRL_AUX_WAYSIZE_64K;
 #elif defined(OMAP4)
     aux |= CTRL_AUX_WAYSIZE_32K;
-#else /* ! (EXYNOS4 || OMAP4 || IMX6) */
-#error Unknown platform for L2C-310
+#မဟုတ်ပါက /* ! (EXYNOS4 || OMAP4 || IMX6) */
+#error Unknown platform အတွက် L2C-310
 #endif /* EXYNOS4 || OMAP4 || IMX6 */
 
 #ifdef TI_MSHIELD
@@ -288,7 +288,7 @@ BOOT_CODE void initL2Cache(void)
     mshield_smc(MSHIELD_SMC_ROM_CTRL_AUX, aux, 0);
     mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, data_ram);
 
-#else /* !TI_MSHIELD */
+#မဟုတ်ပါက /* !TI_MSHIELD */
     /* Direct register access */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     l2cc->control.aux_control      = aux;
@@ -300,10 +300,10 @@ BOOT_CODE void initL2Cache(void)
 
     /* 2: Invalidate by way. */
     l2cc->maintenance.inv_way = 0xffff;
-    while (l2cc->maintenance.inv_way & 0xffff);
+    နေစဉ် (l2cc->maintenance.inv_way & 0xffff);
 
     /* 3: write to lockdown D & I reg9 if required  */
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
+    အကယ်၍ ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
         /* disable lockdown */
         l2cc->lockdown.d_lockdown0 = 0;
         l2cc->lockdown.i_lockdown0 = 0;
@@ -322,7 +322,7 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    အကယ်၍ ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
         /* disable lockdown */
         l2cc->lockdown.lock_line_eng = 0;
     }
@@ -336,7 +336,7 @@ BOOT_CODE void initL2Cache(void)
 #ifdef TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 1, 0);
-#else /* !TI_MSHIELD */
+#မဟုတ်ပါက /* !TI_MSHIELD */
     /* Direct register access */
     l2cc->control.control |= CTRL_CTRL_EN;
 #endif /* TI_MSHIELD */
@@ -344,7 +344,7 @@ BOOT_CODE void initL2Cache(void)
      * of the l2cc register updates */
     dsb();
 
-#if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
+#အကယ်၍ defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 1 in the ACTLR, which on the cortex-a9 is the l2 prefetch enable
      * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
     setACTLR(getACTLR() | BIT(1));
@@ -353,12 +353,12 @@ BOOT_CODE void initL2Cache(void)
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-static inline void L2_cacheSync(void)
+static anta_hstha void L2_cacheSync(void)
 {
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     l2cc->maintenance.cache_sync = 0;
-    while (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
+    နေစဉ် (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
     /* Wait till the L2 cache operation has completed and avoid later memoy
      * operations being reordered to before this point */
     dsb();
@@ -374,11 +374,11 @@ static inline void L2_cacheSync(void)
  */
 void plat_cleanInvalidateL2Cache(void)
 {
-    if (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
+    အကယ်၍ (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
         /* Avoid normal memory writes being reordered with device memory writes */
         dmb();
         l2cc->maintenance.clean_inv_way = 0xffff;
-        while (l2cc->maintenance.clean_inv_way);
+        နေစဉ် (l2cc->maintenance.clean_inv_way);
         L2_cacheSync();
     }
 }
@@ -390,7 +390,7 @@ void plat_cleanCache(void)
     dmb();
     /* Clean by way. */
     l2cc->maintenance.clean_way = 0xffff;
-    while (l2cc->maintenance.clean_way & 0xffff);
+    နေစဉ် (l2cc->maintenance.clean_way & 0xffff);
     L2_cacheSync();
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
@@ -403,7 +403,7 @@ void plat_cleanL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
+    အတွက် (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.clean_pa = start;
@@ -423,7 +423,7 @@ void plat_invalidateL2Range(paddr_t start, paddr_t end)
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
+    အတွက် (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.inv_pa = start;
@@ -441,7 +441,7 @@ void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
+    အတွက် (start = L2_LINE_START(start);
          start != L2_LINE_START(end + L2_LINE_SIZE);
          start += L2_LINE_SIZE) {
         l2cc->maintenance.clean_inv_pa = start;

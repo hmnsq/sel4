@@ -90,30 +90,30 @@
 
 typedef uint32_t drhu_id_t;
 
-static inline uint32_t vtd_read32(drhu_id_t drhu_id, uint32_t offset)
+static anta_hstha uint32_t vtd_read32(drhu_id_t drhu_id, uint32_t offset)
 {
-    return *(volatile uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
+    ပြန်ပေး *(ca_ncala uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
 }
 
-static inline void vtd_write32(drhu_id_t drhu_id, uint32_t offset, uint32_t value)
+static anta_hstha void vtd_write32(drhu_id_t drhu_id, uint32_t offset, uint32_t value)
 {
-    *(volatile uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
+    *(ca_ncala uint32_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
 }
 
 
-static inline uint64_t vtd_read64(drhu_id_t drhu_id, uint32_t offset)
+static anta_hstha uint64_t vtd_read64(drhu_id_t drhu_id, uint32_t offset)
 {
-    return *(volatile uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
+    ပြန်ပေး *(ca_ncala uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset);
 }
 
-static inline void vtd_write64(drhu_id_t drhu_id, uint32_t offset, uint64_t value)
+static anta_hstha void vtd_write64(drhu_id_t drhu_id, uint32_t offset, uint64_t value)
 {
-    *(volatile uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
+    *(ca_ncala uint64_t *)(PPTR_DRHU_START + (drhu_id << PAGE_BITS) + offset) = value;
 }
 
-static inline uint32_t get_ivo(drhu_id_t drhu_id)
+static anta_hstha uint32_t get_ivo(drhu_id_t drhu_id)
 {
-    return ((vtd_read32(drhu_id, ECAP_REG) >> 8) & IVO_MASK) * 16;
+    ပြန်ပေး ((vtd_read32(drhu_id, ECAP_REG) >> 8) & IVO_MASK) * 16;
 }
 
 static uint32_t get_fro_offset(drhu_id_t drhu_id)
@@ -126,7 +126,7 @@ static uint32_t get_fro_offset(drhu_id_t drhu_id)
     /* Get bits 33 to 32 from higher Capability Register */
     fro_offset |= (vtd_read32(drhu_id, CAP_REG + 4) & 0x3) << 8;
 
-    return fro_offset << 4;
+    ပြန်ပေး fro_offset << 4;
 }
 
 void invalidate_context_cache(void)
@@ -142,10 +142,10 @@ void invalidate_context_cache(void)
 
     drhu_id_t i;
 
-    for (i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (i = 0; i < x86KSnumDrhu; i++) {
         /* Wait till ICC bit is clear */
         uint64_t ccmd = 0;
-        while ((vtd_read64(i, CCMD_REG) >> ICC) & 1);
+        နေစဉ် ((vtd_read64(i, CCMD_REG) >> ICC) & 1);
 
         /* Program CIRG for Global Invalidation by setting bit 61 which
          * will be bit 29 in upper 32 bits of CCMD_REG
@@ -156,7 +156,7 @@ void invalidate_context_cache(void)
         vtd_write64(i, CCMD_REG, ccmd);
 
         /* Wait for the invalidation to complete */
-        while ((vtd_read64(i, CCMD_REG) >> ICC) & 1);
+        နေစဉ် ((vtd_read64(i, CCMD_REG) >> ICC) & 1);
     }
 }
 
@@ -176,11 +176,11 @@ void invalidate_iotlb(void)
     uint32_t  ivo_offset;
     drhu_id_t i;
 
-    for (i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (i = 0; i < x86KSnumDrhu; i++) {
         ivo_offset = get_ivo(i);
 
         /* Wait till IVT bit is clear */
-        while ((vtd_read32(i, ivo_offset + IOTLB_REG + 4) >> IVT) & 1);
+        နေစဉ် ((vtd_read32(i, ivo_offset + IOTLB_REG + 4) >> IVT) & 1);
 
         /* Program IIRG for Global Invalidation by setting bit 60 which
          * will be bit 28 in upper 32 bits of IOTLB_REG
@@ -195,7 +195,7 @@ void invalidate_iotlb(void)
         vtd_write32(i, ivo_offset + IOTLB_REG + 4, iotlb_reg_upper);
 
         /* Wait for the invalidation to complete */
-        while ((vtd_read32(i, ivo_offset + IOTLB_REG + 4) >> IVT) & 1);
+        နေစဉ် ((vtd_read32(i, ivo_offset + IOTLB_REG + 4) >> IVT) & 1);
     }
 }
 
@@ -222,7 +222,7 @@ static void vtd_process_faults(drhu_id_t i)
     fro_offset = get_fro_offset(i);
     fault_status = (vtd_read32(i, FSTS_REG) >> PPF) & PPF_MASK;
 
-    if (fault_status) {
+    အကယ်၍ (fault_status) {
         num_fault_regs = ((vtd_read32(i, CAP_REG + 4) >> NFR) & NFR_MASK) + 1;
         fault_record_index = (vtd_read32(i, FSTS_REG) >> FRI) & FRI_MASK;
         fr_reg = fro_offset + 16 * fault_record_index;
@@ -246,10 +246,10 @@ static void vtd_process_faults(drhu_id_t i)
 
             fault_record_index = (fault_record_index + 1) % num_fault_regs;
             fr_reg = fro_offset + 16 * fault_record_index;
-        } while ((vtd_read32(i, fr_reg + 12) >> FAULT) & 1);
+        } နေစဉ် ((vtd_read32(i, fr_reg + 12) >> FAULT) & 1);
 
         /* Check for Primary Fault Overflow */
-        if (vtd_read32(i, FSTS_REG) & 1) {
+        အကယ်၍ (vtd_read32(i, FSTS_REG) & 1) {
             /* Clear PFO bit, so new faults will be generated again ! */
             vtd_write32(i, FSTS_REG, 1);
         }
@@ -260,15 +260,15 @@ void vtd_handle_fault(void)
 {
     drhu_id_t i;
 
-    for (i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (i = 0; i < x86KSnumDrhu; i++) {
         vtd_process_faults(i);
     }
 }
 
 BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
 {
-    if (x86KSnumDrhu == 0) {
-        return 0;
+    အကယ်၍ (x86KSnumDrhu == 0) {
+        ပြန်ပေး 0;
     }
     assert(x86KSnumIOPTLevels > 0);
 
@@ -276,8 +276,8 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
     size += N_VTD_CONTEXTS; /* one for each context */
     size += rmrr_list->num; /* one for each device */
 
-    if (rmrr_list->num == 0) {
-        return size;
+    အကယ်၍ (rmrr_list->num == 0) {
+        ပြန်ပေး size;
     }
 
     /* filter the identical regions by pci bus id */
@@ -285,8 +285,8 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
     filtered.entries[0] = rmrr_list->entries[0];
     filtered.num = 1;
 
-    for (word_t i = 1; i < rmrr_list->num; i++) {
-        if (vtd_get_root_index(rmrr_list->entries[i].device) !=
+    အတွက် (word_t i = 1; i < rmrr_list->num; i++) {
+        အကယ်၍ (vtd_get_root_index(rmrr_list->entries[i].device) !=
             vtd_get_root_index(filtered.entries[filtered.num - 1].device) &&
             rmrr_list->entries[i].base != filtered.entries[filtered.num - 1].base &&
             rmrr_list->entries[i].limit != filtered.entries[filtered.num - 1].limit) {
@@ -295,13 +295,13 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
         }
     }
 
-    for (word_t i = x86KSnumIOPTLevels - 1; i > 0; i--) {
+    အတွက် (word_t i = x86KSnumIOPTLevels - 1; i > 0; i--) {
         /* If we are still looking up bits beyond the 32bit of physical
          * that we support then we select entry 0 in the current PT */
-        if ((VTD_PT_INDEX_BITS * i + seL4_PageBits) >= 32) {
+        အကယ်၍ ((VTD_PT_INDEX_BITS * i + seL4_PageBits) >= 32) {
             size++;
-        } else {
-            for (word_t j = 0; j < filtered.num; j++) {
+        } မဟုတ်ပါက {
+            အတွက် (word_t j = 0; j < filtered.num; j++) {
                 v_region_t region = (v_region_t) {
                     .start = filtered.entries[j].base,
                     .end = filtered.entries[j].limit
@@ -310,20 +310,20 @@ BOOT_CODE word_t vtd_get_n_paging(acpi_rmrr_list_t *rmrr_list)
             }
         }
     }
-    return size;
+    ပြန်ပေး size;
 }
 
 /* This function is a simplistic duplication of some of the logic
  * in iospace.c
  */
-BOOT_CODE static void vtd_map_reserved_page(vtd_cte_t *vtd_context_table, int context_index, paddr_t addr)
+BOOT_CODE static void vtd_map_reserved_page(vtd_cte_t *vtd_context_table, ကိန်းပြည့် context_index, paddr_t addr)
 {
-    int i;
+    ကိန်းပြည့် i;
     vtd_pte_t *iopt;
     vtd_pte_t *vtd_pte_slot;
     /* first check for the first page table */
     vtd_cte_t *vtd_context_slot = vtd_context_table + context_index;
-    if (!vtd_cte_ptr_get_present(vtd_context_slot)) {
+    အကယ်၍ (!vtd_cte_ptr_get_present(vtd_context_slot)) {
         iopt = (vtd_pte_t *) it_alloc_paging();
         flushCacheRange(iopt, seL4_IOPageTableBits);
 
@@ -336,32 +336,32 @@ BOOT_CODE static void vtd_map_reserved_page(vtd_cte_t *vtd_context_table, int co
                                 true);                    /* Present                                */
         x86KSFirstValidIODomain++;
         flushCacheRange(vtd_context_slot, VTD_CTE_SIZE_BITS);
-    } else {
+    } မဟုတ်ပါက {
         iopt = (vtd_pte_t *)paddr_to_pptr(vtd_cte_ptr_get_asr(vtd_context_slot));
     }
     /* now recursively find and map page tables */
-    for (i = x86KSnumIOPTLevels - 1; i >= 0; i--) {
+    အတွက် (i = x86KSnumIOPTLevels - 1; i >= 0; i--) {
         uint32_t iopt_index;
         /* If we are still looking up bits beyond the 32bit of physical
          * that we support then we select entry 0 in the current PT */
-        if (VTD_PT_INDEX_BITS * i + seL4_PageBits >= 32) {
+        အကယ်၍ (VTD_PT_INDEX_BITS * i + seL4_PageBits >= 32) {
             iopt_index = 0;
-        } else {
+        } မဟုတ်ပါက {
             iopt_index = ((addr >> seL4_PageBits) >> (VTD_PT_INDEX_BITS * i)) & MASK(VTD_PT_INDEX_BITS);
         }
         vtd_pte_slot = iopt + iopt_index;
-        if (i == 0) {
+        အကယ်၍ (i == 0) {
             /* Now put the mapping in */
             *vtd_pte_slot = vtd_pte_new(addr, 1, 1);
             flushCacheRange(vtd_pte_slot, VTD_PTE_SIZE_BITS);
-        } else {
-            if (!vtd_pte_ptr_get_write(vtd_pte_slot)) {
+        } မဟုတ်ပါက {
+            အကယ်၍ (!vtd_pte_ptr_get_write(vtd_pte_slot)) {
                 iopt = (vtd_pte_t *) it_alloc_paging();
                 flushCacheRange(iopt, seL4_IOPageTableBits);
 
                 *vtd_pte_slot = vtd_pte_new(pptr_to_paddr(iopt), 1, 1);
                 flushCacheRange(vtd_pte_slot, VTD_PTE_SIZE_BITS);
-            } else {
+            } မဟုတ်ပါက {
                 iopt = (vtd_pte_t *)paddr_to_pptr(vtd_pte_ptr_get_addr(vtd_pte_slot));
             }
         }
@@ -382,10 +382,10 @@ BOOT_CODE static void vtd_create_context_table(uint8_t bus, acpi_rmrr_list_t *rm
             true                                           /* Present               */
         );
     /* map in any RMRR regions */
-    for (i = 0; i < rmrr_list->num; i++) {
-        if (vtd_get_root_index(rmrr_list->entries[i].device) == bus) {
+    အတွက် (i = 0; i < rmrr_list->num; i++) {
+        အကယ်၍ (vtd_get_root_index(rmrr_list->entries[i].device) == bus) {
             uint32_t addr;
-            for (addr = rmrr_list->entries[i].base; addr < rmrr_list->entries[i].limit; addr += BIT(seL4_PageBits)) {
+            အတွက် (addr = rmrr_list->entries[i].base; addr < rmrr_list->entries[i].limit; addr += BIT(seL4_PageBits)) {
                 vtd_map_reserved_page(vtd_context_table, vtd_get_context_index(rmrr_list->entries[i].device), addr);
             }
         }
@@ -397,7 +397,7 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
     drhu_id_t i;
     uint32_t status = 0;
 
-    for (i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (i = 0; i < x86KSnumDrhu; i++) {
         pptr_t pa = (pptr_t)pptr_to_paddr((void *)x86KSvtdRootTable);
 
         /* Set the Root Table Register */
@@ -410,7 +410,7 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
         /* Wait for SRTP operation to complete by polling
          * RTPS bit from GSTS_REG
          */
-        while (!((vtd_read32(i, GSTS_REG) >> RTPS) & 1));
+        နေစဉ် (!((vtd_read32(i, GSTS_REG) >> RTPS) & 1));
     }
 
     /* Globally invalidate context cache of all IOMMUs */
@@ -419,13 +419,13 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
     /* Globally invalidate IOTLB of all IOMMUs */
     invalidate_iotlb();
 
-    for (i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (i = 0; i < x86KSnumDrhu; i++) {
         uint32_t data, addr;
 
         data = int_iommu;
         addr = apic_get_base_paddr();
-        if (!addr) {
-            return false;
+        အကယ်၍ (!addr) {
+            ပြန်ပေး false;
         }
         addr |= (cpu_id << 12);
 
@@ -438,7 +438,7 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
         status |= BIT(WBF);
         /*flush IOMMU write buffer */
         vtd_write32(i, GCMD_REG, status);
-        while (((vtd_read32(i, GSTS_REG) >> WBFS) & 1));
+        နေစဉ် (((vtd_read32(i, GSTS_REG) >> WBFS) & 1));
 
         printf("IOMMU 0x%x: enabling...", i);
 
@@ -450,11 +450,11 @@ BOOT_CODE static bool_t vtd_enable(cpu_id_t cpu_id)
         /* Wait for Translation Enable operation to complete by polling
          * TES bit from GSTS_REG
          */
-        while (!((vtd_read32(i, GSTS_REG) >> TES) & 1));
+        နေစဉ် (!((vtd_read32(i, GSTS_REG) >> TES) & 1));
 
         printf(" enabled\n");
     }
-    return true;
+    ပြန်ပေး true;
 }
 
 BOOT_CODE bool_t vtd_init_num_iopts(uint32_t num_drhu)
@@ -462,76 +462,76 @@ BOOT_CODE bool_t vtd_init_num_iopts(uint32_t num_drhu)
     x86KSnumDrhu = num_drhu;
     x86KSFirstValidIODomain = 0;
 
-    if (x86KSnumDrhu == 0) {
-        return true;
+    အကယ်၍ (x86KSnumDrhu == 0) {
+        ပြန်ပေး true;
     }
 
     uint32_t aw_bitmask = 0xffffffff;
     /* Start the number of domains at 16 bits */
     uint32_t  num_domain_id_bits = 16;
-    for (drhu_id_t i = 0; i < x86KSnumDrhu; i++) {
+    အတွက် (drhu_id_t i = 0; i < x86KSnumDrhu; i++) {
         uint32_t bits_supported = 4 + 2 * (vtd_read32(i, CAP_REG) & 7);
         aw_bitmask &= vtd_read32(i, CAP_REG) >> SAGAW;
         printf("IOMMU 0x%x: %d-bit domain IDs supported\n", i, bits_supported);
-        if (bits_supported < num_domain_id_bits) {
+        အကယ်၍ (bits_supported < num_domain_id_bits) {
             num_domain_id_bits = bits_supported;
         }
     }
 
     x86KSnumIODomainIDBits = num_domain_id_bits;
     UNUSED uint32_t  max_num_iopt_levels;
-    if (aw_bitmask & SAGAW_6_LEVEL) {
+    အကယ်၍ (aw_bitmask & SAGAW_6_LEVEL) {
         max_num_iopt_levels = 6;
-    } else if (aw_bitmask & SAGAW_5_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_5_LEVEL) {
         max_num_iopt_levels = 5;
-    } else if (aw_bitmask & SAGAW_4_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_4_LEVEL) {
         max_num_iopt_levels = 4;
-    } else if (aw_bitmask & SAGAW_3_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_3_LEVEL) {
         max_num_iopt_levels = 3;
-    } else if (aw_bitmask & SAGAW_2_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_2_LEVEL) {
         max_num_iopt_levels = 2;
-    } else {
+    } မဟုတ်ပါက {
         printf("IOMMU: mismatch of supported number of PT levels between IOMMUs\n");
-        return false;
+        ပြန်ပေး false;
     }
 
-    if (aw_bitmask & SAGAW_3_LEVEL) {
+    အကယ်၍ (aw_bitmask & SAGAW_3_LEVEL) {
         x86KSnumIOPTLevels = 3;
-    } else if (aw_bitmask & SAGAW_4_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_4_LEVEL) {
         x86KSnumIOPTLevels = 4;
-    } else if (aw_bitmask & SAGAW_5_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_5_LEVEL) {
         x86KSnumIOPTLevels = 5;
-    } else if (aw_bitmask & SAGAW_6_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_6_LEVEL) {
         x86KSnumIOPTLevels = 6;
-    } else if (aw_bitmask & SAGAW_2_LEVEL) {
+    } မဟုတ်ပါက အကယ်၍ (aw_bitmask & SAGAW_2_LEVEL) {
         x86KSnumIOPTLevels = 2;
-    } else {
+    } မဟုတ်ပါက {
         printf("IOMMU: mismatch of supported number of PT levels between IOMMUs\n");
-        return false;
+        ပြန်ပေး false;
     }
 
     printf("IOMMU: Using %d page-table levels (max. supported: %d)\n", x86KSnumIOPTLevels, max_num_iopt_levels);
-    return true;
+    ပြန်ပေး true;
 }
 
 
 BOOT_CODE bool_t vtd_init(cpu_id_t  cpu_id, acpi_rmrr_list_t *rmrr_list)
 {
-    if (x86KSnumDrhu == 0) {
-        return true;
+    အကယ်၍ (x86KSnumDrhu == 0) {
+        ပြန်ပေး true;
     }
 
     x86KSvtdRootTable = (vtd_rte_t *) it_alloc_paging();
-    for (uint32_t bus = 0; bus < N_VTD_CONTEXTS; bus++) {
+    အတွက် (uint32_t bus = 0; bus < N_VTD_CONTEXTS; bus++) {
         vtd_create_context_table(bus, rmrr_list);
     }
 
     flushCacheRange(x86KSvtdRootTable, VTD_RT_SIZE_BITS);
 
-    if (!vtd_enable(cpu_id)) {
-        return false;
+    အကယ်၍ (!vtd_enable(cpu_id)) {
+        ပြန်ပေး false;
     }
-    return true;
+    ပြန်ပေး true;
 }
 
 #endif /* CONFIG_IOMMU */
