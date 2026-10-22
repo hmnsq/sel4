@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <types.h>
+#অন্তর্ভাব <machine/io.h>
+#অন্তর্ভাব <kernel/vspace.h>
+#অন্তর্ভাব <arch/machine.h>
+#অন্তর্ভাব <arch/kernel/vspace.h>
+#অন্তর্ভাব <plat/machine.h>
+#অন্তর্ভাব <linker.h>
+#অন্তর্ভাব <plat/machine/devices_gen.h>
+#অন্তর্ভাব <plat/machine/hardware.h>
 
 #define TIOCP_CFG_SOFTRESET BIT(0)
 
@@ -28,27 +28,27 @@
 
 timer_t *timer = (timer_t *) TIMER_PPTR;
 
-#define WDT_REG(base, off) ((volatile uint32_t *)((base) + (off)))
+#define WDT_REG(base, off) ((অস্থির uint32_t *)((base) + (off)))
 #define WDT_REG_WWPS 0x34
 #define WDT_REG_WSPR 0x48
 #define WDT_WWPS_PEND_WSPR BIT(4)
 
 #define SET_REGISTER(reg, mask) \
-        do {                    \
+        করো {                    \
             reg |= mask;        \
-        } while((reg & mask) != mask);
+        } যখন((reg & mask) != mask);
 
-static BOOT_CODE void disableWatchdog(void)
+স্থির BOOT_CODE শূন্য disableWatchdog(শূন্য)
 {
     uint32_t wdt = WDT1_PPTR;
 
     // am335x ref man, sec 20.4.3.8
     *WDT_REG(wdt, WDT_REG_WSPR) = 0xaaaa;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    যখন ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
     *WDT_REG(wdt, WDT_REG_WSPR) = 0x5555;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    যখন ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
 }
@@ -57,32 +57,32 @@ static BOOT_CODE void disableWatchdog(void)
  * Enable DMTIMER clocks, otherwise their registers wont be accessible.
  * This could be moved out of kernel.
  */
-static BOOT_CODE void enableTimers(void)
+স্থির BOOT_CODE শূন্য enableTimers(শূন্য)
 {
     uint32_t cmper = CMPER_PPTR;
 
     /* XXX repeat this for DMTIMER4..7 */
     /* select clock - Timer 3 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    যখন ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    যখন ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 
     /* select clock - Timer 4 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    যখন ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    যখন ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 }
@@ -91,10 +91,10 @@ static BOOT_CODE void enableTimers(void)
 /* The idea here is to use the functionality of overflow interrupts to calculate time
    and use match interrupts for setting a deadline. */
 
-uint32_t high_bits = 0;
-BOOT_CODE void initTimer(void)
+uint32_t উপরের_bits = 0;
+BOOT_CODE শূন্য initTimer(শূন্য)
 {
-    int timeout;
+    পূর্ণসংখ্যা timeout;
     disableWatchdog();
     enableTimers();
 
@@ -105,11 +105,11 @@ BOOT_CODE void initTimer(void)
     SET_REGISTER(timer->tclr, 0u);
 
     /* wait for reset */
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
+    জন্য (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
 
-    if (!timeout) {
+    যদি (!timeout) {
         printf("init timer failed\n");
-        return;
+        ফেরত;
     }
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
@@ -127,24 +127,24 @@ BOOT_CODE void initTimer(void)
     SET_REGISTER(timer->tclr, (TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE));
 }
 
-#else /* CONFIG_KERNEL_MCS */
+#অন্যথা /* CONFIG_KERNEL_MCS */
 
 
 /* Configure dmtimer0 as kernel preemption timer */
-BOOT_CODE void initTimer(void)
+BOOT_CODE শূন্য initTimer(শূন্য)
 {
-    int timeout;
+    পূর্ণসংখ্যা timeout;
 
     disableWatchdog();
     enableTimers();
 
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
+    জন্য (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
         ;
-    if (!timeout) {
+    যদি (!timeout) {
         printf("init timer failed\n");
-        return;
+        ফেরত;
     }
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);

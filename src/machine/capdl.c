@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#অন্তর্ভাব <config.h>
 
 #ifdef CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <machine/registerset.h>
-#include <machine/timer.h>
-#include <string.h>
-#include <kernel/cspace.h>
+#অন্তর্ভাব <machine/capdl.h>
+#অন্তর্ভাব <machine/registerset.h>
+#অন্তর্ভাব <machine/timer.h>
+#অন্তর্ভাব <string.h>
+#অন্তর্ভাব <kernel/cspace.h>
 #ifdef CONFIG_KERNEL_MCS
-#include <kernel/sporadic.h>
+#অন্তর্ভাব <kernel/sporadic.h>
 #endif
 
 #define SEEN_SZ 256
@@ -24,52 +24,52 @@
  * as well since the extractor might comes across multiple caps to the same object.
  */
 cap_t seen_list[SEEN_SZ];
-int watermark = 0;
+পূর্ণসংখ্যা watermark = 0;
 
-void add_to_seen(cap_t c)
+শূন্য add_to_seen(cap_t c)
 {
     /* Won't work well if there're more than SEEN_SZ cnode */
-    if (watermark < SEEN_SZ) {
+    যদি (watermark < SEEN_SZ) {
         seen_list[watermark] = c;
         watermark++;
     }
 }
 
-void reset_seen_list(void)
+শূন্য reset_seen_list(শূন্য)
 {
-    memset(seen_list, 0, SEEN_SZ * sizeof(seen_list[0]));
+    memset(seen_list, 0, SEEN_SZ * আকার(seen_list[0]));
     watermark = 0;
 }
 
 bool_t seen(cap_t c)
 {
-    for (int i = 0; i < watermark; i++) {
-        if (same_cap(seen_list[i], c)) {
-            return true;
+    জন্য (পূর্ণসংখ্যা i = 0; i < watermark; i++) {
+        যদি (same_cap(seen_list[i], c)) {
+            ফেরত true;
         }
     }
-    return false;
+    ফেরত false;
 }
 
 bool_t same_cap(cap_t a, cap_t b)
 {
-    return (a.words[0] == b.words[0] && a.words[1] == b.words[1]);
+    ফেরত (a.শব্দগুলি[0] == b.শব্দগুলি[0] && a.শব্দগুলি[1] == b.শব্দগুলি[1]);
 }
 
 /* Return true if strings are the same */
-static inline bool_t strings_equal(const char *str1, const char *str2)
+স্থির অন্তঃরেখ bool_t strings_equal(ধ্রুবক অক্ষর *str1, ধ্রুবক অক্ষর *str2)
 {
-    while (*str1 && *str2 && (*str1 == *str2)) {
+    যখন (*str1 && *str2 && (*str1 == *str2)) {
         str1++;
         str2++;
     }
-    return !(*(const unsigned char *)str1 - * (const unsigned char *)str2);
+    ফেরত !(*(ধ্রুবক unsigned অক্ষর *)str1 - * (ধ্রুবক unsigned অক্ষর *)str2);
 }
 
 /* Return true if the tcb is for rootserver or idle thread */
-bool_t root_or_idle_tcb(tcb_t *tcb)
+bool_t মূল_or_idle_tcb(tcb_t *tcb)
 {
-    return (strings_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "rootserver")
+    ফেরত (strings_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "rootserver")
             || strings_equal(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "idle_thread"));
 }
 
@@ -79,24 +79,24 @@ bool_t root_or_idle_tcb(tcb_t *tcb)
 
 #ifdef CONFIG_PRINTING
 
-void obj_tcb_print_attrs(tcb_t *tcb)
+শূন্য obj_tcb_print_attrs(tcb_t *tcb)
 {
     printf("(addr: 0x%lx, ip: 0x%lx, sp: 0x%lx, prio: %lu, max_prio: %lu",
-           (long unsigned int)tcb->tcbIPCBuffer,
-           (long unsigned int)getRestartPC(tcb),
-           (long unsigned int)get_tcb_sp(tcb),
-           (long unsigned int)tcb->tcbPriority,
-           (long unsigned int)tcb->tcbMCP);
+           (long unsigned পূর্ণসংখ্যা)tcb->tcbIPCBuffer,
+           (long unsigned পূর্ণসংখ্যা)getRestartPC(tcb),
+           (long unsigned পূর্ণসংখ্যা)get_tcb_sp(tcb),
+           (long unsigned পূর্ণসংখ্যা)tcb->tcbPriority,
+           (long unsigned পূর্ণসংখ্যা)tcb->tcbMCP);
 
 #ifdef ENABLE_SMP_SUPPORT
-    printf(", affinity: %lu", (long unsigned int)tcb->tcbAffinity);
+    printf(", affinity: %lu", (long unsigned পূর্ণসংখ্যা)tcb->tcbAffinity);
 #endif /* ENABLE_SMP_SUPPORT */
 
     /* init */
 
 #ifdef CONFIG_KERNEL_MCS
     cap_t ep_cap = TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap;
-    if (cap_get_capType(ep_cap) != cap_null_cap) {
+    যদি (cap_get_capType(ep_cap) != cap_null_cap) {
         printf(", fault_ep: %p", EP_PTR(cap_endpoint_cap_get_capEPPtr(ep_cap)));
     }
 #endif
@@ -106,20 +106,20 @@ void obj_tcb_print_attrs(tcb_t *tcb)
 
 #ifdef CONFIG_KERNEL_MCS
 
-static inline ticks_t sc_get_budget(sched_context_t *sc)
+স্থির অন্তঃরেখ ticks_t sc_get_budget(sched_context_t *sc)
 {
-    ticks_t sum = refill_head(sc)->rAmount;
-    word_t current = sc->scRefillHead;
+    ticks_t যোগ_2 = refill_শীর্ষ(sc)->rAmount;
+    word_t current = sc->sc_Refill_শীর্ষ;
 
-    while (current != sc->scRefillTail) {
+    যখন (current != sc->sc_Refill_লেজ) {
         current = ((current == sc->scRefillMax - 1u) ? (0) : current + 1u);
-        sum += refill_index(sc, current)->rAmount;
+        যোগ_2 += refill_সূচক(sc, current)->rAmount;
     }
 
-    return sum;
+    ফেরত যোগ_2;
 }
 
-void obj_sc_print_attrs(cap_t sc_cap)
+শূন্য obj_sc_print_attrs(cap_t sc_cap)
 {
     sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(sc_cap));
     ticks_t period = sc->scPeriod;
@@ -132,21 +132,21 @@ void obj_sc_print_attrs(cap_t sc_cap)
 }
 #endif /* CONFIG_KERNEL_MCS */
 
-void obj_ut_print_attrs(cte_t *slot, tcb_t *tcb)
+শূন্য obj_ut_print_attrs(cte_t *slot, tcb_t *tcb)
 {
     /* might have two untypeds with the same address but different size */
     printf("%p_%lu_untyped = ut (%lu bits, paddr: %p) {",
-           (void *)cap_untyped_cap_get_capPtr(slot->cap),
-           (long unsigned int)cap_untyped_cap_get_capBlockSize(slot->cap),
-           (long unsigned int)cap_untyped_cap_get_capBlockSize(slot->cap),
+           (শূন্য *)cap_untyped_cap_get_capPtr(slot->cap),
+           (long unsigned পূর্ণসংখ্যা)cap_untyped_cap_get_cap_Block_আকার(slot->cap),
+           (long unsigned পূর্ণসংখ্যা)cap_untyped_cap_get_cap_Block_আকার(slot->cap),
            WORD_PTR(cap_untyped_cap_get_capPtr(slot->cap)));
 
     /* there is no need to check for a NullCap as NullCaps are
     always accompanied by null mdb pointers */
-    for (cte_t *nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-         nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
-        if (!sameRegionAs(slot->cap, nextPtr->cap)) {
+    জন্য (cte_t *পরবর্তী_Ptr = CTE_PTR(mdb_গ্রন্থি_get_mdb_পরবর্তী(slot->cteMDBNode));
+         পরবর্তী_Ptr && isMDBParentOf(slot, পরবর্তী_Ptr);
+         পরবর্তী_Ptr = CTE_PTR(mdb_গ্রন্থি_get_mdb_পরবর্তী(slot->cteMDBNode))) {
+        যদি (!sameRegionAs(slot->cap, পরবর্তী_Ptr->cap)) {
             /* TBD:
              * - this will print out the attributes of the cap, which it shouldn't
              *
@@ -154,37 +154,37 @@ void obj_ut_print_attrs(cte_t *slot, tcb_t *tcb)
              *   isn't reachable from any of the non root threads. This would result
              *   in an object being mentioned but never properly defined
              */
-            print_cap(nextPtr->cap);
+            print_cap(পরবর্তী_Ptr->cap);
         }
     }
     printf("}\n");
 }
 
-void obj_cnode_print_attrs(cap_t cnode)
+শূন্য obj_cnode_print_attrs(cap_t cnode)
 {
-    printf("(%lu bits)\n", (long unsigned int)cap_cnode_cap_get_capCNodeRadix(cnode));
+    printf("(%lu bits)\n", (long unsigned পূর্ণসংখ্যা)cap_cnode_cap_get_capCNodeRadix(cnode));
 }
 
-void obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
+শূন্য obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
 {
-    if (seen(cnode)) {
-        return;
+    যদি (seen(cnode)) {
+        ফেরত;
     }
     add_to_seen(cnode);
-    printf("%p_cnode = cnode ", (void *)cap_cnode_cap_get_capCNodePtr(cnode));
+    printf("%p_cnode = cnode ", (শূন্য *)cap_cnode_cap_get_capCNodePtr(cnode));
     obj_cnode_print_attrs(cnode);
     word_t radix = cap_cnode_cap_get_capCNodeRadix(cnode);
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
+    জন্য (uint32_t i = 0; i < (1 << radix); i++) {
         lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) == cap_untyped_cap) {
+        যদি (cap_get_capType(c.cap) == cap_untyped_cap) {
             /* we need `cte_t *` to print out the slots of an untyped object */
             obj_ut_print_attrs(c.slot, tcb);
 
-        } else if (cap_get_capType(c.cap) == cap_cnode_cap) {
+        } অন্যথা যদি (cap_get_capType(c.cap) == cap_cnode_cap) {
             /* TBD: deal with nested cnodes */
 
-        } else if (cap_get_capType(c.cap) != cap_null_cap) {
+        } অন্যথা যদি (cap_get_capType(c.cap) != cap_null_cap) {
             print_object(c.cap);
         }
     }
@@ -194,30 +194,30 @@ void obj_tcb_print_cnodes(cap_t cnode, tcb_t *tcb)
  * Caps
  */
 
-void cap_cnode_print_attrs(cap_t cnode)
+শূন্য cap_cnode_print_attrs(cap_t cnode)
 {
     printf("(guard: %lu, guard_size: %lu)\n",
-           (long unsigned int)cap_cnode_cap_get_capCNodeGuard(cnode),
-           (long unsigned int)cap_cnode_cap_get_capCNodeGuardSize(cnode));
+           (long unsigned পূর্ণসংখ্যা)cap_cnode_cap_get_capCNodeGuard(cnode),
+           (long unsigned পূর্ণসংখ্যা)cap_cnode_cap_get_cap_CNode_Guard_আকার(cnode));
 }
 
-void cap_ep_print_attrs(cap_t ep)
+শূন্য cap_ep_print_attrs(cap_t ep)
 {
     printf("(");
     cap_endpoint_cap_get_capCanReceive(ep) ? putchar('R') : 0;
     cap_endpoint_cap_get_capCanSend(ep) ? putchar('W') : 0;
     cap_endpoint_cap_get_capCanGrant(ep) ? putchar('G') : 0;
     cap_endpoint_cap_get_capCanGrantReply(ep) ? putchar('P') : 0;
-    long unsigned int badge = cap_endpoint_cap_get_capEPBadge(ep);
+    long unsigned পূর্ণসংখ্যা badge = cap_endpoint_cap_get_capEPBadge(ep);
     badge ? printf(", badge: %lu)\n", badge) : printf(")\n");
 }
 
-void cap_ntfn_print_attrs(cap_t ntfn)
+শূন্য cap_ntfn_print_attrs(cap_t ntfn)
 {
     printf("(");
     cap_notification_cap_get_capNtfnCanReceive(ntfn) ? putchar('R') : 0;
     cap_notification_cap_get_capNtfnCanSend(ntfn) ? putchar('W') : 0;
-    long unsigned int badge = cap_notification_cap_get_capNtfnBadge(ntfn);
+    long unsigned পূর্ণসংখ্যা badge = cap_notification_cap_get_capNtfnBadge(ntfn);
     badge ? printf(", badge: %lu)\n", badge) : printf(")\n");
 }
 
@@ -225,60 +225,60 @@ void cap_ntfn_print_attrs(cap_t ntfn)
  * print object slots
  */
 
-void obj_tcb_print_slots(tcb_t *tcb)
+শূন্য obj_tcb_print_slots(tcb_t *tcb)
 {
     printf("%p_tcb {\n", tcb);
 
     /* CSpace root */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap) != cap_null_cap) {
         printf("cspace: %p_cnode ",
-               (void *)cap_cnode_cap_get_capCNodePtr(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap));
+               (শূন্য *)cap_cnode_cap_get_capCNodePtr(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap));
         cap_cnode_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap);
     }
 
     /* VSpace root */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) != cap_null_cap) {
         printf("vspace: %p_pd\n",
-               cap_vtable_cap_get_vspace_root_fp(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+               cap_vtable_cap_get_vspace_মূল_fp(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
     }
 
     /* IPC buffer cap slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbBuffer)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcb_বাফার)->cap) != cap_null_cap) {
         /* TBD: print out the bound vcpu */
-        print_ipc_buffer_slot(tcb);
+        print_ipc_বাফার_slot(tcb);
     }
 
 #ifdef CONFIG_KERNEL_MCS
 
     /* Fault endpoint slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap) != cap_null_cap) {
         printf("fault_ep_slot: %p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap));
+               (শূন্য *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap));
         cap_ep_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbFaultHandler)->cap);
     }
 
     /* sc */
-    if (tcb->tcbSchedContext) {
+    যদি (tcb->tcbSchedContext) {
         printf("sc_slot: %p_sc\n", tcb->tcbSchedContext);
     }
 
     /* Timeout endpoint slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap) != cap_null_cap) {
         printf("temp_fault_ep_slot: %p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap));
+               (শূন্য *)cap_endpoint_cap_get_capEPPtr(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap));
         cap_ep_print_attrs(TCB_PTR_CTE_PTR(tcb, tcbTimeoutHandler)->cap);
     }
 
-# else
+# অন্যথা
     /* Reply cap slot */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap) != cap_null_cap) {
         printf("reply_slot: %p_reply\n",
-               (void *)cap_reply_cap_get_capTCBPtr(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap));
+               (শূন্য *)cap_reply_cap_get_capTCBPtr(TCB_PTR_CTE_PTR(tcb, tcbReply)->cap));
     }
 
     /* TCB of most recent IPC sender */
-    if (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap) != cap_null_cap) {
+    যদি (cap_get_capType(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap) != cap_null_cap) {
         tcb_t *caller = TCB_PTR(cap_thread_cap_get_capTCBPtr(TCB_PTR_CTE_PTR(tcb, tcbCaller)->cap));
         printf("caller_slot: %p_tcb\n", caller);
     }
@@ -287,57 +287,57 @@ void obj_tcb_print_slots(tcb_t *tcb)
 }
 
 /* TBD: deal with nested cnodes */
-void obj_cnode_print_slots(tcb_t *tcb)
+শূন্য obj_cnode_print_slots(tcb_t *tcb)
 {
-    cap_t root = TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap;
-    if (cap_get_capType(root) != cap_cnode_cap) {
-        return;
+    cap_t মূল = TCB_PTR_CTE_PTR(tcb, tcbCTable)->cap;
+    যদি (cap_get_capType(মূল) != cap_cnode_cap) {
+        ফেরত;
     }
 
-    word_t radix = cap_cnode_cap_get_capCNodeRadix(root);
-    if (seen(root)) {
-        return;
+    word_t radix = cap_cnode_cap_get_capCNodeRadix(মূল);
+    যদি (seen(মূল)) {
+        ফেরত;
     }
-    add_to_seen(root);
+    add_to_seen(মূল);
 
-    printf("%p_cnode {\n", (void *)cap_cnode_cap_get_capCNodePtr(root));
+    printf("%p_cnode {\n", (শূন্য *)cap_cnode_cap_get_capCNodePtr(মূল));
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
+    জন্য (uint32_t i = 0; i < (1 << radix); i++) {
         lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) != cap_null_cap) {
+        যদি (cap_get_capType(c.cap) != cap_null_cap) {
             printf("0x%x: ", i);
             print_cap(c.cap);
         }
     }
     printf("}\n");
 
-    for (uint32_t i = 0; i < (1 << radix); i++) {
+    জন্য (uint32_t i = 0; i < (1 << radix); i++) {
         lookupCapAndSlot_ret_t c = lookupCapAndSlot(tcb, i);
-        if (cap_get_capType(c.cap) == cap_irq_handler_cap) {
+        যদি (cap_get_capType(c.cap) == cap_irq_handler_cap) {
             /* TBD: should instead print it from IRQNode */
             obj_irq_print_slots(c.cap);
         }
     }
 }
 
-void obj_irq_print_maps(void)
+শূন্য obj_irq_print_maps(শূন্য)
 {
     printf("irq maps {\n");
 
-    for (seL4_Word target = 0; target < CONFIG_MAX_NUM_NODES; target++) {
-        for (unsigned i = 0; i <= maxIRQ; i++) {
+    জন্য (seL4_Word target = 0; target < CONFIG_MAX_অঙ্ক_NODES; target++) {
+        জন্য (unsigned i = 0; i <= maxIRQ; i++) {
             irq_t irq = CORE_IRQ_TO_IRQT(target, i);
-            if (isIRQActive(irq)) {
+            যদি (isIRQActive(irq)) {
                 cap_t cap = intStateIRQNode[IRQT_TO_IDX(irq)].cap;
-                if (cap_get_capType(cap) != cap_null_cap) {
+                যদি (cap_get_capType(cap) != cap_null_cap) {
                     printf("%d: 0x%lx_%lu_irq\n",
                            i,
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
-                           (long unsigned int)irq.irq,
-#else
-                           (long unsigned int)irq,
+#যদি defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
+                           (long unsigned পূর্ণসংখ্যা)irq.irq,
+#অন্যথা
+                           (long unsigned পূর্ণসংখ্যা)irq,
 #endif
-                           (long unsigned int)target);
+                           (long unsigned পূর্ণসংখ্যা)target);
                 }
             }
         }
@@ -345,19 +345,19 @@ void obj_irq_print_maps(void)
     printf("}\n");
 }
 
-void obj_irq_print_slots(cap_t irq_cap)
+শূন্য obj_irq_print_slots(cap_t irq_cap)
 {
     irq_t irq = IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(irq_cap));
-    if (isIRQActive(irq)) {
+    যদি (isIRQActive(irq)) {
         printf("0x%lx_%lu_irq {\n",
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
-               (long unsigned int)irq.irq,
-#else
-               (long unsigned int)irq,
+#যদি defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_ARM)
+               (long unsigned পূর্ণসংখ্যা)irq.irq,
+#অন্যথা
+               (long unsigned পূর্ণসংখ্যা)irq,
 #endif
-               (long unsigned int)IRQT_TO_CORE(irq));
+               (long unsigned পূর্ণসংখ্যা)IRQT_TO_CORE(irq));
         cap_t ntfn_cap = intStateIRQNode[IRQT_TO_IDX(irq)].cap;
-        if (cap_get_capType(ntfn_cap) != cap_null_cap) {
+        যদি (cap_get_capType(ntfn_cap) != cap_null_cap) {
             printf("0x0: ");
             print_cap(ntfn_cap);
         }
@@ -365,19 +365,19 @@ void obj_irq_print_slots(cap_t irq_cap)
     }
 }
 
-void print_objects(void)
+শূন্য print_objects(শূন্য)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    জন্য (tcb_t *curr = গ্রন্থি_STATE(ksDebugTCBs); curr != ফাঁকা; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_পরবর্তী) {
+        যদি (মূল_or_idle_tcb(curr)) {
+            চালু;
         }
         /* print the contains of the tcb's vtable as objects */
         obj_tcb_print_vtable(curr);
     }
 
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    জন্য (tcb_t *curr = গ্রন্থি_STATE(ksDebugTCBs); curr != ফাঁকা; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_পরবর্তী) {
+        যদি (মূল_or_idle_tcb(curr)) {
+            চালু;
         }
 
         /* print the tcb as objects */
@@ -385,17 +385,17 @@ void print_objects(void)
         obj_tcb_print_attrs(curr);
 
         /* print the contains of the tcb's ctable as objects */
-        if (cap_get_capType(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap) == cap_cnode_cap) {
+        যদি (cap_get_capType(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap) == cap_cnode_cap) {
             obj_tcb_print_cnodes(TCB_PTR_CTE_PTR(curr, tcbCTable)->cap, curr);
         }
     }
 }
 
-void print_caps(void)
+শূন্য print_caps(শূন্য)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        if (root_or_idle_tcb(curr)) {
-            continue;
+    জন্য (tcb_t *curr = গ্রন্থি_STATE(ksDebugTCBs); curr != ফাঁকা; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_পরবর্তী) {
+        যদি (মূল_or_idle_tcb(curr)) {
+            চালু;
         }
         obj_cnode_print_slots(curr);
         obj_vtable_print_slots(curr);
@@ -403,113 +403,113 @@ void print_caps(void)
     }
 }
 
-void print_cap(cap_t cap)
+শূন্য print_cap(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap: {
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_endpoint_cap: {
         printf("%p_ep ",
-               (void *)cap_endpoint_cap_get_capEPPtr(cap));
+               (শূন্য *)cap_endpoint_cap_get_capEPPtr(cap));
         cap_ep_print_attrs(cap);
-        break;
+        বিরতি;
     }
-    case cap_notification_cap: {
+    ক্ষেত্র cap_notification_cap: {
         printf("%p_notification ",
-               (void *)cap_notification_cap_get_capNtfnPtr(cap));
+               (শূন্য *)cap_notification_cap_get_capNtfnPtr(cap));
         cap_ntfn_print_attrs(cap);
-        break;
+        বিরতি;
     }
-    case cap_untyped_cap: {
+    ক্ষেত্র cap_untyped_cap: {
         printf("%p_untyped\n",
-               (void *)cap_untyped_cap_get_capPtr(cap));
-        break;
+               (শূন্য *)cap_untyped_cap_get_capPtr(cap));
+        বিরতি;
     }
-    case cap_thread_cap: {
+    ক্ষেত্র cap_thread_cap: {
         printf("%p_tcb\n",
-               (void *)cap_thread_cap_get_capTCBPtr(cap));
-        break;
+               (শূন্য *)cap_thread_cap_get_capTCBPtr(cap));
+        বিরতি;
     }
-    case cap_cnode_cap: {
+    ক্ষেত্র cap_cnode_cap: {
         printf("%p_cnode ",
-               (void *)cap_cnode_cap_get_capCNodePtr(cap));
+               (শূন্য *)cap_cnode_cap_get_capCNodePtr(cap));
         cap_cnode_print_attrs(cap);
-        break;
+        বিরতি;
     }
 #ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap: {
+    ক্ষেত্র cap_reply_cap: {
         printf("%p_reply\n",
-               (void *)cap_reply_cap_get_capReplyPtr(cap));
-        break;
+               (শূন্য *)cap_reply_cap_get_capReplyPtr(cap));
+        বিরতি;
     }
-    case cap_sched_context_cap: {
+    ক্ষেত্র cap_sched_context_cap: {
         printf("%p_sc\n",
-               (void *)cap_sched_context_cap_get_capSCPtr(cap));
-        break;
+               (শূন্য *)cap_sched_context_cap_get_capSCPtr(cap));
+        বিরতি;
     }
-    case cap_sched_control_cap: {
+    ক্ষেত্র cap_sched_control_cap: {
         printf("%lu_sched_control\n",
-               (long unsigned int)cap_sched_control_cap_get_core(cap));
-        break;
+               (long unsigned পূর্ণসংখ্যা)cap_sched_control_cap_get_core(cap));
+        বিরতি;
     }
 #endif
-    case cap_irq_control_cap: {
+    ক্ষেত্র cap_irq_control_cap: {
         printf("irq_control\n"); /* only one in the system */
-        break;
+        বিরতি;
     }
-    case cap_irq_handler_cap: {
+    ক্ষেত্র cap_irq_handler_cap: {
         printf("%p_%lu_irq\n",
-               (void *)cap_irq_handler_cap_get_capIRQ(cap),
-               (long unsigned int)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
-        break;
+               (শূন্য *)cap_irq_handler_cap_get_capIRQ(cap),
+               (long unsigned পূর্ণসংখ্যা)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
+        বিরতি;
     }
-    default: {
+    পূর্বনির্ধারিত: {
         print_cap_arch(cap);
-        break;
+        বিরতি;
     }
     }
 }
 
-void print_object(cap_t cap)
+শূন্য print_object(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap: {
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_endpoint_cap: {
         printf("%p_ep = ep\n",
-               (void *)cap_endpoint_cap_get_capEPPtr(cap));
-        break;
+               (শূন্য *)cap_endpoint_cap_get_capEPPtr(cap));
+        বিরতি;
     }
-    case cap_notification_cap: {
+    ক্ষেত্র cap_notification_cap: {
         printf("%p_notification = notification\n",
-               (void *)cap_notification_cap_get_capNtfnPtr(cap));
-        break;
+               (শূন্য *)cap_notification_cap_get_capNtfnPtr(cap));
+        বিরতি;
     }
-    case cap_thread_cap: {
+    ক্ষেত্র cap_thread_cap: {
         /* this object has already got handle by `print_objects` */
-        break;
+        বিরতি;
     }
-    case cap_cnode_cap: {
-        assert(!"should not happend");
+    ক্ষেত্র cap_cnode_cap: {
+        প্রতিজ্ঞা(!"should not happend");
     }
 #ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap: {
+    ক্ষেত্র cap_reply_cap: {
         printf("%p_reply = rtreply\n",
-               (void *)cap_reply_cap_get_capReplyPtr(cap));
-        break;
+               (শূন্য *)cap_reply_cap_get_capReplyPtr(cap));
+        বিরতি;
     }
-    case cap_sched_context_cap: {
+    ক্ষেত্র cap_sched_context_cap: {
         printf("%p_sc = sc ",
-               (void *)cap_sched_context_cap_get_capSCPtr(cap));
+               (শূন্য *)cap_sched_context_cap_get_capSCPtr(cap));
         obj_sc_print_attrs(cap);
-        break;
+        বিরতি;
     }
 #endif
-    case cap_irq_handler_cap: {
+    ক্ষেত্র cap_irq_handler_cap: {
         printf("%p_%lu_irq = irq\n",
-               (void *)cap_irq_handler_cap_get_capIRQ(cap),
-               (long unsigned int)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
-        break;
+               (শূন্য *)cap_irq_handler_cap_get_capIRQ(cap),
+               (long unsigned পূর্ণসংখ্যা)IRQT_TO_CORE(IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap))));
+        বিরতি;
     }
-    default:
+    পূর্বনির্ধারিত:
         print_object_arch(cap);
-        break;
+        বিরতি;
     }
 }
 

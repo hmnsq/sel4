@@ -5,15 +5,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/l2c_310.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <arch/machine/l2c_310.h>
 
-#define L2_LINE_SIZE_BITS 5
-#define L2_LINE_SIZE BIT(L2_LINE_SIZE_BITS) /* 32 byte line size */
+#define L2_সারি_আকার_BITS 5
+#define L2_সারি_আকার BIT(L2_সারি_আকার_BITS) /* 32 byte line size */
 
-#define L2_LINE_START(a) ROUND_DOWN(a, L2_LINE_SIZE_BITS)
+#define L2_সারি_START(a) ROUND_DOWN(a, L2_সারি_আকার_BITS)
 
-compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BITS)
+compile_assert(l2_l1_same_সারি_আকার, L2_সারি_আকার_BITS == L1_CACHE_সারি_আকার_BITS)
 
 /* MSHIELD Control */
 #define MSHIELD_SMC_ROM_CTRL_CTRL         0x102
@@ -33,7 +33,7 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 /* Cache ID */
 #define PL310_LOCKDOWN_BY_MASK            (0xf<<25)
 #define PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
-#define PL310_LOCKDOWN_BY_LINE            (0xf<<25)
+#define PL310_LOCKDOWN_BY_সারি            (0xf<<25)
 
 /* Primary control */
 #define CTRL_CTRL_EN BIT(0)
@@ -54,8 +54,8 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 #define CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               BIT(13)
 #define CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    BIT(12)
 #define CTRL_AUX_STOREBUFDEV_LIMIT_EN                      BIT(11)
-#define CTRL_AUX_HIGH_PRIO_SODEV_EN                        BIT(10)
-#define CTRL_AUX_FULL_LINE_ZEROS_ENABLE                    BIT( 0)
+#define CTRL_AUX_উপরের_PRIO_SODEV_EN                        BIT(10)
+#define CTRL_AUX_FULL_সারি_ZEROS_ENABLE                    BIT( 0)
 
 #define CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
 #define CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
@@ -91,7 +91,7 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 /* PREFECTCH */
 #define CTRL2_PFET_DBL_LINEFILL_EN              BIT(30)
 #define CTRL2_PFET_INST_PREFETCH_EN             BIT(29)
-#define CTRL2_PFET_DATA_PREFETCH_EN             BIT(28)
+#define CTRL2_PFET_তথ্য_PREFETCH_EN             BIT(28)
 #define CTRL2_PFET_DBL_LINEFILL_ON_WRAP_EN      BIT(27)
 #define CTRL2_PFET_PREFETCH_DROP_EN             BIT(24)
 #define CTRL2_PFET_INCR_DBL_LINEFILL_EN         BIT(23)
@@ -99,24 +99,24 @@ compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BIT
 #define CTRL2_PFET_PREFETCH_OFFSET(X)    ((X) * BIT( 0) )
 
 
-struct l2cc_map {
+কাঠামো l2cc_map {
 
-    struct {
+    কাঠামো {
         uint32_t cache_id;              /* 0x000 */
         uint32_t cache_type;            /* 0x004 */
         uint32_t res[62];
     } id /* reg0 */;
 
-    struct {
+    কাঠামো {
         uint32_t control;               /* 0x100 */
         uint32_t aux_control;           /* 0x104 */
         uint32_t tag_ram_control;       /* 0x108 */
-        uint32_t data_ram_control;      /* 0x10C */
+        uint32_t তথ্য_ram_control;      /* 0x10C */
         uint32_t res[60];
     } control /* reg1 */;
 
-    struct {
-        uint32_t ev_counter_ctrl;       /* 0x200 */
+    কাঠামো {
+        uint32_t ev_গণক_ctrl;       /* 0x200 */
         uint32_t ev_counter1_cfg;       /* 0x204 */
         uint32_t ev_counter0_cfg;       /* 0x208 */
         uint32_t ev_counter1;           /* 0x20C */
@@ -128,20 +128,20 @@ struct l2cc_map {
         uint32_t res[55];
     } interrupt /* reg2 */;
 
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg3;
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg4;
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg5;
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg6;
 
-    struct {
+    কাঠামো {
         uint32_t res[12];
         uint32_t cache_sync;            /* 0x730 */
         uint32_t res1[15];
@@ -151,20 +151,20 @@ struct l2cc_map {
         uint32_t res3[12];
         uint32_t clean_pa;              /* 0x7B0 */
         uint32_t res4[1];
-        uint32_t clean_index;           /* 0x7B8 */
+        uint32_t clean_সূচক;           /* 0x7B8 */
         uint32_t clean_way;             /* 0x7BC */
         uint32_t res5[12];
         uint32_t clean_inv_pa;          /* 0x7F0 */
         uint32_t res6[1];
-        uint32_t clean_inv_index;       /* 0x7F8 */
+        uint32_t clean_inv_সূচক;       /* 0x7F8 */
         uint32_t clean_inv_way;         /* 0x7FC */
     } maintenance /* reg7 */;
 
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg8;
 
-    struct {
+    কাঠামো {
         uint32_t d_lockdown0;           /* 0x900 */
         uint32_t i_lockdown0;           /* 0x904 */
         uint32_t d_lockdown1;           /* 0x908 */
@@ -182,32 +182,32 @@ struct l2cc_map {
         uint32_t d_lockdown7;           /* 0x938 */
         uint32_t i_lockdown7;           /* 0x93C */
         uint32_t res[4];
-        uint32_t lock_line_eng;         /* 0x950 */
+        uint32_t lock_সারি_eng;         /* 0x950 */
         uint32_t unlock_wayg;           /* 0x954 */
         uint32_t res1[42];
     } lockdown /* reg9 */;
 
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg10;
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg11;
 
-    struct {
+    কাঠামো {
         uint32_t addr_filtering_start;  /* 0xC00 */
         uint32_t addr_filtering_end;    /* 0xC04 */
         uint32_t res[62];
     } filter /* reg12 */;
 
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg13;
-    struct {
+    কাঠামো {
         uint32_t res[64];
     } reg14;
 
-    struct {
+    কাঠামো {
         uint32_t res[16];
         uint32_t debug_ctrl;            /* 0xF40 */
         uint32_t res1[7];
@@ -220,20 +220,20 @@ struct l2cc_map {
 
 
 #ifndef L2CC_L2C310_PPTR
-#error L2CC_L2C310_PPTR must be defined for virtual memory access to the L2 cache controller
-#else  /* L2CC_PPTR */
-volatile struct l2cc_map *const l2cc
-    = (volatile struct l2cc_map *)L2CC_L2C310_PPTR;
+#error L2CC_L2C310_PPTR must be defined জন্য আভাসী memory access to the L2 cache controller
+#অন্যথা  /* L2CC_PPTR */
+অস্থির কাঠামো l2cc_map *ধ্রুবক l2cc
+    = (অস্থির কাঠামো l2cc_map *)L2CC_L2C310_PPTR;
 #endif /* !L2CC_PPTR */
 
 
 #ifdef TI_MSHIELD
-BOOT_CODE static void mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
+BOOT_CODE স্থির শূন্য mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
 {
-    register uint32_t _arg1 asm("r0") = arg1;
-    register uint32_t _arg2 asm("r1") = arg2;
-    register uint32_t _callid asm("r12") = callid;
-    asm volatile("push {r2-r12, lr}\n"
+    নিবন্ধ uint32_t _arg1 asm("r0") = arg1;
+    নিবন্ধ uint32_t _arg2 asm("r1") = arg2;
+    নিবন্ধ uint32_t _callid asm("r12") = callid;
+    asm অস্থির("push {r2-r12, lr}\n"
                  "dsb\n"
                  "smc #0\n"
                  "pop {r2-r12, lr}"
@@ -241,12 +241,12 @@ BOOT_CODE static void mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
 }
 #endif /* TI_MSHIELD */
 
-BOOT_CODE void initL2Cache(void)
+BOOT_CODE শূন্য initL2Cache(শূন্য)
 {
 #ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
     uint32_t aux;
     uint32_t tag_ram;
-    uint32_t data_ram;
+    uint32_t তথ্য_ram;
     uint32_t prefetch;
 
     /* L2 cache must be disabled during initialisation */
@@ -254,13 +254,13 @@ BOOT_CODE void initL2Cache(void)
     l2cc->control.control &= ~CTRL_CTRL_EN;
 #endif
 
-    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_DATA_PREFETCH_EN;
-#if defined(CONFIG_PLAT_IMX6)
+    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_তথ্য_PREFETCH_EN;
+#যদি defined(CONFIG_PLAT_IMX6)
     tag_ram  = CTRL_RAM_LATENCY(1, 2, 1);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 1);
-#else
+    তথ্য_ram = CTRL_RAM_LATENCY(1, 2, 1);
+#অন্যথা
     tag_ram  = CTRL_RAM_LATENCY(1, 1, 0);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 0);
+    তথ্য_ram = CTRL_RAM_LATENCY(1, 2, 0);
 #endif
 
     aux      = 0
@@ -271,14 +271,14 @@ BOOT_CODE void initL2Cache(void)
                | CTRL_AUX_ASSOCIATIVITY_16WAY
                | CTRL_AUS_REPLPOLICY_RROBIN;
 
-#if defined(CONFIG_PLAT_IMX6SX)
+#যদি defined(CONFIG_PLAT_IMX6SX)
     aux |= CTRL_AUX_WAYSIZE_16K;
-#elif defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
+#নতুবা_যদি defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
     aux |= CTRL_AUX_WAYSIZE_64K;
-#elif defined(OMAP4)
+#নতুবা_যদি defined(OMAP4)
     aux |= CTRL_AUX_WAYSIZE_32K;
-#else /* ! (EXYNOS4 || OMAP4 || IMX6) */
-#error Unknown platform for L2C-310
+#অন্যথা /* ! (EXYNOS4 || OMAP4 || IMX6) */
+#error Unknown platform জন্য L2C-310
 #endif /* EXYNOS4 || OMAP4 || IMX6 */
 
 #ifdef TI_MSHIELD
@@ -286,24 +286,24 @@ BOOT_CODE void initL2Cache(void)
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 0, 0);
     mshield_smc(MSHIELD_SMC_ROM_CTRL_AUX, aux, 0);
-    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, data_ram);
+    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, তথ্য_ram);
 
-#else /* !TI_MSHIELD */
+#অন্যথা /* !TI_MSHIELD */
     /* Direct register access */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     l2cc->control.aux_control      = aux;
     l2cc->control.tag_ram_control  = tag_ram;
-    l2cc->control.data_ram_control = data_ram;
+    l2cc->control.তথ্য_ram_control = তথ্য_ram;
     l2cc->control2.prefetch_ctrl   = prefetch;
 
 #endif /* TI_MSHIELD */
 
     /* 2: Invalidate by way. */
     l2cc->maintenance.inv_way = 0xffff;
-    while (l2cc->maintenance.inv_way & 0xffff);
+    যখন (l2cc->maintenance.inv_way & 0xffff);
 
     /* 3: write to lockdown D & I reg9 if required  */
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
+    যদি ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
         /* disable lockdown */
         l2cc->lockdown.d_lockdown0 = 0;
         l2cc->lockdown.i_lockdown0 = 0;
@@ -322,9 +322,9 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    যদি ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_সারি) {
         /* disable lockdown */
-        l2cc->lockdown.lock_line_eng = 0;
+        l2cc->lockdown.lock_সারি_eng = 0;
     }
 
     /* 4: write to interrupt clear register to clear any residual raw interrupts set */
@@ -336,7 +336,7 @@ BOOT_CODE void initL2Cache(void)
 #ifdef TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 1, 0);
-#else /* !TI_MSHIELD */
+#অন্যথা /* !TI_MSHIELD */
     /* Direct register access */
     l2cc->control.control |= CTRL_CTRL_EN;
 #endif /* TI_MSHIELD */
@@ -344,7 +344,7 @@ BOOT_CODE void initL2Cache(void)
      * of the l2cc register updates */
     dsb();
 
-#if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
+#যদি defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 1 in the ACTLR, which on the cortex-a9 is the l2 prefetch enable
      * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
     setACTLR(getACTLR() | BIT(1));
@@ -353,12 +353,12 @@ BOOT_CODE void initL2Cache(void)
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-static inline void L2_cacheSync(void)
+স্থির অন্তঃরেখ শূন্য L2_cacheSync(শূন্য)
 {
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     l2cc->maintenance.cache_sync = 0;
-    while (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
+    যখন (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
     /* Wait till the L2 cache operation has completed and avoid later memoy
      * operations being reordered to before this point */
     dsb();
@@ -372,40 +372,40 @@ static inline void L2_cacheSync(void)
  * The same is true when doing separate clean and invalidate operations,
  * hence that is not a proper work-around and worse than the errata.
  */
-void plat_cleanInvalidateL2Cache(void)
+শূন্য plat_cleanInvalidateL2Cache(শূন্য)
 {
-    if (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
+    যদি (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
         /* Avoid normal memory writes being reordered with device memory writes */
         dmb();
         l2cc->maintenance.clean_inv_way = 0xffff;
-        while (l2cc->maintenance.clean_inv_way);
+        যখন (l2cc->maintenance.clean_inv_way);
         L2_cacheSync();
     }
 }
 
-void plat_cleanCache(void)
+শূন্য plat_cleanCache(শূন্য)
 {
 #ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* Clean by way. */
     l2cc->maintenance.clean_way = 0xffff;
-    while (l2cc->maintenance.clean_way & 0xffff);
+    যখন (l2cc->maintenance.clean_way & 0xffff);
     L2_cacheSync();
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanL2Range(paddr_t start, paddr_t end)
+শূন্য plat_cleanL2Range(paddr_t start, paddr_t end)
 {
 #ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    প্রতিজ্ঞা(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    জন্য (start = L2_সারি_START(start);
+         start != L2_সারি_START(end + L2_সারি_আকার);
+         start += L2_সারি_আকার) {
         l2cc->maintenance.clean_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
@@ -413,19 +413,19 @@ void plat_cleanL2Range(paddr_t start, paddr_t end)
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_invalidateL2Range(paddr_t start, paddr_t end)
+শূন্য plat_invalidateL2Range(paddr_t start, paddr_t end)
 {
 #ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    প্রতিজ্ঞা(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    জন্য (start = L2_সারি_START(start);
+         start != L2_সারি_START(end + L2_সারি_আকার);
+         start += L2_সারি_আকার) {
         l2cc->maintenance.inv_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
@@ -433,17 +433,17 @@ void plat_invalidateL2Range(paddr_t start, paddr_t end)
 #endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
+শূন্য plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
 {
 #ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    প্রতিজ্ঞা(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
+    জন্য (start = L2_সারি_START(start);
+         start != L2_সারি_START(end + L2_সারি_আকার);
+         start += L2_সারি_আকার) {
         l2cc->maintenance.clean_inv_pa = start;
         /* do not need to wait for every invalidate as 310 is atomic */
     }

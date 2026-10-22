@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <stdint.h>
+#অন্তর্ভাব <util.h>
+#অন্তর্ভাব <machine/io.h>
 
 #define ULCON       0x0000 /* line control */
 #define UCON        0x0004 /* control */
@@ -30,23 +30,23 @@
 #define TXBUF_EMPTY     BIT(1)
 #define RXBUF_READY     BIT(0)
 
-#define UART_REG(X) ((volatile uint32_t *)(UART_PPTR + (X)))
+#define UART_REG(X) ((অস্থির uint32_t *)(UART_PPTR + (X)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+শূন্য uart_drv_putchar(unsigned অক্ষর c)
 {
-    while ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
+    যখন ((*UART_REG(UTRSTAT) & TXBUF_EMPTY) == 0);
     *UART_REG(UTXH) = (c & 0xff);
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned অক্ষর uart_drv_getchar(শূন্য)
 {
-    if ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
-        return (unsigned char) * UART_REG(URXH);
-    } else {
-        return -1;
+    যদি ((*UART_REG(UTRSTAT) & RXBUF_READY)) {
+        ফেরত (unsigned অক্ষর) * UART_REG(URXH);
+    } অন্যথা {
+        ফেরত -1;
     }
 }
 #endif /* CONFIG_DEBUG_BUILD */

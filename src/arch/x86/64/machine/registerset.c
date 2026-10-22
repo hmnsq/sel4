@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
+#অন্তর্ভাব <assert.h>
+#অন্তর্ভাব <arch/machine/registerset.h>
+#অন্তর্ভাব <machine/fpu.h>
+#অন্তর্ভাব <arch/object/structures.h>
 
-const register_t msgRegisters[] = {
+ধ্রুবক register_t বার্তা_Registers[] = {
     R10, R8, R9, R15
 };
 compile_assert(
     consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    আকার(বার্তা_Registers) / আকার(বার্তা_Registers[0]) == n_বার্তা_Registers
 );
 
-const register_t frameRegisters[] = {
+ধ্রুবক register_t frameRegisters[] = {
     FaultIP, RSP, FLAGS, RAX, RBX, RCX, RDX, RSI, RDI, RBP,
     R8, R9, R10, R11, R12, R13, R14, R15
 };
 compile_assert(
     consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    আকার(frameRegisters) / আকার(frameRegisters[0]) == n_frameRegisters
 );
 
-const register_t gpRegisters[] = {
+ধ্রুবক register_t gpRegisters[] = {
     FS_BASE, GS_BASE
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    আকার(gpRegisters) / আকার(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+শূন্য Mode_initContext(user_context_t *context)
 {
     context->registers[RAX] = 0;
     context->registers[RBX] = 0;
@@ -56,19 +56,19 @@ void Mode_initContext(user_context_t *context)
 
 word_t Mode_sanitiseRegister(register_t reg, word_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    যদি (reg == FaultIP || reg == পরবর্তী_IP || reg == FS_BASE || reg == GS_BASE) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        যদি (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    ফেরত v;
 }
 
 #ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+word_t getNBSendRecvDest(শূন্য)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ফেরত getRegister(গ্রন্থি_STATE(ksCurThread), nbsendRecvDest);
 }
 #endif

@@ -4,180 +4,180 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <plat/machine/devices.h>
+#অন্তর্ভাব <config.h>
+#অন্তর্ভাব <types.h>
+#অন্তর্ভাব <api/failures.h>
+#অন্তর্ভাব <kernel/vspace.h>
+#অন্তর্ভাব <object/structures.h>
+#অন্তর্ভাব <arch/machine.h>
+#অন্তর্ভাব <arch/model/statedata.h>
+#অন্তর্ভাব <machine/fpu.h>
+#অন্তর্ভাব <arch/object/objecttype.h>
+#অন্তর্ভাব <arch/object/ioport.h>
+#অন্তর্ভাব <plat/machine/devices.h>
 
-#include <arch/object/iospace.h>
-#include <arch/object/vcpu.h>
-#include <plat/machine/intel-vtd.h>
+#অন্তর্ভাব <arch/object/iospace.h>
+#অন্তর্ভাব <arch/object/vcpu.h>
+#অন্তর্ভাব <plat/machine/intel-vtd.h>
 
 deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_page_table_cap:
+        যদি (cap_page_table_cap_get_capPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving an unmapped PT cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 
-    case cap_page_directory_cap:
-        if (cap_page_directory_cap_get_capPDIsMapped(cap)) {
+    ক্ষেত্র cap_page_directory_cap:
+        যদি (cap_page_directory_cap_get_capPDIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving a PD cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    ক্ষেত্র cap_asid_control_cap:
+    ক্ষেত্র cap_asid_pool_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_io_port_control_cap:
+        ফেরত ret;
+    ক্ষেত্র cap_io_port_control_cap:
         ret.status = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        return ret;
-    case cap_io_port_cap:
+        ফেরত ret;
+    ক্ষেত্র cap_io_port_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        ফেরত ret;
 
 #ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
+    ক্ষেত্র cap_io_space_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_io_page_table_cap:
-        if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+        ফেরত ret;
+    ক্ষেত্র cap_io_page_table_cap:
+        যদি (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 #endif
 
 #ifdef CONFIG_VTX
-    case cap_vcpu_cap:
+    ক্ষেত্র cap_vcpu_cap:
         ret.cap = cap;
         ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_ept_pml4_cap:
-        if (cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
+        ফেরত ret;
+    ক্ষেত্র cap_ept_pml4_cap:
+        যদি (cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving a EPT PML4 cap without an assigned ASID.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
-    case cap_ept_pdpt_cap:
-        if (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+        ফেরত ret;
+    ক্ষেত্র cap_ept_pdpt_cap:
+        যদি (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving an unmapped EPT PDPT cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 
-    case cap_ept_pd_cap:
-        if (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    ক্ষেত্র cap_ept_pd_cap:
+        যদি (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving an unmapped EPT PD cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 
-    case cap_ept_pt_cap:
-        if (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+    ক্ষেত্র cap_ept_pt_cap:
+        যদি (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
-        } else {
+        } অন্যথা {
             userError("Deriving an unmapped EPT PT cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        ফেরত ret;
 #endif
 
-    default:
-        return Mode_deriveCap(slot, cap);
+    পূর্বনির্ধারিত:
+        ফেরত Mode_deriveCap(slot, cap);
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_তথ্য(bool_t preserve, word_t তথ্য, cap_t cap)
 {
     /* Avoid a switch statement with just a 'default' case as the C parser does not like this */
 #ifdef CONFIG_IOMMU
-    switch (cap_get_capType(cap)) {
-    case cap_io_space_cap: {
-        seL4_X86_IOSpace_CapData_t w = { { data } };
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_io_space_cap: {
+        se_L4_X86_IOSpace_Cap_তথ্য_t w = { { তথ্য } };
         uint16_t PCIDevice = get_dev_id(
-                                 seL4_X86_IOSpace_CapData_get_pciBus(w),
-                                 seL4_X86_IOSpace_CapData_get_pciDev(w),
-                                 seL4_X86_IOSpace_CapData_get_pciFun(w)
+                                 se_L4_X86_IOSpace_Cap_তথ্য_get_pci_Bus(w),
+                                 se_L4_X86_IOSpace_Cap_তথ্য_get_pci_Dev(w),
+                                 se_L4_X86_IOSpace_Cap_তথ্য_get_pci_Fun(w)
                              );
-        uint16_t domainID = seL4_X86_IOSpace_CapData_get_domainID(w);
-        if (!preserve && cap_io_space_cap_get_capPCIDevice(cap) == 0 &&
+        uint16_t domainID = se_L4_X86_IOSpace_Cap_তথ্য_get_domain_ID(w);
+        যদি (!preserve && cap_io_space_cap_get_capPCIDevice(cap) == 0 &&
             domainID >= x86KSFirstValidIODomain &&
             domainID != 0                        &&
             domainID <= MASK(x86KSnumIODomainIDBits)) {
-            return cap_io_space_cap_new(domainID, PCIDevice);
-        } else {
-            return cap_null_cap_new();
+            ফেরত cap_io_space_cap_new(domainID, PCIDevice);
+        } অন্যথা {
+            ফেরত cap_null_cap_new();
         }
     }
 
-    default:
-        return cap;
+    পূর্বনির্ধারিত:
+        ফেরত cap;
     }
 #endif
-    return cap;
+    ফেরত cap;
 }
 
 cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    যদি (cap_get_capType(cap) == cap_frame_cap) {
         vm_rights_t vm_rights;
 
         vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
         vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        ফেরত cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
+    } অন্যথা {
+        ফেরত cap;
     }
 }
 
@@ -185,239 +185,239 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-        if (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_page_directory_cap:
+        যদি (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
             unmapPageDirectory(
                 cap_page_directory_cap_get_capPDMappedASID(cap),
                 cap_page_directory_cap_get_capPDMappedAddress(cap),
                 PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap))
             );
         }
-        break;
+        বিরতি;
 
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ক্ষেত্র cap_page_table_cap:
+        যদি (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
             unmapPageTable(
                 cap_page_table_cap_get_capPTMappedASID(cap),
                 cap_page_table_cap_get_capPTMappedAddress(cap),
                 PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap))
             );
         }
-        break;
+        বিরতি;
 
-    case cap_asid_pool_cap:
-        if (final) {
+    ক্ষেত্র cap_asid_pool_cap:
+        যদি (final) {
             deleteASIDPool(
                 cap_asid_pool_cap_get_capASIDBase(cap),
                 ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))
             );
         }
-        break;
-    case cap_asid_control_cap:
-    case cap_io_port_control_cap:
-        break;
-    case cap_io_port_cap:
+        বিরতি;
+    ক্ষেত্র cap_asid_control_cap:
+    ক্ষেত্র cap_io_port_control_cap:
+        বিরতি;
+    ক্ষেত্র cap_io_port_cap:
 #ifdef CONFIG_VTX
         clearVPIDIOPortMappings(cap_io_port_cap_get_capIOPortVPID(cap),
                                 cap_io_port_cap_get_capIOPortFirstPort(cap),
                                 cap_io_port_cap_get_capIOPortLastPort(cap));
 #endif
-        if (final) {
+        যদি (final) {
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap;
-            return fc_ret;
+            ফেরত fc_ret;
         }
-        break;
+        বিরতি;
 #ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        if (final) {
+    ক্ষেত্র cap_io_space_cap:
+        যদি (final) {
             unmapVTDContextEntry(cap);
         }
-        break;
+        বিরতি;
 
-    case cap_io_page_table_cap:
-        if (final && cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+    ক্ষেত্র cap_io_page_table_cap:
+        যদি (final && cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
             deleteIOPageTable(cap);
         }
-        break;
+        বিরতি;
 #endif
 
 #ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        if (final) {
+    ক্ষেত্র cap_vcpu_cap:
+        যদি (final) {
             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
         }
-        break;
-    case cap_ept_pml4_cap:
-        if (final && cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
+        বিরতি;
+    ক্ষেত্র cap_ept_pml4_cap:
+        যদি (final && cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
             deleteEPTASID(cap_ept_pml4_cap_get_capPML4MappedASID(cap),
                           (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(cap));
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pdpt_cap:
-        if (final && cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    ক্ষেত্র cap_ept_pdpt_cap:
+        যদি (final && cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
             unmapEPTPDPT(
                 cap_ept_pdpt_cap_get_capPDPTMappedASID(cap),
                 cap_ept_pdpt_cap_get_capPDPTMappedAddress(cap),
                 (ept_pdpte_t *)cap_ept_pdpt_cap_get_capPDPTBasePtr(cap));
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pd_cap:
-        if (final && cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    ক্ষেত্র cap_ept_pd_cap:
+        যদি (final && cap_ept_pd_cap_get_capPDIsMapped(cap)) {
             unmapEPTPageDirectory(
                 cap_ept_pd_cap_get_capPDMappedASID(cap),
                 cap_ept_pd_cap_get_capPDMappedAddress(cap),
                 (ept_pde_t *)cap_ept_pd_cap_get_capPDBasePtr(cap));
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pt_cap:
-        if (final && cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+    ক্ষেত্র cap_ept_pt_cap:
+        যদি (final && cap_ept_pt_cap_get_capPTIsMapped(cap)) {
             unmapEPTPageTable(
                 cap_ept_pt_cap_get_capPTMappedASID(cap),
                 cap_ept_pt_cap_get_capPTMappedAddress(cap),
                 (ept_pte_t *)cap_ept_pt_cap_get_capPTBasePtr(cap));
         }
-        break;
+        বিরতি;
 #endif
 
-    default:
-        return Mode_finaliseCap(cap, final);
+    পূর্বনির্ধারিত:
+        ফেরত Mode_finaliseCap(cap, final);
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    ফেরত fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
+    নির্বাচন (cap_get_capType(cap_a)) {
+    ক্ষেত্র cap_frame_cap:
+        যদি (cap_get_capType(cap_b) == cap_frame_cap) {
+            word_t botA, botB, শীর্ষ_A, শীর্ষ_B;
             botA = cap_frame_cap_get_capFBasePtr(cap_a);
             botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b)));
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+            শীর্ষ_A = botA + MASK(page_Bits_For_আকার(cap_frame_cap_get_capFSize(cap_a)));
+            শীর্ষ_B = botB + MASK(page_Bits_For_আকার(cap_frame_cap_get_capFSize(cap_b)));
+            ফেরত ((botA <= botB) && (শীর্ষ_A >= শীর্ষ_B) && (botB <= শীর্ষ_B));
         }
-        break;
+        বিরতি;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
+    ক্ষেত্র cap_page_table_cap:
+        যদি (cap_get_capType(cap_b) == cap_page_table_cap) {
+            ফেরত cap_page_table_cap_get_capPTBasePtr(cap_a) ==
                    cap_page_table_cap_get_capPTBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_page_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_directory_cap) {
-            return cap_page_directory_cap_get_capPDBasePtr(cap_a) ==
+    ক্ষেত্র cap_page_directory_cap:
+        যদি (cap_get_capType(cap_b) == cap_page_directory_cap) {
+            ফেরত cap_page_directory_cap_get_capPDBasePtr(cap_a) ==
                    cap_page_directory_cap_get_capPDBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+    ক্ষেত্র cap_asid_control_cap:
+        যদি (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            ফেরত true;
         }
-        break;
+        বিরতি;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    ক্ষেত্র cap_asid_pool_cap:
+        যদি (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            ফেরত cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_io_port_control_cap:
-        if (cap_get_capType(cap_b) == cap_io_port_control_cap ||
+    ক্ষেত্র cap_io_port_control_cap:
+        যদি (cap_get_capType(cap_b) == cap_io_port_control_cap ||
             cap_get_capType(cap_b) == cap_io_port_cap) {
-            return true;
+            ফেরত true;
         }
-        break;
+        বিরতি;
 
-    case cap_io_port_cap:
-        if (cap_get_capType(cap_b) == cap_io_port_cap) {
-            return  cap_io_port_cap_get_capIOPortFirstPort(cap_a) ==
+    ক্ষেত্র cap_io_port_cap:
+        যদি (cap_get_capType(cap_b) == cap_io_port_cap) {
+            ফেরত  cap_io_port_cap_get_capIOPortFirstPort(cap_a) ==
                     cap_io_port_cap_get_capIOPortFirstPort(cap_b) &&
                     cap_io_port_cap_get_capIOPortLastPort(cap_a) ==
                     cap_io_port_cap_get_capIOPortLastPort(cap_b);
         }
-        break;
+        বিরতি;
 
 #ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        if (cap_get_capType(cap_b) == cap_io_space_cap) {
-            return cap_io_space_cap_get_capPCIDevice(cap_a) ==
+    ক্ষেত্র cap_io_space_cap:
+        যদি (cap_get_capType(cap_b) == cap_io_space_cap) {
+            ফেরত cap_io_space_cap_get_capPCIDevice(cap_a) ==
                    cap_io_space_cap_get_capPCIDevice(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_io_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_io_page_table_cap) {
-            return cap_io_page_table_cap_get_capIOPTBasePtr(cap_a) ==
+    ক্ষেত্র cap_io_page_table_cap:
+        যদি (cap_get_capType(cap_b) == cap_io_page_table_cap) {
+            ফেরত cap_io_page_table_cap_get_capIOPTBasePtr(cap_a) ==
                    cap_io_page_table_cap_get_capIOPTBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 #endif
 
 #ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        if (cap_get_capType(cap_b) == cap_vcpu_cap) {
-            return cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
+    ক্ষেত্র cap_vcpu_cap:
+        যদি (cap_get_capType(cap_b) == cap_vcpu_cap) {
+            ফেরত cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
                    cap_vcpu_cap_get_capVCPUPtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pml4_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pml4_cap) {
-            return cap_ept_pml4_cap_get_capPML4BasePtr(cap_a) ==
+    ক্ষেত্র cap_ept_pml4_cap:
+        যদি (cap_get_capType(cap_b) == cap_ept_pml4_cap) {
+            ফেরত cap_ept_pml4_cap_get_capPML4BasePtr(cap_a) ==
                    cap_ept_pml4_cap_get_capPML4BasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pdpt_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pdpt_cap) {
-            return cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
+    ক্ষেত্র cap_ept_pdpt_cap:
+        যদি (cap_get_capType(cap_b) == cap_ept_pdpt_cap) {
+            ফেরত cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
                    cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pd_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pd_cap) {
-            return cap_ept_pd_cap_get_capPDBasePtr(cap_a) ==
+    ক্ষেত্র cap_ept_pd_cap:
+        যদি (cap_get_capType(cap_b) == cap_ept_pd_cap) {
+            ফেরত cap_ept_pd_cap_get_capPDBasePtr(cap_a) ==
                    cap_ept_pd_cap_get_capPDBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
-    case cap_ept_pt_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pt_cap) {
-            return cap_ept_pt_cap_get_capPTBasePtr(cap_a) ==
+    ক্ষেত্র cap_ept_pt_cap:
+        যদি (cap_get_capType(cap_b) == cap_ept_pt_cap) {
+            ফেরত cap_ept_pt_cap_get_capPTBasePtr(cap_a) ==
                    cap_ept_pt_cap_get_capPTBasePtr(cap_b);
         }
-        break;
+        বিরতি;
 
 #endif
 
     }
 
-    return Mode_sameRegionAs(cap_a, cap_b);
+    ফেরত Mode_sameRegionAs(cap_a, cap_b);
 }
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_io_port_control_cap &&
+    যদি (cap_get_capType(cap_a) == cap_io_port_control_cap &&
         cap_get_capType(cap_b) == cap_io_port_cap) {
-        return false;
+        ফেরত false;
     }
-    if (cap_get_capType(cap_a) == cap_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
+    যদি (cap_get_capType(cap_a) == cap_frame_cap) {
+        যদি (cap_get_capType(cap_b) == cap_frame_cap) {
+            ফেরত ((cap_frame_cap_get_capFBasePtr(cap_a) ==
                      cap_frame_cap_get_capFBasePtr(cap_b)) &&
                     (cap_frame_cap_get_capFSize(cap_a) ==
                      cap_frame_cap_get_capFSize(cap_b)) &&
@@ -425,81 +425,81 @@ bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
                      (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
         }
     }
-    return Arch_sameRegionAs(cap_a, cap_b);
+    ফেরত Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+word_t Arch_get_Object_আকার(word_t t)
 {
-    switch (t) {
-    case seL4_X86_4K:
-        return pageBitsForSize(X86_SmallPage);
-    case seL4_X86_LargePageObject:
-        return pageBitsForSize(X86_LargePage);
-    case seL4_X86_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_X86_PageDirectoryObject:
-        return seL4_PageDirBits;
-    case seL4_IA32_PDPTObject:
-        return seL4_PDPTBits;
-    case seL4_X86_IOPageTableObject:
-        return seL4_IOPageTableBits;
+    নির্বাচন (t) {
+    ক্ষেত্র seL4_X86_4K:
+        ফেরত page_Bits_For_আকার(X86_SmallPage);
+    ক্ষেত্র seL4_X86_LargePageObject:
+        ফেরত page_Bits_For_আকার(X86_LargePage);
+    ক্ষেত্র seL4_X86_PageTableObject:
+        ফেরত seL4_PageTableBits;
+    ক্ষেত্র seL4_X86_PageDirectoryObject:
+        ফেরত seL4_PageDirBits;
+    ক্ষেত্র seL4_IA32_PDPTObject:
+        ফেরত seL4_PDPTBits;
+    ক্ষেত্র seL4_X86_IOPageTableObject:
+        ফেরত seL4_IOPageTableBits;
 #ifdef CONFIG_VTX
-    case seL4_X86_VCPUObject:
-        return seL4_X86_VCPUBits;
-    case seL4_X86_EPTPML4Object:
-        return seL4_X86_EPTPML4Bits;
-    case seL4_X86_EPTPDPTObject:
-        return seL4_X86_EPTPDPTBits;
-    case seL4_X86_EPTPDObject:
-        return seL4_X86_EPTPDBits;
-    case seL4_X86_EPTPTObject:
-        return seL4_X86_EPTPTBits;
+    ক্ষেত্র seL4_X86_VCPUObject:
+        ফেরত seL4_X86_VCPUBits;
+    ক্ষেত্র seL4_X86_EPTPML4Object:
+        ফেরত seL4_X86_EPTPML4Bits;
+    ক্ষেত্র seL4_X86_EPTPDPTObject:
+        ফেরত seL4_X86_EPTPDPTBits;
+    ক্ষেত্র seL4_X86_EPTPDObject:
+        ফেরত seL4_X86_EPTPDBits;
+    ক্ষেত্র seL4_X86_EPTPTObject:
+        ফেরত seL4_X86_EPTPTBits;
 #endif
-    default:
-        return Mode_getObjectSize(t);
+    পূর্বনির্ধারিত:
+        ফেরত Mode_get_Object_আকার(t);
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Arch_createObject(object_t t, শূন্য *regionBase, word_t user_আকার, bool_t deviceMemory)
 {
 #ifdef CONFIG_VTX
-    switch (t) {
-    case seL4_X86_VCPUObject: {
+    নির্বাচন (t) {
+    ক্ষেত্র seL4_X86_VCPUObject: {
         vcpu_t *vcpu;
         vcpu = VCPU_PTR((word_t)regionBase);
         vcpu_init(vcpu);
-        return cap_vcpu_cap_new(VCPU_REF(vcpu));
+        ফেরত cap_vcpu_cap_new(VCPU_REF(vcpu));
     }
-    case seL4_X86_EPTPML4Object:
-        return cap_ept_pml4_cap_new(
+    ক্ষেত্র seL4_X86_EPTPML4Object:
+        ফেরত cap_ept_pml4_cap_new(
                    0,                  /* capPML4IsMapped      */
                    VPID_INVALID,       /* capPML4MappedASID    */
                    (word_t)regionBase  /* capPML4BasePtr       */
                );
-    case seL4_X86_EPTPDPTObject:
-        return cap_ept_pdpt_cap_new(
+    ক্ষেত্র seL4_X86_EPTPDPTObject:
+        ফেরত cap_ept_pdpt_cap_new(
                    0,                  /* capPDPTMappedAddress */
                    0,                  /* capPDPTIsMapped      */
                    VPID_INVALID,       /* capPDPTMappedASID    */
                    (word_t)regionBase   /* capPDPTBasePtr      */
                );
-    case seL4_X86_EPTPDObject:
-        return cap_ept_pd_cap_new(
+    ক্ষেত্র seL4_X86_EPTPDObject:
+        ফেরত cap_ept_pd_cap_new(
                    0,                  /* capPDMappedAddress   */
                    0,                  /* capPDIsMapped        */
                    VPID_INVALID,       /* capPDMappedASID      */
                    (word_t)regionBase  /* capPDBasePtr         */
                );
-    case seL4_X86_EPTPTObject:
-        return cap_ept_pt_cap_new(
+    ক্ষেত্র seL4_X86_EPTPTObject:
+        ফেরত cap_ept_pt_cap_new(
                    0,                  /* capPTMappedAddress   */
                    0,                  /* capPTIsMapped        */
                    VPID_INVALID,       /* capPTMappedASID      */
                    (word_t)regionBase  /* capPTBasePtr         */
                );
-    default:
+    পূর্বনির্ধারিত:
 #endif
-        return Mode_createObject(t, regionBase, userSize, deviceMemory);
+        ফেরত Mode_createObject(t, regionBase, user_আকার, deviceMemory);
 #ifdef CONFIG_VTX
     }
 #endif
@@ -507,51 +507,51 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 
 exception_t Arch_decodeInvocation(
     word_t invLabel,
-    word_t length,
+    word_t দৈর্ঘ্য,
     cptr_t cptr,
     cte_t *slot,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    word_t *বাফার
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    case cap_io_port_control_cap:
-        return decodeX86PortControlInvocation(invLabel, length, cptr, slot, cap, buffer);
-    case cap_io_port_cap:
-        return decodeX86PortInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+    নির্বাচন (cap_get_capType(cap)) {
+    ক্ষেত্র cap_asid_control_cap:
+    ক্ষেত্র cap_asid_pool_cap:
+        ফেরত decodeX86MMUInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, call, বাফার);
+    ক্ষেত্র cap_io_port_control_cap:
+        ফেরত decodeX86PortControlInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, বাফার);
+    ক্ষেত্র cap_io_port_cap:
+        ফেরত decodeX86PortInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, call, বাফার);
 #ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        return decodeX86IOSpaceInvocation(invLabel, cap);
-    case cap_io_page_table_cap:
-        return decodeX86IOPTInvocation(invLabel, length, slot, cap, buffer);
+    ক্ষেত্র cap_io_space_cap:
+        ফেরত decodeX86IOSpaceInvocation(invLabel, cap);
+    ক্ষেত্র cap_io_page_table_cap:
+        ফেরত decodeX86IOPTInvocation(invLabel, দৈর্ঘ্য, slot, cap, বাফার);
 #endif
 #ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        return decodeX86VCPUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    case cap_ept_pml4_cap:
-    case cap_ept_pdpt_cap:
-    case cap_ept_pd_cap:
-    case cap_ept_pt_cap:
-        return decodeX86EPTInvocation(invLabel, length, cptr, slot, cap, buffer);
+    ক্ষেত্র cap_vcpu_cap:
+        ফেরত decodeX86VCPUInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, call, বাফার);
+    ক্ষেত্র cap_ept_pml4_cap:
+    ক্ষেত্র cap_ept_pdpt_cap:
+    ক্ষেত্র cap_ept_pd_cap:
+    ক্ষেত্র cap_ept_pt_cap:
+        ফেরত decodeX86EPTInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, বাফার);
 #endif
-    default:
-        return Mode_decodeInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+    পূর্বনির্ধারিত:
+        ফেরত Mode_decodeInvocation(invLabel, দৈর্ঘ্য, cptr, slot, cap, call, বাফার);
     }
 }
 
-void Arch_prepareThreadDelete(tcb_t *thread)
+শূন্য Arch_prepareThreadDelete(tcb_t *thread)
 {
     /* Notify the lazy FPU module about this thread's deletion. */
     fpuRelease(thread);
 }
 
-void Arch_postCapDeletion(cap_t cap)
+শূন্য Arch_postCapDeletion(cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_io_port_cap) {
+    যদি (cap_get_capType(cap) == cap_io_port_cap) {
         uint16_t first_port = cap_io_port_cap_get_capIOPortFirstPort(cap);
         uint16_t last_port = cap_io_port_cap_get_capIOPortLastPort(cap);
 

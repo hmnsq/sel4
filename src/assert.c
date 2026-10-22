@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <machine/io.h>
+#অন্তর্ভাব <assert.h>
+#অন্তর্ভাব <machine/io.h>
 
 #ifdef CONFIG_DEBUG_BUILD
 
-void _fail(
-    const char  *s,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+শূন্য _fail(
+    ধ্রুবক অক্ষর  *s,
+    ধ্রুবক অক্ষর  *file,
+    unsigned পূর্ণসংখ্যা সারি,
+    ধ্রুবক অক্ষর  *function)
 {
     printf(
         "seL4 called fail at %s:%u in function %s, saying \"%s\"\n",
         file,
-        line,
+        সারি,
         function,
         s
     );
     halt();
 }
 
-void _assert_fail(
-    const char  *assertion,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+শূন্য _assert_fail(
+    ধ্রুবক অক্ষর  *assertion,
+    ধ্রুবক অক্ষর  *file,
+    unsigned পূর্ণসংখ্যা সারি,
+    ধ্রুবক অক্ষর  *function)
 {
     printf("seL4 failed assertion '%s' at %s:%u in function %s\n",
            assertion,
            file,
-           line,
+           সারি,
            function
           );
     halt();
