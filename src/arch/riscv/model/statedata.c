@@ -6,24 +6,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#شامل <util.h>
+#شامل <api/types.h>
+#شامل <arch/types.h>
+#شامل <arch/model/statedata.h>
+#شامل <arch/object/structures.h>
+#شامل <linker.h>
+#شامل <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
 asid_pool_t *riscvKSASIDTable[nASIDPools];
 
 /* Kernel Page Tables */
-pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t kernel_ریشه_page_Table[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
-#if __riscv_xlen != 32
+#اگر __riscv_xlen != 32
 pte_t kernel_image_level1_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 pte_t kernel_image_level1_dev_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#elif defined(CONFIG_KERNEL_LOG_BUFFER)
+#وگرنهاگر defined(CONFIG_KERNEL_LOG_BUFFER)
 pte_t kernel_image_level1_log_buffer_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 #endif
 

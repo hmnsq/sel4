@@ -5,7 +5,7 @@
  */
 
 #ifdef CONFIG_HAVE_FPU
-#include <arch/machine/fpu.h>
+#شامل <arch/machine/fpu.h>
 
-bool_t isFPUEnabled[CONFIG_MAX_NUM_NODES];
+bool_t isFPUEnabled[CONFIG_MAX_رقم_NODES];
 #endif

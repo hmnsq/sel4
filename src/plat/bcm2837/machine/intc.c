@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <stdint.h>
-#include <plat/machine.h>
-BOOT_CODE void initIRQController(void)
+#شامل <util.h>
+#شامل <stdint.h>
+#شامل <plat/machine.h>
+BOOT_CODE تهی initIRQController(تهی)
 {
     /* Disable all interrupts */
     intc_regs->bfDisableIRQs[0] = 0xffffffff;
@@ -22,9 +22,9 @@ BOOT_CODE void initIRQController(void)
     core_regs->coreTimerPrescaler = 0x80000000;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_CODE تهی cpu_initLocalIRQController(تهی) {}
 
-static inline irq_t getActiveIRQ(void)
+ایستا درونخطی irq_t getActiveIRQ(تهی)
 {
     uint32_t pending;
     uint32_t irq;
@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    اگر (pending == 0) {
+        بازگشت irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    اگر (irq != INTERRUPT_CORE_GPU) {
+        بازگشت irq;
     }
 
     /* GPU interrupt */
@@ -49,81 +49,81 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    اگر (pending) {
+        بازگشت (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    اگر (pending) {
+        بازگشت (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    اگر (pending) {
+        بازگشت (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    بازگشت irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+ایستا درونخطی تهی maskInterrupt(bool_t disable, irq_t irq)
 {
-    switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+    انتخاب (irq) {
+    حالت INTERRUPT_CORE_CNTPSIRQ :
+    حالت INTERRUPT_CORE_CNTPNSIRQ:
+    حالت INTERRUPT_CORE_CNTHPIRQ :
+    حالت INTERRUPT_CORE_CNTVIRQ  :
+        اگر (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } وگرنه {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        بازگشت;
+    حالت INTERRUPT_CORE_MAILBOX_0:
+    حالت INTERRUPT_CORE_MAILBOX_1:
+    حالت INTERRUPT_CORE_MAILBOX_2:
+    حالت INTERRUPT_CORE_MAILBOX_3:
+        اگر (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } وگرنه {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        بازگشت;
+    حالت INTERRUPT_CORE_LOCAL_TIMER:
+        اگر (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } وگرنه {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        بازگشت;
+    حالت INTERRUPT_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    حالت INTERRUPT_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    حالت INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
-    default:
-        break;
+        بازگشت;
+    پیشفرض:
+        بشکن;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    اگر (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        بازگشت;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    اگر (irq < NORMAL_IRQ_OFFSET) {
+        اگر (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } وگرنه {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } وگرنه اگر (irq <= maxIRQ) {
+        صحیح normal_irq = irq - NORMAL_IRQ_OFFSET;
+        صحیح index = normal_irq / 32;
+        اگر (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } وگرنه {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }

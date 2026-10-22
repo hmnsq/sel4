@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/sbi.h>
+#شامل <config.h>
+#شامل <arch/sbi.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NO_INLINE halt(void)
+تهی VISIBLE NO_INLINE halt(تهی)
 {
 #ifdef CONFIG_PRINTING
     printf("halting...");

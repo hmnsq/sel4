@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <drivers/timer/arm_global.h>
+#شامل <drivers/timer/arm_global.h>
 
-timer_t *const globalTimer = (timer_t *) TIMER_PPTR;
+timer_t *ثابت globalTimer = (timer_t *) TIMER_PPTR;
 
 /** DONT_TRANSLATE */
-BOOT_CODE void initTimer(void)
+BOOT_CODE تهی initTimer(تهی)
 {
     /* disable the timer */
     globalTimer->control = 0;
     /* zero the timer */
-    globalTimer->countLower = 0;
-    globalTimer->countUpper = 0;
+    globalTimer->شمار_Lower = 0;
+    globalTimer->شمار_Upper = 0;
     /* turn it on again, with interrupts on, comparator register off,
      * in one-shot mode, with standard prescaler */
     globalTimer->control = BIT(ENABLE) | BIT(IRQ_ENABLE);

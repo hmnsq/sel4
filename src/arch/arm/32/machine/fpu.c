@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <mode/machine.h>
-#include <arch/machine/fpu.h>
-#include <mode/model/statedata.h>
-#include <config.h>
-#include <util.h>
+#شامل <mode/machine.h>
+#شامل <arch/machine/fpu.h>
+#شامل <mode/model/statedata.h>
+#شامل <config.h>
+#شامل <util.h>
 
 /*
  * The following function checks if the subarchitecture support asynchronous exceptions
  */
-BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
+BOOT_CODE ایستا درونخطی bool_t supportsAsyncExceptions(تهی)
 {
     word_t fpexc;
 
@@ -25,7 +25,7 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
     /* Read back the FPEXC register*/
     VMRS(FPEXC, fpexc);
 
-    return !!(fpexc & BIT(FPEXC_EX_BIT));
+    بازگشت !!(fpexc & BIT(FPEXC_EX_BIT));
 }
 
 #ifdef CONFIG_HAVE_FPU
@@ -36,37 +36,37 @@ BOOT_CODE static inline bool_t supportsAsyncExceptions(void)
  */
 bool_t isFPUD32SupportedCached;
 
-BOOT_CODE static inline bool_t isFPUD32Supported(void)
+BOOT_CODE ایستا درونخطی bool_t isFPUD32Supported(تهی)
 {
     word_t mvfr0;
-    asm volatile(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
+    asm فرار(".word 0xeef73a10 \n"   /* vmrs    r3, mvfr0 */
                  "mov %0, r3       \n"
                  : "=r"(mvfr0)
                  :
                  : "r3");
-    return ((mvfr0 & 0xf) == 2);
+    بازگشت ((mvfr0 & 0xf) == 2);
 }
 
 /* Initialise the FP/SIMD for this machine. */
-BOOT_CODE bool_t fpsimd_init(void)
+BOOT_CODE bool_t fpsimd_init(تهی)
 {
     /* We are inside CONFIG_HAVE_FPU, so CPACR_DEFAULT enables CP10 and CP11 access. */
     setCPACR(CPACR_DEFAULT);
     isb();
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    اگر (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* Allow hyp mode FPU accesses for the rest of the initialisation. */
         enableFpuInstInHyp();
     }
 
-    if (supportsAsyncExceptions()) {
+    اگر (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
         printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-        return false;
+        بازگشت false;
     }
 
     isFPUD32SupportedCached = isFPUD32Supported();
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    اگر (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* FPEXC is VCPU state and native threads always have EN set. Setting EN
          * must happen before disableFpu() traps hyp mode (kernel) FPU accesses
          * again. */
@@ -75,65 +75,65 @@ BOOT_CODE bool_t fpsimd_init(void)
     /* Set the FPU to lazy switch mode */
     disableFpu();
 
-    return true;
+    بازگشت true;
 }
 #endif /* CONFIG_HAVE_FPU */
 
 /* Probe the FPU hardware. Requires CP10 and CP11 access in CPACR and, in hyp
  * mode, no CP10 and CP11 traps in HCPTR. */
-BOOT_CODE static bool_t fpsimd_HWCapProbe(void)
+BOOT_CODE ایستا bool_t fpsimd_HWCapProbe(تهی)
 {
     word_t fpsid;
 
     /* Check of this platform supports HW FP instructions */
-    asm volatile(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
+    asm فرار(".word 0xeef00a10  \n"  /* vmrs    r0, fpsid */
                  "mov %0, r0        \n"
                  : "=r"(fpsid) :
                  : "r0");
-    if (fpsid & BIT(FPSID_SW_BIT)) {
-        return false;
+    اگر (fpsid & BIT(FPSID_SW_BIT)) {
+        بازگشت false;
     }
 
     word_t fpsid_subarch;
 
-    if (supportsAsyncExceptions()) {
+    اگر (supportsAsyncExceptions()) {
         /* In the future, when we've targets that support asynchronous FPU exceptions, we've to support them */
-        if (config_set(CONFIG_HAVE_FPU)) {
+        اگر (config_set(CONFIG_HAVE_FPU)) {
             printf("Error: seL4 doesn't support FPU subarchitectures that support asynchronous exceptions\n");
-            return false;
-        } else {
+            بازگشت false;
+        } وگرنه {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            بازگشت true;
         }
     }
     /* Check for subarchitectures we support */
     fpsid_subarch = (fpsid >> FPSID_SUBARCH_SHIFT_POS) & 0x7f;
 
-    switch (fpsid_subarch) {
+    انتخاب (fpsid_subarch) {
     /* We only support the following subarch values */
-    case 0x2:
-    case 0x3:
-    case 0x4:
-        break;
-    default: {
-        if (config_set(CONFIG_HAVE_FPU)) {
+    حالت 0x2:
+    حالت 0x3:
+    حالت 0x4:
+        بشکن;
+    پیشفرض: {
+        اگر (config_set(CONFIG_HAVE_FPU)) {
             printf("Error: seL4 doesn't support this VFP subarchitecture\n");
-            return false;
-        } else {
+            بازگشت false;
+        } وگرنه {
             // if we aren't using the fpu then we have detected an fpu that we cannot use, but that is fine
-            return true;
+            بازگشت true;
         }
     }
 
     }
 
-    if (!config_set(CONFIG_HAVE_FPU)) {
+    اگر (!config_set(CONFIG_HAVE_FPU)) {
         printf("Info: Not using supported FPU as FPU is disabled in the build configuration\n");
     }
-    return true;
+    بازگشت true;
 }
 
-BOOT_CODE bool_t fpsimd_HWCapTest(void)
+BOOT_CODE bool_t fpsimd_HWCapTest(تهی)
 {
     bool_t result;
 
@@ -158,5 +158,5 @@ BOOT_CODE bool_t fpsimd_HWCapTest(void)
     setCPACR(CPACR_DEFAULT);
     isb();
 
-    return result;
+    بازگشت result;
 }

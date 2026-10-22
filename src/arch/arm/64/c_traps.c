@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#شامل <config.h>
+#شامل <model/statedata.h>
+#شامل <arch/fastpath/fastpath.h>
+#شامل <arch/kernel/traps.h>
+#شامل <api/syscall.h>
+#شامل <linker.h>
+#شامل <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#شامل <benchmark/benchmark_track.h>
+#شامل <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+تهی VISIBLE NORETURN restore_user_context(تهی)
 {
     c_exit_hook();
 
 #ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
+    restore_user_debug_context(گره_STATE(ksCurThread));
 #endif
 
-    NODE_UNLOCK_IF_HELD;
+    گره_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm فرار(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#وگرنه
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
 #endif
@@ -59,56 +59,56 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(گره_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#اگر defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED ایستا ثابت نویسه *vect_offset_to_name(word_t vect_offset)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    انتخاب (vect_offset) {
+    حالت 0x000:
+        بازگشت "Synchronous EL1t/EL2t";
+    حالت 0x080:
+        بازگشت "IRQ EL1t/EL2t";
+    حالت 0x100:
+        بازگشت "FIQ EL1t/EL2t";
+    حالت 0x180:
+        بازگشت "SError EL1t/EL2t";
+    حالت 0x200:
+        بازگشت "Synchronous Current EL";
+    حالت 0x280:
+        بازگشت "IRQ Current EL";
+    حالت 0x300:
+        بازگشت "FIQ Current EL";
+    حالت 0x380:
+        بازگشت "SError Current EL";
+    حالت 0x400:
+        بازگشت "Synchronous 64-bit EL0/EL1";
+    حالت 0x480:
+        بازگشت "IRQ 64-bit EL0/EL1";
+    حالت 0x500:
+        بازگشت "FIQ 64-bit EL0/EL1";
+    حالت 0x580:
+        بازگشت "SError 64-bit EL0/EL1";
+    حالت 0x600:
+        بازگشت "Synchronous 32-bit EL0/EL1";
+    حالت 0x680:
+        بازگشت "IRQ 32-bit EL0/EL1";
+    حالت 0x700:
+        بازگشت "FIQ 32-bit EL0/EL1";
+    حالت 0x780:
+        بازگشت "SError 32-bit EL0/EL1";
+    پیشفرض:
+        بازگشت "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+تهی VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
 {
     printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
     printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));
