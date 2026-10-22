@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ cleanByWSL(word_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm ಚಞ್ಚಲ("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ cleanInvalidateByWSL(word_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm ಚಞ್ಚಲ("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ word_t readCLID(ಶೂನ್ಯ)
 {
     word_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    ಪ್ರತ್ಯಾಗಮ CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -28,13 +28,13 @@ static inline word_t readCLID(void)
 #define LOUIS(x)   (((x) >> 21)        & MASK(3))
 #define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
 
-enum arm_cache_type {
+ಗಣನಾ arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ word_t readCacheSize(ಪೂರ್ಣಾಙ್ಕ level, bool_t instruction)
 {
     word_t size, csselr_old;
     /* Save CSSELR */
@@ -45,27 +45,27 @@ static inline word_t readCacheSize(int level, bool_t instruction)
     MRS("ccsidr_el1", size);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    ಪ್ರತ್ಯಾಗಮ size;
 }
 
 #define LINEBITS(s)     (((s) & MASK(3)) + 4)
 #define ASSOC(s)        ((((s) >> 3) & MASK(10)) + 1)
 #define NSETS(s)        ((((s) >> 13) & MASK(15)) + 1)
 
-void clean_D_PoU(void)
+ಶೂನ್ಯ clean_D_PoU(ಶೂನ್ಯ)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    ಪೂರ್ಣಾಙ್ಕ clid = readCLID();
+    ಪೂರ್ಣಾಙ್ಕ lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ l = 0; l < lou; l++) {
+        ಯದಿ (CTYPE(clid, l) > ARMCacheI) {
             word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
+            ಪೂರ್ಣಾಙ್ಕ lbits = LINEBITS(lsize);
+            ಪೂರ್ಣಾಙ್ಕ assoc = ASSOC(lsize);
+            ಪೂರ್ಣಾಙ್ಕ assoc_bits = wordBits - clzl(assoc - 1);
+            ಪೂರ್ಣಾಙ್ಕ nsets = NSETS(lsize);
+            ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ w = 0; w < assoc; w++) {
+                ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ s = 0; s < nsets; s++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (s << lbits) | (l << 1));
                 }
@@ -74,35 +74,35 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ cleanInvalidate_D_by_level(ಪೂರ್ಣಾಙ್ಕ l)
 {
     word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    ಪೂರ್ಣಾಙ್ಕ lbits = LINEBITS(lsize);
+    ಪೂರ್ಣಾಙ್ಕ assoc = ASSOC(lsize);
+    ಪೂರ್ಣಾಙ್ಕ assoc_bits = wordBits - clzl(assoc - 1);
+    ಪೂರ್ಣಾಙ್ಕ nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
+    ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ w = 0; w < assoc; w++) {
+        ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ s = 0; s < nsets; s++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (s << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+ಶೂನ್ಯ cleanInvalidate_D_PoC(ಶೂನ್ಯ)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    ಪೂರ್ಣಾಙ್ಕ clid = readCLID();
+    ಪೂರ್ಣಾಙ್ಕ loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ l = 0; l < loc; l++) {
+        ಯದಿ (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+ಶೂನ್ಯ cleanInvalidate_L1D(ಶೂನ್ಯ)
 {
     cleanInvalidate_D_by_level(0);
 }

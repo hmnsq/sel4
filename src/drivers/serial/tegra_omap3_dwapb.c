@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <stdint.h>
+#ಅನ್ತರ್ಭಾವ <util.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/devices_gen.h>
 
 #define UTHR        0x0
 #define ULSR        0x14
@@ -16,22 +16,22 @@
 #define ULSR_THRE   BIT(5)
 #define ULSR_RDR    BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ಚಞ್ಚಲ uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+ಶೂನ್ಯ uart_drv_putchar(unsigned ವರ್ಣ c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    ಯಾವತ್ ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned ವರ್ಣ uart_drv_getchar(ಶೂನ್ಯ)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    ಯಾವತ್ ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    ಪ್ರತ್ಯಾಗಮ *UART_REG(UTHR);
 }
 #endif /* CONFIG_DEBUG_BUILD */

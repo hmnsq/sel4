@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/model/smp.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <mode/model/smp.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-nodeInfo_t node_info[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE) VISIBLE;
-char nodeSkimScratch[CONFIG_MAX_NUM_NODES][sizeof(nodeInfo_t)] ALIGN(L1_CACHE_LINE_SIZE);
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+ಗಂಟು_Info_t ಗಂಟು_info[CONFIG_MAX_ಅಂಕೆ_NODES] ALIGN(L1_CACHE_ಸಾಲು_SIZE) VISIBLE;
+ವರ್ಣ ಗಂಟು_Skim_Scratch[CONFIG_MAX_ಅಂಕೆ_NODES][ಪರಿಮಾಣ(ಗಂಟು_Info_t)] ALIGN(L1_CACHE_ಸಾಲು_SIZE);
+ಬಾಹ್ಯ ವರ್ಣ kernel_ರಾಶಿ_alloc[CONFIG_MAX_ಅಂಕೆ_NODES][BIT(CONFIG_KERNEL_ರಾಶಿ_BITS)];
 
-BOOT_CODE void mode_init_tls(cpu_id_t cpu_index)
+BOOT_CODE ಶೂನ್ಯ mode_init_tls(cpu_id_t cpu_index)
 {
-    node_info[cpu_index].stackTop = kernel_stack_alloc[cpu_index + 1];
-    node_info[cpu_index].irqStack = &x64KSIRQStack[cpu_index][0];
-    node_info[cpu_index].index = cpu_index;
-    x86_wrmsr(IA32_KERNEL_GS_BASE_MSR, (word_t)&node_info[cpu_index]);
+    ಗಂಟು_info[cpu_index].ರಾಶಿ_ತುದಿ_2 = kernel_ರಾಶಿ_alloc[cpu_index + 1];
+    ಗಂಟು_info[cpu_index].irq_ರಾಶಿ_2 = &x64KSIRQStack[cpu_index][0];
+    ಗಂಟು_info[cpu_index].index = cpu_index;
+    x86_wrmsr(IA32_KERNEL_GS_BASE_MSR, (word_t)&ಗಂಟು_info[cpu_index]);
     swapgs();
 }
 

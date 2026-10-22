@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <plat/machine/hardware.h>
-#include <arch/user_access.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <arch/user_access.h>
 
 /* bits in the CNTKCTL_EL1 */
 #define EL0VCTEN BIT(1)
@@ -19,16 +19,16 @@
 
 #define PMUSERENR_EL0_EN BIT(0)
 
-static void check_export_pmu(void)
+ಸ್ಥಿರ ಶೂನ್ಯ check_export_pmu(ಶೂನ್ಯ)
 {
-#if defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
+#ಯದಿ defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
     /* allow PL0 to access the PMU */
     uint32_t val = PMUSERENR_EL0_EN;
     MSR("PMUSERENR_EL0", val);
 #endif
 }
 
-static void check_export_arch_timer(void)
+ಸ್ಥಿರ ಶೂನ್ಯ check_export_arch_timer(ಶೂನ್ಯ)
 {
     uint32_t val = 0;
 #ifdef CONFIG_EXPORT_PCNT_USER
@@ -57,7 +57,7 @@ static void check_export_arch_timer(void)
 #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-void armv_init_user_access(void)
+ಶೂನ್ಯ armv_init_user_access(ಶೂನ್ಯ)
 {
     check_export_pmu();
     check_export_arch_timer();

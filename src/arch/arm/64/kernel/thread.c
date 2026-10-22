@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ಅನ್ತರ್ಭಾವ <object.h>
+#ಅನ್ತರ್ಭಾವ <machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+ಶೂನ್ಯ Arch_switchToThread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ಯದಿ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
     setVMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE ಶೂನ್ಯ Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, SPSR_EL1, PSTATE_IDLETHREAD);
     setRegister(tcb, ELR_EL1, (word_t)&idle_thread);
 }
 
-void Arch_switchToIdleThread(void)
+ಶೂನ್ಯ Arch_switchToIdleThread(ಶೂನ್ಯ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
+    ಯದಿ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        vcpu_switch(ರಿಕ್ತ);
     }
-    setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+    set_Current_User_VSpace_ಬೇರು(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+ಶೂನ್ಯ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }

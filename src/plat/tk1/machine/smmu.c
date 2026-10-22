@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <config.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
 
 #ifdef CONFIG_TK1_SMMU
 
-#include <plat/machine/smmu.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/smmu.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
 
 
 #define MC_PADDR                    0x70019000
@@ -64,95 +64,95 @@
 
 #define IOPDE_4M_INDEX_SHIFT            22
 
-static volatile tk1_mc_regs_t *smmu_regs = (volatile tk1_mc_regs_t *)(SMMU_PPTR);
+ಸ್ಥಿರ ಚಞ್ಚಲ tk1_mc_regs_t *smmu_regs = (ಚಞ್ಚಲ tk1_mc_regs_t *)(SMMU_PPTR);
 
-static char smmu_pds[ARM_PLAT_NUM_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
+ಸ್ಥಿರ ವರ್ಣ smmu_pds[ARM_PLAT_ಅಂಕೆ_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
 
-static void do_smmu_enable(void)
+ಸ್ಥಿರ ಶೂನ್ಯ do_smmu_enable(ಶೂನ್ಯ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    ಚಞ್ಚಲ uint32_t *config = (ಚಞ್ಚಲ uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
     *config = 1;
 }
 
-static void do_smmu_disable(void)
+ಸ್ಥಿರ ಶೂನ್ಯ do_smmu_disable(ಶೂನ್ಯ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    ಚಞ್ಚಲ uint32_t *config = (ಚಞ್ಚಲ uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
     *config = 0;
 }
 
-static inline void smmu_disable(void)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ smmu_disable(ಶೂನ್ಯ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ಯದಿ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* in hyp mode, we need call the hook in monitor mode */
         /* we need physical address here */
         paddr_t addr = addrFromKPPtr(&do_smmu_disable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm ಚಞ್ಚಲ("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } ಅನ್ಯಥಾ {
         /* in secure mode, can enable it directly */
         smmu_regs->smmu_config = 0;
     }
 
-    return;
+    ಪ್ರತ್ಯಾಗಮ;
 }
 
-static inline void smmu_enable(void)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ smmu_enable(ಶೂನ್ಯ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ಯದಿ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         paddr_t addr = addrFromKPPtr(&do_smmu_enable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm ಚಞ್ಚಲ("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } ಅನ್ಯಥಾ {
         smmu_regs->smmu_config = 1;
     }
 
-    return;
+    ಪ್ರತ್ಯಾಗಮ;
 }
 
 
-static uint32_t make_ptb_data(uint32_t pd_base, bool_t read, bool_t write, bool_t nonsecure)
+ಸ್ಥಿರ uint32_t make_ptb_data(uint32_t pd_base, bool_t ಪಠ, bool_t ಲಿಖ, bool_t nonsecure)
 {
     uint32_t ret = 0;
     ret = (pd_base >> PTB_DATA_BASE_SHIFT);
 
-    if (read) {
+    ಯದಿ (ಪಠ) {
         ret |= PTB_DATA_READ;
     }
-    if (write) {
+    ಯದಿ (ಲಿಖ) {
         ret |= PTB_DATA_WRITE;
     }
-    if (nonsecure) {
+    ಯದಿ (nonsecure) {
         ret |= PTB_DATA_NONSECURE;
     }
 
-    return ret;
+    ಪ್ರತ್ಯಾಗಮ ret;
 }
 
-void plat_smmu_ptc_flush_all(void)
+ಶೂನ್ಯ plat_smmu_ptc_flush_all(ಶೂನ್ಯ)
 {
     uint32_t cmd = PTC_FLUSH_ALL;
     smmu_regs->smmu_ptc_flush = cmd;
 }
 
-void plat_smmu_tlb_flush_all(void)
+ಶೂನ್ಯ plat_smmu_tlb_flush_all(ಶೂನ್ಯ)
 {
     uint32_t cmd = TLB_FLUSH_ALL;
     smmu_regs->smmu_tlb_flush = cmd;
 }
 
-BOOT_CODE int plat_smmu_init(void)
+BOOT_CODE ಪೂರ್ಣಾಙ್ಕ plat_smmu_init(ಶೂನ್ಯ)
 {
     uint32_t asid;
 
     smmu_disable();
 
-    for (asid = SMMU_FIRST_ASID; asid <= SMMU_LAST_ASID; asid++) {
+    ಪ್ರತಿ (asid = SMMU_FIRST_ASID; asid <= SMMU_LAST_ASID; asid++) {
         iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
 
         memset(pd, 0, BIT(SMMU_PD_INDEX_BITS));
@@ -202,67 +202,67 @@ BOOT_CODE int plat_smmu_init(void)
     smmu_enable();
 
     /* also need to unmask interrupts */
-    if (config_set(CONFIG_SMMU_INTERRUPT_ENABLE)) {
+    ಯದಿ (config_set(CONFIG_SMMU_INTERRUPT_ENABLE)) {
         smmu_regs->intmask = BIT(MC_APB_ASID_UPDATE_BIT) | BIT(MC_SMMU_PAGE_BIT) |
                              BIT(MC_DECERR_MTS_BIT) | BIT(MC_SECERR_SEC_BIT) |
                              BIT(MC_DECERR_VPR_BIT) | BIT(MC_ARBITRATION_EMEM_BIT) |
                              BIT(MC_SECURITY_BIT) | BIT(MC_DECERR_EMEM_BIT);
-    } else {
+    } ಅನ್ಯಥಾ {
         smmu_regs->intmask = 0;
     }
-    return ARM_PLAT_NUM_SMMU;
+    ಪ್ರತ್ಯಾಗಮ ARM_PLAT_ಅಂಕೆ_SMMU;
 }
 
 iopde_t *plat_smmu_lookup_iopd_by_asid(uint32_t asid)
 {
     /* There should be no way to generate bad ASID values through the kernel
      * so this is an assertion and not a check */
-    assert(asid >= SMMU_FIRST_ASID && asid <= SMMU_LAST_ASID);
-    return (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    ಪ್ರತಿಜ್ಞಾ(asid >= SMMU_FIRST_ASID && asid <= SMMU_LAST_ASID);
+    ಪ್ರತ್ಯಾಗಮ (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
 }
 
-void plat_smmu_handle_interrupt(void)
+ಶೂನ್ಯ plat_smmu_handle_interrupt(ಶೂನ್ಯ)
 {
     uint32_t status = smmu_regs->intstatus;
     uint32_t clear_status = 0;
 
-    if (status & BIT(MC_DECERR_MTS_BIT)) {
+    ಯದಿ (status & BIT(MC_DECERR_MTS_BIT)) {
         clear_status |= BIT(MC_DECERR_MTS_BIT);
     }
-    if (status & BIT(MC_SECERR_SEC_BIT)) {
+    ಯದಿ (status & BIT(MC_SECERR_SEC_BIT)) {
         clear_status |= BIT(MC_SECERR_SEC_BIT);
     }
-    if (status & BIT(MC_DECERR_VPR_BIT)) {
+    ಯದಿ (status & BIT(MC_DECERR_VPR_BIT)) {
         clear_status |= BIT(MC_DECERR_VPR_BIT);
     }
-    if (status & BIT(MC_ARBITRATION_EMEM_BIT)) {
+    ಯದಿ (status & BIT(MC_ARBITRATION_EMEM_BIT)) {
         clear_status |= BIT(MC_ARBITRATION_EMEM_BIT);
     }
-    if (status & BIT(MC_SECURITY_BIT)) {
+    ಯದಿ (status & BIT(MC_SECURITY_BIT)) {
         clear_status |= BIT(MC_SECURITY_BIT);
     }
-    if (status & BIT(MC_DECERR_EMEM_BIT)) {
+    ಯದಿ (status & BIT(MC_DECERR_EMEM_BIT)) {
         clear_status |= BIT(MC_DECERR_EMEM_BIT);
     }
-    if (status & BIT(MC_APB_ASID_UPDATE_BIT)) {
+    ಯದಿ (status & BIT(MC_APB_ASID_UPDATE_BIT)) {
         clear_status |= BIT(MC_APB_ASID_UPDATE_BIT);
     }
 
     /* we only care about SMMU translation failures */
-    if (status & BIT(MC_SMMU_PAGE_BIT)) {
-        if (config_set(CONFIG_PRINTING)) {
+    ಯದಿ (status & BIT(MC_SMMU_PAGE_BIT)) {
+        ಯದಿ (config_set(CONFIG_PRINTING)) {
             uint32_t err_status = smmu_regs->err_status;
             uint32_t UNUSED err_adr = smmu_regs->err_adr;
             uint32_t UNUSED id = err_status & MC_ERR_ID_MASK;
             uint32_t UNUSED rw = (err_status & MC_ERR_RW_MASK);
-            uint32_t UNUSED read = (err_status & MC_ERR_INVALID_SMMU_PAGE_READ_MASK);
-            uint32_t UNUSED write = (err_status & MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK);
+            uint32_t UNUSED ಪಠ = (err_status & MC_ERR_INVALID_SMMU_PAGE_READ_MASK);
+            uint32_t UNUSED ಲಿಖ = (err_status & MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK);
             uint32_t UNUSED nonsecure = (err_status & MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK);
             uint32_t UNUSED type = (err_status & MC_ERR_TYPE_MASK) >> MC_ERR_TYPE_SHIFT;
 
             printf("SMMU Address translation error:\n");
             printf("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
-            printf("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", read, write, nonsecure);
+            printf("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", ಪಠ, ಲಿಖ, nonsecure);
         }
         clear_status |= BIT(MC_SMMU_PAGE_BIT);
     }

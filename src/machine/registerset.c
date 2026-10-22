@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <machine/registerset.h>
 
-const register_t fault_messages[][MAX_MSG_SIZE] = {
+ಧ್ರುವ register_t fault_messages[][MAX_ಸಂದೇಶ_SIZE] = {
     [MessageID_Syscall] = SYSCALL_MESSAGE,
     [MessageID_Exception] = EXCEPTION_MESSAGE,
 #ifdef CONFIG_KERNEL_MCS

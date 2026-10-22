@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <smp/lock.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <smp/lock.h>
 
 #ifdef ENABLE_SMP_SUPPORT
-compile_assert(BKL_not_padded, sizeof(big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
+compile_assert(BKL_not_padded, ಪರಿಮಾಣ(big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
 
 clh_lock_t big_kernel_lock;
 
-BOOT_CODE void clh_lock_init(void)
+BOOT_CODE ಶೂನ್ಯ clh_lock_init(ಶೂನ್ಯ)
 {
     /* Check if linker honoured alignment */
-    assert(((seL4_Word)&big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        big_kernel_lock.node[i].myreq = &big_kernel_lock.request[i];
+    ಪ್ರತಿಜ್ಞಾ(((seL4_Word)&big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
+    ಪ್ರತಿ (ಪೂರ್ಣಾಙ್ಕ i = 0; i < CONFIG_MAX_ಅಂಕೆ_NODES; i++) {
+        big_kernel_lock.ಗಂಟು[i].myreq = &big_kernel_lock.request[i];
     }
 
     /* Initialize the CLH tail */
-    big_kernel_lock.request[CONFIG_MAX_NUM_NODES].state = CLHState_Granted;
-    big_kernel_lock.tail = &big_kernel_lock.request[CONFIG_MAX_NUM_NODES];
+    big_kernel_lock.request[CONFIG_MAX_ಅಂಕೆ_NODES].state = CLHState_Granted;
+    big_kernel_lock.tail = &big_kernel_lock.request[CONFIG_MAX_ಅಂಕೆ_NODES];
 }
 
 #endif /* ENABLE_SMP_SUPPORT */

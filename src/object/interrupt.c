@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/interrupt.h>
-#include <object/cnode.h>
-#include <object/notification.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <model/statedata.h>
-#include <machine/timer.h>
-#include <smp/ipi.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <api/invocation.h>
+#ಅನ್ತರ್ಭಾವ <api/syscall.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <object/interrupt.h>
+#ಅನ್ತರ್ಭಾವ <object/cnode.h>
+#ಅನ್ತರ್ಭಾವ <object/notification.h>
+#ಅನ್ತರ್ಭಾವ <kernel/cspace.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <machine/timer.h>
+#ಅನ್ತರ್ಭಾವ <smp/ipi.h>
 
 exception_t decodeIRQControlInvocation(word_t invLabel, word_t length,
                                        cte_t *srcSlot, word_t *buffer)
 {
-    if (invLabel == IRQIssueIRQHandler) {
+    ಯದಿ (invLabel == IRQIssueIRQHandler) {
         word_t index, depth, irq_w;
         irq_t irq;
         cte_t *destSlot;
@@ -31,9 +31,9 @@ exception_t decodeIRQControlInvocation(word_t invLabel, word_t length,
         lookupSlot_ret_t lu_ret;
         exception_t status;
 
-        if (length < 3 || current_extra_caps.excaprefs[0] == NULL) {
+        ಯದಿ (length < 3 || current_extra_caps.excaprefs[0] == ರಿಕ್ತ) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಪ್ರತ್ಯಾಗಮ EXCEPTION_SYSCALL_ERROR;
         }
         irq_w = getSyscallArg(0, buffer);
         irq = CORE_IRQ_TO_IRQT(0, irq_w);
@@ -43,138 +43,138 @@ exception_t decodeIRQControlInvocation(word_t invLabel, word_t length,
         cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
         status = Arch_checkIRQ(irq_w);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ಯದಿ (status != EXCEPTION_NONE) {
+            ಪ್ರತ್ಯಾಗಮ status;
         }
 
-        if (isIRQActive(irq)) {
+        ಯದಿ (isIRQActive(irq)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+            userError("Rejecting request for IRQ %u. Already active.", (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq));
+            ಪ್ರತ್ಯಾಗಮ EXCEPTION_SYSCALL_ERROR;
         }
 
         lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        ಯದಿ (lu_ret.status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(buffer, 0), (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq));
+            ಪ್ರತ್ಯಾಗಮ lu_ret.status;
         }
         destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        ಯದಿ (status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(buffer, 0), (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq));
+            ಪ್ರತ್ಯಾಗಮ status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeIRQControl(irq, destSlot, srcSlot);
-    } else {
-        return Arch_decodeIRQControlInvocation(invLabel, length, srcSlot, buffer);
+        setThreadState(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಪ್ರತ್ಯಾಗಮ invokeIRQControl(irq, destSlot, srcSlot);
+    } ಅನ್ಯಥಾ {
+        ಪ್ರತ್ಯಾಗಮ Arch_decodeIRQControlInvocation(invLabel, length, srcSlot, buffer);
     }
 }
 
 exception_t invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot)
 {
     setIRQState(IRQSignal, irq);
-    cteInsert(cap_irq_handler_cap_new(IRQT_TO_IDX(irq)), controlSlot, handlerSlot);
+    cte_ಸೇರಿಸು(cap_irq_handler_cap_new(IRQT_TO_IDX(irq)), controlSlot, handlerSlot);
 
-    return EXCEPTION_NONE;
+    ಪ್ರತ್ಯಾಗಮ EXCEPTION_NONE;
 }
 
 exception_t decodeIRQHandlerInvocation(word_t invLabel, irq_t irq)
 {
-    switch (invLabel) {
-    case IRQAckIRQ:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    ವಿಕಲ್ಪ (invLabel) {
+    ಪಕ್ಷ IRQAckIRQ:
+        setThreadState(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_AckIRQ(irq);
-        return EXCEPTION_NONE;
+        ಪ್ರತ್ಯಾಗಮ EXCEPTION_NONE;
 
-    case IRQSetIRQHandler: {
+    ಪಕ್ಷ IRQSetIRQHandler: {
         cap_t ntfnCap;
         cte_t *slot;
 
-        if (current_extra_caps.excaprefs[0] == NULL) {
+        ಯದಿ (current_extra_caps.excaprefs[0] == ರಿಕ್ತ) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಪ್ರತ್ಯಾಗಮ EXCEPTION_SYSCALL_ERROR;
         }
         ntfnCap = current_extra_caps.excaprefs[0]->cap;
         slot = current_extra_caps.excaprefs[0];
 
-        if (cap_get_capType(ntfnCap) != cap_notification_cap ||
+        ಯದಿ (cap_get_capType(ntfnCap) != cap_notification_cap ||
             !cap_notification_cap_get_capNtfnCanSend(ntfnCap)) {
-            if (cap_get_capType(ntfnCap) != cap_notification_cap) {
+            ಯದಿ (cap_get_capType(ntfnCap) != cap_notification_cap) {
                 userError("IRQSetHandler: provided cap is not an notification capability.");
-            } else {
+            } ಅನ್ಯಥಾ {
                 userError("IRQSetHandler: caller does not have send rights on the endpoint.");
             }
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+            ಪ್ರತ್ಯಾಗಮ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_SetIRQHandler(irq, ntfnCap, slot);
-        return EXCEPTION_NONE;
+        ಪ್ರತ್ಯಾಗಮ EXCEPTION_NONE;
     }
 
-    case IRQClearIRQHandler:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+    ಪಕ್ಷ IRQClearIRQHandler:
+        setThreadState(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
         invokeIRQHandler_ClearIRQHandler(irq);
-        return EXCEPTION_NONE;
+        ಪ್ರತ್ಯಾಗಮ EXCEPTION_NONE;
 
-    default:
+    ಸ್ವಭಾವ:
         userError("IRQHandler: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಪ್ರತ್ಯಾಗಮ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void invokeIRQHandler_AckIRQ(irq_t irq)
+ಶೂನ್ಯ invokeIRQHandler_AckIRQ(irq_t irq)
 {
 #ifdef CONFIG_ARCH_RISCV
-#if !defined(CONFIG_PLAT_QEMU_RISCV_VIRT)
+#ಯದಿ !defined(CONFIG_PLAT_QEMU_RISCV_VIRT)
     /* QEMU has a bug where interrupts must be
      * immediately claimed, which is done in getActiveIRQ. For other
      * platforms, the claim can wait and be done here.
      */
     plic_complete_claim(irq);
 #endif
-#else
+#ಅನ್ಯಥಾ
 
-#if defined ENABLE_SMP_SUPPORT && defined CONFIG_ARCH_ARM
-    if (IRQ_IS_PPI(irq) && IRQT_TO_CORE(irq) != getCurrentCPUIndex()) {
+#ಯದಿ defined ENABLE_SMP_SUPPORT && defined CONFIG_ARCH_ARM
+    ಯದಿ (IRQ_IS_PPI(irq) && IRQT_TO_CORE(irq) != getCurrentCPUIndex()) {
 #ifdef CONFIG_ARM_GIC_V3_SUPPORT
         /* According to the GICv3 spec, SPIs can be deactivated from any PE,
          * but SGIs and PPIs must be deactivated from their target PE.
          */
         doRemoteDeactivatePrivateInterrupt(IRQT_TO_CORE(irq), IRQT_TO_IDX(irq));
-#else /* CONFIG_ARM_GIC_V3_SUPPORT */
+#ಅನ್ಯಥಾ /* CONFIG_ARM_GIC_V3_SUPPORT */
         doRemoteMaskPrivateInterrupt(IRQT_TO_CORE(irq), false, IRQT_TO_IDX(irq));
 #endif /* CONFIG_ARM_GIC_V3_SUPPORT */
-        return;
+        ಪ್ರತ್ಯಾಗಮ;
     }
 #endif
-    if (config_set(CONFIG_ARM_GIC_V3_SUPPORT)) {
+    ಯದಿ (config_set(CONFIG_ARM_GIC_V3_SUPPORT)) {
         deactivateInterrupt(irq);
-    } else {
+    } ಅನ್ಯಥಾ {
         maskInterrupt(false, irq);
     }
 #endif /* CONFIG_ARCH_RISCV */
 }
 
-void invokeIRQHandler_SetIRQHandler(irq_t irq, cap_t cap, cte_t *slot)
+ಶೂನ್ಯ invokeIRQHandler_SetIRQHandler(irq_t irq, cap_t cap, cte_t *slot)
 {
     cte_t *irqSlot;
 
     irqSlot = intStateIRQNode + IRQT_TO_IDX(irq);
     /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (-1))" */
     cteDeleteOne(irqSlot);
-    cteInsert(cap, slot, irqSlot);
+    cte_ಸೇರಿಸು(cap, slot, irqSlot);
 }
 
-void invokeIRQHandler_ClearIRQHandler(irq_t irq)
+ಶೂನ್ಯ invokeIRQHandler_ClearIRQHandler(irq_t irq)
 {
     cte_t *irqSlot;
 
@@ -183,7 +183,7 @@ void invokeIRQHandler_ClearIRQHandler(irq_t irq)
     cteDeleteOne(irqSlot);
 }
 
-void deletingIRQHandler(irq_t irq)
+ಶೂನ್ಯ deletingIRQHandler(irq_t irq)
 {
     cte_t *slot;
 
@@ -192,83 +192,83 @@ void deletingIRQHandler(irq_t irq)
     cteDeleteOne(slot);
 }
 
-void deletedIRQHandler(irq_t irq)
+ಶೂನ್ಯ deletedIRQHandler(irq_t irq)
 {
     setIRQState(IRQInactive, irq);
 }
 
-void handleInterrupt(irq_t irq)
+ಶೂನ್ಯ handleInterrupt(irq_t irq)
 {
-    if (unlikely(IRQT_TO_IRQ(irq) > maxIRQ)) {
+    ಯದಿ (unlikely(IRQT_TO_IRQ(irq) > maxIRQ)) {
         /* The interrupt number is out of range. Pretend it did not happen by
          * handling it like an inactive interrupt (mask and ack). We assume this
          * is acceptable, because the platform specific interrupt controller
          * driver reported this interrupt. Maybe the value maxIRQ is just wrong
          * or set to a lower value because the interrupts are unused.
          */
-        printf("Received IRQ %d, which is above the platforms maxIRQ of %d\n", (int)IRQT_TO_IRQ(irq), (int)maxIRQ);
+        printf("Received IRQ %d, which is above the platforms maxIRQ of %d\n", (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq), (ಪೂರ್ಣಾಙ್ಕ)maxIRQ);
         maskInterrupt(true, irq);
         ackInterrupt(irq);
-        return;
+        ಪ್ರತ್ಯಾಗಮ;
     }
 
-    switch (intStateIRQTable[IRQT_TO_IDX(irq)]) {
-    case IRQSignal: {
+    ವಿಕಲ್ಪ (intStateIRQTable[IRQT_TO_IDX(irq)]) {
+    ಪಕ್ಷ IRQSignal: {
         /* Merging the variable declaration and initialization into one line
          * requires an update in the proofs first. Might be a c89 legacy.
          */
         cap_t cap;
         cap = intStateIRQNode[IRQT_TO_IDX(irq)].cap;
-        if (cap_get_capType(cap) == cap_notification_cap &&
+        ಯದಿ (cap_get_capType(cap) == cap_notification_cap &&
             cap_notification_cap_get_capNtfnCanSend(cap)) {
             sendSignal(NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)),
                        cap_notification_cap_get_capNtfnBadge(cap));
-        } else {
+        } ಅನ್ಯಥಾ {
 #ifdef CONFIG_IRQ_REPORTING
-            printf("Undelivered IRQ: %d\n", (int)IRQT_TO_IRQ(irq));
+            printf("Undelivered IRQ: %d\n", (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq));
 #endif
         }
 #ifndef CONFIG_ARCH_RISCV
-        if (!config_set(CONFIG_ARM_GIC_V3_SUPPORT)) {
+        ಯದಿ (!config_set(CONFIG_ARM_GIC_V3_SUPPORT)) {
             maskInterrupt(true, irq);
         }
 #endif
 
-        break;
+        ಭಙ್ಗ;
     }
 
-    case IRQTimer:
+    ಪಕ್ಷ IRQTimer:
 #ifdef CONFIG_KERNEL_MCS
         ackDeadlineIRQ();
-        NODE_STATE(ksReprogram) = true;
-#else
+        ಗಂಟು_STATE(ksReprogram) = true;
+#ಅನ್ಯಥಾ
         timerTick();
         resetTimer();
 #endif
-        break;
+        ಭಙ್ಗ;
 
 #ifdef ENABLE_SMP_SUPPORT
-    case IRQIPI:
+    ಪಕ್ಷ IRQIPI:
         handleIPI(irq, true);
-        break;
+        ಭಙ್ಗ;
 #endif /* ENABLE_SMP_SUPPORT */
 
-    case IRQReserved:
+    ಪಕ್ಷ IRQReserved:
         handleReservedIRQ(irq);
-        break;
+        ಭಙ್ಗ;
 
-    case IRQInactive:
+    ಪಕ್ಷ IRQInactive:
         /* This case shouldn't happen anyway unless the hardware or platform
          * code is broken. Hopefully masking it again should make the interrupt
          * go away.
          */
         maskInterrupt(true, irq);
 #ifdef CONFIG_IRQ_REPORTING
-        printf("Received disabled IRQ: %d\n", (int)IRQT_TO_IRQ(irq));
+        printf("Received disabled IRQ: %d\n", (ಪೂರ್ಣಾಙ್ಕ)IRQT_TO_IRQ(irq));
 #endif
-        break;
+        ಭಙ್ಗ;
 
-    default:
+    ಸ್ವಭಾವ:
         /* No corresponding haskell error */
         fail("Invalid IRQ state");
     }
@@ -281,16 +281,16 @@ void handleInterrupt(irq_t irq)
 
 bool_t isIRQActive(irq_t irq)
 {
-    return intStateIRQTable[IRQT_TO_IDX(irq)] != IRQInactive;
+    ಪ್ರತ್ಯಾಗಮ intStateIRQTable[IRQT_TO_IDX(irq)] != IRQInactive;
 }
 
-void setIRQState(irq_state_t irqState, irq_t irq)
+ಶೂನ್ಯ setIRQState(irq_state_t irqState, irq_t irq)
 {
     intStateIRQTable[IRQT_TO_IDX(irq)] = irqState;
-#if defined ENABLE_SMP_SUPPORT && defined CONFIG_ARCH_ARM
-    if (IRQ_IS_PPI(irq) && IRQT_TO_CORE(irq) != getCurrentCPUIndex()) {
+#ಯದಿ defined ENABLE_SMP_SUPPORT && defined CONFIG_ARCH_ARM
+    ಯದಿ (IRQ_IS_PPI(irq) && IRQT_TO_CORE(irq) != getCurrentCPUIndex()) {
         doRemoteMaskPrivateInterrupt(IRQT_TO_CORE(irq), irqState == IRQInactive, IRQT_TO_IDX(irq));
-        return;
+        ಪ್ರತ್ಯಾಗಮ;
     }
 #endif
     maskInterrupt(irqState == IRQInactive, irq);

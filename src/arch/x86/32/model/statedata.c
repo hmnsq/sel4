@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <mode/model/statedata.h>
 
 /* Current active page directory. This is really just a shadow of CR3 */
 UP_STATE_DEFINE(paddr_t, ia32KSCurrentPD VISIBLE);
