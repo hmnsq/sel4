@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#అన్తర్భావ <object.h>
+#అన్తర్భావ <machine.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <arch/kernel/vspace.h>
+#అన్తర్భావ <arch/kernel/thread.h>
+#అన్తర్భావ <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+శూన్య Arch_switch_గమ్యం_Thread(tcb_t *tcb)
 {
     /* set PD */
-    setVMRoot(tcb);
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+    సమితి_VMRoot(tcb);
+    ఒకవేళ (config_సమితి(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    ఒకవేళ (config_సమితి(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_సంకేతం శూన్య Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, FLAGS, FLAGS_USER_DEFAULT);
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
-    setRegister(tcb, CS, SEL_CS_0);
-    setRegister(tcb, SS, SEL_DS_0);
-    setRegister(tcb, FS_BASE, 0);
-    setRegister(tcb, GS_BASE, 0);
+    సమితి_రిజిస్టరు(tcb, FLAGS, FLAGS_USER_DEFAULT);
+    సమితి_రిజిస్టరు(tcb, తదుపరి_IP, (మాట_t)&idle_thread);
+    సమితి_రిజిస్టరు(tcb, CS, SEL_CS_0);
+    సమితి_రిజిస్టరు(tcb, SS, SEL_DS_0);
+    సమితి_రిజిస్టరు(tcb, FS_పునాది, 0);
+    సమితి_రిజిస్టరు(tcb, GS_పునాది, 0);
 }
 
-void Arch_switchToIdleThread(void)
+శూన్య Arch_switch_గమ్యం_Idle_Thread(శూన్య)
 {
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    సమితి_VMRoot(కణుపు_STATE(ksIdleThread));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+శూన్య Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Mode_postModifyRegisters(tcb_t *tptr)
+శూన్య బహుళకం_post_Modify_Registers(tcb_t *tptr)
 {
     /* Don't need to do anything */
 }

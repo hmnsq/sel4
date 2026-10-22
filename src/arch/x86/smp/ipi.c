@@ -4,117 +4,117 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/ipi.h>
-#include <smp/lock.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <mode/smp/ipi.h>
+#అన్తర్భావ <smp/ipi.h>
+#అన్తర్భావ <smp/lock.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+శూన్య handleRemoteCall(IpiRemoteCall_t call, మాట_t arg0, మాట_t arg1, మాట_t arg2, bool_t irq_మార్గం)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
-            ipiStallCoreCallback(irqPath);
-            break;
+    ఒకవేళ (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        ఎంపిక (call) {
+        స్థితి IpiRemoteCall_Stall:
+            ipiStallCoreCallback(irq_మార్గం);
+            ఆపు;
 
-        case IpiRemoteCall_InvalidatePageStructureCacheASID:
-            invalidateLocalPageStructureCacheASID(arg0, arg1);
-            break;
+        స్థితి Ipi_Remote_Call_Invalidate_పుట_Structure_Cache_ASID:
+            invalidate_Local_పుట_Structure_Cache_ASID(arg0, arg1);
+            ఆపు;
 
-        case IpiRemoteCall_InvalidateTranslationSingle:
+        స్థితి IpiRemoteCall_InvalidateTranslationSingle:
             invalidateLocalTranslationSingle(arg0);
-            break;
+            ఆపు;
 
-        case IpiRemoteCall_InvalidateTranslationSingleASID:
+        స్థితి IpiRemoteCall_InvalidateTranslationSingleASID:
             invalidateLocalTranslationSingleASID(arg0, arg1);
-            break;
+            ఆపు;
 
-        case IpiRemoteCall_InvalidateTranslationAll:
+        స్థితి IpiRemoteCall_InvalidateTranslationAll:
             invalidateLocalTranslationAll();
-            break;
+            ఆపు;
 
-        case IpiRemoteCall_switchFpuOwner:
+        స్థితి IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
+            ఆపు;
 
-#ifdef CONFIG_VTX
-        case IpiRemoteCall_ClearCurrentVCPU:
+#నిర్వచితమైతే CONFIG_VTX
+        స్థితి IpiRemoteCall_ClearCurrentVCPU:
             clearCurrentVCPU();
-            break;
-        case IpiRemoteCall_VMCheckBoundNotification: {
+            ఆపు;
+        స్థితి IpiRemoteCall_VMCheckBoundNotification: {
             tcb_t *tcb = (tcb_t *)arg0;
 
             /* For a running VM notifications are already checked by handleVmexit */
-            if (tcb != NODE_STATE(ksCurThread)) {
+            ఒకవేళ (tcb != కణుపు_STATE(ksCurThread)) {
                 VMCheckBoundNotification(tcb);
             }
-            break;
+            ఆపు;
         }
-#endif
-        default:
-            Mode_handleRemoteCall((IpiModeRemoteCall_t)call, arg0, arg1, arg2);
-            break;
+#అయితే_ముగింపు
+        అప్రమేయ:
+            బహుళకం_handle_Remote_Call((Ipi_బహుళకం_Remote_Call_t)call, arg0, arg1, arg2);
+            ఆపు;
         }
 
-        big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
+        big_kernel_తాళం.కణుపు[getCurrentCPUIndex()].ipi = 0;
         ipi_wait();
     }
 }
 
 /* make sure all cpu IDs for number of core fit in bitwise word */
-compile_assert(invalid_number_of_supported_nodes, CONFIG_MAX_NUM_NODES <= wordBits);
+compile_assert(invalid_సంఖ్య_యొక్క_supported_nodes, CONFIG_MAX_అంకె_NODES <= మాట_బిట్లు);
 
-#ifdef CONFIG_USE_LOGICAL_IDS
-static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
+#నిర్వచితమైతే CONFIG_USE_LOGICAL_IDS
+స్థిర శూన్య x86_ipi_send_ముసుగు(అంతరాయం_t ipi, మాట_t ముసుగు_2, bool_t isBlocking)
 {
-    word_t nr_target_clusters = 0;
-    word_t target_clusters[CONFIG_MAX_NUM_NODES];
+    మాట_t nr_లక్ష్యం_clusters = 0;
+    మాట_t లక్ష్యం_clusters[CONFIG_MAX_అంకె_NODES];
 
-    do {
-        int core = wordBits - 1 - clzl(mask);
-        target_clusters[nr_target_clusters] = 0;
+    చేయి {
+        పూర్ణాంకం core = మాట_బిట్లు - 1 - clzl(ముసుగు_2);
+        లక్ష్యం_clusters[nr_లక్ష్యం_clusters] = 0;
 
         /* get mask of all cores in bitmask which are in same cluster as 'core' */
-        word_t sub_mask = mask & cpu_mapping.other_indexes_in_cluster[core];
-        target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[core];
-        if (isBlocking) {
-            big_kernel_lock.node[core].ipi = 1;
+        మాట_t sub_ముసుగు = ముసుగు_2 & cpu_mapping.other_indexes_లోపల_cluster[core];
+        లక్ష్యం_clusters[nr_లక్ష్యం_clusters] |= cpu_mapping.సూచీ_గమ్యం_logical_id[core];
+        ఒకవేళ (isBlocking) {
+            big_kernel_తాళం.కణుపు[core].ipi = 1;
         }
 
         /* check if there is any other core in this cluster */
-        while (sub_mask) {
-            int index = wordBits - 1 - clzl(sub_mask);
-            target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[index];
-            if (isBlocking) {
-                big_kernel_lock.node[index].ipi = 1;
+        అయితే (sub_ముసుగు) {
+            పూర్ణాంకం సూచీ = మాట_బిట్లు - 1 - clzl(sub_ముసుగు);
+            లక్ష్యం_clusters[nr_లక్ష్యం_clusters] |= cpu_mapping.సూచీ_గమ్యం_logical_id[సూచీ];
+            ఒకవేళ (isBlocking) {
+                big_kernel_తాళం.కణుపు[సూచీ].ipi = 1;
             }
-            sub_mask &= ~BIT(index);
+            sub_ముసుగు &= ~బిట్టు(సూచీ);
         }
 
-        mask &= ~(cpu_mapping.other_indexes_in_cluster[core] | BIT(core));
-        nr_target_clusters++;
-    } while (mask != 0);
+        ముసుగు_2 &= ~(cpu_mapping.other_indexes_లోపల_cluster[core] | బిట్టు(core));
+        nr_లక్ష్యం_clusters++;
+    } అయితే (ముసుగు_2 != 0);
 
     /* broadcast IPIs to clusters... */
     IPI_ICR_BARRIER;
-    for (int i = 0; i < nr_target_clusters; i++) {
-        apic_send_ipi_cluster(ipi, target_clusters[i]);
+    కొరకు (పూర్ణాంకం i = 0; i < nr_లక్ష్యం_clusters; i++) {
+        apic_send_ipi_cluster(ipi, లక్ష్యం_clusters[i]);
     }
 }
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#అయితే_ముగింపు /* CONFIG_USE_LOGICAL_IDS */
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+శూన్య ipi_send_ముసుగు(irq_t ipi, మాట_t ముసుగు_2, bool_t isBlocking)
 {
-    interrupt_t interrupt_ipi = ipi + IRQ_INT_OFFSET;
+    అంతరాయం_t అంతరాయం_ipi = ipi + IRQ_INT_స్థానభ్రంశం;
 
-#ifdef CONFIG_USE_LOGICAL_IDS
-    x86_ipi_send_mask(interrupt_ipi, mask, isBlocking);
-#else
-    generic_ipi_send_mask(interrupt_ipi, mask, isBlocking);
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#నిర్వచితమైతే CONFIG_USE_LOGICAL_IDS
+    x86_ipi_send_ముసుగు(అంతరాయం_ipi, ముసుగు_2, isBlocking);
+#లేకపోతే
+    generic_ipi_send_ముసుగు(అంతరాయం_ipi, ముసుగు_2, isBlocking);
+#అయితే_ముగింపు /* CONFIG_USE_LOGICAL_IDS */
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */

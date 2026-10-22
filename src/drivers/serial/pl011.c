@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
 
-#define UARTDR                    0x000
-#define UARTFR                    0x018
+#నిర్వచించు UARTDR                    0x000
+#నిర్వచించు UARTFR                    0x018
 
-#define PL011_UARTFR_TXFF         BIT(5)
-#define PL011_UARTFR_RXFE         BIT(4)
+#నిర్వచించు PL011_UARTFR_TXFF         బిట్టు(5)
+#నిర్వచించు PL011_UARTFR_RXFE         బిట్టు(4)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#నిర్వచించు UART_REG(x) ((అస్థిర uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#నిర్వచితమైతే CONFIG_PRINTING
+శూన్య uart_drv_putchar(గుర్తులేని అక్షరం c)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
+    అయితే ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
 
     *UART_REG(UARTDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం uart_drv_getchar(శూన్య)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
+    అయితే ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
 
-    return *UART_REG(UARTDR);
+    తిరిగి *UART_REG(UARTDR);
 }
-#endif  /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు  /* CONFIG_DEBUG_BUILD */

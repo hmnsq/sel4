@@ -4,55 +4,55 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/types.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <arch/machine/l2c_310.h>
+#అన్తర్భావ <api/types.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <arch/machine/hardware.h>
+#అన్తర్భావ <arch/machine/l2c_310.h>
 
-#define LINE_START(a) ROUND_DOWN(a, L1_CACHE_LINE_SIZE_BITS)
-#define LINE_INDEX(a) (LINE_START(a)>>L1_CACHE_LINE_SIZE_BITS)
+#నిర్వచించు పంక్తి_ప్రారంభం(a) విడత_కిందికి(a, L1_CACHE_పంక్తి_కొలత_బిట్లు)
+#నిర్వచించు పంక్తి_సూచీ(a) (పంక్తి_ప్రారంభం(a)>>L1_CACHE_పంక్తి_కొలత_బిట్లు)
 
-static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
+స్థిర శూన్య cleanCacheRange_PoC(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        cleanByVA(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
 }
 
-void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య cleanInvalidateCacheRange_RAM(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end, id)" */
 
     /* First clean the L1 range */
-    cleanCacheRange_PoC(start, end, pstart);
+    cleanCacheRange_PoC(ప్రారంభం, చివర, pstart);
 
     /* ensure operation completes and visible in L2 */
     dsb();
 
     /* Now clean and invalidate the L2 range */
-    plat_cleanInvalidateL2Range(pstart, pstart + (end - start));
+    plat_cleanInvalidateL2Range(pstart, pstart + (చివర - ప్రారంభం));
 
     /* Finally clean and invalidate the L1 range. The extra clean is only strictly necessary
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanInvalByVA(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        cleanInvalByVA(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
     /* ensure clean and invalidate complete */
     dsb();
 }
 
-void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య cleanCacheRange_RAM(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -60,7 +60,7 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* clean l1 to l2 */
-    cleanCacheRange_PoC(start, end, pstart);
+    cleanCacheRange_PoC(ప్రారంభం, చివర, pstart);
 
     /* ensure cache operation completes before cleaning l2 */
     dsb();
@@ -71,41 +71,41 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* now clean l2 to RAM */
-    plat_cleanL2Range(pstart, pstart + (end - start));
+    plat_cleanL2Range(pstart, pstart + (చివర - ప్రారంభం));
 }
 
-void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య cleanCacheRange_PoU(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA_PoU(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        cleanByVA_PoU(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
 }
 
-void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య invalidateCacheRange_RAM(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
 
     /* If the start and end are not aligned to a cache line boundary
      * then we need to clean the line first to prevent invalidating
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
-        cleanCacheRange_RAM(start, start, pstart);
+    ఒకవేళ (ప్రారంభం != పంక్తి_ప్రారంభం(ప్రారంభం)) {
+        cleanCacheRange_RAM(ప్రారంభం, ప్రారంభం, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
-        line = LINE_START(end);
-        cleanCacheRange_RAM(line, line, pstart + (line - start));
+    ఒకవేళ (చివర + 1 != పంక్తి_ప్రారంభం(చివర + 1)) {
+        పంక్తి = పంక్తి_ప్రారంభం(చివర);
+        cleanCacheRange_RAM(పంక్తి, పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -116,7 +116,7 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
     /* Invalidate L2 range. Invalidating the L2 before the L1 is the order
      * given in the l2c_310 manual, as an L1 line might be allocated from the L2
      * before the L2 can be invalidated. */
-    plat_invalidateL2Range(pstart, pstart + (end - start));
+    plat_invalidateL2Range(pstart, pstart + (చివర - ప్రారంభం));
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -124,17 +124,17 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        invalidateByVA(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
     /* Ensure invalidate completes */
     dsb();
 }
 
-void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య invalidateCacheRange_I(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-#if defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
+#ఒకవేళ defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     /* In cases where the hypervisor is supported, the virtual address passed
      * to this function are kernel aliases for the underlying physical memory
      * rather than the virtual address in the actual vspace. This works fine
@@ -145,29 +145,29 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      * case
      */
     invalidate_I_PoU();
-#else
-    vptr_t line;
-    word_t index;
+#లేకపోతే
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA_I(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        invalidateByVA_I(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
-#endif
+#అయితే_ముగింపు
 }
 
-void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
+శూన్య branchFlushRange(vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t పంక్తి;
+    మాట_t సూచీ;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        branchFlush(line, pstart + (line - start));
+    కొరకు (సూచీ = పంక్తి_సూచీ(ప్రారంభం); సూచీ < పంక్తి_సూచీ(చివర) + 1; సూచీ++) {
+        పంక్తి = సూచీ << L1_CACHE_పంక్తి_కొలత_బిట్లు;
+        branchFlush(పంక్తి, pstart + (పంక్తి - ప్రారంభం));
     }
 }
 
-void cleanCaches_PoU(void)
+శూన్య cleanCaches_PoU(శూన్య)
 {
     dsb();
     clean_D_PoU();
@@ -176,7 +176,7 @@ void cleanCaches_PoU(void)
     dsb();
 }
 
-void cleanInvalidateL1Caches(void)
+శూన్య cleanInvalidateL1Caches(శూన్య)
 {
     dsb();
     cleanInvalidate_D_PoC();
@@ -185,7 +185,7 @@ void cleanInvalidateL1Caches(void)
     dsb();
 }
 
-void arch_clean_invalidate_caches(void)
+శూన్య arch_clean_invalidate_caches(శూన్య)
 {
     cleanCaches_PoU();
     plat_cleanInvalidateL2Cache();
@@ -193,14 +193,14 @@ void arch_clean_invalidate_caches(void)
     isb();
 }
 
-void arch_clean_invalidate_L1_caches(word_t type)
+శూన్య arch_clean_invalidate_L1_caches(మాట_t type)
 {
     dsb();
-    if (type & BIT(1)) {
+    ఒకవేళ (type & బిట్టు(1)) {
         cleanInvalidate_L1D();
         dsb();
     }
-    if (type & BIT(0)) {
+    ఒకవేళ (type & బిట్టు(0)) {
         invalidate_I_PoU();
         dsb();
         isb();

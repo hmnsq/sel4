@@ -5,42 +5,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <object.h>
-#include <kernel/vspace.h>
-#include <api/faults.h>
-#include <api/syscall.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <object.h>
+#అన్తర్భావ <kernel/vspace.h>
+#అన్తర్భావ <api/faults.h>
+#అన్తర్భావ <api/syscall.h>
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <util.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <api/faults.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <util.h>
 
-bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
+bool_t Arch_handle_Fault_జవాబు(tcb_t *receiver, tcb_t *sender, మాట_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    ఎంపిక (faultType) {
+    స్థితి seL4_Fault_VMFault:
+        తిరిగి true;
 
-    default:
+    అప్రమేయ:
         fail("Invalid fault");
     }
 }
 
-word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
+మాట_t Arch_సమితి_MRs_fault(tcb_t *sender, tcb_t *receiver, మాట_t *receiveIPCBuffer, మాట_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
-              seL4_Fault_VMFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
+    ఎంపిక (faultType) {
+    స్థితి seL4_Fault_VMFault: {
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
+              se_L4_Fault_VMFault_get_చిరునామా(sender->tcbFault));
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        తిరిగి సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
-    default:
+    అప్రమేయ:
         fail("Invalid fault");
     }
 }

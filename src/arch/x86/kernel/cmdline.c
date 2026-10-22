@@ -4,108 +4,108 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <machine/io.h>
-#include <arch/kernel/cmdline.h>
-#include <arch/kernel/boot_sys.h>
-#include <linker.h>
-#include <plat/machine/io.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <arch/kernel/cmdline.h>
+#అన్తర్భావ <arch/kernel/boot_sys.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/io.h>
 
 /* 'cmdline_val' is declared globally because of a C-subset restriction.
  * It is only used in cmdline_parse(), which therefore is non-reentrant.
  */
-#define MAX_CMDLINE_VAL_LEN 1000
+#నిర్వచించు MAX_CMDLINE_VAL_LEN 1000
 BOOT_BSS
-char cmdline_val[MAX_CMDLINE_VAL_LEN];
+అక్షరం cmdline_val[MAX_CMDLINE_VAL_LEN];
 
 /* workaround because string literals are not supported by C parser */
-const char cmdline_str_max_num_nodes[]  = {'m', 'a', 'x', '_', 'n', 'u', 'm', '_', 'n', 'o', 'd', 'e', 's', 0};
-const char cmdline_str_num_sh_frames[]  = {'n', 'u', 'm', '_', 's', 'h', '_', 'f', 'r', 'a', 'm', 'e', 's', 0};
-const char cmdline_str_disable_iommu[]  = {'d', 'i', 's', 'a', 'b', 'l', 'e', '_', 'i', 'o', 'm', 'm', 'u', 0};
+స్థిరరాశి అక్షరం cmdline_str_max_అంకె_nodes[]  = {'m', 'a', 'x', '_', 'n', 'u', 'm', '_', 'n', 'o', 'd', 'e', 's', 0};
+స్థిరరాశి అక్షరం cmdline_str_అంకె_sh_చట్రాలు[]  = {'n', 'u', 'm', '_', 's', 'h', '_', 'f', 'r', 'a', 'm', 'e', 's', 0};
+స్థిరరాశి అక్షరం cmdline_str_disable_iommu[]  = {'d', 'i', 's', 'a', 'b', 'l', 'e', '_', 'i', 'o', 'm', 'm', 'u', 0};
 
-static int is_space(char c)
+స్థిర పూర్ణాంకం is_space(అక్షరం c)
 {
-    return c <= ' ';
+    తిరిగి c <= ' ';
 }
 
-static int UNUSED parse_opt(const char *cmdline, const char *opt, char *value, int bufsize)
+స్థిర పూర్ణాంకం వాడని parse_opt(స్థిరరాశి అక్షరం *cmdline, స్థిరరాశి అక్షరం *opt, అక్షరం *విలువ, పూర్ణాంకం bufsize)
 {
-    int len = -1;
-    const char *optptr = NULL;
+    పూర్ణాంకం len = -1;
+    స్థిరరాశి అక్షరం *optptr = ఖాళీ;
 
-    while (true) {
-        for (; is_space(*cmdline) && (*cmdline != 0); cmdline++);
-        if (*cmdline == 0) {
-            break;
+    అయితే (true) {
+        కొరకు (; is_space(*cmdline) && (*cmdline != 0); cmdline++);
+        ఒకవేళ (*cmdline == 0) {
+            ఆపు;
         }
 
-        for (optptr = opt; *optptr && *cmdline && (*cmdline != '=') && !is_space(*cmdline)
+        కొరకు (optptr = opt; *optptr && *cmdline && (*cmdline != '=') && !is_space(*cmdline)
              && (*optptr == *cmdline); optptr++, cmdline++);
 
-        if (*optptr == '\0' && *cmdline == '=') {
+        ఒకవేళ (*optptr == '\0' && *cmdline == '=') {
             cmdline++;
 
-            for (len = 0; !is_space(*cmdline) && (len < bufsize - 1); cmdline++, len++) {
-                value[len] = *cmdline;
+            కొరకు (len = 0; !is_space(*cmdline) && (len < bufsize - 1); cmdline++, len++) {
+                విలువ[len] = *cmdline;
             }
-            if (bufsize) {
-                value[len] = '\0';
+            ఒకవేళ (bufsize) {
+                విలువ[len] = '\0';
             }
         }
-        for (; !is_space(*cmdline); cmdline++);
+        కొరకు (; !is_space(*cmdline); cmdline++);
     }
 
-    return len;
+    తిరిగి len;
 }
 
-static int parse_bool(const char *cmdline, const char *opt)
+స్థిర పూర్ణాంకం parse_bool(స్థిరరాశి అక్షరం *cmdline, స్థిరరాశి అక్షరం *opt)
 {
-    const char *optptr = NULL;
+    స్థిరరాశి అక్షరం *optptr = ఖాళీ;
 
-    while (1) {
-        for (; is_space(*cmdline) && (*cmdline != 0); cmdline++);
-        if (*cmdline == 0) {
-            return 0;
+    అయితే (1) {
+        కొరకు (; is_space(*cmdline) && (*cmdline != 0); cmdline++);
+        ఒకవేళ (*cmdline == 0) {
+            తిరిగి 0;
         }
 
-        for (optptr = opt; *optptr && *cmdline && !is_space(*cmdline) && (*optptr == *cmdline); optptr++, cmdline++);
+        కొరకు (optptr = opt; *optptr && *cmdline && !is_space(*cmdline) && (*optptr == *cmdline); optptr++, cmdline++);
 
-        if (*optptr == '\0' && is_space(*cmdline)) {
-            return 1;
-        } else {
-            for (; !is_space(*cmdline); cmdline++);
+        ఒకవేళ (*optptr == '\0' && is_space(*cmdline)) {
+            తిరిగి 1;
+        } లేకపోతే {
+            కొరకు (; !is_space(*cmdline); cmdline++);
         }
     }
 }
 
-static void UNUSED parse_uint16_array(char *str, uint16_t *array, int array_size)
+స్థిర శూన్య వాడని parse_uint16_array(అక్షరం *str, uint16_t *array, పూర్ణాంకం array_కొలత)
 {
-    char *last;
-    int   i = 0;
-    int   v;
+    అక్షరం *చివరి;
+    పూర్ణాంకం   i = 0;
+    పూర్ణాంకం   v;
 
-    while (str && i < array_size) {
-        for (last = str; *str && *str != ','; str++);
-        if (*str == 0) {
+    అయితే (str && i < array_కొలత) {
+        కొరకు (చివరి = str; *str && *str != ','; str++);
+        ఒకవేళ (*str == 0) {
             str = 0;
-        } else {
+        } లేకపోతే {
             *str = 0;
             str++;
         }
-        v = str_to_long(last);
-        if (v == -1) {
+        v = str_గమ్యం_long(చివరి);
+        ఒకవేళ (v == -1) {
             array[i] = 0;
-        } else {
+        } లేకపోతే {
             array[i] = v;
         }
         i++;
     }
 }
 
-void cmdline_parse(const char *cmdline, cmdline_opt_t *cmdline_opt)
+శూన్య cmdline_parse(స్థిరరాశి అక్షరం *cmdline, cmdline_opt_t *cmdline_opt)
 {
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+#ఒకవేళ defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
     /* use BIOS data area to read serial configuration. The BDA is not
      * fully standardized and parts are absolete. See http://wiki.osdev.org/Memory_Map_(x86)#BIOS_Data_Area_.28BDA.29
      * for an explanation
@@ -115,52 +115,52 @@ void cmdline_parse(const char *cmdline, cmdline_opt_t *cmdline_opt)
      * build system) for any address below 4096.  Turn that off for
      * accessing the BIOS area.
      */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
+#సూచన GCC diagnostic నెట్టు
+#సూచన GCC diagnostic ignored "-Warray-bounds"
 
-    const unsigned short *bda_port = (unsigned short *)0x400;
-    const unsigned short *bda_equi = (unsigned short *)0x410;
-    int const bda_ports_count       = (*bda_equi >> 9) & 0x7;
-#endif
+    స్థిరరాశి గుర్తులేని పొట్టి *bda_పోర్టు = (గుర్తులేని పొట్టి *)0x400;
+    స్థిరరాశి గుర్తులేని పొట్టి *bda_equi = (గుర్తులేని పొట్టి *)0x410;
+    పూర్ణాంకం స్థిరరాశి bda_ports_లెక్క       = (*bda_equi >> 9) & 0x7;
+#అయితే_ముగింపు
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
     /* initialise to default or use BDA if available */
-    cmdline_opt->console_port = bda_ports_count && *bda_port ? *bda_port : 0x3f8;
+    cmdline_opt->console_పోర్టు = bda_ports_లెక్క && *bda_పోర్టు ? *bda_పోర్టు : 0x3f8;
 
-    if (parse_opt(cmdline, "console_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
-        parse_uint16_array(cmdline_val, &cmdline_opt->console_port, 1);
+    ఒకవేళ (parse_opt(cmdline, "console_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
+        parse_uint16_array(cmdline_val, &cmdline_opt->console_పోర్టు, 1);
     }
 
     /* initialise console ports to enable debug output */
-    if (cmdline_opt->console_port) {
-        serial_init(cmdline_opt->console_port);
-        x86KSconsolePort = cmdline_opt->console_port;
+    ఒకవేళ (cmdline_opt->console_పోర్టు) {
+        serial_init(cmdline_opt->console_పోర్టు);
+        x86_KSconsole_పోర్టు = cmdline_opt->console_పోర్టు;
     }
 
     /* only start printing here after having parsed/set/initialised the console_port */
-    printf("\nBoot config: parsing cmdline '%s'\n", cmdline);
+    రాయి("\nBoot config: parsing cmdline '%s'\n", cmdline);
 
-    if (cmdline_opt->console_port) {
-        printf("Boot config: console_port = 0x%x\n", cmdline_opt->console_port);
+    ఒకవేళ (cmdline_opt->console_పోర్టు) {
+        రాయి("Boot config: console_port = 0x%x\n", cmdline_opt->console_పోర్టు);
     }
-#endif
+#అయితే_ముగింపు
 
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+#ఒకవేళ defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
     /* initialise to default or use BDA if available */
-    cmdline_opt->debug_port = bda_ports_count && *bda_port ? *bda_port : 0x3f8;
-    if (parse_opt(cmdline, "debug_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
-        parse_uint16_array(cmdline_val, &cmdline_opt->debug_port, 1);
+    cmdline_opt->debug_పోర్టు = bda_ports_లెక్క && *bda_పోర్టు ? *bda_పోర్టు : 0x3f8;
+    ఒకవేళ (parse_opt(cmdline, "debug_port", cmdline_val, MAX_CMDLINE_VAL_LEN) != -1) {
+        parse_uint16_array(cmdline_val, &cmdline_opt->debug_పోర్టు, 1);
     }
 
     /* initialise debug ports */
-    if (cmdline_opt->debug_port) {
-        serial_init(cmdline_opt->debug_port);
-        x86KSdebugPort = cmdline_opt->debug_port;
-        printf("Boot config: debug_port = 0x%x\n", cmdline_opt->debug_port);
+    ఒకవేళ (cmdline_opt->debug_పోర్టు) {
+        serial_init(cmdline_opt->debug_పోర్టు);
+        x86_KSdebug_పోర్టు = cmdline_opt->debug_పోర్టు;
+        రాయి("Boot config: debug_port = 0x%x\n", cmdline_opt->debug_పోర్టు);
     }
-#pragma GCC diagnostic pop
-#endif
+#సూచన GCC diagnostic తీయి
+#అయితే_ముగింపు
 
     cmdline_opt->disable_iommu = parse_bool(cmdline, cmdline_str_disable_iommu);
-    printf("Boot config: disable_iommu = %s\n", cmdline_opt->disable_iommu ? "true" : "false");
+    రాయి("Boot config: disable_iommu = %s\n", cmdline_opt->disable_iommu ? "true" : "false");
 }

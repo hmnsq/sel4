@@ -4,55 +4,55 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/model/statedata.h>
-#include <machine/io.h>
-#include <plat/machine/io.h>
-#include <drivers/uart.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <arch/kernel/boot_sys.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/io.h>
+#అన్తర్భావ <drivers/uart.h>
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void serial_init(uint16_t port)
+#ఒకవేళ defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+శూన్య serial_init(uint16_t పోర్టు)
 {
-    while (!(in8(port + 5) & 0x60)); /* wait until not busy */
+    అయితే (!(in8(పోర్టు + 5) & 0x60)); /* wait until not busy */
 
-    out8(port + 1, 0x00); /* disable generating interrupts */
-    out8(port + 3, 0x80); /* line control register: command: set divisor */
-    out8(port,     0x01); /* set low byte of divisor to 0x01 = 115200 baud */
-    out8(port + 1, 0x00); /* set high byte of divisor to 0x00 */
-    out8(port + 3, 0x03); /* line control register: set 8 bit, no parity, 1 stop bit */
-    out8(port + 4, 0x0b); /* modem control register: set DTR/RTS/OUT2 */
+    out8(పోర్టు + 1, 0x00); /* disable generating interrupts */
+    out8(పోర్టు + 3, 0x80); /* line control register: command: set divisor */
+    out8(పోర్టు,     0x01); /* set low byte of divisor to 0x01 = 115200 baud */
+    out8(పోర్టు + 1, 0x00); /* set high byte of divisor to 0x00 */
+    out8(పోర్టు + 3, 0x03); /* line control register: set 8 bit, no parity, 1 stop bit */
+    out8(పోర్టు + 4, 0x0b); /* modem control register: set DTR/RTS/OUT2 */
 
-    in8(port);     /* clear receiver port */
-    in8(port + 5); /* clear line status port */
-    in8(port + 6); /* clear modem status port */
+    in8(పోర్టు);     /* clear receiver port */
+    in8(పోర్టు + 5); /* clear line status port */
+    in8(పోర్టు + 6); /* clear modem status port */
 }
-#endif /* defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING) */
+#అయితే_ముగింపు /* defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING) */
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
 
 /* there is no UART driver at drivers/serial/... for the pc99 platform, but we
  * implement parts of the API here, so we can reuse the generic code.
  */
-void uart_drv_putchar(
-    unsigned char c)
+శూన్య uart_drv_putchar(
+    గుర్తులేని అక్షరం c)
 {
-    while (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
-    out8(x86KSdebugPort, c);
+    అయితే (x86_KSdebug_పోర్టు && (in8(x86_KSdebug_పోర్టు + 5) & 0x20) == 0);
+    out8(x86_KSdebug_పోర్టు, c);
 }
 
-void kernel_putDebugChar(unsigned char c)
+శూన్య kernel_putDebugChar(గుర్తులేని అక్షరం c)
 {
     /* this will take care of CR/LF handling and call uart_drv_putchar() */
     uart_console_putchar(c);
 }
 
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం kernel_getDebugChar(శూన్య)
 {
-    while ((in8(x86KSdebugPort + 5) & 1) == 0);
-    return in8(x86KSdebugPort);
+    అయితే ((in8(x86_KSdebug_పోర్టు + 5) & 1) == 0);
+    తిరిగి in8(x86_KSdebug_పోర్టు);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

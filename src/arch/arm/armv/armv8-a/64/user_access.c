@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <plat/machine/hardware.h>
-#include <arch/user_access.h>
+#అన్తర్భావ <plat/machine/hardware.h>
+#అన్తర్భావ <arch/user_access.h>
 
 /* bits in the CNTKCTL_EL1 */
-#define EL0VCTEN BIT(1)
-#define EL0PCTEN BIT(0)
-#define EL0VTEN  BIT(8)
-#define EL0PTEN  BIT(9)
+#నిర్వచించు EL0VCTEN బిట్టు(1)
+#నిర్వచించు EL0PCTEN బిట్టు(0)
+#నిర్వచించు EL0VTEN  బిట్టు(8)
+#నిర్వచించు EL0PTEN  బిట్టు(9)
 
 /* bits in CNTHCTL_EL2 */
-#define EL1PCEN  BIT(1)
-#define EL1PCTEN BIT(0)
+#నిర్వచించు EL1PCEN  బిట్టు(1)
+#నిర్వచించు EL1PCTEN బిట్టు(0)
 
-#define PMUSERENR_EL0_EN BIT(0)
+#నిర్వచించు PMUSERENR_EL0_EN బిట్టు(0)
 
-static void check_export_pmu(void)
+స్థిర శూన్య check_export_pmu(శూన్య)
 {
-#if defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
+#ఒకవేళ defined CONFIG_EXPORT_PMU_USER || defined CONFIG_ENABLE_BENCHMARKS
     /* allow PL0 to access the PMU */
     uint32_t val = PMUSERENR_EL0_EN;
     MSR("PMUSERENR_EL0", val);
-#endif
+#అయితే_ముగింపు
 }
 
-static void check_export_arch_timer(void)
+స్థిర శూన్య check_export_arch_timer(శూన్య)
 {
     uint32_t val = 0;
-#ifdef CONFIG_EXPORT_PCNT_USER
+#నిర్వచితమైతే CONFIG_EXPORT_PCNT_USER
     val |= EL0PCTEN;
-#endif /* CONFIG_EXPORT_PCNT_USER */
-#ifdef CONFIG_EXPORT_PTMR_USER
+#అయితే_ముగింపు /* CONFIG_EXPORT_PCNT_USER */
+#నిర్వచితమైతే CONFIG_EXPORT_PTMR_USER
     val |= EL0PTEN;
-#endif /* CONFIG_EXPORT_PTMR_USER */
-#ifdef CONFIG_EXPORT_VCNT_USER
+#అయితే_ముగింపు /* CONFIG_EXPORT_PTMR_USER */
+#నిర్వచితమైతే CONFIG_EXPORT_VCNT_USER
     val |= EL0VCTEN;
-#endif /* CONFIG_EXPORT_VCNT_USER */
-#ifdef CONFIG_EXPORT_VTMR_USER
+#అయితే_ముగింపు /* CONFIG_EXPORT_VCNT_USER */
+#నిర్వచితమైతే CONFIG_EXPORT_VTMR_USER
     val |= EL0VTEN;
-#endif /* CONFIG_EXPORT_VTMR_USER */
+#అయితే_ముగింపు /* CONFIG_EXPORT_VTMR_USER */
     MSR("CNTKCTL_EL1", val);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
     val = 0;
-#ifdef CONFIG_EXPORT_PCNT_USER
+#నిర్వచితమైతే CONFIG_EXPORT_PCNT_USER
     val |= EL1PCTEN;
-#endif /* CONFIG_EXPORT_PCNT_USER */
-#ifdef CONFIG_EXPORT_PTMR_USER
+#అయితే_ముగింపు /* CONFIG_EXPORT_PCNT_USER */
+#నిర్వచితమైతే CONFIG_EXPORT_PTMR_USER
     val |= EL1PCEN;
-#endif /* CONFIG_EXPORT_PTMR_USER */
+#అయితే_ముగింపు /* CONFIG_EXPORT_PTMR_USER */
     MSR("CNTHCTL_EL2", val);
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-void armv_init_user_access(void)
+శూన్య armv_init_user_access(శూన్య)
 {
     check_export_pmu();
     check_export_arch_timer();

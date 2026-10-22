@@ -4,166 +4,166 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <benchmark/benchmark.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <kernel/boot.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/stack.h>
-#include <machine/io.h>
-#include <machine/debug.h>
-#include <model/statedata.h>
-#include <object/cnode.h>
-#include <object/untyped.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <armv/context_switch.h>
-#include <arch/object/iospace.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/tlb.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <benchmark/benchmark.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <kernel/boot.h>
+#అన్తర్భావ <kernel/cspace.h>
+#అన్తర్భావ <kernel/thread.h>
+#అన్తర్భావ <kernel/stack.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <machine/debug.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <object/cnode.h>
+#అన్తర్భావ <object/untyped.h>
+#అన్తర్భావ <arch/api/invocation.h>
+#అన్తర్భావ <arch/kernel/vspace.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/hardware.h>
+#అన్తర్భావ <armv/context_switch.h>
+#అన్తర్భావ <arch/object/iospace.h>
+#అన్తర్భావ <arch/object/vcpu.h>
+#అన్తర్భావ <arch/machine/tlb.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
-#include <benchmark/benchmark_track.h>
-#endif
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+#అన్తర్భావ <benchmark/benchmark_track.h>
+#అయితే_ముగింపు
 
 /* ARM uses multiple identical mappings in a page table / page directory to construct
  * large mappings. In both cases it happens to be 16 entries, which can be calculated by
  * looking at the size difference of the mappings, and is done this way to remove magic
  * numbers littering this code and make it clear what is going on */
-#define SECTIONS_PER_SUPER_SECTION BIT(ARMSuperSectionBits - ARMSectionBits)
-#define PAGES_PER_LARGE_PAGE BIT(ARMLargePageBits - ARMSmallPageBits)
+#నిర్వచించు SECTIONS_చొప్పున_SUPER_SECTION బిట్టు(ARMSuper_Section_బిట్లు - ARMSection_బిట్లు)
+#నిర్వచించు పుటలు_చొప్పున_LARGE_పుట బిట్టు(ARMLarge_పుట_బిట్లు - ARMSmall_పుట_బిట్లు)
 
 /* helper stuff to avoid fencepost errors when
  * getting the last byte of a PTE or PDE */
-#define LAST_BYTE_PTE(PTE,LENGTH) ((word_t)&(PTE)[(LENGTH)-1] + (BIT(PTE_SIZE_BITS)-1))
-#define LAST_BYTE_PDE(PDE,LENGTH) ((word_t)&(PDE)[(LENGTH)-1] + (BIT(PDE_SIZE_BITS)-1))
+#నిర్వచించు చివరి_BYTE_PTE(PTE,నిడివి_2) ((మాట_t)&(PTE)[(నిడివి_2)-1] + (బిట్టు(PTE_కొలత_బిట్లు)-1))
+#నిర్వచించు చివరి_BYTE_PDE(PDE,నిడివి_2) ((మాట_t)&(PDE)[(నిడివి_2)-1] + (బిట్టు(PDE_కొలత_బిట్లు)-1))
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
 /* Stage 2 */
-#define MEMATTR_CACHEABLE    0xf /* Inner and Outer write-back */
-#define MEMATTR_NONCACHEABLE 0x0 /* Strongly ordered or device memory */
+#నిర్వచించు MEMATTR_CACHEABLE    0xf /* Inner and Outer write-back */
+#నిర్వచించు MEMATTR_NONCACHEABLE 0x0 /* Strongly ordered or device memory */
 
 /* STage 1 hyp */
-#define ATTRINDX_CACHEABLE    0xff /* Inner and Outer RW write-back non-transient */
-#define ATTRINDX_NONCACHEABLE 0x0  /* strongly ordered or device memory */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#నిర్వచించు ATTRINDX_CACHEABLE    0xff /* Inner and Outer RW write-back non-transient */
+#నిర్వచించు ATTRINDX_NONCACHEABLE 0x0  /* strongly ordered or device memory */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-static void setGlobalPD(void);
+స్థిర శూన్య సమితి_Global_PD(శూన్య);
 
-struct resolve_ret {
-    paddr_t frameBase;
-    vm_page_size_t frameSize;
+నిర్మాణం resolve_ret {
+    paddr_t చట్రం_పునాది;
+    vm_పుట_కొలత_t చట్రం_కొలత;
     bool_t valid;
 };
-typedef struct resolve_ret resolve_ret_t;
+రకనిర్వచనం నిర్మాణం resolve_ret resolve_ret_t;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-static bool_t PURE pteCheckIfMapped(pte_t *pte);
-static bool_t PURE pdeCheckIfMapped(pde_t *pde);
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+స్థిర bool_t శుద్ధ pteCheckIfMapped(pte_t *pte);
+స్థిర bool_t శుద్ధ pdeCheckIfMapped(pde_t *pde);
 
-static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+స్థిర మాట_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMNoAccess:
-        return 0;
+    ఎంపిక (vm_rights) {
+    స్థితి VMNoAccess:
+        తిరిగి 0;
 
-    case VMKernelOnly:
-        return 1;
+    స్థితి VMKernelOnly:
+        తిరిగి 1;
 
-    case VMReadOnly:
-        return 2;
+    స్థితి VMReadOnly:
+        తిరిగి 2;
 
-    case VMReadWrite:
-        return 3;
+    స్థితి VMReadWrite:
+        తిరిగి 3;
 
-    default:
+    అప్రమేయ:
         fail("Invalid VM rights");
     }
 }
 
-#else
+#లేకపోతే
 /* AP encoding slightly different. AP only used for kernel mappings which are fixed after boot time */
-BOOT_CODE
-static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+BOOT_సంకేతం
+స్థిర మాట_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-        return 0;
-    case VMReadWrite:
-        return 1;
-    case VMNoAccess:
+    ఎంపిక (vm_rights) {
+    స్థితి VMKernelOnly:
+        తిరిగి 0;
+    స్థితి VMReadWrite:
+        తిరిగి 1;
+    స్థితి VMNoAccess:
         /* RO at PL1 only */
-        return 2;
-    case VMReadOnly:
-        return 3;
-    default:
+        తిరిగి 2;
+    స్థితి VMReadOnly:
+        తిరిగి 3;
+    అప్రమేయ:
         fail("Invalid VM rights");
     }
 }
 
-static word_t CONST HAPFromVMRights(vm_rights_t vm_rights)
+స్థిర మాట_t CONST HAPFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-    case VMNoAccess:
-        return 0;
-    case VMReadOnly:
-        return 1;
+    ఎంపిక (vm_rights) {
+    స్థితి VMKernelOnly:
+    స్థితి VMNoAccess:
+        తిరిగి 0;
+    స్థితి VMReadOnly:
+        తిరిగి 1;
     /*
     case VMWriteOnly:
         return 2;
     */
-    case VMReadWrite:
-        return 3;
-    default:
+    స్థితి VMReadWrite:
+        తిరిగి 3;
+    అప్రమేయ:
         fail("Invalid VM rights");
     }
 }
 
-#endif
+#అయితే_ముగింపు
 
-vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
+vm_rights_t CONST ముసుగు_VMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_ముసుగు)
 {
-    if (vm_rights == VMNoAccess) {
-        return VMNoAccess;
+    ఒకవేళ (vm_rights == VMNoAccess) {
+        తిరిగి VMNoAccess;
     }
-    if (vm_rights == VMReadOnly &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    ఒకవేళ (vm_rights == VMReadOnly &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ముసుగు)) {
+        తిరిగి VMReadOnly;
     }
-    if (vm_rights == VMReadWrite &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    ఒకవేళ (vm_rights == VMReadWrite &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ముసుగు)) {
+        ఒకవేళ (!seL4_CapRights_get_capAllowWrite(cap_rights_ముసుగు)) {
+            తిరిగి VMReadOnly;
+        } లేకపోతే {
+            తిరిగి VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
-        !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
-        seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+    ఒకవేళ (vm_rights == VMReadWrite &&
+        !seL4_CapRights_get_capAllowRead(cap_rights_ముసుగు) &&
+        seL4_CapRights_get_capAllowWrite(cap_rights_ముసుగు)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    తిరిగి VMKernelOnly;
 }
 
 /* ==================== BOOT CODE STARTS HERE ==================== */
 
-BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
+BOOT_సంకేతం శూన్య map_kernel_చట్రం(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_లక్షణాలు_t లక్షణాలు)
 {
-    word_t idx = (vaddr & MASK(pageBitsForSize(ARMSection))) >> pageBitsForSize(ARMSmallPage);
+    మాట_t idx = (vaddr & ముసుగు(పుట_బిట్లు_For_కొలత(ARMSection))) >> పుట_బిట్లు_For_కొలత(ARMSmall_పుట);
 
-    assert(vaddr >= PPTR_TOP); /* vaddr lies in the region the global PT covers */
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t tex;
-    if (vm_attributes_get_armPageCacheable(attributes)) {
+    ప్రతిజ్ఞా(vaddr >= PPTR_శిఖరం); /* vaddr lies in the region the global PT covers */
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t tex;
+    ఒకవేళ (vm_లక్షణాలు_get_arm_పుట_Cacheable(లక్షణాలు)) {
         tex = 5; /* TEX = 0b1(Cached)01(Outer Write Allocate) */
-    } else {
+    } లేకపోతే {
         tex = 0;
     }
     armKSGlobalPT[idx] =
@@ -178,7 +178,7 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
             1, /* B (Inner write allocate) */
             0  /* executable */
         );
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#లేకపోతే /* CONFIG_ARM_HYPERVISOR_SUPPORT */
     armHSGlobalPT[idx] =
         pteS1_pteS1_small_new(
             0, /* Executable */
@@ -190,26 +190,26 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
             0, /* Not shared */
             APFromVMRights(vm_rights),
             0, /* non secure */
-            vm_attributes_get_armPageCacheable(attributes)
+            vm_లక్షణాలు_get_arm_పుట_Cacheable(లక్షణాలు)
         );
-#endif /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-BOOT_CODE void map_kernel_window(void)
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+BOOT_సంకేతం శూన్య map_kernel_కిటికీ(శూన్య)
 {
     paddr_t  phys;
-    word_t idx;
+    మాట_t idx;
     pde_t    pde;
 
     /* mapping of KERNEL_ELF_BASE (virtual address) to kernel's
      * KERNEL_ELF_PHYS_BASE  */
     /* up to end of virtual address space minus 16M using 16M frames */
-    phys = physBase();
-    idx = PPTR_BASE >> pageBitsForSize(ARMSection);
+    phys = phys_పునాది();
+    idx = PPTR_పునాది >> పుట_బిట్లు_For_కొలత(ARMSection);
 
-    while (idx < BIT(PD_INDEX_BITS) - SECTIONS_PER_SUPER_SECTION) {
-        word_t idx2;
+    అయితే (idx < బిట్టు(PD_సూచీ_బిట్లు) - SECTIONS_చొప్పున_SUPER_SECTION) {
+        మాట_t idx2;
 
         pde = pde_pde_section_new(
                   phys,
@@ -225,14 +225,14 @@ BOOT_CODE void map_kernel_window(void)
                   0, /* C (Inner write allocate) */
                   1  /* B (Inner write allocate) */
               );
-        for (idx2 = idx; idx2 < idx + SECTIONS_PER_SUPER_SECTION; idx2++) {
+        కొరకు (idx2 = idx; idx2 < idx + SECTIONS_చొప్పున_SUPER_SECTION; idx2++) {
             armKSGlobalPD[idx2] = pde;
         }
-        phys += BIT(pageBitsForSize(ARMSuperSection));
-        idx += SECTIONS_PER_SUPER_SECTION;
+        phys += బిట్టు(పుట_బిట్లు_For_కొలత(ARMSuperSection));
+        idx += SECTIONS_చొప్పున_SUPER_SECTION;
     }
 
-    while (idx < (PPTR_TOP >> pageBitsForSize(ARMSection))) {
+    అయితే (idx < (PPTR_శిఖరం >> పుట_బిట్లు_For_కొలత(ARMSection))) {
         pde = pde_pde_section_new(
                   phys,
                   0, /* Section */
@@ -248,45 +248,45 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* B (Inner write allocate) */
               );
         armKSGlobalPD[idx] = pde;
-        phys += BIT(pageBitsForSize(ARMSection));
+        phys += బిట్టు(పుట_బిట్లు_For_కొలత(ARMSection));
         idx++;
     }
 
     /* crosscheck whether we have mapped correctly so far */
-    assert(phys == PADDR_TOP);
+    ప్రతిజ్ఞా(phys == PADDR_శిఖరం);
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
     /* map log buffer page table. PTEs to be filled by user later by calling seL4_BenchmarkSetLogBuffer() */
     armKSGlobalPD[idx] =
         pde_pde_coarse_new(
-            addrFromKPPtr(armKSGlobalLogPT), /* address */
+            addrFromKPPtr(armKSGlobalLogPT), /*చిరునామా*/
             true,                           /* P       */
             0                               /* Domain  */
         );
 
-    memzero(armKSGlobalLogPT, BIT(seL4_PageTableBits));
+    memzero(armKSGlobalLogPT, బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
 
-    phys += BIT(pageBitsForSize(ARMSection));
+    phys += బిట్టు(పుట_బిట్లు_For_కొలత(ARMSection));
     idx++;
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#అయితే_ముగింపు /* CONFIG_KERNEL_LOG_BUFFER */
 
     /* map page table covering last 1M of virtual address space to page directory */
     armKSGlobalPD[idx] =
         pde_pde_coarse_new(
-            addrFromKPPtr(armKSGlobalPT), /* address */
+            addrFromKPPtr(armKSGlobalPT), /*చిరునామా*/
             true,                        /* P       */
             0                            /* Domain  */
         );
 
     /* now start initialising the page table */
-    memzero(armKSGlobalPT, 1 << seL4_PageTableBits);
+    memzero(armKSGlobalPT, 1 << se_L4_పుట_పట్టిక_బిట్లు);
 
     /* map vector table */
-    map_kernel_frame(
-        addrFromKPPtr(arm_vector_table),
-        PPTR_VECTOR_TABLE,
+    map_kernel_చట్రం(
+        addrFromKPPtr(arm_సదిశ_పట్టిక),
+        PPTR_సదిశ_పట్టిక,
         VMKernelOnly,
-        vm_attributes_new(
+        vm_లక్షణాలు_new(
             false, /* armExecuteNever */
             true,  /* armParityEnabled */
             true   /* armPageCacheable */
@@ -296,17 +296,17 @@ BOOT_CODE void map_kernel_window(void)
     map_kernel_devices();
 }
 
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#లేకపోతే /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-BOOT_CODE void map_kernel_window(void)
+BOOT_సంకేతం శూన్య map_kernel_కిటికీ(శూన్య)
 {
     paddr_t    phys;
     uint32_t   idx;
     pdeS1_t pde;
-    pte_t UNUSED pteS2;
+    pte_t వాడని pteS2;
 
     /* Initialise PGD */
-    for (idx = 0; idx < 3; idx++) {
+    కొరకు (idx = 0; idx < 3; idx++) {
         pde = pdeS1_pdeS1_invalid_new();
         armHSGlobalPGD[idx] = pde;
     }
@@ -315,14 +315,14 @@ BOOT_CODE void map_kernel_window(void)
 
     /* Initialise PMD */
     /* Invalidate up until USER_TOP */
-    for (idx = 0; idx < (USER_TOP - 0xC0000000) >> (PT_INDEX_BITS + PAGE_BITS); idx++) {
+    కొరకు (idx = 0; idx < (USER_శిఖరం - 0xC0000000) >> (PT_సూచీ_బిట్లు + పుట_బిట్లు); idx++) {
         pde = pdeS1_pdeS1_invalid_new();
         armHSGlobalPD[idx] = pde;
     }
     /* mapping of PPTR_BASE (virtual address) to kernel's physBase  */
     /* up to end of virtual address space minus 2M using 2M frames */
-    phys = physBase();
-    for (; idx < BIT(PT_INDEX_BITS) - 1; idx++) {
+    phys = phys_పునాది();
+    కొరకు (; idx < బిట్టు(PT_సూచీ_బిట్లు) - 1; idx++) {
         pde = pdeS1_pdeS1_section_new(
                   0, /* Executable */
                   0, /* Executable in PL1 */
@@ -336,15 +336,15 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* outer write-back Cacheable */
               );
         armHSGlobalPD[idx] = pde;
-        phys += BIT(PT_INDEX_BITS + PAGE_BITS);
+        phys += బిట్టు(PT_సూచీ_బిట్లు + పుట_బిట్లు);
     }
     /* map page table covering last 2M of virtual address space */
     pde = pdeS1_pdeS1_coarse_new(0, 0, 0, 0, addrFromKPPtr(armHSGlobalPT));
     armHSGlobalPD[idx] = pde;
 
     /* now start initialising the page table */
-    memzero(armHSGlobalPT, 1 << seL4_PageTableBits);
-    for (idx = 0; idx < 256; idx++) {
+    memzero(armHSGlobalPT, 1 << se_L4_పుట_పట్టిక_బిట్లు);
+    కొరకు (idx = 0; idx < 256; idx++) {
         pteS1_t pte;
         pte = pteS1_pteS1_small_new(
                   0, /* Executable */
@@ -359,14 +359,14 @@ BOOT_CODE void map_kernel_window(void)
                   1  /* outer write-back Cacheable */
               );
         armHSGlobalPT[idx] = pte;
-        phys += BIT(PAGE_BITS);
+        phys += బిట్టు(పుట_బిట్లు);
     }
     /* map vector table */
-    map_kernel_frame(
-        addrFromKPPtr(arm_vector_table),
-        PPTR_VECTOR_TABLE,
+    map_kernel_చట్రం(
+        addrFromKPPtr(arm_సదిశ_పట్టిక),
+        PPTR_సదిశ_పట్టిక,
         VMKernelOnly,
-        vm_attributes_new(
+        vm_లక్షణాలు_new(
             false, /* armExecuteNever */
             true,  /* armParityEnabled */
             true   /* armPageCacheable */
@@ -376,25 +376,25 @@ BOOT_CODE void map_kernel_window(void)
     map_kernel_devices();
 }
 
-#endif /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* !CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-static BOOT_CODE void map_it_frame_cap(cap_t pd_cap, cap_t frame_cap, bool_t executable)
+స్థిర BOOT_సంకేతం శూన్య map_it_చట్రం_cap(cap_t pd_cap, cap_t చట్రం_cap, bool_t executable)
 {
     pte_t *pt;
-    pte_t *targetSlot;
-    pde_t *pd    = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pd_cap));
-    void  *frame = (void *)generic_frame_cap_get_capFBasePtr(frame_cap);
-    vptr_t vptr  = generic_frame_cap_get_capFMappedAddress(frame_cap);
+    pte_t *లక్ష్యం_స్థానం;
+    pde_t *pd    = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(pd_cap));
+    శూన్య  *చట్రం = (శూన్య *)generic_చట్రం_cap_get_cap_FBase_Ptr(చట్రం_cap);
+    vptr_t vptr  = generic_చట్రం_cap_get_cap_FMapped_చిరునామా(చట్రం_cap);
 
-    assert(generic_frame_cap_get_capFMappedASID(frame_cap) != 0);
+    ప్రతిజ్ఞా(generic_చట్రం_cap_get_cap_FMapped_ASID(చట్రం_cap) != 0);
 
-    pd += (vptr >> pageBitsForSize(ARMSection));
-    pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pd));
-    targetSlot = pt + ((vptr & MASK(pageBitsForSize(ARMSection)))
-                       >> pageBitsForSize(ARMSmallPage));
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    *targetSlot = pte_pte_small_new(
-                      addrFromPPtr(frame),
+    pd += (vptr >> పుట_బిట్లు_For_కొలత(ARMSection));
+    pt = ptrFromPAddr(pde_pde_coarse_ptr_get_చిరునామా(pd));
+    లక్ష్యం_స్థానం = pt + ((vptr & ముసుగు(పుట_బిట్లు_For_కొలత(ARMSection)))
+                       >> పుట_బిట్లు_For_కొలత(ARMSmall_పుట));
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    *లక్ష్యం_స్థానం = pte_pte_small_new(
+                      addrFromPPtr(చట్రం),
                       1, /* not global */
                       SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
                       0, /* APX = 0, privileged full access */
@@ -404,161 +404,161 @@ static BOOT_CODE void map_it_frame_cap(cap_t pd_cap, cap_t frame_cap, bool_t exe
                       1, /* B (Inner write allocate) */
                       !executable
                   );
-#else
-    *targetSlot = pte_pte_small_new(
+#లేకపోతే
+    *లక్ష్యం_స్థానం = pte_pte_small_new(
                       0, /* Executable */
                       0, /* Not contiguous */
-                      addrFromPPtr(frame),
+                      addrFromPPtr(చట్రం),
                       1, /* AF -- always set */
                       0, /* Not shared */
                       HAPFromVMRights(VMReadWrite),
                       MEMATTR_CACHEABLE  /* Cacheable */
                   );
-#endif
+#అయితే_ముగింపు
 }
 
 /* Create a frame cap for the initial thread. */
 
-static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
+స్థిర BOOT_సంకేతం cap_t create_it_చట్రం_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
 {
-    if (use_large)
-        return
-            cap_frame_cap_new(
+    ఒకవేళ (use_large)
+        తిరిగి
+            cap_చట్రం_cap_new(
                 ARMSection,                    /* capFSize           */
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
-                wordFromVMRights(VMReadWrite), /* capFVMRights       */
+                ASID_దిగువ(asid),                /* capFMappedASIDLow  */
+                మాట_From_VMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+                ASID_ఎగువ(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
-    else
-        return
-            cap_small_frame_cap_new(
-                ASID_LOW(asid),                /* capFMappedASIDLow  */
-                wordFromVMRights(VMReadWrite), /* capFVMRights       */
+    లేకపోతే
+        తిరిగి
+            cap_small_చట్రం_cap_new(
+                ASID_దిగువ(asid),                /* capFMappedASIDLow  */
+                మాట_From_VMRights(VMReadWrite), /* capFVMRights       */
                 vptr,                          /* capFMappedAddress  */
                 false,                         /* capFIsDevice       */
-#ifdef CONFIG_TK1_SMMU
+#నిర్వచితమైతే CONFIG_TK1_SMMU
                 0,                             /* IOSpace            */
-#endif
-                ASID_HIGH(asid),               /* capFMappedASIDHigh */
+#అయితే_ముగింపు
+                ASID_ఎగువ(asid),               /* capFMappedASIDHigh */
                 pptr                           /* capFBasePtr        */
             );
 }
 
-static BOOT_CODE void map_it_pt_cap(cap_t pd_cap, cap_t pt_cap)
+స్థిర BOOT_సంకేతం శూన్య map_it_pt_cap(cap_t pd_cap, cap_t pt_cap)
 {
-    pde_t *pd   = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pd_cap));
-    pte_t *pt   = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(pt_cap));
-    vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(pt_cap);
-    pde_t *targetSlot = pd + (vptr >> pageBitsForSize(ARMSection));
+    pde_t *pd   = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(pd_cap));
+    pte_t *pt   = PTE_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(pt_cap));
+    vptr_t vptr = cap_పుట_పట్టిక_cap_get_cap_PTMapped_చిరునామా(pt_cap);
+    pde_t *లక్ష్యం_స్థానం = pd + (vptr >> పుట_బిట్లు_For_కొలత(ARMSection));
 
-    assert(cap_page_table_cap_get_capPTIsMapped(pt_cap));
+    ప్రతిజ్ఞా(cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(pt_cap));
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    *targetSlot = pde_pde_coarse_new(
-                      addrFromPPtr(pt), /* address */
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    *లక్ష్యం_స్థానం = pde_pde_coarse_new(
+                      addrFromPPtr(pt), /*చిరునామా*/
                       true,             /* P       */
                       0                 /* Domain  */
                   );
-#else
-    *targetSlot = pde_pde_coarse_new(addrFromPPtr(pt));
-#endif
+#లేకపోతే
+    *లక్ష్యం_స్థానం = pde_pde_coarse_new(addrFromPPtr(pt));
+#అయితే_ముగింపు
 }
 
 /* Create a page table for the initial thread */
 
-static BOOT_CODE cap_t create_it_page_table_cap(cap_t pd, pptr_t pptr, vptr_t vptr, asid_t asid)
+స్థిర BOOT_సంకేతం cap_t create_it_పుట_పట్టిక_cap(cap_t pd, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
-    cap = cap_page_table_cap_new(
+    cap = cap_పుట_పట్టిక_cap_new(
               1,    /* capPTIsMapped      */
               asid, /* capPTMappedASID    */
               vptr, /* capPTMappedAddress */
               pptr  /* capPTBasePtr       */
           );
-    if (asid != asidInvalid) {
+    ఒకవేళ (asid != asidInvalid) {
         map_it_pt_cap(pd, cap);
     }
-    return cap;
+    తిరిగి cap;
 }
 
-BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
+BOOT_సంకేతం మాట_t arch_get_n_paging(v_region_t it_v_reg)
 {
-    return get_n_paging(it_v_reg, PT_INDEX_BITS + PAGE_BITS);
+    తిరిగి get_n_paging(it_v_reg, PT_సూచీ_బిట్లు + పుట_బిట్లు);
 }
 
 /* Create an address space for the initial thread.
  * This includes page directory and page tables */
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_సంకేతం cap_t create_it_చిరునామా_space(cap_t మూలం_cnode_cap, v_region_t it_v_reg)
 {
     vptr_t     pt_vptr;
-    seL4_SlotPos slot_pos_before;
-    seL4_SlotPos slot_pos_after;
+    se_L4_స్థానం_Pos స్థానం_pos_before;
+    se_L4_స్థానం_Pos స్థానం_pos_after;
 
     /* create PD cap */
     copyGlobalMappings(PDE_PTR(rootserver.vspace));
-    cleanCacheRange_PoU(rootserver.vspace, rootserver.vspace + (1 << seL4_PageDirBits) - 1,
-                        addrFromPPtr((void *)rootserver.vspace));
+    cleanCacheRange_PoU(rootserver.vspace, rootserver.vspace + (1 << se_L4_పుట_Dir_బిట్లు) - 1,
+                        addrFromPPtr((శూన్య *)rootserver.vspace));
     cap_t pd_cap =
-        cap_page_directory_cap_new(
+        cap_పుట_directory_cap_new(
             true,    /* capPDIsMapped   */
             IT_ASID, /* capPDMappedASID */
             rootserver.vspace  /* capPDBasePtr    */
         );
-    slot_pos_before = ndks_boot.slot_pos_cur;
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
+    స్థానం_pos_before = ndks_boot.స్థానం_pos_cur;
+    write_స్థానం(స్థానం_PTR(pptr_యొక్క_cap(మూలం_cnode_cap), seL4_CapInitThreadVSpace), pd_cap);
 
     /* create all PT caps necessary to cover userland image */
-    for (pt_vptr = ROUND_DOWN(it_v_reg.start, PT_INDEX_BITS + PAGE_BITS);
-         pt_vptr < it_v_reg.end;
-         pt_vptr += BIT(PT_INDEX_BITS + PAGE_BITS)) {
-        if (!provide_cap(root_cnode_cap,
-                         create_it_page_table_cap(pd_cap, it_alloc_paging(), pt_vptr, IT_ASID))
+    కొరకు (pt_vptr = విడత_కిందికి(it_v_reg.ప్రారంభం, PT_సూచీ_బిట్లు + పుట_బిట్లు);
+         pt_vptr < it_v_reg.చివర;
+         pt_vptr += బిట్టు(PT_సూచీ_బిట్లు + పుట_బిట్లు)) {
+        ఒకవేళ (!provide_cap(మూలం_cnode_cap,
+                         create_it_పుట_పట్టిక_cap(pd_cap, it_alloc_paging(), pt_vptr, IT_ASID))
            ) {
-            return cap_null_cap_new();
+            తిరిగి cap_null_cap_new();
         }
     }
 
-    slot_pos_after = ndks_boot.slot_pos_cur;
-    ndks_boot.bi_frame->userImagePaging = (seL4_SlotRegion) {
-        slot_pos_before, slot_pos_after
+    స్థానం_pos_after = ndks_boot.స్థానం_pos_cur;
+    ndks_boot.bi_చట్రం->userImagePaging = (se_L4_స్థానం_Region) {
+        స్థానం_pos_before, స్థానం_pos_after
     };
 
-    return pd_cap;
+    తిరిగి pd_cap;
 }
 
-BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
+BOOT_సంకేతం cap_t create_unmapped_it_చట్రం_cap(pptr_t pptr, bool_t use_large)
 {
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+    తిరిగి create_it_చట్రం_cap(pptr, 0, asidInvalid, use_large);
 }
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
+BOOT_సంకేతం cap_t create_mapped_it_చట్రం_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
                                            bool_t executable)
 {
-    cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
-    map_it_frame_cap(pd_cap, cap, executable);
-    return cap;
+    cap_t cap = create_it_చట్రం_cap(pptr, vptr, asid, use_large);
+    map_it_చట్రం_cap(pd_cap, cap, executable);
+    తిరిగి cap;
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_సంకేతం శూన్య activate_kernel_vspace(శూన్య)
 {
     /* Ensure that there's nothing stale in newly-mapped regions, and
        that everything we've written (particularly the kernel page tables)
        is committed. */
     cleanInvalidateL1Caches();
-    setGlobalPD();
+    సమితి_Global_PD();
     invalidateLocalTLB();
-    lockTLBEntry(PPTR_BASE);
-    lockTLBEntry(PPTR_VECTOR_TABLE);
+    తాళం_TLBEntry(PPTR_పునాది);
+    తాళం_TLBEntry(PPTR_సదిశ_పట్టిక);
 }
 
-#else
+#లేకపోతే
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_సంకేతం శూన్య activate_kernel_vspace(శూన్య)
 {
     uint32_t r;
     /* Ensure that there's nothing stale in newly-mapped regions, and
@@ -566,13 +566,13 @@ BOOT_CODE void activate_kernel_vspace(void)
        is committed. */
     cleanInvalidateL1Caches();
     /* Setup the memory attributes: We use 2 indices (cachable/non-cacheable) */
-    setHMAIR((ATTRINDX_NONCACHEABLE << 0) | (ATTRINDX_CACHEABLE << 8), 0);
-    setCurrentHypPD(addrFromKPPtr(armHSGlobalPGD));
+    సమితి_HMAIR((ATTRINDX_NONCACHEABLE << 0) | (ATTRINDX_CACHEABLE << 8), 0);
+    సమితి_Current_Hyp_PD(addrFromKPPtr(armHSGlobalPGD));
     invalidateHypTLB();
-#if 0 /* Can't lock entries on A15 */
-    lockTLBEntry(PPTR_BASE);
-    lockTLBEntry(PPTR_VECTOR_TABLE);
-#endif
+#ఒకవేళ 0 /* Can't lock entries on A15 */
+    తాళం_TLBEntry(PPTR_పునాది);
+    తాళం_TLBEntry(PPTR_సదిశ_పట్టిక);
+#అయితే_ముగింపు
     /* TODO find a better place to init the VMMU */
     r = 0;
     /* Translation range */
@@ -581,230 +581,230 @@ BOOT_CODE void activate_kernel_vspace(void)
     /* starting level */
     r |= (0x0 << 6);     /* Start at second level */
     /* Sharability of tables */
-    r |= BIT(8);       /* Inner write-back, write-allocate */
-    r |= BIT(10);      /* Outer write-back, write-allocate */
+    r |= బిట్టు(8);       /* Inner write-back, write-allocate */
+    r |= బిట్టు(10);      /* Outer write-back, write-allocate */
     /* Long descriptor format (not that we have a choice) */
-    r |= BIT(31);
-    setVTCR(r);
+    r |= బిట్టు(31);
+    సమితి_VTCR(r);
 }
 
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_pd_cap)
+BOOT_సంకేతం శూన్య write_it_asid_pool(cap_t it_ap_cap, cap_t it_pd_cap)
 {
-    asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
-    ap->array[ASID_LOW(IT_ASID)] = PDE_PTR(pptr_of_cap(it_pd_cap));
-    armKSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    asid_pool_t *ap = ASID_POOL_PTR(pptr_యొక్క_cap(it_ap_cap));
+    ap->array[ASID_దిగువ(IT_ASID)] = PDE_PTR(pptr_యొక్క_cap(it_pd_cap));
+    armKSASIDTable[ASID_ఎగువ(IT_ASID)] = ap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
-findPDForASID_ret_t findPDForASID(asid_t asid)
+కనుగొను_PDFor_ASID_ret_t కనుగొను_PDFor_ASID(asid_t asid)
 {
-    findPDForASID_ret_t ret;
+    కనుగొను_PDFor_ASID_ret_t ret;
     asid_pool_t *poolPtr;
     pde_t *pd;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
-    if (unlikely(!poolPtr)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    poolPtr = armKSASIDTable[ASID_ఎగువ(asid)];
+    ఒకవేళ (unlikely(!poolPtr)) {
+        current_lookup_fault = lookup_fault_invalid_మూలం_new();
 
-        ret.pd = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd = ఖాళీ;
+        ret.స్థితి_2 = EXCEPTION_LOOKUP_FAULT;
+        తిరిగి ret;
     }
 
-    pd = poolPtr->array[ASID_LOW(asid)];
-    if (unlikely(!pd)) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    pd = poolPtr->array[ASID_దిగువ(asid)];
+    ఒకవేళ (unlikely(!pd)) {
+        current_lookup_fault = lookup_fault_invalid_మూలం_new();
 
-        ret.pd = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.pd = ఖాళీ;
+        ret.స్థితి_2 = EXCEPTION_LOOKUP_FAULT;
+        తిరిగి ret;
     }
 
     ret.pd = pd;
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.స్థితి_2 = EXCEPTION_NONE;
+    తిరిగి ret;
 }
 
-word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
+మాట_t *శుద్ధ lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
 {
-    word_t w_bufferPtr;
-    cap_t bufferCap;
+    మాట_t w_బఫరు_Ptr;
+    cap_t బఫరు_Cap;
     vm_rights_t vm_rights;
 
-    w_bufferPtr = thread->tcbIPCBuffer;
-    bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
+    w_బఫరు_Ptr = thread->tcbIPCBuffer;
+    బఫరు_Cap = TCB_PTR_CTE_PTR(thread, tcb_బఫరు)->cap;
 
-    if (unlikely(cap_get_capType(bufferCap) != cap_small_frame_cap &&
-                 cap_get_capType(bufferCap) != cap_frame_cap)) {
-        return NULL;
+    ఒకవేళ (unlikely(cap_get_capType(బఫరు_Cap) != cap_small_చట్రం_cap &&
+                 cap_get_capType(బఫరు_Cap) != cap_చట్రం_cap)) {
+        తిరిగి ఖాళీ;
     }
-    if (unlikely(generic_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    ఒకవేళ (unlikely(generic_చట్రం_cap_get_cap_FIs_Device(బఫరు_Cap))) {
+        తిరిగి ఖాళీ;
     }
 
-    vm_rights = generic_frame_cap_get_capFVMRights(bufferCap);
-    if (likely(vm_rights == VMReadWrite ||
+    vm_rights = generic_చట్రం_cap_get_cap_FVMRights(బఫరు_Cap);
+    ఒకవేళ (likely(vm_rights == VMReadWrite ||
                (!isReceiver && vm_rights == VMReadOnly))) {
-        word_t basePtr;
-        unsigned int pageBits;
+        మాట_t పునాది_Ptr;
+        గుర్తులేని పూర్ణాంకం పుట_బిట్లు_2;
 
-        basePtr = generic_frame_cap_get_capFBasePtr(bufferCap);
-        pageBits = pageBitsForSize(generic_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        పునాది_Ptr = generic_చట్రం_cap_get_cap_FBase_Ptr(బఫరు_Cap);
+        పుట_బిట్లు_2 = పుట_బిట్లు_For_కొలత(generic_చట్రం_cap_get_cap_FSize(బఫరు_Cap));
+        తిరిగి (మాట_t *)(పునాది_Ptr + (w_బఫరు_Ptr & ముసుగు(పుట_బిట్లు_2)));
+    } లేకపోతే {
+        తిరిగి ఖాళీ;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (unlikely(cap_get_capType(cap) != cap_small_frame_cap &&
-                 cap_get_capType(cap) != cap_frame_cap)) {
+    ఒకవేళ (unlikely(cap_get_capType(cap) != cap_small_చట్రం_cap &&
+                 cap_get_capType(cap) != cap_చట్రం_cap)) {
         userError("Requested IPC Buffer is not a frame cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (unlikely(generic_frame_cap_get_capFIsDevice(cap))) {
+    ఒకవేళ (unlikely(generic_చట్రం_cap_get_cap_FIs_Device(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(vptr & MASK(seL4_IPCBufferSizeBits))) {
+    ఒకవేళ (unlikely(vptr & ముసుగు(se_L4_IPCBuffer_కొలత_బిట్లు))) {
         userError("Requested IPC Buffer location 0x%x is not aligned.",
-                  (int)vptr);
+                  (పూర్ణాంకం)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 pde_t *CONST lookupPDSlot(pde_t *pd, vptr_t vptr)
 {
-    unsigned int pdIndex;
+    గుర్తులేని పూర్ణాంకం pd_సూచీ;
 
-    pdIndex = vptr >> (PAGE_BITS + PT_INDEX_BITS);
-    return pd + pdIndex;
+    pd_సూచీ = vptr >> (పుట_బిట్లు + PT_సూచీ_బిట్లు);
+    తిరిగి pd + pd_సూచీ;
 }
 
 lookupPTSlot_ret_t lookupPTSlot(pde_t *pd, vptr_t vptr)
 {
     lookupPTSlot_ret_t ret;
-    pde_t *pdSlot;
+    pde_t *pd_స్థానం;
 
-    pdSlot = lookupPDSlot(pd, vptr);
+    pd_స్థానం = lookupPDSlot(pd, vptr);
 
-    if (unlikely(pde_ptr_get_pdeType(pdSlot) != pde_pde_coarse)) {
-        current_lookup_fault = lookup_fault_missing_capability_new(PT_INDEX_BITS + PAGE_BITS);
+    ఒకవేళ (unlikely(pde_ptr_get_pdeType(pd_స్థానం) != pde_pde_coarse)) {
+        current_lookup_fault = lookup_fault_missing_capability_new(PT_సూచీ_బిట్లు + పుట_బిట్లు);
 
-        ret.ptSlot = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
-    } else {
-        pte_t *pt, *ptSlot;
-        unsigned int ptIndex;
+        ret.pt_స్థానం = ఖాళీ;
+        ret.స్థితి_2 = EXCEPTION_LOOKUP_FAULT;
+        తిరిగి ret;
+    } లేకపోతే {
+        pte_t *pt, *pt_స్థానం;
+        గుర్తులేని పూర్ణాంకం pt_సూచీ;
 
-        pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pdSlot));
-        ptIndex = (vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS);
-        ptSlot = pt + ptIndex;
+        pt = ptrFromPAddr(pde_pde_coarse_ptr_get_చిరునామా(pd_స్థానం));
+        pt_సూచీ = (vptr >> పుట_బిట్లు) & ముసుగు(PT_సూచీ_బిట్లు);
+        pt_స్థానం = pt + pt_సూచీ;
 
-        ret.ptSlot = ptSlot;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.pt_స్థానం = pt_స్థానం;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
     }
 }
 
-static pte_t *lookupPTSlot_nofail(pte_t *pt, vptr_t vptr)
+స్థిర pte_t *lookupPTSlot_nofail(pte_t *pt, vptr_t vptr)
 {
-    unsigned int ptIndex;
+    గుర్తులేని పూర్ణాంకం pt_సూచీ;
 
-    ptIndex = (vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS);
-    return pt + ptIndex;
+    pt_సూచీ = (vptr >> పుట_బిట్లు) & ముసుగు(PT_సూచీ_బిట్లు);
+    తిరిగి pt + pt_సూచీ;
 }
 
-static const resolve_ret_t default_resolve_ret_t;
+స్థిర స్థిరరాశి resolve_ret_t default_resolve_ret_t;
 
-static resolve_ret_t resolveVAddr(pde_t *pd, vptr_t vaddr)
+స్థిర resolve_ret_t resolveVAddr(pde_t *pd, vptr_t vaddr)
 {
     pde_t *pde = lookupPDSlot(pd, vaddr);
     resolve_ret_t ret = default_resolve_ret_t;
 
     ret.valid = true;
 
-    switch (pde_ptr_get_pdeType(pde)) {
-    case pde_pde_section:
-        ret.frameBase = pde_pde_section_ptr_get_address(pde);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (pde_pde_section_ptr_get_size(pde)) {
-            ret.frameSize = ARMSuperSection;
-        } else {
-            ret.frameSize = ARMSection;
+    ఎంపిక (pde_ptr_get_pdeType(pde)) {
+    స్థితి pde_pde_section:
+        ret.చట్రం_పునాది = pde_pde_section_ptr_get_చిరునామా(pde);
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (pde_pde_section_ptr_get_కొలత(pde)) {
+            ret.చట్రం_కొలత = ARMSuperSection;
+        } లేకపోతే {
+            ret.చట్రం_కొలత = ARMSection;
         }
-#else
-        if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#లేకపోతే
+        ఒకవేళ (pde_pde_section_ptr_get_contiguous_hint(pde)) {
             /* Entries are represented as 16 contiguous sections. We need to mask
                to get the super section frame base */
-            ret.frameBase &= ~MASK(pageBitsForSize(ARMSuperSection));
-            ret.frameSize = ARMSuperSection;
-        } else {
-            ret.frameSize = ARMSection;
+            ret.చట్రం_పునాది &= ~ముసుగు(పుట_బిట్లు_For_కొలత(ARMSuperSection));
+            ret.చట్రం_కొలత = ARMSuperSection;
+        } లేకపోతే {
+            ret.చట్రం_కొలత = ARMSection;
         }
-#endif
-        return ret;
+#అయితే_ముగింపు
+        తిరిగి ret;
 
-    case pde_pde_coarse: {
-        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
+    స్థితి pde_pde_coarse: {
+        pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_చిరునామా(pde));
         pte_t *pte = lookupPTSlot_nofail(pt, vaddr);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small:
-            ret.frameBase = pte_pte_small_ptr_get_address(pte);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+        ఎంపిక (pte_ptr_get_pteType(pte)) {
+        స్థితి pte_pte_small:
+            ret.చట్రం_పునాది = pte_pte_small_ptr_get_చిరునామా(pte);
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+            ఒకవేళ (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 /* Entries are represented as 16 contiguous small frames. We need to mask
                    to get the large frame base */
-                ret.frameBase &= ~MASK(pageBitsForSize(ARMLargePage));
-                ret.frameSize = ARMLargePage;
-            } else {
-                ret.frameSize = ARMSmallPage;
+                ret.చట్రం_పునాది &= ~ముసుగు(పుట_బిట్లు_For_కొలత(ARMLarge_పుట));
+                ret.చట్రం_కొలత = ARMLarge_పుట;
+            } లేకపోతే {
+                ret.చట్రం_కొలత = ARMSmall_పుట;
             }
-#else
-            ret.frameSize = ARMSmallPage;
-#endif
-            return ret;
+#లేకపోతే
+            ret.చట్రం_కొలత = ARMSmall_పుట;
+#అయితే_ముగింపు
+            తిరిగి ret;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large:
-            ret.frameBase = pte_pte_large_ptr_get_address(pte);
-            ret.frameSize = ARMLargePage;
-            return ret;
-#endif
-        default:
-            break;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        స్థితి pte_pte_large:
+            ret.చట్రం_పునాది = pte_pte_large_ptr_get_చిరునామా(pte);
+            ret.చట్రం_కొలత = ARMLarge_పుట;
+            తిరిగి ret;
+#అయితే_ముగింపు
+        అప్రమేయ:
+            ఆపు;
         }
-        break;
+        ఆపు;
     }
     }
 
     ret.valid = false;
-    return ret;
+    తిరిగి ret;
 }
 
-static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
+స్థిర pte_t CONST makeUserPTE(vm_పుట_కొలత_t పుట_కొలత, paddr_t paddr,
                                bool_t cacheable, bool_t nonexecutable, vm_rights_t vm_rights)
 {
     pte_t pte;
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t ap;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t ap;
 
     ap = APFromVMRights(vm_rights);
 
-    switch (page_size) {
-    case ARMSmallPage: {
-        if (cacheable) {
+    ఎంపిక (పుట_కొలత) {
+    స్థితి ARMSmall_పుట: {
+        ఒకవేళ (cacheable) {
             pte = pte_pte_small_new(paddr,
                                     1, /* not global */
                                     SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
@@ -813,7 +813,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     ap,
                                     0, 1, /* Inner write-back, write-allocate */
                                     nonexecutable);
-        } else {
+        } లేకపోతే {
             pte = pte_pte_small_new(paddr,
                                     1, /* not global */
                                     1, /* shared */
@@ -823,11 +823,11 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     0, 0,
                                     nonexecutable);
         }
-        break;
+        ఆపు;
     }
 
-    case ARMLargePage: {
-        if (cacheable) {
+    స్థితి ARMLarge_పుట: {
+        ఒకవేళ (cacheable) {
             pte = pte_pte_large_new(paddr,
                                     nonexecutable,
                                     5, /* TEX = 0b101, outer write-back, write-allocate */
@@ -837,7 +837,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     ap,
                                     0, 1, /* Inner write-back, write-allocate */
                                     1 /* reserved */);
-        } else {
+        } లేకపోతే {
             pte = pte_pte_large_new(paddr,
                                     nonexecutable,
                                     0, /* TEX = 0b000, strongly-ordered */
@@ -848,22 +848,22 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                                     0, 0,
                                     1 /* reserved */);
         }
-        break;
+        ఆపు;
     }
 
-    default:
+    అప్రమేయ:
         fail("Invalid PTE frame type");
     }
 
-#else
+#లేకపోతే
 
-    word_t hap;
+    మాట_t hap;
 
     hap = HAPFromVMRights(vm_rights);
 
-    switch (page_size) {
-    case ARMSmallPage: {
-        if (cacheable) {
+    ఎంపిక (పుట_కొలత) {
+    స్థితి ARMSmall_పుట: {
+        ఒకవేళ (cacheable) {
             pte = pte_pte_small_new(
                       nonexecutable, /* Executable */
                       0,      /* Not contiguous */
@@ -872,7 +872,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       0,      /* not shared */
                       hap,    /* HAP - access */
                       MEMATTR_CACHEABLE /* Cacheable */);
-        } else {
+        } లేకపోతే {
             pte = pte_pte_small_new(
                       nonexecutable, /* Executable */
                       0,      /* Not contiguous */
@@ -882,11 +882,11 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       hap,    /* HAP - access */
                       MEMATTR_NONCACHEABLE /* Not cacheable */);
         }
-        break;
+        ఆపు;
     }
 
-    case ARMLargePage: {
-        if (cacheable) {
+    స్థితి ARMLarge_పుట: {
+        ఒకవేళ (cacheable) {
             pte = pte_pte_small_new(
                       nonexecutable,   /* Executable */
                       1,   /* 16 contiguous */
@@ -895,7 +895,7 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       0,   /* not shared */
                       hap, /* HAP - access */
                       MEMATTR_CACHEABLE  /* Cacheable */);
-        } else {
+        } లేకపోతే {
             pte = pte_pte_small_new(
                       nonexecutable,   /* Executable */
                       1,   /* 16 contiguous */
@@ -905,55 +905,55 @@ static pte_t CONST makeUserPTE(vm_page_size_t page_size, paddr_t paddr,
                       hap, /* HAP - access */
                       MEMATTR_NONCACHEABLE /* Not cacheable */);
         }
-        break;
+        ఆపు;
     }
-    default:
+    అప్రమేయ:
         fail("Invalid PTE frame type");
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-    return pte;
+    తిరిగి pte;
 }
 
-static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t parity,
-                               bool_t cacheable, bool_t nonexecutable, word_t domain,
+స్థిర pde_t CONST makeUserPDE(vm_పుట_కొలత_t పుట_కొలత, paddr_t paddr, bool_t parity,
+                               bool_t cacheable, bool_t nonexecutable, మాట_t domain,
                                vm_rights_t vm_rights)
 {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t ap, size2;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t ap, size2;
 
     ap = APFromVMRights(vm_rights);
-#else
-    word_t hap, size2;
+#లేకపోతే
+    మాట_t hap, size2;
 
-    (void)domain;
+    (శూన్య)domain;
     hap = HAPFromVMRights(vm_rights);
-#endif
+#అయితే_ముగింపు
 
-    switch (page_size) {
-    case ARMSection:
+    ఎంపిక (పుట_కొలత) {
+    స్థితి ARMSection:
         size2 = 0;
-        break;
+        ఆపు;
 
-    case ARMSuperSection:
+    స్థితి ARMSuperSection:
         size2 = 1;
-        break;
+        ఆపు;
 
-    default:
+    అప్రమేయ:
         fail("Invalid PDE frame type");
     }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    if (cacheable) {
-        return pde_pde_section_new(paddr, size2,
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    ఒకవేళ (cacheable) {
+        తిరిగి pde_pde_section_new(paddr, size2,
                                    1, /* not global */
                                    SMP_TERNARY(1, 0), /* shareable if SMP enabled, otherwise unshared */
                                    0, /* APX = 0, privileged full access */
                                    5, /* TEX = 0b101, outer write-back, write-allocate */
                                    ap, parity, domain, nonexecutable,
                                    0, 1 /* Inner write-back, write-allocate */);
-    } else {
-        return pde_pde_section_new(paddr, size2,
+    } లేకపోతే {
+        తిరిగి pde_pde_section_new(paddr, size2,
                                    1, /* not global */
                                    1, /* shared */
                                    0, /* APX = 0, privileged full access */
@@ -961,9 +961,9 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                                    ap, parity, domain, nonexecutable,
                                    0, 0);
     }
-#else
-    if (cacheable) {
-        return pde_pde_section_new(
+#లేకపోతే
+    ఒకవేళ (cacheable) {
+        తిరిగి pde_pde_section_new(
                    nonexecutable, /* Executable */
                    size2, /* contiguous */
                    paddr,
@@ -971,8 +971,8 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                    0, /* not shared */
                    hap,
                    MEMATTR_CACHEABLE /* Cacheable */);
-    } else {
-        return pde_pde_section_new(
+    } లేకపోతే {
+        తిరిగి pde_pde_section_new(
                    nonexecutable, /* Executable */
                    size2, /* contiguous */
                    paddr,
@@ -981,30 +981,30 @@ static pde_t CONST makeUserPDE(vm_page_size_t page_size, paddr_t paddr, bool_t p
                    hap,
                    MEMATTR_NONCACHEABLE /* Not cacheable */);
     }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_మూలం(cap_t cap)
 {
-    return cap_get_capType(cap) == cap_page_directory_cap &&
-           cap_page_directory_cap_get_capPDIsMapped(cap);
+    తిరిగి cap_get_capType(cap) == cap_పుట_directory_cap &&
+           cap_పుట_directory_cap_get_cap_PDIs_Mapped(cap);
 }
 
-bool_t CONST isIOSpaceFrameCap(cap_t cap)
+bool_t CONST is_IOSpace_చట్రం_Cap(cap_t cap)
 {
-#ifdef CONFIG_TK1_SMMU
-    return cap_get_capType(cap) == cap_small_frame_cap && cap_small_frame_cap_get_capFIsIOSpace(cap);
-#else
-    return false;
-#endif
+#నిర్వచితమైతే CONFIG_TK1_SMMU
+    తిరిగి cap_get_capType(cap) == cap_small_చట్రం_cap && cap_small_చట్రం_cap_get_cap_FIs_IOSpace(cap);
+#లేకపోతే
+    తిరిగి false;
+#అయితే_ముగింపు
 }
 
 /** Switch to the empty PD on the reserved HW ASID */
-static void setGlobalPD(void)
+స్థిర శూన్య సమితి_Global_PD(శూన్య)
 {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
     writeContextIDAndPD(hwASIDReserved, addrFromKPPtr(armUSGlobalPD));
-#else
+#లేకపోతే
     /* Before changing the PD ensure all memory accesses have completed */
     dsb();
     /* First switch to global PD on old ASID. Stale TLB entries may exist
@@ -1014,133 +1014,133 @@ static void setGlobalPD(void)
     isb();
     /* Switch to reserved HW ASID. Only empty/global kernel mappings are
        now available from the TLB. */
-    setHardwareASID(hwASIDReserved);
-#endif
+    సమితి_Hardware_ASID(hwASIDReserved);
+#అయితే_ముగింపు
 }
 
-void setVMRoot(tcb_t *tcb)
+శూన్య సమితి_VMRoot(tcb_t *tcb)
 {
-    cap_t threadRoot;
+    cap_t thread_మూలం;
     asid_t asid;
     pde_t *pd;
-    findPDForASID_ret_t find_ret;
+    కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_మూలం = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap ||
-        !cap_page_directory_cap_get_capPDIsMapped(threadRoot)) {
-        setGlobalPD();
-        return;
+    ఒకవేళ (cap_get_capType(thread_మూలం) != cap_పుట_directory_cap ||
+        !cap_పుట_directory_cap_get_cap_PDIs_Mapped(thread_మూలం)) {
+        సమితి_Global_PD();
+        తిరిగి;
     }
 
-    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot));
-    asid = cap_page_directory_cap_get_capPDMappedASID(threadRoot);
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.pd != pd)) {
-        setGlobalPD();
-        return;
+    pd = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(thread_మూలం));
+    asid = cap_పుట_directory_cap_get_cap_PDMapped_ASID(thread_మూలం);
+    కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+    ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE || కనుగొను_ret.pd != pd)) {
+        సమితి_Global_PD();
+        తిరిగి;
     }
 
     armv_contextSwitch(pd, asid);
 }
 
-static bool_t setVMRootForFlush(pde_t *pd, asid_t asid)
+స్థిర bool_t సమితి_VMRoot_For_Flush(pde_t *pd, asid_t asid)
 {
-    cap_t threadRoot;
+    cap_t thread_మూలం;
 
-    threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
+    thread_మూలం = TCB_PTR_CTE_PTR(కణుపు_STATE(ksCurThread), tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) == cap_page_directory_cap &&
-        cap_page_directory_cap_get_capPDIsMapped(threadRoot) &&
-        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(threadRoot)) == pd) {
-        return false;
+    ఒకవేళ (cap_get_capType(thread_మూలం) == cap_పుట_directory_cap &&
+        cap_పుట_directory_cap_get_cap_PDIs_Mapped(thread_మూలం) &&
+        PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(thread_మూలం)) == pd) {
+        తిరిగి false;
     }
 
     armv_contextSwitch(pd, asid);
 
-    return true;
+    తిరిగి true;
 }
 
-pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
+pde_t *పుట_పట్టిక_Mapped(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
-    findPDForASID_ret_t find_ret;
+    కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
     pde_t pde;
-    unsigned int pdIndex;
+    గుర్తులేని పూర్ణాంకం pd_సూచీ;
 
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
-        return NULL;
+    కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+    ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE)) {
+        తిరిగి ఖాళీ;
     }
 
-    pdIndex = vaddr >> (PAGE_BITS + PT_INDEX_BITS);
-    pde = find_ret.pd[pdIndex];
+    pd_సూచీ = vaddr >> (పుట_బిట్లు + PT_సూచీ_బిట్లు);
+    pde = కనుగొను_ret.pd[pd_సూచీ];
 
-    if (likely(pde_get_pdeType(pde) == pde_pde_coarse
-               && ptrFromPAddr(pde_pde_coarse_get_address(pde)) == pt)) {
-        return find_ret.pd;
-    } else {
-        return NULL;
+    ఒకవేళ (likely(pde_get_pdeType(pde) == pde_pde_coarse
+               && ptrFromPAddr(pde_pde_coarse_get_చిరునామా(pde)) == pt)) {
+        తిరిగి కనుగొను_ret.pd;
+    } లేకపోతే {
+        తిరిగి ఖాళీ;
     }
 }
 
-static void invalidateASID(asid_t asid)
+స్థిర శూన్య invalidateASID(asid_t asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ఎగువ(asid)];
+    ప్రతిజ్ఞా(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_దిగువ(asid)];
+    ప్రతిజ్ఞా(pd);
 
-    pd[PD_ASID_SLOT] = pde_pde_invalid_new(0, false);
+    pd[PD_ASID_స్థానం] = pde_pde_invalid_new(0, false);
 }
 
-static pde_t PURE loadHWASID(asid_t asid)
+స్థిర pde_t శుద్ధ ఎక్కించు_HWASID(asid_t asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ఎగువ(asid)];
+    ప్రతిజ్ఞా(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_దిగువ(asid)];
+    ప్రతిజ్ఞా(pd);
 
-    return pd[PD_ASID_SLOT];
+    తిరిగి pd[PD_ASID_స్థానం];
 }
 
-static void storeHWASID(asid_t asid, hw_asid_t hw_asid)
+స్థిర శూన్య storeHWASID(asid_t asid, hw_asid_t hw_asid)
 {
     asid_pool_t *asidPool;
     pde_t *pd;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ఎగువ(asid)];
+    ప్రతిజ్ఞా(asidPool);
 
-    pd = asidPool->array[ASID_LOW(asid)];
-    assert(pd);
+    pd = asidPool->array[ASID_దిగువ(asid)];
+    ప్రతిజ్ఞా(pd);
 
     /* Store HW ASID in the last entry
        Masquerade as an invalid PDE */
-    pd[PD_ASID_SLOT] = pde_pde_invalid_new(hw_asid, true);
+    pd[PD_ASID_స్థానం] = pde_pde_invalid_new(hw_asid, true);
 
     armKSHWASIDTable[hw_asid] = asid;
 }
 
-hw_asid_t findFreeHWASID(void)
+hw_asid_t కనుగొను_Free_HWASID(శూన్య)
 {
-    word_t hw_asid_offset;
+    మాట_t hw_asid_స్థానభ్రంశం;
     hw_asid_t hw_asid;
 
     /* Find a free hardware ASID */
-    for (hw_asid_offset = 0;
-         hw_asid_offset <= (word_t)((hw_asid_t) - 1);
-         hw_asid_offset ++) {
-        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_offset);
-        if (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
-            return hw_asid;
+    కొరకు (hw_asid_స్థానభ్రంశం = 0;
+         hw_asid_స్థానభ్రంశం <= (మాట_t)((hw_asid_t) - 1);
+         hw_asid_స్థానభ్రంశం ++) {
+        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_స్థానభ్రంశం);
+        ఒకవేళ (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
+            తిరిగి hw_asid;
         }
     }
 
@@ -1154,88 +1154,88 @@ hw_asid_t findFreeHWASID(void)
 
     /* Increment the NextASID index, skipping the reserved ASID 0 on wrap */
     armKSNextASID++;
-    if (armKSNextASID == hwASIDReserved) {
+    ఒకవేళ (armKSNextASID == hwASIDReserved) {
         armKSNextASID = hwASIDMin;
     }
-    return hw_asid;
+    తిరిగి hw_asid;
 }
 
 hw_asid_t getHWASID(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return pde_pde_invalid_get_stored_hw_asid(stored_hw_asid);
-    } else {
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
+    ఒకవేళ (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        తిరిగి pde_pde_invalid_get_stored_hw_asid(stored_hw_asid);
+    } లేకపోతే {
         hw_asid_t new_hw_asid;
 
-        new_hw_asid = findFreeHWASID();
+        new_hw_asid = కనుగొను_Free_HWASID();
         storeHWASID(asid, new_hw_asid);
-        return new_hw_asid;
+        తిరిగి new_hw_asid;
     }
 }
 
-static void invalidateASIDEntry(asid_t asid)
+స్థిర శూన్య invalidateASIDEntry(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
+    ఒకవేళ (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
         armKSHWASIDTable[pde_pde_invalid_get_stored_hw_asid(stored_hw_asid)] =
             asidInvalid;
     }
     invalidateASID(asid);
 }
 
-void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+శూన్య unmap_పుట_పట్టిక(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
-    pde_t *pd, *pdSlot;
-    unsigned int pdIndex;
+    pde_t *pd, *pd_స్థానం;
+    గుర్తులేని పూర్ణాంకం pd_సూచీ;
 
-    pd = pageTableMapped(asid, vaddr, pt);
+    pd = పుట_పట్టిక_Mapped(asid, vaddr, pt);
 
-    if (likely(pd != NULL)) {
-        pdIndex = vaddr >> (PT_INDEX_BITS + PAGE_BITS);
-        pdSlot = pd + pdIndex;
+    ఒకవేళ (likely(pd != ఖాళీ)) {
+        pd_సూచీ = vaddr >> (PT_సూచీ_బిట్లు + పుట_బిట్లు);
+        pd_స్థానం = pd + pd_సూచీ;
 
-        *pdSlot = pde_pde_invalid_new(0, 0);
-        cleanByVA_PoU((word_t)pdSlot, addrFromPPtr(pdSlot));
-        flushTable(pd, asid, vaddr, pt);
+        *pd_స్థానం = pde_pde_invalid_new(0, 0);
+        cleanByVA_PoU((మాట_t)pd_స్థానం, addrFromPPtr(pd_స్థానం));
+        flush_పట్టిక(pd, asid, vaddr, pt);
     }
 }
 
-void copyGlobalMappings(pde_t *newPD)
+శూన్య copyGlobalMappings(pde_t *newPD)
 {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t i;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t i;
     pde_t *global_pd = armKSGlobalPD;
 
-    for (i = PPTR_BASE >> ARMSectionBits; i < BIT(PD_INDEX_BITS); i++) {
-        if (i != PD_ASID_SLOT) {
+    కొరకు (i = PPTR_పునాది >> ARMSection_బిట్లు; i < బిట్టు(PD_సూచీ_బిట్లు); i++) {
+        ఒకవేళ (i != PD_ASID_స్థానం) {
             newPD[i] = global_pd[i];
         }
     }
-#endif
+#అయితే_ముగింపు
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 {
-    switch (vm_faultType) {
-    case ARMDataAbort: {
-        word_t addr, fault;
+    ఎంపిక (vm_faultType) {
+    స్థితి ARMDataAbort: {
+        మాట_t addr, fault;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
         addr = getHDFAR();
-        addr = (addressTranslateS1(addr) & ~MASK(PAGE_BITS)) | (addr & MASK(PAGE_BITS));
+        addr = (చిరునామా_Translate_S1(addr) & ~ముసుగు(పుట_బిట్లు)) | (addr & ముసుగు(పుట_బిట్లు));
         /* MSBs tell us that this was a DataAbort */
         fault = getHSR() & 0x3ffffff;
-#else
+#లేకపోతే
         addr = getFAR();
         fault = getDFSR();
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
         /* Debug exceptions come in on the Prefetch and Data abort vectors.
          * We have to test the fault-status bits in the IFSR/DFSR to determine
          * if it's a debug exception when one occurs.
@@ -1243,284 +1243,284 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
          * If it is a debug exception, return early and don't fallthrough to the
          * normal VM Fault handling path.
          */
-        if (isDebugFault(fault)) {
+        ఒకవేళ (isDebugFault(fault)) {
             current_fault = handleUserLevelDebugException(0);
-            return EXCEPTION_FAULT;
+            తిరిగి EXCEPTION_FAULT;
         }
-#endif
+#అయితే_ముగింపు
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        తిరిగి EXCEPTION_FAULT;
     }
 
-    case ARMPrefetchAbort: {
-        word_t pc, fault;
+    స్థితి ARMPrefetchAbort: {
+        మాట_t pc, fault;
 
         pc = getRestartPC(thread);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pc = (addressTranslateS1(pc) & ~MASK(PAGE_BITS)) | (pc & MASK(PAGE_BITS));
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        pc = (చిరునామా_Translate_S1(pc) & ~ముసుగు(పుట_బిట్లు)) | (pc & ముసుగు(పుట_బిట్లు));
         /* MSBs tell us that this was a PrefetchAbort */
         fault = getHSR() & 0x3ffffff;
-#else
+#లేకపోతే
         fault = getIFSR();
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-        if (isDebugFault(fault)) {
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
+        ఒకవేళ (isDebugFault(fault)) {
             current_fault = handleUserLevelDebugException(pc);
 
-            if (seL4_Fault_DebugException_get_exceptionReason(current_fault) == seL4_SingleStep
-                && !singleStepFaultCounterReady(thread)) {
+            ఒకవేళ (seL4_Fault_DebugException_get_exceptionReason(current_fault) == se_L4_Single_అడుగు
+                && !single_అడుగు_Fault_Counter_Ready(thread)) {
                 /* Don't send a fault message to the thread yet if we were asked
                  * to step through N instructions and the counter isn't depleted
                  * yet.
                  */
-                return EXCEPTION_NONE;
+                తిరిగి EXCEPTION_NONE;
             }
-            return EXCEPTION_FAULT;
+            తిరిగి EXCEPTION_FAULT;
         }
-#endif
+#అయితే_ముగింపు
         current_fault = seL4_Fault_VMFault_new(pc, fault, true);
-        return EXCEPTION_FAULT;
+        తిరిగి EXCEPTION_FAULT;
     }
 
-    default:
+    అప్రమేయ:
         fail("Invalid VM fault type");
     }
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+శూన్య deleteASIDPool(asid_t asid_పునాది, asid_pool_t *pool)
 {
-    unsigned int offset;
+    గుర్తులేని పూర్ణాంకం స్థానభ్రంశం;
 
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
+    ప్రతిజ్ఞా((asid_పునాది & ముసుగు(asid_దిగువ_బిట్లు)) == 0);
 
-    if (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (offset = 0; offset < BIT(asidLowBits); offset++) {
-            if (pool->array[offset]) {
-                flushSpace(asid_base + offset);
-                invalidateASIDEntry(asid_base + offset);
+    ఒకవేళ (armKSASIDTable[ASID_ఎగువ(asid_పునాది)] == pool) {
+        కొరకు (స్థానభ్రంశం = 0; స్థానభ్రంశం < బిట్టు(asid_దిగువ_బిట్లు); స్థానభ్రంశం++) {
+            ఒకవేళ (pool->array[స్థానభ్రంశం]) {
+                flushSpace(asid_పునాది + స్థానభ్రంశం);
+                invalidateASIDEntry(asid_పునాది + స్థానభ్రంశం);
             }
         }
-        armKSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        armKSASIDTable[ASID_ఎగువ(asid_పునాది)] = ఖాళీ;
+        సమితి_VMRoot(కణుపు_STATE(ksCurThread));
     }
 }
 
-void deleteASID(asid_t asid, pde_t *pd)
+శూన్య deleteASID(asid_t asid, pde_t *pd)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
+    poolPtr = armKSASIDTable[ASID_ఎగువ(asid)];
 
-    if (poolPtr != NULL && poolPtr->array[ASID_LOW(asid)] == pd) {
+    ఒకవేళ (poolPtr != ఖాళీ && poolPtr->array[ASID_దిగువ(asid)] == pd) {
         flushSpace(asid);
         invalidateASIDEntry(asid);
-        poolPtr->array[ASID_LOW(asid)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        poolPtr->array[ASID_దిగువ(asid)] = ఖాళీ;
+        సమితి_VMRoot(కణుపు_STATE(ksCurThread));
     }
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-static pte_t pte_pte_invalid_new(void)
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+స్థిర pte_t pte_pte_invalid_new(శూన్య)
 {
     /* Invalid as every PTE must have bit 0 set (large PTE) or bit 1 set (small
      * PTE). 0 == 'translation fault' in ARM parlance.
      */
-    return (pte_t) {
+    తిరిగి (pte_t) {
         {
             0
         }
     };
 }
-#endif
+#అయితే_ముగింపు
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
+శూన్య unmap_పుట(vm_పుట_కొలత_t పుట_కొలత, asid_t asid, vptr_t vptr, శూన్య *pptr)
 {
-    findPDForASID_ret_t find_ret;
+    కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
     paddr_t addr = addrFromPPtr(pptr);
 
-    find_ret = findPDForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
-        return;
+    కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+    ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE)) {
+        తిరిగి;
     }
 
-    switch (page_size) {
-    case ARMSmallPage: {
+    ఎంపిక (పుట_కొలత) {
+    స్థితి ARMSmall_పుట: {
         lookupPTSlot_ret_t lu_ret;
 
-        lu_ret = lookupPTSlot(find_ret.pd, vptr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return;
+        lu_ret = lookupPTSlot(కనుగొను_ret.pd, vptr);
+        ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
+            తిరిగి;
         }
 
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_small)) {
-            return;
+        ఒకవేళ (unlikely(pte_ptr_get_pteType(lu_ret.pt_స్థానం) != pte_pte_small)) {
+            తిరిగి;
         }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.ptSlot) != 0)) {
-            return;
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.pt_స్థానం) != 0)) {
+            తిరిగి;
         }
-#endif
-        if (unlikely(pte_pte_small_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+#అయితే_ముగింపు
+        ఒకవేళ (unlikely(pte_pte_small_ptr_get_చిరునామా(lu_ret.pt_స్థానం) != addr)) {
+            తిరిగి;
         }
 
-        *(lu_ret.ptSlot) = pte_pte_invalid_new();
-        cleanByVA_PoU((word_t)lu_ret.ptSlot, addrFromPPtr(lu_ret.ptSlot));
+        *(lu_ret.pt_స్థానం) = pte_pte_invalid_new();
+        cleanByVA_PoU((మాట_t)lu_ret.pt_స్థానం, addrFromPPtr(lu_ret.pt_స్థానం));
 
-        break;
+        ఆపు;
     }
 
-    case ARMLargePage: {
+    స్థితి ARMLarge_పుట: {
         lookupPTSlot_ret_t lu_ret;
-        word_t i;
+        మాట_t i;
 
-        lu_ret = lookupPTSlot(find_ret.pd, vptr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return;
+        lu_ret = lookupPTSlot(కనుగొను_ret.pd, vptr);
+        ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
+            తిరిగి;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_large)) {
-            return;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (unlikely(pte_ptr_get_pteType(lu_ret.pt_స్థానం) != pte_pte_large)) {
+            తిరిగి;
         }
-        if (unlikely(pte_pte_large_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+        ఒకవేళ (unlikely(pte_pte_large_ptr_get_చిరునామా(lu_ret.pt_స్థానం) != addr)) {
+            తిరిగి;
         }
-#else
-        if (unlikely(pte_ptr_get_pteType(lu_ret.ptSlot) != pte_pte_small)) {
-            return;
+#లేకపోతే
+        ఒకవేళ (unlikely(pte_ptr_get_pteType(lu_ret.pt_స్థానం) != pte_pte_small)) {
+            తిరిగి;
         }
-        if (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.ptSlot) != 1)) {
-            return;
+        ఒకవేళ (unlikely(pte_pte_small_ptr_get_contiguous_hint(lu_ret.pt_స్థానం) != 1)) {
+            తిరిగి;
         }
-        if (unlikely(pte_pte_small_ptr_get_address(lu_ret.ptSlot) != addr)) {
-            return;
+        ఒకవేళ (unlikely(pte_pte_small_ptr_get_చిరునామా(lu_ret.pt_స్థానం) != addr)) {
+            తిరిగి;
         }
-#endif
+#అయితే_ముగింపు
 
-        for (i = 0; i < PAGES_PER_LARGE_PAGE; i++) {
-            lu_ret.ptSlot[i] = pte_pte_invalid_new();
+        కొరకు (i = 0; i < పుటలు_చొప్పున_LARGE_పుట; i++) {
+            lu_ret.pt_స్థానం[i] = pte_pte_invalid_new();
         }
-        cleanCacheRange_PoU((word_t)&lu_ret.ptSlot[0],
-                            LAST_BYTE_PTE(lu_ret.ptSlot, PAGES_PER_LARGE_PAGE),
-                            addrFromPPtr(&lu_ret.ptSlot[0]));
+        cleanCacheRange_PoU((మాట_t)&lu_ret.pt_స్థానం[0],
+                            చివరి_BYTE_PTE(lu_ret.pt_స్థానం, పుటలు_చొప్పున_LARGE_పుట),
+                            addrFromPPtr(&lu_ret.pt_స్థానం[0]));
 
-        break;
+        ఆపు;
     }
 
-    case ARMSection: {
+    స్థితి ARMSection: {
         pde_t *pd;
 
-        pd = lookupPDSlot(find_ret.pd, vptr);
+        pd = lookupPDSlot(కనుగొను_ret.pd, vptr);
 
-        if (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
-            return;
+        ఒకవేళ (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
+            తిరిగి;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pde_pde_section_ptr_get_size(pd) != 0)) {
-#else
-        if (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 0)) {
-#endif
-            return;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_కొలత(pd) != 0)) {
+#లేకపోతే
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 0)) {
+#అయితే_ముగింపు
+            తిరిగి;
         }
-        if (unlikely(pde_pde_section_ptr_get_address(pd) != addr)) {
-            return;
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_చిరునామా(pd) != addr)) {
+            తిరిగి;
         }
 
         *pd = pde_pde_invalid_new(0, 0);
-        cleanByVA_PoU((word_t)pd, addrFromPPtr(pd));
+        cleanByVA_PoU((మాట_t)pd, addrFromPPtr(pd));
 
-        break;
+        ఆపు;
     }
 
-    case ARMSuperSection: {
+    స్థితి ARMSuperSection: {
         pde_t *pd;
-        word_t i;
+        మాట_t i;
 
-        pd = lookupPDSlot(find_ret.pd, vptr);
+        pd = lookupPDSlot(కనుగొను_ret.pd, vptr);
 
-        if (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
-            return;
+        ఒకవేళ (unlikely(pde_ptr_get_pdeType(pd) != pde_pde_section)) {
+            తిరిగి;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pde_pde_section_ptr_get_size(pd) != 1)) {
-#else
-        if (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 1)) {
-#endif
-            return;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_కొలత(pd) != 1)) {
+#లేకపోతే
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_contiguous_hint(pd) != 1)) {
+#అయితే_ముగింపు
+            తిరిగి;
         }
-        if (unlikely(pde_pde_section_ptr_get_address(pd) != addr)) {
-            return;
+        ఒకవేళ (unlikely(pde_pde_section_ptr_get_చిరునామా(pd) != addr)) {
+            తిరిగి;
         }
 
-        for (i = 0; i < SECTIONS_PER_SUPER_SECTION; i++) {
+        కొరకు (i = 0; i < SECTIONS_చొప్పున_SUPER_SECTION; i++) {
             pd[i] = pde_pde_invalid_new(0, 0);
         }
-        cleanCacheRange_PoU((word_t)&pd[0], LAST_BYTE_PDE(pd, SECTIONS_PER_SUPER_SECTION),
+        cleanCacheRange_PoU((మాట_t)&pd[0], చివరి_BYTE_PDE(pd, SECTIONS_చొప్పున_SUPER_SECTION),
                             addrFromPPtr(&pd[0]));
 
-        break;
+        ఆపు;
     }
 
-    default:
+    అప్రమేయ:
         fail("Invalid ARM page type");
-        break;
+        ఆపు;
     }
 
     /* Flush the page now that the mapping has been updated */
-    flushPage(page_size, find_ret.pd, asid, vptr);
+    flush_పుట(పుట_కొలత, కనుగొను_ret.pd, asid, vptr);
 }
 
-void flushPage(vm_page_size_t page_size, pde_t *pd, asid_t asid, word_t vptr)
+శూన్య flush_పుట(vm_పుట_కొలత_t పుట_కొలత, pde_t *pd, asid_t asid, మాట_t vptr)
 {
     pde_t stored_hw_asid;
-    word_t base_addr;
-    bool_t root_switched;
+    మాట_t పునాది_addr;
+    bool_t మూలం_switched;
 
-    assert((vptr & MASK(pageBitsForSize(page_size))) == 0);
+    ప్రతిజ్ఞా((vptr & ముసుగు(పుట_బిట్లు_For_కొలత(పుట_కొలత))) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
-    stored_hw_asid = loadHWASID(asid);
+    మూలం_switched = సమితి_VMRoot_For_Flush(pd, asid);
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
 
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        base_addr = vptr & ~MASK(12);
+    ఒకవేళ (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        పునాది_addr = vptr & ~ముసుగు(12);
 
         /* Do the TLB flush */
-        invalidateTranslationSingle(base_addr | pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
+        invalidateTranslationSingle(పునాది_addr | pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        ఒకవేళ (మూలం_switched) {
+            సమితి_VMRoot(కణుపు_STATE(ksCurThread));
         }
     }
 }
 
-void flushTable(pde_t *pd, asid_t asid, word_t vptr, pte_t *pt)
+శూన్య flush_పట్టిక(pde_t *pd, asid_t asid, మాట_t vptr, pte_t *pt)
 {
     pde_t stored_hw_asid;
-    bool_t root_switched;
+    bool_t మూలం_switched;
 
-    assert((vptr & MASK(PT_INDEX_BITS + ARMSmallPageBits)) == 0);
+    ప్రతిజ్ఞా((vptr & ముసుగు(PT_సూచీ_బిట్లు + ARMSmall_పుట_బిట్లు)) == 0);
 
     /* Switch to the address space to allow a cache clean by VA */
-    root_switched = setVMRootForFlush(pd, asid);
-    stored_hw_asid = loadHWASID(asid);
+    మూలం_switched = సమితి_VMRoot_For_Flush(pd, asid);
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
 
-    if (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+    ఒకవేళ (pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
         invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        ఒకవేళ (మూలం_switched) {
+            సమితి_VMRoot(కణుపు_STATE(ksCurThread));
         }
     }
 }
 
-void flushSpace(asid_t asid)
+శూన్య flushSpace(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
 
     /* Clean the entire data cache, to guarantee that any VAs mapped
      * in the deleted space are clean (because we can't clean by VA after
@@ -1529,1226 +1529,1226 @@ void flushSpace(asid_t asid)
 
     /* If the given ASID doesn't have a hardware ASID
      * assigned, then it can't have any mappings in the TLB */
-    if (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return;
+    ఒకవేళ (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        తిరిగి;
     }
 
     /* Do the TLB flush */
     invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 }
 
-void invalidateTLBByASID(asid_t asid)
+శూన్య invalidateTLBByASID(asid_t asid)
 {
     pde_t stored_hw_asid;
 
-    stored_hw_asid = loadHWASID(asid);
+    stored_hw_asid = ఎక్కించు_HWASID(asid);
 
     /* If the given ASID doesn't have a hardware ASID
      * assigned, then it can't have any mappings in the TLB */
-    if (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
-        return;
+    ఒకవేళ (!pde_pde_invalid_get_stored_asid_valid(stored_hw_asid)) {
+        తిరిగి;
     }
 
     /* Do the TLB flush */
     invalidateTranslationASID(pde_pde_invalid_get_stored_hw_asid(stored_hw_asid));
 }
 
-static inline bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
+స్థిర అంతఃవరుస bool_t CONST checkVPAlignment(vm_పుట_కొలత_t sz, మాట_t w)
 {
-    return (w & MASK(pageBitsForSize(sz))) == 0;
+    తిరిగి (w & ముసుగు(పుట_బిట్లు_For_కొలత(sz))) == 0;
 }
 
-struct create_mappings_pte_return {
-    exception_t status;
+నిర్మాణం create_mappings_pte_return {
+    exception_t స్థితి_2;
     pte_t pte;
     pte_range_t pte_entries;
 };
-typedef struct create_mappings_pte_return create_mappings_pte_return_t;
+రకనిర్వచనం నిర్మాణం create_mappings_pte_return create_mappings_pte_return_t;
 
-struct create_mappings_pde_return {
-    exception_t status;
+నిర్మాణం create_mappings_pde_return {
+    exception_t స్థితి_2;
     pde_t pde;
     pde_range_t pde_entries;
 };
-typedef struct create_mappings_pde_return create_mappings_pde_return_t;
+రకనిర్వచనం నిర్మాణం create_mappings_pde_return create_mappings_pde_return_t;
 
-static create_mappings_pte_return_t
-createSafeMappingEntries_PTE
-(paddr_t base, word_t vaddr, vm_page_size_t frameSize,
- vm_rights_t vmRights, vm_attributes_t attr, pde_t *pd)
+స్థిర create_mappings_pte_return_t
+create_సురక్షిత_Mapping_Entries_PTE
+(paddr_t పునాది, మాట_t vaddr, vm_పుట_కొలత_t చట్రం_కొలత,
+ vm_rights_t vmRights, vm_లక్షణాలు_t attr, pde_t *pd)
 {
 
     create_mappings_pte_return_t ret;
     lookupPTSlot_ret_t lu_ret;
-    word_t i;
+    మాట_t i;
 
-    switch (frameSize) {
+    ఎంపిక (చట్రం_కొలత) {
 
-    case ARMSmallPage:
+    స్థితి ARMSmall_పుట:
 
-        ret.pte_entries.base = NULL; /* to avoid uninitialised warning */
-        ret.pte_entries.length = 1;
+        ret.pte_entries.పునాది = ఖాళీ; /* to avoid uninitialised warning */
+        ret.pte_entries.నిడివి = 1;
 
-        ret.pte = makeUserPTE(ARMSmallPage, base,
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pte = makeUserPTE(ARMSmall_పుట, పునాది,
+                              vm_లక్షణాలు_get_arm_పుట_Cacheable(attr),
+                              vm_లక్షణాలు_get_arm_Execute_Never(attr),
                               vmRights);
 
         lu_ret = lookupPTSlot(pd, vaddr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource =
+            current_syscall_error.failed_Lookup_Was_ఆధారం =
                 false;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
             /* current_lookup_fault will have been set by
              * lookupPTSlot */
-            return ret;
+            తిరిగి ret;
         }
 
-        ret.pte_entries.base = lu_ret.ptSlot;
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (unlikely(pte_ptr_get_pteType(ret.pte_entries.base) ==
+        ret.pte_entries.పునాది = lu_ret.pt_స్థానం;
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (unlikely(pte_ptr_get_pteType(ret.pte_entries.పునాది) ==
                      pte_pte_large)) {
-#else
-        if (unlikely(pte_ptr_get_pteType(ret.pte_entries.base) == pte_pte_small
-                     && pte_pte_small_ptr_get_contiguous_hint(ret.pte_entries.base))) {
-#endif
+#లేకపోతే
+        ఒకవేళ (unlikely(pte_ptr_get_pteType(ret.pte_entries.పునాది) == pte_pte_small
+                     && pte_pte_small_ptr_get_contiguous_hint(ret.pte_entries.పునాది))) {
+#అయితే_ముగింపు
             current_syscall_error.type =
-                seL4_DeleteFirst;
+                se_L4_Delete_మొదటి;
 
-            ret.status = EXCEPTION_SYSCALL_ERROR;
-            return ret;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
+            తిరిగి ret;
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    case ARMLargePage:
+    స్థితి ARMLarge_పుట:
 
-        ret.pte_entries.base = NULL; /* to avoid uninitialised warning */
-        ret.pte_entries.length = PAGES_PER_LARGE_PAGE;
+        ret.pte_entries.పునాది = ఖాళీ; /* to avoid uninitialised warning */
+        ret.pte_entries.నిడివి = పుటలు_చొప్పున_LARGE_పుట;
 
-        ret.pte = makeUserPTE(ARMLargePage, base,
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pte = makeUserPTE(ARMLarge_పుట, పునాది,
+                              vm_లక్షణాలు_get_arm_పుట_Cacheable(attr),
+                              vm_లక్షణాలు_get_arm_Execute_Never(attr),
                               vmRights);
 
         lu_ret = lookupPTSlot(pd, vaddr);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource =
+            current_syscall_error.failed_Lookup_Was_ఆధారం =
                 false;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
             /* current_lookup_fault will have been set by
              * lookupPTSlot */
-            return ret;
+            తిరిగి ret;
         }
 
-        ret.pte_entries.base = lu_ret.ptSlot;
+        ret.pte_entries.పునాది = lu_ret.pt_స్థానం;
 
-        for (i = 0; i < PAGES_PER_LARGE_PAGE; i++) {
-            if (unlikely(pte_get_pteType(ret.pte_entries.base[i]) ==
+        కొరకు (i = 0; i < పుటలు_చొప్పున_LARGE_పుట; i++) {
+            ఒకవేళ (unlikely(pte_get_pteType(ret.pte_entries.పునాది[i]) ==
                          pte_pte_small)
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-                && !pte_pte_small_get_contiguous_hint(ret.pte_entries.base[i])
-#endif
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+                && !pte_pte_small_get_contiguous_hint(ret.pte_entries.పునాది[i])
+#అయితే_ముగింపు
                ) {
                 current_syscall_error.type =
-                    seL4_DeleteFirst;
+                    se_L4_Delete_మొదటి;
 
-                ret.status = EXCEPTION_SYSCALL_ERROR;
-                return ret;
+                ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
+                తిరిగి ret;
             }
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    default:
+    అప్రమేయ:
         fail("Invalid or unexpected ARM page type.");
 
     }
 }
 
-static create_mappings_pde_return_t
-createSafeMappingEntries_PDE
-(paddr_t base, word_t vaddr, vm_page_size_t frameSize,
- vm_rights_t vmRights, vm_attributes_t attr, pde_t *pd)
+స్థిర create_mappings_pde_return_t
+create_సురక్షిత_Mapping_Entries_PDE
+(paddr_t పునాది, మాట_t vaddr, vm_పుట_కొలత_t చట్రం_కొలత,
+ vm_rights_t vmRights, vm_లక్షణాలు_t attr, pde_t *pd)
 {
 
     create_mappings_pde_return_t ret;
-    pde_tag_t currentPDEType;
-    word_t i;
+    pde_ట్యాగ్_t currentPDEType;
+    మాట_t i;
 
-    switch (frameSize) {
+    ఎంపిక (చట్రం_కొలత) {
 
     /* PDE mappings */
-    case ARMSection:
-        ret.pde_entries.base = lookupPDSlot(pd, vaddr);
-        ret.pde_entries.length = 1;
+    స్థితి ARMSection:
+        ret.pde_entries.పునాది = lookupPDSlot(pd, vaddr);
+        ret.pde_entries.నిడివి = 1;
 
-        ret.pde = makeUserPDE(ARMSection, base,
-                              vm_attributes_get_armParityEnabled(attr),
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pde = makeUserPDE(ARMSection, పునాది,
+                              vm_లక్షణాలు_get_arm_Parity_Enabled(attr),
+                              vm_లక్షణాలు_get_arm_పుట_Cacheable(attr),
+                              vm_లక్షణాలు_get_arm_Execute_Never(attr),
                               0,
                               vmRights);
 
         currentPDEType =
-            pde_ptr_get_pdeType(ret.pde_entries.base);
-        if (unlikely(currentPDEType != pde_pde_invalid &&
+            pde_ptr_get_pdeType(ret.pde_entries.పునాది);
+        ఒకవేళ (unlikely(currentPDEType != pde_pde_invalid &&
                      (currentPDEType != pde_pde_section ||
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                      pde_pde_section_ptr_get_size(ret.pde_entries.base) != 0))) {
-#else
-                      pde_pde_section_ptr_get_contiguous_hint(ret.pde_entries.base) != 0))) {
-#endif
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+                      pde_pde_section_ptr_get_కొలత(ret.pde_entries.పునాది) != 0))) {
+#లేకపోతే
+                      pde_pde_section_ptr_get_contiguous_hint(ret.pde_entries.పునాది) != 0))) {
+#అయితే_ముగింపు
             current_syscall_error.type =
-                seL4_DeleteFirst;
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+                se_L4_Delete_మొదటి;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
 
-            return ret;
+            తిరిగి ret;
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    case ARMSuperSection:
-        ret.pde_entries.base = lookupPDSlot(pd, vaddr);
-        ret.pde_entries.length = SECTIONS_PER_SUPER_SECTION;
+    స్థితి ARMSuperSection:
+        ret.pde_entries.పునాది = lookupPDSlot(pd, vaddr);
+        ret.pde_entries.నిడివి = SECTIONS_చొప్పున_SUPER_SECTION;
 
-        ret.pde = makeUserPDE(ARMSuperSection, base,
-                              vm_attributes_get_armParityEnabled(attr),
-                              vm_attributes_get_armPageCacheable(attr),
-                              vm_attributes_get_armExecuteNever(attr),
+        ret.pde = makeUserPDE(ARMSuperSection, పునాది,
+                              vm_లక్షణాలు_get_arm_Parity_Enabled(attr),
+                              vm_లక్షణాలు_get_arm_పుట_Cacheable(attr),
+                              vm_లక్షణాలు_get_arm_Execute_Never(attr),
                               0,
                               vmRights);
 
-        for (i = 0; i < SECTIONS_PER_SUPER_SECTION; i++) {
+        కొరకు (i = 0; i < SECTIONS_చొప్పున_SUPER_SECTION; i++) {
             currentPDEType =
-                pde_get_pdeType(ret.pde_entries.base[i]);
-            if (unlikely(currentPDEType != pde_pde_invalid &&
+                pde_get_pdeType(ret.pde_entries.పునాది[i]);
+            ఒకవేళ (unlikely(currentPDEType != pde_pde_invalid &&
                          (currentPDEType != pde_pde_section ||
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                          pde_pde_section_get_size(ret.pde_entries.base[i]) != 1))) {
-#else
-                          pde_pde_section_get_contiguous_hint(ret.pde_entries.base[i]) != 1))) {
-#endif
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+                          pde_pde_section_get_కొలత(ret.pde_entries.పునాది[i]) != 1))) {
+#లేకపోతే
+                          pde_pde_section_get_contiguous_hint(ret.pde_entries.పునాది[i]) != 1))) {
+#అయితే_ముగింపు
                 current_syscall_error.type =
-                    seL4_DeleteFirst;
-                ret.status = EXCEPTION_SYSCALL_ERROR;
+                    se_L4_Delete_మొదటి;
+                ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
 
-                return ret;
+                తిరిగి ret;
             }
         }
 
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    default:
+    అప్రమేయ:
         fail("Invalid or unexpected ARM page type.");
 
     }
 }
 
-static inline vptr_t pageBase(vptr_t vaddr, vm_page_size_t size)
+స్థిర అంతఃవరుస vptr_t పుట_పునాది(vptr_t vaddr, vm_పుట_కొలత_t కొలత)
 {
-    return vaddr & ~MASK(pageBitsForSize(size));
+    తిరిగి vaddr & ~ముసుగు(పుట_బిట్లు_For_కొలత(కొలత));
 }
 
-static bool_t PURE pteCheckIfMapped(pte_t *pte)
+స్థిర bool_t శుద్ధ pteCheckIfMapped(pte_t *pte)
 {
-    return pte_ptr_get_pteType(pte) != pte_pte_invalid;
+    తిరిగి pte_ptr_get_pteType(pte) != pte_pte_invalid;
 }
 
-static bool_t PURE pdeCheckIfMapped(pde_t *pde)
+స్థిర bool_t శుద్ధ pdeCheckIfMapped(pde_t *pde)
 {
-    return pde_ptr_get_pdeType(pde) != pde_pde_invalid;
+    తిరిగి pde_ptr_get_pdeType(pde) != pde_pde_invalid;
 }
 
-static void doFlush(int invLabel, vptr_t start, vptr_t end, paddr_t pstart)
+స్థిర శూన్య doFlush(పూర్ణాంకం invLabel, vptr_t ప్రారంభం, vptr_t చివర, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end, id)" */
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ఒకవేళ (config_సమితి(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* The hypervisor does not share an AS with userspace so we must flush
          * by kernel MVA instead. ARMv7 caches are PIPT so it makes no difference */
-        end = (vptr_t)paddr_to_pptr(pstart) + (end - start);
-        start = (vptr_t)paddr_to_pptr(pstart);
+        చివర = (vptr_t)paddr_గమ్యం_pptr(pstart) + (చివర - ప్రారంభం);
+        ప్రారంభం = (vptr_t)paddr_గమ్యం_pptr(pstart);
     }
-    switch (invLabel) {
-    case ARMPDClean_Data:
-    case ARMPageClean_Data:
-        cleanCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDInvalidate_Data:
-    case ARMPageInvalidate_Data:
-        invalidateCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDCleanInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-        cleanInvalidateCacheRange_RAM(start, end, pstart);
-        break;
-    case ARMPDUnify_Instruction:
-    case ARMPageUnify_Instruction:
+    ఎంపిక (invLabel) {
+    స్థితి ARMPDClean_దత్తాంశం:
+    స్థితి ARMPage_Clean_దత్తాంశం:
+        cleanCacheRange_RAM(ప్రారంభం, చివర, pstart);
+        ఆపు;
+    స్థితి ARMPDInvalidate_దత్తాంశం:
+    స్థితి ARMPage_Invalidate_దత్తాంశం:
+        invalidateCacheRange_RAM(ప్రారంభం, చివర, pstart);
+        ఆపు;
+    స్థితి ARMPDClean_Invalidate_దత్తాంశం:
+    స్థితి ARMPage_Clean_Invalidate_దత్తాంశం:
+        cleanInvalidateCacheRange_RAM(ప్రారంభం, చివర, pstart);
+        ఆపు;
+    స్థితి ARMPDUnify_Instruction:
+    స్థితి ARMPageUnify_Instruction:
         /* First clean data lines to point of unification
            (L2 cache)... */
-        cleanCacheRange_PoU(start, end, pstart);
+        cleanCacheRange_PoU(ప్రారంభం, చివర, pstart);
         /* Ensure it's been written. */
         dsb();
         /* ...then invalidate the corresponding instruction lines
            to point of unification... */
-        invalidateCacheRange_I(start, end, pstart);
+        invalidateCacheRange_I(ప్రారంభం, చివర, pstart);
         /* ...then invalidate branch predictors... */
-        branchFlushRange(start, end, pstart);
+        branchFlushRange(ప్రారంభం, చివర, pstart);
         /* ... then wait for the completion of invalidations. */
         dsb();
         /* Ensure new instructions come from fresh cache lines. */
         isb();
-        break;
-    default:
+        ఆపు;
+    అప్రమేయ:
         fail("Invalid operation, shouldn't get here.\n");
     }
 }
 
 /* ================= INVOCATION HANDLING STARTS HERE ================== */
 
-static exception_t performPDFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
-                                  vptr_t end, paddr_t pstart)
+స్థిర exception_t performPDFlush(పూర్ణాంకం invLabel, pde_t *pd, asid_t asid, vptr_t ప్రారంభం,
+                                  vptr_t చివర, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t మూలం_switched;
 
     /* Flush if given a non zero range */
-    if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+    ఒకవేళ (ప్రారంభం < చివర) {
+        మూలం_switched = సమితి_VMRoot_For_Flush(pd, asid);
 
-        doFlush(invLabel, start, end, pstart);
+        doFlush(invLabel, ప్రారంభం, చివర, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        ఒకవేళ (మూలం_switched) {
+            సమితి_VMRoot(కణుపు_STATE(ksCurThread));
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageTableInvocationMap(cap_t cap, cte_t *ctSlot,
-                                                 pde_t pde, pde_t *pdSlot)
+స్థిర exception_t perform_పుట_పట్టిక_Invocation_Map(cap_t cap, cte_t *ct_స్థానం,
+                                                 pde_t pde, pde_t *pd_స్థానం)
 {
-    ctSlot->cap = cap;
-    *pdSlot = pde;
-    cleanByVA_PoU((word_t)pdSlot, addrFromPPtr(pdSlot));
+    ct_స్థానం->cap = cap;
+    *pd_స్థానం = pde;
+    cleanByVA_PoU((మాట_t)pd_స్థానం, addrFromPPtr(pd_స్థానం));
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
+స్థిర exception_t perform_పుట_పట్టిక_Invocation_Unmap(cap_t cap, cte_t *ct_స్థానం)
 {
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
-        pte_t *pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-        unmapPageTable(
-            cap_page_table_cap_get_capPTMappedASID(cap),
-            cap_page_table_cap_get_capPTMappedAddress(cap),
+    ఒకవేళ (cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap)) {
+        pte_t *pt = PTE_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap));
+        unmap_పుట_పట్టిక(
+            cap_పుట_పట్టిక_cap_get_cap_PTMapped_ASID(cap),
+            cap_పుట_పట్టిక_cap_get_cap_PTMapped_చిరునామా(cap),
             pt);
-        clearMemory_PT((void *)pt, cap_get_capSizeBits(cap));
+        clear_జ్ఞాపకం_PT((శూన్య *)pt, cap_get_cap_కొలత_బిట్లు(cap));
     }
-    cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
+    cap_పుట_పట్టిక_cap_ptr_సమితి_cap_PTIs_Mapped(&(ct_స్థానం->cap), 0);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationMapPTE(asid_t asid, cap_t cap, cte_t *ctSlot, pte_t pte,
+స్థిర exception_t perform_పుట_Invocation_Map_PTE(asid_t asid, cap_t cap, cte_t *ct_స్థానం, pte_t pte,
                                                pte_range_t pte_entries)
 {
-    word_t i, j UNUSED;
+    మాట_t i, j వాడని;
     bool_t tlbflush_required;
 
-    ctSlot->cap = cap;
+    ct_స్థానం->cap = cap;
 
     /* we only need to check the first entries because of how createSafeMappingEntries
      * works to preserve the consistency of tables */
-    tlbflush_required = pteCheckIfMapped(pte_entries.base);
+    tlbflush_required = pteCheckIfMapped(pte_entries.పునాది);
 
-    j = pte_entries.length;
+    j = pte_entries.నిడివి;
     /** GHOSTUPD: "(\<acute>j <= 16, id)" */
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t base_address = pte_pte_small_get_address(pte);
-#endif
-    for (i = 0; i < pte_entries.length; i++) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pte = pte_pte_small_set_address(pte, base_address + i * BIT(pageBitsForSize(ARMSmallPage)));
-#endif
-        pte_entries.base[i] = pte;
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t పునాది_చిరునామా = pte_pte_small_get_చిరునామా(pte);
+#అయితే_ముగింపు
+    కొరకు (i = 0; i < pte_entries.నిడివి; i++) {
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        pte = pte_pte_small_సమితి_చిరునామా(pte, పునాది_చిరునామా + i * బిట్టు(పుట_బిట్లు_For_కొలత(ARMSmall_పుట)));
+#అయితే_ముగింపు
+        pte_entries.పునాది[i] = pte;
     }
-    cleanCacheRange_PoU((word_t)pte_entries.base,
-                        LAST_BYTE_PTE(pte_entries.base, pte_entries.length),
-                        addrFromPPtr(pte_entries.base));
-    if (unlikely(tlbflush_required)) {
+    cleanCacheRange_PoU((మాట_t)pte_entries.పునాది,
+                        చివరి_BYTE_PTE(pte_entries.పునాది, pte_entries.నిడివి),
+                        addrFromPPtr(pte_entries.పునాది));
+    ఒకవేళ (unlikely(tlbflush_required)) {
         invalidateTLBByASID(asid);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationMapPDE(asid_t asid, cap_t cap, cte_t *ctSlot, pde_t pde,
+స్థిర exception_t perform_పుట_Invocation_Map_PDE(asid_t asid, cap_t cap, cte_t *ct_స్థానం, pde_t pde,
                                                pde_range_t pde_entries)
 {
-    word_t i, j UNUSED;
+    మాట_t i, j వాడని;
     bool_t tlbflush_required;
 
-    ctSlot->cap = cap;
+    ct_స్థానం->cap = cap;
 
     /* we only need to check the first entries because of how createSafeMappingEntries
      * works to preserve the consistency of tables */
-    tlbflush_required = pdeCheckIfMapped(pde_entries.base);
+    tlbflush_required = pdeCheckIfMapped(pde_entries.పునాది);
 
-    j = pde_entries.length;
+    j = pde_entries.నిడివి;
     /** GHOSTUPD: "(\<acute>j <= 16, id)" */
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t base_address = pde_pde_section_get_address(pde);
-#endif
-    for (i = 0; i < pde_entries.length; i++) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        pde = pde_pde_section_set_address(pde, base_address + i * BIT(pageBitsForSize(ARMSection)));
-#endif
-        pde_entries.base[i] = pde;
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    మాట_t పునాది_చిరునామా = pde_pde_section_get_చిరునామా(pde);
+#అయితే_ముగింపు
+    కొరకు (i = 0; i < pde_entries.నిడివి; i++) {
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        pde = pde_pde_section_సమితి_చిరునామా(pde, పునాది_చిరునామా + i * బిట్టు(పుట_బిట్లు_For_కొలత(ARMSection)));
+#అయితే_ముగింపు
+        pde_entries.పునాది[i] = pde;
     }
-    cleanCacheRange_PoU((word_t)pde_entries.base,
-                        LAST_BYTE_PDE(pde_entries.base, pde_entries.length),
-                        addrFromPPtr(pde_entries.base));
-    if (unlikely(tlbflush_required)) {
+    cleanCacheRange_PoU((మాట_t)pde_entries.పునాది,
+                        చివరి_BYTE_PDE(pde_entries.పునాది, pde_entries.నిడివి),
+                        addrFromPPtr(pde_entries.పునాది));
+    ఒకవేళ (unlikely(tlbflush_required)) {
         invalidateTLBByASID(asid);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+స్థిర exception_t perform_పుట_Invocation_Unmap(cap_t cap, cte_t *ct_స్థానం)
 {
-    if (generic_frame_cap_get_capFIsMapped(cap)) {
-        unmapPage(generic_frame_cap_get_capFSize(cap),
-                  generic_frame_cap_get_capFMappedASID(cap),
-                  generic_frame_cap_get_capFMappedAddress(cap),
-                  (void *)generic_frame_cap_get_capFBasePtr(cap));
+    ఒకవేళ (generic_చట్రం_cap_get_cap_FIs_Mapped(cap)) {
+        unmap_పుట(generic_చట్రం_cap_get_cap_FSize(cap),
+                  generic_చట్రం_cap_get_cap_FMapped_ASID(cap),
+                  generic_చట్రం_cap_get_cap_FMapped_చిరునామా(cap),
+                  (శూన్య *)generic_చట్రం_cap_get_cap_FBase_Ptr(cap));
     }
 
-    generic_frame_cap_ptr_set_capFMappedAddress(&ctSlot->cap, asidInvalid, 0);
+    generic_చట్రం_cap_ptr_సమితి_cap_FMapped_చిరునామా(&ct_స్థానం->cap, asidInvalid, 0);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageFlush(int invLabel, pde_t *pd, asid_t asid, vptr_t start,
-                                    vptr_t end, paddr_t pstart)
+స్థిర exception_t perform_పుట_Flush(పూర్ణాంకం invLabel, pde_t *pd, asid_t asid, vptr_t ప్రారంభం,
+                                    vptr_t చివర, paddr_t pstart)
 {
-    bool_t root_switched;
+    bool_t మూలం_switched;
 
     /* now we can flush. But only if we were given a non zero range */
-    if (start < end) {
-        root_switched = setVMRootForFlush(pd, asid);
+    ఒకవేళ (ప్రారంభం < చివర) {
+        మూలం_switched = సమితి_VMRoot_For_Flush(pd, asid);
 
-        doFlush(invLabel, start, end, pstart);
+        doFlush(invLabel, ప్రారంభం, చివర, pstart);
 
-        if (root_switched) {
-            setVMRoot(NODE_STATE(ksCurThread));
+        ఒకవేళ (మూలం_switched) {
+            సమితి_VMRoot(కణుపు_STATE(ksCurThread));
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
+స్థిర exception_t perform_పుట_Get_చిరునామా(శూన్య *vbase_ptr, bool_t call)
 {
     /* Get the physical address of this frame. */
     paddr_t capFBasePtr;
     capFBasePtr = addrFromPPtr(vbase_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    thread = కణుపు_STATE(ksCurThread);
+    ఒకవేళ (call) {
+        మాట_t *ipc_బఫరు = lookupIPCBuffer(true, thread);
+        సమితి_రిజిస్టరు(thread, badge_రిజిస్టరు, 0);
+        గుర్తులేని పూర్ణాంకం నిడివి = సమితి_MR(thread, ipc_బఫరు, 0, capFBasePtr);
+        సమితి_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, నిడివి)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Running);
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr,
-                                             cte_t *pdCapSlot)
+స్థిర exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr,
+                                             cte_t *pd_Cap_స్థానం)
 {
-    cap_page_directory_cap_ptr_set_capPDMappedASID(&pdCapSlot->cap, asid);
-    cap_page_directory_cap_ptr_set_capPDIsMapped(&pdCapSlot->cap, 1);
-    poolPtr->array[ASID_LOW(asid)] =
-        PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCapSlot->cap));
+    cap_పుట_directory_cap_ptr_సమితి_cap_PDMapped_ASID(&pd_Cap_స్థానం->cap, asid);
+    cap_పుట_directory_cap_ptr_సమితి_cap_PDIs_Mapped(&pd_Cap_స్థానం->cap, 1);
+    poolPtr->array[ASID_దిగువ(asid)] =
+        PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(pd_Cap_స్థానం->cap));
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
-                                                cte_t *parent, asid_t asid_base)
+స్థిర exception_t performASIDControlInvocation(శూన్య *చట్రం, cte_t *స్థానం,
+                                                cte_t *మాతృ, asid_t asid_పునాది)
 {
 
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
-    cap_untyped_cap_ptr_set_capFreeIndex(&(parent->cap),
-                                         MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(parent->cap)));
+    cap_untyped_cap_ptr_సమితి_cap_Free_సూచీ(&(మాతృ->cap),
+                                         MAX_FREE_సూచీ(cap_untyped_cap_get_cap_ఖండం_కొలత(మాతృ->cap)));
 
-    memzero(frame, 1 << ARMSmallPageBits);
+    memzero(చట్రం, 1 << ARMSmall_పుట_బిట్లు);
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(cap_asid_pool_cap_new(asid_base, WORD_REF(frame)),
-              parent, slot);;
+    cte_చొప్పించు(cap_asid_pool_cap_new(asid_పునాది, మాట_REF(చట్రం)),
+              మాతృ, స్థానం);;
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    armKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    ప్రతిజ్ఞా((asid_పునాది & ముసుగు(asid_దిగువ_బిట్లు)) == 0);
+    armKSASIDTable[ASID_ఎగువ(asid_పునాది)] = (asid_pool_t *)చట్రం;
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeARMPageDirectoryInvocation(word_t invLabel, word_t length,
+స్థిర exception_t decodeARMPageDirectoryInvocation(మాట_t invLabel, మాట_t నిడివి,
                                                     cptr_t cptr, cte_t *cte, cap_t cap,
-                                                    word_t *buffer)
+                                                    మాట_t *బఫరు)
 {
-    switch (invLabel) {
-    case ARMPDClean_Data:
-    case ARMPDInvalidate_Data:
-    case ARMPDCleanInvalidate_Data:
-    case ARMPDUnify_Instruction: {
-        vptr_t start, end;
+    ఎంపిక (invLabel) {
+    స్థితి ARMPDClean_దత్తాంశం:
+    స్థితి ARMPDInvalidate_దత్తాంశం:
+    స్థితి ARMPDClean_Invalidate_దత్తాంశం:
+    స్థితి ARMPDUnify_Instruction: {
+        vptr_t ప్రారంభం, చివర;
         paddr_t pstart;
-        findPDForASID_ret_t find_ret;
+        కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
         asid_t asid;
         pde_t *pd;
         resolve_ret_t resolve_ret;
 
-        if (length < 2) {
+        ఒకవేళ (నిడివి < 2) {
             userError("PD Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        ప్రారంభం = getSyscallArg(0, బఫరు);
+        చివర =   getSyscallArg(1, బఫరు);
 
         /* Check sanity of arguments */
-        if (end <= start) {
+        ఒకవేళ (చివర <= ప్రారంభం) {
             userError("PD Flush: Invalid range");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Don't let applications flush kernel regions. */
-        if (start >= USER_TOP || end > USER_TOP) {
+        ఒకవేళ (ప్రారంభం >= USER_శిఖరం || చివర > USER_శిఖరం) {
             userError("PD Flush: Overlaps kernel region.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(cap_get_capType(cap) != cap_page_directory_cap ||
-                     !cap_page_directory_cap_get_capPDIsMapped(cap))) {
+        ఒకవేళ (unlikely(cap_get_capType(cap) != cap_పుట_directory_cap ||
+                     !cap_పుట_directory_cap_get_cap_PDIs_Mapped(cap))) {
             userError("PD Flush: Invalid cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_సంఖ్య = 0;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* Make sure that the supplied pd is ok */
-        pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap));
-        asid = cap_page_directory_cap_get_capPDMappedASID(cap);
+        pd = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(cap));
+        asid = cap_పుట_directory_cap_get_cap_PDMapped_ASID(cap);
 
-        find_ret = findPDForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+        ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE)) {
             userError("PD Flush: No PD for ASID");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = false;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.pd != pd)) {
+        ఒకవేళ (unlikely(కనుగొను_ret.pd != pd)) {
             userError("PD Flush: Invalid PD Cap");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_సంఖ్య = 0;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Look up the frame containing 'start'. */
-        resolve_ret = resolveVAddr(pd, start);
+        resolve_ret = resolveVAddr(pd, ప్రారంభం);
 
         /* Check that there's actually something there. */
-        if (!resolve_ret.valid) {
+        ఒకవేళ (!resolve_ret.valid) {
             /* Fail silently, as there can't be any stale cached data (for the
              * given address space), and getting a syscall error because the
              * relevant page is non-resident would be 'astonishing'. */
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return EXCEPTION_NONE;
+            సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+            తిరిగి EXCEPTION_NONE;
         }
 
         /* Refuse to cross a page boundary. */
-        if (pageBase(start, resolve_ret.frameSize) !=
-            pageBase(end - 1, resolve_ret.frameSize)) {
+        ఒకవేళ (పుట_పునాది(ప్రారంభం, resolve_ret.చట్రం_కొలత) !=
+            పుట_పునాది(చివర - 1, resolve_ret.చట్రం_కొలత)) {
             userError("PD Flush: Range is across page boundary.");
             current_syscall_error.type = seL4_RangeError;
-            current_syscall_error.rangeErrorMin = start;
+            current_syscall_error.rangeErrorMin = ప్రారంభం;
             current_syscall_error.rangeErrorMax =
-                pageBase(start, resolve_ret.frameSize) +
-                MASK(pageBitsForSize(resolve_ret.frameSize));
-            return EXCEPTION_SYSCALL_ERROR;
+                పుట_పునాది(ప్రారంభం, resolve_ret.చట్రం_కొలత) +
+                ముసుగు(పుట_బిట్లు_For_కొలత(resolve_ret.చట్రం_కొలత));
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* Calculate the physical start address. */
-        pstart = resolve_ret.frameBase
-                 + (start & MASK(pageBitsForSize(resolve_ret.frameSize)));
+        pstart = resolve_ret.చట్రం_పునాది
+                 + (ప్రారంభం & ముసుగు(పుట_బిట్లు_For_కొలత(resolve_ret.చట్రం_కొలత)));
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        ఒకవేళ (pstart < phys_పునాది() || pstart > PADDR_శిఖరం || (చివర - ప్రారంభం) > PADDR_శిఖరం - pstart) {
             userError("PD Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#అయితే_ముగింపు
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPDFlush(invLabel, pd, asid, start, end - 1, pstart);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి performPDFlush(invLabel, pd, asid, ప్రారంభం, చివర - 1, pstart);
     }
 
-    default:
+    అప్రమేయ:
         userError("PD: Invalid invocation number");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
 }
 
-static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
-                                                cte_t *cte, cap_t cap, word_t *buffer)
+స్థిర exception_t decode_ARMPage_పట్టిక_Invocation(మాట_t invLabel, మాట_t నిడివి,
+                                                cte_t *cte, cap_t cap, మాట_t *బఫరు)
 {
-    word_t vaddr, pdIndex;
+    మాట_t vaddr, pd_సూచీ;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    vm_attributes_t attr;
-#endif
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    vm_లక్షణాలు_t attr;
+#అయితే_ముగింపు
     cap_t pdCap;
-    pde_t *pd, *pdSlot;
+    pde_t *pd, *pd_స్థానం;
     pde_t pde;
     asid_t asid;
     paddr_t paddr;
 
-    if (invLabel == ARMPageTableUnmap) {
-        if (unlikely(! isFinalCapability(cte))) {
+    ఒకవేళ (invLabel == ARMPage_పట్టిక_Unmap) {
+        ఒకవేళ (unlikely(! isFinalCapability(cte))) {
             userError("ARMPageTableUnmap: Cannot unmap if more than one cap exists.");
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Revoke_మొదటి;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageTableInvocationUnmap(cap, cte);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి perform_పుట_పట్టిక_Invocation_Unmap(cap, cte);
     }
 
-    if (unlikely(invLabel != ARMPageTableMap)) {
+    ఒకవేళ (unlikely(invLabel != ARMPage_పట్టిక_Map)) {
         userError("ARMPageTable: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
+    ఒకవేళ (unlikely(నిడివి < 2 || current_extra_caps.excaprefs[0] == ఖాళీ)) {
         userError("ARMPageTableMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+    ఒకవేళ (unlikely(cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap))) {
         userError("ARMPageTableMap: Page table is already mapped to page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_సంఖ్య = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    attr = vmAttributesFromWord(getSyscallArg(1, buffer));
-#endif
+    vaddr = getSyscallArg(0, బఫరు);
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    attr = vm_లక్షణాలు_From_మాట(getSyscallArg(1, బఫరు));
+#అయితే_ముగింపు
     pdCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (unlikely(cap_get_capType(pdCap) != cap_page_directory_cap ||
-                 !cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+    ఒకవేళ (unlikely(cap_get_capType(pdCap) != cap_పుట_directory_cap ||
+                 !cap_పుట_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
         userError("ARMPageTableMap: Invalid PD cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(pdCap));
-    asid = cap_page_directory_cap_get_capPDMappedASID(pdCap);
+    pd = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(pdCap));
+    asid = cap_పుట_directory_cap_get_cap_PDMapped_ASID(pdCap);
 
-    if (unlikely(vaddr >= USER_TOP)) {
+    ఒకవేళ (unlikely(vaddr >= USER_శిఖరం)) {
         userError("ARMPageTableMap: Virtual address cannot be in kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr,
-                  USER_TOP);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+                  USER_శిఖరం);
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     {
-        findPDForASID_ret_t find_ret;
+        కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
 
-        find_ret = findPDForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+        ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE)) {
             userError("ARMPageTableMap: ASID lookup failed.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = false;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.pd != pd)) {
+        ఒకవేళ (unlikely(కనుగొను_ret.pd != pd)) {
             userError("ARMPageTableMap: ASID lookup failed.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    pdIndex = vaddr >> (PAGE_BITS + PT_INDEX_BITS);
-    pdSlot = &pd[pdIndex];
-    if (unlikely(pde_ptr_get_pdeType(pdSlot) != pde_pde_invalid)) {
+    pd_సూచీ = vaddr >> (పుట_బిట్లు + PT_సూచీ_బిట్లు);
+    pd_స్థానం = &pd[pd_సూచీ];
+    ఒకవేళ (unlikely(pde_ptr_get_pdeType(pd_స్థానం) != pde_pde_invalid)) {
         userError("ARMPageTableMap: Page directory already has entry for supplied address.");
-        current_syscall_error.type = seL4_DeleteFirst;
+        current_syscall_error.type = se_L4_Delete_మొదటి;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     paddr = addrFromPPtr(
-                PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+                PTE_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap)));
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
     pde = pde_pde_coarse_new(
               paddr,
-              vm_attributes_get_armParityEnabled(attr),
+              vm_లక్షణాలు_get_arm_Parity_Enabled(attr),
               0 /* Domain */
           );
-#else
+#లేకపోతే
     pde = pde_pde_coarse_new(paddr);
-#endif
+#అయితే_ముగింపు
 
-    cap = cap_page_table_cap_set_capPTIsMapped(cap, 1);
-    cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
-    cap = cap_page_table_cap_set_capPTMappedAddress(cap, vaddr);
+    cap = cap_పుట_పట్టిక_cap_సమితి_cap_PTIs_Mapped(cap, 1);
+    cap = cap_పుట_పట్టిక_cap_సమితి_cap_PTMapped_ASID(cap, asid);
+    cap = cap_పుట_పట్టిక_cap_సమితి_cap_PTMapped_చిరునామా(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performPageTableInvocationMap(cap, cte, pde, pdSlot);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి perform_పుట_పట్టిక_Invocation_Map(cap, cte, pde, pd_స్థానం);
 }
 
-static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
-                                            cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+స్థిర exception_t decodeARMFrameInvocation(మాట_t invLabel, మాట_t నిడివి,
+                                            cte_t *cte, cap_t cap, bool_t call, మాట_t *బఫరు)
 {
-    switch (invLabel) {
-    case ARMPageMap: {
-        word_t vaddr, vtop, w_rightsMask;
+    ఎంపిక (invLabel) {
+    స్థితి ARMPageMap: {
+        మాట_t vaddr, vtop, w_rights_ముసుగు;
         paddr_t capFBasePtr;
         cap_t pdCap;
         pde_t *pd;
         asid_t asid;
         vm_rights_t capVMRights, vmRights;
-        vm_page_size_t frameSize;
-        vm_attributes_t attr;
+        vm_పుట_కొలత_t చట్రం_కొలత;
+        vm_లక్షణాలు_t attr;
 
-        if (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
+        ఒకవేళ (unlikely(నిడివి < 3 || current_extra_caps.excaprefs[0] == ఖాళీ)) {
             userError("ARMPageMap: Truncated message.");
             current_syscall_error.type =
-                seL4_TruncatedMessage;
+                se_L4_Truncated_సందేశం;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        vaddr = getSyscallArg(0, buffer);
-        w_rightsMask = getSyscallArg(1, buffer);
-        attr = vmAttributesFromWord(getSyscallArg(2, buffer));
+        vaddr = getSyscallArg(0, బఫరు);
+        w_rights_ముసుగు = getSyscallArg(1, బఫరు);
+        attr = vm_లక్షణాలు_From_మాట(getSyscallArg(2, బఫరు));
         pdCap = current_extra_caps.excaprefs[0]->cap;
 
-        frameSize = generic_frame_cap_get_capFSize(cap);
-        capVMRights = generic_frame_cap_get_capFVMRights(cap);
+        చట్రం_కొలత = generic_చట్రం_cap_get_cap_FSize(cap);
+        capVMRights = generic_చట్రం_cap_get_cap_FVMRights(cap);
 
-        if (unlikely(cap_get_capType(pdCap) != cap_page_directory_cap ||
-                     !cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+        ఒకవేళ (unlikely(cap_get_capType(pdCap) != cap_పుట_directory_cap ||
+                     !cap_పుట_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
             userError("ARMPageMap: Bad PageDirectory cap.");
             current_syscall_error.type =
                 seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        pd = PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(
+        pd = PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(
                          pdCap));
-        asid = cap_page_directory_cap_get_capPDMappedASID(pdCap);
+        asid = cap_పుట_directory_cap_get_cap_PDMapped_ASID(pdCap);
 
-        if (generic_frame_cap_get_capFIsMapped(cap)) {
-            if (generic_frame_cap_get_capFMappedASID(cap) != asid) {
+        ఒకవేళ (generic_చట్రం_cap_get_cap_FIs_Mapped(cap)) {
+            ఒకవేళ (generic_చట్రం_cap_get_cap_FMapped_ASID(cap) != asid) {
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (generic_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            ఒకవేళ (generic_చట్రం_cap_get_cap_FMapped_చిరునామా(cap) != vaddr) {
                 userError("ARMPageMap: Attempting to map frame into multiple addresses");
-                current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.type = se_L4_Invalid_వాదం;
+                current_syscall_error.invalid_వాదం_సంఖ్య = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
-            vtop = vaddr + BIT(pageBitsForSize(frameSize)) - 1;
+        } లేకపోతే {
+            vtop = vaddr + బిట్టు(పుట_బిట్లు_For_కొలత(చట్రం_కొలత)) - 1;
 
-            if (unlikely(vtop >= USER_TOP)) {
-                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_TOP);
+            ఒకవేళ (unlikely(vtop >= USER_శిఖరం)) {
+                userError("ARMPageMap: Cannot map frame over kernel window. vaddr: 0x%08lx, USER_TOP: 0x%08x", vaddr, USER_శిఖరం);
                 current_syscall_error.type =
-                    seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                    se_L4_Invalid_వాదం;
+                current_syscall_error.invalid_వాదం_సంఖ్య = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         {
-            findPDForASID_ret_t find_ret;
+            కనుగొను_PDFor_ASID_ret_t కనుగొను_ret;
 
-            find_ret = findPDForASID(asid);
-            if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+            కనుగొను_ret = కనుగొను_PDFor_ASID(asid);
+            ఒకవేళ (unlikely(కనుగొను_ret.స్థితి_2 != EXCEPTION_NONE)) {
                 userError("ARMPageMap: No PD for ASID");
                 current_syscall_error.type =
                     seL4_FailedLookup;
-                current_syscall_error.failedLookupWasSource =
+                current_syscall_error.failed_Lookup_Was_ఆధారం =
                     false;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (unlikely(find_ret.pd != pd)) {
+            ఒకవేళ (unlikely(కనుగొను_ret.pd != pd)) {
                 userError("ARMPageMap: ASID lookup failed.");
                 current_syscall_error.type =
                     seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         vmRights =
-            maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
+            ముసుగు_VMRights(capVMRights, rights_From_మాట(w_rights_ముసుగు));
 
-        if (unlikely(!checkVPAlignment(frameSize, vaddr))) {
+        ఒకవేళ (unlikely(!checkVPAlignment(చట్రం_కొలత, vaddr))) {
             userError("ARMPageMap: Virtual address has incorrect alignment.");
             current_syscall_error.type =
                 seL4_AlignmentError;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        capFBasePtr = addrFromPPtr((void *)
-                                   generic_frame_cap_get_capFBasePtr(cap));
+        capFBasePtr = addrFromPPtr((శూన్య *)
+                                   generic_చట్రం_cap_get_cap_FBase_Ptr(cap));
 
-        cap = generic_frame_cap_set_capFMappedAddress(cap, asid,
+        cap = generic_చట్రం_cap_సమితి_cap_FMapped_చిరునామా(cap, asid,
                                                       vaddr);
-        if (frameSize == ARMSmallPage || frameSize == ARMLargePage) {
+        ఒకవేళ (చట్రం_కొలత == ARMSmall_పుట || చట్రం_కొలత == ARMLarge_పుట) {
             create_mappings_pte_return_t map_ret;
-            map_ret = createSafeMappingEntries_PTE(capFBasePtr, vaddr,
-                                                   frameSize, vmRights,
+            map_ret = create_సురక్షిత_Mapping_Entries_PTE(capFBasePtr, vaddr,
+                                                   చట్రం_కొలత, vmRights,
                                                    attr, pd);
-            if (unlikely(map_ret.status != EXCEPTION_NONE)) {
-#ifdef CONFIG_PRINTING
-                if (current_syscall_error.type == seL4_DeleteFirst) {
+            ఒకవేళ (unlikely(map_ret.స్థితి_2 != EXCEPTION_NONE)) {
+#నిర్వచితమైతే CONFIG_PRINTING
+                ఒకవేళ (current_syscall_error.type == se_L4_Delete_మొదటి) {
                     userError("ARMPageMap: Page table entry was not free.");
                 }
-#endif
-                return map_ret.status;
+#అయితే_ముగింపు
+                తిరిగి map_ret.స్థితి_2;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationMapPTE(asid, cap, cte,
+            సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+            తిరిగి perform_పుట_Invocation_Map_PTE(asid, cap, cte,
                                                map_ret.pte,
                                                map_ret.pte_entries);
-        } else {
+        } లేకపోతే {
             create_mappings_pde_return_t map_ret;
-            map_ret = createSafeMappingEntries_PDE(capFBasePtr, vaddr,
-                                                   frameSize, vmRights,
+            map_ret = create_సురక్షిత_Mapping_Entries_PDE(capFBasePtr, vaddr,
+                                                   చట్రం_కొలత, vmRights,
                                                    attr, pd);
-            if (unlikely(map_ret.status != EXCEPTION_NONE)) {
-#ifdef CONFIG_PRINTING
-                if (current_syscall_error.type == seL4_DeleteFirst) {
+            ఒకవేళ (unlikely(map_ret.స్థితి_2 != EXCEPTION_NONE)) {
+#నిర్వచితమైతే CONFIG_PRINTING
+                ఒకవేళ (current_syscall_error.type == se_L4_Delete_మొదటి) {
                     userError("ARMPageMap: Page directory entry was not free.");
                 }
-#endif
-                return map_ret.status;
+#అయితే_ముగింపు
+                తిరిగి map_ret.స్థితి_2;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationMapPDE(asid, cap, cte,
+            సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+            తిరిగి perform_పుట_Invocation_Map_PDE(asid, cap, cte,
                                                map_ret.pde,
                                                map_ret.pde_entries);
         }
     }
 
-    case ARMPageUnmap: {
-#ifdef CONFIG_TK1_SMMU
-        if (isIOSpaceFrameCap(cap)) {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationUnmapIO(cap, cte);
-        } else
-#endif
+    స్థితి ARMPageUnmap: {
+#నిర్వచితమైతే CONFIG_TK1_SMMU
+        ఒకవేళ (is_IOSpace_చట్రం_Cap(cap)) {
+            సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+            తిరిగి perform_పుట_Invocation_Unmap_IO(cap, cte);
+        } లేకపోతే
+#అయితే_ముగింపు
         {
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performPageInvocationUnmap(cap, cte);
+            సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+            తిరిగి perform_పుట_Invocation_Unmap(cap, cte);
         }
     }
 
-#ifdef CONFIG_TK1_SMMU
-    case ARMPageMapIO: {
-        return decodeARMIOMapInvocation(invLabel, length, cte, cap, buffer);
+#నిర్వచితమైతే CONFIG_TK1_SMMU
+    స్థితి ARMPageMapIO: {
+        తిరిగి decodeARMIOMapInvocation(invLabel, నిడివి, cte, cap, బఫరు);
     }
-#endif
+#అయితే_ముగింపు
 
-    case ARMPageClean_Data:
-    case ARMPageInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-    case ARMPageUnify_Instruction: {
+    స్థితి ARMPage_Clean_దత్తాంశం:
+    స్థితి ARMPage_Invalidate_దత్తాంశం:
+    స్థితి ARMPage_Clean_Invalidate_దత్తాంశం:
+    స్థితి ARMPageUnify_Instruction: {
         asid_t asid;
         vptr_t vaddr;
-        findPDForASID_ret_t pd;
-        vptr_t start, end;
+        కనుగొను_PDFor_ASID_ret_t pd;
+        vptr_t ప్రారంభం, చివర;
         paddr_t pstart;
-        word_t page_size;
-        word_t page_base;
+        మాట_t పుట_కొలత;
+        మాట_t పుట_పునాది_2;
 
-        if (length < 2) {
+        ఒకవేళ (నిడివి < 2) {
             userError("Page Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid = generic_frame_cap_get_capFMappedASID(cap);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        asid = generic_చట్రం_cap_get_cap_FMapped_ASID(cap);
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Must use kernel vaddr in hyp mode. */
-        vaddr = generic_frame_cap_get_capFBasePtr(cap);
-#else
-        vaddr = generic_frame_cap_get_capFMappedAddress(cap);
-#endif
+        vaddr = generic_చట్రం_cap_get_cap_FBase_Ptr(cap);
+#లేకపోతే
+        vaddr = generic_చట్రం_cap_get_cap_FMapped_చిరునామా(cap);
+#అయితే_ముగింపు
 
-        if (unlikely(!generic_frame_cap_get_capFIsMapped(cap))) {
+        ఒకవేళ (unlikely(!generic_చట్రం_cap_get_cap_FIs_Mapped(cap))) {
             userError("Page Flush: Frame is not mapped.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        pd = findPDForASID(asid);
-        if (unlikely(pd.status != EXCEPTION_NONE)) {
+        pd = కనుగొను_PDFor_ASID(asid);
+        ఒకవేళ (unlikely(pd.స్థితి_2 != EXCEPTION_NONE)) {
             userError("Page Flush: No PD for ASID");
             current_syscall_error.type =
                 seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = false;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        ప్రారంభం = getSyscallArg(0, బఫరు);
+        చివర =   getSyscallArg(1, బఫరు);
 
         /* check that the range is sane */
-        if (end <= start) {
+        ఒకవేళ (చివర <= ప్రారంభం) {
             userError("PageFlush: Invalid range");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
 
         /* start and end are currently relative inside this page */
-        page_size = 1 << pageBitsForSize(generic_frame_cap_get_capFSize(cap));
-        page_base = addrFromPPtr((void *)generic_frame_cap_get_capFBasePtr(cap));
+        పుట_కొలత = 1 << పుట_బిట్లు_For_కొలత(generic_చట్రం_cap_get_cap_FSize(cap));
+        పుట_పునాది_2 = addrFromPPtr((శూన్య *)generic_చట్రం_cap_get_cap_FBase_Ptr(cap));
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితం_కాకపోతే CONFIG_ARM_HYPERVISOR_SUPPORT
         /* When not in hypervisor mode, we flush via user virtual addresses and
            need to make sure the mapping info in the cap is not stale. */
         resolve_ret_t resolve_ret = resolveVAddr(pd.pd, vaddr);
-        if (unlikely(!resolve_ret.valid ||
-                     resolve_ret.frameSize != generic_frame_cap_get_capFSize(cap) ||
-                     resolve_ret.frameBase != page_base)) {
+        ఒకవేళ (unlikely(!resolve_ret.valid ||
+                     resolve_ret.చట్రం_కొలత != generic_చట్రం_cap_get_cap_FSize(cap) ||
+                     resolve_ret.చట్రం_పునాది != పుట_పునాది_2)) {
             userError("Page Flush: Attempting to use cap with stale mapping information.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_సంఖ్య = 0;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#అయితే_ముగింపు
 
-        if (start >= page_size || end > page_size) {
+        ఒకవేళ (ప్రారంభం >= పుట_కొలత || చివర > పుట_కొలత) {
             userError("Page Flush: Requested range not inside page");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 0;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         /* turn start and end into absolute addresses */
-        pstart = page_base + start;
-        start += vaddr;
-        end += vaddr;
+        pstart = పుట_పునాది_2 + ప్రారంభం;
+        ప్రారంభం += vaddr;
+        చివర += vaddr;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window.
            pstart + (end - start) can overflow at the top of the address space. */
-        if (pstart < physBase() || pstart > PADDR_TOP || (end - start) > PADDR_TOP - pstart) {
+        ఒకవేళ (pstart < phys_పునాది() || pstart > PADDR_శిఖరం || (చివర - ప్రారంభం) > PADDR_శిఖరం - pstart) {
             userError("Page Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#అయితే_ముగింపు
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageFlush(invLabel, pd.pd, asid, start, end - 1, pstart);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి perform_పుట_Flush(invLabel, pd.pd, asid, ప్రారంభం, చివర - 1, pstart);
     }
 
-    case ARMPageGetAddress: {
+    స్థితి ARMPage_Get_చిరునామా: {
 
 
         /* Check that there are enough message registers */
-        assert(n_msgRegisters >= 1);
+        ప్రతిజ్ఞా(n_సందేశం_Registers >= 1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress((void *)generic_frame_cap_get_capFBasePtr(cap), call);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి perform_పుట_Get_చిరునామా((శూన్య *)generic_చట్రం_cap_get_cap_FBase_Ptr(cap), call);
     }
 
-    default:
+    అప్రమేయ:
         userError("ARMPage: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
-                                   cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMMMUInvocation(మాట_t invLabel, మాట_t నిడివి, cptr_t cptr,
+                                   cte_t *cte, cap_t cap, bool_t call, మాట_t *బఫరు)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-        return decodeARMPageDirectoryInvocation(invLabel, length, cptr, cte,
-                                                cap, buffer);
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_పుట_directory_cap:
+        తిరిగి decodeARMPageDirectoryInvocation(invLabel, నిడివి, cptr, cte,
+                                                cap, బఫరు);
 
-    case cap_page_table_cap:
-        return decodeARMPageTableInvocation(invLabel, length, cte, cap, buffer);
+    స్థితి cap_పుట_పట్టిక_cap:
+        తిరిగి decode_ARMPage_పట్టిక_Invocation(invLabel, నిడివి, cte, cap, బఫరు);
 
-    case cap_small_frame_cap:
-    case cap_frame_cap:
-        return decodeARMFrameInvocation(invLabel, length, cte, cap, call, buffer);
+    స్థితి cap_small_చట్రం_cap:
+    స్థితి cap_చట్రం_cap:
+        తిరిగి decodeARMFrameInvocation(invLabel, నిడివి, cte, cap, call, బఫరు);
 
-    case cap_asid_control_cap: {
-        word_t i;
-        asid_t asid_base;
-        word_t index, depth;
-        cap_t untyped, root;
-        cte_t *parentSlot, *destSlot;
-        lookupSlot_ret_t lu_ret;
-        void *frame;
-        exception_t status;
+    స్థితి cap_asid_control_cap: {
+        మాట_t i;
+        asid_t asid_పునాది;
+        మాట_t సూచీ, లోతు;
+        cap_t untyped, మూలం;
+        cte_t *మాతృ_స్థానం, *dest_స్థానం;
+        lookup_స్థానం_ret_t lu_ret;
+        శూన్య *చట్రం;
+        exception_t స్థితి_2;
 
-        if (unlikely(invLabel != ARMASIDControlMakePool)) {
+        ఒకవేళ (unlikely(invLabel != ARMASIDControlMakePool)) {
             userError("ASIDControl: Illegal operation.");
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL
-                     || current_extra_caps.excaprefs[1] == NULL)) {
+        ఒకవేళ (unlikely(నిడివి < 2 || current_extra_caps.excaprefs[0] == ఖాళీ
+                     || current_extra_caps.excaprefs[1] == ఖాళీ)) {
             userError("ASIDControlMakePool: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        index = getSyscallArg(0, buffer);
-        depth = getSyscallArg(1, buffer);
-        parentSlot = current_extra_caps.excaprefs[0];
-        untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        సూచీ = getSyscallArg(0, బఫరు);
+        లోతు = getSyscallArg(1, బఫరు);
+        మాతృ_స్థానం = current_extra_caps.excaprefs[0];
+        untyped = మాతృ_స్థానం->cap;
+        మూలం = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
+        కొరకు (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
 
-        if (unlikely(i == nASIDPools)) {
+        ఒకవేళ (unlikely(i == nASIDPools)) {
             userError("ASIDControlMakePool: No unallocated pools found.");
-            current_syscall_error.type = seL4_DeleteFirst;
+            current_syscall_error.type = se_L4_Delete_మొదటి;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_పునాది = i << asid_దిగువ_బిట్లు;
 
-        if (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
-                     cap_untyped_cap_get_capBlockSize(untyped) !=
-                     seL4_ASIDPoolBits || cap_untyped_cap_get_capIsDevice(untyped))) {
+        ఒకవేళ (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
+                     cap_untyped_cap_get_cap_ఖండం_కొలత(untyped) !=
+                     se_L4_ASIDPool_బిట్లు || cap_untyped_cap_get_capIsDevice(untyped))) {
             userError("ASIDControlMakePool: Invalid untyped cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        status = ensureNoChildren(parentSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        స్థితి_2 = ensureNoChildren(మాతృ_స్థానం);
+        ఒకవేళ (unlikely(స్థితి_2 != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Untyped has children. Revoke first.");
-            return status;
+            తిరిగి స్థితి_2;
         }
 
-        frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
+        చట్రం = మాట_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+        lu_ret = lookup_లక్ష్యం_స్థానం(మూలం, సూచీ, లోతు);
+        ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Failed to lookup destination slot.");
-            return lu_ret.status;
+            తిరిగి lu_ret.స్థితి_2;
         }
-        destSlot = lu_ret.slot;
+        dest_స్థానం = lu_ret.స్థానం;
 
-        status = ensureEmptySlot(destSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (unlikely(స్థితి_2 != EXCEPTION_NONE)) {
             userError("ASIDControlMakePool: Destination slot not empty.");
-            return status;
+            తిరిగి స్థితి_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot,
-                                            parentSlot, asid_base);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి performASIDControlInvocation(చట్రం, dest_స్థానం,
+                                            మాతృ_స్థానం, asid_పునాది);
     }
 
-    case cap_asid_pool_cap: {
+    స్థితి cap_asid_pool_cap: {
         cap_t pdCap;
-        cte_t *pdCapSlot;
+        cte_t *pd_Cap_స్థానం;
         asid_pool_t *pool;
-        word_t i;
+        మాట_t i;
         asid_t asid;
 
-        if (unlikely(invLabel != ARMASIDPoolAssign)) {
+        ఒకవేళ (unlikely(invLabel != ARMASIDPool_కేటాయించు)) {
             userError("ASIDPool: Illegal operation.");
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+        ఒకవేళ (unlikely(current_extra_caps.excaprefs[0] == ఖాళీ)) {
             userError("ASIDPoolAssign: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        pdCapSlot = current_extra_caps.excaprefs[0];
-        pdCap = pdCapSlot->cap;
+        pd_Cap_స్థానం = current_extra_caps.excaprefs[0];
+        pdCap = pd_Cap_స్థానం->cap;
 
-        if (unlikely(
-                cap_get_capType(pdCap) != cap_page_directory_cap ||
-                cap_page_directory_cap_get_capPDIsMapped(pdCap))) {
+        ఒకవేళ (unlikely(
+                cap_get_capType(pdCap) != cap_పుట_directory_cap ||
+                cap_పుట_directory_cap_get_cap_PDIs_Mapped(pdCap))) {
             userError("ASIDPoolAssign: Invalid page directory cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_సంఖ్య = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = armKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
-        if (unlikely(!pool)) {
+        pool = armKSASIDTable[ASID_ఎగువ(cap_asid_pool_cap_get_capASIDBase(cap))];
+        ఒకవేళ (unlikely(!pool)) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
+            current_syscall_error.failed_Lookup_Was_ఆధారం = false;
+            current_lookup_fault = lookup_fault_invalid_మూలం_new();
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
+        ఒకవేళ (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
             userError("ASIDPoolAssign: Failed to lookup pool.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_సంఖ్య = 0;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < (1 << asidLowBits) && (asid + i == 0 || pool->array[i]); i++);
+        కొరకు (i = 0; i < (1 << asid_దిగువ_బిట్లు) && (asid + i == 0 || pool->array[i]); i++);
 
-        if (unlikely(i == 1 << asidLowBits)) {
+        ఒకవేళ (unlikely(i == 1 << asid_దిగువ_బిట్లు)) {
             userError("ASIDPoolAssign: No free ASID.");
-            current_syscall_error.type = seL4_DeleteFirst;
+            current_syscall_error.type = se_L4_Delete_మొదటి;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, pdCapSlot);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి performASIDPoolInvocation(asid, pool, pd_Cap_స్థానం);
     }
 
-    default:
+    అప్రమేయ:
         fail("Invalid ARM arch cap type");
     }
 }
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
+exception_t benchmark_arch_map_log_బఫరు(మాట_t చట్రం_cptr)
 {
-    lookupCapAndSlot_ret_t lu_ret;
-    vm_page_size_t frameSize;
-    pptr_t  frame_pptr;
+    lookup_Cap_And_స్థానం_ret_t lu_ret;
+    vm_పుట_కొలత_t చట్రం_కొలత;
+    pptr_t  చట్రం_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookup_Cap_And_స్థానం(కణుపు_STATE(ksCurThread), చట్రం_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        userError("Invalid cap #%lu.", frame_cptr);
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+    ఒకవేళ (unlikely(lu_ret.స్థితి_2 != EXCEPTION_NONE)) {
+        userError("Invalid cap #%lu.", చట్రం_cptr);
+        current_fault = seL4_Fault_CapFault_new(చట్రం_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    ఒకవేళ (cap_get_capType(lu_ret.cap) != cap_చట్రం_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(చట్రం_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    frameSize = generic_frame_cap_get_capFSize(lu_ret.cap);
+    చట్రం_కొలత = generic_చట్రం_cap_get_cap_FSize(lu_ret.cap);
 
-    if (frameSize != ARMSection) {
+    ఒకవేళ (చట్రం_కొలత != ARMSection) {
         userError("Invalid frame size. The kernel expects 1M log buffer");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(చట్రం_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    frame_pptr = generic_frame_cap_get_capFBasePtr(lu_ret.cap);
+    చట్రం_pptr = generic_చట్రం_cap_get_cap_FBase_Ptr(lu_ret.cap);
 
-    ksUserLogBuffer = pptr_to_paddr((void *) frame_pptr);
+    ks_User_Log_బఫరు = pptr_గమ్యం_paddr((శూన్య *) చట్రం_pptr);
 
-    for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-        paddr_t physical_address = ksUserLogBuffer + (idx << seL4_PageBits);
+    కొరకు (పూర్ణాంకం idx = 0; idx < బిట్టు(PT_సూచీ_బిట్లు); idx++) {
+        paddr_t physical_చిరునామా = ks_User_Log_బఫరు + (idx << se_L4_పుట_బిట్లు);
 
         armKSGlobalLogPT[idx] =
             pte_pte_small_new(
-                physical_address,
+                physical_చిరునామా,
                 0, /* global */
                 0, /* Not shared */
                 0, /* APX = 0, privileged full access */
@@ -2760,156 +2760,156 @@ exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
             );
 
         cleanByVA_PoU((vptr_t)&armKSGlobalLogPT[idx], addrFromKPPtr(&armKSGlobalLogPT[idx]));
-        invalidateTranslationSingle(KS_LOG_PPTR + (idx * BIT(seL4_PageBits)));
+        invalidateTranslationSingle(KS_LOG_PPTR + (idx * బిట్టు(se_L4_పుట_బిట్లు)));
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#అయితే_ముగింపు /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_DEBUG_BUILD
-void kernelPrefetchAbort(word_t pc, word_t lr) VISIBLE;
-void kernelDataAbort(word_t pc) VISIBLE;
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+శూన్య kernelPrefetchAbort(మాట_t pc, మాట_t lr) VISIBLE;
+శూన్య kernel_దత్తాంశం_Abort(మాట_t pc) VISIBLE;
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
 
-void kernelUndefinedInstruction(word_t pc) VISIBLE;
+శూన్య kernelUndefinedInstruction(మాట_t pc) VISIBLE;
 
-void kernelPrefetchAbort(word_t pc, word_t lr)
+శూన్య kernelPrefetchAbort(మాట_t pc, మాట_t lr)
 {
-    printf("\n\nKERNEL PREFETCH ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HSR: 0x%"SEL4_PRIx_word"\n", getHSR());
-    printf("LR: 0x%"SEL4_PRIx_word"\n", lr);
+    రాయి("\n\nKERNEL PREFETCH ABORT!\n");
+    రాయి("Faulting instruction: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("HSR: 0x%"SEL4_PRIx_మాట"\n", getHSR());
+    రాయి("LR: 0x%"SEL4_PRIx_మాట"\n", lr);
     halt();
 }
 
-void kernelDataAbort(word_t pc)
+శూన్య kernel_దత్తాంశం_Abort(మాట_t pc)
 {
-    printf("\n\nKERNEL DATA ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HDFAR: 0x%"SEL4_PRIx_word" HSR: 0x%"SEL4_PRIx_word"\n",
+    రాయి("\n\nKERNEL DATA ABORT!\n");
+    రాయి("Faulting instruction: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("HDFAR: 0x%"SEL4_PRIx_మాట" HSR: 0x%"SEL4_PRIx_మాట"\n",
            getHDFAR(), getHSR());
     halt();
 }
 
-void kernelUndefinedInstruction(word_t pc)
+శూన్య kernelUndefinedInstruction(మాట_t pc)
 {
-    printf("\n\nKERNEL UNDEFINED INSTRUCTION!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("HSR: 0x%"SEL4_PRIx_word"\n", getHSR());
+    రాయి("\n\nKERNEL UNDEFINED INSTRUCTION!\n");
+    రాయి("Faulting instruction: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("HSR: 0x%"SEL4_PRIx_మాట"\n", getHSR());
     halt();
 }
 
-#else /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#లేకపోతే /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-void kernelPrefetchAbort(word_t pc, word_t lr)
+శూన్య kernelPrefetchAbort(మాట_t pc, మాట_t lr)
 {
-    printf("\n\nKERNEL PREFETCH ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("IFSR: 0x%"SEL4_PRIx_word"\n", getIFSR());
-    printf("LR: 0x%"SEL4_PRIx_word"\n", lr);
+    రాయి("\n\nKERNEL PREFETCH ABORT!\n");
+    రాయి("Faulting instruction: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("IFSR: 0x%"SEL4_PRIx_మాట"\n", getIFSR());
+    రాయి("LR: 0x%"SEL4_PRIx_మాట"\n", lr);
     halt();
 }
 
-void kernelDataAbort(word_t pc)
+శూన్య kernel_దత్తాంశం_Abort(మాట_t pc)
 {
-    printf("\n\nKERNEL DATA ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("FAR: 0x%"SEL4_PRIx_word" DFSR: 0x%"SEL4_PRIx_word"\n",
+    రాయి("\n\nKERNEL DATA ABORT!\n");
+    రాయి("Faulting instruction: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("FAR: 0x%"SEL4_PRIx_మాట" DFSR: 0x%"SEL4_PRIx_మాట"\n",
            getFAR(), getDFSR());
     halt();
 }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
 
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_PRINTING
-typedef struct readWordFromVSpace_ret {
-    exception_t status;
-    word_t value;
-} readWordFromVSpace_ret_t;
+#నిర్వచితమైతే CONFIG_PRINTING
+రకనిర్వచనం నిర్మాణం read_మాట_From_VSpace_ret {
+    exception_t స్థితి_2;
+    మాట_t విలువ;
+} read_మాట_From_VSpace_ret_t;
 
-static readWordFromVSpace_ret_t readWordFromVSpace(pde_t *pd, word_t vaddr)
+స్థిర read_మాట_From_VSpace_ret_t read_మాట_From_VSpace(pde_t *pd, మాట_t vaddr)
 {
-    readWordFromVSpace_ret_t ret;
-    lookupPTSlot_ret_t ptSlot;
-    pde_t *pdSlot;
+    read_మాట_From_VSpace_ret_t ret;
+    lookupPTSlot_ret_t pt_స్థానం;
+    pde_t *pd_స్థానం;
     paddr_t paddr;
-    word_t offset;
+    మాట_t స్థానభ్రంశం;
     pptr_t kernel_vaddr;
-    word_t *value;
+    మాట_t *విలువ;
 
-    pdSlot = lookupPDSlot(pd, vaddr);
-    if (pde_ptr_get_pdeType(pdSlot) == pde_pde_section) {
-        paddr = pde_pde_section_ptr_get_address(pdSlot);
-        offset = vaddr & MASK(ARMSectionBits);
-    } else {
-        ptSlot = lookupPTSlot(pd, vaddr);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_small) {
-            paddr = pte_pte_small_ptr_get_address(ptSlot.ptSlot);
-            if (pte_pte_small_ptr_get_contiguous_hint(ptSlot.ptSlot)) {
-                offset = vaddr & MASK(ARMLargePageBits);
-            } else {
-                offset = vaddr & MASK(ARMSmallPageBits);
+    pd_స్థానం = lookupPDSlot(pd, vaddr);
+    ఒకవేళ (pde_ptr_get_pdeType(pd_స్థానం) == pde_pde_section) {
+        paddr = pde_pde_section_ptr_get_చిరునామా(pd_స్థానం);
+        స్థానభ్రంశం = vaddr & ముసుగు(ARMSection_బిట్లు);
+    } లేకపోతే {
+        pt_స్థానం = lookupPTSlot(pd, vaddr);
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+        ఒకవేళ (pt_స్థానం.స్థితి_2 == EXCEPTION_NONE && pte_ptr_get_pteType(pt_స్థానం.pt_స్థానం) == pte_pte_small) {
+            paddr = pte_pte_small_ptr_get_చిరునామా(pt_స్థానం.pt_స్థానం);
+            ఒకవేళ (pte_pte_small_ptr_get_contiguous_hint(pt_స్థానం.pt_స్థానం)) {
+                స్థానభ్రంశం = vaddr & ముసుగు(ARMLarge_పుట_బిట్లు);
+            } లేకపోతే {
+                స్థానభ్రంశం = vaddr & ముసుగు(ARMSmall_పుట_బిట్లు);
             }
-#else
-        if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_small) {
-            paddr = pte_pte_small_ptr_get_address(ptSlot.ptSlot);
-            offset = vaddr & MASK(ARMSmallPageBits);
-        } else if (ptSlot.status == EXCEPTION_NONE && pte_ptr_get_pteType(ptSlot.ptSlot) == pte_pte_large) {
-            paddr = pte_pte_large_ptr_get_address(ptSlot.ptSlot);
-            offset = vaddr & MASK(ARMLargePageBits);
-#endif
-        } else {
-            ret.status = EXCEPTION_LOOKUP_FAULT;
-            return ret;
+#లేకపోతే
+        ఒకవేళ (pt_స్థానం.స్థితి_2 == EXCEPTION_NONE && pte_ptr_get_pteType(pt_స్థానం.pt_స్థానం) == pte_pte_small) {
+            paddr = pte_pte_small_ptr_get_చిరునామా(pt_స్థానం.pt_స్థానం);
+            స్థానభ్రంశం = vaddr & ముసుగు(ARMSmall_పుట_బిట్లు);
+        } లేకపోతే ఒకవేళ (pt_స్థానం.స్థితి_2 == EXCEPTION_NONE && pte_ptr_get_pteType(pt_స్థానం.pt_స్థానం) == pte_pte_large) {
+            paddr = pte_pte_large_ptr_get_చిరునామా(pt_స్థానం.pt_స్థానం);
+            స్థానభ్రంశం = vaddr & ముసుగు(ARMLarge_పుట_బిట్లు);
+#అయితే_ముగింపు
+        } లేకపోతే {
+            ret.స్థితి_2 = EXCEPTION_LOOKUP_FAULT;
+            తిరిగి ret;
         }
     }
 
 
-    kernel_vaddr = (word_t)paddr_to_pptr(paddr);
-    value = (word_t *)(kernel_vaddr + offset);
-    ret.status = EXCEPTION_NONE;
-    ret.value = *value;
-    return ret;
+    kernel_vaddr = (మాట_t)paddr_గమ్యం_pptr(paddr);
+    విలువ = (మాట_t *)(kernel_vaddr + స్థానభ్రంశం);
+    ret.స్థితి_2 = EXCEPTION_NONE;
+    ret.విలువ = *విలువ;
+    తిరిగి ret;
 }
 
-void Arch_userStackTrace(tcb_t *tptr)
+శూన్య Arch_user_దొంతర_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot;
+    cap_t thread_మూలం;
     pde_t *pd;
-    word_t sp;
-    int i;
+    మాట_t sp;
+    పూర్ణాంకం i;
 
-    threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    thread_మూలం = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the PD */
-    if (cap_get_capType(threadRoot) != cap_page_directory_cap) {
-        printf("Invalid vspace\n");
-        return;
+    ఒకవేళ (cap_get_capType(thread_మూలం) != cap_పుట_directory_cap) {
+        రాయి("Invalid vspace\n");
+        తిరిగి;
     }
 
-    pd = (pde_t *)pptr_of_cap(threadRoot);
+    pd = (pde_t *)pptr_యొక్క_cap(thread_మూలం);
 
-    sp = getRegister(tptr, SP);
+    sp = get_రిజిస్టరు(tptr, SP);
     /* check for alignment so we don't have to worry about accessing
      * words that might be on two different pages */
-    if (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
-        printf("SP not aligned\n");
-        return;
+    ఒకవేళ (!IS_ALIGNED(sp, se_L4_మాట_కొలత_బిట్లు)) {
+        రాయి("SP not aligned\n");
+        తిరిగి;
     }
 
-    for (i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
-        word_t address = sp + (i * sizeof(word_t));
-        readWordFromVSpace_ret_t result;
-        result = readWordFromVSpace(pd, address);
-        if (result.status == EXCEPTION_NONE) {
-            printf("0x%lx: 0x%lx\n", (long)address, (long)result.value);
-        } else {
-            printf("0x%lx: INVALID\n", (long)address);
+    కొరకు (i = 0; i < CONFIG_USER_దొంతర_TRACE_నిడివి; i++) {
+        మాట_t చిరునామా = sp + (i * పరిమాణం(మాట_t));
+        read_మాట_From_VSpace_ret_t ఫలితం;
+        ఫలితం = read_మాట_From_VSpace(pd, చిరునామా);
+        ఒకవేళ (ఫలితం.స్థితి_2 == EXCEPTION_NONE) {
+            రాయి("0x%lx: 0x%lx\n", (దీర్ఘ)చిరునామా, (దీర్ఘ)ఫలితం.విలువ);
+        } లేకపోతే {
+            రాయి("0x%lx: INVALID\n", (దీర్ఘ)చిరునామా);
         }
     }
 }
-#endif
+#అయితే_ముగింపు

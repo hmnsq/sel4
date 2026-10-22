@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <machine/io.h>
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#అన్తర్భావ <stdarg.h>
+#అన్తర్భావ <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,40 +24,40 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+రకనిర్వచనం నిర్మాణం బహిర్గతం_wrap_t  బహిర్గతం_wrap_t_2;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+రకనిర్వచనం శూన్య (*బహిర్గతం_write_fn)(బహిర్గతం_wrap_t_2 *బహిర్గతం, స్థిరరాశి అక్షరం *buf, మాట_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
-    word_t used;
+నిర్మాణం బహిర్గతం_wrap_t {
+    స్థిరరాశి బహిర్గతం_write_fn లిఖ;
+    అక్షరం *స్థిరరాశి buf;
+    స్థిరరాశి మాట_t maxlen;
+    మాట_t వాడిన_2;
 };
 
 /* printf_core() and its helpers call this to actually output something. The
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+స్థిర శూన్య బహిర్గతం(బహిర్గతం_wrap_t_2 *బహిర్గతం_wrap, స్థిరరాశి అక్షరం *buf, మాట_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    ఒకవేళ (బహిర్గతం_wrap) {
+        బహిర్గతం_wrap->లిఖ(బహిర్గతం_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
-    UNUSED out_wrap_t *out,
-    const char *buf,
-    word_t len)
+స్థిర శూన్య do_output_గమ్యం_putchar(
+    వాడని బహిర్గతం_wrap_t_2 *బహిర్గతం,
+    స్థిరరాశి అక్షరం *buf,
+    మాట_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
-            putchar(*buf++);
+    ఒకవేళ (buf) {
+        అయితే (len-- > 0) {
+            అక్షరం_రాయి(*buf++);
         }
     }
 }
@@ -65,21 +65,21 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
-    out_wrap_t *out,
-    const char *buf,
-    word_t len)
+స్థిర శూన్య do_output_గమ్యం_బఫరు(
+    బహిర్గతం_wrap_t_2 *బహిర్గతం,
+    స్థిరరాశి అక్షరం *buf,
+    మాట_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    ఒకవేళ (buf && (బహిర్గతం->వాడిన_2 < బహిర్గతం->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        మాట_t విడుదల = బహిర్గతం->maxlen - బహిర్గతం->వాడిన_2;
+        ఒకవేళ (len > విడుదల) {
+            len = విడుదల;
         }
-        memcpy(&out->buf[out->used], buf, len);
-        out->used += len;
+        జ్ఞాపకం_నకలు(&బహిర్గతం->buf[బహిర్గతం->వాడిన_2], buf, len);
+        బహిర్గతం->వాడిన_2 += len;
     }
 }
 
@@ -89,31 +89,31 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+స్థిర అంతఃవరుస bool_t అంకెనా(అక్షరం c)
 {
-    return c >= '0' &&
+    తిరిగి c >= '0' &&
            c <= '9';
 }
 
 /* Convenient bit representation for modifier flags, which all fall within 31
  * codepoints of the space character.
  */
-#define MASK_TYPE(a) (1U<<( a -' '))
+#నిర్వచించు ముసుగు_TYPE(a) (1U<<( a -' '))
 
-#define ALT_FORM     (1U<<('#'-' '))
-#define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
-#define PAD_POS      (1U<<(' '-' '))
-#define MARK_POS     (1U<<('+'-' '))
-#define GROUPED      (1U<<('\''-' '))
+#నిర్వచించు ALT_FORM     (1U<<('#'-' '))
+#నిర్వచించు ZERO_PAD     (1U<<('0'-' '))
+#నిర్వచించు ఎడమ_ADJ     (1U<<('-'-' '))
+#నిర్వచించు PAD_POS      (1U<<(' '-' '))
+#నిర్వచించు MARK_POS     (1U<<('+'-' '))
+#నిర్వచించు GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#నిర్వచించు FLAGMASK (ALT_FORM|ZERO_PAD|ఎడమ_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+గణన {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -121,17 +121,17 @@ enum {
     LONG, ULONG,
     SHORT, USHORT, CHAR, UCHAR,
     WORDT, LLONG,
-#define IMAX LLONG
-#define UMAX ULLONG
-#define PDIFF LONG
-#define UIPTR ULONG
+#నిర్వచించు IMAX LLONG
+#నిర్వచించు UMAX ULLONG
+#నిర్వచించు PDIFF LONG
+#నిర్వచించు UIPTR ULONG
     NOARG,
     MAXSTATE
 };
 
-#define S(x) [(x)-'A']
+#నిర్వచించు S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+స్థిర స్థిరరాశి గుర్తులేని అక్షరం స్థితులు[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -174,95 +174,95 @@ static const unsigned char states[]['z' - 'A' + 1] = {
     }
 };
 
-#define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
-#define DIGIT(c) (c - '0')
+#నిర్వచించు OOB(x) ((గుర్తులేని)(x)-'A' > 'z'-'A')
+#నిర్వచించు DIGIT(c) (c - '0')
 
-union arg {
+సంఘం arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    దీర్ఘ ద్విగుణ f;
+    శూన్య *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+స్థిర శూన్య తీయి_arg(సంఘం arg *arg, పూర్ణాంకం type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
-        arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
-        arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
-        arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
-        arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
-        arg->i = va_arg(*ap, word_t);
+    ఎంపిక (type) {
+    స్థితి PTR:
+        arg->p = va_arg(*ap, శూన్య *);
+        ఆపు;
+    స్థితి INT:
+        arg->i = va_arg(*ap, పూర్ణాంకం);
+        ఆపు;
+    స్థితి UINT:
+        arg->i = va_arg(*ap, గుర్తులేని పూర్ణాంకం);
+        ఆపు;
+    స్థితి LONG:
+        arg->i = va_arg(*ap, దీర్ఘ);
+        ఆపు;
+    స్థితి ULONG:
+        arg->i = va_arg(*ap, గుర్తులేని దీర్ఘ);
+        ఆపు;
+    స్థితి LLONG:
+        arg->i = va_arg(*ap, దీర్ఘ దీర్ఘ);
+        ఆపు;
+    స్థితి ULLONG:
+        arg->i = va_arg(*ap, గుర్తులేని దీర్ఘ దీర్ఘ);
+        ఆపు;
+    స్థితి SHORT:
+        arg->i = (పొట్టి)va_arg(*ap, పూర్ణాంకం);
+        ఆపు;
+    స్థితి USHORT:
+        arg->i = (గుర్తులేని పొట్టి)va_arg(*ap, పూర్ణాంకం);
+        ఆపు;
+    స్థితి CHAR:
+        arg->i = (గుర్తుగల అక్షరం)va_arg(*ap, పూర్ణాంకం);
+        ఆపు;
+    స్థితి UCHAR:
+        arg->i = (గుర్తులేని అక్షరం)va_arg(*ap, పూర్ణాంకం);
+        ఆపు;
+    స్థితి WORDT:
+        arg->i = va_arg(*ap, మాట_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+స్థిర శూన్య pad(బహిర్గతం_wrap_t_2 *f, అక్షరం c, పూర్ణాంకం w, పూర్ణాంకం l, పూర్ణాంకం fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    అక్షరం pad[32]; /* good enough for what the kernel prints */
+    ఒకవేళ (fl & (ఎడమ_ADJ | ZERO_PAD) || l >= w) {
+        తిరిగి;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > పరిమాణం(pad) ? పరిమాణం(pad) : l);
+    కొరకు (; l >= పరిమాణం(pad); l -= పరిమాణం(pad)) {
+        బహిర్గతం(f, pad, పరిమాణం(pad));
     }
-    out(f, pad, l);
+    బహిర్గతం(f, pad, l);
 }
 
-static const char xdigits[16] = {
+స్థిర స్థిరరాశి అక్షరం xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+స్థిర అక్షరం *fmt_x(uintmax_t x, అక్షరం *s, పూర్ణాంకం క్రింది)
 {
-    for (; x; x >>= 4) {
-        *--s = xdigits[(x & 15)] | lower;
+    కొరకు (; x; x >>= 4) {
+        *--s = xdigits[(x & 15)] | క్రింది;
     }
-    return s;
+    తిరిగి s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+స్థిర అక్షరం *fmt_o(uintmax_t x, అక్షరం *s)
 {
-    for (; x; x >>= 3) {
+    కొరకు (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    తిరిగి s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+స్థిర అక్షరం *fmt_u(uintmax_t x, అక్షరం *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    అయితే (0 != x) {
+#ఒకవేళ defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,332 +277,332 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        గుర్తులేని పూర్ణాంకం rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        ఒకవేళ (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            ప్రతిజ్ఞా(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#లేకపోతే
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
-#endif
+        గుర్తులేని పూర్ణాంకం rem = x % 10;
+#అయితే_ముగింపు
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    తిరిగి s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
  * reduced/removed if we could measure the buf length under all code paths
  */
-#define LDBL_MANT_DIG 113
+#నిర్వచించు LDBL_MANT_DIG 113
 
-#define NL_ARGMAX 9
+#నిర్వచించు NL_ARGMAX 9
 
-static int getint(char **s)
+స్థిర పూర్ణాంకం getint(అక్షరం **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    పూర్ణాంకం i;
+    కొరకు (i = 0; అంకెనా(**s); (*s)++) {
+        ఒకవేళ (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } లేకపోతే {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    తిరిగి i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+స్థిర పూర్ణాంకం printf_core(బహిర్గతం_wrap_t_2 *f, స్థిరరాశి అక్షరం *fmt, va_list *ap, సంఘం arg *nl_arg, పూర్ణాంకం *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
-    unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
-    unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    అక్షరం *a, *z, *s = (అక్షరం *)fmt;
+    గుర్తులేని l10n = 0, fl;
+    పూర్ణాంకం w, p, xp;
+    సంఘం arg arg;
+    పూర్ణాంకం argpos;
+    గుర్తులేని st, ps;
+    పూర్ణాంకం cnt = 0, l = 0;
+    అక్షరం buf[పరిమాణం(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    స్థిరరాశి అక్షరం *ఉపసర్గ;
+    పూర్ణాంకం t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    కొరకు (;;) {
+        ఒకవేళ (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            తిరిగి -1; /*అధికప్రవాహం*/
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        ఒకవేళ (!*s) {
+            ఆపు;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        కొరకు (a = s; *s && *s != '%'; s++);
+        కొరకు (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        ఒకవేళ (z - a > INTMAX_MAX - cnt) {
+            తిరిగి -1; /*అధికప్రవాహం*/
         }
         l = z - a;
-        out(f, a, l);
-        if (l) {
-            continue;
+        బహిర్గతం(f, a, l);
+        ఒకవేళ (l) {
+            కొనసాగు;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        ఒకవేళ (అంకెనా(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } లేకపోతే {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
-            fl |= MASK_TYPE(*s);
+        కొరకు (fl = 0; (గుర్తులేని)*s - ' ' < 32 && (FLAGMASK & ముసుగు_TYPE(*s)); s++) {
+            fl |= ముసుగు_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        ఒకవేళ (*s == '*') {
+            ఒకవేళ (అంకెనా(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } లేకపోతే ఒకవేళ (!l10n) {
+                w = f ? va_arg(*ap, పూర్ణాంకం) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } లేకపోతే {
+                తిరిగి -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            ఒకవేళ (w < 0) {
+                fl |= ఎడమ_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } లేకపోతే ఒకవేళ ((w = getint(&s)) < 0) {
+            తిరిగి -1; /*అధికప్రవాహం*/
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        ఒకవేళ (*s == '.' && s[1] == '*') {
+            ఒకవేళ (అంకెనా(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } లేకపోతే ఒకవేళ (!l10n) {
+                p = f ? va_arg(*ap, పూర్ణాంకం) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } లేకపోతే {
+                తిరిగి -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } లేకపోతే ఒకవేళ (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } లేకపోతే {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        చేయి {
+            ఒకవేళ (OOB(*s)) {
+                తిరిగి -1; /* invalid */
             }
             ps = st;
-            st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+            st = స్థితులు[st]S(*s++);
+        } అయితే (st - 1 < STOP);
+        ఒకవేళ (!st) {
+            తిరిగి -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        ఒకవేళ (st == NOARG) {
+            ఒకవేళ (argpos >= 0) {
+                తిరిగి -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } లేకపోతే {
+            ఒకవేళ (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } లేకపోతే ఒకవేళ (f) {
+                తీయి_arg(&arg, st, ap);
+            } లేకపోతే {
+                తిరిగి 0;
             }
         }
 
-        if (!f) {
-            continue;
+        ఒకవేళ (!f) {
+            కొనసాగు;
         }
 
-        z = buf + sizeof(buf);
-        prefix = "-+   0X0x";
+        z = buf + పరిమాణం(buf);
+        ఉపసర్గ = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        ఒకవేళ (fl & ఎడమ_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        ఒకవేళ (t == 'n') {
+            ఒకవేళ (!arg.p) {
+                కొనసాగు;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
-                *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
-                *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
-                *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
-                *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
-                *(word_t *)arg.p = cnt;
-                break;
+            ఎంపిక (ps) {
+            స్థితి BARE:
+                *(పూర్ణాంకం *)arg.p = cnt;
+                ఆపు;
+            స్థితి LPRE:
+                *(దీర్ఘ *)arg.p = cnt;
+                ఆపు;
+            స్థితి LLPRE:
+                *(దీర్ఘ దీర్ఘ *)arg.p = cnt;
+                ఆపు;
+            స్థితి HPRE:
+                *(గుర్తులేని పొట్టి *)arg.p = cnt;
+                ఆపు;
+            స్థితి HHPRE:
+                *(గుర్తులేని అక్షరం *)arg.p = cnt;
+                ఆపు;
+            స్థితి ZTPRE:
+                *(మాట_t *)arg.p = cnt;
+                ఆపు;
+            స్థితి JPRE:
+                *(మాట_t *)arg.p = cnt;
+                ఆపు;
             }
-            continue;
-        } else if (t == 'c') {
+            కొనసాగు;
+        } లేకపోతే ఒకవేళ (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } లేకపోతే ఒకవేళ (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            ఒకవేళ (p < 0 && *z) {
+                తిరిగి -1; /*అధికప్రవాహం*/
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } లేకపోతే {
+            ఎంపిక (t) {
+            స్థితి 'p':
+                p = MAX(p, 2 * పరిమాణం(శూన్య *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            స్థితి 'x':
+            స్థితి 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
-                    prefix += (t >> 4);
+                ఒకవేళ (arg.i && (fl & ALT_FORM)) {
+                    ఉపసర్గ += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                ఆపు;
+            స్థితి 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                ఒకవేళ ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                ఆపు;
+            స్థితి 'd':
+            స్థితి 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                ఒకవేళ (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
-                    prefix++;
-                } else if (fl & PAD_POS) {
-                    prefix += 2;
-                } else {
+                } లేకపోతే ఒకవేళ (fl & MARK_POS) {
+                    ఉపసర్గ++;
+                } లేకపోతే ఒకవేళ (fl & PAD_POS) {
+                    ఉపసర్గ += 2;
+                } లేకపోతే {
                     pl = 0;
                 }
-            case 'u':
+            స్థితి 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                ఆపు;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            ఒకవేళ (xp && p < 0) {
+                తిరిగి -1; /*అధికప్రవాహం*/
             }
-            if (xp) {
+            ఒకవేళ (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            ఒకవేళ (!arg.i && !p) {
                 a = z;
-            } else {
+            } లేకపోతే {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        ఒకవేళ (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        ఒకవేళ (p > INTMAX_MAX - pl) {
+            తిరిగి -1; /*అధికప్రవాహం*/
         }
-        if (w < pl + p) {
+        ఒకవేళ (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        ఒకవేళ (w > INTMAX_MAX - cnt) {
+            తిరిగి -1; /*అధికప్రవాహం*/
         }
 
         pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
+        బహిర్గతం(f, ఉపసర్గ, pl);
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        బహిర్గతం(f, a, z - a);
+        pad(f, ' ', w, pl + p, fl ^ ఎడమ_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    ఒకవేళ (f) {
+        తిరిగి cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    ఒకవేళ (!l10n) {
+        తిరిగి 0;
     }
 
-    return 1;
+    పూర్ణాంకం i;
+    కొరకు (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        తీయి_arg(nl_arg + i, nl_type[i], ap);
+    }
+    కొరకు (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    ఒకవేళ (i <= NL_ARGMAX) {
+        తిరిగి -1; /* invalid */
+    }
+
+    తిరిగి 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+స్థిర పూర్ణాంకం vprintf(బహిర్గతం_wrap_t_2 *బహిర్గతం, స్థిరరాశి అక్షరం *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    పూర్ణాంకం nl_type[NL_ARGMAX + 1] = {0};
+    సంఘం arg nl_arg[NL_ARGMAX + 1];
+    పూర్ణాంకం ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
-        va_end(ap2);
-        return -1;
+    ఒకవేళ (printf_core(ఖాళీ, fmt, &ap2, nl_arg, nl_type) < 0) {
+        va_చివర(ap2);
+        తిరిగి -1;
     }
 
-    ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
-    va_end(ap2);
-    return ret;
+    ret = printf_core(బహిర్గతం, fmt, &ap2, nl_arg, nl_type);
+    va_చివర(ap2);
+    తిరిగి ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+పూర్ణాంకం impl_kvprintf(స్థిరరాశి అక్షరం *format, va_list ap)
 {
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+    బహిర్గతం_wrap_t_2 బహిర్గతం_wrap =  {
+        .లిఖ  = do_output_గమ్యం_putchar,
+        .buf    = ఖాళీ,
         .maxlen = 0,
-        .used   = 0
+        .వాడిన_2   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    తిరిగి vprintf(&బహిర్గతం_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+పూర్ణాంకం impl_ksnvprintf(అక్షరం *str, మాట_t కొలత, స్థిరరాశి అక్షరం *format, va_list ap)
 {
-    if (!str) {
-        size = 0;
+    ఒకవేళ (!str) {
+        కొలత = 0;
     }
 
-    out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+    బహిర్గతం_wrap_t_2 బహిర్గతం_wrap =  {
+        .లిఖ  = do_output_గమ్యం_బఫరు,
         .buf    = str,
-        .maxlen = size,
-        .used   = 0
+        .maxlen = కొలత,
+        .వాడిన_2   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    పూర్ణాంకం ret = vprintf(&బహిర్గతం_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
-        str[(ret < size) ? ret : size - 1] = '\0';
+    ఒకవేళ ((ret > 0) && (కొలత > 0)) {
+        str[(ret < కొలత) ? ret : కొలత - 1] = '\0';
     }
 
-    return ret;
+    తిరిగి ret;
 }
 
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */

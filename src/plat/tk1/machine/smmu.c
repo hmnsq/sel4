@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <config.h>
 
-#ifdef CONFIG_TK1_SMMU
+#నిర్వచితమైతే CONFIG_TK1_SMMU
 
-#include <plat/machine/smmu.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <object/structures.h>
-
-
-#define MC_PADDR                    0x70019000
-#define SMMU_CONFIG_OFFSET          0x10
-
-#define PTB_DATA_BASE_SHIFT         12
-#define PTB_DATA_READ               BIT(31)
-#define PTB_DATA_WRITE              BIT(30)
-#define PTB_DATA_NONSECURE          BIT(29)
-#define PTB_DATA_BASE_PD_MASK       0x3fffff
-
-#define MODULE_ASID_ENABLE          BIT(31)
-
-#define PTC_FLUSH_ALL               0
-#define PTC_FLUSH_ADR               1
-
-#define TLB_ASID_MATCH              BIT(31)
-#define TLB_FLUSH_ALL               (0)
-#define TLB_FLUSH_SECTION           (2)
-#define TLB_FLUSH_GROUP             (3)
-
-#define MC_DECERR_MTS_BIT           16u
-#define MC_SECERR_SEC_BIT           13u
-#define MC_DECERR_VPR_BIT           12u
-#define MC_APB_ASID_UPDATE_BIT      11u
-#define MC_SMMU_PAGE_BIT            10u
-#define MC_ARBITRATION_EMEM_BIT     9u
-#define MC_SECURITY_BIT             8u
-#define MC_DECERR_EMEM_BIT          6u
+#అన్తర్భావ <plat/machine/smmu.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/hardware.h>
+#అన్తర్భావ <object/structures.h>
 
 
-#define MC_ERR_ID_MASK              0x7f
-#define MC_ERR_ADR_MASK             0x7000
-#define MC_ERR_RW_MASK              0x10000
-#define MC_ERR_SEC_MASK             0x20000
-#define MC_ERR_SWAP_MASK            0x40000
-#define MC_ERR_ADR_HI_MASK          0x300000
-#define MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK     0x2000000
-#define MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK         0x4000000
-#define MC_ERR_INVALID_SMMU_PAGE_READ_MASK          0x8000000
-#define MC_ERR_TYPE_MASK                            0x70000000
-#define MC_ERR_TYPE_SHIFT                           28
+#నిర్వచించు MC_PADDR                    0x70019000
+#నిర్వచించు SMMU_CONFIG_స్థానభ్రంశం          0x10
 
-#define MC_ERR_TYPE_RSVD                0
-#define MC_ERR_TYPE_DECERR_EMEM         2
-#define MC_ERR_TYPE_SECURITY            3
-#define MC_ERR_TYPE_SECURITY_CARVEOUT   4
-#define MC_ERR_TYPE_INVALID_SMMU_PAGE   6
+#నిర్వచించు PTB_దత్తాంశం_పునాది_జరుపు         12
+#నిర్వచించు PTB_దత్తాంశం_READ               బిట్టు(31)
+#నిర్వచించు PTB_దత్తాంశం_WRITE              బిట్టు(30)
+#నిర్వచించు PTB_దత్తాంశం_NONSECURE          బిట్టు(29)
+#నిర్వచించు PTB_దత్తాంశం_పునాది_PD_ముసుగు       0x3fffff
 
-#define IOPDE_4M_INDEX_SHIFT            22
+#నిర్వచించు MODULE_ASID_ENABLE          బిట్టు(31)
 
-static volatile tk1_mc_regs_t *smmu_regs = (volatile tk1_mc_regs_t *)(SMMU_PPTR);
+#నిర్వచించు PTC_FLUSH_ALL               0
+#నిర్వచించు PTC_FLUSH_ADR               1
 
-static char smmu_pds[ARM_PLAT_NUM_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
+#నిర్వచించు TLB_ASID_సరిపోలిక              బిట్టు(31)
+#నిర్వచించు TLB_FLUSH_ALL               (0)
+#నిర్వచించు TLB_FLUSH_SECTION           (2)
+#నిర్వచించు TLB_FLUSH_సమూహం             (3)
 
-static void do_smmu_enable(void)
+#నిర్వచించు MC_DECERR_MTS_బిట్టు           16u
+#నిర్వచించు MC_SECERR_SEC_బిట్టు           13u
+#నిర్వచించు MC_DECERR_VPR_బిట్టు           12u
+#నిర్వచించు MC_APB_ASID_UPDATE_బిట్టు      11u
+#నిర్వచించు MC_SMMU_పుట_బిట్టు            10u
+#నిర్వచించు MC_ARBITRATION_EMEM_బిట్టు     9u
+#నిర్వచించు MC_SECURITY_బిట్టు             8u
+#నిర్వచించు MC_DECERR_EMEM_బిట్టు          6u
+
+
+#నిర్వచించు MC_ERR_ID_ముసుగు              0x7f
+#నిర్వచించు MC_ERR_ADR_ముసుగు             0x7000
+#నిర్వచించు MC_ERR_RW_ముసుగు              0x10000
+#నిర్వచించు MC_ERR_SEC_ముసుగు             0x20000
+#నిర్వచించు MC_ERR_మార్పిడి_ముసుగు            0x40000
+#నిర్వచించు MC_ERR_ADR_HI_ముసుగు          0x300000
+#నిర్వచించు MC_ERR_INVALID_SMMU_పుట_NONSECURE_ముసుగు     0x2000000
+#నిర్వచించు MC_ERR_INVALID_SMMU_పుట_WRITE_ముసుగు         0x4000000
+#నిర్వచించు MC_ERR_INVALID_SMMU_పుట_READ_ముసుగు          0x8000000
+#నిర్వచించు MC_ERR_TYPE_ముసుగు                            0x70000000
+#నిర్వచించు MC_ERR_TYPE_జరుపు                           28
+
+#నిర్వచించు MC_ERR_TYPE_RSVD                0
+#నిర్వచించు MC_ERR_TYPE_DECERR_EMEM         2
+#నిర్వచించు MC_ERR_TYPE_SECURITY            3
+#నిర్వచించు MC_ERR_TYPE_SECURITY_CARVEOUT   4
+#నిర్వచించు MC_ERR_TYPE_INVALID_SMMU_పుట   6
+
+#నిర్వచించు IOPDE_4_M_సూచీ_జరుపు            22
+
+స్థిర అస్థిర tk1_mc_regs_t *smmu_regs = (అస్థిర tk1_mc_regs_t *)(SMMU_PPTR);
+
+స్థిర అక్షరం smmu_pds[ARM_PLAT_అంకె_SMMU][బిట్టు(SMMU_PD_సూచీ_బిట్లు)] ALIGN(బిట్టు(SMMU_PD_సూచీ_బిట్లు));
+
+స్థిర శూన్య do_smmu_enable(శూన్య)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    అస్థిర uint32_t *config = (అస్థిర uint32_t *)(MC_PADDR + SMMU_CONFIG_స్థానభ్రంశం);
     *config = 1;
 }
 
-static void do_smmu_disable(void)
+స్థిర శూన్య do_smmu_disable(శూన్య)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    అస్థిర uint32_t *config = (అస్థిర uint32_t *)(MC_PADDR + SMMU_CONFIG_స్థానభ్రంశం);
     *config = 0;
 }
 
-static inline void smmu_disable(void)
+స్థిర అంతఃవరుస శూన్య smmu_disable(శూన్య)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ఒకవేళ (config_సమితి(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* in hyp mode, we need call the hook in monitor mode */
         /* we need physical address here */
         paddr_t addr = addrFromKPPtr(&do_smmu_disable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm అస్థిర("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } లేకపోతే {
         /* in secure mode, can enable it directly */
         smmu_regs->smmu_config = 0;
     }
 
-    return;
+    తిరిగి;
 }
 
-static inline void smmu_enable(void)
+స్థిర అంతఃవరుస శూన్య smmu_enable(శూన్య)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ఒకవేళ (config_సమితి(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         paddr_t addr = addrFromKPPtr(&do_smmu_enable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm అస్థిర("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } లేకపోతే {
         smmu_regs->smmu_config = 1;
     }
 
-    return;
+    తిరిగి;
 }
 
 
-static uint32_t make_ptb_data(uint32_t pd_base, bool_t read, bool_t write, bool_t nonsecure)
+స్థిర uint32_t make_ptb_దత్తాంశం(uint32_t pd_పునాది, bool_t పఠ, bool_t లిఖ, bool_t nonsecure)
 {
     uint32_t ret = 0;
-    ret = (pd_base >> PTB_DATA_BASE_SHIFT);
+    ret = (pd_పునాది >> PTB_దత్తాంశం_పునాది_జరుపు);
 
-    if (read) {
-        ret |= PTB_DATA_READ;
+    ఒకవేళ (పఠ) {
+        ret |= PTB_దత్తాంశం_READ;
     }
-    if (write) {
-        ret |= PTB_DATA_WRITE;
+    ఒకవేళ (లిఖ) {
+        ret |= PTB_దత్తాంశం_WRITE;
     }
-    if (nonsecure) {
-        ret |= PTB_DATA_NONSECURE;
+    ఒకవేళ (nonsecure) {
+        ret |= PTB_దత్తాంశం_NONSECURE;
     }
 
-    return ret;
+    తిరిగి ret;
 }
 
-void plat_smmu_ptc_flush_all(void)
+శూన్య plat_smmu_ptc_flush_all(శూన్య)
 {
     uint32_t cmd = PTC_FLUSH_ALL;
     smmu_regs->smmu_ptc_flush = cmd;
 }
 
-void plat_smmu_tlb_flush_all(void)
+శూన్య plat_smmu_tlb_flush_all(శూన్య)
 {
     uint32_t cmd = TLB_FLUSH_ALL;
     smmu_regs->smmu_tlb_flush = cmd;
 }
 
-BOOT_CODE int plat_smmu_init(void)
+BOOT_సంకేతం పూర్ణాంకం plat_smmu_init(శూన్య)
 {
     uint32_t asid;
 
     smmu_disable();
 
-    for (asid = SMMU_FIRST_ASID; asid <= SMMU_LAST_ASID; asid++) {
-        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    కొరకు (asid = SMMU_మొదటి_ASID; asid <= SMMU_చివరి_ASID; asid++) {
+        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_మొదటి_ASID];
 
-        memset(pd, 0, BIT(SMMU_PD_INDEX_BITS));
-        cleanCacheRange_RAM((word_t)pd, ((word_t)pd + BIT(SMMU_PD_INDEX_BITS)),
+        memset(pd, 0, బిట్టు(SMMU_PD_సూచీ_బిట్లు));
+        cleanCacheRange_RAM((మాట_t)pd, ((మాట_t)pd + బిట్టు(SMMU_PD_సూచీ_బిట్లు)),
                             addrFromPPtr(pd));
 
         smmu_regs->smmu_ptb_asid = asid;
 
         /* make it read/write/nonsecure but all translation entries are invalid */
-        smmu_regs->smmu_ptb_data = make_ptb_data(pptr_to_paddr(pd), true, true, true);
+        smmu_regs->smmu_ptb_దత్తాంశం = make_ptb_దత్తాంశం(pptr_గమ్యం_paddr(pd), true, true, true);
     }
-    printf("Total %d IOASID set up\n", (asid - 1));
+    రాయి("Total %d IOASID set up\n", (asid - 1));
 
     /* now assign IOASID to each module */
     smmu_regs->smmu_afi_asid = SMMU_AFI_ASID | MODULE_ASID_ENABLE;
@@ -202,72 +202,72 @@ BOOT_CODE int plat_smmu_init(void)
     smmu_enable();
 
     /* also need to unmask interrupts */
-    if (config_set(CONFIG_SMMU_INTERRUPT_ENABLE)) {
-        smmu_regs->intmask = BIT(MC_APB_ASID_UPDATE_BIT) | BIT(MC_SMMU_PAGE_BIT) |
-                             BIT(MC_DECERR_MTS_BIT) | BIT(MC_SECERR_SEC_BIT) |
-                             BIT(MC_DECERR_VPR_BIT) | BIT(MC_ARBITRATION_EMEM_BIT) |
-                             BIT(MC_SECURITY_BIT) | BIT(MC_DECERR_EMEM_BIT);
-    } else {
+    ఒకవేళ (config_సమితి(CONFIG_SMMU_అంతరాయం_ENABLE)) {
+        smmu_regs->intmask = బిట్టు(MC_APB_ASID_UPDATE_బిట్టు) | బిట్టు(MC_SMMU_పుట_బిట్టు) |
+                             బిట్టు(MC_DECERR_MTS_బిట్టు) | బిట్టు(MC_SECERR_SEC_బిట్టు) |
+                             బిట్టు(MC_DECERR_VPR_బిట్టు) | బిట్టు(MC_ARBITRATION_EMEM_బిట్టు) |
+                             బిట్టు(MC_SECURITY_బిట్టు) | బిట్టు(MC_DECERR_EMEM_బిట్టు);
+    } లేకపోతే {
         smmu_regs->intmask = 0;
     }
-    return ARM_PLAT_NUM_SMMU;
+    తిరిగి ARM_PLAT_అంకె_SMMU;
 }
 
 iopde_t *plat_smmu_lookup_iopd_by_asid(uint32_t asid)
 {
     /* There should be no way to generate bad ASID values through the kernel
      * so this is an assertion and not a check */
-    assert(asid >= SMMU_FIRST_ASID && asid <= SMMU_LAST_ASID);
-    return (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    ప్రతిజ్ఞా(asid >= SMMU_మొదటి_ASID && asid <= SMMU_చివరి_ASID);
+    తిరిగి (iopde_t *) smmu_pds[asid - SMMU_మొదటి_ASID];
 }
 
-void plat_smmu_handle_interrupt(void)
+శూన్య plat_smmu_handle_అంతరాయం(శూన్య)
 {
-    uint32_t status = smmu_regs->intstatus;
-    uint32_t clear_status = 0;
+    uint32_t స్థితి_2 = smmu_regs->intstatus;
+    uint32_t clear_స్థితి = 0;
 
-    if (status & BIT(MC_DECERR_MTS_BIT)) {
-        clear_status |= BIT(MC_DECERR_MTS_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_DECERR_MTS_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_DECERR_MTS_బిట్టు);
     }
-    if (status & BIT(MC_SECERR_SEC_BIT)) {
-        clear_status |= BIT(MC_SECERR_SEC_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_SECERR_SEC_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_SECERR_SEC_బిట్టు);
     }
-    if (status & BIT(MC_DECERR_VPR_BIT)) {
-        clear_status |= BIT(MC_DECERR_VPR_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_DECERR_VPR_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_DECERR_VPR_బిట్టు);
     }
-    if (status & BIT(MC_ARBITRATION_EMEM_BIT)) {
-        clear_status |= BIT(MC_ARBITRATION_EMEM_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_ARBITRATION_EMEM_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_ARBITRATION_EMEM_బిట్టు);
     }
-    if (status & BIT(MC_SECURITY_BIT)) {
-        clear_status |= BIT(MC_SECURITY_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_SECURITY_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_SECURITY_బిట్టు);
     }
-    if (status & BIT(MC_DECERR_EMEM_BIT)) {
-        clear_status |= BIT(MC_DECERR_EMEM_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_DECERR_EMEM_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_DECERR_EMEM_బిట్టు);
     }
-    if (status & BIT(MC_APB_ASID_UPDATE_BIT)) {
-        clear_status |= BIT(MC_APB_ASID_UPDATE_BIT);
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_APB_ASID_UPDATE_బిట్టు)) {
+        clear_స్థితి |= బిట్టు(MC_APB_ASID_UPDATE_బిట్టు);
     }
 
     /* we only care about SMMU translation failures */
-    if (status & BIT(MC_SMMU_PAGE_BIT)) {
-        if (config_set(CONFIG_PRINTING)) {
-            uint32_t err_status = smmu_regs->err_status;
-            uint32_t UNUSED err_adr = smmu_regs->err_adr;
-            uint32_t UNUSED id = err_status & MC_ERR_ID_MASK;
-            uint32_t UNUSED rw = (err_status & MC_ERR_RW_MASK);
-            uint32_t UNUSED read = (err_status & MC_ERR_INVALID_SMMU_PAGE_READ_MASK);
-            uint32_t UNUSED write = (err_status & MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK);
-            uint32_t UNUSED nonsecure = (err_status & MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK);
-            uint32_t UNUSED type = (err_status & MC_ERR_TYPE_MASK) >> MC_ERR_TYPE_SHIFT;
+    ఒకవేళ (స్థితి_2 & బిట్టు(MC_SMMU_పుట_బిట్టు)) {
+        ఒకవేళ (config_సమితి(CONFIG_PRINTING)) {
+            uint32_t err_స్థితి = smmu_regs->err_స్థితి;
+            uint32_t వాడని err_adr = smmu_regs->err_adr;
+            uint32_t వాడని id = err_స్థితి & MC_ERR_ID_ముసుగు;
+            uint32_t వాడని rw = (err_స్థితి & MC_ERR_RW_ముసుగు);
+            uint32_t వాడని పఠ = (err_స్థితి & MC_ERR_INVALID_SMMU_పుట_READ_ముసుగు);
+            uint32_t వాడని లిఖ = (err_స్థితి & MC_ERR_INVALID_SMMU_పుట_WRITE_ముసుగు);
+            uint32_t వాడని nonsecure = (err_స్థితి & MC_ERR_INVALID_SMMU_పుట_NONSECURE_ముసుగు);
+            uint32_t వాడని type = (err_స్థితి & MC_ERR_TYPE_ముసుగు) >> MC_ERR_TYPE_జరుపు;
 
-            printf("SMMU Address translation error:\n");
-            printf("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
-            printf("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", read, write, nonsecure);
+            రాయి("SMMU Address translation error:\n");
+            రాయి("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
+            రాయి("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", పఠ, లిఖ, nonsecure);
         }
-        clear_status |= BIT(MC_SMMU_PAGE_BIT);
+        clear_స్థితి |= బిట్టు(MC_SMMU_పుట_బిట్టు);
     }
 
     /* write 1 to clear the interrupt */
-    smmu_regs->intstatus = clear_status;
+    smmu_regs->intstatus = clear_స్థితి;
 }
-#endif
+#అయితే_ముగింపు

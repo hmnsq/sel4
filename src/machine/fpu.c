@@ -4,47 +4,47 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/fpu.h>
-#include <api/failures.h>
-#include <model/statedata.h>
-#include <arch/object/structures.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <arch/object/structures.h>
 
-#ifdef CONFIG_HAVE_FPU
+#నిర్వచితమైతే CONFIG_HAVE_FPU
 /* Switch the owner of the FPU to the given thread on local core. */
-void switchLocalFpuOwner(tcb_t *new_owner)
+శూన్య switchLocalFpuOwner(tcb_t *new_owner)
 {
     enableFpu();
-    if (NODE_STATE(ksCurFPUOwner)) {
-        saveFpuState(NODE_STATE(ksCurFPUOwner));
+    ఒకవేళ (కణుపు_STATE(ksCurFPUOwner)) {
+        saveFpuState(కణుపు_STATE(ksCurFPUOwner));
     }
-    if (new_owner) {
-        loadFpuState(new_owner);
-    } else {
+    ఒకవేళ (new_owner) {
+        ఎక్కించు_Fpu_State(new_owner);
+    } లేకపోతే {
         disableFpu();
     }
-    NODE_STATE(ksCurFPUOwner) = new_owner;
+    కణుపు_STATE(ksCurFPUOwner) = new_owner;
 }
 
-void switchFpuOwner(tcb_t *new_owner, word_t cpu)
+శూన్య switchFpuOwner(tcb_t *new_owner, మాట_t cpu)
 {
-#ifdef ENABLE_SMP_SUPPORT
-    if (cpu != getCurrentCPUIndex()) {
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+    ఒకవేళ (cpu != getCurrentCPUIndex()) {
         doRemoteswitchFpuOwner(new_owner, cpu);
-    } else
-#endif /* ENABLE_SMP_SUPPORT */
+    } లేకపోతే
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
     {
         switchLocalFpuOwner(new_owner);
     }
 }
 
 /* Prepare for the deletion of the given thread. */
-void fpuRelease(tcb_t *thread)
+శూన్య fpuRelease(tcb_t *thread)
 {
     /* If the thread being deleted currently owns the FPU, switch away from it
      * so that 'ksCurFPUOwner' doesn't point to invalid memory. */
-    if (nativeThreadUsingFPU(thread)) {
-        switchFpuOwner(NULL, SMP_TERNARY(thread->tcbAffinity, 0));
+    ఒకవేళ (nativeThreadUsingFPU(thread)) {
+        switchFpuOwner(ఖాళీ, SMP_TERNARY(thread->tcbAffinity, 0));
     }
 }
-#endif /* CONFIG_HAVE_FPU */
+#అయితే_ముగింపు /* CONFIG_HAVE_FPU */

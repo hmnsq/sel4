@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
 
-#define URXD  0x00 /* UART Receiver Register */
-#define UTXD  0x40 /* UART Transmitter Register */
-#define UCR1  0x80 /* UART Control Register 1 */
-#define UCR2  0x84 /* UART Control Register 2 */
-#define UCR3  0x88 /* UART Control Register 3 */
-#define UCR4  0x8c /* UART Control Register 4 */
-#define UFCR  0x90 /* UART FIFO Control Register */
-#define USR1  0x94 /* UART Status Register 1 */
-#define USR2  0x98 /* UART Status Register 2 */
-#define UESC  0x9c /* UART Escape Character Register */
-#define UTIM  0xa0 /* UART Escape Timer Register */
-#define UBIR  0xa4 /* UART BRM Incremental Register */
-#define UBMR  0xa8 /* UART BRM Modulator Register */
-#define UBRC  0xac /* UART Baud Rate Counter Register */
-#define ONEMS 0xb0 /* UART One Millisecond Register */
-#define UTS   0xb4 /* UART Test Register */
+#నిర్వచించు URXD  0x00 /* UART Receiver Register */
+#నిర్వచించు UTXD  0x40 /* UART Transmitter Register */
+#నిర్వచించు UCR1  0x80 /* UART Control Register 1 */
+#నిర్వచించు UCR2  0x84 /* UART Control Register 2 */
+#నిర్వచించు UCR3  0x88 /* UART Control Register 3 */
+#నిర్వచించు UCR4  0x8c /* UART Control Register 4 */
+#నిర్వచించు UFCR  0x90 /* UART FIFO Control Register */
+#నిర్వచించు USR1  0x94 /* UART Status Register 1 */
+#నిర్వచించు USR2  0x98 /* UART Status Register 2 */
+#నిర్వచించు UESC  0x9c /* UART Escape Character Register */
+#నిర్వచించు UTIM  0xa0 /* UART Escape Timer Register */
+#నిర్వచించు UBIR  0xa4 /* UART BRM Incremental Register */
+#నిర్వచించు UBMR  0xa8 /* UART BRM Modulator Register */
+#నిర్వచించు UBRC  0xac /* UART Baud Rate Counter Register */
+#నిర్వచించు ONEMS 0xb0 /* UART One Millisecond Register */
+#నిర్వచించు UTS   0xb4 /* UART Test Register */
 
-#define UART_SR1_TRDY         BIT(13)
-#define UART_SR1_RRDY         BIT(9)
-#define UART_SR2_TXFIFO_EMPTY BIT(14)
-#define UART_SR2_RXFIFO_RDR   BIT(0)
+#నిర్వచించు UART_SR1_TRDY         బిట్టు(13)
+#నిర్వచించు UART_SR1_RRDY         బిట్టు(9)
+#నిర్వచించు UART_SR2_TXFIFO_ఖాళీలు బిట్టు(14)
+#నిర్వచించు UART_SR2_RXFIFO_RDR   బిట్టు(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#నిర్వచించు UART_REG(x) ((అస్థిర uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#నిర్వచితమైతే CONFIG_PRINTING
+శూన్య uart_drv_putchar(గుర్తులేని అక్షరం c)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
+    అయితే (!(*UART_REG(USR2) & UART_SR2_TXFIFO_ఖాళీలు));
     *UART_REG(UTXD) = c;
 }
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం uart_drv_getchar(శూన్య)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
-    return *UART_REG(URXD);
+    అయితే (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
+    తిరిగి *UART_REG(URXD);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

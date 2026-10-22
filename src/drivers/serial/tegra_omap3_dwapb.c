@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
 
-#define UTHR        0x0
-#define ULSR        0x14
+#నిర్వచించు UTHR        0x0
+#నిర్వచించు ULSR        0x14
 
-#define ULSR_THRE   BIT(5)
-#define ULSR_RDR    BIT(0)
+#నిర్వచించు ULSR_THRE   బిట్టు(5)
+#నిర్వచించు ULSR_RDR    బిట్టు(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#నిర్వచించు UART_REG(x) ((అస్థిర uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#నిర్వచితమైతే CONFIG_PRINTING
+శూన్య uart_drv_putchar(గుర్తులేని అక్షరం c)
 {
-    while ((*UART_REG(ULSR) & ULSR_THRE) == 0);
+    అయితే ((*UART_REG(ULSR) & ULSR_THRE) == 0);
 
     *UART_REG(UTHR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం uart_drv_getchar(శూన్య)
 {
-    while ((*UART_REG(ULSR) & ULSR_RDR) == 0);
+    అయితే ((*UART_REG(ULSR) & ULSR_RDR) == 0);
 
-    return *UART_REG(UTHR);
+    తిరిగి *UART_REG(UTHR);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

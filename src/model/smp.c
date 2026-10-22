@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/smp.h>
-#include <object/tcb.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <model/smp.h>
+#అన్తర్భావ <object/tcb.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
 
-void migrateTCB(tcb_t *tcb, word_t new_core)
+శూన్య migrateTCB(tcb_t *tcb, మాట_t new_core)
 {
-    if (new_core == tcb->tcbAffinity) {
-        return;
+    ఒకవేళ (new_core == tcb->tcbAffinity) {
+        తిరిగి;
     }
-#ifdef CONFIG_DEBUG_BUILD
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
     tcbDebugRemove(tcb);
-#endif
-#ifdef CONFIG_HAVE_FPU
+#అయితే_ముగింపు
+#నిర్వచితమైతే CONFIG_HAVE_FPU
     /* If the thread owns the FPU of the core it is currently running on (which
      * is not necessarily the core, that we are now running on), then release
      * that cores's FPU.
      */
     fpuRelease(tcb);
-#endif /* CONFIG_HAVE_FPU */
+#అయితే_ముగింపు /* CONFIG_HAVE_FPU */
     tcb->tcbAffinity = new_core;
-#ifdef CONFIG_DEBUG_BUILD
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
     tcbDebugAppend(tcb);
-#endif
+#అయితే_ముగింపు
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */

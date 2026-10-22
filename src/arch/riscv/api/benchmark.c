@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#ifdef CONFIG_ENABLE_BENCHMARK
+#నిర్వచితమైతే CONFIG_ENABLE_BENCHMARK
 
-#endif /* CONFIG_ENABLE_BENCHMARK */
+#అయితే_ముగింపు /* CONFIG_ENABLE_BENCHMARK */
 
 

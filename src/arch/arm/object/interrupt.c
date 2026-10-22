@@ -4,224 +4,224 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <config.h>
 
-#include <arch/object/interrupt.h>
+#అన్తర్భావ <arch/object/interrupt.h>
 
-static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, bool_t trigger)
+స్థిర exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handler_స్థానం, cte_t *control_స్థానం, bool_t trigger)
 {
-    if (config_set(HAVE_SET_TRIGGER)) {
-        setIRQTrigger(irq, trigger);
+    ఒకవేళ (config_సమితి(HAVE_సమితి_TRIGGER)) {
+        సమితి_IRQTrigger(irq, trigger);
     }
-    return invokeIRQControl(irq, handlerSlot, controlSlot);
+    తిరిగి invokeIRQControl(irq, handler_స్థానం, control_స్థానం);
 }
 
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
+#నిర్వచితం_కాకపోతే CONFIG_ENABLE_SMP_SUPPORT
 
-static exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *sgiSlot, cte_t *controlSlot)
+స్థిర exception_t Arch_invokeIssueSGISignal(మాట_t irq, మాట_t లక్ష్యం, cte_t *sgi_స్థానం, cte_t *control_స్థానం)
 {
-    cteInsert(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
-    return EXCEPTION_NONE;
+    cte_చొప్పించు(cap_sgi_signal_cap_new(లక్ష్యం, irq), control_స్థానం, sgi_స్థానం);
+    తిరిగి EXCEPTION_NONE;
 }
 
-#endif
+#అయితే_ముగింపు
 
-exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
-                                            cte_t *srcSlot, word_t *buffer)
+exception_t Arch_decodeIRQControlInvocation(మాట_t invLabel, మాట_t నిడివి,
+                                            cte_t *src_స్థానం, మాట_t *బఫరు)
 {
-    if (invLabel == ARMIRQIssueIRQHandlerTrigger) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (invLabel == ARMIRQIssueIRQHandlerTrigger) {
+        ఒకవేళ (నిడివి < 4 || current_extra_caps.excaprefs[0] == ఖాళీ) {
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!config_set(HAVE_SET_TRIGGER)) {
+        ఒకవేళ (!config_సమితి(HAVE_సమితి_TRIGGER)) {
             userError("This platform does not support setting the IRQ trigger");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t irq_w = getSyscallArg(0, buffer);
-        irq_t irq = (irq_t) CORE_IRQ_TO_IRQT(0, irq_w);
-        bool_t trigger = !!getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer);
+        మాట_t irq_w = getSyscallArg(0, బఫరు);
+        irq_t irq = (irq_t) CORE_IRQ_గమ్యం_IRQT(0, irq_w);
+        bool_t trigger = !!getSyscallArg(1, బఫరు);
+        మాట_t సూచీ = getSyscallArg(2, బఫరు);
+        మాట_t లోతు = getSyscallArg(3, బఫరు);
 
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-        exception_t status = Arch_checkIRQ(irq_w);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        exception_t స్థితి_2 = Arch_checkIRQ(irq_w);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
 
-#if defined ENABLE_SMP_SUPPORT
-        if (IRQ_IS_PPI(irq)) {
+#ఒకవేళ defined ENABLE_SMP_SUPPORT
+        ఒకవేళ (IRQ_IS_PPI(irq)) {
             userError("Trying to get a handler on a PPI: use GetTriggerCore.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        if (isIRQActive(irq)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+#అయితే_ముగింపు
+        ఒకవేళ (isIRQActive(irq)) {
+            current_syscall_error.type = se_L4_Revoke_మొదటి;
+            userError("Rejecting request for IRQ %u. Already active.", (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookup_స్థానం_ret_t lu_ret = lookup_లక్ష్యం_స్థానం(cnodeCap, సూచీ, లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(బఫరు, 0), (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి lu_ret.స్థితి_2;
         }
 
-        cte_t *destSlot = lu_ret.slot;
+        cte_t *dest_స్థానం = lu_ret.స్థానం;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(బఫరు, 0), (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి స్థితి_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueSGISignal) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి Arch_invokeIRQControl(irq, dest_స్థానం, src_స్థానం, trigger);
+#నిర్వచితం_కాకపోతే CONFIG_ENABLE_SMP_SUPPORT
+    } లేకపోతే ఒకవేళ (invLabel == ARMIRQIssueSGISignal) {
+        ఒకవేళ (నిడివి < 4 || current_extra_caps.excaprefs[0] == ఖాళీ) {
             userError("IRQControl: IssueSGISignal: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (wrap_config_set(NUM_SGIS) == 0) {
+        ఒకవేళ (wrap_config_సమితి(అంకె_SGIS) == 0) {
             current_syscall_error.type = seL4_IllegalOperation;
             userError("IRQControl: IssueSGISignal not available on this platform.");
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t irq = getSyscallArg(0, buffer);
-        word_t target = getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer);
+        మాట_t irq = getSyscallArg(0, బఫరు);
+        మాట_t లక్ష్యం = getSyscallArg(1, బఫరు);
+        మాట_t సూచీ = getSyscallArg(2, బఫరు);
+        మాట_t లోతు = getSyscallArg(3, బఫరు);
 
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (irq >= wrap_config_set(NUM_SGIS)) {
+        ఒకవేళ (irq >= wrap_config_సమితి(అంకె_SGIS)) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
-            current_syscall_error.rangeErrorMax = NUM_SGIS - 1;
+            current_syscall_error.rangeErrorMax = అంకె_SGIS - 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI IRQ 0x%lx.", irq);
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!plat_SGITargetValid(target)) {
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            userError("IRQControl: IssueSGISignal: Invalid SGI Target 0x%lx.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+        ఒకవేళ (!plat_SGITargetValid(లక్ష్యం)) {
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+            userError("IRQControl: IssueSGISignal: Invalid SGI Target 0x%lx.", లక్ష్యం);
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookup_స్థానం_ret_t lu_ret = lookup_లక్ష్యం_స్థానం(cnodeCap, సూచీ, లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap invalid: cap %lu.",
-                      getExtraCPtr(buffer, 0));
-            return lu_ret.status;
+                      getExtraCPtr(బఫరు, 0));
+            తిరిగి lu_ret.స్థితి_2;
         }
-        cte_t *destSlot = lu_ret.slot;
+        cte_t *dest_స్థానం = lu_ret.స్థానం;
 
-        exception_t status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        exception_t స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap not empty: cap %lu.",
-                      getExtraCPtr(buffer, 0));
-            return status;
+                      getExtraCPtr(బఫరు, 0));
+            తిరిగి స్థితి_2;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి Arch_invokeIssueSGISignal(irq, లక్ష్యం, dest_స్థానం, src_స్థానం);
 
-#endif
-#ifdef ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
-        word_t irq_w = getSyscallArg(0, buffer);
-        bool_t trigger = !!getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer) & 0xfful;
-        seL4_Word target = getSyscallArg(4, buffer);
+#అయితే_ముగింపు
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+    } లేకపోతే ఒకవేళ (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
+        మాట_t irq_w = getSyscallArg(0, బఫరు);
+        bool_t trigger = !!getSyscallArg(1, బఫరు);
+        మాట_t సూచీ = getSyscallArg(2, బఫరు);
+        మాట_t లోతు = getSyscallArg(3, బఫరు) & 0xfful;
+        se_L4_మాట లక్ష్యం = getSyscallArg(4, బఫరు);
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
-        exception_t status = Arch_checkIRQ(irq_w);
-        irq_t irq = CORE_IRQ_TO_IRQT(target, irq_w);
+        exception_t స్థితి_2 = Arch_checkIRQ(irq_w);
+        irq_t irq = CORE_IRQ_గమ్యం_IRQT(లక్ష్యం, irq_w);
 
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
 
-        if (target >= CONFIG_MAX_NUM_NODES) {
-            current_syscall_error.type = seL4_InvalidArgument;
-            userError("Target core %lu is invalid.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+        ఒకవేళ (లక్ష్యం >= CONFIG_MAX_అంకె_NODES) {
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            userError("Target core %lu is invalid.", లక్ష్యం);
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (isIRQActive(irq)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+        ఒకవేళ (isIRQActive(irq)) {
+            current_syscall_error.type = se_L4_Revoke_మొదటి;
+            userError("Rejecting request for IRQ %u. Already active.", (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookup_స్థానం_ret_t lu_ret = lookup_లక్ష్యం_స్థానం(cnodeCap, సూచీ, లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(బఫరు, 0), (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి lu_ret.స్థితి_2;
         }
 
-        cte_t *destSlot = lu_ret.slot;
+        cte_t *dest_స్థానం = lu_ret.స్థానం;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(బఫరు, 0), (పూర్ణాంకం)IRQT_గమ్యం_IRQ(irq));
+            తిరిగి స్థితి_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
 
         /* If the IRQ is not a private interrupt, then the role of the syscall is to set
          * target core to which the shared interrupt will be physically delivered.
          */
-        if (!IRQ_IS_PPI(irq)) {
-            setIRQTarget(irq, target);
+        ఒకవేళ (!IRQ_IS_PPI(irq)) {
+            సమితి_IRQTarget(irq, లక్ష్యం);
         }
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
-#endif /* ENABLE_SMP_SUPPORT */
-    } else {
+        తిరిగి Arch_invokeIRQControl(irq, dest_స్థానం, src_స్థానం, trigger);
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
+    } లేకపోతే {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
+#నిర్వచితం_కాకపోతే CONFIG_ENABLE_SMP_SUPPORT
 
-static exception_t invokeSGISignalGenerate(word_t irq, word_t target)
+స్థిర exception_t invokeSGISignalGenerate(మాట_t irq, మాట_t లక్ష్యం)
 {
-    plat_sendSGI(irq, target);
-    return EXCEPTION_NONE;
+    plat_sendSGI(irq, లక్ష్యం);
+    తిరిగి EXCEPTION_NONE;
 }
 
 
-exception_t decodeSGISignalInvocation(word_t invLabel, word_t length,
-                                      cap_t cap, word_t *buffer)
+exception_t decodeSGISignalInvocation(మాట_t invLabel, మాట_t నిడివి,
+                                      cap_t cap, మాట_t *బఫరు)
 {
 
-    word_t irq = cap_sgi_signal_cap_get_capSGIIRQ(cap);
-    word_t target = cap_sgi_signal_cap_get_capSGITarget(cap);
+    మాట_t irq = cap_sgi_signal_cap_get_capSGIIRQ(cap);
+    మాట_t లక్ష్యం = cap_sgi_signal_cap_get_capSGITarget(cap);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSGISignalGenerate(irq, target);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeSGISignalGenerate(irq, లక్ష్యం);
 }
-#endif /* !CONFIG_ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు /* !CONFIG_ENABLE_SMP_SUPPORT */

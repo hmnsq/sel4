@@ -6,25 +6,25 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <api/types.h>
+#అన్తర్భావ <arch/types.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <arch/object/structures.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
 asid_pool_t *riscvKSASIDTable[nASIDPools];
 
 /* Kernel Page Tables */
-pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t kernel_మూలం_పుట_పట్టిక[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
 
-#if __riscv_xlen != 32
-pte_t kernel_image_level1_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t kernel_image_level1_dev_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#elif defined(CONFIG_KERNEL_LOG_BUFFER)
-pte_t kernel_image_level1_log_buffer_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-#endif
+#ఒకవేళ __riscv_xlen != 32
+pte_t kernel_image_level1_pt[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
+pte_t kernel_image_level1_dev_pt[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
+#లేదావేళ defined(CONFIG_KERNEL_LOG_బఫరు)
+pte_t kernel_image_level1_log_బఫరు_pt[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
+#అయితే_ముగింపు
 
 SMP_STATE_DEFINE(core_map_t, coreMap);

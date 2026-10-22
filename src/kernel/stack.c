@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/stack.h>
+#అన్తర్భావ <kernel/stack.h>
 
-VISIBLE ALIGN(KERNEL_STACK_ALIGNMENT)
-char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+VISIBLE ALIGN(KERNEL_దొంతర_ALIGNMENT)
+అక్షరం kernel_దొంతర_alloc[CONFIG_MAX_అంకె_NODES][బిట్టు(CONFIG_KERNEL_దొంతర_బిట్లు)];

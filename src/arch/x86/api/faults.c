@@ -4,89 +4,89 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <util.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <api/faults.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <util.h>
 
-bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
+bool_t Arch_handle_Fault_జవాబు(tcb_t *receiver, tcb_t *sender, మాట_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    ఎంపిక (faultType) {
+    స్థితి seL4_Fault_VMFault:
+        తిరిగి true;
 
-    default:
+    అప్రమేయ:
         fail("Invalid fault");
     }
 }
 
-word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
+మాట_t Arch_సమితి_MRs_fault(tcb_t *sender, tcb_t *receiver, మాట_t *receiveIPCBuffer, మాట_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
-              seL4_Fault_VMFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
+    ఎంపిక (faultType) {
+    స్థితి seL4_Fault_VMFault: {
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
+              se_L4_Fault_VMFault_get_చిరునామా(sender->tcbFault));
+        సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        తిరిగి సమితి_MR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
-    default:
+    అప్రమేయ:
         fail("Invalid fault");
     }
 }
 
-word_t handleKernelException(
-    word_t vector,
-    word_t errcode,
-    word_t ip,
-    word_t sp,
-    word_t flags,
-    word_t cr0,
-    word_t cr2,
-    word_t cr3,
-    word_t cr4
+మాట_t handleKernelException(
+    మాట_t సదిశ,
+    మాట_t errcode,
+    మాట_t ip,
+    మాట_t sp,
+    మాట_t flags,
+    మాట_t cr0,
+    మాట_t cr2,
+    మాట_t cr3,
+    మాట_t cr4
 );
 
 VISIBLE
-word_t handleKernelException(
-    word_t vector,
-    word_t errcode,
-    word_t ip,
-    word_t sp,
-    word_t flags,
-    word_t cr0,
-    word_t cr2,
-    word_t cr3,
-    word_t cr4
+మాట_t handleKernelException(
+    మాట_t సదిశ,
+    మాట_t errcode,
+    మాట_t ip,
+    మాట_t sp,
+    మాట_t flags,
+    మాట_t cr0,
+    మాట_t cr2,
+    మాట_t cr3,
+    మాట_t cr4
 )
 {
-    word_t i;
+    మాట_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
-        word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
-        ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
-        return ret;
+    ఒకవేళ (సదిశ == int_gp_fault && ARCH_కణుపు_STATE(x86_KSGPExcept_Return_గమ్యం) != 0) {
+        మాట_t ret = ARCH_కణుపు_STATE(x86_KSGPExcept_Return_గమ్యం);
+        ARCH_కణుపు_STATE(x86_KSGPExcept_Return_గమ్యం) = 0;
+        తిరిగి ret;
     }
-    printf("\n========== KERNEL EXCEPTION ==========\n");
-    printf("Vector:  0x%lx\n", vector);
-    printf("ErrCode: 0x%lx\n", errcode);
-    printf("IP:      0x%lx\n", ip);
-    printf("SP:      0x%lx\n", sp);
-    printf("FLAGS:   0x%lx\n", flags);
-    printf("CR0:     0x%lx\n", cr0);
-    printf("CR2:     0x%lx (page-fault address)\n", cr2);
-    printf("CR3:     0x%lx (page-directory physical address)\n", cr3);
-    printf("CR4:     0x%lx\n", cr4);
-    printf("\nStack Dump:\n");
-    for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
-        printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
+    రాయి("\n========== KERNEL EXCEPTION ==========\n");
+    రాయి("Vector:  0x%lx\n", సదిశ);
+    రాయి("ErrCode: 0x%lx\n", errcode);
+    రాయి("IP:      0x%lx\n", ip);
+    రాయి("SP:      0x%lx\n", sp);
+    రాయి("FLAGS:   0x%lx\n", flags);
+    రాయి("CR0:     0x%lx\n", cr0);
+    రాయి("CR2:     0x%lx (page-fault address)\n", cr2);
+    రాయి("CR3:     0x%lx (page-directory physical address)\n", cr3);
+    రాయి("CR4:     0x%lx\n", cr4);
+    రాయి("\nStack Dump:\n");
+    కొరకు (i = 0; i < 20; i++) {
+        మాట_t వాడని దొంతర = sp + i * పరిమాణం(మాట_t);
+        రాయి("*0x%lx == 0x%lx\n", దొంతర, *(మాట_t *)దొంతర);
     }
-    printf("\nHalting...\n");
+    రాయి("\nHalting...\n");
     halt();
     UNREACHABLE();
 }

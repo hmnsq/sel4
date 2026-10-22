@@ -4,75 +4,75 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <benchmark/benchmark_utilisation.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <benchmark/benchmark_utilisation.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_UTILISATION
 
 timestamp_t ksEnter;
 
-void benchmark_track_utilisation_dump(void)
+శూన్య benchmark_track_utilisation_dump(శూన్య)
 {
-    uint64_t *buffer = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, NODE_STATE(ksCurThread)))->msg[0]));
-    tcb_t *tcb = NULL;
-    word_t tcb_cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    uint64_t *బఫరు = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, కణుపు_STATE(ksCurThread)))->సందేశం[0]));
+    tcb_t *tcb = ఖాళీ;
+    మాట_t tcb_cptr = get_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు);
     lookupCap_ret_t lu_ret;
-    word_t cap_type;
+    మాట_t cap_type;
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
+    lu_ret = lookupCap(కణుపు_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    ఒకవేళ (cap_type != cap_thread_cap) {
         userError("SysBenchmarkFinalizeLog: cap is not a TCB, halting");
-        return;
+        తిరిగి;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
 
     /* Selected TCB counters */
-    buffer[BENCHMARK_TCB_UTILISATION] = tcb->benchmark.utilisation; /* Requested thread utilisation */
-    buffer[BENCHMARK_TCB_NUMBER_SCHEDULES] = tcb->benchmark.number_schedules; /* Number of times scheduled */
-    buffer[BENCHMARK_TCB_KERNEL_UTILISATION] = tcb->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_TCB_NUMBER_KERNEL_ENTRIES] = tcb->benchmark.number_kernel_entries; /* Number of kernel entries */
+    బఫరు[BENCHMARK_TCB_UTILISATION] = tcb->benchmark.utilisation; /* Requested thread utilisation */
+    బఫరు[BENCHMARK_TCB_సంఖ్య_SCHEDULES] = tcb->benchmark.సంఖ్య_schedules; /* Number of times scheduled */
+    బఫరు[BENCHMARK_TCB_KERNEL_UTILISATION] = tcb->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
+    బఫరు[BENCHMARK_TCB_సంఖ్య_KERNEL_ENTRIES] = tcb->benchmark.సంఖ్య_kernel_entries; /* Number of kernel entries */
 
     /* Idle counters */
-    buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = NODE_STATE(
+    బఫరు[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = కణుపు_STATE(
                                                       ksIdleThread)->benchmark.utilisation; /* Idle thread utilisation of current CPU */
-#ifdef ENABLE_SMP_SUPPORT
-    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = NODE_STATE_ON_CORE(ksIdleThread,
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+    బఫరు[BENCHMARK_IDLE_TCBCPU_UTILISATION] = కణుపు_STATE_ON_CORE(ksIdleThread,
                                                                    tcb->tcbAffinity)->benchmark.utilisation; /* Idle thread utilisation of CPU the TCB is running on */
-#else
-    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
-#endif
+#లేకపోతే
+    బఫరు[BENCHMARK_IDLE_TCBCPU_UTILISATION] = బఫరు[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
+#అయితే_ముగింపు
 
-    buffer[BENCHMARK_IDLE_NUMBER_SCHEDULES] = NODE_STATE(
-                                                  ksIdleThread)->benchmark.number_schedules; /* Number of times scheduled */
-    buffer[BENCHMARK_IDLE_KERNEL_UTILISATION] = NODE_STATE(
+    బఫరు[BENCHMARK_IDLE_సంఖ్య_SCHEDULES] = కణుపు_STATE(
+                                                  ksIdleThread)->benchmark.సంఖ్య_schedules; /* Number of times scheduled */
+    బఫరు[BENCHMARK_IDLE_KERNEL_UTILISATION] = కణుపు_STATE(
                                                     ksIdleThread)->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_IDLE_NUMBER_KERNEL_ENTRIES] = NODE_STATE(
-                                                       ksIdleThread)->benchmark.number_kernel_entries; /* Number of kernel entries */
+    బఫరు[BENCHMARK_IDLE_సంఖ్య_KERNEL_ENTRIES] = కణుపు_STATE(
+                                                       ksIdleThread)->benchmark.సంఖ్య_kernel_entries; /* Number of kernel entries */
 
 
     /* Total counters */
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-    buffer[BENCHMARK_TOTAL_UTILISATION] =
-        (ARCH_NODE_STATE(ccnt_num_overflows) * 0xFFFFFFFFU) + NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time);
-#else
-    buffer[BENCHMARK_TOTAL_UTILISATION] = NODE_STATE(benchmark_end_time) - NODE_STATE(
-                                              benchmark_start_time); /* Overall time */
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
-    buffer[BENCHMARK_TOTAL_NUMBER_SCHEDULES] = NODE_STATE(benchmark_kernel_number_schedules);
-    buffer[BENCHMARK_TOTAL_KERNEL_UTILISATION] = NODE_STATE(benchmark_kernel_time);
-    buffer[BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES] = NODE_STATE(benchmark_kernel_number_entries);
+#నిర్వచితమైతే CONFIG_ARM_ENABLE_PMU_అధికప్రవాహం_అంతరాయం
+    బఫరు[BENCHMARK_మొత్తం_UTILISATION] =
+        (ARCH_కణుపు_STATE(ccnt_అంకె_overflows) * 0xFFFFFFFFU) + కణుపు_STATE(benchmark_చివర_సమయం) - కణుపు_STATE(benchmark_ప్రారంభం_సమయం);
+#లేకపోతే
+    బఫరు[BENCHMARK_మొత్తం_UTILISATION] = కణుపు_STATE(benchmark_చివర_సమయం) - కణుపు_STATE(
+                                              benchmark_ప్రారంభం_సమయం); /* Overall time */
+#అయితే_ముగింపు /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+    బఫరు[BENCHMARK_మొత్తం_సంఖ్య_SCHEDULES] = కణుపు_STATE(benchmark_kernel_సంఖ్య_schedules);
+    బఫరు[BENCHMARK_మొత్తం_KERNEL_UTILISATION] = కణుపు_STATE(benchmark_kernel_సమయం);
+    బఫరు[BENCHMARK_మొత్తం_సంఖ్య_KERNEL_ENTRIES] = కణుపు_STATE(benchmark_kernel_సంఖ్య_entries);
 
 }
 
-void benchmark_track_reset_utilisation(tcb_t *tcb)
+శూన్య benchmark_track_reset_utilisation(tcb_t *tcb)
 {
     tcb->benchmark.utilisation = 0;
-    tcb->benchmark.number_schedules = 0;
-    tcb->benchmark.number_kernel_entries = 0;
+    tcb->benchmark.సంఖ్య_schedules = 0;
+    tcb->benchmark.సంఖ్య_kernel_entries = 0;
     tcb->benchmark.kernel_utilisation = 0;
-    tcb->benchmark.schedule_start_time = 0;
+    tcb->benchmark.కాలపట్టిక_ప్రారంభం_సమయం = 0;
 }
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#అయితే_ముగింపు /* CONFIG_BENCHMARK_TRACK_UTILISATION */

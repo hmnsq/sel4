@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <stdint.h>
-#include <util.h>
+#అన్తర్భావ <assert.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
 
 /*
  * memzero needs a custom type that allows us to use a word
  * that has the aliasing properties of a char.
  */
-typedef unsigned long __attribute__((__may_alias__)) ulong_alias;
+రకనిర్వచనం గుర్తులేని దీర్ఘ __attribute__((__may_alias__)) ulong_alias;
 
 /*
  * Zero 'n' bytes of memory starting from 's'.
  *
  * 'n' and 's' must be word aligned.
  */
-void memzero(void *s, unsigned long n)
+శూన్య memzero(శూన్య *s, గుర్తులేని దీర్ఘ n)
 {
     uint8_t *p = s;
 
     /* Ensure alignment constraints are met. */
-    assert((unsigned long)s % sizeof(unsigned long) == 0);
-    assert(n % sizeof(unsigned long) == 0);
+    ప్రతిజ్ఞా((గుర్తులేని దీర్ఘ)s % పరిమాణం(గుర్తులేని దీర్ఘ) == 0);
+    ప్రతిజ్ఞా(n % పరిమాణం(గుర్తులేని దీర్ఘ) == 0);
 
     /* We will never memzero an area larger than the largest current
        live object */
@@ -33,14 +33,14 @@ void memzero(void *s, unsigned long n)
         \<or> \<acute>n <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Write out words. */
-    while (n != 0) {
+    అయితే (n != 0) {
         *(ulong_alias *)p = 0;
-        p += sizeof(ulong_alias);
-        n -= sizeof(ulong_alias);
+        p += పరిమాణం(ulong_alias);
+        n -= పరిమాణం(ulong_alias);
     }
 }
 
-void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
+శూన్య *VISIBLE memset(శూన్య *s, గుర్తులేని దీర్ఘ c, గుర్తులేని దీర్ఘ n)
 {
     uint8_t *p;
 
@@ -48,93 +48,93 @@ void *VISIBLE memset(void *s, unsigned long c, unsigned long n)
      * If we are only writing zeros and we are word aligned, we can
      * use the optimized 'memzero' function.
      */
-    if (likely(c == 0 && ((unsigned long)s % sizeof(unsigned long)) == 0 && (n % sizeof(unsigned long)) == 0)) {
+    ఒకవేళ (likely(c == 0 && ((గుర్తులేని దీర్ఘ)s % పరిమాణం(గుర్తులేని దీర్ఘ)) == 0 && (n % పరిమాణం(గుర్తులేని దీర్ఘ)) == 0)) {
         memzero(s, n);
-    } else {
+    } లేకపోతే {
         /* Otherwise, we use a slower, simple memset. */
-        for (p = (uint8_t *)s; n > 0; n--, p++) {
+        కొరకు (p = (uint8_t *)s; n > 0; n--, p++) {
             *p = (uint8_t)c;
         }
     }
 
-    return s;
+    తిరిగి s;
 }
 
-void *VISIBLE memcpy(void *ptr_dst, const void *ptr_src, unsigned long n)
+శూన్య *VISIBLE జ్ఞాపకం_నకలు(శూన్య *ptr_dst, స్థిరరాశి శూన్య *ptr_src, గుర్తులేని దీర్ఘ n)
 {
     uint8_t *p;
-    const uint8_t *q;
+    స్థిరరాశి uint8_t *q;
 
-    for (p = (uint8_t *)ptr_dst, q = (const uint8_t *)ptr_src; n; n--, p++, q++) {
+    కొరకు (p = (uint8_t *)ptr_dst, q = (స్థిరరాశి uint8_t *)ptr_src; n; n--, p++, q++) {
         *p = *q;
     }
 
-    return ptr_dst;
+    తిరిగి ptr_dst;
 }
 
-int PURE strncmp(const char *s1, const char *s2, int n)
+పూర్ణాంకం శుద్ధ అక్షరశ్రేణి_పోలిక(స్థిరరాశి అక్షరం *s1, స్థిరరాశి అక్షరం *s2, పూర్ణాంకం n)
 {
-    word_t i;
-    int diff;
+    మాట_t i;
+    పూర్ణాంకం diff;
 
-    for (i = 0; i < n; i++) {
-        diff = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
-        if (diff != 0 || s1[i] == '\0') {
-            return diff;
+    కొరకు (i = 0; i < n; i++) {
+        diff = ((గుర్తులేని అక్షరం *)s1)[i] - ((గుర్తులేని అక్షరం *)s2)[i];
+        ఒకవేళ (diff != 0 || s1[i] == '\0') {
+            తిరిగి diff;
         }
     }
 
-    return 0;
+    తిరిగి 0;
 }
 
-long CONST char_to_long(char c)
+దీర్ఘ CONST char_గమ్యం_long(అక్షరం c)
 {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
+    ఒకవేళ (c >= '0' && c <= '9') {
+        తిరిగి c - '0';
+    } లేకపోతే ఒకవేళ (c >= 'A' && c <= 'F') {
+        తిరిగి c - 'A' + 10;
+    } లేకపోతే ఒకవేళ (c >= 'a' && c <= 'f') {
+        తిరిగి c - 'a' + 10;
     }
-    return -1;
+    తిరిగి -1;
 }
 
-long PURE str_to_long(const char *str)
+దీర్ఘ శుద్ధ str_గమ్యం_long(స్థిరరాశి అక్షరం *str)
 {
-    unsigned int base;
-    long res;
-    long val = 0;
-    char c;
+    గుర్తులేని పూర్ణాంకం పునాది;
+    దీర్ఘ res;
+    దీర్ఘ val = 0;
+    అక్షరం c;
 
     /* NULL ptr and empty str */
-    if (str == NULL || *str == 0) {
-        return -1;
+    ఒకవేళ (str == ఖాళీ || *str == 0) {
+        తిరిగి -1;
     }
 
     /* check for "0x", *(str + 1) may be 0, but must be allocated since str is not empty */
-    if (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
-        base = 16;
+    ఒకవేళ (*str == '0' && (*(str + 1) == 'x' || *(str + 1) == 'X')) {
+        పునాది = 16;
         str += 2;
         /* '0x' on its own is malformed */
-        if (*str == 0) {
-            return -1;
+        ఒకవేళ (*str == 0) {
+            తిరిగి -1;
         }
-    } else {
-        base = 10;
+    } లేకపోతే {
+        పునాది = 10;
     }
 
     c = *str;
-    while (c != '\0') {
-        res = char_to_long(c);
-        if (res == -1 || res >= base) {
-            return -1;
+    అయితే (c != '\0') {
+        res = char_గమ్యం_long(c);
+        ఒకవేళ (res == -1 || res >= పునాది) {
+            తిరిగి -1;
         }
-        val = val * base + res;
+        val = val * పునాది + res;
         str++;
         c = *str;
     }
 
-    return val;
+    తిరిగి val;
 }
 
 // The following implementations of CLZ (count leading zeros) and CTZ (count
@@ -168,9 +168,9 @@ long PURE str_to_long(const char *str)
 // binary.
 
 // Check some assumptions made by the clzl, clzll, ctzl functions:
-compile_assert(clz_ulong_32_or_64, sizeof(unsigned long) == 4 || sizeof(unsigned long) == 8);
-compile_assert(clz_ullong_64, sizeof(unsigned long long) == 8);
-compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
+compile_assert(clz_ulong_32_or_64, పరిమాణం(గుర్తులేని దీర్ఘ) == 4 || పరిమాణం(గుర్తులేని దీర్ఘ) == 8);
+compile_assert(clz_ullong_64, పరిమాణం(గుర్తులేని దీర్ఘ దీర్ఘ) == 8);
+compile_assert(clz_మాట_కొలత, పరిమాణం(గుర్తులేని దీర్ఘ) * 8 == CONFIG_మాట_కొలత);
 
 // Count leading zeros.
 // This implementation contains no branches. If the architecture provides an
@@ -183,12 +183,12 @@ compile_assert(clz_word_size, sizeof(unsigned long) * 8 == CONFIG_WORD_SIZE);
 // These functions are potentially `UNUSED` because we want to always expose
 // them to verification without necessarily linking them into the kernel
 // binary.
-static UNUSED CONST inline unsigned clz32(uint32_t x)
+స్థిర వాడని CONST అంతఃవరుస గుర్తులేని clz32(uint32_t x)
 {
     // Compiler builtins typically return int, but we use unsigned internally
     // to reduce the number of guards we see in the proofs.
-    unsigned count = 32;
-    uint32_t mask = UINT32_MAX;
+    గుర్తులేని లెక్క = 32;
+    uint32_t ముసుగు_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -206,109 +206,109 @@ static UNUSED CONST inline unsigned clz32(uint32_t x)
     // while also generating reasonably efficient binary code.
 
     // The `if (1)` blocks make it easier to reason by chunks in the proofs.
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x0000ffff
-        count -= bits; // [16, 32]
+        ముసుగు_2 >>= (1 << 4); // 0x0000ffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 4; // [0, 16]
+        x >>= బిట్లు; // <= 0x0000ffff
+        లెక్క -= బిట్లు; // [16, 32]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x000000ff
-        count -= bits; // [8, 16, 24, 32]
+        ముసుగు_2 >>= (1 << 3); // 0x000000ff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 3; // [0, 8]
+        x >>= బిట్లు; // <= 0x000000ff
+        లెక్క -= బిట్లు; // [8, 16, 24, 32]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x0000000f
-        count -= bits; // [4, 8, 12, ..., 32]
+        ముసుగు_2 >>= (1 << 2); // 0x0000000f
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 2; // [0, 4]
+        x >>= బిట్లు; // <= 0x0000000f
+        లెక్క -= బిట్లు; // [4, 8, 12, ..., 32]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x00000003
-        count -= bits; // [2, 4, 6, ..., 32]
+        ముసుగు_2 >>= (1 << 1); // 0x00000003
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 1; // [0, 2]
+        x >>= బిట్లు; // <= 0x00000003
+        లెక్క -= బిట్లు; // [2, 4, 6, ..., 32]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x00000001
-        count -= bits; // [1, 2, 3, ..., 32]
+        ముసుగు_2 >>= (1 << 0); // 0x00000001
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 0; // [0, 1]
+        x >>= బిట్లు; // <= 0x00000001
+        లెక్క -= బిట్లు; // [1, 2, 3, ..., 32]
     }
 
     // If the original input was zero, there will have been no shifts, so this
     // gives a result of 32. Otherwise, x is now exactly 1, so subtracting from
     // count gives a result from [0, 1, 2, ..., 31].
-    return count - x;
+    తిరిగి లెక్క - x;
 }
 
-static UNUSED CONST inline unsigned clz64(uint64_t x)
+స్థిర వాడని CONST అంతఃవరుస గుర్తులేని clz64(uint64_t x)
 {
-    unsigned count = 64;
-    uint64_t mask = UINT64_MAX;
+    గుర్తులేని లెక్క = 64;
+    uint64_t ముసుగు_2 = UINT64_MAX;
 
     // Although we could implement this using clz32, we spell out the
     // iterations in full for slightly better code generation at low
     // optimisation levels, and to allow us to reuse the proof machinery we
     // developed for clz32.
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)(mask < x)) << 5; // [0, 32]
-        x >>= bits; // <= 0x00000000ffffffff
-        count -= bits; // [32, 64]
+        ముసుగు_2 >>= (1 << 5); // 0x00000000ffffffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 5; // [0, 32]
+        x >>= బిట్లు; // <= 0x00000000ffffffff
+        లెక్క -= బిట్లు; // [32, 64]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)(mask < x)) << 4; // [0, 16]
-        x >>= bits; // <= 0x000000000000ffff
-        count -= bits; // [16, 32, 48, 64]
+        ముసుగు_2 >>= (1 << 4); // 0x000000000000ffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 4; // [0, 16]
+        x >>= బిట్లు; // <= 0x000000000000ffff
+        లెక్క -= బిట్లు; // [16, 32, 48, 64]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)(mask < x)) << 3; // [0, 8]
-        x >>= bits; // <= 0x00000000000000ff
-        count -= bits; // [8, 16, 24, ..., 64]
+        ముసుగు_2 >>= (1 << 3); // 0x00000000000000ff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 3; // [0, 8]
+        x >>= బిట్లు; // <= 0x00000000000000ff
+        లెక్క -= బిట్లు; // [8, 16, 24, ..., 64]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)(mask < x)) << 2; // [0, 4]
-        x >>= bits; // <= 0x000000000000000f
-        count -= bits; // [4, 8, 12, ..., 64]
+        ముసుగు_2 >>= (1 << 2); // 0x000000000000000f
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 2; // [0, 4]
+        x >>= బిట్లు; // <= 0x000000000000000f
+        లెక్క -= బిట్లు; // [4, 8, 12, ..., 64]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)(mask < x)) << 1; // [0, 2]
-        x >>= bits; // <= 0x0000000000000003
-        count -= bits; // [2, 4, 6, ..., 64]
+        ముసుగు_2 >>= (1 << 1); // 0x0000000000000003
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 1; // [0, 2]
+        x >>= బిట్లు; // <= 0x0000000000000003
+        లెక్క -= బిట్లు; // [2, 4, 6, ..., 64]
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)(mask < x)) << 0; // [0, 1]
-        x >>= bits; // <= 0x0000000000000001
-        count -= bits; // [1, 2, 3, ..., 64]
+        ముసుగు_2 >>= (1 << 0); // 0x0000000000000001
+        గుర్తులేని బిట్లు = ((గుర్తులేని)(ముసుగు_2 < x)) << 0; // [0, 1]
+        x >>= బిట్లు; // <= 0x0000000000000001
+        లెక్క -= బిట్లు; // [1, 2, 3, ..., 64]
     }
 
-    return count - x;
+    తిరిగి లెక్క - x;
 }
 
 // Count trailing zeros.
 // See comments on clz32.
-static UNUSED CONST inline unsigned ctz32(uint32_t x)
+స్థిర వాడని CONST అంతఃవరుస గుర్తులేని ctz32(uint32_t x)
 {
-    unsigned count = (x == 0);
-    uint32_t mask = UINT32_MAX;
+    గుర్తులేని లెక్క = (x == 0);
+    uint32_t ముసుగు_2 = UINT32_MAX;
 
     // Each iteration i (counting backwards) considers the least significant
     // 2^(i+1) bits of x as the current focus. At the first iteration, the
@@ -328,94 +328,94 @@ static UNUSED CONST inline unsigned ctz32(uint32_t x)
     // The iterations are given a very regular structure to facilitate proofs,
     // while also generating reasonably efficient binary code.
 
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x0000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x0000ffff != 0
-        count += bits; // if xi != 0 then [0, 16] else 17
+        ముసుగు_2 >>= (1 << 4); // 0x0000ffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 4; // [0, 16]
+        x >>= బిట్లు; // xi != 0 --> x & 0x0000ffff != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 16] else 17
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, 24] else 25
+        ముసుగు_2 >>= (1 << 3); // 0x000000ff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 3; // [0, 8]
+        x >>= బిట్లు; // xi != 0 --> x & 0x000000ff != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 8, 16, 24] else 25
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x0000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x0000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 28] else 29
+        ముసుగు_2 >>= (1 << 2); // 0x0000000f
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 2; // [0, 4]
+        x >>= బిట్లు; // xi != 0 --> x & 0x0000000f != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 4, 8, ..., 28] else 29
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x00000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x00000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 30] else 31
+        ముసుగు_2 >>= (1 << 1); // 0x00000003
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 1; // [0, 2]
+        x >>= బిట్లు; // xi != 0 --> x & 0x00000003 != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 2, 4, ..., 30] else 31
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x00000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x00000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 31] else 32
+        ముసుగు_2 >>= (1 << 0); // 0x00000001
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 0; // [0, 1]
+        x >>= బిట్లు; // xi != 0 --> x & 0x00000001 != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 1, 2, ..., 31] else 32
     }
 
-    return count;
+    తిరిగి లెక్క;
 }
 
-static UNUSED CONST inline unsigned ctz64(uint64_t x)
+స్థిర వాడని CONST అంతఃవరుస గుర్తులేని ctz64(uint64_t x)
 {
-    unsigned count = (x == 0);
-    uint64_t mask = UINT64_MAX;
+    గుర్తులేని లెక్క = (x == 0);
+    uint64_t ముసుగు_2 = UINT64_MAX;
 
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 5
-        mask >>= (1 << 5); // 0x00000000ffffffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 5; // [0, 32]
-        x >>= bits; // xi != 0 --> x & 0x00000000ffffffff != 0
-        count += bits; // if xi != 0 then [0, 32] else 33
+        ముసుగు_2 >>= (1 << 5); // 0x00000000ffffffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 5; // [0, 32]
+        x >>= బిట్లు; // xi != 0 --> x & 0x00000000ffffffff != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 32] else 33
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 4
-        mask >>= (1 << 4); // 0x000000000000ffff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 4; // [0, 16]
-        x >>= bits; // xi != 0 --> x & 0x000000000000ffff != 0
-        count += bits; // if xi != 0 then [0, 16, 32, 48] else 49
+        ముసుగు_2 >>= (1 << 4); // 0x000000000000ffff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 4; // [0, 16]
+        x >>= బిట్లు; // xi != 0 --> x & 0x000000000000ffff != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 16, 32, 48] else 49
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 3
-        mask >>= (1 << 3); // 0x00000000000000ff
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 3; // [0, 8]
-        x >>= bits; // xi != 0 --> x & 0x00000000000000ff != 0
-        count += bits; // if xi != 0 then [0, 8, 16, ..., 56] else 57
+        ముసుగు_2 >>= (1 << 3); // 0x00000000000000ff
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 3; // [0, 8]
+        x >>= బిట్లు; // xi != 0 --> x & 0x00000000000000ff != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 8, 16, ..., 56] else 57
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 2
-        mask >>= (1 << 2); // 0x000000000000000f
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 2; // [0, 4]
-        x >>= bits; // xi != 0 --> x & 0x000000000000000f != 0
-        count += bits; // if xi != 0 then [0, 4, 8, ..., 60] else 61
+        ముసుగు_2 >>= (1 << 2); // 0x000000000000000f
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 2; // [0, 4]
+        x >>= బిట్లు; // xi != 0 --> x & 0x000000000000000f != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 4, 8, ..., 60] else 61
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 1
-        mask >>= (1 << 1); // 0x0000000000000003
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 1; // [0, 2]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000003 != 0
-        count += bits; // if xi != 0 then [0, 2, 4, ..., 62] else 63
+        ముసుగు_2 >>= (1 << 1); // 0x0000000000000003
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 1; // [0, 2]
+        x >>= బిట్లు; // xi != 0 --> x & 0x0000000000000003 != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 2, 4, ..., 62] else 63
     }
-    if (1) {
+    ఒకవేళ (1) {
         // iteration 0
-        mask >>= (1 << 0); // 0x0000000000000001
-        unsigned bits = ((unsigned)((x & mask) == 0)) << 0; // [0, 1]
-        x >>= bits; // xi != 0 --> x & 0x0000000000000001 != 0
-        count += bits; // if xi != 0 then [0, 1, 2, ..., 63] else 64
+        ముసుగు_2 >>= (1 << 0); // 0x0000000000000001
+        గుర్తులేని బిట్లు = ((గుర్తులేని)((x & ముసుగు_2) == 0)) << 0; // [0, 1]
+        x >>= బిట్లు; // xi != 0 --> x & 0x0000000000000001 != 0
+        లెక్క += బిట్లు; // if xi != 0 then [0, 1, 2, ..., 63] else 64
     }
 
-    return count;
+    తిరిగి లెక్క;
 }
 
 // GCC's builtins will emit calls to these functions when the platform does
@@ -423,30 +423,30 @@ static UNUSED CONST inline unsigned ctz64(uint64_t x)
 // These are only provided when the relevant config items are set.
 // We define these separately from `ctz32` etc. so that we can verify all of
 // `ctz32` etc. without necessarily linking them into the kernel binary.
-#ifdef CONFIG_CLZ_32
-CONST int __clzsi2(uint32_t x)
+#నిర్వచితమైతే CONFIG_CLZ_32
+CONST పూర్ణాంకం __clzsi2(uint32_t x)
 {
-    return clz32(x);
+    తిరిగి clz32(x);
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_CLZ_64
-CONST int __clzdi2(uint64_t x)
+#నిర్వచితమైతే CONFIG_CLZ_64
+CONST పూర్ణాంకం __clzdi2(uint64_t x)
 {
-    return clz64(x);
+    తిరిగి clz64(x);
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_CTZ_32
-CONST int __ctzsi2(uint32_t x)
+#నిర్వచితమైతే CONFIG_CTZ_32
+CONST పూర్ణాంకం __ctzsi2(uint32_t x)
 {
-    return ctz32(x);
+    తిరిగి ctz32(x);
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_CTZ_64
-CONST int __ctzdi2(uint64_t x)
+#నిర్వచితమైతే CONFIG_CTZ_64
+CONST పూర్ణాంకం __ctzdi2(uint64_t x)
 {
-    return ctz64(x);
+    తిరిగి ctz64(x);
 }
-#endif
+#అయితే_ముగింపు

@@ -4,458 +4,458 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <sel4/shared_types.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#endif
-#include <object/tcb.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <model/statedata.h>
-#include <util.h>
-#include <string.h>
-#include <stdint.h>
-#include <arch/smp/ipi_inline.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <api/invocation.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <sel4/shared_types.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <object/structures.h>
+#అన్తర్భావ <object/objecttype.h>
+#అన్తర్భావ <object/cnode.h>
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+#అన్తర్భావ <object/schedcontext.h>
+#అయితే_ముగింపు
+#అన్తర్భావ <object/tcb.h>
+#అన్తర్భావ <kernel/cspace.h>
+#అన్తర్భావ <kernel/thread.h>
+#అన్తర్భావ <kernel/vspace.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <arch/smp/ipi_inline.h>
 
-#define NULL_PRIO 0
+#నిర్వచించు NULL_PRIO 0
 
-static exception_t checkPrio(prio_t prio, tcb_t *auth)
+స్థిర exception_t checkPrio(prio_t prio, tcb_t *auth)
 {
     prio_t mcp;
 
     mcp = auth->tcbMCP;
 
     /* system invariant: existing MCPs are bounded */
-    assert(mcp <= seL4_MaxPrio);
+    ప్రతిజ్ఞా(mcp <= seL4_MaxPrio);
 
     /* can't assign a priority greater than our own mcp */
-    if (prio > mcp) {
+    ఒకవేళ (prio > mcp) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = seL4_MinPrio;
         current_syscall_error.rangeErrorMax = mcp;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static inline void addToBitmap(word_t cpu, word_t dom, word_t prio)
+స్థిర అంతఃవరుస శూన్య కూడు_గమ్యం_Bitmap(మాట_t cpu, మాట_t dom, మాట_t prio)
 {
-    word_t l1index;
-    word_t l1index_inverted;
+    మాట_t l1index;
+    మాట_t l1index_inverted;
 
-    l1index = prio_to_l1index(prio);
+    l1index = prio_గమ్యం_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
 
-    NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= BIT(l1index);
+    కణుపు_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= బిట్టు(l1index);
     /* we invert the l1 index when accessed the 2nd level of the bitmap in
        order to increase the likelihood that high prio threads l2 index word will
        be on the same cache line as the l1 index word - this makes sure the
        fastpath is fastest for high prio threads */
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= BIT(prio & MASK(wordRadix));
+    కణుపు_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= బిట్టు(prio & ముసుగు(మాట_Radix));
 }
 
-static inline void removeFromBitmap(word_t cpu, word_t dom, word_t prio)
+స్థిర అంతఃవరుస శూన్య removeFromBitmap(మాట_t cpu, మాట_t dom, మాట_t prio)
 {
-    word_t l1index;
-    word_t l1index_inverted;
+    మాట_t l1index;
+    మాట_t l1index_inverted;
 
-    l1index = prio_to_l1index(prio);
+    l1index = prio_గమ్యం_l1index(prio);
     l1index_inverted = invert_l1index(l1index);
-    NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~BIT(prio & MASK(wordRadix));
-    if (unlikely(!NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
-        NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~BIT(l1index);
+    కణుపు_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~బిట్టు(prio & ముసుగు(మాట_Radix));
+    ఒకవేళ (unlikely(!కణుపు_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
+        కణుపు_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~బిట్టు(l1index);
     }
 }
 
-tcb_queue_t tcb_queue_remove(tcb_queue_t queue, tcb_t *tcb)
+tcb_వరుస_t tcb_వరుస_remove(tcb_వరుస_t వరుస, tcb_t *tcb)
 {
     tcb_t *before;
     tcb_t *after;
 
     before = tcb->tcbSchedPrev;
-    after = tcb->tcbSchedNext;
+    after = tcb->tcb_Sched_తదుపరి;
 
-    if (queue.head == tcb && queue.end == tcb) {
-        queue.head = NULL;
-        queue.end = NULL;
-    } else {
-        if (queue.head == tcb) {
-            after->tcbSchedPrev = NULL;
-            tcb->tcbSchedNext = NULL;
-            queue.head = after;
-        } else {
-            if (queue.end == tcb) {
-                before->tcbSchedNext = NULL;
-                tcb->tcbSchedPrev = NULL;
-                queue.end = before;
-            } else {
-                before->tcbSchedNext = after;
+    ఒకవేళ (వరుస.తల == tcb && వరుస.చివర == tcb) {
+        వరుస.తల = ఖాళీ;
+        వరుస.చివర = ఖాళీ;
+    } లేకపోతే {
+        ఒకవేళ (వరుస.తల == tcb) {
+            after->tcbSchedPrev = ఖాళీ;
+            tcb->tcb_Sched_తదుపరి = ఖాళీ;
+            వరుస.తల = after;
+        } లేకపోతే {
+            ఒకవేళ (వరుస.చివర == tcb) {
+                before->tcb_Sched_తదుపరి = ఖాళీ;
+                tcb->tcbSchedPrev = ఖాళీ;
+                వరుస.చివర = before;
+            } లేకపోతే {
+                before->tcb_Sched_తదుపరి = after;
                 after->tcbSchedPrev = before;
-                tcb->tcbSchedPrev = NULL;
-                tcb->tcbSchedNext = NULL;
+                tcb->tcbSchedPrev = ఖాళీ;
+                tcb->tcb_Sched_తదుపరి = ఖాళీ;
             }
         }
     }
 
-    return queue;
+    తిరిగి వరుస;
 }
 
 /* Add TCB to the head of a scheduler queue */
-void tcbSchedEnqueue(tcb_t *tcb)
+శూన్య tcb_Sched_వరుసలో_చేర్చు(tcb_t *tcb)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(isSchedulable(tcb));
-    assert(refill_sufficient(tcb->tcbSchedContext, 0));
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    ప్రతిజ్ఞా(isSchedulable(tcb));
+    ప్రతిజ్ఞా(refill_sufficient(tcb->tcbSchedContext, 0));
+#అయితే_ముగింపు
 
-    if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
+    ఒకవేళ (!thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_వరుస_t వరుస;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        మాట_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ప్రాధాన్యత;
+        idx = ready_queues_సూచీ(dom, prio);
+        వరుస = కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        if (tcb_queue_empty(queue)) {
-            addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
+        ఒకవేళ (tcb_వరుస_ఖాళీలు(వరుస)) {
+            కూడు_గమ్యం_Bitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
+        కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_వరుస_prepend(వరుస, tcb);
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
+        thread_state_ptr_సమితి_tcb_Queued(&tcb->tcbState, true);
     }
 }
 
 /* Add TCB to the end of a scheduler queue */
-void tcbSchedAppend(tcb_t *tcb)
+శూన్య tcbSchedAppend(tcb_t *tcb)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(isSchedulable(tcb));
-    assert(refill_sufficient(tcb->tcbSchedContext, 0));
-    assert(refill_ready(tcb->tcbSchedContext));
-#endif
-    if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    ప్రతిజ్ఞా(isSchedulable(tcb));
+    ప్రతిజ్ఞా(refill_sufficient(tcb->tcbSchedContext, 0));
+    ప్రతిజ్ఞా(refill_ready(tcb->tcbSchedContext));
+#అయితే_ముగింపు
+    ఒకవేళ (!thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_వరుస_t వరుస;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        మాట_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ప్రాధాన్యత;
+        idx = ready_queues_సూచీ(dom, prio);
+        వరుస = కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        if (tcb_queue_empty(queue)) {
-            addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
+        ఒకవేళ (tcb_వరుస_ఖాళీలు(వరుస)) {
+            కూడు_గమ్యం_Bitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
+        కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = tcb_వరుస_append(వరుస, tcb);
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
+        thread_state_ptr_సమితి_tcb_Queued(&tcb->tcbState, true);
     }
 }
 
 /* Remove TCB from a scheduler queue */
-void tcbSchedDequeue(tcb_t *tcb)
+శూన్య tcb_Sched_వరుస_నుండి_తీయి(tcb_t *tcb)
 {
-    if (thread_state_get_tcbQueued(tcb->tcbState)) {
-        tcb_queue_t queue;
-        tcb_queue_t new_queue;
+    ఒకవేళ (thread_state_get_tcbQueued(tcb->tcbState)) {
+        tcb_వరుస_t వరుస;
+        tcb_వరుస_t new_వరుస;
         dom_t dom;
         prio_t prio;
-        word_t idx;
+        మాట_t idx;
 
         dom = tcb->tcbDomain;
-        prio = tcb->tcbPriority;
-        idx = ready_queues_index(dom, prio);
-        queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
+        prio = tcb->tcb_ప్రాధాన్యత;
+        idx = ready_queues_సూచీ(dom, prio);
+        వరుస = కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
 
-        new_queue = tcb_queue_remove(queue, tcb);
+        new_వరుస = tcb_వరుస_remove(వరుస, tcb);
 
-        NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_queue;
+        కణుపు_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = new_వరుస;
 
-        thread_state_ptr_set_tcbQueued(&tcb->tcbState, false);
+        thread_state_ptr_సమితి_tcb_Queued(&tcb->tcbState, false);
 
-        if (likely(tcb_queue_empty(new_queue))) {
+        ఒకవేళ (likely(tcb_వరుస_ఖాళీలు(new_వరుస))) {
             removeFromBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
         }
     }
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-void tcbDebugAppend(tcb_t *tcb)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+శూన్య tcbDebugAppend(tcb_t *tcb)
 {
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
     /* prepend to the list */
-    debug_tcb->tcbDebugPrev = NULL;
+    debug_tcb->tcbDebugPrev = ఖాళీ;
 
-    debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
+    debug_tcb->tcb_Debug_తదుపరి = కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
 
-    if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
+    ఒకవేళ (కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        TCB_PTR_DEBUG_PTR(కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
     }
 
-    NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
+    కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
 }
 
-void tcbDebugRemove(tcb_t *tcb)
+శూన్య tcbDebugRemove(tcb_t *tcb)
 {
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
 
-    assert(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != NULL);
-    if (tcb == NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
-        NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs,
-                                                                                                 tcb->tcbAffinity))->tcbDebugNext;
-    } else {
-        assert(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugPrev)->tcbDebugNext = debug_tcb->tcbDebugNext;
+    ప్రతిజ్ఞా(కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != ఖాళీ);
+    ఒకవేళ (tcb == కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity)) {
+        కణుపు_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(కణుపు_STATE_ON_CORE(ksDebugTCBs,
+                                                                                                 tcb->tcbAffinity))->tcb_Debug_తదుపరి;
+    } లేకపోతే {
+        ప్రతిజ్ఞా(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
+        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugPrev)->tcb_Debug_తదుపరి = debug_tcb->tcb_Debug_తదుపరి;
     }
 
-    if (debug_tcb->tcbDebugNext) {
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugNext)->tcbDebugPrev = debug_tcb->tcbDebugPrev;
+    ఒకవేళ (debug_tcb->tcb_Debug_తదుపరి) {
+        TCB_PTR_DEBUG_PTR(debug_tcb->tcb_Debug_తదుపరి)->tcbDebugPrev = debug_tcb->tcbDebugPrev;
     }
 
-    debug_tcb->tcbDebugPrev = NULL;
-    debug_tcb->tcbDebugNext = NULL;
+    debug_tcb->tcbDebugPrev = ఖాళీ;
+    debug_tcb->tcb_Debug_తదుపరి = ఖాళీ;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */
 
-#ifndef CONFIG_KERNEL_MCS
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
 /* Add TCB to the end of an endpoint queue */
-tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
+tcb_వరుస_t tcbEPAppend(tcb_t *tcb, tcb_వరుస_t వరుస)
 {
-    if (!queue.head) { /* Empty list */
-        queue.head = tcb;
-    } else {
-        queue.end->tcbEPNext = tcb;
+    ఒకవేళ (!వరుస.తల) { /* Empty list */
+        వరుస.తల = tcb;
+    } లేకపోతే {
+        వరుస.చివర->tcbEPNext = tcb;
     }
-    tcb->tcbEPPrev = queue.end;
-    tcb->tcbEPNext = NULL;
-    queue.end = tcb;
+    tcb->tcbEPPrev = వరుస.చివర;
+    tcb->tcbEPNext = ఖాళీ;
+    వరుస.చివర = tcb;
 
-    return queue;
+    తిరిగి వరుస;
 }
 
 /* Remove TCB from an endpoint queue */
-tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
+tcb_వరుస_t tcbEPDequeue(tcb_t *tcb, tcb_వరుస_t వరుస)
 {
-    if (tcb->tcbEPPrev) {
+    ఒకవేళ (tcb->tcbEPPrev) {
         tcb->tcbEPPrev->tcbEPNext = tcb->tcbEPNext;
-    } else {
-        queue.head = tcb->tcbEPNext;
+    } లేకపోతే {
+        వరుస.తల = tcb->tcbEPNext;
     }
 
-    if (tcb->tcbEPNext) {
+    ఒకవేళ (tcb->tcbEPNext) {
         tcb->tcbEPNext->tcbEPPrev = tcb->tcbEPPrev;
-    } else {
-        queue.end = tcb->tcbEPPrev;
+    } లేకపోతే {
+        వరుస.చివర = tcb->tcbEPPrev;
     }
 
-    return queue;
+    తిరిగి వరుస;
 }
-#endif /* CONFIG_KERNEL_MCS */
+#అయితే_ముగింపు /* CONFIG_KERNEL_MCS */
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
 
-void tcbReleaseRemove(tcb_t *tcb)
+శూన్య tcbReleaseRemove(tcb_t *tcb)
 {
-    if (likely(thread_state_get_tcbInReleaseQueue(tcb->tcbState))) {
-        tcb_queue_t queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
+    ఒకవేళ (likely(thread_state_get_tcb_లోపల_Release_వరుస(tcb->tcbState))) {
+        tcb_వరుస_t వరుస = కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity);
 
-        if (queue.head == tcb) {
-            NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+        ఒకవేళ (వరుస.తల == tcb) {
+            కణుపు_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
         }
 
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_remove(queue, tcb);
+        కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity) = tcb_వరుస_remove(వరుస, tcb);
 
-        thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, false);
+        thread_state_ptr_సమితి_tcb_లోపల_Release_వరుస(&tcb->tcbState, false);
     }
 }
 
-static inline ticks_t PURE tcbReadyTime(tcb_t *tcb)
+స్థిర అంతఃవరుస ticks_t శుద్ధ tcb_Ready_సమయం(tcb_t *tcb)
 {
-    return refill_head(tcb->tcbSchedContext)->rTime;
+    తిరిగి refill_తల(tcb->tcbSchedContext)->r_సమయం;
 }
 
-static inline bool_t PURE time_after(tcb_t *tcb, ticks_t new_time)
+స్థిర అంతఃవరుస bool_t శుద్ధ సమయం_after(tcb_t *tcb, ticks_t new_సమయం)
 {
-    return tcb != NULL && new_time >= tcbReadyTime(tcb);
+    తిరిగి tcb != ఖాళీ && new_సమయం >= tcb_Ready_సమయం(tcb);
 }
 
-static tcb_t *find_time_after(tcb_t *tcb, ticks_t new_time)
+స్థిర tcb_t *కనుగొను_సమయం_after(tcb_t *tcb, ticks_t new_సమయం)
 {
     tcb_t *after = tcb;
 
-    while (time_after(after, new_time)) {
-        after = after->tcbSchedNext;
+    అయితే (సమయం_after(after, new_సమయం)) {
+        after = after->tcb_Sched_తదుపరి;
     }
 
-    return after;
+    తిరిగి after;
 }
 
-void tcbReleaseEnqueue(tcb_t *tcb)
+శూన్య tcb_Release_వరుసలో_చేర్చు(tcb_t *tcb)
 {
-    assert(thread_state_get_tcbInReleaseQueue(tcb->tcbState) == false);
-    assert(thread_state_get_tcbQueued(tcb->tcbState) == false);
+    ప్రతిజ్ఞా(thread_state_get_tcb_లోపల_Release_వరుస(tcb->tcbState) == false);
+    ప్రతిజ్ఞా(thread_state_get_tcbQueued(tcb->tcbState) == false);
 
-    ticks_t new_time;
-    tcb_queue_t queue;
+    ticks_t new_సమయం;
+    tcb_వరుస_t వరుస;
 
-    queue = NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity);
-    new_time = tcbReadyTime(tcb);
+    వరుస = కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity);
+    new_సమయం = tcb_Ready_సమయం(tcb);
 
-    if (tcb_queue_empty(queue) || new_time < tcbReadyTime(queue.head)) {
-        NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_prepend(queue, tcb);
-    } else {
-        if (tcbReadyTime(queue.end) <= new_time) {
-            NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity) = tcb_queue_append(queue, tcb);
-        } else {
+    ఒకవేళ (tcb_వరుస_ఖాళీలు(వరుస) || new_సమయం < tcb_Ready_సమయం(వరుస.తల)) {
+        కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity) = tcb_వరుస_prepend(వరుస, tcb);
+    } లేకపోతే {
+        ఒకవేళ (tcb_Ready_సమయం(వరుస.చివర) <= new_సమయం) {
+            కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity) = tcb_వరుస_append(వరుస, tcb);
+        } లేకపోతే {
             tcb_t *after;
-            after = find_time_after(queue.head, new_time);
-            tcb_queue_insert(tcb, after);
+            after = కనుగొను_సమయం_after(వరుస.తల, new_సమయం);
+            tcb_వరుస_చొప్పించు(tcb, after);
         }
     }
 
-    thread_state_ptr_set_tcbInReleaseQueue(&tcb->tcbState, true);
+    thread_state_ptr_సమితి_tcb_లోపల_Release_వరుస(&tcb->tcbState, true);
 
-    if (queue.head != NODE_STATE_ON_CORE(ksReleaseQueue, tcb->tcbAffinity).head) {
-        NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
+    ఒకవేళ (వరుస.తల != కణుపు_STATE_ON_CORE(ks_Release_వరుస, tcb->tcbAffinity).తల) {
+        కణుపు_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity) = true;
     }
 }
-#endif
+#అయితే_ముగింపు
 
-cptr_t PURE getExtraCPtr(word_t *bufferPtr, word_t i)
+cptr_t శుద్ధ getExtraCPtr(మాట_t *బఫరు_Ptr, మాట_t i)
 {
-    return (cptr_t)bufferPtr[seL4_MsgMaxLength + 2 + i];
+    తిరిగి (cptr_t)బఫరు_Ptr[se_L4_సందేశం_Max_నిడివి + 2 + i];
 }
 
-void setExtraBadge(word_t *bufferPtr, word_t badge,
-                   word_t i)
+శూన్య సమితి_Extra_Badge(మాట_t *బఫరు_Ptr, మాట_t badge,
+                   మాట_t i)
 {
-    bufferPtr[seL4_MsgMaxLength + 2 + i] = badge;
+    బఫరు_Ptr[se_L4_సందేశం_Max_నిడివి + 2 + i] = badge;
 }
 
-#ifndef CONFIG_KERNEL_MCS
-void setupCallerCap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
+శూన్య అమరిక_Caller_Cap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
 {
-    cte_t *replySlot, *callerSlot;
-    cap_t masterCap UNUSED, callerCap UNUSED;
+    cte_t *జవాబు_స్థానం, *caller_స్థానం;
+    cap_t masterCap వాడని, callerCap వాడని;
 
-    setThreadState(sender, ThreadState_BlockedOnReply);
-    replySlot = TCB_PTR_CTE_PTR(sender, tcbReply);
-    masterCap = replySlot->cap;
+    సమితి_Thread_State(sender, Thread_State_Blocked_On_జవాబు);
+    జవాబు_స్థానం = TCB_PTR_CTE_PTR(sender, tcb_జవాబు);
+    masterCap = జవాబు_స్థానం->cap;
     /* Haskell error: "Sender must have a valid master reply cap" */
-    assert(cap_get_capType(masterCap) == cap_reply_cap);
-    assert(cap_reply_cap_get_capReplyMaster(masterCap));
-    assert(cap_reply_cap_get_capReplyCanGrant(masterCap));
-    assert(TCB_PTR(cap_reply_cap_get_capTCBPtr(masterCap)) == sender);
-    callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
-    callerCap = callerSlot->cap;
+    ప్రతిజ్ఞా(cap_get_capType(masterCap) == cap_జవాబు_cap);
+    ప్రతిజ్ఞా(cap_జవాబు_cap_get_cap_జవాబు_Master(masterCap));
+    ప్రతిజ్ఞా(cap_జవాబు_cap_get_cap_జవాబు_Can_Grant(masterCap));
+    ప్రతిజ్ఞా(TCB_PTR(cap_జవాబు_cap_get_cap_TCBPtr(masterCap)) == sender);
+    caller_స్థానం = TCB_PTR_CTE_PTR(receiver, tcbCaller);
+    callerCap = caller_స్థానం->cap;
     /* Haskell error: "Caller cap must not already exist" */
-    assert(cap_get_capType(callerCap) == cap_null_cap);
-    cteInsert(cap_reply_cap_new(canGrant, false, TCB_REF(sender)),
-              replySlot, callerSlot);
+    ప్రతిజ్ఞా(cap_get_capType(callerCap) == cap_null_cap);
+    cte_చొప్పించు(cap_జవాబు_cap_new(canGrant, false, TCB_REF(sender)),
+              జవాబు_స్థానం, caller_స్థానం);
 }
 
-void deleteCallerCap(tcb_t *receiver)
+శూన్య deleteCallerCap(tcb_t *receiver)
 {
-    cte_t *callerSlot;
+    cte_t *caller_స్థానం;
 
-    callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
+    caller_స్థానం = TCB_PTR_CTE_PTR(receiver, tcbCaller);
     /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-    cteDeleteOne(callerSlot);
+    cteDeleteOne(caller_స్థానం);
 }
-#endif
+#అయితే_ముగింపు
 
 extra_caps_t current_extra_caps;
 
-exception_t lookupExtraCaps(tcb_t *thread, word_t *bufferPtr, seL4_MessageInfo_t info)
+exception_t lookupExtraCaps(tcb_t *thread, మాట_t *బఫరు_Ptr, se_L4_సందేశం_Info_t info)
 {
-    lookupSlot_raw_ret_t lu_ret;
+    lookup_స్థానం_raw_ret_t lu_ret;
     cptr_t cptr;
-    word_t i, length;
+    మాట_t i, నిడివి;
 
-    if (!bufferPtr) {
-        current_extra_caps.excaprefs[0] = NULL;
-        return EXCEPTION_NONE;
+    ఒకవేళ (!బఫరు_Ptr) {
+        current_extra_caps.excaprefs[0] = ఖాళీ;
+        తిరిగి EXCEPTION_NONE;
     }
 
-    length = seL4_MessageInfo_get_extraCaps(info);
+    నిడివి = se_L4_సందేశం_Info_get_extra_Caps(info);
 
-    for (i = 0; i < length; i++) {
-        cptr = getExtraCPtr(bufferPtr, i);
+    కొరకు (i = 0; i < నిడివి; i++) {
+        cptr = getExtraCPtr(బఫరు_Ptr, i);
 
-        lu_ret = lookupSlot(thread, cptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lu_ret = lookup_స్థానం(thread, cptr);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             current_fault = seL4_Fault_CapFault_new(cptr, false);
-            return lu_ret.status;
+            తిరిగి lu_ret.స్థితి_2;
         }
 
-        current_extra_caps.excaprefs[i] = lu_ret.slot;
+        current_extra_caps.excaprefs[i] = lu_ret.స్థానం;
     }
-    if (i < seL4_MsgMaxExtraCaps) {
-        current_extra_caps.excaprefs[i] = NULL;
+    ఒకవేళ (i < se_L4_సందేశం_Max_Extra_Caps) {
+        current_extra_caps.excaprefs[i] = ఖాళీ;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 /* Copy IPC MRs from one thread to another */
-word_t copyMRs(tcb_t *sender, word_t *sendBuf, tcb_t *receiver,
-               word_t *recvBuf, word_t n)
+మాట_t copyMRs(tcb_t *sender, మాట_t *sendBuf, tcb_t *receiver,
+               మాట_t *recvBuf, మాట_t n)
 {
-    word_t i;
+    మాట_t i;
 
     /* Copy inline words */
-    for (i = 0; i < n && i < n_msgRegisters; i++) {
-        setRegister(receiver, msgRegisters[i],
-                    getRegister(sender, msgRegisters[i]));
+    కొరకు (i = 0; i < n && i < n_సందేశం_Registers; i++) {
+        సమితి_రిజిస్టరు(receiver, సందేశం_Registers[i],
+                    get_రిజిస్టరు(sender, సందేశం_Registers[i]));
     }
 
-    if (!recvBuf || !sendBuf) {
-        return i;
+    ఒకవేళ (!recvBuf || !sendBuf) {
+        తిరిగి i;
     }
 
     /* Copy out-of-line words */
-    for (; i < n; i++) {
+    కొరకు (; i < n; i++) {
         recvBuf[i + 1] = sendBuf[i + 1];
     }
 
-    return i;
+    తిరిగి i;
 }
 
-#ifdef ENABLE_SMP_SUPPORT
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
 /* This checks if the current updated to scheduler queue is changing the previous scheduling
  * decision made by the scheduler. If its a case, an `irq_reschedule_ipi` is sent */
-void remoteQueueUpdate(tcb_t *tcb)
+శూన్య remote_వరుస_Update(tcb_t *tcb)
 {
     /* only ipi if the target is for the current domain */
-    if (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain) {
-        tcb_t *targetCurThread = NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
+    ఒకవేళ (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain) {
+        tcb_t *లక్ష్యం_Cur_Thread = కణుపు_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
 
         /* reschedule if the target core is idle or we are waking a higher priority thread (or
          * if a new irq would need to be set on MCS) */
-        if (targetCurThread == NODE_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
-            tcb->tcbPriority > targetCurThread->tcbPriority
-#ifdef CONFIG_KERNEL_MCS
-            || NODE_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
-#endif
+        ఒకవేళ (లక్ష్యం_Cur_Thread == కణుపు_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity)  ||
+            tcb->tcb_ప్రాధాన్యత > లక్ష్యం_Cur_Thread->tcb_ప్రాధాన్యత
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+            || కణుపు_STATE_ON_CORE(ksReprogram, tcb->tcbAffinity)
+#అయితే_ముగింపు
            ) {
-            ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+            ARCH_కణుపు_STATE(ipiReschedulePending) |= బిట్టు(tcb->tcbAffinity);
         }
     }
 }
@@ -463,212 +463,212 @@ void remoteQueueUpdate(tcb_t *tcb)
 /* This makes sure the the TCB is not being run on other core.
  * It would request 'IpiRemoteCall_Stall' to switch the core from this TCB
  * We also request the 'irq_reschedule_ipi' to restore the state of target core */
-void remoteTCBStall(tcb_t *tcb)
+శూన్య remoteTCBStall(tcb_t *tcb)
 {
 
-    if (
-#ifdef CONFIG_KERNEL_MCS
+    ఒకవేళ (
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
         tcb->tcbSchedContext &&
-#endif
+#అయితే_ముగింపు
         tcb->tcbAffinity != getCurrentCPUIndex() &&
-        NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
+        కణుపు_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity) == tcb) {
         doRemoteStall(tcb->tcbAffinity);
-        ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+        ARCH_కణుపు_STATE(ipiReschedulePending) |= బిట్టు(tcb->tcbAffinity);
     }
 }
 
-#ifndef CONFIG_KERNEL_MCS
-static exception_t invokeTCB_SetAffinity(tcb_t *thread, word_t affinity)
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
+స్థిర exception_t invoke_TCB_సమితి_Affinity(tcb_t *thread, మాట_t affinity)
 {
     /* remove the tcb from scheduler queue in case it is already in one
      * and add it to new queue if required */
-    tcbSchedDequeue(thread);
+    tcb_Sched_వరుస_నుండి_తీయి(thread);
     migrateTCB(thread, affinity);
-    if (isRunnable(thread)) {
+    ఒకవేళ (isRunnable(thread)) {
         SCHED_APPEND(thread);
     }
     /* reschedule current cpu if tcb moves itself */
-    if (thread == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (thread == కణుపు_STATE(ksCurThread)) {
         rescheduleRequired();
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
+స్థిర exception_t decode_సమితి_Affinity(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
     tcb_t *tcb;
-    word_t affinity;
+    మాట_t affinity;
 
-    if (length < 1) {
+    ఒకవేళ (నిడివి < 1) {
         userError("TCB SetAffinity: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    affinity = getSyscallArg(0, buffer);
-    if (affinity >= ksNumCPUs) {
+    affinity = getSyscallArg(0, బఫరు);
+    ఒకవేళ (affinity >= ks_అంకె_CPUs) {
         userError("TCB SetAffinity: Requested CPU does not exist.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_SetAffinity(tcb, affinity);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invoke_TCB_సమితి_Affinity(tcb, affinity);
 }
-#endif
-#endif /* ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-static exception_t invokeConfigureSingleStepping(bool_t call, word_t *buffer, tcb_t *t,
-                                                 uint16_t bp_num, word_t n_instrs)
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
+స్థిర exception_t invokeConfigureSingleStepping(bool_t call, మాట_t *బఫరు, tcb_t *t,
+                                                 uint16_t bp_అంకె, మాట_t n_instrs)
 {
     bool_t bp_was_consumed;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    word_t value;
+    thread = కణుపు_STATE(ksCurThread);
+    మాట_t విలువ;
 
-    bp_was_consumed = configureSingleStepping(t, bp_num, n_instrs, false);
-    if (n_instrs == 0) {
-#ifndef CONFIG_ARCH_AARCH64
-        unsetBreakpointUsedFlag(t, bp_num);
-#endif /* CONFIG_ARCH_AARCH64 */
-        value = false;
-    } else {
-#ifndef CONFIG_ARCH_AARCH64
-        setBreakpointUsedFlag(t, bp_num);
-#endif /* CONFIG_ARCH_AARCH64 */
-        value = bp_was_consumed;
+    bp_was_consumed = configureSingleStepping(t, bp_అంకె, n_instrs, false);
+    ఒకవేళ (n_instrs == 0) {
+#నిర్వచితం_కాకపోతే CONFIG_ARCH_AARCH64
+        unset_Breakpoint_వాడిన_Flag(t, bp_అంకె);
+#అయితే_ముగింపు /* CONFIG_ARCH_AARCH64 */
+        విలువ = false;
+    } లేకపోతే {
+#నిర్వచితం_కాకపోతే CONFIG_ARCH_AARCH64
+        సమితి_Breakpoint_వాడిన_Flag(t, bp_అంకె);
+#అయితే_ముగింపు /* CONFIG_ARCH_AARCH64 */
+        విలువ = bp_was_consumed;
     }
 
-    if (call) {
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    ఒకవేళ (call) {
+        సమితి_రిజిస్టరు(thread, badge_రిజిస్టరు, 0);
+        గుర్తులేని పూర్ణాంకం నిడివి = సమితి_MR(thread, బఫరు, 0, విలువ);
+        సమితి_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, నిడివి)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Running);
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeConfigureSingleStepping(cap_t cap, bool_t call, word_t *buffer)
+స్థిర exception_t decodeConfigureSingleStepping(cap_t cap, bool_t call, మాట_t *బఫరు)
 {
-    uint16_t bp_num;
-    word_t n_instrs;
+    uint16_t bp_అంకె;
+    మాట_t n_instrs;
     tcb_t *tcb;
     syscall_error_t syserr;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    bp_num = getSyscallArg(0, buffer);
-    n_instrs = getSyscallArg(1, buffer);
+    bp_అంకె = getSyscallArg(0, బఫరు);
+    n_instrs = getSyscallArg(1, బఫరు);
 
-    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_num, n_instrs, false);
-    if (syserr.type != seL4_NoError) {
+    syserr = Arch_decodeConfigureSingleStepping(tcb, bp_అంకె, n_instrs, false);
+    ఒకవేళ (syserr.type != seL4_NoError) {
         current_syscall_error = syserr;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeConfigureSingleStepping(call, buffer, tcb, bp_num, n_instrs);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeConfigureSingleStepping(call, బఫరు, tcb, bp_అంకె, n_instrs);
 }
 
-static exception_t invokeSetBreakpoint(tcb_t *tcb, uint16_t bp_num,
-                                       word_t vaddr, word_t type, word_t size, word_t rw)
+స్థిర exception_t invoke_సమితి_Breakpoint(tcb_t *tcb, uint16_t bp_అంకె,
+                                       మాట_t vaddr, మాట_t type, మాట_t కొలత, మాట_t rw)
 {
-    setBreakpoint(tcb, bp_num, vaddr, type, size, rw);
+    సమితి_Breakpoint(tcb, bp_అంకె, vaddr, type, కొలత, rw);
     /* Signal restore_user_context() to pop the breakpoint context on return. */
-    setBreakpointUsedFlag(tcb, bp_num);
-    return EXCEPTION_NONE;
+    సమితి_Breakpoint_వాడిన_Flag(tcb, bp_అంకె);
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
+స్థిర exception_t decode_సమితి_Breakpoint(cap_t cap, మాట_t *బఫరు)
 {
-    uint16_t bp_num;
-    word_t vaddr, type, size, rw;
+    uint16_t bp_అంకె;
+    మాట_t vaddr, type, కొలత, rw;
     tcb_t *tcb;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
-    vaddr = getSyscallArg(1, buffer);
-    type = getSyscallArg(2, buffer);
-    size = getSyscallArg(3, buffer);
-    rw = getSyscallArg(4, buffer);
+    bp_అంకె = getSyscallArg(0, బఫరు);
+    vaddr = getSyscallArg(1, బఫరు);
+    type = getSyscallArg(2, బఫరు);
+    కొలత = getSyscallArg(3, బఫరు);
+    rw = getSyscallArg(4, బఫరు);
 
     /* We disallow the user to set breakpoint addresses that are in the kernel
      * vaddr range.
      */
-    if (vaddr >= (word_t)USER_TOP) {
+    ఒకవేళ (vaddr >= (మాట_t)USER_శిఖరం) {
         userError("Debug: Invalid address %lx: bp addresses must be userspace "
                   "addresses.",
                   vaddr);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (type != seL4_InstructionBreakpoint && type != seL4_DataBreakpoint) {
+    ఒకవేళ (type != seL4_InstructionBreakpoint && type != se_L4_దత్తాంశం_Breakpoint) {
         userError("Debug: Unknown breakpoint type %lx.", type);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
-    } else if (type == seL4_InstructionBreakpoint) {
-        if (size != 0) {
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 2;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
+    } లేకపోతే ఒకవేళ (type == seL4_InstructionBreakpoint) {
+        ఒకవేళ (కొలత != 0) {
             userError("Debug: Instruction bps must have size of 0.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 3;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        if (rw != seL4_BreakOnRead) {
+        ఒకవేళ (rw != seL4_BreakOnRead) {
             userError("Debug: Instruction bps must be break-on-read.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 4;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 4;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        if ((seL4_FirstWatchpoint == -1 || bp_num >= seL4_FirstWatchpoint)
-            && seL4_FirstBreakpoint != seL4_FirstWatchpoint) {
+        ఒకవేళ ((se_L4_మొదటి_Watchpoint == -1 || bp_అంకె >= se_L4_మొదటి_Watchpoint)
+            && se_L4_మొదటి_Breakpoint != se_L4_మొదటి_Watchpoint) {
             userError("Debug: Can't specify a watchpoint ID with type seL4_InstructionBreakpoint.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 2;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-    } else if (type == seL4_DataBreakpoint) {
-        if (size == 0) {
+    } లేకపోతే ఒకవేళ (type == se_L4_దత్తాంశం_Breakpoint) {
+        ఒకవేళ (కొలత == 0) {
             userError("Debug: Data bps cannot have size of 0.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 3;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 3;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        if (seL4_FirstWatchpoint != -1 && bp_num < seL4_FirstWatchpoint) {
+        ఒకవేళ (se_L4_మొదటి_Watchpoint != -1 && bp_అంకె < se_L4_మొదటి_Watchpoint) {
             userError("Debug: Data watchpoints cannot specify non-data watchpoint ID.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 2;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_వాదం;
+            current_syscall_error.invalid_వాదం_సంఖ్య = 2;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-    } else if (type == seL4_SoftwareBreakRequest) {
+    } లేకపోతే ఒకవేళ (type == seL4_SoftwareBreakRequest) {
         userError("Debug: Use a software breakpoint instruction to trigger a "
                   "software breakpoint.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 2;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (rw != seL4_BreakOnRead && rw != seL4_BreakOnWrite
+    ఒకవేళ (rw != seL4_BreakOnRead && rw != seL4_BreakOnWrite
         && rw != seL4_BreakOnReadWrite) {
         userError("Debug: Unknown access-type %lu.", rw);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 3;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (size != 0 && size != 1 && size != 2 && size != 4 && size != 8) {
-        userError("Debug: Invalid size %lu.", size);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (కొలత != 0 && కొలత != 1 && కొలత != 2 && కొలత != 4 && కొలత != 8) {
+        userError("Debug: Invalid size %lu.", కొలత);
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 3;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (size > 0 && vaddr & (size - 1)) {
+    ఒకవేళ (కొలత > 0 && vaddr & (కొలత - 1)) {
         /* Just Don't allow unaligned watchpoints. They are undefined
          * both ARM and x86.
          *
@@ -683,942 +683,942 @@ static exception_t decodeSetBreakpoint(cap_t cap, word_t *buffer)
          */
         userError("Debug: Unaligned data watchpoint address %lx (size %lx) "
                   "rejected.\n",
-                  vaddr, size);
+                  vaddr, కొలత);
 
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    error = Arch_decodeSetBreakpoint(tcb, bp_num, vaddr, type, size, rw);
-    if (error.type != seL4_NoError) {
+    error = Arch_decode_సమితి_Breakpoint(tcb, bp_అంకె, vaddr, type, కొలత, rw);
+    ఒకవేళ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSetBreakpoint(tcb, bp_num,
-                               vaddr, type, size, rw);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invoke_సమితి_Breakpoint(tcb, bp_అంకె,
+                               vaddr, type, కొలత, rw);
 }
 
-static exception_t invokeGetBreakpoint(bool_t call, word_t *buffer, tcb_t *tcb, uint16_t bp_num)
+స్థిర exception_t invokeGetBreakpoint(bool_t call, మాట_t *బఫరు, tcb_t *tcb, uint16_t bp_అంకె)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = కణుపు_STATE(ksCurThread);
     getBreakpoint_t res;
-    res = getBreakpoint(tcb, bp_num);
-    if (call) {
-        setRegister(thread, badgeRegister, 0);
-        setMR(NODE_STATE(ksCurThread), buffer, 0, res.vaddr);
-        setMR(NODE_STATE(ksCurThread), buffer, 1, res.type);
-        setMR(NODE_STATE(ksCurThread), buffer, 2, res.size);
-        setMR(NODE_STATE(ksCurThread), buffer, 3, res.rw);
-        setMR(NODE_STATE(ksCurThread), buffer, 4, res.is_enabled);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, 5)));
+    res = getBreakpoint(tcb, bp_అంకె);
+    ఒకవేళ (call) {
+        సమితి_రిజిస్టరు(thread, badge_రిజిస్టరు, 0);
+        సమితి_MR(కణుపు_STATE(ksCurThread), బఫరు, 0, res.vaddr);
+        సమితి_MR(కణుపు_STATE(ksCurThread), బఫరు, 1, res.type);
+        సమితి_MR(కణుపు_STATE(ksCurThread), బఫరు, 2, res.కొలత);
+        సమితి_MR(కణుపు_STATE(ksCurThread), బఫరు, 3, res.rw);
+        సమితి_MR(కణుపు_STATE(ksCurThread), బఫరు, 4, res.is_enabled);
+        సమితి_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, 5)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Running);
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeGetBreakpoint(cap_t cap, bool_t call, word_t *buffer)
+స్థిర exception_t decodeGetBreakpoint(cap_t cap, bool_t call, మాట_t *బఫరు)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_అంకె;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_అంకె = getSyscallArg(0, బఫరు);
 
-    error = Arch_decodeGetBreakpoint(tcb, bp_num);
-    if (error.type != seL4_NoError) {
+    error = Arch_decodeGetBreakpoint(tcb, bp_అంకె);
+    ఒకవేళ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeGetBreakpoint(call, buffer, tcb, bp_num);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeGetBreakpoint(call, బఫరు, tcb, bp_అంకె);
 }
 
-static exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_num)
+స్థిర exception_t invokeUnsetBreakpoint(tcb_t *tcb, uint16_t bp_అంకె)
 {
     /* Maintain the bitfield of in-use breakpoints. */
-    unsetBreakpoint(tcb, bp_num);
-    unsetBreakpointUsedFlag(tcb, bp_num);
-    return EXCEPTION_NONE;
+    unsetBreakpoint(tcb, bp_అంకె);
+    unset_Breakpoint_వాడిన_Flag(tcb, bp_అంకె);
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeUnsetBreakpoint(cap_t cap, word_t *buffer)
+స్థిర exception_t decodeUnsetBreakpoint(cap_t cap, మాట_t *బఫరు)
 {
     tcb_t *tcb;
-    uint16_t bp_num;
+    uint16_t bp_అంకె;
     syscall_error_t error;
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    bp_num = getSyscallArg(0, buffer);
+    bp_అంకె = getSyscallArg(0, బఫరు);
 
-    error = Arch_decodeUnsetBreakpoint(tcb, bp_num);
-    if (error.type != seL4_NoError) {
+    error = Arch_decodeUnsetBreakpoint(tcb, bp_అంకె);
+    ఒకవేళ (error.type != seL4_NoError) {
         current_syscall_error = error;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeUnsetBreakpoint(tcb, bp_num);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeUnsetBreakpoint(tcb, bp_అంకె);
 }
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#అయితే_ముగింపు /* CONFIG_HARDWARE_DEBUG_API */
 
-static exception_t invokeSetTLSBase(tcb_t *thread, word_t tls_base)
+స్థిర exception_t invoke_సమితి_TLSBase(tcb_t *thread, మాట_t tls_పునాది)
 {
-    setRegister(thread, TLS_BASE, tls_base);
-    if (thread == NODE_STATE(ksCurThread)) {
+    సమితి_రిజిస్టరు(thread, TLS_పునాది, tls_పునాది);
+    ఒకవేళ (thread == కణుపు_STATE(ksCurThread)) {
         /* If this is the current thread force a reschedule to ensure that any changes
          * to the TLS_BASE are realized */
         rescheduleRequired();
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static exception_t decodeSetTLSBase(cap_t cap, word_t length, word_t *buffer)
+స్థిర exception_t decode_సమితి_TLSBase(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    word_t tls_base;
+    మాట_t tls_పునాది;
 
-    if (length < 1) {
+    ఒకవేళ (నిడివి < 1) {
         userError("TCB SetTLSBase: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    tls_base = getSyscallArg(0, buffer);
+    tls_పునాది = getSyscallArg(0, బఫరు);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSetTLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_base);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invoke_సమితి_TLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_పునాది);
 }
 
-static void invokeSetFlags(tcb_t *thread, word_t clear, word_t set, bool_t call)
+స్థిర శూన్య invoke_సమితి_Flags(tcb_t *thread, మాట_t clear, మాట_t సమితి, bool_t call)
 {
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-    word_t flags = thread->tcbFlags;
+    tcb_t *cur_thread = కణుపు_STATE(ksCurThread);
+    మాట_t flags = thread->tcbFlags;
 
     flags &= ~clear;
-    flags |= set & seL4_TCBFlag_MASK;
+    flags |= సమితి & se_L4_TCBFlag_ముసుగు;
     thread->tcbFlags = flags;
 
-#ifdef CONFIG_HAVE_FPU
-    if (flags & seL4_TCBFlag_fpuDisabled) {
+#నిర్వచితమైతే CONFIG_HAVE_FPU
+    ఒకవేళ (flags & seL4_TCBFlag_fpuDisabled) {
         /* Save current FPU state before disabling FPU: */
         fpuRelease(thread);
-    } else if (thread == cur_thread) {
+    } లేకపోతే ఒకవేళ (thread == cur_thread) {
         /* Restore FPU here as switchToThread() won't be called: */
         lazyFPURestore(thread);
     }
-#endif
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, cur_thread);
-        setRegister(cur_thread, badgeRegister, 0);
-        unsigned int length = setMR(cur_thread, ipcBuffer, 0, flags);
-        setRegister(cur_thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+#అయితే_ముగింపు
+    ఒకవేళ (call) {
+        మాట_t *ipc_బఫరు = lookupIPCBuffer(true, cur_thread);
+        సమితి_రిజిస్టరు(cur_thread, badge_రిజిస్టరు, 0);
+        గుర్తులేని పూర్ణాంకం నిడివి = సమితి_MR(cur_thread, ipc_బఫరు, 0, flags);
+        సమితి_రిజిస్టరు(cur_thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, నిడివి)));
     }
-    setThreadState(cur_thread, ThreadState_Running);
+    సమితి_Thread_State(cur_thread, ThreadState_Running);
 }
 
-static exception_t decodeSetFlags(cap_t cap, word_t length, bool_t call, word_t *buffer)
+స్థిర exception_t decode_సమితి_Flags(cap_t cap, మాట_t నిడివి, bool_t call, మాట_t *బఫరు)
 {
     tcb_t *thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (length < 2) {
+    ఒకవేళ (నిడివి < 2) {
         userError("TCB SetFlags: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t clear = getSyscallArg(0, buffer);
-    word_t set   = getSyscallArg(1, buffer);
+    మాట_t clear = getSyscallArg(0, బఫరు);
+    మాట_t సమితి   = getSyscallArg(1, బఫరు);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    invokeSetFlags(thread, clear, set, call);
-    return EXCEPTION_NONE;
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    invoke_సమితి_Flags(thread, clear, సమితి, call);
+    తిరిగి EXCEPTION_NONE;
 }
 
 /* The following functions sit in the syscall error monad, but include the
  * exception cases for the preemptible bottom end, as they call the invoke
  * functions directly.  This is a significant deviation from the Haskell
  * spec. */
-exception_t decodeTCBInvocation(word_t invLabel, word_t length, cap_t cap,
-                                cte_t *slot, bool_t call, word_t *buffer)
+exception_t decodeTCBInvocation(మాట_t invLabel, మాట_t నిడివి, cap_t cap,
+                                cte_t *స్థానం, bool_t call, మాట_t *బఫరు)
 {
     /* Stall the core if we are operating on a remote TCB that is currently running */
     SMP_COND_STATEMENT(remoteTCBStall(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));)
 
-    switch (invLabel) {
-    case TCBReadRegisters:
+    ఎంపిక (invLabel) {
+    స్థితి TCBReadRegisters:
         /* Second level of decoding */
-        return decodeReadRegisters(cap, length, call, buffer);
+        తిరిగి decodeReadRegisters(cap, నిడివి, call, బఫరు);
 
-    case TCBWriteRegisters:
-        return decodeWriteRegisters(cap, length, buffer);
+    స్థితి TCBWriteRegisters:
+        తిరిగి decodeWriteRegisters(cap, నిడివి, బఫరు);
 
-    case TCBCopyRegisters:
-        return decodeCopyRegisters(cap, length, buffer);
+    స్థితి TCBCopyRegisters:
+        తిరిగి decodeCopyRegisters(cap, నిడివి, బఫరు);
 
-    case TCBSuspend:
+    స్థితి TCBSuspend:
         /* Jump straight to the invoke */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeTCB_Suspend(
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeTCB_Suspend(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
-    case TCBResume:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeTCB_Resume(
+    స్థితి TCBResume:
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeTCB_Resume(
                    TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
 
-    case TCBConfigure:
-        return decodeTCBConfigure(cap, length, slot, buffer);
+    స్థితి TCBConfigure:
+        తిరిగి decodeTCBConfigure(cap, నిడివి, స్థానం, బఫరు);
 
-    case TCBSetPriority:
-        return decodeSetPriority(cap, length, buffer);
+    స్థితి TCBSet_ప్రాధాన్యత:
+        తిరిగి decode_సమితి_ప్రాధాన్యత(cap, నిడివి, బఫరు);
 
-    case TCBSetMCPriority:
-        return decodeSetMCPriority(cap, length, buffer);
+    స్థితి TCBSetMCPriority:
+        తిరిగి decode_సమితి_MCPriority(cap, నిడివి, బఫరు);
 
-    case TCBSetSchedParams:
-#ifdef CONFIG_KERNEL_MCS
-        return decodeSetSchedParams(cap, length, slot, buffer);
-#else
-        return decodeSetSchedParams(cap, length, buffer);
-#endif
+    స్థితి TCBSetSchedParams:
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+        తిరిగి decode_సమితి_Sched_Params(cap, నిడివి, స్థానం, బఫరు);
+#లేకపోతే
+        తిరిగి decode_సమితి_Sched_Params(cap, నిడివి, బఫరు);
+#అయితే_ముగింపు
 
-    case TCBSetIPCBuffer:
-        return decodeSetIPCBuffer(cap, length, slot, buffer);
+    స్థితి TCBSetIPCBuffer:
+        తిరిగి decode_సమితి_IPCBuffer(cap, నిడివి, స్థానం, బఫరు);
 
-    case TCBSetSpace:
-        return decodeSetSpace(cap, length, slot, buffer);
+    స్థితి TCBSetSpace:
+        తిరిగి decode_సమితి_Space(cap, నిడివి, స్థానం, బఫరు);
 
-    case TCBBindNotification:
-        return decodeBindNotification(cap);
+    స్థితి TCBBindNotification:
+        తిరిగి decodeBindNotification(cap);
 
-    case TCBUnbindNotification:
-        return decodeUnbindNotification(cap);
+    స్థితి TCBUnbindNotification:
+        తిరిగి decodeUnbindNotification(cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    case TCBSetTimeoutEndpoint:
-        return decodeSetTimeoutEndpoint(cap, slot);
-#else
-#ifdef ENABLE_SMP_SUPPORT
-    case TCBSetAffinity:
-        return decodeSetAffinity(cap, length, buffer);
-#endif /* ENABLE_SMP_SUPPORT */
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    స్థితి TCBSetTimeoutEndpoint:
+        తిరిగి decode_సమితి_Timeout_Endpoint(cap, స్థానం);
+#లేకపోతే
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+    స్థితి TCBSetAffinity:
+        తిరిగి decode_సమితి_Affinity(cap, నిడివి, బఫరు);
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు
 
         /* There is no notion of arch specific TCB invocations so this needs to go here */
-#ifdef CONFIG_VTX
-    case TCBSetEPTRoot:
-        return decodeSetEPTRoot(cap);
-#endif
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి TCBSetEPTRoot:
+        తిరిగి decode_సమితి_EPTRoot(cap);
+#అయితే_ముగింపు
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case TCBConfigureSingleStepping:
-        return decodeConfigureSingleStepping(cap, call, buffer);
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
+    స్థితి TCBConfigureSingleStepping:
+        తిరిగి decodeConfigureSingleStepping(cap, call, బఫరు);
 
-    case TCBSetBreakpoint:
-        return decodeSetBreakpoint(cap, buffer);
+    స్థితి TCBSetBreakpoint:
+        తిరిగి decode_సమితి_Breakpoint(cap, బఫరు);
 
-    case TCBGetBreakpoint:
-        return decodeGetBreakpoint(cap, call, buffer);
+    స్థితి TCBGetBreakpoint:
+        తిరిగి decodeGetBreakpoint(cap, call, బఫరు);
 
-    case TCBUnsetBreakpoint:
-        return decodeUnsetBreakpoint(cap, buffer);
-#endif
+    స్థితి TCBUnsetBreakpoint:
+        తిరిగి decodeUnsetBreakpoint(cap, బఫరు);
+#అయితే_ముగింపు
 
-    case TCBSetTLSBase:
-        return decodeSetTLSBase(cap, length, buffer);
+    స్థితి TCBSetTLSBase:
+        తిరిగి decode_సమితి_TLSBase(cap, నిడివి, బఫరు);
 
-    case TCBSetFlags:
-        return decodeSetFlags(cap, length, call, buffer);
+    స్థితి TCBSetFlags:
+        తిరిగి decode_సమితి_Flags(cap, నిడివి, call, బఫరు);
 
-    default:
+    అప్రమేయ:
         /* Haskell: "throw IllegalOperation" */
         userError("TCB: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-enum CopyRegistersFlags {
-    CopyRegisters_suspendSource = 0,
-    CopyRegisters_resumeTarget = 1,
-    CopyRegisters_transferFrame = 2,
+గణన CopyRegistersFlags {
+    Copy_Registers_suspend_ఆధారం = 0,
+    Copy_Registers_resume_లక్ష్యం = 1,
+    Copy_Registers_transfer_చట్రం = 2,
     CopyRegisters_transferInteger = 3
 };
 
-exception_t decodeCopyRegisters(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeCopyRegisters(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    word_t transferArch;
+    మాట_t transferArch;
     tcb_t *srcTCB;
-    cap_t source_cap;
-    word_t flags;
+    cap_t ఆధారం_cap;
+    మాట_t flags;
 
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (నిడివి < 1 || current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB CopyRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
+    flags = getSyscallArg(0, బఫరు);
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
-    source_cap = current_extra_caps.excaprefs[0]->cap;
+    ఆధారం_cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(source_cap) == cap_thread_cap) {
-        srcTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(source_cap));
-    } else {
+    ఒకవేళ (cap_get_capType(ఆధారం_cap) == cap_thread_cap) {
+        srcTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(ఆధారం_cap));
+    } లేకపోతే {
         userError("TCB CopyRegisters: Invalid source TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_CopyRegisters(
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_CopyRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), srcTCB,
-               flags & BIT(CopyRegisters_suspendSource),
-               flags & BIT(CopyRegisters_resumeTarget),
-               flags & BIT(CopyRegisters_transferFrame),
-               flags & BIT(CopyRegisters_transferInteger),
+               flags & బిట్టు(Copy_Registers_suspend_ఆధారం),
+               flags & బిట్టు(Copy_Registers_resume_లక్ష్యం),
+               flags & బిట్టు(Copy_Registers_transfer_చట్రం),
+               flags & బిట్టు(CopyRegisters_transferInteger),
                transferArch);
 
 }
 
-enum ReadRegistersFlags {
+గణన ReadRegistersFlags {
     ReadRegisters_suspend = 0
 };
 
-exception_t decodeReadRegisters(cap_t cap, word_t length, bool_t call,
-                                word_t *buffer)
+exception_t decodeReadRegisters(cap_t cap, మాట_t నిడివి, bool_t call,
+                                మాట_t *బఫరు)
 {
-    word_t transferArch, flags, n;
+    మాట_t transferArch, flags, n;
     tcb_t *thread;
 
-    if (length < 2) {
+    ఒకవేళ (నిడివి < 2) {
         userError("TCB ReadRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
-    n     = getSyscallArg(1, buffer);
+    flags = getSyscallArg(0, బఫరు);
+    n     = getSyscallArg(1, బఫరు);
 
-    if (n < 1 || n > n_frameRegisters + n_gpRegisters) {
+    ఒకవేళ (n < 1 || n > n_చట్రం_Registers + n_gpRegisters) {
         userError("TCB ReadRegisters: Attempted to read an invalid number of registers (%d).",
-                  (int)n);
+                  (పూర్ణాంకం)n);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = n_frameRegisters +
+        current_syscall_error.rangeErrorMax = n_చట్రం_Registers +
                                               n_gpRegisters;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (thread == కణుపు_STATE(ksCurThread)) {
         userError("TCB ReadRegisters: Attempted to read our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_ReadRegisters(
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_ReadRegisters(
                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)),
-               flags & BIT(ReadRegisters_suspend),
+               flags & బిట్టు(ReadRegisters_suspend),
                n, transferArch, call);
 }
 
-enum WriteRegistersFlags {
+గణన WriteRegistersFlags {
     WriteRegisters_resume = 0
 };
 
-exception_t decodeWriteRegisters(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeWriteRegisters(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    word_t flags, w;
-    word_t transferArch;
+    మాట_t flags, w;
+    మాట_t transferArch;
     tcb_t *thread;
 
-    if (length < 2) {
+    ఒకవేళ (నిడివి < 2) {
         userError("TCB WriteRegisters: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    flags = getSyscallArg(0, buffer);
-    w     = getSyscallArg(1, buffer);
+    flags = getSyscallArg(0, బఫరు);
+    w     = getSyscallArg(1, బఫరు);
 
-    if (length - 2 < w) {
+    ఒకవేళ (నిడివి - 2 < w) {
         userError("TCB WriteRegisters: Message too short for requested write size (%d/%d).",
-                  (int)(length - 2), (int)w);
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+                  (పూర్ణాంకం)(నిడివి - 2), (పూర్ణాంకం)w);
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     transferArch = Arch_decodeTransfer(flags >> 8);
 
     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    if (thread == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (thread == కణుపు_STATE(ksCurThread)) {
         userError("TCB WriteRegisters: Attempted to write our own registers.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_WriteRegisters(thread,
-                                    flags & BIT(WriteRegisters_resume),
-                                    w, transferArch, buffer);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_WriteRegisters(thread,
+                                    flags & బిట్టు(WriteRegisters_resume),
+                                    w, transferArch, బఫరు);
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
 bool_t validFaultHandler(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        return (cap_endpoint_cap_get_capCanSend(cap) &&
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_endpoint_cap:
+        తిరిగి (cap_endpoint_cap_get_capCanSend(cap) &&
                 (cap_endpoint_cap_get_capCanGrant(cap) ||
-                 cap_endpoint_cap_get_capCanGrantReply(cap)));
-    case cap_null_cap:
+                 cap_endpoint_cap_get_cap_Can_Grant_జవాబు(cap)));
+    స్థితి cap_null_cap:
         /* just has no fault endpoint */
-        return true;
-    default:
-        return false;
+        తిరిగి true;
+    అప్రమేయ:
+        తిరిగి false;
     }
 }
-#endif
+#అయితే_ముగింపు
 
 /* TCBConfigure batches SetIPCBuffer and parts of SetSpace. */
-exception_t decodeTCBConfigure(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+exception_t decodeTCBConfigure(cap_t cap, మాట_t నిడివి, cte_t *స్థానం, మాట_t *బఫరు)
 {
-    cte_t *bufferSlot, *cRootSlot, *vRootSlot;
-    cap_t bufferCap, cRootCap, vRootCap;
+    cte_t *బఫరు_స్థానం, *c_మూలం_స్థానం, *v_మూలం_స్థానం;
+    cap_t బఫరు_Cap, c_మూలం_Cap, v_మూలం_Cap;
     deriveCap_ret_t dc_ret;
-    word_t cRootData, vRootData, bufferAddr;
-#ifdef CONFIG_KERNEL_MCS
-#define TCBCONFIGURE_ARGS 3
-#else
-#define TCBCONFIGURE_ARGS 4
-#endif
-    if (length < TCBCONFIGURE_ARGS || current_extra_caps.excaprefs[0] == NULL
-        || current_extra_caps.excaprefs[1] == NULL
-        || current_extra_caps.excaprefs[2] == NULL) {
+    మాట_t c_మూలం_దత్తాంశం, v_మూలం_దత్తాంశం, బఫరు_Addr;
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+#నిర్వచించు TCBCONFIGURE_వాదనలు 3
+#లేకపోతే
+#నిర్వచించు TCBCONFIGURE_వాదనలు 4
+#అయితే_ముగింపు
+    ఒకవేళ (నిడివి < TCBCONFIGURE_వాదనలు || current_extra_caps.excaprefs[0] == ఖాళీ
+        || current_extra_caps.excaprefs[1] == ఖాళీ
+        || current_extra_caps.excaprefs[2] == ఖాళీ) {
         userError("TCB Configure: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    cRootData     = getSyscallArg(0, buffer);
-    vRootData     = getSyscallArg(1, buffer);
-    bufferAddr    = getSyscallArg(2, buffer);
-#else
-    cptr_t faultEP       = getSyscallArg(0, buffer);
-    cRootData     = getSyscallArg(1, buffer);
-    vRootData     = getSyscallArg(2, buffer);
-    bufferAddr    = getSyscallArg(3, buffer);
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    c_మూలం_దత్తాంశం     = getSyscallArg(0, బఫరు);
+    v_మూలం_దత్తాంశం     = getSyscallArg(1, బఫరు);
+    బఫరు_Addr    = getSyscallArg(2, బఫరు);
+#లేకపోతే
+    cptr_t faultEP       = getSyscallArg(0, బఫరు);
+    c_మూలం_దత్తాంశం     = getSyscallArg(1, బఫరు);
+    v_మూలం_దత్తాంశం     = getSyscallArg(2, బఫరు);
+    బఫరు_Addr    = getSyscallArg(3, బఫరు);
+#అయితే_ముగింపు
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
-    bufferSlot = current_extra_caps.excaprefs[2];
-    bufferCap  = current_extra_caps.excaprefs[2]->cap;
+    c_మూలం_స్థానం  = current_extra_caps.excaprefs[0];
+    c_మూలం_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_మూలం_స్థానం  = current_extra_caps.excaprefs[1];
+    v_మూలం_Cap   = current_extra_caps.excaprefs[1]->cap;
+    బఫరు_స్థానం = current_extra_caps.excaprefs[2];
+    బఫరు_Cap  = current_extra_caps.excaprefs[2]->cap;
 
-    if (bufferAddr == 0) {
-        bufferSlot = NULL;
-    } else {
-        dc_ret = deriveCap(bufferSlot, bufferCap);
-        if (dc_ret.status != EXCEPTION_NONE) {
-            return dc_ret.status;
+    ఒకవేళ (బఫరు_Addr == 0) {
+        బఫరు_స్థానం = ఖాళీ;
+    } లేకపోతే {
+        dc_ret = deriveCap(బఫరు_స్థానం, బఫరు_Cap);
+        ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి dc_ret.స్థితి_2;
         }
-        bufferCap = dc_ret.cap;
+        బఫరు_Cap = dc_ret.cap;
 
-        exception_t e = checkValidIPCBuffer(bufferAddr, bufferCap);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        exception_t e = checkValidIPCBuffer(బఫరు_Addr, బఫరు_Cap);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
     }
 
-    if (slotCapLongRunningDelete(
+    ఒకవేళ (స్థానం_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-        slotCapLongRunningDelete(
+        స్థానం_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable))) {
         userError("TCB Configure: CSpace or VSpace currently being deleted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    ఒకవేళ (c_మూలం_దత్తాంశం != 0) {
+        c_మూలం_Cap = update_Cap_దత్తాంశం(false, c_మూలం_దత్తాంశం, c_మూలం_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(c_మూలం_స్థానం, c_మూలం_Cap);
+    ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి dc_ret.స్థితి_2;
     }
-    cRootCap = dc_ret.cap;
+    c_మూలం_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    ఒకవేళ (cap_get_capType(c_మూలం_Cap) != cap_cnode_cap) {
         userError("TCB Configure: CSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    ఒకవేళ (v_మూలం_దత్తాంశం != 0) {
+        v_మూలం_Cap = update_Cap_దత్తాంశం(false, v_మూలం_దత్తాంశం, v_మూలం_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(v_మూలం_స్థానం, v_మూలం_Cap);
+    ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి dc_ret.స్థితి_2;
     }
-    vRootCap = dc_ret.cap;
+    v_మూలం_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    ఒకవేళ (!is_Valid_VTable_మూలం(v_మూలం_Cap)) {
         userError("TCB Configure: VSpace cap is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               bufferAddr, bufferCap,
-               bufferSlot, thread_control_caps_update_space |
-               thread_control_caps_update_ipc_buffer);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               c_మూలం_Cap, c_మూలం_స్థానం,
+               v_మూలం_Cap, v_మూలం_స్థానం,
+               బఫరు_Addr, బఫరు_Cap,
+               బఫరు_స్థానం, thread_control_caps_update_space |
+               thread_control_caps_update_ipc_బఫరు);
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
                faultEP, NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               bufferAddr, bufferCap,
-               bufferSlot, thread_control_update_space |
-               thread_control_update_ipc_buffer);
-#endif
+               c_మూలం_Cap, c_మూలం_స్థానం,
+               v_మూలం_Cap, v_మూలం_స్థానం,
+               బఫరు_Addr, బఫరు_Cap,
+               బఫరు_స్థానం, thread_control_update_space |
+               thread_control_update_ipc_బఫరు);
+#అయితే_ముగింపు
 }
 
-exception_t decodeSetPriority(cap_t cap, word_t length, word_t *buffer)
+exception_t decode_సమితి_ప్రాధాన్యత(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (నిడివి < 1 || current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB SetPriority: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newPrio = getSyscallArg(0, buffer);
+    prio_t newPrio = getSyscallArg(0, బఫరు);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ఒకవేళ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("Set priority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newPrio, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t స్థితి_2 = checkPrio(newPrio, authTCB);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
         userError("TCB SetPriority: Requested priority %lu too high (max %lu).",
-                  (unsigned long) newPrio, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (గుర్తులేని దీర్ఘ) newPrio, (గుర్తులేని దీర్ఘ) authTCB->tcbMCP);
+        తిరిగి స్థితి_2;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-               cap_null_cap_new(), NULL,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
                NULL_PRIO, newPrio,
-               NULL, thread_control_sched_update_priority);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+               ఖాళీ, thread_control_sched_update_ప్రాధాన్యత);
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ఖాళీ,
                0, NULL_PRIO, newPrio,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_priority);
-#endif
+               ఖాళీ, thread_control_update_ప్రాధాన్యత);
+#అయితే_ముగింపు
 }
 
-exception_t decodeSetMCPriority(cap_t cap, word_t length, word_t *buffer)
+exception_t decode_సమితి_MCPriority(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (నిడివి < 1 || current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB SetMCPriority: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newMcp = getSyscallArg(0, buffer);
+    prio_t newMcp = getSyscallArg(0, బఫరు);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ఒకవేళ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetMCPriority: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newMcp, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t స్థితి_2 = checkPrio(newMcp, authTCB);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
         userError("TCB SetMCPriority: Requested maximum controlled priority %lu too high (max %lu).",
-                  (unsigned long) newMcp, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (గుర్తులేని దీర్ఘ) newMcp, (గుర్తులేని దీర్ఘ) authTCB->tcbMCP);
+        తిరిగి స్థితి_2;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-               cap_null_cap_new(), NULL,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
                newMcp, NULL_PRIO,
-               NULL, thread_control_sched_update_mcp);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+               ఖాళీ, thread_control_sched_update_mcp);
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ఖాళీ,
                0, newMcp, NULL_PRIO,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_mcp);
-#endif
+               ఖాళీ, thread_control_update_mcp);
+#అయితే_ముగింపు
 }
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t decodeSetTimeoutEndpoint(cap_t cap, cte_t *slot)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+exception_t decode_సమితి_Timeout_Endpoint(cap_t cap, cte_t *స్థానం)
 {
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB SetTimeoutEndpoint: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    cte_t *thSlot = current_extra_caps.excaprefs[0];
+    cte_t *th_స్థానం = current_extra_caps.excaprefs[0];
     cap_t thCap   = current_extra_caps.excaprefs[0]->cap;
 
     /* timeout handler */
-    if (!validFaultHandler(thCap)) {
+    ఒకవేళ (!validFaultHandler(thCap)) {
         userError("TCB SetTimeoutEndpoint: timeout endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               thCap, thSlot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               0, cap_null_cap_new(), NULL,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
+               cap_null_cap_new(), ఖాళీ,
+               thCap, th_స్థానం,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               0, cap_null_cap_new(), ఖాళీ,
                thread_control_caps_update_timeout);
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t decodeSetSchedParams(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
-#else
-exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+exception_t decode_సమితి_Sched_Params(cap_t cap, మాట_t నిడివి, cte_t *స్థానం, మాట_t *బఫరు)
+#లేకపోతే
+exception_t decode_సమితి_Sched_Params(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
+#అయితే_ముగింపు
 {
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-#ifdef CONFIG_KERNEL_MCS
-        || current_extra_caps.excaprefs[1] == NULL || current_extra_caps.excaprefs[2] == NULL
-#endif
+    ఒకవేళ (నిడివి < 2 || current_extra_caps.excaprefs[0] == ఖాళీ
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+        || current_extra_caps.excaprefs[1] == ఖాళీ || current_extra_caps.excaprefs[2] == ఖాళీ
+#అయితే_ముగింపు
        ) {
         userError("TCB SetSchedParams: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    prio_t newMcp = getSyscallArg(0, buffer);
-    prio_t newPrio = getSyscallArg(1, buffer);
+    prio_t newMcp = getSyscallArg(0, బఫరు);
+    prio_t newPrio = getSyscallArg(1, బఫరు);
     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     cap_t scCap   = current_extra_caps.excaprefs[1]->cap;
-    cte_t *fhSlot = current_extra_caps.excaprefs[2];
+    cte_t *fh_స్థానం = current_extra_caps.excaprefs[2];
     cap_t fhCap   = current_extra_caps.excaprefs[2]->cap;
-#endif
+#అయితే_ముగింపు
 
-    if (cap_get_capType(authCap) != cap_thread_cap) {
+    ఒకవేళ (cap_get_capType(authCap) != cap_thread_cap) {
         userError("TCB SetSchedParams: authority cap not a TCB.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-    exception_t status = checkPrio(newMcp, authTCB);
-    if (status != EXCEPTION_NONE) {
+    exception_t స్థితి_2 = checkPrio(newMcp, authTCB);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
         userError("TCB SetSchedParams: Requested maximum controlled priority %lu too high (max %lu).",
-                  (unsigned long) newMcp, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (గుర్తులేని దీర్ఘ) newMcp, (గుర్తులేని దీర్ఘ) authTCB->tcbMCP);
+        తిరిగి స్థితి_2;
     }
 
-    status = checkPrio(newPrio, authTCB);
-    if (status != EXCEPTION_NONE) {
+    స్థితి_2 = checkPrio(newPrio, authTCB);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
         userError("TCB SetSchedParams: Requested priority %lu too high (max %lu).",
-                  (unsigned long) newPrio, (unsigned long) authTCB->tcbMCP);
-        return status;
+                  (గుర్తులేని దీర్ఘ) newPrio, (గుర్తులేని దీర్ఘ) authTCB->tcbMCP);
+        తిరిగి స్థితి_2;
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-    sched_context_t *sc = NULL;
+    sched_context_t *sc = ఖాళీ;
     thread_control_flag_t update_flags = thread_control_sched_update_mcp |
-                                         thread_control_sched_update_priority |
+                                         thread_control_sched_update_ప్రాధాన్యత |
                                          thread_control_sched_update_fault;
-    switch (cap_get_capType(scCap)) {
-    case cap_sched_context_cap:
+    ఎంపిక (cap_get_capType(scCap)) {
+    స్థితి cap_sched_context_cap:
         sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(scCap));
-        if (tcb->tcbSchedContext != sc) {
-            if (tcb->tcbSchedContext) {
+        ఒకవేళ (tcb->tcbSchedContext != sc) {
+            ఒకవేళ (tcb->tcbSchedContext) {
                 userError("TCB Configure: tcb already has a scheduling context.");
                 current_syscall_error.type = seL4_IllegalOperation;
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
-            if (sc->scTcb) {
+            ఒకవేళ (sc->scTcb) {
                 userError("TCB Configure: sched context already bound.");
                 current_syscall_error.type = seL4_IllegalOperation;
-                return EXCEPTION_SYSCALL_ERROR;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
         }
-        if (isBlocked(tcb) && !sc_released(sc)) {
+        ఒకవేళ (isBlocked(tcb) && !sc_released(sc)) {
             userError("TCB Configure: tcb blocked and scheduling context not schedulable.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    case cap_null_cap:
-        if (tcb == NODE_STATE(ksCurThread)) {
+        ఆపు;
+    స్థితి cap_null_cap:
+        ఒకవేళ (tcb == కణుపు_STATE(ksCurThread)) {
             userError("TCB SetSchedParams: Cannot change sched_context of current thread");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        break;
-    default:
+        ఆపు;
+    అప్రమేయ:
         userError("TCB Configure: sched context cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 2;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If we are setting or unsetting the scheduling context, update the flags */
-    if (tcb->tcbSchedContext != sc) {
+    ఒకవేళ (tcb->tcbSchedContext != sc) {
         update_flags |= thread_control_sched_update_sc;
     }
 
-    if (!validFaultHandler(fhCap)) {
+    ఒకవేళ (!validFaultHandler(fhCap)) {
         userError("TCB Configure: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 3;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 3;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-#endif
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlSched(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               fhCap, fhSlot,
+#అయితే_ముగింపు
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlSched(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
+               fhCap, fh_స్థానం,
                newMcp, newPrio,
                sc, update_flags);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), ఖాళీ,
                0, newMcp, newPrio,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
                0, cap_null_cap_new(),
-               NULL, thread_control_update_mcp |
-               thread_control_update_priority);
-#endif
+               ఖాళీ, thread_control_update_mcp |
+               thread_control_update_ప్రాధాన్యత);
+#అయితే_ముగింపు
 }
 
 
-exception_t decodeSetIPCBuffer(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+exception_t decode_సమితి_IPCBuffer(cap_t cap, మాట_t నిడివి, cte_t *స్థానం, మాట_t *బఫరు)
 {
-    cptr_t cptr_bufferPtr;
-    cap_t bufferCap;
-    cte_t *bufferSlot;
+    cptr_t cptr_బఫరు_Ptr;
+    cap_t బఫరు_Cap;
+    cte_t *బఫరు_స్థానం;
 
-    if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (నిడివి < 1 || current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB SetIPCBuffer: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    cptr_bufferPtr  = getSyscallArg(0, buffer);
-    bufferSlot = current_extra_caps.excaprefs[0];
-    bufferCap  = current_extra_caps.excaprefs[0]->cap;
+    cptr_బఫరు_Ptr  = getSyscallArg(0, బఫరు);
+    బఫరు_స్థానం = current_extra_caps.excaprefs[0];
+    బఫరు_Cap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cptr_bufferPtr == 0) {
-        bufferSlot = NULL;
-    } else {
+    ఒకవేళ (cptr_బఫరు_Ptr == 0) {
+        బఫరు_స్థానం = ఖాళీ;
+    } లేకపోతే {
         exception_t e;
         deriveCap_ret_t dc_ret;
 
-        dc_ret = deriveCap(bufferSlot, bufferCap);
-        if (dc_ret.status != EXCEPTION_NONE) {
-            return dc_ret.status;
+        dc_ret = deriveCap(బఫరు_స్థానం, బఫరు_Cap);
+        ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి dc_ret.స్థితి_2;
         }
-        bufferCap = dc_ret.cap;
-        e = checkValidIPCBuffer(cptr_bufferPtr, bufferCap);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        బఫరు_Cap = dc_ret.cap;
+        e = checkValidIPCBuffer(cptr_బఫరు_Ptr, బఫరు_Cap);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cptr_bufferPtr, bufferCap,
-               bufferSlot, thread_control_caps_update_ipc_buffer);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               cptr_బఫరు_Ptr, బఫరు_Cap,
+               బఫరు_స్థానం, thread_control_caps_update_ipc_బఫరు);
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
                0, NULL_PRIO, NULL_PRIO,
-               cap_null_cap_new(), NULL,
-               cap_null_cap_new(), NULL,
-               cptr_bufferPtr, bufferCap,
-               bufferSlot, thread_control_update_ipc_buffer);
+               cap_null_cap_new(), ఖాళీ,
+               cap_null_cap_new(), ఖాళీ,
+               cptr_బఫరు_Ptr, బఫరు_Cap,
+               బఫరు_స్థానం, thread_control_update_ipc_బఫరు);
 
-#endif
+#అయితే_ముగింపు
 }
 
-#ifdef CONFIG_KERNEL_MCS
-#define DECODE_SET_SPACE_PARAMS 2
-#else
-#define DECODE_SET_SPACE_PARAMS 3
-#endif
-exception_t decodeSetSpace(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+#నిర్వచించు DECODE_సమితి_SPACE_PARAMS 2
+#లేకపోతే
+#నిర్వచించు DECODE_సమితి_SPACE_PARAMS 3
+#అయితే_ముగింపు
+exception_t decode_సమితి_Space(cap_t cap, మాట_t నిడివి, cte_t *స్థానం, మాట_t *బఫరు)
 {
-    word_t cRootData, vRootData;
-    cte_t *cRootSlot, *vRootSlot;
-    cap_t cRootCap, vRootCap;
+    మాట_t c_మూలం_దత్తాంశం, v_మూలం_దత్తాంశం;
+    cte_t *c_మూలం_స్థానం, *v_మూలం_స్థానం;
+    cap_t c_మూలం_Cap, v_మూలం_Cap;
     deriveCap_ret_t dc_ret;
 
-    if (length < DECODE_SET_SPACE_PARAMS || current_extra_caps.excaprefs[0] == NULL
-        || current_extra_caps.excaprefs[1] == NULL
-#ifdef CONFIG_KERNEL_MCS
-        || current_extra_caps.excaprefs[2] == NULL
-#endif
+    ఒకవేళ (నిడివి < DECODE_సమితి_SPACE_PARAMS || current_extra_caps.excaprefs[0] == ఖాళీ
+        || current_extra_caps.excaprefs[1] == ఖాళీ
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+        || current_extra_caps.excaprefs[2] == ఖాళీ
+#అయితే_ముగింపు
        ) {
         userError("TCB SetSpace: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    cRootData = getSyscallArg(0, buffer);
-    vRootData = getSyscallArg(1, buffer);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    c_మూలం_దత్తాంశం = getSyscallArg(0, బఫరు);
+    v_మూలం_దత్తాంశం = getSyscallArg(1, బఫరు);
 
-    cte_t *fhSlot     = current_extra_caps.excaprefs[0];
+    cte_t *fh_స్థానం     = current_extra_caps.excaprefs[0];
     cap_t fhCap      = current_extra_caps.excaprefs[0]->cap;
-    cRootSlot  = current_extra_caps.excaprefs[1];
-    cRootCap   = current_extra_caps.excaprefs[1]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[2];
-    vRootCap   = current_extra_caps.excaprefs[2]->cap;
-#else
-    cptr_t faultEP   = getSyscallArg(0, buffer);
-    cRootData = getSyscallArg(1, buffer);
-    vRootData = getSyscallArg(2, buffer);
+    c_మూలం_స్థానం  = current_extra_caps.excaprefs[1];
+    c_మూలం_Cap   = current_extra_caps.excaprefs[1]->cap;
+    v_మూలం_స్థానం  = current_extra_caps.excaprefs[2];
+    v_మూలం_Cap   = current_extra_caps.excaprefs[2]->cap;
+#లేకపోతే
+    cptr_t faultEP   = getSyscallArg(0, బఫరు);
+    c_మూలం_దత్తాంశం = getSyscallArg(1, బఫరు);
+    v_మూలం_దత్తాంశం = getSyscallArg(2, బఫరు);
 
-    cRootSlot  = current_extra_caps.excaprefs[0];
-    cRootCap   = current_extra_caps.excaprefs[0]->cap;
-    vRootSlot  = current_extra_caps.excaprefs[1];
-    vRootCap   = current_extra_caps.excaprefs[1]->cap;
-#endif
+    c_మూలం_స్థానం  = current_extra_caps.excaprefs[0];
+    c_మూలం_Cap   = current_extra_caps.excaprefs[0]->cap;
+    v_మూలం_స్థానం  = current_extra_caps.excaprefs[1];
+    v_మూలం_Cap   = current_extra_caps.excaprefs[1]->cap;
+#అయితే_ముగింపు
 
-    if (slotCapLongRunningDelete(
+    ఒకవేళ (స్థానం_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-        slotCapLongRunningDelete(
+        స్థానం_Cap_Long_Running_Delete(
             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable))) {
         userError("TCB SetSpace: CSpace or VSpace currently being deleted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cRootData != 0) {
-        cRootCap = updateCapData(false, cRootData, cRootCap);
+    ఒకవేళ (c_మూలం_దత్తాంశం != 0) {
+        c_మూలం_Cap = update_Cap_దత్తాంశం(false, c_మూలం_దత్తాంశం, c_మూలం_Cap);
     }
 
-    dc_ret = deriveCap(cRootSlot, cRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(c_మూలం_స్థానం, c_మూలం_Cap);
+    ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి dc_ret.స్థితి_2;
     }
-    cRootCap = dc_ret.cap;
+    c_మూలం_Cap = dc_ret.cap;
 
-    if (cap_get_capType(cRootCap) != cap_cnode_cap) {
+    ఒకవేళ (cap_get_capType(c_మూలం_Cap) != cap_cnode_cap) {
         userError("TCB SetSpace: Invalid CNode cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (vRootData != 0) {
-        vRootCap = updateCapData(false, vRootData, vRootCap);
+    ఒకవేళ (v_మూలం_దత్తాంశం != 0) {
+        v_మూలం_Cap = update_Cap_దత్తాంశం(false, v_మూలం_దత్తాంశం, v_మూలం_Cap);
     }
 
-    dc_ret = deriveCap(vRootSlot, vRootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(v_మూలం_స్థానం, v_మూలం_Cap);
+    ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి dc_ret.స్థితి_2;
     }
-    vRootCap = dc_ret.cap;
+    v_మూలం_Cap = dc_ret.cap;
 
-    if (!isValidVTableRoot(vRootCap)) {
+    ఒకవేళ (!is_Valid_VTable_మూలం(v_మూలం_Cap)) {
         userError("TCB SetSpace: Invalid VSpace cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     /* fault handler */
-    if (!validFaultHandler(fhCap)) {
+    ఒకవేళ (!validFaultHandler(fhCap)) {
         userError("TCB SetSpace: fault endpoint cap invalid.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-#endif
+#అయితే_ముగింపు
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-    return invokeTCB_ThreadControlCaps(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-               fhCap, fhSlot,
-               cap_null_cap_new(), NULL,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               0, cap_null_cap_new(), NULL, thread_control_caps_update_space | thread_control_caps_update_fault);
-#else
-    return invokeTCB_ThreadControl(
-               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    తిరిగి invokeTCB_ThreadControlCaps(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
+               fhCap, fh_స్థానం,
+               cap_null_cap_new(), ఖాళీ,
+               c_మూలం_Cap, c_మూలం_స్థానం,
+               v_మూలం_Cap, v_మూలం_స్థానం,
+               0, cap_null_cap_new(), ఖాళీ, thread_control_caps_update_space | thread_control_caps_update_fault);
+#లేకపోతే
+    తిరిగి invokeTCB_ThreadControl(
+               TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), స్థానం,
                faultEP,
                NULL_PRIO, NULL_PRIO,
-               cRootCap, cRootSlot,
-               vRootCap, vRootSlot,
-               0, cap_null_cap_new(), NULL, thread_control_update_space);
-#endif
+               c_మూలం_Cap, c_మూలం_స్థానం,
+               v_మూలం_Cap, v_మూలం_స్థానం,
+               0, cap_null_cap_new(), ఖాళీ, thread_control_update_space);
+#అయితే_ముగింపు
 }
 
 exception_t decodeBindNotification(cap_t cap)
@@ -1627,46 +1627,46 @@ exception_t decodeBindNotification(cap_t cap)
     tcb_t *tcb;
     cap_t ntfn_cap;
 
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("TCB BindNotification: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (tcb->tcbBoundNotification) {
+    ఒకవేళ (tcb->tcbBoundNotification) {
         userError("TCB BindNotification: TCB already has a bound notification.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     ntfn_cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(ntfn_cap) == cap_notification_cap) {
+    ఒకవేళ (cap_get_capType(ntfn_cap) == cap_notification_cap) {
         ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(ntfn_cap));
-    } else {
+    } లేకపోతే {
         userError("TCB BindNotification: Notification is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!cap_notification_cap_get_capNtfnCanReceive(ntfn_cap)) {
+    ఒకవేళ (!cap_notification_cap_get_capNtfnCanReceive(ntfn_cap)) {
         userError("TCB BindNotification: Insufficient access rights");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if ((tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr)
+    ఒకవేళ ((tcb_t *)notification_ptr_get_ntfn_వరుస_తల(ntfnPtr)
         || (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr)) {
         userError("TCB BindNotification: Notification cannot be bound.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_NotificationControl(tcb, ntfnPtr);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_NotificationControl(tcb, ntfnPtr);
 }
 
 exception_t decodeUnbindNotification(cap_t cap)
@@ -1675,14 +1675,14 @@ exception_t decodeUnbindNotification(cap_t cap)
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
 
-    if (!tcb->tcbBoundNotification) {
+    ఒకవేళ (!tcb->tcbBoundNotification) {
         userError("TCB UnbindNotification: TCB already has no bound Notification.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeTCB_NotificationControl(tcb, NULL);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeTCB_NotificationControl(tcb, ఖాళీ);
 }
 
 /* The following functions sit in the preemption monad and implement the
@@ -1690,255 +1690,255 @@ exception_t decodeUnbindNotification(cap_t cap)
 exception_t invokeTCB_Suspend(tcb_t *thread)
 {
     suspend(thread);
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 exception_t invokeTCB_Resume(tcb_t *thread)
 {
     restart(thread);
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
-                                        tcb_cnode_index_t index, cap_t newCap, cte_t *srcSlot)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+స్థిర అంతఃవరుస exception_t installTCBCap(tcb_t *లక్ష్యం, cap_t tCap, cte_t *స్థానం,
+                                        tcb_cnode_సూచీ_t సూచీ, cap_t newCap, cte_t *src_స్థానం)
 {
-    cte_t *rootSlot = TCB_PTR_CTE_PTR(target, index);
-    UNUSED exception_t e = cteDelete(rootSlot, true);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    cte_t *మూలం_స్థానం = TCB_PTR_CTE_PTR(లక్ష్యం, సూచీ);
+    వాడని exception_t e = cteDelete(మూలం_స్థానం, true);
+    ఒకవేళ (e != EXCEPTION_NONE) {
+        తిరిగి e;
     }
 
     /* cteDelete on a cap installed in the tcb cannot fail */
-    if (cap_get_capType(newCap) != cap_null_cap) {
-        if (sameObjectAs(newCap, srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(newCap, srcSlot, rootSlot);
+    ఒకవేళ (cap_get_capType(newCap) != cap_null_cap) {
+        ఒకవేళ (sameObjectAs(newCap, src_స్థానం->cap) &&
+            sameObjectAs(tCap, స్థానం->cap)) {
+            cte_చొప్పించు(newCap, src_స్థానం, మూలం_స్థానం);
         }
     }
-    return e;
+    తిరిగి e;
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
-                                        cap_t fh_newCap, cte_t *fh_srcSlot,
-                                        cap_t th_newCap, cte_t *th_srcSlot,
-                                        cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                        cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-                                        word_t bufferAddr, cap_t bufferCap,
-                                        cte_t *bufferSrcSlot,
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+exception_t invokeTCB_ThreadControlCaps(tcb_t *లక్ష్యం, cte_t *స్థానం,
+                                        cap_t fh_newCap, cte_t *fh_src_స్థానం,
+                                        cap_t th_newCap, cte_t *th_src_స్థానం,
+                                        cap_t c_మూలం_new_Cap, cte_t *c_మూలం_src_స్థానం,
+                                        cap_t v_మూలం_new_Cap, cte_t *v_మూలం_src_స్థానం,
+                                        మాట_t బఫరు_Addr, cap_t బఫరు_Cap,
+                                        cte_t *బఫరు_Src_స్థానం,
                                         thread_control_flag_t updateFlags)
 {
     exception_t e;
-    cap_t tCap = cap_thread_cap_new((word_t)target);
+    cap_t tCap = cap_thread_cap_new((మాట_t)లక్ష్యం);
 
-    if (updateFlags & thread_control_caps_update_fault) {
-        e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ఒకవేళ (updateFlags & thread_control_caps_update_fault) {
+        e = installTCBCap(లక్ష్యం, tCap, స్థానం, tcbFaultHandler, fh_newCap, fh_src_స్థానం);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
 
     }
 
-    if (updateFlags & thread_control_caps_update_timeout) {
-        e = installTCBCap(target, tCap, slot, tcbTimeoutHandler, th_newCap, th_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ఒకవేళ (updateFlags & thread_control_caps_update_timeout) {
+        e = installTCBCap(లక్ష్యం, tCap, స్థానం, tcbTimeoutHandler, th_newCap, th_src_స్థానం);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
     }
 
-    if (updateFlags & thread_control_caps_update_space) {
-        e = installTCBCap(target, tCap, slot, tcbCTable, cRoot_newCap, cRoot_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ఒకవేళ (updateFlags & thread_control_caps_update_space) {
+        e = installTCBCap(లక్ష్యం, tCap, స్థానం, tcbCTable, c_మూలం_new_Cap, c_మూలం_src_స్థానం);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
 
-        e = installTCBCap(target, tCap, slot, tcbVTable, vRoot_newCap, vRoot_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        e = installTCBCap(లక్ష్యం, tCap, స్థానం, tcbVTable, v_మూలం_new_Cap, v_మూలం_src_స్థానం);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
     }
 
-    if (updateFlags & thread_control_caps_update_ipc_buffer) {
-        cte_t *bufferSlot;
+    ఒకవేళ (updateFlags & thread_control_caps_update_ipc_బఫరు) {
+        cte_t *బఫరు_స్థానం;
 
-        bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-        e = cteDelete(bufferSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        బఫరు_స్థానం = TCB_PTR_CTE_PTR(లక్ష్యం, tcb_బఫరు);
+        e = cteDelete(బఫరు_స్థానం, true);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
-        target->tcbIPCBuffer = bufferAddr;
+        లక్ష్యం->tcbIPCBuffer = బఫరు_Addr;
 
-        if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+        ఒకవేళ (బఫరు_Src_స్థానం && sameObjectAs(బఫరు_Cap, బఫరు_Src_స్థానం->cap) &&
+            sameObjectAs(tCap, స్థానం->cap)) {
+            cte_చొప్పించు(బఫరు_Cap, బఫరు_Src_స్థానం, బఫరు_స్థానం);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        ఒకవేళ (లక్ష్యం == కణుపు_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
-#else
-exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
-                                    cptr_t faultep, prio_t mcp, prio_t priority,
-                                    cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-                                    cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-                                    word_t bufferAddr, cap_t bufferCap,
-                                    cte_t *bufferSrcSlot,
+#లేకపోతే
+exception_t invokeTCB_ThreadControl(tcb_t *లక్ష్యం, cte_t *స్థానం,
+                                    cptr_t faultep, prio_t mcp, prio_t ప్రాధాన్యత,
+                                    cap_t c_మూలం_new_Cap, cte_t *c_మూలం_src_స్థానం,
+                                    cap_t v_మూలం_new_Cap, cte_t *v_మూలం_src_స్థానం,
+                                    మాట_t బఫరు_Addr, cap_t బఫరు_Cap,
+                                    cte_t *బఫరు_Src_స్థానం,
                                     thread_control_flag_t updateFlags)
 {
     exception_t e;
-    cap_t tCap = cap_thread_cap_new((word_t)target);
+    cap_t tCap = cap_thread_cap_new((మాట_t)లక్ష్యం);
 
-    if (updateFlags & thread_control_update_space) {
-        target->tcbFaultHandler = faultep;
+    ఒకవేళ (updateFlags & thread_control_update_space) {
+        లక్ష్యం->tcbFaultHandler = faultep;
     }
 
-    if (updateFlags & thread_control_update_mcp) {
-        setMCPriority(target, mcp);
+    ఒకవేళ (updateFlags & thread_control_update_mcp) {
+        సమితి_MCPriority(లక్ష్యం, mcp);
     }
 
-    if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
+    ఒకవేళ (updateFlags & thread_control_update_space) {
+        cte_t *మూలం_స్థానం;
 
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbCTable);
-        e = cteDelete(rootSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        మూలం_స్థానం = TCB_PTR_CTE_PTR(లక్ష్యం, tcbCTable);
+        e = cteDelete(మూలం_స్థానం, true);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
-        if (sameObjectAs(cRoot_newCap, cRoot_srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(cRoot_newCap, cRoot_srcSlot, rootSlot);
-        }
-    }
-
-    if (updateFlags & thread_control_update_space) {
-        cte_t *rootSlot;
-
-        rootSlot = TCB_PTR_CTE_PTR(target, tcbVTable);
-        e = cteDelete(rootSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
-        }
-        if (sameObjectAs(vRoot_newCap, vRoot_srcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(vRoot_newCap, vRoot_srcSlot, rootSlot);
+        ఒకవేళ (sameObjectAs(c_మూలం_new_Cap, c_మూలం_src_స్థానం->cap) &&
+            sameObjectAs(tCap, స్థానం->cap)) {
+            cte_చొప్పించు(c_మూలం_new_Cap, c_మూలం_src_స్థానం, మూలం_స్థానం);
         }
     }
 
-    if (updateFlags & thread_control_update_ipc_buffer) {
-        cte_t *bufferSlot;
+    ఒకవేళ (updateFlags & thread_control_update_space) {
+        cte_t *మూలం_స్థానం;
 
-        bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-        e = cteDelete(bufferSlot, true);
-        if (e != EXCEPTION_NONE) {
-            return e;
+        మూలం_స్థానం = TCB_PTR_CTE_PTR(లక్ష్యం, tcbVTable);
+        e = cteDelete(మూలం_స్థానం, true);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
-        target->tcbIPCBuffer = bufferAddr;
+        ఒకవేళ (sameObjectAs(v_మూలం_new_Cap, v_మూలం_src_స్థానం->cap) &&
+            sameObjectAs(tCap, స్థానం->cap)) {
+            cte_చొప్పించు(v_మూలం_new_Cap, v_మూలం_src_స్థానం, మూలం_స్థానం);
+        }
+    }
 
-        if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-            sameObjectAs(tCap, slot->cap)) {
-            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+    ఒకవేళ (updateFlags & thread_control_update_ipc_బఫరు) {
+        cte_t *బఫరు_స్థానం;
+
+        బఫరు_స్థానం = TCB_PTR_CTE_PTR(లక్ష్యం, tcb_బఫరు);
+        e = cteDelete(బఫరు_స్థానం, true);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
+        }
+        లక్ష్యం->tcbIPCBuffer = బఫరు_Addr;
+
+        ఒకవేళ (బఫరు_Src_స్థానం && sameObjectAs(బఫరు_Cap, బఫరు_Src_స్థానం->cap) &&
+            sameObjectAs(tCap, స్థానం->cap)) {
+            cte_చొప్పించు(బఫరు_Cap, బఫరు_Src_స్థానం, బఫరు_స్థానం);
         }
 
-        if (target == NODE_STATE(ksCurThread)) {
+        ఒకవేళ (లక్ష్యం == కణుపు_STATE(ksCurThread)) {
             rescheduleRequired();
         }
     }
 
-    if (updateFlags & thread_control_update_priority) {
-        setPriority(target, priority);
+    ఒకవేళ (updateFlags & thread_control_update_ప్రాధాన్యత) {
+        సమితి_ప్రాధాన్యత(లక్ష్యం, ప్రాధాన్యత);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t invokeTCB_ThreadControlSched(tcb_t *target, cte_t *slot,
-                                         cap_t fh_newCap, cte_t *fh_srcSlot,
-                                         prio_t mcp, prio_t priority,
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+exception_t invokeTCB_ThreadControlSched(tcb_t *లక్ష్యం, cte_t *స్థానం,
+                                         cap_t fh_newCap, cte_t *fh_src_స్థానం,
+                                         prio_t mcp, prio_t ప్రాధాన్యత,
                                          sched_context_t *sc,
                                          thread_control_flag_t updateFlags)
 {
-    if (updateFlags & thread_control_sched_update_fault) {
-        cap_t tCap = cap_thread_cap_new((word_t)target);
-        exception_t e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
-        if (e != EXCEPTION_NONE) {
-            return e;
+    ఒకవేళ (updateFlags & thread_control_sched_update_fault) {
+        cap_t tCap = cap_thread_cap_new((మాట_t)లక్ష్యం);
+        exception_t e = installTCBCap(లక్ష్యం, tCap, స్థానం, tcbFaultHandler, fh_newCap, fh_src_స్థానం);
+        ఒకవేళ (e != EXCEPTION_NONE) {
+            తిరిగి e;
         }
     }
 
-    if (updateFlags & thread_control_sched_update_mcp) {
-        setMCPriority(target, mcp);
+    ఒకవేళ (updateFlags & thread_control_sched_update_mcp) {
+        సమితి_MCPriority(లక్ష్యం, mcp);
     }
 
-    if (updateFlags & thread_control_sched_update_priority) {
-        setPriority(target, priority);
+    ఒకవేళ (updateFlags & thread_control_sched_update_ప్రాధాన్యత) {
+        సమితి_ప్రాధాన్యత(లక్ష్యం, ప్రాధాన్యత);
     }
 
-    if (updateFlags & thread_control_sched_update_sc) {
-        if (sc != NULL) {
-            schedContext_bindTCB(sc, target);
-        } else if (sc == NULL) {
-            schedContext_unbindTCB(target->tcbSchedContext);
+    ఒకవేళ (updateFlags & thread_control_sched_update_sc) {
+        ఒకవేళ (sc != ఖాళీ) {
+            schedContext_bindTCB(sc, లక్ష్యం);
+        } లేకపోతే ఒకవేళ (sc == ఖాళీ) {
+            schedContext_unbindTCB(లక్ష్యం->tcbSchedContext);
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
-#endif
+#అయితే_ముగింపు
 
 exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
-                                    bool_t suspendSource, bool_t resumeTarget,
-                                    bool_t transferFrame, bool_t transferInteger,
-                                    word_t transferArch)
+                                    bool_t suspend_ఆధారం, bool_t resume_లక్ష్యం,
+                                    bool_t transfer_చట్రం, bool_t transferInteger,
+                                    మాట_t transferArch)
 {
-    if (suspendSource) {
+    ఒకవేళ (suspend_ఆధారం) {
         suspend(tcb_src);
     }
 
-    if (resumeTarget) {
+    ఒకవేళ (resume_లక్ష్యం) {
         restart(dest);
     }
 
-    if (transferFrame) {
-        word_t i;
-        word_t v;
-        word_t pc;
+    ఒకవేళ (transfer_చట్రం) {
+        మాట_t i;
+        మాట_t v;
+        మాట_t pc;
 
-        for (i = 0; i < n_frameRegisters; i++) {
-            v = getRegister(tcb_src, frameRegisters[i]);
-            setRegister(dest, frameRegisters[i], v);
+        కొరకు (i = 0; i < n_చట్రం_Registers; i++) {
+            v = get_రిజిస్టరు(tcb_src, చట్రం_Registers[i]);
+            సమితి_రిజిస్టరు(dest, చట్రం_Registers[i], v);
         }
 
         pc = getRestartPC(dest);
-        setNextPC(dest, pc);
+        సమితి_తదుపరి_PC(dest, pc);
     }
 
-    if (transferInteger) {
-        word_t i;
-        word_t v;
+    ఒకవేళ (transferInteger) {
+        మాట_t i;
+        మాట_t v;
 
-        for (i = 0; i < n_gpRegisters; i++) {
-            v = getRegister(tcb_src, gpRegisters[i]);
-            setRegister(dest, gpRegisters[i], v);
+        కొరకు (i = 0; i < n_gpRegisters; i++) {
+            v = get_రిజిస్టరు(tcb_src, gpRegisters[i]);
+            సమితి_రిజిస్టరు(dest, gpRegisters[i], v);
         }
     }
 
     Arch_postModifyRegisters(dest);
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (dest == కణుపు_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
     }
 
-    return Arch_performTransfer(transferArch, tcb_src, dest);
+    తిరిగి Arch_performTransfer(transferArch, tcb_src, dest);
 }
 
 /* ReadRegisters is a special case: replyFromKernel & setMRs are
@@ -1947,172 +1947,172 @@ exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
  * top-level replyFromKernel_success_empty() from running by setting the
  * thread state. Retype does this too.
  */
-exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
-                                    word_t n, word_t arch, bool_t call)
+exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspend_ఆధారం,
+                                    మాట_t n, మాట_t arch, bool_t call)
 {
-    word_t i, j;
+    మాట_t i, j;
     exception_t e;
     tcb_t *thread;
 
-    thread = NODE_STATE(ksCurThread);
+    thread = కణుపు_STATE(ksCurThread);
 
-    if (suspendSource) {
+    ఒకవేళ (suspend_ఆధారం) {
         suspend(tcb_src);
     }
 
-    e = Arch_performTransfer(arch, tcb_src, NODE_STATE(ksCurThread));
-    if (e != EXCEPTION_NONE) {
-        return e;
+    e = Arch_performTransfer(arch, tcb_src, కణుపు_STATE(ksCurThread));
+    ఒకవేళ (e != EXCEPTION_NONE) {
+        తిరిగి e;
     }
 
-    if (call) {
-        word_t *ipcBuffer;
+    ఒకవేళ (call) {
+        మాట_t *ipc_బఫరు;
 
-        ipcBuffer = lookupIPCBuffer(true, thread);
+        ipc_బఫరు = lookupIPCBuffer(true, thread);
 
-        setRegister(thread, badgeRegister, 0);
+        సమితి_రిజిస్టరు(thread, badge_రిజిస్టరు, 0);
 
-        for (i = 0; i < n && i < n_frameRegisters && i < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i],
-                        getRegister(tcb_src, frameRegisters[i]));
+        కొరకు (i = 0; i < n && i < n_చట్రం_Registers && i < n_సందేశం_Registers; i++) {
+            సమితి_రిజిస్టరు(thread, సందేశం_Registers[i],
+                        get_రిజిస్టరు(tcb_src, చట్రం_Registers[i]));
         }
 
-        if (ipcBuffer != NULL && i < n && i < n_frameRegisters) {
-            for (; i < n && i < n_frameRegisters; i++) {
-                ipcBuffer[i + 1] = getRegister(tcb_src, frameRegisters[i]);
+        ఒకవేళ (ipc_బఫరు != ఖాళీ && i < n && i < n_చట్రం_Registers) {
+            కొరకు (; i < n && i < n_చట్రం_Registers; i++) {
+                ipc_బఫరు[i + 1] = get_రిజిస్టరు(tcb_src, చట్రం_Registers[i]);
             }
         }
 
         j = i;
 
-        for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n
-             && i + n_frameRegisters < n_msgRegisters; i++) {
-            setRegister(thread, msgRegisters[i + n_frameRegisters],
-                        getRegister(tcb_src, gpRegisters[i]));
+        కొరకు (i = 0; i < n_gpRegisters && i + n_చట్రం_Registers < n
+             && i + n_చట్రం_Registers < n_సందేశం_Registers; i++) {
+            సమితి_రిజిస్టరు(thread, సందేశం_Registers[i + n_చట్రం_Registers],
+                        get_రిజిస్టరు(tcb_src, gpRegisters[i]));
         }
 
-        if (ipcBuffer != NULL && i < n_gpRegisters
-            && i + n_frameRegisters < n) {
-            for (; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-                ipcBuffer[i + n_frameRegisters + 1] =
-                    getRegister(tcb_src, gpRegisters[i]);
+        ఒకవేళ (ipc_బఫరు != ఖాళీ && i < n_gpRegisters
+            && i + n_చట్రం_Registers < n) {
+            కొరకు (; i < n_gpRegisters && i + n_చట్రం_Registers < n; i++) {
+                ipc_బఫరు[i + n_చట్రం_Registers + 1] =
+                    get_రిజిస్టరు(tcb_src, gpRegisters[i]);
             }
         }
 
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, i + j)));
+        సమితి_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, i + j)));
     }
-    setThreadState(thread, ThreadState_Running);
+    సమితి_Thread_State(thread, ThreadState_Running);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resumeTarget,
-                                     word_t n, word_t arch, word_t *buffer)
+exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resume_లక్ష్యం,
+                                     మాట_t n, మాట_t arch, మాట_t *బఫరు)
 {
-    word_t i;
-    word_t pc;
+    మాట_t i;
+    మాట_t pc;
     exception_t e;
     bool_t archInfo;
 
-    e = Arch_performTransfer(arch, NODE_STATE(ksCurThread), dest);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    e = Arch_performTransfer(arch, కణుపు_STATE(ksCurThread), dest);
+    ఒకవేళ (e != EXCEPTION_NONE) {
+        తిరిగి e;
     }
 
-    if (n > n_frameRegisters + n_gpRegisters) {
-        n = n_frameRegisters + n_gpRegisters;
+    ఒకవేళ (n > n_చట్రం_Registers + n_gpRegisters) {
+        n = n_చట్రం_Registers + n_gpRegisters;
     }
 
-    archInfo = Arch_getSanitiseRegisterInfo(dest);
+    archInfo = Arch_get_Sanitise_రిజిస్టరు_Info(dest);
 
-    for (i = 0; i < n_frameRegisters && i < n; i++) {
+    కొరకు (i = 0; i < n_చట్రం_Registers && i < n; i++) {
         /* Offset of 2 to get past the initial syscall arguments */
-        setRegister(dest, frameRegisters[i],
-                    sanitiseRegister(frameRegisters[i],
-                                     getSyscallArg(i + 2, buffer), archInfo));
+        సమితి_రిజిస్టరు(dest, చట్రం_Registers[i],
+                    sanitise_రిజిస్టరు(చట్రం_Registers[i],
+                                     getSyscallArg(i + 2, బఫరు), archInfo));
     }
 
-    for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-        setRegister(dest, gpRegisters[i],
-                    sanitiseRegister(gpRegisters[i],
-                                     getSyscallArg(i + n_frameRegisters + 2,
-                                                   buffer), archInfo));
+    కొరకు (i = 0; i < n_gpRegisters && i + n_చట్రం_Registers < n; i++) {
+        సమితి_రిజిస్టరు(dest, gpRegisters[i],
+                    sanitise_రిజిస్టరు(gpRegisters[i],
+                                     getSyscallArg(i + n_చట్రం_Registers + 2,
+                                                   బఫరు), archInfo));
     }
 
     pc = getRestartPC(dest);
-    setNextPC(dest, pc);
+    సమితి_తదుపరి_PC(dest, pc);
 
     Arch_postModifyRegisters(dest);
 
-    if (resumeTarget) {
+    ఒకవేళ (resume_లక్ష్యం) {
         restart(dest);
     }
 
-    if (dest == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (dest == కణుపు_STATE(ksCurThread)) {
         /* If we modified the current thread we may need to reschedule
          * due to changing registers are only reloaded in Arch_switchToThread */
         rescheduleRequired();
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 exception_t invokeTCB_NotificationControl(tcb_t *tcb, notification_t *ntfnPtr)
 {
-    if (ntfnPtr) {
+    ఒకవేళ (ntfnPtr) {
         bindNotification(tcb, ntfnPtr);
-    } else {
+    } లేకపోతే {
         unbindNotification(tcb);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-void setThreadName(tcb_t *tcb, const char *name)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+శూన్య సమితి_Thread_Name(tcb_t *tcb, స్థిరరాశి అక్షరం *name)
 {
-    strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, name, TCB_NAME_LENGTH);
+    strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, name, TCB_NAME_నిడివి);
 }
-#endif
+#అయితే_ముగింపు
 
-word_t setMRs_syscall_error(tcb_t *thread, word_t *receiveIPCBuffer)
+మాట_t సమితి_MRs_syscall_error(tcb_t *thread, మాట_t *receiveIPCBuffer)
 {
-    switch (current_syscall_error.type) {
-    case seL4_InvalidArgument:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidArgumentNumber);
+    ఎంపిక (current_syscall_error.type) {
+    స్థితి se_L4_Invalid_వాదం:
+        తిరిగి సమితి_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.invalid_వాదం_సంఖ్య);
 
-    case seL4_InvalidCapability:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.invalidCapNumber);
+    స్థితి seL4_InvalidCapability:
+        తిరిగి సమితి_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.invalid_Cap_సంఖ్య);
 
-    case seL4_IllegalOperation:
-        return 0;
+    స్థితి seL4_IllegalOperation:
+        తిరిగి 0;
 
-    case seL4_RangeError:
-        setMR(thread, receiveIPCBuffer, 0,
+    స్థితి seL4_RangeError:
+        సమితి_MR(thread, receiveIPCBuffer, 0,
               current_syscall_error.rangeErrorMin);
-        return setMR(thread, receiveIPCBuffer, 1,
+        తిరిగి సమితి_MR(thread, receiveIPCBuffer, 1,
                      current_syscall_error.rangeErrorMax);
 
-    case seL4_AlignmentError:
-        return 0;
+    స్థితి seL4_AlignmentError:
+        తిరిగి 0;
 
-    case seL4_FailedLookup:
-        setMR(thread, receiveIPCBuffer, 0,
-              current_syscall_error.failedLookupWasSource ? 1 : 0);
-        return setMRs_lookup_failure(thread, receiveIPCBuffer,
+    స్థితి seL4_FailedLookup:
+        సమితి_MR(thread, receiveIPCBuffer, 0,
+              current_syscall_error.failed_Lookup_Was_ఆధారం ? 1 : 0);
+        తిరిగి సమితి_MRs_lookup_failure(thread, receiveIPCBuffer,
                                      current_lookup_fault, 1);
 
-    case seL4_TruncatedMessage:
-    case seL4_DeleteFirst:
-    case seL4_RevokeFirst:
-        return 0;
-    case seL4_NotEnoughMemory:
-        return setMR(thread, receiveIPCBuffer, 0,
-                     current_syscall_error.memoryLeft);
-    default:
+    స్థితి se_L4_Truncated_సందేశం:
+    స్థితి se_L4_Delete_మొదటి:
+    స్థితి se_L4_Revoke_మొదటి:
+        తిరిగి 0;
+    స్థితి se_L4_Not_Enough_జ్ఞాపకం:
+        తిరిగి సమితి_MR(thread, receiveIPCBuffer, 0,
+                     current_syscall_error.జ్ఞాపకం_ఎడమ);
+    అప్రమేయ:
         fail("Invalid syscall error");
     }
 }

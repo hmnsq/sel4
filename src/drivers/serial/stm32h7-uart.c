@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
 
-#define USART_ISR               0x1C
-#define USART_TDR               0x28
+#నిర్వచించు USART_ISR               0x1C
+#నిర్వచించు USART_TDR               0x28
 
-#define USART_ISR_TXE           0x80U
+#నిర్వచించు USART_ISR_TXE           0x80U
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#నిర్వచించు UART_REG(x) ((అస్థిర uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#నిర్వచితమైతే CONFIG_PRINTING
+శూన్య uart_drv_putchar(గుర్తులేని అక్షరం c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    అయితే (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం uart_drv_getchar(శూన్య)
 {
-    return -1;
+    తిరిగి -1;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

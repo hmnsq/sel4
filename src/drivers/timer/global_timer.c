@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <drivers/timer/arm_global.h>
+#అన్తర్భావ <drivers/timer/arm_global.h>
 
-timer_t *const globalTimer = (timer_t *) TIMER_PPTR;
+timer_t *స్థిరరాశి globalTimer = (timer_t *) TIMER_PPTR;
 
 /** DONT_TRANSLATE */
-BOOT_CODE void initTimer(void)
+BOOT_సంకేతం శూన్య initTimer(శూన్య)
 {
     /* disable the timer */
     globalTimer->control = 0;
     /* zero the timer */
-    globalTimer->countLower = 0;
-    globalTimer->countUpper = 0;
+    globalTimer->లెక్క_క్రింది = 0;
+    globalTimer->లెక్క_పై = 0;
     /* turn it on again, with interrupts on, comparator register off,
      * in one-shot mode, with standard prescaler */
-    globalTimer->control = BIT(ENABLE) | BIT(IRQ_ENABLE);
+    globalTimer->control = బిట్టు(ENABLE) | బిట్టు(IRQ_ENABLE);
 
     /* this timer will overflow in about 1000 years */
 }

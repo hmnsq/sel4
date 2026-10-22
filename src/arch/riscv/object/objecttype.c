@@ -5,66 +5,66 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/object/objecttype.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <kernel/vspace.h>
+#అన్తర్భావ <object/structures.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <arch/object/objecttype.h>
 
-deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t Arch_deriveCap(cte_t *స్థానం, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
+    ఎంపిక (cap_get_capType(cap)) {
 
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving an unmapped PT cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        తిరిగి ret;
 
-    case cap_frame_cap:
-        cap = cap_frame_cap_set_capFMappedAddress(cap, 0);
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    స్థితి cap_చట్రం_cap:
+        cap = cap_చట్రం_cap_సమితి_cap_FMapped_చిరునామా(cap, 0);
+        ret.cap = cap_చట్రం_cap_సమితి_cap_FMapped_ASID(cap, asidInvalid);
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    స్థితి cap_asid_control_cap:
+    స్థితి cap_asid_pool_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-    default:
+    అప్రమేయ:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap type");
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_దత్తాంశం(bool_t preserve, మాట_t దత్తాంశం, cap_t cap)
 {
-    return cap;
+    తిరిగి cap;
 }
 
-cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
+cap_t CONST Arch_ముసుగు_Cap_Rights(seL4_CapRights_t cap_rights_ముసుగు, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    ఒకవేళ (cap_get_capType(cap) == cap_చట్రం_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        vm_rights = vm_Rights_From_మాట(cap_చట్రం_cap_get_cap_FVMRights(cap));
+        vm_rights = ముసుగు_VMRights(vm_rights, cap_rights_ముసుగు);
+        తిరిగి cap_చట్రం_cap_సమితి_cap_FVMRights(cap, మాట_From_VMRights(vm_rights));
+    } లేకపోతే {
+        తిరిగి cap;
     }
 }
 
@@ -72,18 +72,18 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_చట్రం_cap:
 
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            unmapPage(cap_frame_cap_get_capFSize(cap),
-                      cap_frame_cap_get_capFMappedASID(cap),
-                      cap_frame_cap_get_capFMappedAddress(cap),
-                      cap_frame_cap_get_capFBasePtr(cap));
+        ఒకవేళ (cap_చట్రం_cap_get_cap_FMapped_ASID(cap)) {
+            unmap_పుట(cap_చట్రం_cap_get_cap_FSize(cap),
+                      cap_చట్రం_cap_get_cap_FMapped_ASID(cap),
+                      cap_చట్రం_cap_get_cap_FMapped_చిరునామా(cap),
+                      cap_చట్రం_cap_get_cap_FBase_Ptr(cap));
         }
-        break;
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
+        ఆపు;
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (final && cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap)) {
             /*
              * This PageTable is either mapped as a vspace_root or otherwise exists
              * as an entry in another PageTable. We check if it is a vspace_root and
@@ -91,194 +91,194 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
              * a mapped PageTable and unmap it from whatever page table it is mapped
              * into.
              */
-            asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-            findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-            pte_t *pte = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-            if (find_ret.status == EXCEPTION_NONE && find_ret.vspace_root == pte) {
+            asid_t asid = cap_పుట_పట్టిక_cap_get_cap_PTMapped_ASID(cap);
+            కనుగొను_VSpace_For_ASID_ret_t కనుగొను_ret = కనుగొను_VSpace_For_ASID(asid);
+            pte_t *pte = PTE_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap));
+            ఒకవేళ (కనుగొను_ret.స్థితి_2 == EXCEPTION_NONE && కనుగొను_ret.vspace_మూలం == pte) {
                 deleteASID(asid, pte);
-            } else {
-                unmapPageTable(asid, cap_page_table_cap_get_capPTMappedAddress(cap), pte);
+            } లేకపోతే {
+                unmap_పుట_పట్టిక(asid, cap_పుట_పట్టిక_cap_get_cap_PTMapped_చిరునామా(cap), pte);
             }
         }
-        break;
-    case cap_asid_pool_cap:
-        if (final) {
+        ఆపు;
+    స్థితి cap_asid_pool_cap:
+        ఒకవేళ (final) {
             deleteASIDPool(
                 cap_asid_pool_cap_get_capASIDBase(cap),
                 ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))
             );
         }
-        break;
-    case cap_asid_control_cap:
-        break;
+        ఆపు;
+    స్థితి cap_asid_control_cap:
+        ఆపు;
     }
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    తిరిగి fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
-            botA = cap_frame_cap_get_capFBasePtr(cap_a);
-            botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+    ఎంపిక (cap_get_capType(cap_a)) {
+    స్థితి cap_చట్రం_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_చట్రం_cap) {
+            మాట_t botA, botB, శిఖరం_A, శిఖరం_B;
+            botA = cap_చట్రం_cap_get_cap_FBase_Ptr(cap_a);
+            botB = cap_చట్రం_cap_get_cap_FBase_Ptr(cap_b);
+            శిఖరం_A = botA + ముసుగు(పుట_బిట్లు_For_కొలత(cap_చట్రం_cap_get_cap_FSize(cap_a)));
+            శిఖరం_B = botB + ముసుగు(పుట_బిట్లు_For_కొలత(cap_చట్రం_cap_get_cap_FSize(cap_b))) ;
+            తిరిగి ((botA <= botB) && (శిఖరం_A >= శిఖరం_B) && (botB <= శిఖరం_B));
         }
-        break;
+        ఆపు;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_పుట_పట్టిక_cap) {
+            తిరిగి cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap_a) ==
+                   cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap_b);
         }
-        break;
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+        ఆపు;
+    స్థితి cap_asid_control_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            తిరిగి true;
         }
-        break;
+        ఆపు;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    స్థితి cap_asid_pool_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            తిరిగి cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        ఆపు;
     }
 
-    return false;
+    తిరిగి false;
 }
 
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if ((cap_get_capType(cap_a) == cap_frame_cap) &&
-        (cap_get_capType(cap_b) == cap_frame_cap)) {
-        return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
-                 cap_frame_cap_get_capFBasePtr(cap_b)) &&
-                (cap_frame_cap_get_capFSize(cap_a) ==
-                 cap_frame_cap_get_capFSize(cap_b)) &&
-                ((cap_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                 (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
+    ఒకవేళ ((cap_get_capType(cap_a) == cap_చట్రం_cap) &&
+        (cap_get_capType(cap_b) == cap_చట్రం_cap)) {
+        తిరిగి ((cap_చట్రం_cap_get_cap_FBase_Ptr(cap_a) ==
+                 cap_చట్రం_cap_get_cap_FBase_Ptr(cap_b)) &&
+                (cap_చట్రం_cap_get_cap_FSize(cap_a) ==
+                 cap_చట్రం_cap_get_cap_FSize(cap_b)) &&
+                ((cap_చట్రం_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                 (cap_చట్రం_cap_get_cap_FIs_Device(cap_b) == 0)));
     }
-    return Arch_sameRegionAs(cap_a, cap_b);
+    తిరిగి Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+మాట_t Arch_get_Object_కొలత(మాట_t t)
 {
-    switch (t) {
-    case seL4_RISCV_4K_Page:
-    case seL4_RISCV_PageTableObject:
-        return seL4_PageBits;
-    case seL4_RISCV_Mega_Page:
-        return seL4_LargePageBits;
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page:
-        return seL4_HugePageBits;
-#endif
-#if CONFIG_PT_LEVELS > 3
-    case seL4_RISCV_Tera_Page:
-        return seL4_TeraPageBits;
-#endif
-    default:
+    ఎంపిక (t) {
+    స్థితి se_L4_RISCV_4_K_పుట:
+    స్థితి se_L4_RISCV_పుట_పట్టిక_Object:
+        తిరిగి se_L4_పుట_బిట్లు;
+    స్థితి se_L4_RISCV_Mega_పుట:
+        తిరిగి se_L4_Large_పుట_బిట్లు;
+#ఒకవేళ CONFIG_PT_స్థాయిలు > 2
+    స్థితి se_L4_RISCV_Giga_పుట:
+        తిరిగి se_L4_Huge_పుట_బిట్లు;
+#అయితే_ముగింపు
+#ఒకవేళ CONFIG_PT_స్థాయిలు > 3
+    స్థితి se_L4_RISCV_Tera_పుట:
+        తిరిగి se_L4_Tera_పుట_బిట్లు;
+#అయితే_ముగింపు
+    అప్రమేయ:
         fail("Invalid object type");
-        return 0;
+        తిరిగి 0;
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t
-                        deviceMemory)
+cap_t Arch_createObject(object_t t, శూన్య *region_పునాది, మాట_t user_కొలత, bool_t
+                        device_జ్ఞాపకం)
 {
-    switch (t) {
-    case seL4_RISCV_4K_Page:
-        if (deviceMemory) {
+    ఎంపిక (t) {
+    స్థితి se_L4_RISCV_4_K_పుట:
+        ఒకవేళ (device_జ్ఞాపకం) {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVPageBits))" */
-        } else {
+        } లేకపోతే {
             /** AUXUPD: "(True, ptr_retyps 1
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVSmallPage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVPageBits))" */
         }
-        return cap_frame_cap_new(
+        తిరిగి cap_చట్రం_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_4K_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (మాట_t) region_పునాది,            /* capFBasePtr          */
+                   RISCV_4_K_పుట,                  /* capFSize             */
+                   మాట_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_జ్ఞాపకం,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
 
-    case seL4_RISCV_Mega_Page: {
-        if (deviceMemory) {
+    స్థితి se_L4_RISCV_Mega_పుట: {
+        ఒకవేళ (device_జ్ఞాపకం) {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVMegaPageBits))" */
-        } else {
+        } లేకపోతే {
             /** AUXUPD: "(True, ptr_retyps (2^9)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVLargePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVMegaPageBits))" */
         }
-        return cap_frame_cap_new(
+        తిరిగి cap_చట్రం_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_Mega_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (మాట_t) region_పునాది,            /* capFBasePtr          */
+                   RISCV_Mega_పుట,                  /* capFSize             */
+                   మాట_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_జ్ఞాపకం,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
     }
 
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page: {
-        if (deviceMemory) {
+#ఒకవేళ CONFIG_PT_స్థాయిలు > 2
+    స్థితి se_L4_RISCV_Giga_పుట: {
+        ఒకవేళ (device_జ్ఞాపకం) {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_device_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVGigaPageBits))" */
-        } else {
+        } లేకపోతే {
             /** AUXUPD: "(True, ptr_retyps (2^18)
                      (Ptr (ptr_val \<acute>regionBase) :: user_data_C ptr))" */
             /** GHOSTUPD: "(True, gs_new_frames vmpage_size.RISCVHugePage
                                                     (ptr_val \<acute>regionBase)
                                                     (unat RISCVGigaPageBits))" */
         }
-        return cap_frame_cap_new(
+        తిరిగి cap_చట్రం_cap_new(
                    asidInvalid,                    /* capFMappedASID       */
-                   (word_t) regionBase,            /* capFBasePtr          */
-                   RISCV_Giga_Page,                  /* capFSize             */
-                   wordFromVMRights(VMReadWrite),  /* capFVMRights         */
-                   deviceMemory,                   /* capFIsDevice         */
+                   (మాట_t) region_పునాది,            /* capFBasePtr          */
+                   RISCV_Giga_పుట,                  /* capFSize             */
+                   మాట_From_VMRights(VMReadWrite),  /* capFVMRights         */
+                   device_జ్ఞాపకం,                   /* capFIsDevice         */
                    0                               /* capFMappedAddress    */
                );
     }
-#endif
+#అయితే_ముగింపు
 
-    case seL4_RISCV_PageTableObject:
+    స్థితి se_L4_RISCV_పుట_పట్టిక_Object:
         /** AUXUPD: "(True, ptr_retyps 1
               (Ptr (ptr_val \<acute>regionBase) :: (pte_C[512]) ptr))" */
-        return cap_page_table_cap_new(
+        తిరిగి cap_పుట_పట్టిక_cap_new(
                    asidInvalid,            /* capPTMappedASID    */
-                   (word_t)regionBase,     /* capPTBasePtr       */
+                   (మాట_t)region_పునాది,     /* capPTBasePtr       */
                    0,                      /* capPTIsMapped      */
                    0                       /* capPTMappedAddress */
                );
 
-    default:
+    అప్రమేయ:
         /*
          * This is a conflation of the haskell error: "Arch.createNewCaps
          * got an API type" and the case where an invalid object type is
@@ -289,38 +289,38 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t
 }
 
 exception_t Arch_decodeInvocation(
-    word_t label,
-    word_t length,
+    మాట_t label,
+    మాట_t నిడివి,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *స్థానం,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    మాట_t *బఫరు
 )
 {
-    return decodeRISCVMMUInvocation(label, length, cptr, slot, cap, call, buffer);
+    తిరిగి decodeRISCVMMUInvocation(label, నిడివి, cptr, స్థానం, cap, call, బఫరు);
 }
 
-void Arch_prepareThreadDelete(tcb_t *thread)
+శూన్య Arch_prepareThreadDelete(tcb_t *thread)
 {
-#ifdef CONFIG_HAVE_FPU
+#నిర్వచితమైతే CONFIG_HAVE_FPU
     fpuRelease(thread);
-#endif
+#అయితే_ముగింపు
 }
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_చట్రం_Type(మాట_t type)
 {
-    switch (type) {
-#if CONFIG_PT_LEVELS == 4
-    case seL4_RISCV_Tera_Page:
-#endif
-#if CONFIG_PT_LEVELS > 2
-    case seL4_RISCV_Giga_Page:
-#endif
-    case seL4_RISCV_Mega_Page:
-    case seL4_RISCV_4K_Page:
-        return true;
-    default:
-        return false;
+    ఎంపిక (type) {
+#ఒకవేళ CONFIG_PT_స్థాయిలు == 4
+    స్థితి se_L4_RISCV_Tera_పుట:
+#అయితే_ముగింపు
+#ఒకవేళ CONFIG_PT_స్థాయిలు > 2
+    స్థితి se_L4_RISCV_Giga_పుట:
+#అయితే_ముగింపు
+    స్థితి se_L4_RISCV_Mega_పుట:
+    స్థితి se_L4_RISCV_4_K_పుట:
+        తిరిగి true;
+    అప్రమేయ:
+        తిరిగి false;
     }
 }

@@ -10,7 +10,7 @@
 #include <util.h>
 
 .section .boot.text, "ax"
-.global _start
+.వైశ్విక _start
 .extern init_kernel
 .extern kernel_stack_alloc
 .extern __global_pointer$

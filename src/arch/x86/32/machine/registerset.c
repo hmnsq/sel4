@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <sel4/arch/constants.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
-#include <machine/debug.h>
+#అన్తర్భావ <assert.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <sel4/arch/constants.h>
+#అన్తర్భావ <arch/machine/registerset.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <arch/object/structures.h>
+#అన్తర్భావ <machine/debug.h>
 
-const register_t msgRegisters[] = {
+స్థిరరాశి రిజిస్టరు_t సందేశం_Registers[] = {
     EDI,
-#ifndef CONFIG_KERNEL_MCS
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
     EBP
-#endif
+#అయితే_ముగింపు
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_సందేశం_registers,
+    పరిమాణం(సందేశం_Registers) / పరిమాణం(సందేశం_Registers[0]) == n_సందేశం_Registers
 );
 
-const register_t frameRegisters[] = {
+స్థిరరాశి రిజిస్టరు_t చట్రం_Registers[] = {
     FaultIP, ESP, FLAGS, EAX, EBX, ECX, EDX, ESI, EDI, EBP
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_చట్రం_registers,
+    పరిమాణం(చట్రం_Registers) / పరిమాణం(చట్రం_Registers[0]) == n_చట్రం_Registers
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+స్థిరరాశి రిజిస్టరు_t gpRegisters[] = {
+    FS_పునాది, GS_పునాది
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    పరిమాణం(gpRegisters) / పరిమాణం(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+శూన్య బహుళకం_init_Context(user_context_t *context)
 {
     context->registers[EAX] = 0;
     context->registers[EBX] = 0;
@@ -51,19 +51,19 @@ void Mode_initContext(user_context_t *context)
     context->registers[ESP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+మాట_t బహుళకం_sanitise_రిజిస్టరు(రిజిస్టరు_t reg, మాట_t v)
 {
-    return v;
+    తిరిగి v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+మాట_t getNBSendRecvDest(శూన్య)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    seL4_IPCBuffer *బఫరు = (seL4_IPCBuffer *) lookupIPCBuffer(false, కణుపు_STATE(ksCurThread));
+    ఒకవేళ (బఫరు != ఖాళీ) {
+        తిరిగి బఫరు->user_దత్తాంశం;
+    } లేకపోతే {
+        తిరిగి 0;
     }
 }
-#endif
+#అయితే_ముగింపు

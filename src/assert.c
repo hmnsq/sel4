@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <machine/io.h>
+#అన్తర్భావ <assert.h>
+#అన్తర్భావ <machine/io.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
 
-void _fail(
-    const char  *s,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+శూన్య _fail(
+    స్థిరరాశి అక్షరం  *s,
+    స్థిరరాశి అక్షరం  *file,
+    గుర్తులేని పూర్ణాంకం పంక్తి,
+    స్థిరరాశి అక్షరం  *function)
 {
-    printf(
+    రాయి(
         "seL4 called fail at %s:%u in function %s, saying \"%s\"\n",
         file,
-        line,
+        పంక్తి,
         function,
         s
     );
     halt();
 }
 
-void _assert_fail(
-    const char  *assertion,
-    const char  *file,
-    unsigned int line,
-    const char  *function)
+శూన్య _assert_fail(
+    స్థిరరాశి అక్షరం  *assertion,
+    స్థిరరాశి అక్షరం  *file,
+    గుర్తులేని పూర్ణాంకం పంక్తి,
+    స్థిరరాశి అక్షరం  *function)
 {
-    printf("seL4 failed assertion '%s' at %s:%u in function %s\n",
+    రాయి("seL4 failed assertion '%s' at %s:%u in function %s\n",
            assertion,
            file,
-           line,
+           పంక్తి,
            function
           );
     halt();
 }
 
-#endif
+#అయితే_ముగింపు

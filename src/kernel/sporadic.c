@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <object/structures.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <object/structures.h>
 
 /* functions to manage the circular buffer of
  * sporadic budget replenishments (refills for short).
@@ -32,149 +32,149 @@
  */
 
 /* return the index of the next item in the refill queue */
-static inline word_t refill_next(sched_context_t *sc, word_t index)
+స్థిర అంతఃవరుస మాట_t refill_తదుపరి(sched_context_t *sc, మాట_t సూచీ)
 {
-    return (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
+    తిరిగి (సూచీ == sc->scRefillMax - 1u) ? (0) : సూచీ + 1u;
 }
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
 /* for debugging */
-UNUSED static inline void print_index(sched_context_t *sc, word_t index)
+వాడని స్థిర అంతఃవరుస శూన్య print_సూచీ(sched_context_t *sc, మాట_t సూచీ)
 {
 
-    printf("index %lu, Amount: %llx, time %llx\n", index, refill_index(sc, index)->rAmount,
-           refill_index(sc, index)->rTime);
+    రాయి("index %lu, Amount: %llx, time %llx\n", సూచీ, refill_సూచీ(sc, సూచీ)->rAmount,
+           refill_సూచీ(sc, సూచీ)->r_సమయం);
 }
 
-UNUSED static inline void refill_print(sched_context_t *sc)
+వాడని స్థిర అంతఃవరుస శూన్య refill_print(sched_context_t *sc)
 {
-    printf("Head %lu tail %lu\n", sc->scRefillHead, sc->scRefillTail);
-    word_t current = sc->scRefillHead;
+    రాయి("Head %lu tail %lu\n", sc->sc_Refill_తల, sc->sc_Refill_తోక);
+    మాట_t current = sc->sc_Refill_తల;
     /* always print the head */
-    print_index(sc, current);
+    print_సూచీ(sc, current);
 
-    while (current != sc->scRefillTail) {
-        current = refill_next(sc, current);
-        print_index(sc, current);
+    అయితే (current != sc->sc_Refill_తోక) {
+        current = refill_తదుపరి(sc, current);
+        print_సూచీ(sc, current);
     }
 
 }
-#endif /* CONFIG_PRINTING */
-#ifdef CONFIG_DEBUG_BUILD
+#అయితే_ముగింపు /* CONFIG_PRINTING */
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
 /* check a refill queue is ordered correctly */
-static UNUSED bool_t refill_ordered(sched_context_t *sc)
+స్థిర వాడని bool_t refill_ordered(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
-        return true;
+    ఒకవేళ (is_విడత_Robin(sc)) {
+        తిరిగి true;
     }
 
-    word_t current = sc->scRefillHead;
-    word_t next = refill_next(sc, sc->scRefillHead);
+    మాట_t current = sc->sc_Refill_తల;
+    మాట_t తదుపరి = refill_తదుపరి(sc, sc->sc_Refill_తల);
 
-    while (current != sc->scRefillTail) {
-        if (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
-#ifdef CONFIG_PRINTING
+    అయితే (current != sc->sc_Refill_తోక) {
+        ఒకవేళ (!(refill_సూచీ(sc, current)->r_సమయం + refill_సూచీ(sc, current)->rAmount <= refill_సూచీ(sc, తదుపరి)->r_సమయం)) {
+#నిర్వచితమైతే CONFIG_PRINTING
             refill_print(sc);
-#endif
-            return false;
+#అయితే_ముగింపు
+            తిరిగి false;
         }
-        current = next;
-        next = refill_next(sc, current);
+        current = తదుపరి;
+        తదుపరి = refill_తదుపరి(sc, current);
     }
 
-    return true;
+    తిరిగి true;
 }
 
-#define REFILL_SANITY_START(sc) ticks_t _sum = refill_sum(sc); assert(isRoundRobin(sc) || refill_ordered(sc));
-#define REFILL_SANITY_CHECK(sc, budget) \
-    do { \
-        assert(refill_sum(sc) == budget); assert(isRoundRobin(sc) || refill_ordered(sc)); \
-    } while (0)
+#నిర్వచించు REFILL_SANITY_ప్రారంభం(sc) ticks_t కూడిక = refill_కూడిక(sc); ప్రతిజ్ఞా(is_విడత_Robin(sc) || refill_ordered(sc));
+#నిర్వచించు REFILL_SANITY_CHECK(sc, budget) \
+    చేయి { \
+        ప్రతిజ్ఞా(refill_కూడిక(sc) == budget); ప్రతిజ్ఞా(is_విడత_Robin(sc) || refill_ordered(sc)); \
+    } అయితే (0)
 
-#define REFILL_SANITY_END(sc) \
-    do {\
-        REFILL_SANITY_CHECK(sc, _sum);\
-    } while (0)
-#else
-#define REFILL_SANITY_START(sc)
-#define REFILL_SANITY_CHECK(sc, budget)
-#define REFILL_SANITY_END(sc)
-#endif /* CONFIG_DEBUG_BUILD */
+#నిర్వచించు REFILL_SANITY_చివర(sc) \
+    చేయి {\
+        REFILL_SANITY_CHECK(sc, కూడిక);\
+    } అయితే (0)
+#లేకపోతే
+#నిర్వచించు REFILL_SANITY_ప్రారంభం(sc)
+#నిర్వచించు REFILL_SANITY_CHECK(sc, budget)
+#నిర్వచించు REFILL_SANITY_చివర(sc)
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */
 
 /* compute the sum of a refill queue */
-static UNUSED ticks_t refill_sum(sched_context_t *sc)
+స్థిర వాడని ticks_t refill_కూడిక(sched_context_t *sc)
 {
-    ticks_t sum = refill_head(sc)->rAmount;
-    word_t current = sc->scRefillHead;
+    ticks_t కూడిక_2 = refill_తల(sc)->rAmount;
+    మాట_t current = sc->sc_Refill_తల;
 
-    while (current != sc->scRefillTail) {
-        current = refill_next(sc, current);
-        sum += refill_index(sc, current)->rAmount;
+    అయితే (current != sc->sc_Refill_తోక) {
+        current = refill_తదుపరి(sc, current);
+        కూడిక_2 += refill_సూచీ(sc, current)->rAmount;
     }
 
-    return sum;
+    తిరిగి కూడిక_2;
 }
 
 /* pop head of refill queue */
-static inline refill_t refill_pop_head(sched_context_t *sc)
+స్థిర అంతఃవరుస refill_t refill_తీయి_తల(sched_context_t *sc)
 {
     /* queues cannot be smaller than 1 */
-    assert(!refill_single(sc));
+    ప్రతిజ్ఞా(!refill_single(sc));
 
-    UNUSED word_t prev_size = refill_size(sc);
-    refill_t refill = *refill_head(sc);
-    sc->scRefillHead = refill_next(sc, sc->scRefillHead);
+    వాడని మాట_t prev_కొలత = refill_కొలత(sc);
+    refill_t refill = *refill_తల(sc);
+    sc->sc_Refill_తల = refill_తదుపరి(sc, sc->sc_Refill_తల);
 
     /* sanity */
-    assert(prev_size == (refill_size(sc) + 1));
-    assert(sc->scRefillHead < sc->scRefillMax);
-    return refill;
+    ప్రతిజ్ఞా(prev_కొలత == (refill_కొలత(sc) + 1));
+    ప్రతిజ్ఞా(sc->sc_Refill_తల < sc->scRefillMax);
+    తిరిగి refill;
 }
 
 /* add item to tail of refill queue */
-static inline void refill_add_tail(sched_context_t *sc, refill_t refill)
+స్థిర అంతఃవరుస శూన్య refill_కూడు_తోక(sched_context_t *sc, refill_t refill)
 {
     /* cannot add beyond queue size */
-    assert(refill_size(sc) < sc->scRefillMax);
+    ప్రతిజ్ఞా(refill_కొలత(sc) < sc->scRefillMax);
 
-    word_t new_tail = refill_next(sc, sc->scRefillTail);
-    sc->scRefillTail = new_tail;
-    *refill_tail(sc) = refill;
+    మాట_t new_తోక = refill_తదుపరి(sc, sc->sc_Refill_తోక);
+    sc->sc_Refill_తోక = new_తోక;
+    *refill_తోక(sc) = refill;
 
     /* sanity */
-    assert(new_tail < sc->scRefillMax);
+    ప్రతిజ్ఞా(new_తోక < sc->scRefillMax);
 }
 
-static inline void maybe_add_empty_tail(sched_context_t *sc)
+స్థిర అంతఃవరుస శూన్య maybe_కూడు_ఖాళీలు_తోక(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
+    ఒకవేళ (is_విడత_Robin(sc)) {
         /* add an empty refill - we track the used up time here */
-        refill_t empty_tail = { .rTime = refill_head(sc)->rTime };
-        refill_add_tail(sc, empty_tail);
-        assert(refill_size(sc) == MIN_REFILLS);
+        refill_t ఖాళీలు_తోక = { .r_సమయం = refill_తల(sc)->r_సమయం };
+        refill_కూడు_తోక(sc, ఖాళీలు_తోక);
+        ప్రతిజ్ఞా(refill_కొలత(sc) == MIN_REFILLS);
     }
 }
 
-void refill_new(sched_context_t *sc, word_t max_refills, ticks_t budget, ticks_t period)
+శూన్య refill_new(sched_context_t *sc, మాట_t max_refills, ticks_t budget, ticks_t period)
 {
     sc->scPeriod = period;
-    sc->scRefillHead = 0;
-    sc->scRefillTail = 0;
+    sc->sc_Refill_తల = 0;
+    sc->sc_Refill_తోక = 0;
     sc->scRefillMax = max_refills;
-    assert(budget >= MIN_BUDGET);
+    ప్రతిజ్ఞా(budget >= MIN_BUDGET);
     /* full budget available */
-    refill_head(sc)->rAmount = budget;
+    refill_తల(sc)->rAmount = budget;
     /* budget can be used from now */
-    refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-    maybe_add_empty_tail(sc);
+    refill_తల(sc)->r_సమయం = కణుపు_STATE(ks_Cur_సమయం);
+    maybe_కూడు_ఖాళీలు_తోక(sc);
     REFILL_SANITY_CHECK(sc, budget);
 }
 
-void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, word_t new_max_refills)
+శూన్య refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, మాట_t new_max_refills)
 {
 
     /* refill must be initialised in order to be updated - otherwise refill_new should be used */
-    assert(sc->scRefillMax > 0);
+    ప్రతిజ్ఞా(sc->scRefillMax > 0);
 
     /* this is called on an active thread. We want to preserve the sliding window constraint -
      * so over new_period, new_budget should not be exceeded even temporarily */
@@ -182,38 +182,38 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     /* move the head refill to the start of the list - it's ok as we're going to truncate the
      * list to size 1 - and this way we can't be in an invalid list position once new_max_refills
      * is updated */
-    *refill_index(sc, 0) = *refill_head(sc);
-    sc->scRefillHead = 0;
+    *refill_సూచీ(sc, 0) = *refill_తల(sc);
+    sc->sc_Refill_తల = 0;
     /* truncate refill list to size 1 */
-    sc->scRefillTail = sc->scRefillHead;
+    sc->sc_Refill_తోక = sc->sc_Refill_తల;
     /* update max refills */
     sc->scRefillMax = new_max_refills;
     /* update period */
     sc->scPeriod = new_period;
 
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+    ఒకవేళ (refill_ready(sc)) {
+        refill_తల(sc)->r_సమయం = కణుపు_STATE(ks_Cur_సమయం);
     }
 
-    if (refill_head(sc)->rAmount >= new_budget) {
+    ఒకవేళ (refill_తల(sc)->rAmount >= new_budget) {
         /* if the heads budget exceeds the new budget just trim it */
-        refill_head(sc)->rAmount = new_budget;
-        maybe_add_empty_tail(sc);
-    } else {
+        refill_తల(sc)->rAmount = new_budget;
+        maybe_కూడు_ఖాళీలు_తోక(sc);
+    } లేకపోతే {
         /* otherwise schedule the rest for the next period */
-        refill_t new = { .rAmount = (new_budget - refill_head(sc)->rAmount),
-                         .rTime = refill_head(sc)->rTime + new_period
+        refill_t new = { .rAmount = (new_budget - refill_తల(sc)->rAmount),
+                         .r_సమయం = refill_తల(sc)->r_సమయం + new_period
                        };
-        refill_add_tail(sc, new);
+        refill_కూడు_తోక(sc, new);
     }
 
     REFILL_SANITY_CHECK(sc, new_budget);
 }
 
-static inline void schedule_used(sched_context_t *sc, refill_t new)
+స్థిర అంతఃవరుస శూన్య కాలపట్టిక_వాడిన(sched_context_t *sc, refill_t new)
 {
-    refill_t tail = *refill_tail(sc);
-    if (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
+    refill_t తోక = *refill_తోక(sc);
+    ఒకవేళ (unlikely(తోక.r_సమయం + తోక.rAmount >= new.r_సమయం)) {
         /* Merge overlapping or adjacent refill.
          *
          * refill_update can produce a tail refill that will overlap
@@ -226,50 +226,50 @@ static inline void schedule_used(sched_context_t *sc, refill_t new)
          * that (beyond a refill being split as it is charged
          * incrementally) a refill split is only caused by a thread
          * blocking. */
-        refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
-    } else if (likely(!refill_full(sc))) {
+        refill_తోక(sc)->rAmount = తోక.rAmount + new.rAmount;
+    } లేకపోతే ఒకవేళ (likely(!refill_నిండిన(sc))) {
         /* Add tail normally */
-        refill_add_tail(sc, new);
-    } else {
+        refill_కూడు_తోక(sc, new);
+    } లేకపోతే {
         /* Delay existing tail to merge */
-        refill_tail(sc)->rTime = new.rTime - tail.rAmount;
-        refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
+        refill_తోక(sc)->r_సమయం = new.r_సమయం - తోక.rAmount;
+        refill_తోక(sc)->rAmount = తోక.rAmount + new.rAmount;
     }
 }
 
-static bool_t refill_head_overlapping(sched_context_t *sc)
+స్థిర bool_t refill_తల_overlapping(sched_context_t *sc)
 {
-    if (!refill_single(sc)) {
-        refill_t head = *refill_head(sc);
-        ticks_t tail = head.rTime + head.rAmount;
-        return refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
-    } else {
-        return false;
+    ఒకవేళ (!refill_single(sc)) {
+        refill_t తల = *refill_తల(sc);
+        ticks_t తోక = తల.r_సమయం + తల.rAmount;
+        తిరిగి refill_సూచీ(sc, refill_తదుపరి(sc, sc->sc_Refill_తల))->r_సమయం <= తోక;
+    } లేకపోతే {
+        తిరిగి false;
     }
 }
 
-static inline bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
+స్థిర అంతఃవరుస bool_t తల_refill_overrun(sched_context_t *sc, ticks_t usage)
 {
-    refill_t head = *refill_head(sc);
-    return head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
+    refill_t తల = *refill_తల(sc);
+    తిరిగి తల.rAmount <= usage && తల.r_సమయం < MAX_RELEASE_సమయం;
 }
 
-static inline ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
+స్థిర అంతఃవరుస ticks_t charge_entire_తల_refill(sched_context_t *sc, ticks_t usage)
 {
-    refill_t head = *refill_head(sc);
+    refill_t తల = *refill_తల(sc);
 
-    if (refill_single(sc)) {
-        refill_head(sc)->rTime = head.rTime + sc->scPeriod;
-    } else {
-        refill_t old_head = refill_pop_head(sc);
-        old_head.rTime += sc->scPeriod;
-        schedule_used(sc, old_head);
+    ఒకవేళ (refill_single(sc)) {
+        refill_తల(sc)->r_సమయం = తల.r_సమయం + sc->scPeriod;
+    } లేకపోతే {
+        refill_t old_తల = refill_తీయి_తల(sc);
+        old_తల.r_సమయం += sc->scPeriod;
+        కాలపట్టిక_వాడిన(sc, old_తల);
     }
 
-    return usage - head.rAmount;
+    తిరిగి usage - తల.rAmount;
 }
 
-static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
+స్థిర అంతఃవరుస ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
 {
     ticks_t current_usage = usage;
 
@@ -283,32 +283,32 @@ static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
      * that assertion we ensure that we never delay a refill past this
      * point in the future.
      */
-    while (head_refill_overrun(sc, current_usage)) {
-        current_usage = charge_entire_head_refill(sc, current_usage);
+    అయితే (తల_refill_overrun(sc, current_usage)) {
+        current_usage = charge_entire_తల_refill(sc, current_usage);
     }
 
-    return current_usage;
+    తిరిగి current_usage;
 }
 
-static inline bool_t head_refill_insufficient(sched_context_t *sc)
+స్థిర అంతఃవరుస bool_t తల_refill_insufficient(sched_context_t *sc)
 {
-    return refill_head(sc)->rAmount < MIN_BUDGET;
+    తిరిగి refill_తల(sc)->rAmount < MIN_BUDGET;
 }
 
-static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
+స్థిర అంతఃవరుస శూన్య విలీనం_nonoverlapping_తల_refill(sched_context_t *sc)
 {
-    refill_t head = refill_pop_head(sc);
-    refill_head(sc)->rAmount += head.rAmount;
+    refill_t తల = refill_తీయి_తల(sc);
+    refill_తల(sc)->rAmount += తల.rAmount;
     /* Delay head to ensure the subsequent refill doesn't end any
      * later (rather than simply combining refills). */
-    refill_head(sc)->rTime -= head.rAmount;
+    refill_తల(sc)->r_సమయం -= తల.rAmount;
 }
 
-void refill_budget_check(ticks_t usage)
+శూన్య refill_budget_check(ticks_t usage)
 {
-    sched_context_t *sc = NODE_STATE(ksCurSC);
-    assert(!isRoundRobin(sc));
-    REFILL_SANITY_START(sc);
+    sched_context_t *sc = కణుపు_STATE(ksCurSC);
+    ప్రతిజ్ఞా(!is_విడత_Robin(sc));
+    REFILL_SANITY_ప్రారంభం(sc);
 
     usage = handle_overrun(sc, usage);
 
@@ -316,15 +316,15 @@ void refill_budget_check(ticks_t usage)
      * If the head time is still sufficiently far from the point of
      * integer overflow then the usage must be smaller than the head.
      */
-    refill_t head = *refill_head(sc);
-    if (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
-        assert(head.rAmount > usage);
-        refill_t used = (refill_t) {
+    refill_t తల = *refill_తల(sc);
+    ఒకవేళ (usage > 0 && తల.r_సమయం < MAX_RELEASE_సమయం) {
+        ప్రతిజ్ఞా(తల.rAmount > usage);
+        refill_t వాడిన_2 = (refill_t) {
             .rAmount = usage,
-            .rTime = head.rTime + sc->scPeriod,
+            .r_సమయం = తల.r_సమయం + sc->scPeriod,
         };
 
-        refill_head(sc)->rAmount = head.rAmount - usage;
+        refill_తల(sc)->rAmount = తల.rAmount - usage;
         /* We need to keep the head refill no more than a period before
          * the start of the tail refill. This ensures that new refills
          * are never added before the tail refill (breaking the ordered
@@ -335,45 +335,45 @@ void refill_budget_check(ticks_t usage)
          * schedule_used, the following will still ensure that
          * incremental charging of a refill across preemptions only
          * produces a single new refill one period in the future. */
-        refill_head(sc)->rTime = head.rTime + usage;
-        schedule_used(sc, used);
+        refill_తల(sc)->r_సమయం = తల.r_సమయం + usage;
+        కాలపట్టిక_వాడిన(sc, వాడిన_2);
     }
 
     /* Ensure the head refill has the minimum budget */
-    while (head_refill_insufficient(sc)) {
-        merge_nonoverlapping_head_refill(sc);
+    అయితే (తల_refill_insufficient(sc)) {
+        విలీనం_nonoverlapping_తల_refill(sc);
     }
 
-    REFILL_SANITY_END(sc);
+    REFILL_SANITY_చివర(sc);
 }
 
-static inline void merge_overlapping_head_refill(sched_context_t *sc)
+స్థిర అంతఃవరుస శూన్య విలీనం_overlapping_తల_refill(sched_context_t *sc)
 {
-    refill_t old_head = refill_pop_head(sc);
-    refill_head(sc)->rTime = old_head.rTime;
-    refill_head(sc)->rAmount += old_head.rAmount;
+    refill_t old_తల = refill_తీయి_తల(sc);
+    refill_తల(sc)->r_సమయం = old_తల.r_సమయం;
+    refill_తల(sc)->rAmount += old_తల.rAmount;
 }
 
-void refill_unblock_check(sched_context_t *sc)
+శూన్య refill_unblock_check(sched_context_t *sc)
 {
 
-    if (isRoundRobin(sc)) {
+    ఒకవేళ (is_విడత_Robin(sc)) {
         /* nothing to do */
-        return;
+        తిరిగి;
     }
 
     /* advance earliest activation time to now */
-    REFILL_SANITY_START(sc);
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-        NODE_STATE(ksReprogram) = true;
+    REFILL_SANITY_ప్రారంభం(sc);
+    ఒకవేళ (refill_ready(sc)) {
+        refill_తల(sc)->r_సమయం = కణుపు_STATE(ks_Cur_సమయం);
+        కణుపు_STATE(ksReprogram) = true;
 
         /* merge available replenishments */
-        while (refill_head_overlapping(sc)) {
-            merge_overlapping_head_refill(sc);
+        అయితే (refill_తల_overlapping(sc)) {
+            విలీనం_overlapping_తల_refill(sc);
         }
 
-        assert(refill_sufficient(sc, 0));
+        ప్రతిజ్ఞా(refill_sufficient(sc, 0));
     }
-    REFILL_SANITY_END(sc);
+    REFILL_SANITY_చివర(sc);
 }

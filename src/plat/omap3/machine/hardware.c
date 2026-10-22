@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <kernel/vspace.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <arch/kernel/vspace.h>
+#అన్తర్భావ <plat/machine.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
+#అన్తర్భావ <plat/machine/hardware.h>
 
-#define INTCPS_SYSCONFIG_SOFTRESET BIT(1)
-#define INTCPS_SYSSTATUS_RESETDONE BIT(0)
+#నిర్వచించు INTCPS_SYSCONFIG_SOFTRESET బిట్టు(1)
+#నిర్వచించు INTCPS_SYSSTATUS_RESETDONE బిట్టు(0)
 
-BOOT_CODE void initIRQController(void)
+BOOT_సంకేతం శూన్య initIRQController(శూన్య)
 {
     intc->intcps_sysconfig = INTCPS_SYSCONFIG_SOFTRESET;
-    while (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
+    అయితే (!(intc->intcps_sysstatus & INTCPS_SYSSTATUS_RESETDONE)) ;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_సంకేతం శూన్య cpu_initLocalIRQController(శూన్య) {}

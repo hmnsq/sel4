@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#include <config.h>
-#include <machine/io.h>
-#include <drivers/uart.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <drivers/uart.h>
 
-#ifdef CONFIG_PRINTING
-void kernel_putDebugChar(unsigned char c)
+#నిర్వచితమైతే CONFIG_PRINTING
+శూన్య kernel_putDebugChar(గుర్తులేని అక్షరం c)
 {
     uart_console_putchar(c);
 }
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం kernel_getDebugChar(శూన్య)
 {
-    return uart_drv_getchar();
+    తిరిగి uart_drv_getchar();
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

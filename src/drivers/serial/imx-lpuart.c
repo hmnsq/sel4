@@ -11,30 +11,30 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <plat/machine/devices_gen.h>
 
-#define STAT 0x14
-#define TRANSMIT 0x1c
+#నిర్వచించు STAT 0x14
+#నిర్వచించు TRANSMIT 0x1c
 
-#define STAT_TDRE (1 << 23)
+#నిర్వచించు STAT_TDRE (1 << 23)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#నిర్వచించు UART_REG(x) ((అస్థిర uint32_t *)(UART_PPTR + (x)))
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void uart_drv_putchar(unsigned char c)
+#ఒకవేళ defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+శూన్య uart_drv_putchar(గుర్తులేని అక్షరం c)
 {
-    while (!(*UART_REG(STAT) & STAT_TDRE)) { }
+    అయితే (!(*UART_REG(STAT) & STAT_TDRE)) { }
     *UART_REG(TRANSMIT) = c;
 }
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
+గుర్తులేని అక్షరం uart_drv_getchar(శూన్య)
 {
-    return 0;
+    తిరిగి 0;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

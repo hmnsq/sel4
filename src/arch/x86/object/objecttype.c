@@ -4,180 +4,180 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <plat/machine/devices.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <kernel/vspace.h>
+#అన్తర్భావ <object/structures.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <arch/object/objecttype.h>
+#అన్తర్భావ <arch/object/ioport.h>
+#అన్తర్భావ <plat/machine/devices.h>
 
-#include <arch/object/iospace.h>
-#include <arch/object/vcpu.h>
-#include <plat/machine/intel-vtd.h>
+#అన్తర్భావ <arch/object/iospace.h>
+#అన్తర్భావ <arch/object/vcpu.h>
+#అన్తర్భావ <plat/machine/intel-vtd.h>
 
-deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t Arch_deriveCap(cte_t *స్థానం, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap:
-        if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving an unmapped PT cap");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        తిరిగి ret;
 
-    case cap_page_directory_cap:
-        if (cap_page_directory_cap_get_capPDIsMapped(cap)) {
+    స్థితి cap_పుట_directory_cap:
+        ఒకవేళ (cap_పుట_directory_cap_get_cap_PDIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving a PD cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        తిరిగి ret;
 
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
+    స్థితి cap_asid_control_cap:
+    స్థితి cap_asid_pool_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_io_port_control_cap:
-        ret.status = EXCEPTION_NONE;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
+    స్థితి cap_io_పోర్టు_control_cap:
+        ret.స్థితి_2 = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        return ret;
-    case cap_io_port_cap:
+        తిరిగి ret;
+    స్థితి cap_io_పోర్టు_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
 
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
+#నిర్వచితమైతే CONFIG_IOMMU
+    స్థితి cap_io_space_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_io_page_table_cap:
-        if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
+    స్థితి cap_io_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_io_పుట_పట్టిక_cap_get_cap_IOPTIs_Mapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
-#endif
+        తిరిగి ret;
+#అయితే_ముగింపు
 
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap:
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి cap_vcpu_cap:
         ret.cap = cap;
-        ret.status = EXCEPTION_NONE;
-        return ret;
-    case cap_ept_pml4_cap:
-        if (cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
+        ret.స్థితి_2 = EXCEPTION_NONE;
+        తిరిగి ret;
+    స్థితి cap_ept_pml4_cap:
+        ఒకవేళ (cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving a EPT PML4 cap without an assigned ASID.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
-    case cap_ept_pdpt_cap:
-        if (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+        తిరిగి ret;
+    స్థితి cap_ept_pdpt_cap:
+        ఒకవేళ (cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving an unmapped EPT PDPT cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        తిరిగి ret;
 
-    case cap_ept_pd_cap:
-        if (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    స్థితి cap_ept_pd_cap:
+        ఒకవేళ (cap_ept_pd_cap_get_capPDIsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving an unmapped EPT PD cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
+        తిరిగి ret;
 
-    case cap_ept_pt_cap:
-        if (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+    స్థితి cap_ept_pt_cap:
+        ఒకవేళ (cap_ept_pt_cap_get_capPTIsMapped(cap)) {
             ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
+            ret.స్థితి_2 = EXCEPTION_NONE;
+        } లేకపోతే {
             userError("Deriving an unmapped EPT PT cap.");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
+            ret.స్థితి_2 = EXCEPTION_SYSCALL_ERROR;
         }
-        return ret;
-#endif
+        తిరిగి ret;
+#అయితే_ముగింపు
 
-    default:
-        return Mode_deriveCap(slot, cap);
+    అప్రమేయ:
+        తిరిగి బహుళకం_derive_Cap(స్థానం, cap);
     }
 }
 
-cap_t CONST Arch_updateCapData(bool_t preserve, word_t data, cap_t cap)
+cap_t CONST Arch_update_Cap_దత్తాంశం(bool_t preserve, మాట_t దత్తాంశం, cap_t cap)
 {
     /* Avoid a switch statement with just a 'default' case as the C parser does not like this */
-#ifdef CONFIG_IOMMU
-    switch (cap_get_capType(cap)) {
-    case cap_io_space_cap: {
-        seL4_X86_IOSpace_CapData_t w = { { data } };
+#నిర్వచితమైతే CONFIG_IOMMU
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_io_space_cap: {
+        se_L4_X86_IOSpace_Cap_దత్తాంశం_t w = { { దత్తాంశం } };
         uint16_t PCIDevice = get_dev_id(
-                                 seL4_X86_IOSpace_CapData_get_pciBus(w),
-                                 seL4_X86_IOSpace_CapData_get_pciDev(w),
-                                 seL4_X86_IOSpace_CapData_get_pciFun(w)
+                                 se_L4_X86_IOSpace_Cap_దత్తాంశం_get_pci_Bus(w),
+                                 se_L4_X86_IOSpace_Cap_దత్తాంశం_get_pci_Dev(w),
+                                 se_L4_X86_IOSpace_Cap_దత్తాంశం_get_pci_Fun(w)
                              );
-        uint16_t domainID = seL4_X86_IOSpace_CapData_get_domainID(w);
-        if (!preserve && cap_io_space_cap_get_capPCIDevice(cap) == 0 &&
+        uint16_t domainID = se_L4_X86_IOSpace_Cap_దత్తాంశం_get_domain_ID(w);
+        ఒకవేళ (!preserve && cap_io_space_cap_get_capPCIDevice(cap) == 0 &&
             domainID >= x86KSFirstValidIODomain &&
             domainID != 0                        &&
-            domainID <= MASK(x86KSnumIODomainIDBits)) {
-            return cap_io_space_cap_new(domainID, PCIDevice);
-        } else {
-            return cap_null_cap_new();
+            domainID <= ముసుగు(x86KSnumIODomainIDBits)) {
+            తిరిగి cap_io_space_cap_new(domainID, PCIDevice);
+        } లేకపోతే {
+            తిరిగి cap_null_cap_new();
         }
     }
 
-    default:
-        return cap;
+    అప్రమేయ:
+        తిరిగి cap;
     }
-#endif
-    return cap;
+#అయితే_ముగింపు
+    తిరిగి cap;
 }
 
-cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
+cap_t CONST Arch_ముసుగు_Cap_Rights(seL4_CapRights_t cap_rights_ముసుగు, cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_frame_cap) {
+    ఒకవేళ (cap_get_capType(cap) == cap_చట్రం_cap) {
         vm_rights_t vm_rights;
 
-        vm_rights = vmRightsFromWord(cap_frame_cap_get_capFVMRights(cap));
-        vm_rights = maskVMRights(vm_rights, cap_rights_mask);
-        return cap_frame_cap_set_capFVMRights(cap, wordFromVMRights(vm_rights));
-    } else {
-        return cap;
+        vm_rights = vm_Rights_From_మాట(cap_చట్రం_cap_get_cap_FVMRights(cap));
+        vm_rights = ముసుగు_VMRights(vm_rights, cap_rights_ముసుగు);
+        తిరిగి cap_చట్రం_cap_సమితి_cap_FVMRights(cap, మాట_From_VMRights(vm_rights));
+    } లేకపోతే {
+        తిరిగి cap;
     }
 }
 
@@ -185,376 +185,376 @@ finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-        if (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
-            unmapPageDirectory(
-                cap_page_directory_cap_get_capPDMappedASID(cap),
-                cap_page_directory_cap_get_capPDMappedAddress(cap),
-                PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap))
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_పుట_directory_cap:
+        ఒకవేళ (final && cap_పుట_directory_cap_get_cap_PDIs_Mapped(cap)) {
+            unmap_పుట_Directory(
+                cap_పుట_directory_cap_get_cap_PDMapped_ASID(cap),
+                cap_పుట_directory_cap_get_cap_PDMapped_చిరునామా(cap),
+                PDE_PTR(cap_పుట_directory_cap_get_cap_PDBase_Ptr(cap))
             );
         }
-        break;
+        ఆపు;
 
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
-            unmapPageTable(
-                cap_page_table_cap_get_capPTMappedASID(cap),
-                cap_page_table_cap_get_capPTMappedAddress(cap),
-                PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap))
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (final && cap_పుట_పట్టిక_cap_get_cap_PTIs_Mapped(cap)) {
+            unmap_పుట_పట్టిక(
+                cap_పుట_పట్టిక_cap_get_cap_PTMapped_ASID(cap),
+                cap_పుట_పట్టిక_cap_get_cap_PTMapped_చిరునామా(cap),
+                PT_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap))
             );
         }
-        break;
+        ఆపు;
 
-    case cap_asid_pool_cap:
-        if (final) {
+    స్థితి cap_asid_pool_cap:
+        ఒకవేళ (final) {
             deleteASIDPool(
                 cap_asid_pool_cap_get_capASIDBase(cap),
                 ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))
             );
         }
-        break;
-    case cap_asid_control_cap:
-    case cap_io_port_control_cap:
-        break;
-    case cap_io_port_cap:
-#ifdef CONFIG_VTX
-        clearVPIDIOPortMappings(cap_io_port_cap_get_capIOPortVPID(cap),
-                                cap_io_port_cap_get_capIOPortFirstPort(cap),
-                                cap_io_port_cap_get_capIOPortLastPort(cap));
-#endif
-        if (final) {
+        ఆపు;
+    స్థితి cap_asid_control_cap:
+    స్థితి cap_io_పోర్టు_control_cap:
+        ఆపు;
+    స్థితి cap_io_పోర్టు_cap:
+#నిర్వచితమైతే CONFIG_VTX
+        clearVPIDIOPortMappings(cap_io_పోర్టు_cap_get_cap_IOPort_VPID(cap),
+                                cap_io_పోర్టు_cap_get_cap_IOPort_మొదటి_పోర్టు(cap),
+                                cap_io_పోర్టు_cap_get_cap_IOPort_చివరి_పోర్టు(cap));
+#అయితే_ముగింపు
+        ఒకవేళ (final) {
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap;
-            return fc_ret;
+            తిరిగి fc_ret;
         }
-        break;
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        if (final) {
-            unmapVTDContextEntry(cap);
+        ఆపు;
+#నిర్వచితమైతే CONFIG_IOMMU
+    స్థితి cap_io_space_cap:
+        ఒకవేళ (final) {
+            unmap_VTDContext_నమోదు(cap);
         }
-        break;
+        ఆపు;
 
-    case cap_io_page_table_cap:
-        if (final && cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
-            deleteIOPageTable(cap);
+    స్థితి cap_io_పుట_పట్టిక_cap:
+        ఒకవేళ (final && cap_io_పుట_పట్టిక_cap_get_cap_IOPTIs_Mapped(cap)) {
+            delete_IOPage_పట్టిక(cap);
         }
-        break;
-#endif
+        ఆపు;
+#అయితే_ముగింపు
 
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        if (final) {
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి cap_vcpu_cap:
+        ఒకవేళ (final) {
             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
         }
-        break;
-    case cap_ept_pml4_cap:
-        if (final && cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
+        ఆపు;
+    స్థితి cap_ept_pml4_cap:
+        ఒకవేళ (final && cap_ept_pml4_cap_get_capPML4IsMapped(cap)) {
             deleteEPTASID(cap_ept_pml4_cap_get_capPML4MappedASID(cap),
-                          (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(cap));
+                          (ept_pml4e_t *)cap_ept_pml4_cap_get_cap_PML4_పునాది_Ptr(cap));
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pdpt_cap:
-        if (final && cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
+    స్థితి cap_ept_pdpt_cap:
+        ఒకవేళ (final && cap_ept_pdpt_cap_get_capPDPTIsMapped(cap)) {
             unmapEPTPDPT(
                 cap_ept_pdpt_cap_get_capPDPTMappedASID(cap),
-                cap_ept_pdpt_cap_get_capPDPTMappedAddress(cap),
+                cap_ept_pdpt_cap_get_cap_PDPTMapped_చిరునామా(cap),
                 (ept_pdpte_t *)cap_ept_pdpt_cap_get_capPDPTBasePtr(cap));
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pd_cap:
-        if (final && cap_ept_pd_cap_get_capPDIsMapped(cap)) {
+    స్థితి cap_ept_pd_cap:
+        ఒకవేళ (final && cap_ept_pd_cap_get_capPDIsMapped(cap)) {
             unmapEPTPageDirectory(
                 cap_ept_pd_cap_get_capPDMappedASID(cap),
-                cap_ept_pd_cap_get_capPDMappedAddress(cap),
+                cap_ept_pd_cap_get_cap_PDMapped_చిరునామా(cap),
                 (ept_pde_t *)cap_ept_pd_cap_get_capPDBasePtr(cap));
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pt_cap:
-        if (final && cap_ept_pt_cap_get_capPTIsMapped(cap)) {
-            unmapEPTPageTable(
+    స్థితి cap_ept_pt_cap:
+        ఒకవేళ (final && cap_ept_pt_cap_get_capPTIsMapped(cap)) {
+            unmap_EPTPage_పట్టిక(
                 cap_ept_pt_cap_get_capPTMappedASID(cap),
-                cap_ept_pt_cap_get_capPTMappedAddress(cap),
+                cap_ept_pt_cap_get_cap_PTMapped_చిరునామా(cap),
                 (ept_pte_t *)cap_ept_pt_cap_get_capPTBasePtr(cap));
         }
-        break;
-#endif
+        ఆపు;
+#అయితే_ముగింపు
 
-    default:
-        return Mode_finaliseCap(cap, final);
+    అప్రమేయ:
+        తిరిగి బహుళకం_finalise_Cap(cap, final);
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    తిరిగి fc_ret;
 }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            word_t botA, botB, topA, topB;
-            botA = cap_frame_cap_get_capFBasePtr(cap_a);
-            botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b)));
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
+    ఎంపిక (cap_get_capType(cap_a)) {
+    స్థితి cap_చట్రం_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_చట్రం_cap) {
+            మాట_t botA, botB, శిఖరం_A, శిఖరం_B;
+            botA = cap_చట్రం_cap_get_cap_FBase_Ptr(cap_a);
+            botB = cap_చట్రం_cap_get_cap_FBase_Ptr(cap_b);
+            శిఖరం_A = botA + ముసుగు(పుట_బిట్లు_For_కొలత(cap_చట్రం_cap_get_cap_FSize(cap_a)));
+            శిఖరం_B = botB + ముసుగు(పుట_బిట్లు_For_కొలత(cap_చట్రం_cap_get_cap_FSize(cap_b)));
+            తిరిగి ((botA <= botB) && (శిఖరం_A >= శిఖరం_B) && (botB <= శిఖరం_B));
         }
-        break;
+        ఆపు;
 
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
+    స్థితి cap_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_పుట_పట్టిక_cap) {
+            తిరిగి cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap_a) ==
+                   cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_page_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_directory_cap) {
-            return cap_page_directory_cap_get_capPDBasePtr(cap_a) ==
-                   cap_page_directory_cap_get_capPDBasePtr(cap_b);
+    స్థితి cap_పుట_directory_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_పుట_directory_cap) {
+            తిరిగి cap_పుట_directory_cap_get_cap_PDBase_Ptr(cap_a) ==
+                   cap_పుట_directory_cap_get_cap_PDBase_Ptr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_asid_control_cap:
-        if (cap_get_capType(cap_b) == cap_asid_control_cap) {
-            return true;
+    స్థితి cap_asid_control_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_asid_control_cap) {
+            తిరిగి true;
         }
-        break;
+        ఆపు;
 
-    case cap_asid_pool_cap:
-        if (cap_get_capType(cap_b) == cap_asid_pool_cap) {
-            return cap_asid_pool_cap_get_capASIDPool(cap_a) ==
+    స్థితి cap_asid_pool_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_asid_pool_cap) {
+            తిరిగి cap_asid_pool_cap_get_capASIDPool(cap_a) ==
                    cap_asid_pool_cap_get_capASIDPool(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_io_port_control_cap:
-        if (cap_get_capType(cap_b) == cap_io_port_control_cap ||
-            cap_get_capType(cap_b) == cap_io_port_cap) {
-            return true;
+    స్థితి cap_io_పోర్టు_control_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_io_పోర్టు_control_cap ||
+            cap_get_capType(cap_b) == cap_io_పోర్టు_cap) {
+            తిరిగి true;
         }
-        break;
+        ఆపు;
 
-    case cap_io_port_cap:
-        if (cap_get_capType(cap_b) == cap_io_port_cap) {
-            return  cap_io_port_cap_get_capIOPortFirstPort(cap_a) ==
-                    cap_io_port_cap_get_capIOPortFirstPort(cap_b) &&
-                    cap_io_port_cap_get_capIOPortLastPort(cap_a) ==
-                    cap_io_port_cap_get_capIOPortLastPort(cap_b);
+    స్థితి cap_io_పోర్టు_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_io_పోర్టు_cap) {
+            తిరిగి  cap_io_పోర్టు_cap_get_cap_IOPort_మొదటి_పోర్టు(cap_a) ==
+                    cap_io_పోర్టు_cap_get_cap_IOPort_మొదటి_పోర్టు(cap_b) &&
+                    cap_io_పోర్టు_cap_get_cap_IOPort_చివరి_పోర్టు(cap_a) ==
+                    cap_io_పోర్టు_cap_get_cap_IOPort_చివరి_పోర్టు(cap_b);
         }
-        break;
+        ఆపు;
 
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        if (cap_get_capType(cap_b) == cap_io_space_cap) {
-            return cap_io_space_cap_get_capPCIDevice(cap_a) ==
+#నిర్వచితమైతే CONFIG_IOMMU
+    స్థితి cap_io_space_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_io_space_cap) {
+            తిరిగి cap_io_space_cap_get_capPCIDevice(cap_a) ==
                    cap_io_space_cap_get_capPCIDevice(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_io_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_io_page_table_cap) {
-            return cap_io_page_table_cap_get_capIOPTBasePtr(cap_a) ==
-                   cap_io_page_table_cap_get_capIOPTBasePtr(cap_b);
+    స్థితి cap_io_పుట_పట్టిక_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_io_పుట_పట్టిక_cap) {
+            తిరిగి cap_io_పుట_పట్టిక_cap_get_cap_IOPTBase_Ptr(cap_a) ==
+                   cap_io_పుట_పట్టిక_cap_get_cap_IOPTBase_Ptr(cap_b);
         }
-        break;
-#endif
+        ఆపు;
+#అయితే_ముగింపు
 
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        if (cap_get_capType(cap_b) == cap_vcpu_cap) {
-            return cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి cap_vcpu_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_vcpu_cap) {
+            తిరిగి cap_vcpu_cap_get_capVCPUPtr(cap_a) ==
                    cap_vcpu_cap_get_capVCPUPtr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pml4_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pml4_cap) {
-            return cap_ept_pml4_cap_get_capPML4BasePtr(cap_a) ==
-                   cap_ept_pml4_cap_get_capPML4BasePtr(cap_b);
+    స్థితి cap_ept_pml4_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_ept_pml4_cap) {
+            తిరిగి cap_ept_pml4_cap_get_cap_PML4_పునాది_Ptr(cap_a) ==
+                   cap_ept_pml4_cap_get_cap_PML4_పునాది_Ptr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pdpt_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pdpt_cap) {
-            return cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
+    స్థితి cap_ept_pdpt_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_ept_pdpt_cap) {
+            తిరిగి cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_a) ==
                    cap_ept_pdpt_cap_get_capPDPTBasePtr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pd_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pd_cap) {
-            return cap_ept_pd_cap_get_capPDBasePtr(cap_a) ==
+    స్థితి cap_ept_pd_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_ept_pd_cap) {
+            తిరిగి cap_ept_pd_cap_get_capPDBasePtr(cap_a) ==
                    cap_ept_pd_cap_get_capPDBasePtr(cap_b);
         }
-        break;
+        ఆపు;
 
-    case cap_ept_pt_cap:
-        if (cap_get_capType(cap_b) == cap_ept_pt_cap) {
-            return cap_ept_pt_cap_get_capPTBasePtr(cap_a) ==
+    స్థితి cap_ept_pt_cap:
+        ఒకవేళ (cap_get_capType(cap_b) == cap_ept_pt_cap) {
+            తిరిగి cap_ept_pt_cap_get_capPTBasePtr(cap_a) ==
                    cap_ept_pt_cap_get_capPTBasePtr(cap_b);
         }
-        break;
+        ఆపు;
 
-#endif
+#అయితే_ముగింపు
 
     }
 
-    return Mode_sameRegionAs(cap_a, cap_b);
+    తిరిగి బహుళకం_same_Region_As(cap_a, cap_b);
 }
 
 bool_t CONST Arch_sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_io_port_control_cap &&
-        cap_get_capType(cap_b) == cap_io_port_cap) {
-        return false;
+    ఒకవేళ (cap_get_capType(cap_a) == cap_io_పోర్టు_control_cap &&
+        cap_get_capType(cap_b) == cap_io_పోర్టు_cap) {
+        తిరిగి false;
     }
-    if (cap_get_capType(cap_a) == cap_frame_cap) {
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-            return ((cap_frame_cap_get_capFBasePtr(cap_a) ==
-                     cap_frame_cap_get_capFBasePtr(cap_b)) &&
-                    (cap_frame_cap_get_capFSize(cap_a) ==
-                     cap_frame_cap_get_capFSize(cap_b)) &&
-                    ((cap_frame_cap_get_capFIsDevice(cap_a) == 0) ==
-                     (cap_frame_cap_get_capFIsDevice(cap_b) == 0)));
+    ఒకవేళ (cap_get_capType(cap_a) == cap_చట్రం_cap) {
+        ఒకవేళ (cap_get_capType(cap_b) == cap_చట్రం_cap) {
+            తిరిగి ((cap_చట్రం_cap_get_cap_FBase_Ptr(cap_a) ==
+                     cap_చట్రం_cap_get_cap_FBase_Ptr(cap_b)) &&
+                    (cap_చట్రం_cap_get_cap_FSize(cap_a) ==
+                     cap_చట్రం_cap_get_cap_FSize(cap_b)) &&
+                    ((cap_చట్రం_cap_get_cap_FIs_Device(cap_a) == 0) ==
+                     (cap_చట్రం_cap_get_cap_FIs_Device(cap_b) == 0)));
         }
     }
-    return Arch_sameRegionAs(cap_a, cap_b);
+    తిరిగి Arch_sameRegionAs(cap_a, cap_b);
 }
 
-word_t Arch_getObjectSize(word_t t)
+మాట_t Arch_get_Object_కొలత(మాట_t t)
 {
-    switch (t) {
-    case seL4_X86_4K:
-        return pageBitsForSize(X86_SmallPage);
-    case seL4_X86_LargePageObject:
-        return pageBitsForSize(X86_LargePage);
-    case seL4_X86_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_X86_PageDirectoryObject:
-        return seL4_PageDirBits;
-    case seL4_IA32_PDPTObject:
-        return seL4_PDPTBits;
-    case seL4_X86_IOPageTableObject:
-        return seL4_IOPageTableBits;
-#ifdef CONFIG_VTX
-    case seL4_X86_VCPUObject:
-        return seL4_X86_VCPUBits;
-    case seL4_X86_EPTPML4Object:
-        return seL4_X86_EPTPML4Bits;
-    case seL4_X86_EPTPDPTObject:
-        return seL4_X86_EPTPDPTBits;
-    case seL4_X86_EPTPDObject:
-        return seL4_X86_EPTPDBits;
-    case seL4_X86_EPTPTObject:
-        return seL4_X86_EPTPTBits;
-#endif
-    default:
-        return Mode_getObjectSize(t);
+    ఎంపిక (t) {
+    స్థితి seL4_X86_4K:
+        తిరిగి పుట_బిట్లు_For_కొలత(X86_Small_పుట);
+    స్థితి se_L4_X86_Large_పుట_Object:
+        తిరిగి పుట_బిట్లు_For_కొలత(X86_Large_పుట);
+    స్థితి se_L4_X86_పుట_పట్టిక_Object:
+        తిరిగి se_L4_పుట_పట్టిక_బిట్లు;
+    స్థితి se_L4_X86_పుట_Directory_Object:
+        తిరిగి se_L4_పుట_Dir_బిట్లు;
+    స్థితి seL4_IA32_PDPTObject:
+        తిరిగి seL4_PDPTBits;
+    స్థితి se_L4_X86_IOPage_పట్టిక_Object:
+        తిరిగి se_L4_IOPage_పట్టిక_బిట్లు;
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి seL4_X86_VCPUObject:
+        తిరిగి seL4_X86_VCPUBits;
+    స్థితి seL4_X86_EPTPML4Object:
+        తిరిగి se_L4_X86_EPTPML4_బిట్లు;
+    స్థితి seL4_X86_EPTPDPTObject:
+        తిరిగి seL4_X86_EPTPDPTBits;
+    స్థితి seL4_X86_EPTPDObject:
+        తిరిగి seL4_X86_EPTPDBits;
+    స్థితి seL4_X86_EPTPTObject:
+        తిరిగి seL4_X86_EPTPTBits;
+#అయితే_ముగింపు
+    అప్రమేయ:
+        తిరిగి బహుళకం_get_Object_కొలత(t);
     }
 }
 
-cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t Arch_createObject(object_t t, శూన్య *region_పునాది, మాట_t user_కొలత, bool_t device_జ్ఞాపకం)
 {
-#ifdef CONFIG_VTX
-    switch (t) {
-    case seL4_X86_VCPUObject: {
+#నిర్వచితమైతే CONFIG_VTX
+    ఎంపిక (t) {
+    స్థితి seL4_X86_VCPUObject: {
         vcpu_t *vcpu;
-        vcpu = VCPU_PTR((word_t)regionBase);
+        vcpu = VCPU_PTR((మాట_t)region_పునాది);
         vcpu_init(vcpu);
-        return cap_vcpu_cap_new(VCPU_REF(vcpu));
+        తిరిగి cap_vcpu_cap_new(VCPU_REF(vcpu));
     }
-    case seL4_X86_EPTPML4Object:
-        return cap_ept_pml4_cap_new(
+    స్థితి seL4_X86_EPTPML4Object:
+        తిరిగి cap_ept_pml4_cap_new(
                    0,                  /* capPML4IsMapped      */
                    VPID_INVALID,       /* capPML4MappedASID    */
-                   (word_t)regionBase  /* capPML4BasePtr       */
+                   (మాట_t)region_పునాది  /* capPML4BasePtr       */
                );
-    case seL4_X86_EPTPDPTObject:
-        return cap_ept_pdpt_cap_new(
+    స్థితి seL4_X86_EPTPDPTObject:
+        తిరిగి cap_ept_pdpt_cap_new(
                    0,                  /* capPDPTMappedAddress */
                    0,                  /* capPDPTIsMapped      */
                    VPID_INVALID,       /* capPDPTMappedASID    */
-                   (word_t)regionBase   /* capPDPTBasePtr      */
+                   (మాట_t)region_పునాది   /* capPDPTBasePtr      */
                );
-    case seL4_X86_EPTPDObject:
-        return cap_ept_pd_cap_new(
+    స్థితి seL4_X86_EPTPDObject:
+        తిరిగి cap_ept_pd_cap_new(
                    0,                  /* capPDMappedAddress   */
                    0,                  /* capPDIsMapped        */
                    VPID_INVALID,       /* capPDMappedASID      */
-                   (word_t)regionBase  /* capPDBasePtr         */
+                   (మాట_t)region_పునాది  /* capPDBasePtr         */
                );
-    case seL4_X86_EPTPTObject:
-        return cap_ept_pt_cap_new(
+    స్థితి seL4_X86_EPTPTObject:
+        తిరిగి cap_ept_pt_cap_new(
                    0,                  /* capPTMappedAddress   */
                    0,                  /* capPTIsMapped        */
                    VPID_INVALID,       /* capPTMappedASID      */
-                   (word_t)regionBase  /* capPTBasePtr         */
+                   (మాట_t)region_పునాది  /* capPTBasePtr         */
                );
-    default:
-#endif
-        return Mode_createObject(t, regionBase, userSize, deviceMemory);
-#ifdef CONFIG_VTX
+    అప్రమేయ:
+#అయితే_ముగింపు
+        తిరిగి బహుళకం_create_Object(t, region_పునాది, user_కొలత, device_జ్ఞాపకం);
+#నిర్వచితమైతే CONFIG_VTX
     }
-#endif
+#అయితే_ముగింపు
 }
 
 exception_t Arch_decodeInvocation(
-    word_t invLabel,
-    word_t length,
+    మాట_t invLabel,
+    మాట_t నిడివి,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *స్థానం,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    మాట_t *బఫరు
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_asid_control_cap:
-    case cap_asid_pool_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    case cap_io_port_control_cap:
-        return decodeX86PortControlInvocation(invLabel, length, cptr, slot, cap, buffer);
-    case cap_io_port_cap:
-        return decodeX86PortInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap:
-        return decodeX86IOSpaceInvocation(invLabel, cap);
-    case cap_io_page_table_cap:
-        return decodeX86IOPTInvocation(invLabel, length, slot, cap, buffer);
-#endif
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap:
-        return decodeX86VCPUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    case cap_ept_pml4_cap:
-    case cap_ept_pdpt_cap:
-    case cap_ept_pd_cap:
-    case cap_ept_pt_cap:
-        return decodeX86EPTInvocation(invLabel, length, cptr, slot, cap, buffer);
-#endif
-    default:
-        return Mode_decodeInvocation(invLabel, length, cptr, slot, cap, call, buffer);
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_asid_control_cap:
+    స్థితి cap_asid_pool_cap:
+        తిరిగి decodeX86MMUInvocation(invLabel, నిడివి, cptr, స్థానం, cap, call, బఫరు);
+    స్థితి cap_io_పోర్టు_control_cap:
+        తిరిగి decode_X86_పోర్టు_Control_Invocation(invLabel, నిడివి, cptr, స్థానం, cap, బఫరు);
+    స్థితి cap_io_పోర్టు_cap:
+        తిరిగి decode_X86_పోర్టు_Invocation(invLabel, నిడివి, cptr, స్థానం, cap, call, బఫరు);
+#నిర్వచితమైతే CONFIG_IOMMU
+    స్థితి cap_io_space_cap:
+        తిరిగి decodeX86IOSpaceInvocation(invLabel, cap);
+    స్థితి cap_io_పుట_పట్టిక_cap:
+        తిరిగి decodeX86IOPTInvocation(invLabel, నిడివి, స్థానం, cap, బఫరు);
+#అయితే_ముగింపు
+#నిర్వచితమైతే CONFIG_VTX
+    స్థితి cap_vcpu_cap:
+        తిరిగి decodeX86VCPUInvocation(invLabel, నిడివి, cptr, స్థానం, cap, call, బఫరు);
+    స్థితి cap_ept_pml4_cap:
+    స్థితి cap_ept_pdpt_cap:
+    స్థితి cap_ept_pd_cap:
+    స్థితి cap_ept_pt_cap:
+        తిరిగి decodeX86EPTInvocation(invLabel, నిడివి, cptr, స్థానం, cap, బఫరు);
+#అయితే_ముగింపు
+    అప్రమేయ:
+        తిరిగి బహుళకం_decode_Invocation(invLabel, నిడివి, cptr, స్థానం, cap, call, బఫరు);
     }
 }
 
-void Arch_prepareThreadDelete(tcb_t *thread)
+శూన్య Arch_prepareThreadDelete(tcb_t *thread)
 {
     /* Notify the lazy FPU module about this thread's deletion. */
     fpuRelease(thread);
 }
 
-void Arch_postCapDeletion(cap_t cap)
+శూన్య Arch_postCapDeletion(cap_t cap)
 {
-    if (cap_get_capType(cap) == cap_io_port_cap) {
-        uint16_t first_port = cap_io_port_cap_get_capIOPortFirstPort(cap);
-        uint16_t last_port = cap_io_port_cap_get_capIOPortLastPort(cap);
+    ఒకవేళ (cap_get_capType(cap) == cap_io_పోర్టు_cap) {
+        uint16_t మొదటి_పోర్టు = cap_io_పోర్టు_cap_get_cap_IOPort_మొదటి_పోర్టు(cap);
+        uint16_t చివరి_పోర్టు = cap_io_పోర్టు_cap_get_cap_IOPort_చివరి_పోర్టు(cap);
 
-        freeIOPortRange(first_port, last_port);
+        freeIOPortRange(మొదటి_పోర్టు, చివరి_పోర్టు);
     }
 }

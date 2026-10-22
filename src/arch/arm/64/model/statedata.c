@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <api/types.h>
+#అన్తర్భావ <arch/types.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <arch/object/structures.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <plat/machine/hardware.h>
 
-#ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
-#endif
+#నిర్వచితమైతే CONFIG_ARM_SMMU
+#అన్తర్భావ <arch/object/smmu.h>
+#అయితే_ముగింపు
 
 
 asid_pool_t *armKSASIDTable[nASIDPools];
@@ -82,50 +82,50 @@ asid_pool_t *armKSASIDTable[nASIDPools];
  * applies.
  */
 
-vspace_root_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
-pte_t armKSGlobalKernelPGD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+vspace_మూలం_t armKSGlobalUserVSpace[బిట్టు(se_L4_VSpace_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_VSpace_బిట్లు));
+pte_t armKSGlobalKernelPGD[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
 
-pte_t armKSGlobalKernelPUD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPDs[BIT(PT_INDEX_BITS)][BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPUD[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
+pte_t armKSGlobalKernelPDs[బిట్టు(PT_సూచీ_బిట్లు)][బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
+pte_t armKSGlobalKernelPT[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN_BSS(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][BIT(PT_INDEX_BITS) - 2];
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
+pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[బిట్టు(PT_సూచీ_బిట్లు) - 1][బిట్టు(PT_సూచీ_బిట్లు) - 2];
 compile_assert(log_pude_is_correct_preallocated_pude,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+               GET_KPT_సూచీ(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == బిట్టు(PT_సూచీ_బిట్లు) - 1);
 compile_assert(log_pde_is_correct_preallocated_pde,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == BIT(PT_INDEX_BITS) - 2);
-#endif
+               GET_KPT_సూచీ(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == బిట్టు(PT_సూచీ_బిట్లు) - 2);
+#అయితే_ముగింపు
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-UP_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
-UP_STATE_DEFINE(bool_t, armHSVCPUActive);
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+పైకి_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
+పైకి_STATE_DEFINE(bool_t, armHSVCPUActive);
 
 /* The hardware VMID to virtual ASID mapping table.
  * The ARMv8 supports 8-bit VMID which is used as logical ASID
  * when the kernel runs in EL2.
  */
-asid_t armKSHWASIDTable[BIT(hwASIDBits)];
+asid_t armKSHWASIDTable[బిట్టు(hwASIDBits)];
 hw_asid_t armKSNextASID = hwASIDMin;
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_ARM_SMMU
+#నిర్వచితమైతే CONFIG_ARM_SMMU
 /*recording the state of created SID caps*/
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
-cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+cte_t smmuStateSIDNode[బిట్టు(SMMU_SID_CNODE_స్థానం_బిట్లు)] ALIGN(బిట్టు(SMMU_SID_CNODE_స్థానం_బిట్లు + se_L4_స్థానం_బిట్లు));
+compile_assert(smmu_State_SIDCNode_కొలత, పరిమాణం(smmuStateSIDNode) >= ((SMMU_MAX_SID) * పరిమాణం(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
-cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+cte_t smmuStateCBNode[బిట్టు(SMMU_CB_CNODE_స్థానం_బిట్లు)] ALIGN(బిట్టు(SMMU_CB_CNODE_స్థానం_బిట్లు + se_L4_స్థానం_బిట్లు));
+compile_assert(smmu_State_CBCNode_కొలత, పరిమాణం(smmuStateCBNode) >= ((SMMU_MAX_CB) * పరిమాణం(cte_t)));
 /*recording the context bank to ASID relationship*/
-asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
-#endif
+asid_t smmu_State_CBAsid_పట్టిక[SMMU_MAX_CB];
+#అయితే_ముగింపు
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#నిర్వచితమైతే ARM_పునాది_CP14_SAVE_AND_RESTORE
 /* Null state for the Debug coprocessor's break/watchpoint registers */
 user_breakpoint_state_t armKSNullBreakpointState;
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#అయితే_ముగింపు /* ARM_BASE_CP14_SAVE_AND_RESTORE */

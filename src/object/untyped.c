@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <api/invocation.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/untyped.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <util.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <api/invocation.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <object/structures.h>
+#అన్తర్భావ <object/untyped.h>
+#అన్తర్భావ <object/objecttype.h>
+#అన్తర్భావ <object/cnode.h>
+#అన్తర్భావ <kernel/cspace.h>
+#అన్తర్భావ <kernel/thread.h>
+#అన్తర్భావ <util.h>
 
-static word_t alignUp(word_t baseValue, word_t alignment)
+స్థిర మాట_t align_పైకి(మాట_t పునాది_విలువ, మాట_t alignment)
 {
-    return (baseValue + (BIT(alignment) - 1)) & ~MASK(alignment);
+    తిరిగి (పునాది_విలువ + (బిట్టు(alignment) - 1)) & ~ముసుగు(alignment);
 }
 
-exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
-                                    cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeUntypedInvocation(మాట_t invLabel, మాట_t నిడివి, cte_t *స్థానం,
+                                    cap_t cap, bool_t call, మాట_t *బఫరు)
 {
-    word_t newType, userObjSize, nodeIndex;
-    word_t nodeDepth, nodeOffset, nodeWindow;
-    cte_t *rootSlot;
-    exception_t status;
-    cap_t nodeCap;
-    lookupSlot_ret_t lu_ret;
-    word_t nodeSize;
-    word_t i;
+    మాట_t newType, user_Obj_కొలత, కణుపు_సూచీ;
+    మాట_t కణుపు_లోతు, కణుపు_స్థానభ్రంశం, కణుపు_కిటికీ;
+    cte_t *మూలం_స్థానం;
+    exception_t స్థితి_2;
+    cap_t కణుపు_Cap;
+    lookup_స్థానం_ret_t lu_ret;
+    మాట_t కణుపు_కొలత;
+    మాట_t i;
     cte_t *destCNode;
-    word_t freeRef, alignedFreeRef, objectSize, untypedFreeBytes;
-    word_t freeIndex;
-    bool_t deviceMemory;
+    మాట_t freeRef, alignedFreeRef, object_కొలత, untyped_Free_బైట్లు;
+    మాట_t free_సూచీ;
+    bool_t device_జ్ఞాపకం;
     bool_t reset;
 
     /* Ensure operation is valid. */
-    if (invLabel != UntypedRetype) {
+    ఒకవేళ (invLabel != UntypedRetype) {
         userError("Untyped cap: Illegal operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Ensure message length valid. */
-    if (length < 6 || current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (నిడివి < 6 || current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("Untyped invocation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Fetch arguments. */
-    newType     = getSyscallArg(0, buffer);
-    userObjSize = getSyscallArg(1, buffer);
-    nodeIndex   = getSyscallArg(2, buffer);
-    nodeDepth   = getSyscallArg(3, buffer);
-    nodeOffset  = getSyscallArg(4, buffer);
-    nodeWindow  = getSyscallArg(5, buffer);
-    rootSlot = current_extra_caps.excaprefs[0];
+    newType     = getSyscallArg(0, బఫరు);
+    user_Obj_కొలత = getSyscallArg(1, బఫరు);
+    కణుపు_సూచీ   = getSyscallArg(2, బఫరు);
+    కణుపు_లోతు   = getSyscallArg(3, బఫరు);
+    కణుపు_స్థానభ్రంశం  = getSyscallArg(4, బఫరు);
+    కణుపు_కిటికీ  = getSyscallArg(5, బఫరు);
+    మూలం_స్థానం = current_extra_caps.excaprefs[0];
 
     /* Is the requested object type valid? */
-    if (newType >= seL4_ObjectTypeCount) {
+    ఒకవేళ (newType >= se_L4_Object_Type_లెక్క) {
         userError("Untyped Retype: Invalid object type.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 0;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    objectSize = getObjectSize(newType, userObjSize);
+    object_కొలత = get_Object_కొలత(newType, user_Obj_కొలత);
 
     /* Exclude impossibly large object sizes. getObjectSize can overflow if userObjSize
        is close to 2^wordBits, which is nonsensical in any case, so we check that this
        did not happen. userObjSize will always need to be less than wordBits. */
-    if (userObjSize >= wordBits || objectSize > seL4_MaxUntypedBits) {
+    ఒకవేళ (user_Obj_కొలత >= మాట_బిట్లు || object_కొలత > se_L4_Max_Untyped_బిట్లు) {
         userError("Untyped Retype: Invalid object size.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = seL4_MaxUntypedBits;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = se_L4_Max_Untyped_బిట్లు;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If the target object is a CNode, is it at least size 1? */
-    if (newType == seL4_CapTableObject && userObjSize == 0) {
+    ఒకవేళ (newType == se_L4_Cap_పట్టిక_Object && user_Obj_కొలత == 0) {
         userError("Untyped Retype: Requested CapTable size too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If the target object is a Untyped, is it at least size 4? */
-    if (newType == seL4_UntypedObject && userObjSize < seL4_MinUntypedBits) {
+    ఒకవేళ (newType == seL4_UntypedObject && user_Obj_కొలత < se_L4_Min_Untyped_బిట్లు) {
         userError("Untyped Retype: Requested UntypedItem size too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    if (newType == seL4_SchedContextObject && userObjSize < seL4_MinSchedContextBits) {
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    ఒకవేళ (newType == seL4_SchedContextObject && user_Obj_కొలత < se_L4_Min_Sched_Context_బిట్లు) {
         userError("Untyped retype: Requested a scheduling context too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-#endif
+#అయితే_ముగింపు
 
     /* Lookup the destination CNode (where our caps will be placed in). */
-    if (nodeDepth == 0) {
-        nodeCap = rootSlot->cap;
-    } else {
-        cap_t rootCap = rootSlot->cap;
-        lu_ret = lookupTargetSlot(rootCap, nodeIndex, nodeDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+    ఒకవేళ (కణుపు_లోతు == 0) {
+        కణుపు_Cap = మూలం_స్థానం->cap;
+    } లేకపోతే {
+        cap_t మూలం_Cap = మూలం_స్థానం->cap;
+        lu_ret = lookup_లక్ష్యం_స్థానం(మూలం_Cap, కణుపు_సూచీ, కణుపు_లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             userError("Untyped Retype: Invalid destination address.");
-            return lu_ret.status;
+            తిరిగి lu_ret.స్థితి_2;
         }
-        nodeCap = lu_ret.slot->cap;
+        కణుపు_Cap = lu_ret.స్థానం->cap;
     }
 
     /* Is the destination actually a CNode? */
-    if (cap_get_capType(nodeCap) != cap_cnode_cap) {
+    ఒకవేళ (cap_get_capType(కణుపు_Cap) != cap_cnode_cap) {
         userError("Untyped Retype: Destination cap invalid or read-only.");
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = 0;
-        current_lookup_fault = lookup_fault_missing_capability_new(nodeDepth);
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ఆధారం = 0;
+        current_lookup_fault = lookup_fault_missing_capability_new(కణుపు_లోతు);
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Is the region where the user wants to put the caps valid? */
-    nodeSize = 1ul << cap_cnode_cap_get_capCNodeRadix(nodeCap);
-    if (nodeOffset > nodeSize - 1) {
+    కణుపు_కొలత = 1ul << cap_cnode_cap_get_capCNodeRadix(కణుపు_Cap);
+    ఒకవేళ (కణుపు_స్థానభ్రంశం > కణుపు_కొలత - 1) {
         userError("Untyped Retype: Destination node offset #%d too large.",
-                  (int)nodeOffset);
+                  (పూర్ణాంకం)కణుపు_స్థానభ్రంశం);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = nodeSize - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = కణుపు_కొలత - 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow < 1 || nodeWindow > CONFIG_RETYPE_FAN_OUT_LIMIT) {
+    ఒకవేళ (కణుపు_కిటికీ < 1 || కణుపు_కిటికీ > CONFIG_RETYPE_FAN_బహిర్గతం_హద్దు) {
         userError("Untyped Retype: Number of requested objects (%d) too small or large.",
-                  (int)nodeWindow);
+                  (పూర్ణాంకం)కణుపు_కిటికీ);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = CONFIG_RETYPE_FAN_OUT_LIMIT;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = CONFIG_RETYPE_FAN_బహిర్గతం_హద్దు;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow > nodeSize - nodeOffset) {
+    ఒకవేళ (కణుపు_కిటికీ > కణుపు_కొలత - కణుపు_స్థానభ్రంశం) {
         userError("Untyped Retype: Requested destination window overruns size of node.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = nodeSize - nodeOffset;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = కణుపు_కొలత - కణుపు_స్థానభ్రంశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Ensure that the destination slots are all empty. */
-    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap));
-    for (i = nodeOffset; i < nodeOffset + nodeWindow; i++) {
-        status = ensureEmptySlot(destCNode + i);
-        if (status != EXCEPTION_NONE) {
+    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(కణుపు_Cap));
+    కొరకు (i = కణుపు_స్థానభ్రంశం; i < కణుపు_స్థానభ్రంశం + కణుపు_కిటికీ; i++) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(destCNode + i);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("Untyped Retype: Slot #%d in destination window non-empty.",
-                      (int)i);
-            return status;
+                      (పూర్ణాంకం)i);
+            తిరిగి స్థితి_2;
         }
     }
 
@@ -179,15 +179,15 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
      * If we have children, we just keep allocating from the "free" value
      * recorded in the cap.
      */
-    status = ensureNoChildren(slot);
-    if (status != EXCEPTION_NONE) {
-        freeIndex = cap_untyped_cap_get_capFreeIndex(cap);
+    స్థితి_2 = ensureNoChildren(స్థానం);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+        free_సూచీ = cap_untyped_cap_get_cap_Free_సూచీ(cap);
         reset = false;
-    } else {
-        freeIndex = 0;
+    } లేకపోతే {
+        free_సూచీ = 0;
         reset = true;
     }
-    freeRef = GET_FREE_REF(cap_untyped_cap_get_capPtr(cap), freeIndex);
+    freeRef = GET_FREE_REF(cap_untyped_cap_get_capPtr(cap), free_సూచీ);
 
     /*
      * Determine the maximum number of objects we can create, and return an
@@ -197,52 +197,52 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
      * fits, it will also fit aligned up (by packing it on the right hand side
      * of the untyped).
      */
-    untypedFreeBytes = BIT(cap_untyped_cap_get_capBlockSize(cap)) -
-                       FREE_INDEX_TO_OFFSET(freeIndex);
+    untyped_Free_బైట్లు = బిట్టు(cap_untyped_cap_get_cap_ఖండం_కొలత(cap)) -
+                       FREE_సూచీ_గమ్యం_స్థానభ్రంశం(free_సూచీ);
 
-    if ((untypedFreeBytes >> objectSize) < nodeWindow) {
+    ఒకవేళ ((untyped_Free_బైట్లు >> object_కొలత) < కణుపు_కిటికీ) {
         userError("Untyped Retype: Insufficient memory "
                   "(%lu * %lu bytes needed, %lu bytes available).",
-                  (word_t)nodeWindow,
-                  (objectSize >= wordBits ? -1 : (1ul << objectSize)),
-                  (word_t)(untypedFreeBytes));
-        current_syscall_error.type = seL4_NotEnoughMemory;
-        current_syscall_error.memoryLeft = untypedFreeBytes;
-        return EXCEPTION_SYSCALL_ERROR;
+                  (మాట_t)కణుపు_కిటికీ,
+                  (object_కొలత >= మాట_బిట్లు ? -1 : (1ul << object_కొలత)),
+                  (మాట_t)(untyped_Free_బైట్లు));
+        current_syscall_error.type = se_L4_Not_Enough_జ్ఞాపకం;
+        current_syscall_error.జ్ఞాపకం_ఎడమ = untyped_Free_బైట్లు;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    deviceMemory = cap_untyped_cap_get_capIsDevice(cap);
-    if ((deviceMemory && !Arch_isFrameType(newType))
+    device_జ్ఞాపకం = cap_untyped_cap_get_capIsDevice(cap);
+    ఒకవేళ ((device_జ్ఞాపకం && !Arch_is_చట్రం_Type(newType))
         && newType != seL4_UntypedObject) {
         userError("Untyped Retype: Creating kernel objects with device untyped");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Align up the free region so that it is aligned to the target object's
      * size. */
-    alignedFreeRef = alignUp(freeRef, objectSize);
+    alignedFreeRef = align_పైకి(freeRef, object_కొలత);
 
     /* Perform the retype. */
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeUntyped_Retype(slot, reset,
-                                (void *)alignedFreeRef, newType, userObjSize,
-                                destCNode, nodeOffset, nodeWindow, deviceMemory);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeUntyped_Retype(స్థానం, reset,
+                                (శూన్య *)alignedFreeRef, newType, user_Obj_కొలత,
+                                destCNode, కణుపు_స్థానభ్రంశం, కణుపు_కిటికీ, device_జ్ఞాపకం);
 }
 
-static exception_t resetUntypedCap(cte_t *srcSlot)
+స్థిర exception_t resetUntypedCap(cte_t *src_స్థానం)
 {
-    cap_t prev_cap = srcSlot->cap;
-    word_t block_size = cap_untyped_cap_get_capBlockSize(prev_cap);
-    void *regionBase = WORD_PTR(cap_untyped_cap_get_capPtr(prev_cap));
-    int chunk = CONFIG_RESET_CHUNK_BITS;
-    word_t offset = FREE_INDEX_TO_OFFSET(cap_untyped_cap_get_capFreeIndex(prev_cap));
-    exception_t status;
-    bool_t deviceMemory = cap_untyped_cap_get_capIsDevice(prev_cap);
+    cap_t prev_cap = src_స్థానం->cap;
+    మాట_t ఖండం_కొలత = cap_untyped_cap_get_cap_ఖండం_కొలత(prev_cap);
+    శూన్య *region_పునాది = మాట_PTR(cap_untyped_cap_get_capPtr(prev_cap));
+    పూర్ణాంకం chunk = CONFIG_RESET_CHUNK_బిట్లు;
+    మాట_t స్థానభ్రంశం = FREE_సూచీ_గమ్యం_స్థానభ్రంశం(cap_untyped_cap_get_cap_Free_సూచీ(prev_cap));
+    exception_t స్థితి_2;
+    bool_t device_జ్ఞాపకం = cap_untyped_cap_get_capIsDevice(prev_cap);
 
-    if (offset == 0) {
-        return EXCEPTION_NONE;
+    ఒకవేళ (స్థానభ్రంశం == 0) {
+        తిరిగి EXCEPTION_NONE;
     }
 
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>regionBase)
@@ -250,40 +250,40 @@ static exception_t resetUntypedCap(cte_t *srcSlot)
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>regionBase)
         (unat \<acute>block_size))" */
 
-    if (deviceMemory || block_size < chunk) {
-        if (! deviceMemory) {
-            clearMemory(regionBase, block_size);
+    ఒకవేళ (device_జ్ఞాపకం || ఖండం_కొలత < chunk) {
+        ఒకవేళ (! device_జ్ఞాపకం) {
+            clear_జ్ఞాపకం(region_పునాది, ఖండం_కొలత);
         }
-        srcSlot->cap = cap_untyped_cap_set_capFreeIndex(prev_cap, 0);
-    } else {
-        for (offset = ROUND_DOWN(offset - 1, chunk);
-             offset != - BIT(chunk); offset -= BIT(chunk)) {
-            clearMemory(GET_OFFSET_FREE_PTR(regionBase, offset), chunk);
-            srcSlot->cap = cap_untyped_cap_set_capFreeIndex(prev_cap, OFFSET_TO_FREE_INDEX(offset));
-            status = preemptionPoint();
-            if (status != EXCEPTION_NONE) {
-                return status;
+        src_స్థానం->cap = cap_untyped_cap_సమితి_cap_Free_సూచీ(prev_cap, 0);
+    } లేకపోతే {
+        కొరకు (స్థానభ్రంశం = విడత_కిందికి(స్థానభ్రంశం - 1, chunk);
+             స్థానభ్రంశం != - బిట్టు(chunk); స్థానభ్రంశం -= బిట్టు(chunk)) {
+            clear_జ్ఞాపకం(GET_స్థానభ్రంశం_FREE_PTR(region_పునాది, స్థానభ్రంశం), chunk);
+            src_స్థానం->cap = cap_untyped_cap_సమితి_cap_Free_సూచీ(prev_cap, స్థానభ్రంశం_గమ్యం_FREE_సూచీ(స్థానభ్రంశం));
+            స్థితి_2 = preemption_బిందువు();
+            ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+                తిరిగి స్థితి_2;
             }
         }
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t invokeUntyped_Retype(cte_t *srcSlot,
-                                 bool_t reset, void *retypeBase,
-                                 object_t newType, word_t userSize,
-                                 cte_t *destCNode, word_t destOffset, word_t destLength,
-                                 bool_t deviceMemory)
+exception_t invokeUntyped_Retype(cte_t *src_స్థానం,
+                                 bool_t reset, శూన్య *retype_పునాది,
+                                 object_t newType, మాట_t user_కొలత,
+                                 cte_t *destCNode, మాట_t dest_స్థానభ్రంశం, మాట_t dest_నిడివి,
+                                 bool_t device_జ్ఞాపకం)
 {
-    word_t freeRef;
-    word_t totalObjectSize;
-    void *regionBase = WORD_PTR(cap_untyped_cap_get_capPtr(srcSlot->cap));
-    exception_t status;
+    మాట_t freeRef;
+    మాట_t మొత్తం_Object_కొలత;
+    శూన్య *region_పునాది = మాట_PTR(cap_untyped_cap_get_capPtr(src_స్థానం->cap));
+    exception_t స్థితి_2;
 
-    if (reset) {
-        status = resetUntypedCap(srcSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+    ఒకవేళ (reset) {
+        స్థితి_2 = resetUntypedCap(src_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
     }
 
@@ -292,14 +292,14 @@ exception_t invokeUntyped_Retype(cte_t *srcSlot,
      * Note that userSize is not necessarily the true size of the object in
      * memory. In the case where newType is seL4_CapTableObject, the size is
      * transformed by getObjectSize. */
-    totalObjectSize = destLength << getObjectSize(newType, userSize);
-    freeRef = (word_t)retypeBase + totalObjectSize;
-    srcSlot->cap = cap_untyped_cap_set_capFreeIndex(srcSlot->cap,
-                                                    GET_FREE_INDEX(regionBase, freeRef));
+    మొత్తం_Object_కొలత = dest_నిడివి << get_Object_కొలత(newType, user_కొలత);
+    freeRef = (మాట_t)retype_పునాది + మొత్తం_Object_కొలత;
+    src_స్థానం->cap = cap_untyped_cap_సమితి_cap_Free_సూచీ(src_స్థానం->cap,
+                                                    GET_FREE_సూచీ(region_పునాది, freeRef));
 
     /* Create new objects and caps. */
-    createNewObjects(newType, srcSlot, destCNode, destOffset, destLength,
-                     retypeBase, userSize, deviceMemory);
+    createNewObjects(newType, src_స్థానం, destCNode, dest_స్థానభ్రంశం, dest_నిడివి,
+                     retype_పునాది, user_కొలత, device_జ్ఞాపకం);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }

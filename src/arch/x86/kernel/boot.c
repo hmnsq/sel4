@@ -4,91 +4,91 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <kernel/boot.h>
-#include <machine/io.h>
-#include <model/statedata.h>
-#include <object/interrupt.h>
-#include <arch/object/interrupt.h>
-#include <arch/machine.h>
-#include <arch/kernel/apic.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/kernel/vspace.h>
-#include <machine/fpu.h>
-#include <arch/machine/timer.h>
-#include <arch/object/ioport.h>
-#include <linker.h>
-#include <util.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <kernel/boot.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <object/interrupt.h>
+#అన్తర్భావ <arch/object/interrupt.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <arch/kernel/apic.h>
+#అన్తర్భావ <arch/kernel/boot.h>
+#అన్తర్భావ <arch/kernel/boot_sys.h>
+#అన్తర్భావ <arch/kernel/vspace.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <arch/machine/timer.h>
+#అన్తర్భావ <arch/object/ioport.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <util.h>
 
-#include <plat/machine/intel-vtd.h>
+#అన్తర్భావ <plat/machine/intel-vtd.h>
 
-#define MAX_RESERVED 1
-BOOT_BSS static region_t reserved[MAX_RESERVED];
+#నిర్వచించు MAX_RESERVED 1
+BOOT_BSS స్థిర region_t reserved[MAX_RESERVED];
 
 /* functions exactly corresponding to abstract specification */
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_సంకేతం స్థిర శూన్య init_irqs(cap_t మూలం_cnode_cap)
 {
     irq_t i;
 
-    for (i = 0; i <= maxIRQ; i++) {
-        if (i == irq_timer) {
-            setIRQState(IRQTimer, i);
-#ifdef ENABLE_SMP_SUPPORT
-        } else if (i == irq_remote_call_ipi || i == irq_reschedule_ipi) {
-            setIRQState(IRQIPI, i);
-#endif /* ENABLE_SMP_SUPPORT */
-#ifdef CONFIG_IOMMU
-        } else if (i == irq_iommu) {
-            setIRQState(IRQReserved, i);
-#endif
-        } else if (i == 2 && config_set(CONFIG_IRQ_PIC)) {
+    కొరకు (i = 0; i <= maxIRQ; i++) {
+        ఒకవేళ (i == irq_timer) {
+            సమితి_IRQState(IRQTimer, i);
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+        } లేకపోతే ఒకవేళ (i == irq_remote_call_ipi || i == irq_reschedule_ipi) {
+            సమితి_IRQState(IRQIPI, i);
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
+#నిర్వచితమైతే CONFIG_IOMMU
+        } లేకపోతే ఒకవేళ (i == irq_iommu) {
+            సమితి_IRQState(IRQReserved, i);
+#అయితే_ముగింపు
+        } లేకపోతే ఒకవేళ (i == 2 && config_సమితి(CONFIG_IRQ_PIC)) {
             /* cascaded legacy PIC */
-            setIRQState(IRQReserved, i);
-        } else if (i >= irq_isa_min && i <= irq_isa_max) {
-            if (config_set(CONFIG_IRQ_PIC)) {
-                setIRQState(IRQInactive, i);
-            } else {
-                setIRQState(IRQReserved, i);
+            సమితి_IRQState(IRQReserved, i);
+        } లేకపోతే ఒకవేళ (i >= irq_isa_min && i <= irq_isa_max) {
+            ఒకవేళ (config_సమితి(CONFIG_IRQ_PIC)) {
+                సమితి_IRQState(IRQInactive, i);
+            } లేకపోతే {
+                సమితి_IRQState(IRQReserved, i);
             }
-        } else if (i >= irq_user_min && i <= irq_user_max) {
-            if (config_set(CONFIG_IRQ_IOAPIC)) {
-                setIRQState(IRQInactive, i);
-            } else {
-                setIRQState(IRQReserved, i);
+        } లేకపోతే ఒకవేళ (i >= irq_user_min && i <= irq_user_max) {
+            ఒకవేళ (config_సమితి(CONFIG_IRQ_IOAPIC)) {
+                సమితి_IRQState(IRQInactive, i);
+            } లేకపోతే {
+                సమితి_IRQState(IRQReserved, i);
             }
-        } else {
-            setIRQState(IRQReserved, i);
+        } లేకపోతే {
+            సమితి_IRQState(IRQReserved, i);
         }
     }
     Arch_irqStateInit();
     /* provide the IRQ control cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
+    write_స్థానం(స్థానం_PTR(pptr_యొక్క_cap(మూలం_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
 }
 
-BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
+BOOT_సంకేతం స్థిర bool_t arch_init_freemem(p_region_t ui_p_reg,
                                           v_region_t it_v_reg,
                                           mem_p_regs_t *mem_p_regs,
-                                          word_t extra_bi_size_bits)
+                                          మాట_t extra_bi_కొలత_బిట్లు)
 {
     // Extend the reserved region down to include the base of the kernel image.
     // KERNEL_ELF_PADDR_BASE is the lowest physical load address used
     // in the x86 linker script.
-    ui_p_reg.start = KERNEL_ELF_PADDR_BASE;
-    reserved[0] = paddr_to_pptr_reg(ui_p_reg);
-    return init_freemem(mem_p_regs->count, mem_p_regs->list, MAX_RESERVED,
-                        reserved, it_v_reg, extra_bi_size_bits);
+    ui_p_reg.ప్రారంభం = KERNEL_ELF_PADDR_పునాది;
+    reserved[0] = paddr_గమ్యం_pptr_reg(ui_p_reg);
+    తిరిగి init_freemem(mem_p_regs->లెక్క, mem_p_regs->list, MAX_RESERVED,
+                        reserved, it_v_reg, extra_bi_కొలత_బిట్లు);
 }
 
 /* This function initialises a node's kernel state. It does NOT initialise the CPU. */
 
-BOOT_CODE bool_t init_sys_state(
+BOOT_సంకేతం bool_t init_sys_state(
     cpu_id_t      cpu_id,
     mem_p_regs_t  *mem_p_regs,
     ui_info_t     ui_info,
     /* parameters below not modeled in abstract specification */
-    uint32_t      num_drhu,
+    uint32_t      అంకె_drhu,
     paddr_t      *drhu_list,
     acpi_rmrr_list_t *rmrr_list,
     acpi_rsdp_t      *acpi_rsdp,
@@ -97,272 +97,272 @@ BOOT_CODE bool_t init_sys_state(
     seL4_X86_BootInfo_fb_t *fb_info
 )
 {
-    cap_t         root_cnode_cap;
-    vptr_t        extra_bi_frame_vptr;
-    vptr_t        bi_frame_vptr;
+    cap_t         మూలం_cnode_cap;
+    vptr_t        extra_bi_చట్రం_vptr;
+    vptr_t        bi_చట్రం_vptr;
     vptr_t        ipcbuf_vptr;
     cap_t         it_vspace_cap;
     cap_t         it_ap_cap;
     cap_t         ipcbuf_cap;
-    word_t        extra_bi_size = 0;
-    pptr_t        extra_bi_offset = 0;
+    మాట_t        extra_bi_కొలత = 0;
+    pptr_t        extra_bi_స్థానభ్రంశం = 0;
     uint32_t      tsc_freq;
-    create_frames_of_region_ret_t create_frames_ret;
-    create_frames_of_region_ret_t extra_bi_ret;
+    create_చట్రాలు_యొక్క_region_ret_t create_చట్రాలు_ret;
+    create_చట్రాలు_యొక్క_region_ret_t extra_bi_ret;
 
     /* convert from physical addresses to kernel pptrs */
-    region_t ui_reg             = paddr_to_pptr_reg(ui_info.p_reg);
+    region_t ui_reg             = paddr_గమ్యం_pptr_reg(ui_info.p_reg);
 
     /* convert from physical addresses to userland vptrs */
     v_region_t ui_v_reg;
     v_region_t it_v_reg;
-    ui_v_reg.start = ui_info.p_reg.start - ui_info.pv_offset;
-    ui_v_reg.end   = ui_info.p_reg.end   - ui_info.pv_offset;
+    ui_v_reg.ప్రారంభం = ui_info.p_reg.ప్రారంభం - ui_info.pv_స్థానభ్రంశం;
+    ui_v_reg.చివర   = ui_info.p_reg.చివర   - ui_info.pv_స్థానభ్రంశం;
 
-    ipcbuf_vptr = ui_v_reg.end;
-    bi_frame_vptr = ipcbuf_vptr + BIT(PAGE_BITS);
-    extra_bi_frame_vptr = bi_frame_vptr + BIT(seL4_BootInfoFrameBits);
+    ipcbuf_vptr = ui_v_reg.చివర;
+    bi_చట్రం_vptr = ipcbuf_vptr + బిట్టు(పుట_బిట్లు);
+    extra_bi_చట్రం_vptr = bi_చట్రం_vptr + బిట్టు(se_L4_Boot_Info_చట్రం_బిట్లు);
 
-    if (vbe->vbeMode != -1) {
-        extra_bi_size += sizeof(seL4_X86_BootInfo_VBE);
+    ఒకవేళ (vbe->vbe_బహుళకం != -1) {
+        extra_bi_కొలత += పరిమాణం(seL4_X86_BootInfo_VBE);
     }
-    if (acpi_rsdp) {
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + sizeof(*acpi_rsdp);
+    ఒకవేళ (acpi_rsdp) {
+        extra_bi_కొలత += పరిమాణం(se_L4_Boot_Info_శీర్షిక) + పరిమాణం(*acpi_rsdp);
     }
-    if (fb_info && fb_info->addr) {
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + sizeof(*fb_info);
+    ఒకవేళ (fb_info && fb_info->addr) {
+        extra_bi_కొలత += పరిమాణం(se_L4_Boot_Info_శీర్షిక) + పరిమాణం(*fb_info);
     }
 
-    word_t mb_mmap_size = sizeof(seL4_X86_BootInfo_mmap_t);
-    extra_bi_size += mb_mmap_size;
+    మాట_t mb_mmap_కొలత = పరిమాణం(seL4_X86_BootInfo_mmap_t);
+    extra_bi_కొలత += mb_mmap_కొలత;
 
     // room for tsc frequency
-    extra_bi_size += sizeof(seL4_BootInfoHeader) + 4;
-    word_t extra_bi_size_bits = calculate_extra_bi_size_bits(extra_bi_size);
+    extra_bi_కొలత += పరిమాణం(se_L4_Boot_Info_శీర్షిక) + 4;
+    మాట_t extra_bi_కొలత_బిట్లు = calculate_extra_bi_కొలత_బిట్లు(extra_bi_కొలత);
 
     /* The region of the initial thread is the user image + ipcbuf and boot info */
-    it_v_reg.start = ui_v_reg.start;
-    it_v_reg.end = ROUND_UP(extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0), PAGE_BITS);
-#ifdef CONFIG_IOMMU
+    it_v_reg.ప్రారంభం = ui_v_reg.ప్రారంభం;
+    it_v_reg.చివర = విడత_పైకి(extra_bi_చట్రం_vptr + (extra_bi_కొలత_బిట్లు > 0 ? బిట్టు(extra_bi_కొలత_బిట్లు) : 0), పుట_బిట్లు);
+#నిర్వచితమైతే CONFIG_IOMMU
     /* calculate the number of io pts before initialising memory */
-    if (!vtd_init_num_iopts(num_drhu)) {
-        return false;
+    ఒకవేళ (!vtd_init_అంకె_iopts(అంకె_drhu)) {
+        తిరిగి false;
     }
-#endif /* CONFIG_IOMMU */
+#అయితే_ముగింపు /* CONFIG_IOMMU */
 
-    if (!arch_init_freemem(ui_info.p_reg, it_v_reg, mem_p_regs, extra_bi_size_bits)) {
-        printf("ERROR: free memory management initialization failed\n");
-        return false;
+    ఒకవేళ (!arch_init_freemem(ui_info.p_reg, it_v_reg, mem_p_regs, extra_bi_కొలత_బిట్లు)) {
+        రాయి("ERROR: free memory management initialization failed\n");
+        తిరిగి false;
     }
 
     /* create the root cnode */
-    root_cnode_cap = create_root_cnode();
+    మూలం_cnode_cap = create_మూలం_cnode();
 
     /* create the IO port cap */
-    write_slot(
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIOPortControl),
-        cap_io_port_control_cap_new()
+    write_స్థానం(
+        స్థానం_PTR(pptr_యొక్క_cap(మూలం_cnode_cap), seL4_CapIOPortControl),
+        cap_io_పోర్టు_control_cap_new()
     );
 
     /* create the cap for managing thread domains */
-    create_domain_cap(root_cnode_cap);
+    create_domain_cap(మూలం_cnode_cap);
 
     /* initialise the IRQ states and provide the IRQ control cap */
-    init_irqs(root_cnode_cap);
+    init_irqs(మూలం_cnode_cap);
 
     tsc_freq = tsc_init();
 
     /* populate the bootinfo frame */
-    populate_bi_frame(0, ksNumCPUs, ipcbuf_vptr, extra_bi_size);
+    populate_bi_చట్రం(0, ks_అంకె_CPUs, ipcbuf_vptr, extra_bi_కొలత);
     region_t extra_bi_region = {
-        .start = rootserver.extra_bi,
-        .end = rootserver.extra_bi + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0)
+        .ప్రారంభం = rootserver.extra_bi,
+        .చివర = rootserver.extra_bi + (extra_bi_కొలత_బిట్లు > 0 ? బిట్టు(extra_bi_కొలత_బిట్లు) : 0)
     };
 
     /* populate vbe info block */
-    if (vbe->vbeMode != -1) {
-        vbe->header.id = SEL4_BOOTINFO_HEADER_X86_VBE;
-        vbe->header.len = sizeof(seL4_X86_BootInfo_VBE);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), vbe, sizeof(seL4_X86_BootInfo_VBE));
-        extra_bi_offset += sizeof(seL4_X86_BootInfo_VBE);
+    ఒకవేళ (vbe->vbe_బహుళకం != -1) {
+        vbe->శీర్షిక.id = SEL4_BOOTINFO_శీర్షిక_X86_VBE;
+        vbe->శీర్షిక.len = పరిమాణం(seL4_X86_BootInfo_VBE);
+        జ్ఞాపకం_నకలు((శూన్య *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం), vbe, పరిమాణం(seL4_X86_BootInfo_VBE));
+        extra_bi_స్థానభ్రంశం += పరిమాణం(seL4_X86_BootInfo_VBE);
     }
 
     /* populate acpi rsdp block */
-    if (acpi_rsdp) {
-        seL4_BootInfoHeader header;
-        header.id = SEL4_BOOTINFO_HEADER_X86_ACPI_RSDP;
-        header.len = sizeof(header) + sizeof(*acpi_rsdp);
-        *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), acpi_rsdp, sizeof(*acpi_rsdp));
-        extra_bi_offset += sizeof(*acpi_rsdp);
+    ఒకవేళ (acpi_rsdp) {
+        se_L4_Boot_Info_శీర్షిక శీర్షిక;
+        శీర్షిక.id = SEL4_BOOTINFO_శీర్షిక_X86_ACPI_RSDP;
+        శీర్షిక.len = పరిమాణం(శీర్షిక) + పరిమాణం(*acpi_rsdp);
+        *(se_L4_Boot_Info_శీర్షిక *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం) = శీర్షిక;
+        extra_bi_స్థానభ్రంశం += పరిమాణం(శీర్షిక);
+        జ్ఞాపకం_నకలు((శూన్య *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం), acpi_rsdp, పరిమాణం(*acpi_rsdp));
+        extra_bi_స్థానభ్రంశం += పరిమాణం(*acpi_rsdp);
     }
 
     /* populate framebuffer information block */
-    if (fb_info && fb_info->addr) {
-        seL4_BootInfoHeader header;
-        header.id = SEL4_BOOTINFO_HEADER_X86_FRAMEBUFFER;
-        header.len = sizeof(header) + sizeof(*fb_info);
-        *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset), fb_info, sizeof(*fb_info));
-        extra_bi_offset += sizeof(*fb_info);
+    ఒకవేళ (fb_info && fb_info->addr) {
+        se_L4_Boot_Info_శీర్షిక శీర్షిక;
+        శీర్షిక.id = SEL4_BOOTINFO_శీర్షిక_X86_FRAMEBUFFER;
+        శీర్షిక.len = పరిమాణం(శీర్షిక) + పరిమాణం(*fb_info);
+        *(se_L4_Boot_Info_శీర్షిక *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం) = శీర్షిక;
+        extra_bi_స్థానభ్రంశం += పరిమాణం(శీర్షిక);
+        జ్ఞాపకం_నకలు((శూన్య *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం), fb_info, పరిమాణం(*fb_info));
+        extra_bi_స్థానభ్రంశం += పరిమాణం(*fb_info);
     }
 
     /* populate multiboot mmap block */
-    mb_mmap->header.id = SEL4_BOOTINFO_HEADER_X86_MBMMAP;
-    mb_mmap->header.len = mb_mmap_size;
-    memcpy((void *)(rootserver.extra_bi + extra_bi_offset), mb_mmap, mb_mmap_size);
-    extra_bi_offset += mb_mmap_size;
+    mb_mmap->శీర్షిక.id = SEL4_BOOTINFO_శీర్షిక_X86_MBMMAP;
+    mb_mmap->శీర్షిక.len = mb_mmap_కొలత;
+    జ్ఞాపకం_నకలు((శూన్య *)(rootserver.extra_bi + extra_bi_స్థానభ్రంశం), mb_mmap, mb_mmap_కొలత);
+    extra_bi_స్థానభ్రంశం += mb_mmap_కొలత;
 
     /* populate tsc frequency block */
     {
-        seL4_BootInfoHeader header;
-        header.id = SEL4_BOOTINFO_HEADER_X86_TSC_FREQ;
-        header.len = sizeof(header) + 4;
-        *(seL4_BootInfoHeader *)(extra_bi_region.start + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        *(uint32_t *)(extra_bi_region.start + extra_bi_offset) = tsc_freq;
-        extra_bi_offset += 4;
+        se_L4_Boot_Info_శీర్షిక శీర్షిక;
+        శీర్షిక.id = SEL4_BOOTINFO_శీర్షిక_X86_TSC_FREQ;
+        శీర్షిక.len = పరిమాణం(శీర్షిక) + 4;
+        *(se_L4_Boot_Info_శీర్షిక *)(extra_bi_region.ప్రారంభం + extra_bi_స్థానభ్రంశం) = శీర్షిక;
+        extra_bi_స్థానభ్రంశం += పరిమాణం(శీర్షిక);
+        *(uint32_t *)(extra_bi_region.ప్రారంభం + extra_bi_స్థానభ్రంశం) = tsc_freq;
+        extra_bi_స్థానభ్రంశం += 4;
     }
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     /* set up sched control for each core */
-    init_sched_control(root_cnode_cap, CONFIG_MAX_NUM_NODES);
-#endif
+    init_sched_control(మూలం_cnode_cap, CONFIG_MAX_అంకె_NODES);
+#అయితే_ముగింపు
 
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
-    it_vspace_cap = create_it_address_space(root_cnode_cap, it_v_reg);
-    if (cap_get_capType(it_vspace_cap) == cap_null_cap) {
-        return false;
+    it_vspace_cap = create_it_చిరునామా_space(మూలం_cnode_cap, it_v_reg);
+    ఒకవేళ (cap_get_capType(it_vspace_cap) == cap_null_cap) {
+        తిరిగి false;
     }
 
     /* Create and map bootinfo frame cap */
-    create_bi_frame_cap(
-        root_cnode_cap,
+    create_bi_చట్రం_cap(
+        మూలం_cnode_cap,
         it_vspace_cap,
-        bi_frame_vptr
+        bi_చట్రం_vptr
     );
 
     /* create and map extra bootinfo region */
     extra_bi_ret =
-        create_frames_of_region(
-            root_cnode_cap,
+        create_చట్రాలు_యొక్క_region(
+            మూలం_cnode_cap,
             it_vspace_cap,
             extra_bi_region,
             true,
-            pptr_to_paddr((void *)(extra_bi_region.start - extra_bi_frame_vptr))
+            pptr_గమ్యం_paddr((శూన్య *)(extra_bi_region.ప్రారంభం - extra_bi_చట్రం_vptr))
         );
-    if (!extra_bi_ret.success) {
-        return false;
+    ఒకవేళ (!extra_bi_ret.success) {
+        తిరిగి false;
     }
-    ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
+    ndks_boot.bi_చట్రం->extraBIPages = extra_bi_ret.region;
 
     /* create the initial thread's IPC buffer */
-    ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_vspace_cap, ipcbuf_vptr);
-    if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
-        return false;
+    ipcbuf_cap = create_ipcbuf_చట్రం_cap(మూలం_cnode_cap, it_vspace_cap, ipcbuf_vptr);
+    ఒకవేళ (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
+        తిరిగి false;
     }
 
     /* create all userland image frames */
-    create_frames_ret =
-        create_frames_of_region(
-            root_cnode_cap,
+    create_చట్రాలు_ret =
+        create_చట్రాలు_యొక్క_region(
+            మూలం_cnode_cap,
             it_vspace_cap,
             ui_reg,
             true,
-            ui_info.pv_offset
+            ui_info.pv_స్థానభ్రంశం
         );
-    if (!create_frames_ret.success) {
-        return false;
+    ఒకవేళ (!create_చట్రాలు_ret.success) {
+        తిరిగి false;
     }
-    ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
+    ndks_boot.bi_చట్రం->user_Image_చట్రాలు = create_చట్రాలు_ret.region;
 
     /* create the initial thread's ASID pool */
-    it_ap_cap = create_it_asid_pool(root_cnode_cap);
-    if (cap_get_capType(it_ap_cap) == cap_null_cap) {
-        return false;
+    it_ap_cap = create_it_asid_pool(మూలం_cnode_cap);
+    ఒకవేళ (cap_get_capType(it_ap_cap) == cap_null_cap) {
+        తిరిగి false;
     }
     write_it_asid_pool(it_ap_cap, it_vspace_cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    కణుపు_STATE(ks_Cur_సమయం) = get_Current_సమయం();
+#అయితే_ముగింపు
 
     /* create the idle thread */
     create_idle_thread();
 
     /* copy i387 FPU initial state from FPU */
-    saveFpuState(NODE_STATE(ksIdleThread));
-    x86KSnullFpuState = NODE_STATE(ksIdleThread)->tcbArch.tcbContext.fpuState;
+    saveFpuState(కణుపు_STATE(ksIdleThread));
+    x86KSnullFpuState = కణుపు_STATE(ksIdleThread)->tcbArch.tcbContext.fpuState;
     /* Check that we can load it: */
-    loadFpuState(NODE_STATE(ksIdleThread));
+    ఎక్కించు_Fpu_State(కణుపు_STATE(ksIdleThread));
 
     /* create the initial thread */
-    tcb_t *initial = create_initial_thread(root_cnode_cap,
+    tcb_t *initial = create_initial_thread(మూలం_cnode_cap,
                                            it_vspace_cap,
-                                           ui_info.v_entry,
-                                           bi_frame_vptr,
+                                           ui_info.v_నమోదు,
+                                           bi_చట్రం_vptr,
                                            ipcbuf_vptr,
                                            ipcbuf_cap);
-    if (initial == NULL) {
-        return false;
+    ఒకవేళ (initial == ఖాళీ) {
+        తిరిగి false;
     }
     init_core_state(initial);
 
-#ifdef CONFIG_IOMMU
+#నిర్వచితమైతే CONFIG_IOMMU
     /* initialise VTD-related data structures and the IOMMUs */
-    if (!vtd_init(cpu_id, rmrr_list)) {
-        return false;
+    ఒకవేళ (!vtd_init(cpu_id, rmrr_list)) {
+        తిరిగి false;
     }
 
     /* write number of IOMMU PT levels into bootinfo */
-    ndks_boot.bi_frame->numIOPTLevels = x86KSnumIOPTLevels;
+    ndks_boot.bi_చట్రం->అంకె_IOPTLevels = x86KSnumIOPTLevels;
 
     /* write IOSpace master cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIOSpace), master_iospace_cap());
-#else
-    ndks_boot.bi_frame->numIOPTLevels = -1;
-#endif
+    write_స్థానం(స్థానం_PTR(pptr_యొక్క_cap(మూలం_cnode_cap), seL4_CapIOSpace), master_iospace_cap());
+#లేకపోతే
+    ndks_boot.bi_చట్రం->అంకె_IOPTLevels = -1;
+#అయితే_ముగింపు
 
     /* create all of the untypeds. Both devices and kernel window memory */
-    if (!create_untypeds(root_cnode_cap)) {
-        return false;
+    ఒకవేళ (!create_untypeds(మూలం_cnode_cap)) {
+        తిరిగి false;
     }
 
     /* finalise the bootinfo frame */
     bi_finalise();
 
-    return true;
+    తిరిగి true;
 }
 
 /* This function initialises the CPU. It does NOT initialise any kernel state. */
 
-BOOT_CODE bool_t init_cpu(
-    bool_t   mask_legacy_irqs
+BOOT_సంకేతం bool_t init_cpu(
+    bool_t   ముసుగు_legacy_irqs
 )
 {
     /* initialise virtual-memory-related data structures */
-    if (!init_vm_state()) {
-        return false;
+    ఒకవేళ (!init_vm_state()) {
+        తిరిగి false;
     }
 
     /* initialise CPU's descriptor table registers (GDTR, IDTR, LDTR, TR) */
     init_dtrs();
 
-    if (config_set(CONFIG_SYSENTER)) {
+    ఒకవేళ (config_సమితి(CONFIG_SYSENTER)) {
         /* initialise MSRs (needs an initialised TSS) */
         init_sysenter_msrs();
-    } else if (config_set(CONFIG_SYSCALL)) {
+    } లేకపోతే ఒకవేళ (config_సమితి(CONFIG_SYSCALL)) {
         init_syscall_msrs();
-    } else {
-        return false;
+    } లేకపోతే {
+        తిరిగి false;
     }
 
     /* setup additional PAT MSR */
-    if (!init_pat_msr()) {
-        return false;
+    ఒకవేళ (!init_pat_msr()) {
+        తిరిగి false;
     }
 
     /* enable the Write Protect bit in cr0. This prevents the kernel from writing to
@@ -371,57 +371,57 @@ BOOT_CODE bool_t init_cpu(
 
     /* check for SMAP and SMEP and enable */
     cpuid_007h_ebx_t ebx_007;
-    ebx_007.words[0] = x86_cpuid_ebx(0x7, 0);
-    if (cpuid_007h_ebx_get_smap(ebx_007)) {
+    ebx_007.పదాలు[0] = x86_cpuid_ebx(0x7, 0);
+    ఒకవేళ (cpuid_007h_ebx_get_smap(ebx_007)) {
         /* if we have user stack trace enabled or dangerous code injection then we cannot
          * enable this as SMAP will make them fault. */
-        if (!config_set(CONFIG_PRINTING) && !config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
+        ఒకవేళ (!config_సమితి(CONFIG_PRINTING) && !config_సమితి(CONFIG_DANGEROUS_సంకేతం_INJECTION)) {
             write_cr4(read_cr4() | CR4_SMAP);
         }
     }
-    if (cpuid_007h_ebx_get_smep(ebx_007)) {
+    ఒకవేళ (cpuid_007h_ebx_get_smep(ebx_007)) {
         /* similar to smap we cannot enable smep if using dangerous code injection. it
          * does not affect stack trace printing though */
-        if (!config_set(CONFIG_DANGEROUS_CODE_INJECTION)) {
+        ఒకవేళ (!config_సమితి(CONFIG_DANGEROUS_సంకేతం_INJECTION)) {
             write_cr4(read_cr4() | CR4_SMEP);
         }
     }
 
-    if (!init_ibrs()) {
-        return false;
+    ఒకవేళ (!init_ibrs()) {
+        తిరిగి false;
     }
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
     /* Initialize hardware breakpoints */
     Arch_initHardwareBreakpoints();
-#endif
+#అయితే_ముగింపు
 
     /* initialise floating-point unit */
-    if (!Arch_initFpu()) {
-        return false;
+    ఒకవేళ (!Arch_initFpu()) {
+        తిరిగి false;
     }
 
     /* initialise local APIC */
-    if (!apic_init(mask_legacy_irqs)) {
-        return false;
+    ఒకవేళ (!apic_init(ముసుగు_legacy_irqs)) {
+        తిరిగి false;
     }
 
-#ifdef CONFIG_DEBUG_DISABLE_PREFETCHERS
-    if (!disablePrefetchers()) {
-        return false;
+#నిర్వచితమైతే CONFIG_DEBUG_DISABLE_PREFETCHERS
+    ఒకవేళ (!disablePrefetchers()) {
+        తిరిగి false;
     }
-#endif
+#అయితే_ముగింపు
 
-    if (config_set(CONFIG_EXPORT_PMC_USER)) {
+    ఒకవేళ (config_సమితి(CONFIG_EXPORT_PMC_USER)) {
         enablePMCUser();
     }
 
-#ifdef CONFIG_VTX
+#నిర్వచితమైతే CONFIG_VTX
     /* initialise Intel VT-x extensions */
-    if (!vtx_init()) {
-        return false;
+    ఒకవేళ (!vtx_init()) {
+        తిరిగి false;
     }
-#endif
+#అయితే_ముగింపు
 
-    return true;
+    తిరిగి true;
 }

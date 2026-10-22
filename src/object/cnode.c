@@ -4,931 +4,931 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <api/types.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#include <object/interrupt.h>
-#include <object/untyped.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <model/preemption.h>
-#include <model/statedata.h>
-#include <util.h>
+#అన్తర్భావ <assert.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <api/failures.h>
+#అన్తర్భావ <api/invocation.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <api/types.h>
+#అన్తర్భావ <machine/io.h>
+#అన్తర్భావ <object/structures.h>
+#అన్తర్భావ <object/objecttype.h>
+#అన్తర్భావ <object/cnode.h>
+#అన్తర్భావ <object/interrupt.h>
+#అన్తర్భావ <object/untyped.h>
+#అన్తర్భావ <kernel/cspace.h>
+#అన్తర్భావ <kernel/thread.h>
+#అన్తర్భావ <model/preemption.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <util.h>
 
-struct finaliseSlot_ret {
-    exception_t status;
+నిర్మాణం finalise_స్థానం_ret {
+    exception_t స్థితి_2;
     bool_t success;
     cap_t cleanupInfo;
 };
-typedef struct finaliseSlot_ret finaliseSlot_ret_t;
+రకనిర్వచనం నిర్మాణం finalise_స్థానం_ret finalise_స్థానం_ret_t;
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t exposed);
-static void emptySlot(cte_t *slot, cap_t cleanupInfo);
-static exception_t reduceZombie(cte_t *slot, bool_t exposed);
+స్థిర finalise_స్థానం_ret_t finalise_స్థానం(cte_t *స్థానం, bool_t exposed);
+స్థిర శూన్య ఖాళీలు_స్థానం(cte_t *స్థానం, cap_t cleanupInfo);
+స్థిర exception_t reduceZombie(cte_t *స్థానం, bool_t exposed);
 
-#ifdef CONFIG_KERNEL_MCS
-#define CNODE_LAST_INVOCATION CNodeRotate
-#else
-#define CNODE_LAST_INVOCATION CNodeSaveCaller
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+#నిర్వచించు CNODE_చివరి_INVOCATION CNodeRotate
+#లేకపోతే
+#నిర్వచించు CNODE_చివరి_INVOCATION CNodeSaveCaller
+#అయితే_ముగింపు
 
-exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
-                                  word_t *buffer)
+exception_t decodeCNodeInvocation(మాట_t invLabel, మాట_t నిడివి, cap_t cap,
+                                  మాట_t *బఫరు)
 {
-    lookupSlot_ret_t lu_ret;
-    cte_t *destSlot;
-    word_t index, w_bits;
-    exception_t status;
+    lookup_స్థానం_ret_t lu_ret;
+    cte_t *dest_స్థానం;
+    మాట_t సూచీ, w_బిట్లు;
+    exception_t స్థితి_2;
 
     /* Haskell error: "decodeCNodeInvocation: invalid cap" */
-    assert(cap_get_capType(cap) == cap_cnode_cap);
+    ప్రతిజ్ఞా(cap_get_capType(cap) == cap_cnode_cap);
 
-    if (invLabel < CNodeRevoke || invLabel > CNODE_LAST_INVOCATION) {
+    ఒకవేళ (invLabel < CNodeRevoke || invLabel > CNODE_చివరి_INVOCATION) {
         userError("CNodeCap: Illegal Operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2) {
+    ఒకవేళ (నిడివి < 2) {
         userError("CNode operation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
-    w_bits = getSyscallArg(1, buffer);
+    సూచీ = getSyscallArg(0, బఫరు);
+    w_బిట్లు = getSyscallArg(1, బఫరు);
 
-    lu_ret = lookupTargetSlot(cap, index, w_bits);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookup_లక్ష్యం_స్థానం(cap, సూచీ, w_బిట్లు);
+    ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
         userError("CNode operation: Target slot invalid.");
-        return lu_ret.status;
+        తిరిగి lu_ret.స్థితి_2;
     }
-    destSlot = lu_ret.slot;
+    dest_స్థానం = lu_ret.స్థానం;
 
-    if (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
-        cte_t *srcSlot;
-        word_t srcIndex, srcDepth, capData;
+    ఒకవేళ (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
+        cte_t *src_స్థానం;
+        మాట_t src_సూచీ, src_లోతు, cap_దత్తాంశం;
         bool_t isMove;
         seL4_CapRights_t cap_rights;
-        cap_t srcRoot, newCap;
+        cap_t src_మూలం, newCap;
         deriveCap_ret_t dc_ret;
         cap_t srcCap;
 
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        ఒకవేళ (నిడివి < 4 || current_extra_caps.excaprefs[0] == ఖాళీ) {
             userError("CNode Copy/Mint/Move/Mutate: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        srcIndex = getSyscallArg(2, buffer);
-        srcDepth = getSyscallArg(3, buffer);
+        src_సూచీ = getSyscallArg(2, బఫరు);
+        src_లోతు = getSyscallArg(3, బఫరు);
 
-        srcRoot = current_extra_caps.excaprefs[0]->cap;
+        src_మూలం = current_extra_caps.excaprefs[0]->cap;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Destination not empty.");
-            return status;
+            తిరిగి స్థితి_2;
         }
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lu_ret = lookup_ఆధారం_స్థానం(src_మూలం, src_సూచీ, src_లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Invalid source slot.");
-            return lu_ret.status;
+            తిరిగి lu_ret.స్థితి_2;
         }
-        srcSlot = lu_ret.slot;
+        src_స్థానం = lu_ret.స్థానం;
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(src_స్థానం->cap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Source slot invalid or empty.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = 1;
             current_lookup_fault =
-                lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+                lookup_fault_missing_capability_new(src_లోతు);
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        switch (invLabel) {
-        case CNodeCopy:
+        ఎంపిక (invLabel) {
+        స్థితి CNodeCopy:
 
-            if (length < 5) {
+            ఒకవేళ (నిడివి < 5) {
                 userError("Truncated message for CNode Copy operation.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_సందేశం;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot, srcCap);
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_మాట(getSyscallArg(4, బఫరు));
+            srcCap = ముసుగు_Cap_Rights(cap_rights, src_స్థానం->cap);
+            dc_ret = deriveCap(src_స్థానం, srcCap);
+            ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Copy operation.");
-                return dc_ret.status;
+                తిరిగి dc_ret.స్థితి_2;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            ఆపు;
 
-        case CNodeMint:
-            if (length < 6) {
+        స్థితి CNodeMint:
+            ఒకవేళ (నిడివి < 6) {
                 userError("CNode Mint: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_సందేశం;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            capData = getSyscallArg(5, buffer);
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot,
-                               updateCapData(false, capData, srcCap));
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_మాట(getSyscallArg(4, బఫరు));
+            cap_దత్తాంశం = getSyscallArg(5, బఫరు);
+            srcCap = ముసుగు_Cap_Rights(cap_rights, src_స్థానం->cap);
+            dc_ret = deriveCap(src_స్థానం,
+                               update_Cap_దత్తాంశం(false, cap_దత్తాంశం, srcCap));
+            ఒకవేళ (dc_ret.స్థితి_2 != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Mint operation.");
-                return dc_ret.status;
+                తిరిగి dc_ret.స్థితి_2;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            ఆపు;
 
-        case CNodeMove:
-            newCap = srcSlot->cap;
+        స్థితి CNodeMove:
+            newCap = src_స్థానం->cap;
             isMove = true;
 
-            break;
+            ఆపు;
 
-        case CNodeMutate:
-            if (length < 5) {
+        స్థితి CNodeMutate:
+            ఒకవేళ (నిడివి < 5) {
                 userError("CNode Mutate: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_సందేశం;
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
 
-            capData = getSyscallArg(4, buffer);
-            newCap = updateCapData(true, capData, srcSlot->cap);
+            cap_దత్తాంశం = getSyscallArg(4, బఫరు);
+            newCap = update_Cap_దత్తాంశం(true, cap_దత్తాంశం, src_స్థానం->cap);
             isMove = true;
 
-            break;
+            ఆపు;
 
-        default:
-            assert(0);
-            return EXCEPTION_NONE;
+        అప్రమేయ:
+            ప్రతిజ్ఞా(0);
+            తిరిగి EXCEPTION_NONE;
         }
 
-        if (cap_get_capType(newCap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(newCap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Mutated cap would be invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        if (isMove) {
-            return invokeCNodeMove(newCap, srcSlot, destSlot);
-        } else {
-            return invokeCNodeInsert(newCap, srcSlot, destSlot);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        ఒకవేళ (isMove) {
+            తిరిగి invokeCNodeMove(newCap, src_స్థానం, dest_స్థానం);
+        } లేకపోతే {
+            తిరిగి invoke_CNode_చొప్పించు(newCap, src_స్థానం, dest_స్థానం);
         }
     }
 
-    if (invLabel == CNodeRevoke) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRevoke(destSlot);
+    ఒకవేళ (invLabel == CNodeRevoke) {
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeCNodeRevoke(dest_స్థానం);
     }
 
-    if (invLabel == CNodeDelete) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeDelete(destSlot);
+    ఒకవేళ (invLabel == CNodeDelete) {
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeCNodeDelete(dest_స్థానం);
     }
 
-#ifndef CONFIG_KERNEL_MCS
-    if (invLabel == CNodeSaveCaller) {
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
+    ఒకవేళ (invLabel == CNodeSaveCaller) {
+        స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
             userError("CNode SaveCaller: Destination slot not empty.");
-            return status;
+            తిరిగి స్థితి_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeSaveCaller(destSlot);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeCNodeSaveCaller(dest_స్థానం);
     }
-#endif
+#అయితే_ముగింపు
 
-    if (invLabel == CNodeCancelBadgedSends) {
+    ఒకవేళ (invLabel == CNodeCancelBadgedSends) {
         cap_t destCap;
 
-        destCap = destSlot->cap;
+        destCap = dest_స్థానం->cap;
 
-        if (!hasCancelSendRights(destCap)) {
+        ఒకవేళ (!hasCancelSendRights(destCap)) {
             userError("CNode CancelBadgedSends: Target cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeCancelBadgedSends(destCap);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeCNodeCancelBadgedSends(destCap);
     }
 
-    if (invLabel == CNodeRotate) {
-        word_t pivotNewData, pivotIndex, pivotDepth;
-        word_t srcNewData, srcIndex, srcDepth;
-        cte_t *pivotSlot, *srcSlot;
-        cap_t pivotRoot, srcRoot, newSrcCap, newPivotCap;
+    ఒకవేళ (invLabel == CNodeRotate) {
+        మాట_t ఇరుసు_New_దత్తాంశం, ఇరుసు_సూచీ, ఇరుసు_లోతు;
+        మాట_t src_New_దత్తాంశం, src_సూచీ, src_లోతు;
+        cte_t *ఇరుసు_స్థానం, *src_స్థానం;
+        cap_t ఇరుసు_మూలం, src_మూలం, newSrcCap, new_ఇరుసు_Cap;
 
-        if (length < 8 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+        ఒకవేళ (నిడివి < 8 || current_extra_caps.excaprefs[0] == ఖాళీ
+            || current_extra_caps.excaprefs[1] == ఖాళీ) {
+            current_syscall_error.type = se_L4_Truncated_సందేశం;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
-        pivotNewData = getSyscallArg(2, buffer);
-        pivotIndex   = getSyscallArg(3, buffer);
-        pivotDepth   = getSyscallArg(4, buffer);
-        srcNewData   = getSyscallArg(5, buffer);
-        srcIndex     = getSyscallArg(6, buffer);
-        srcDepth     = getSyscallArg(7, buffer);
+        ఇరుసు_New_దత్తాంశం = getSyscallArg(2, బఫరు);
+        ఇరుసు_సూచీ   = getSyscallArg(3, బఫరు);
+        ఇరుసు_లోతు   = getSyscallArg(4, బఫరు);
+        src_New_దత్తాంశం   = getSyscallArg(5, బఫరు);
+        src_సూచీ     = getSyscallArg(6, బఫరు);
+        src_లోతు     = getSyscallArg(7, బఫరు);
 
-        pivotRoot = current_extra_caps.excaprefs[0]->cap;
-        srcRoot   = current_extra_caps.excaprefs[1]->cap;
+        ఇరుసు_మూలం = current_extra_caps.excaprefs[0]->cap;
+        src_మూలం   = current_extra_caps.excaprefs[1]->cap;
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_ఆధారం_స్థానం(src_మూలం, src_సూచీ, src_లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి lu_ret.స్థితి_2;
         }
-        srcSlot = lu_ret.slot;
+        src_స్థానం = lu_ret.స్థానం;
 
-        lu_ret = lookupPivotSlot(pivotRoot, pivotIndex, pivotDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_ఇరుసు_స్థానం(ఇరుసు_మూలం, ఇరుసు_సూచీ, ఇరుసు_లోతు);
+        ఒకవేళ (lu_ret.స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి lu_ret.స్థితి_2;
         }
-        pivotSlot = lu_ret.slot;
+        ఇరుసు_స్థానం = lu_ret.స్థానం;
 
-        if (pivotSlot == srcSlot || pivotSlot == destSlot) {
+        ఒకవేళ (ఇరుసు_స్థానం == src_స్థానం || ఇరుసు_స్థానం == dest_స్థానం) {
             userError("CNode Rotate: Pivot slot the same as source or dest slot.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (srcSlot != destSlot) {
-            status = ensureEmptySlot(destSlot);
-            if (status != EXCEPTION_NONE) {
-                return status;
+        ఒకవేళ (src_స్థానం != dest_స్థానం) {
+            స్థితి_2 = ensure_ఖాళీలు_స్థానం(dest_స్థానం);
+            ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+                తిరిగి స్థితి_2;
             }
         }
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(src_స్థానం->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
-            current_lookup_fault = lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = 1;
+            current_lookup_fault = lookup_fault_missing_capability_new(src_లోతు);
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(pivotSlot->cap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(ఇరుసు_స్థానం->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 0;
-            current_lookup_fault = lookup_fault_missing_capability_new(pivotDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ఆధారం = 0;
+            current_lookup_fault = lookup_fault_missing_capability_new(ఇరుసు_లోతు);
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        newSrcCap = updateCapData(true, srcNewData, srcSlot->cap);
-        newPivotCap = updateCapData(true, pivotNewData, pivotSlot->cap);
+        newSrcCap = update_Cap_దత్తాంశం(true, src_New_దత్తాంశం, src_స్థానం->cap);
+        new_ఇరుసు_Cap = update_Cap_దత్తాంశం(true, ఇరుసు_New_దత్తాంశం, ఇరుసు_స్థానం->cap);
 
-        if (cap_get_capType(newSrcCap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(newSrcCap) == cap_null_cap) {
             userError("CNode Rotate: Source cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(newPivotCap) == cap_null_cap) {
+        ఒకవేళ (cap_get_capType(new_ఇరుసు_Cap) == cap_null_cap) {
             userError("CNode Rotate: Pivot cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRotate(newSrcCap, newPivotCap,
-                                 srcSlot, pivotSlot, destSlot);
+        సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+        తిరిగి invokeCNodeRotate(newSrcCap, new_ఇరుసు_Cap,
+                                 src_స్థానం, ఇరుసు_స్థానం, dest_స్థానం);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeRevoke(cte_t *destSlot)
+exception_t invokeCNodeRevoke(cte_t *dest_స్థానం)
 {
-    return cteRevoke(destSlot);
+    తిరిగి cteRevoke(dest_స్థానం);
 }
 
-exception_t invokeCNodeDelete(cte_t *destSlot)
+exception_t invokeCNodeDelete(cte_t *dest_స్థానం)
 {
-    return cteDelete(destSlot, true);
+    తిరిగి cteDelete(dest_స్థానం, true);
 }
 
 exception_t invokeCNodeCancelBadgedSends(cap_t cap)
 {
-    word_t badge = cap_endpoint_cap_get_capEPBadge(cap);
-    if (badge) {
+    మాట_t badge = cap_endpoint_cap_get_capEPBadge(cap);
+    ఒకవేళ (badge) {
         endpoint_t *ep = (endpoint_t *)
                          cap_endpoint_cap_get_capEPPtr(cap);
         cancelBadgedSends(ep, badge);
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeInsert(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invoke_CNode_చొప్పించు(cap_t cap, cte_t *src_స్థానం, cte_t *dest_స్థానం)
 {
-    cteInsert(cap, srcSlot, destSlot);
+    cte_చొప్పించు(cap, src_స్థానం, dest_స్థానం);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeMove(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invokeCNodeMove(cap_t cap, cte_t *src_స్థానం, cte_t *dest_స్థానం)
 {
-    cteMove(cap, srcSlot, destSlot);
+    cteMove(cap, src_స్థానం, dest_స్థానం);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeRotate(cap_t cap1, cap_t cap2, cte_t *slot1,
                               cte_t *slot2, cte_t *slot3)
 {
-    if (slot1 == slot3) {
-        cteSwap(cap1, slot1, cap2, slot2);
-    } else {
+    ఒకవేళ (slot1 == slot3) {
+        cte_మార్పిడి(cap1, slot1, cap2, slot2);
+    } లేకపోతే {
         cteMove(cap2, slot2, slot3);
         cteMove(cap1, slot1, slot2);
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#ifndef CONFIG_KERNEL_MCS
-exception_t invokeCNodeSaveCaller(cte_t *destSlot)
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
+exception_t invokeCNodeSaveCaller(cte_t *dest_స్థానం)
 {
     cap_t cap;
-    cte_t *srcSlot;
+    cte_t *src_స్థానం;
 
-    srcSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
-    cap = srcSlot->cap;
+    src_స్థానం = TCB_PTR_CTE_PTR(కణుపు_STATE(ksCurThread), tcbCaller);
+    cap = src_స్థానం->cap;
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_null_cap:
         userError("CNode SaveCaller: Reply cap not present.");
-        break;
+        ఆపు;
 
-    case cap_reply_cap:
-        if (!cap_reply_cap_get_capReplyMaster(cap)) {
-            cteMove(cap, srcSlot, destSlot);
+    స్థితి cap_జవాబు_cap:
+        ఒకవేళ (!cap_జవాబు_cap_get_cap_జవాబు_Master(cap)) {
+            cteMove(cap, src_స్థానం, dest_స్థానం);
         }
-        break;
+        ఆపు;
 
-    default:
+    అప్రమేయ:
         fail("caller capability must be null or reply");
-        break;
+        ఆపు;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
-#endif
+#అయితే_ముగింపు
 
 /*
  * If creating a child UntypedCap, don't allow new objects to be created in the
  * parent.
  */
-static void setUntypedCapAsFull(cap_t srcCap, cap_t newCap, cte_t *srcSlot)
+స్థిర శూన్య సమితి_Untyped_Cap_As_నిండిన(cap_t srcCap, cap_t newCap, cte_t *src_స్థానం)
 {
-    if ((cap_get_capType(srcCap) == cap_untyped_cap)
+    ఒకవేళ ((cap_get_capType(srcCap) == cap_untyped_cap)
         && (cap_get_capType(newCap) == cap_untyped_cap)) {
-        if ((cap_untyped_cap_get_capPtr(srcCap)
+        ఒకవేళ ((cap_untyped_cap_get_capPtr(srcCap)
              == cap_untyped_cap_get_capPtr(newCap))
-            && (cap_untyped_cap_get_capBlockSize(newCap)
-                == cap_untyped_cap_get_capBlockSize(srcCap))) {
-            cap_untyped_cap_ptr_set_capFreeIndex(&(srcSlot->cap),
-                                                 MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(srcCap)));
+            && (cap_untyped_cap_get_cap_ఖండం_కొలత(newCap)
+                == cap_untyped_cap_get_cap_ఖండం_కొలత(srcCap))) {
+            cap_untyped_cap_ptr_సమితి_cap_Free_సూచీ(&(src_స్థానం->cap),
+                                                 MAX_FREE_సూచీ(cap_untyped_cap_get_cap_ఖండం_కొలత(srcCap)));
         }
     }
 }
 
-void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+శూన్య cte_చొప్పించు(cap_t newCap, cte_t *src_స్థానం, cte_t *dest_స్థానం)
 {
-    mdb_node_t srcMDB, newMDB;
+    mdb_కణుపు_t srcMDB, newMDB;
     cap_t srcCap;
     bool_t newCapIsRevocable;
 
-    srcMDB = srcSlot->cteMDBNode;
-    srcCap = srcSlot->cap;
+    srcMDB = src_స్థానం->cteMDBNode;
+    srcCap = src_స్థానం->cap;
 
     newCapIsRevocable = isCapRevocable(newCap, srcCap);
 
-    newMDB = mdb_node_set_mdbPrev(srcMDB, CTE_REF(srcSlot));
-    newMDB = mdb_node_set_mdbRevocable(newMDB, newCapIsRevocable);
-    newMDB = mdb_node_set_mdbFirstBadged(newMDB, newCapIsRevocable);
+    newMDB = mdb_కణుపు_సమితి_mdb_Prev(srcMDB, CTE_REF(src_స్థానం));
+    newMDB = mdb_కణుపు_సమితి_mdb_Revocable(newMDB, newCapIsRevocable);
+    newMDB = mdb_కణుపు_సమితి_mdb_మొదటి_Badged(newMDB, newCapIsRevocable);
 
     /* Haskell error: "cteInsert to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    ప్రతిజ్ఞా(cap_get_capType(dest_స్థానం->cap) == cap_null_cap);
     /* Haskell error: "cteInsert: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    ప్రతిజ్ఞా((cte_t *)mdb_కణుపు_get_mdb_తదుపరి(dest_స్థానం->cteMDBNode) == ఖాళీ &&
+           (cte_t *)mdb_కణుపు_get_mdb_Prev(dest_స్థానం->cteMDBNode) == ఖాళీ);
 
     /* Prevent parent untyped cap from being used again if creating a child
      * untyped from it. */
-    setUntypedCapAsFull(srcCap, newCap, srcSlot);
+    సమితి_Untyped_Cap_As_నిండిన(srcCap, newCap, src_స్థానం);
 
-    destSlot->cap = newCap;
-    destSlot->cteMDBNode = newMDB;
-    mdb_node_ptr_set_mdbNext(&srcSlot->cteMDBNode, CTE_REF(destSlot));
-    if (mdb_node_get_mdbNext(newMDB)) {
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(mdb_node_get_mdbNext(newMDB))->cteMDBNode,
-            CTE_REF(destSlot));
+    dest_స్థానం->cap = newCap;
+    dest_స్థానం->cteMDBNode = newMDB;
+    mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(&src_స్థానం->cteMDBNode, CTE_REF(dest_స్థానం));
+    ఒకవేళ (mdb_కణుపు_get_mdb_తదుపరి(newMDB)) {
+        mdb_కణుపు_ptr_సమితి_mdb_Prev(
+            &CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(newMDB))->cteMDBNode,
+            CTE_REF(dest_స్థానం));
     }
 }
 
-void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+శూన్య cteMove(cap_t newCap, cte_t *src_స్థానం, cte_t *dest_స్థానం)
 {
-    mdb_node_t mdb;
-    word_t prev_ptr, next_ptr;
+    mdb_కణుపు_t mdb;
+    మాట_t prev_ptr, తదుపరి_ptr;
 
     /* Haskell error: "cteMove to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    ప్రతిజ్ఞా(cap_get_capType(dest_స్థానం->cap) == cap_null_cap);
     /* Haskell error: "cteMove: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    ప్రతిజ్ఞా((cte_t *)mdb_కణుపు_get_mdb_తదుపరి(dest_స్థానం->cteMDBNode) == ఖాళీ &&
+           (cte_t *)mdb_కణుపు_get_mdb_Prev(dest_స్థానం->cteMDBNode) == ఖాళీ);
 
-    mdb = srcSlot->cteMDBNode;
-    destSlot->cap = newCap;
-    srcSlot->cap = cap_null_cap_new();
-    destSlot->cteMDBNode = mdb;
-    srcSlot->cteMDBNode = nullMDBNode;
+    mdb = src_స్థానం->cteMDBNode;
+    dest_స్థానం->cap = newCap;
+    src_స్థానం->cap = cap_null_cap_new();
+    dest_స్థానం->cteMDBNode = mdb;
+    src_స్థానం->cteMDBNode = nullMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_కణుపు_get_mdb_Prev(mdb);
+    ఒకవేళ (prev_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(
             &CTE_PTR(prev_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+            CTE_REF(dest_స్థానం));
 
-    next_ptr = mdb_node_get_mdbNext(mdb);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+    తదుపరి_ptr = mdb_కణుపు_get_mdb_తదుపరి(mdb);
+    ఒకవేళ (తదుపరి_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_Prev(
+            &CTE_PTR(తదుపరి_ptr)->cteMDBNode,
+            CTE_REF(dest_స్థానం));
 }
 
-void capSwapForDelete(cte_t *slot1, cte_t *slot2)
+శూన్య cap_మార్పిడి_For_Delete(cte_t *slot1, cte_t *slot2)
 {
     cap_t cap1, cap2;
 
-    if (slot1 == slot2) {
-        return;
+    ఒకవేళ (slot1 == slot2) {
+        తిరిగి;
     }
 
     cap1 = slot1->cap;
     cap2 = slot2->cap;
 
-    cteSwap(cap1, slot1, cap2, slot2);
+    cte_మార్పిడి(cap1, slot1, cap2, slot2);
 }
 
-void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
+శూన్య cte_మార్పిడి(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
 {
-    mdb_node_t mdb1, mdb2;
-    word_t next_ptr, prev_ptr;
+    mdb_కణుపు_t mdb1, mdb2;
+    మాట_t తదుపరి_ptr, prev_ptr;
 
     slot1->cap = cap2;
     slot2->cap = cap1;
 
     mdb1 = slot1->cteMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb1);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_కణుపు_get_mdb_Prev(mdb1);
+    ఒకవేళ (prev_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
-    next_ptr = mdb_node_get_mdbNext(mdb1);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    తదుపరి_ptr = mdb_కణుపు_get_mdb_తదుపరి(mdb1);
+    ఒకవేళ (తదుపరి_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_Prev(
+            &CTE_PTR(తదుపరి_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
     mdb2 = slot2->cteMDBNode;
     slot1->cteMDBNode = mdb2;
     slot2->cteMDBNode = mdb1;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb2);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_కణుపు_get_mdb_Prev(mdb2);
+    ఒకవేళ (prev_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot1));
 
-    next_ptr = mdb_node_get_mdbNext(mdb2);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    తదుపరి_ptr = mdb_కణుపు_get_mdb_తదుపరి(mdb2);
+    ఒకవేళ (తదుపరి_ptr)
+        mdb_కణుపు_ptr_సమితి_mdb_Prev(
+            &CTE_PTR(తదుపరి_ptr)->cteMDBNode,
             CTE_REF(slot1));
 }
 
-exception_t cteRevoke(cte_t *slot)
+exception_t cteRevoke(cte_t *స్థానం)
 {
-    cte_t *nextPtr;
-    exception_t status;
+    cte_t *తదుపరి_Ptr;
+    exception_t స్థితి_2;
 
     /* there is no need to check for a NullCap as NullCaps are
        always accompanied by null mdb pointers */
-    for (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-         nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
-        status = cteDelete(nextPtr, true);
-        if (status != EXCEPTION_NONE) {
-            return status;
+    కొరకు (తదుపరి_Ptr = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(స్థానం->cteMDBNode));
+         తదుపరి_Ptr && is_MDBParent_యొక్క(స్థానం, తదుపరి_Ptr);
+         తదుపరి_Ptr = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(స్థానం->cteMDBNode))) {
+        స్థితి_2 = cteDelete(తదుపరి_Ptr, true);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            return status;
+        స్థితి_2 = preemption_బిందువు();
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t cteDelete(cte_t *slot, bool_t exposed)
+exception_t cteDelete(cte_t *స్థానం, bool_t exposed)
 {
-    finaliseSlot_ret_t fs_ret;
+    finalise_స్థానం_ret_t fs_ret;
 
-    fs_ret = finaliseSlot(slot, exposed);
-    if (fs_ret.status != EXCEPTION_NONE) {
-        return fs_ret.status;
+    fs_ret = finalise_స్థానం(స్థానం, exposed);
+    ఒకవేళ (fs_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి fs_ret.స్థితి_2;
     }
 
-    if (exposed || fs_ret.success) {
-        emptySlot(slot, fs_ret.cleanupInfo);
+    ఒకవేళ (exposed || fs_ret.success) {
+        ఖాళీలు_స్థానం(స్థానం, fs_ret.cleanupInfo);
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-static void emptySlot(cte_t *slot, cap_t cleanupInfo)
+స్థిర శూన్య ఖాళీలు_స్థానం(cte_t *స్థానం, cap_t cleanupInfo)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        mdb_node_t mdbNode;
-        cte_t *prev, *next;
+    ఒకవేళ (cap_get_capType(స్థానం->cap) != cap_null_cap) {
+        mdb_కణుపు_t mdb_కణుపు;
+        cte_t *prev, *తదుపరి;
 
-        mdbNode = slot->cteMDBNode;
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdbNode));
-        next = CTE_PTR(mdb_node_get_mdbNext(mdbNode));
+        mdb_కణుపు = స్థానం->cteMDBNode;
+        prev = CTE_PTR(mdb_కణుపు_get_mdb_Prev(mdb_కణుపు));
+        తదుపరి = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(mdb_కణుపు));
 
-        if (prev) {
-            mdb_node_ptr_set_mdbNext(&prev->cteMDBNode, CTE_REF(next));
+        ఒకవేళ (prev) {
+            mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(&prev->cteMDBNode, CTE_REF(తదుపరి));
         }
-        if (next) {
-            mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(prev));
+        ఒకవేళ (తదుపరి) {
+            mdb_కణుపు_ptr_సమితి_mdb_Prev(&తదుపరి->cteMDBNode, CTE_REF(prev));
         }
-        if (next)
-            mdb_node_ptr_set_mdbFirstBadged(&next->cteMDBNode,
-                                            mdb_node_get_mdbFirstBadged(next->cteMDBNode) ||
-                                            mdb_node_get_mdbFirstBadged(mdbNode));
-        slot->cap = cap_null_cap_new();
-        slot->cteMDBNode = nullMDBNode;
+        ఒకవేళ (తదుపరి)
+            mdb_కణుపు_ptr_సమితి_mdb_మొదటి_Badged(&తదుపరి->cteMDBNode,
+                                            mdb_కణుపు_get_mdb_మొదటి_Badged(తదుపరి->cteMDBNode) ||
+                                            mdb_కణుపు_get_mdb_మొదటి_Badged(mdb_కణుపు));
+        స్థానం->cap = cap_null_cap_new();
+        స్థానం->cteMDBNode = nullMDBNode;
 
         postCapDeletion(cleanupInfo);
     }
 }
 
-static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
+స్థిర అంతఃవరుస bool_t CONST capRemovable(cap_t cap, cte_t *స్థానం)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-        return true;
-    case cap_zombie_cap: {
-        word_t n = cap_zombie_cap_get_capZombieNumber(cap);
-        cte_t *z_slot = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
-        return (n == 0 || (n == 1 && slot == z_slot));
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_null_cap:
+        తిరిగి true;
+    స్థితి cap_zombie_cap: {
+        మాట_t n = cap_zombie_cap_get_cap_Zombie_సంఖ్య(cap);
+        cte_t *z_స్థానం = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
+        తిరిగి (n == 0 || (n == 1 && స్థానం == z_స్థానం));
     }
-    default:
+    అప్రమేయ:
         fail("finaliseCap should only return Zombie or NullCap");
     }
 }
 
-static inline bool_t CONST capCyclicZombie(cap_t cap, cte_t *slot)
+స్థిర అంతఃవరుస bool_t CONST capCyclicZombie(cap_t cap, cte_t *స్థానం)
 {
-    return cap_get_capType(cap) == cap_zombie_cap &&
-           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == slot;
+    తిరిగి cap_get_capType(cap) == cap_zombie_cap &&
+           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == స్థానం;
 }
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t immediate)
+స్థిర finalise_స్థానం_ret_t finalise_స్థానం(cte_t *స్థానం, bool_t తక్షణ)
 {
     bool_t final;
     finaliseCap_ret_t fc_ret;
-    exception_t status;
-    finaliseSlot_ret_t ret;
+    exception_t స్థితి_2;
+    finalise_స్థానం_ret_t ret;
 
-    while (cap_get_capType(slot->cap) != cap_null_cap) {
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, false);
+    అయితే (cap_get_capType(స్థానం->cap) != cap_null_cap) {
+        final = isFinalCapability(స్థానం);
+        fc_ret = finaliseCap(స్థానం->cap, final, false);
 
-        if (capRemovable(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        ఒకవేళ (capRemovable(fc_ret.remainder, స్థానం)) {
+            ret.స్థితి_2 = EXCEPTION_NONE;
             ret.success = true;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            తిరిగి ret;
         }
 
-        slot->cap = fc_ret.remainder;
+        స్థానం->cap = fc_ret.remainder;
 
-        if (!immediate && capCyclicZombie(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        ఒకవేళ (!తక్షణ && capCyclicZombie(fc_ret.remainder, స్థానం)) {
+            ret.స్థితి_2 = EXCEPTION_NONE;
             ret.success = false;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            తిరిగి ret;
         }
 
-        status = reduceZombie(slot, immediate);
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        స్థితి_2 = reduceZombie(స్థానం, తక్షణ);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            ret.స్థితి_2 = స్థితి_2;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            తిరిగి ret;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        స్థితి_2 = preemption_బిందువు();
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            ret.స్థితి_2 = స్థితి_2;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            తిరిగి ret;
         }
     }
-    ret.status = EXCEPTION_NONE;
+    ret.స్థితి_2 = EXCEPTION_NONE;
     ret.success = true;
     ret.cleanupInfo = cap_null_cap_new();
-    return ret;
+    తిరిగి ret;
 }
 
-static exception_t reduceZombie(cte_t *slot, bool_t immediate)
+స్థిర exception_t reduceZombie(cte_t *స్థానం, bool_t తక్షణ)
 {
     cte_t *ptr;
-    word_t n, type;
-    exception_t status;
+    మాట_t n, type;
+    exception_t స్థితి_2;
 
-    assert(cap_get_capType(slot->cap) == cap_zombie_cap);
-    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
-    n = cap_zombie_cap_get_capZombieNumber(slot->cap);
-    type = cap_zombie_cap_get_capZombieType(slot->cap);
+    ప్రతిజ్ఞా(cap_get_capType(స్థానం->cap) == cap_zombie_cap);
+    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(స్థానం->cap);
+    n = cap_zombie_cap_get_cap_Zombie_సంఖ్య(స్థానం->cap);
+    type = cap_zombie_cap_get_capZombieType(స్థానం->cap);
 
     /* Haskell error: "reduceZombie: expected unremovable zombie" */
-    assert(n > 0);
+    ప్రతిజ్ఞా(n > 0);
 
-    if (immediate) {
-        cte_t *endSlot = &ptr[n - 1];
+    ఒకవేళ (తక్షణ) {
+        cte_t *చివర_స్థానం = &ptr[n - 1];
 
-        status = cteDelete(endSlot, false);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        స్థితి_2 = cteDelete(చివర_స్థానం, false);
+        ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+            తిరిగి స్థితి_2;
         }
 
-        switch (cap_get_capType(slot->cap)) {
-        case cap_null_cap:
-            break;
+        ఎంపిక (cap_get_capType(స్థానం->cap)) {
+        స్థితి cap_null_cap:
+            ఆపు;
 
-        case cap_zombie_cap: {
+        స్థితి cap_zombie_cap: {
             cte_t *ptr2 =
-                (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
+                (cte_t *)cap_zombie_cap_get_capZombiePtr(స్థానం->cap);
 
-            if (ptr == ptr2 &&
-                cap_zombie_cap_get_capZombieNumber(slot->cap) == n &&
-                cap_zombie_cap_get_capZombieType(slot->cap) == type) {
-                assert(cap_get_capType(endSlot->cap) == cap_null_cap);
-                slot->cap =
-                    cap_zombie_cap_set_capZombieNumber(slot->cap, n - 1);
-            } else {
+            ఒకవేళ (ptr == ptr2 &&
+                cap_zombie_cap_get_cap_Zombie_సంఖ్య(స్థానం->cap) == n &&
+                cap_zombie_cap_get_capZombieType(స్థానం->cap) == type) {
+                ప్రతిజ్ఞా(cap_get_capType(చివర_స్థానం->cap) == cap_null_cap);
+                స్థానం->cap =
+                    cap_zombie_cap_సమితి_cap_Zombie_సంఖ్య(స్థానం->cap, n - 1);
+            } లేకపోతే {
                 /* Haskell error:
                  * "Expected new Zombie to be self-referential."
                  */
-                assert(ptr2 == slot && ptr != slot);
+                ప్రతిజ్ఞా(ptr2 == స్థానం && ptr != స్థానం);
             }
-            break;
+            ఆపు;
         }
 
-        default:
+        అప్రమేయ:
             fail("Expected recursion to result in Zombie.");
         }
-    } else {
+    } లేకపోతే {
         /* Haskell error: "Cyclic zombie passed to unexposed reduceZombie" */
-        assert(ptr != slot);
+        ప్రతిజ్ఞా(ptr != స్థానం);
 
-        if (cap_get_capType(ptr->cap) == cap_zombie_cap) {
+        ఒకవేళ (cap_get_capType(ptr->cap) == cap_zombie_cap) {
             /* Haskell error: "Moving self-referential Zombie aside." */
-            assert(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
+            ప్రతిజ్ఞా(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
         }
 
-        capSwapForDelete(ptr, slot);
+        cap_మార్పిడి_For_Delete(ptr, స్థానం);
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-void cteDeleteOne(cte_t *slot)
+శూన్య cteDeleteOne(cte_t *స్థానం)
 {
-    word_t cap_type = cap_get_capType(slot->cap);
-    if (cap_type != cap_null_cap) {
+    మాట_t cap_type = cap_get_capType(స్థానం->cap);
+    ఒకవేళ (cap_type != cap_null_cap) {
         bool_t final;
-        finaliseCap_ret_t fc_ret UNUSED;
+        finaliseCap_ret_t fc_ret వాడని;
 
         /** GHOSTUPD: "(gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = (-1)
             \<or> gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = \<acute>cap_type, id)" */
 
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, true);
+        final = isFinalCapability(స్థానం);
+        fc_ret = finaliseCap(స్థానం->cap, final, true);
         /* Haskell error: "cteDeleteOne: cap should be removable" */
-        assert(capRemovable(fc_ret.remainder, slot) &&
+        ప్రతిజ్ఞా(capRemovable(fc_ret.remainder, స్థానం) &&
                cap_get_capType(fc_ret.cleanupInfo) == cap_null_cap);
-        emptySlot(slot, cap_null_cap_new());
+        ఖాళీలు_స్థానం(స్థానం, cap_null_cap_new());
     }
 }
 
-void insertNewCap(cte_t *parent, cte_t *slot, cap_t cap)
+శూన్య చొప్పించు_New_Cap(cte_t *మాతృ, cte_t *స్థానం, cap_t cap)
 {
-    cte_t *next;
+    cte_t *తదుపరి;
 
-    next = CTE_PTR(mdb_node_get_mdbNext(parent->cteMDBNode));
-    slot->cap = cap;
-    slot->cteMDBNode = mdb_node_new(CTE_REF(next), true, true, CTE_REF(parent));
-    if (next) {
-        mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(slot));
+    తదుపరి = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(మాతృ->cteMDBNode));
+    స్థానం->cap = cap;
+    స్థానం->cteMDBNode = mdb_కణుపు_new(CTE_REF(తదుపరి), true, true, CTE_REF(మాతృ));
+    ఒకవేళ (తదుపరి) {
+        mdb_కణుపు_ptr_సమితి_mdb_Prev(&తదుపరి->cteMDBNode, CTE_REF(స్థానం));
     }
-    mdb_node_ptr_set_mdbNext(&parent->cteMDBNode, CTE_REF(slot));
+    mdb_కణుపు_ptr_సమితి_mdb_తదుపరి(&మాతృ->cteMDBNode, CTE_REF(స్థానం));
 }
 
-#ifndef CONFIG_KERNEL_MCS
-void setupReplyMaster(tcb_t *thread)
+#నిర్వచితం_కాకపోతే CONFIG_KERNEL_MCS
+శూన్య అమరిక_జవాబు_Master(tcb_t *thread)
 {
-    cte_t *slot;
+    cte_t *స్థానం;
 
-    slot = TCB_PTR_CTE_PTR(thread, tcbReply);
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
+    స్థానం = TCB_PTR_CTE_PTR(thread, tcb_జవాబు);
+    ఒకవేళ (cap_get_capType(స్థానం->cap) == cap_null_cap) {
         /* Haskell asserts that no reply caps exist for this thread here. This
          * cannot be translated. */
-        slot->cap = cap_reply_cap_new(true, true, TCB_REF(thread));
-        slot->cteMDBNode = nullMDBNode;
-        mdb_node_ptr_set_mdbRevocable(&slot->cteMDBNode, true);
-        mdb_node_ptr_set_mdbFirstBadged(&slot->cteMDBNode, true);
+        స్థానం->cap = cap_జవాబు_cap_new(true, true, TCB_REF(thread));
+        స్థానం->cteMDBNode = nullMDBNode;
+        mdb_కణుపు_ptr_సమితి_mdb_Revocable(&స్థానం->cteMDBNode, true);
+        mdb_కణుపు_ptr_సమితి_mdb_మొదటి_Badged(&స్థానం->cteMDBNode, true);
     }
 }
-#endif
+#అయితే_ముగింపు
 
-bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
+bool_t శుద్ధ is_MDBParent_యొక్క(cte_t *cte_a, cte_t *cte_b)
 {
-    if (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
-        return false;
+    ఒకవేళ (!mdb_కణుపు_get_mdb_Revocable(cte_a->cteMDBNode)) {
+        తిరిగి false;
     }
-    if (!sameRegionAs(cte_a->cap, cte_b->cap)) {
-        return false;
+    ఒకవేళ (!sameRegionAs(cte_a->cap, cte_b->cap)) {
+        తిరిగి false;
     }
     /* We want to take care of arch caps first, because that is easier in the proofs.
        We expect Arch_isMDBParentOf to return true if both caps are not architecture
        specific. */
-    if (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
-                            mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode))) {
-        return false;
+    ఒకవేళ (!Arch_is_MDBParent_యొక్క(cte_a->cap, cte_b->cap,
+                            mdb_కణుపు_get_mdb_మొదటి_Badged(cte_b->cteMDBNode))) {
+        తిరిగి false;
     }
-    switch (cap_get_capType(cte_a->cap)) {
-    case cap_endpoint_cap: {
-        word_t badge;
+    ఎంపిక (cap_get_capType(cte_a->cap)) {
+    స్థితి cap_endpoint_cap: {
+        మాట_t badge;
 
         badge = cap_endpoint_cap_get_capEPBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        ఒకవేళ (badge == 0) {
+            తిరిగి true;
         }
-        return (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        తిరిగి (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
+               !mdb_కణుపు_get_mdb_మొదటి_Badged(cte_b->cteMDBNode);
+        ఆపు;
     }
 
-    case cap_notification_cap: {
-        word_t badge;
+    స్థితి cap_notification_cap: {
+        మాట_t badge;
 
         badge = cap_notification_cap_get_capNtfnBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        ఒకవేళ (badge == 0) {
+            తిరిగి true;
         }
-        return (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        తిరిగి (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
+               !mdb_కణుపు_get_mdb_మొదటి_Badged(cte_b->cteMDBNode);
+        ఆపు;
     }
 
-    default:
-        return true;
-        break;
+    అప్రమేయ:
+        తిరిగి true;
+        ఆపు;
     }
 }
 
-exception_t ensureNoChildren(cte_t *slot)
+exception_t ensureNoChildren(cte_t *స్థానం)
 {
-    if (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
-        cte_t *next;
+    ఒకవేళ (mdb_కణుపు_get_mdb_తదుపరి(స్థానం->cteMDBNode) != 0) {
+        cte_t *తదుపరి;
 
-        next = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (isMDBParentOf(slot, next)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+        తదుపరి = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(స్థానం->cteMDBNode));
+        ఒకవేళ (is_MDBParent_యొక్క(స్థానం, తదుపరి)) {
+            current_syscall_error.type = se_L4_Revoke_మొదటి;
+            తిరిగి EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t ensureEmptySlot(cte_t *slot)
+exception_t ensure_ఖాళీలు_స్థానం(cte_t *స్థానం)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (cap_get_capType(స్థానం->cap) != cap_null_cap) {
+        current_syscall_error.type = se_L4_Delete_మొదటి;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-bool_t PURE isFinalCapability(cte_t *cte)
+bool_t శుద్ధ isFinalCapability(cte_t *cte)
 {
-    mdb_node_t mdb;
+    mdb_కణుపు_t mdb;
     bool_t prevIsSameObject;
 
     mdb = cte->cteMDBNode;
 
-    if (mdb_node_get_mdbPrev(mdb) == 0) {
+    ఒకవేళ (mdb_కణుపు_get_mdb_Prev(mdb) == 0) {
         prevIsSameObject = false;
-    } else {
+    } లేకపోతే {
         cte_t *prev;
 
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdb));
+        prev = CTE_PTR(mdb_కణుపు_get_mdb_Prev(mdb));
         prevIsSameObject = sameObjectAs(prev->cap, cte->cap);
     }
 
-    if (prevIsSameObject) {
-        return false;
-    } else {
-        if (mdb_node_get_mdbNext(mdb) == 0) {
-            return true;
-        } else {
-            cte_t *next;
+    ఒకవేళ (prevIsSameObject) {
+        తిరిగి false;
+    } లేకపోతే {
+        ఒకవేళ (mdb_కణుపు_get_mdb_తదుపరి(mdb) == 0) {
+            తిరిగి true;
+        } లేకపోతే {
+            cte_t *తదుపరి;
 
-            next = CTE_PTR(mdb_node_get_mdbNext(mdb));
-            return !sameObjectAs(cte->cap, next->cap);
+            తదుపరి = CTE_PTR(mdb_కణుపు_get_mdb_తదుపరి(mdb));
+            తిరిగి !sameObjectAs(cte->cap, తదుపరి->cap);
         }
     }
 }
 
-bool_t PURE slotCapLongRunningDelete(cte_t *slot)
+bool_t శుద్ధ స్థానం_Cap_Long_Running_Delete(cte_t *స్థానం)
 {
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
-        return false;
-    } else if (! isFinalCapability(slot)) {
-        return false;
+    ఒకవేళ (cap_get_capType(స్థానం->cap) == cap_null_cap) {
+        తిరిగి false;
+    } లేకపోతే ఒకవేళ (! isFinalCapability(స్థానం)) {
+        తిరిగి false;
     }
-    switch (cap_get_capType(slot->cap)) {
-    case cap_thread_cap:
-    case cap_zombie_cap:
-    case cap_cnode_cap:
-        return true;
-    default:
-        return false;
+    ఎంపిక (cap_get_capType(స్థానం->cap)) {
+    స్థితి cap_thread_cap:
+    స్థితి cap_zombie_cap:
+    స్థితి cap_cnode_cap:
+        తిరిగి true;
+    అప్రమేయ:
+        తిరిగి false;
     }
 }
 
 /* This implementation is specialised to the (current) limit
  * of one cap receive slot. */
-cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
+cte_t *getReceiveSlots(tcb_t *thread, మాట_t *బఫరు)
 {
     cap_transfer_t ct;
     cptr_t cptr;
     lookupCap_ret_t luc_ret;
-    lookupSlot_ret_t lus_ret;
-    cte_t *slot;
+    lookup_స్థానం_ret_t lus_ret;
+    cte_t *స్థానం;
     cap_t cnode;
 
-    if (!buffer) {
-        return NULL;
+    ఒకవేళ (!బఫరు) {
+        తిరిగి ఖాళీ;
     }
 
-    ct = loadCapTransfer(buffer);
-    cptr = ct.ctReceiveRoot;
+    ct = ఎక్కించు_Cap_Transfer(బఫరు);
+    cptr = ct.ct_Receive_మూలం;
 
     luc_ret = lookupCap(thread, cptr);
-    if (luc_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    ఒకవేళ (luc_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి ఖాళీ;
     }
     cnode = luc_ret.cap;
 
-    lus_ret = lookupTargetSlot(cnode, ct.ctReceiveIndex, ct.ctReceiveDepth);
-    if (lus_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    lus_ret = lookup_లక్ష్యం_స్థానం(cnode, ct.ct_Receive_సూచీ, ct.ct_Receive_లోతు);
+    ఒకవేళ (lus_ret.స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి ఖాళీ;
     }
-    slot = lus_ret.slot;
+    స్థానం = lus_ret.స్థానం;
 
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        return NULL;
+    ఒకవేళ (cap_get_capType(స్థానం->cap) != cap_null_cap) {
+        తిరిగి ఖాళీ;
     }
 
-    return slot;
+    తిరిగి స్థానం;
 }
 
-cap_transfer_t PURE loadCapTransfer(word_t *buffer)
+cap_transfer_t శుద్ధ ఎక్కించు_Cap_Transfer(మాట_t *బఫరు)
 {
-    const int offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
-    return capTransferFromWords(buffer + offset);
+    స్థిరరాశి పూర్ణాంకం స్థానభ్రంశం = se_L4_సందేశం_Max_నిడివి + se_L4_సందేశం_Max_Extra_Caps + 2;
+    తిరిగి cap_Transfer_From_పదాలు(బఫరు + స్థానభ్రంశం);
 }

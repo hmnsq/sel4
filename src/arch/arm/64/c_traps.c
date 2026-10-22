@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <arch/fastpath/fastpath.h>
+#అన్తర్భావ <arch/kernel/traps.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <linker.h>
+#అన్తర్భావ <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#అన్తర్భావ <benchmark/benchmark_track.h>
+#అన్తర్భావ <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+శూన్య VISIBLE NORETURN restore_user_context(శూన్య)
 {
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#నిర్వచితమైతే ARM_CP14_SAVE_AND_RESTORE_NATIVE_దారాలు
+    restore_user_debug_context(కణుపు_STATE(ksCurThread));
+#అయితే_ముగింపు
 
-    NODE_UNLOCK_IF_HELD;
+    కణుపు_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm అస్థిర(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
         "ldp     x21, x22, [sp, %[SP_EL0]] \n"
         "ldr     x23, [sp, %[SPSR_EL1]]    \n"
         "msr     sp_el0, x21                \n"
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#లేకపోతే
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
-#endif
+#అయితే_ముగింపు
         /* Restore remaining registers */
         "ldp     x0,  x1,  [sp, #16 * 0]    \n"
         "ldp     x2,  x3,  [sp, #16 * 1]    \n"
@@ -59,60 +59,60 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(కణుపు_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#ఒకవేళ defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+వాడని స్థిర స్థిరరాశి అక్షరం *vect_స్థానభ్రంశం_గమ్యం_name(మాట_t vect_స్థానభ్రంశం)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    ఎంపిక (vect_స్థానభ్రంశం) {
+    స్థితి 0x000:
+        తిరిగి "Synchronous EL1t/EL2t";
+    స్థితి 0x080:
+        తిరిగి "IRQ EL1t/EL2t";
+    స్థితి 0x100:
+        తిరిగి "FIQ EL1t/EL2t";
+    స్థితి 0x180:
+        తిరిగి "SError EL1t/EL2t";
+    స్థితి 0x200:
+        తిరిగి "Synchronous Current EL";
+    స్థితి 0x280:
+        తిరిగి "IRQ Current EL";
+    స్థితి 0x300:
+        తిరిగి "FIQ Current EL";
+    స్థితి 0x380:
+        తిరిగి "SError Current EL";
+    స్థితి 0x400:
+        తిరిగి "Synchronous 64-bit EL0/EL1";
+    స్థితి 0x480:
+        తిరిగి "IRQ 64-bit EL0/EL1";
+    స్థితి 0x500:
+        తిరిగి "FIQ 64-bit EL0/EL1";
+    స్థితి 0x580:
+        తిరిగి "SError 64-bit EL0/EL1";
+    స్థితి 0x600:
+        తిరిగి "Synchronous 32-bit EL0/EL1";
+    స్థితి 0x680:
+        తిరిగి "IRQ 32-bit EL0/EL1";
+    స్థితి 0x700:
+        తిరిగి "FIQ 32-bit EL0/EL1";
+    స్థితి 0x780:
+        తిరిగి "SError 32-bit EL0/EL1";
+    అప్రమేయ:
+        తిరిగి "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+శూన్య VISIBLE c_handle_invalid_సదిశ_నమోదు(మాట_t vect_స్థానభ్రంశం, మాట_t pc)
 {
-    printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
-    printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));
-    printf("Fault attributed to program counter: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("ESR: 0x%"SEL4_PRIx_word" FAR: 0x%"SEL4_PRIx_word"\n", getESR(), getFAR());
+    రాయి("\n\nKERNEL INVALID VECTOR ENTRY!\n");
+    రాయి("Vector: 0x%"SEL4_PRIx_మాట" (%s)\n", vect_స్థానభ్రంశం, vect_స్థానభ్రంశం_గమ్యం_name(vect_స్థానభ్రంశం));
+    రాయి("Fault attributed to program counter: 0x%"SEL4_PRIx_మాట"\n", pc);
+    రాయి("ESR: 0x%"SEL4_PRIx_మాట" FAR: 0x%"SEL4_PRIx_మాట"\n", getESR(), getFAR());
 }
-#endif
+#అయితే_ముగింపు

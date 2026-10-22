@@ -4,39 +4,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <string.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <assert.h>
+#అన్తర్భావ <string.h>
 
-word_t strnlen(const char *s, word_t maxlen)
+మాట_t strnlen(స్థిరరాశి అక్షరం *s, మాట_t maxlen)
 {
-    word_t len;
-    for (len = 0; len < maxlen && s[len]; len++);
-    return len;
+    మాట_t len;
+    కొరకు (len = 0; len < maxlen && s[len]; len++);
+    తిరిగి len;
 }
 
-word_t strlcpy(char *dest, const char *src, word_t size)
+మాట_t strlcpy(అక్షరం *dest, స్థిరరాశి అక్షరం *src, మాట_t కొలత)
 {
-    word_t len;
-    for (len = 0; len + 1 < size && src[len]; len++) {
+    మాట_t len;
+    కొరకు (len = 0; len + 1 < కొలత && src[len]; len++) {
         dest[len] = src[len];
     }
     dest[len] = '\0';
-    return len;
+    తిరిగి len;
 }
 
-word_t strlcat(char *dest, const char *src, word_t size)
+మాట_t strlcat(అక్షరం *dest, స్థిరరాశి అక్షరం *src, మాట_t కొలత)
 {
-    word_t len;
+    మాట_t len;
     /* get to the end of dest */
-    for (len = 0; len < size && dest[len]; len++);
+    కొరకు (len = 0; len < కొలత && dest[len]; len++);
     /* check that dest was at least 'size' length to prevent inserting
      * a null byte when we shouldn't */
-    if (len < size) {
-        for (; len + 1 < size && *src; len++, src++) {
+    ఒకవేళ (len < కొలత) {
+        కొరకు (; len + 1 < కొలత && *src; len++, src++) {
             dest[len] = *src;
         }
         dest[len] = '\0';
     }
-    return len;
+    తిరిగి len;
 }

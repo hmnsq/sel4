@@ -4,54 +4,54 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#అన్తర్భావ <config.h>
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
 
-#include <machine/debug.h>
-#include <arch/kernel/vspace.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <arch/machine/registerset.h>
-#include <arch/model/statedata.h>
-#include <armv/debug.h>
-#include <mode/machine/debug.h>
-#include <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
-#include <string.h>
-#include <util.h>
+#అన్తర్భావ <machine/debug.h>
+#అన్తర్భావ <arch/kernel/vspace.h>
+#అన్తర్భావ <arch/machine/debug.h>
+#అన్తర్భావ <arch/machine/debug_conf.h>
+#అన్తర్భావ <arch/machine/registerset.h>
+#అన్తర్భావ <arch/model/statedata.h>
+#అన్తర్భావ <armv/debug.h>
+#అన్తర్భావ <mode/machine/debug.h>
+#అన్తర్భావ <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <util.h>
 
-#define MDSCR_MDE (BIT(15))
-#define MDSCR_SS  (BIT(0))
-#define SPSR_SS   (BIT(21))
+#నిర్వచించు MDSCR_MDE (బిట్టు(15))
+#నిర్వచించు MDSCR_SS  (బిట్టు(0))
+#నిర్వచించు SPSR_SS   (బిట్టు(21))
 
-#define ESR_EXCEPTION_CLASS_MASK 0xFC000000
-#define ESR_EXCEPTION_CLASS_OFF 26
+#నిర్వచించు ESR_EXCEPTION_CLASS_ముసుగు 0xFC000000
+#నిర్వచించు ESR_EXCEPTION_CLASS_OFF 26
 
-#define DEBUG_ENTRY_BREAKPOINT      0x30
-#define DEBUG_ENTRY_SINGLE_STEP     0x32
-#define DEBUG_ENTRY_WATCHPOINT      0x34
-#define DEBUG_ENTRY_EXPLICIT_BKPT   0x3C
+#నిర్వచించు DEBUG_నమోదు_BREAKPOINT      0x30
+#నిర్వచించు DEBUG_నమోదు_SINGLE_అడుగు     0x32
+#నిర్వచించు DEBUG_నమోదు_WATCHPOINT      0x34
+#నిర్వచించు DEBUG_నమోదు_EXPLICIT_BKPT   0x3C
 
-#define OSDLR_LOCK (BIT(0))
-#define OSLAR_LOCK (BIT(0))
+#నిర్వచించు OSDLR_తాళం (బిట్టు(0))
+#నిర్వచించు OSLAR_తాళం (బిట్టు(0))
 
-bool_t byte8WatchpointsSupported(void)
+bool_t byte8WatchpointsSupported(శూన్య)
 {
-    return true;
+    తిరిగి true;
 }
 
-exception_t handleDebugFaultEvent(word_t esr)
+exception_t handleDebugFaultEvent(మాట_t esr)
 {
     MCS_DO_IF_BUDGET({
-        current_fault = handleUserLevelDebugException(esr, getRestartPC(NODE_STATE(ksCurThread)));
-        if (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
+        current_fault = handleUserLevelDebugException(esr, getRestartPC(కణుపు_STATE(ksCurThread)));
+        ఒకవేళ (seL4_Fault_get_seL4_FaultType(current_fault) != seL4_Fault_NullFault)
         {
-            handleFault(NODE_STATE(ksCurThread));
+            handleFault(కణుపు_STATE(ksCurThread));
         }
     })
-    schedule();
+    కాలపట్టిక();
     activateThread();
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -60,23 +60,23 @@ exception_t handleDebugFaultEvent(word_t esr)
  * @param bp_num The hardware ID of the breakpoint register to be used.
  * @param n_instr The number of instructions to step over.
  */
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
-                               bool_t is_reply)
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_అంకె, మాట_t n_instr,
+                               bool_t is_జవాబు)
 {
-    if (n_instr > 0) {
+    ఒకవేళ (n_instr > 0) {
         /* Enable single stepping */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+        t->tcbArch.tcbContext.breakpointState.single_అడుగు_enabled = true;
+    } లేకపోతే {
         /* Disable single stepping */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
+        t->tcbArch.tcbContext.breakpointState.single_అడుగు_enabled = false;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return true;
+    తిరిగి true;
 }
 
 /* Guides the debug hardware initialization sequence. */
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_సంకేతం bool_t Arch_initHardwareBreakpoints(శూన్య)
 {
     /*
      * ARMv8 Architecture Reference Manual for A-profile Architecture
@@ -84,7 +84,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      *    ... MDSCR_EL1.MDE
      */
 
-    word_t mdscr = 0;
+    మాట_t mdscr = 0;
     MRS("MDSCR_EL1", mdscr);
     mdscr |= MDSCR_MDE;
     MSR("MDSCR_EL1", mdscr);
@@ -99,13 +99,13 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      */
 
     /* Ensure that the OS double lock is unset */
-    word_t osdlr = 0;
+    మాట_t osdlr = 0;
     MRS("osdlr_el1", osdlr);
-    osdlr &= ~OSDLR_LOCK;
+    osdlr &= ~OSDLR_తాళం;
     MSR("osdlr_el1", osdlr);
 
     /* Ensure that the OS lock is unset */
-    word_t oslar = 0;
+    మాట_t oslar = 0;
     MSR("oslar_el1", oslar);
 
     /* Ensure that all the breakpoint and watchpoint registers are initially disabled */
@@ -120,21 +120,21 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    కొరకు (పూర్ణాంకం i = 0; i < se_L4_అంకె_Exclusive_Breakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    కొరకు (పూర్ణాంకం i = 0; i < se_L4_అంకె_Exclusive_Watchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
-    return true;
+    తిరిగి true;
 }
 
 /* Abstract wrapper around the ESR fault status value */
 
-static word_t getFaultStatus(word_t esr)
+స్థిర మాట_t get_Fault_స్థితి(మాట_t esr)
 {
-    return (esr & ESR_EXCEPTION_CLASS_MASK) >> ESR_EXCEPTION_CLASS_OFF;
+    తిరిగి (esr & ESR_EXCEPTION_CLASS_ముసుగు) >> ESR_EXCEPTION_CLASS_OFF;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -149,13 +149,13 @@ static word_t getFaultStatus(word_t esr)
  *           values change. This also makes the debug code forward compatible
  *           aarch64.
  */
-bool_t isDebugFault(word_t esr)
+bool_t isDebugFault(మాట_t esr)
 {
-    word_t exception_class = getFaultStatus(esr);
-    return (exception_class == DEBUG_ENTRY_BREAKPOINT ||
-            exception_class == DEBUG_ENTRY_SINGLE_STEP ||
-            exception_class == DEBUG_ENTRY_WATCHPOINT ||
-            exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
+    మాట_t exception_class = get_Fault_స్థితి(esr);
+    తిరిగి (exception_class == DEBUG_నమోదు_BREAKPOINT ||
+            exception_class == DEBUG_నమోదు_SINGLE_అడుగు ||
+            exception_class == DEBUG_నమోదు_WATCHPOINT ||
+            exception_class == DEBUG_నమోదు_EXPLICIT_BKPT);
 }
 
 /** Called to process a debug exception.
@@ -174,81 +174,81 @@ bool_t isDebugFault(word_t esr)
  * @param fault_vaddr The instruction vaddr which triggered the exception, as
  *                    extracted by the kernel.
  */
-seL4_Fault_t handleUserLevelDebugException(word_t esr, word_t fault_vaddr)
+seL4_Fault_t handleUserLevelDebugException(మాట_t esr, మాట_t fault_vaddr)
 {
-    int active_bp;
-    word_t bp_reason, bp_vaddr;
-    word_t exception_class = getFaultStatus(esr);
+    పూర్ణాంకం చురుకైన_bp;
+    మాట_t bp_reason, bp_vaddr;
+    మాట_t exception_class = get_Fault_స్థితి(esr);
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_DebugFault;
-    ksKernelEntry.word = exception_class;
-#endif
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_Debug_Fault;
+    ks_Kernel_నమోదు.మాట = exception_class;
+#అయితే_ముగింపు
 
-    switch (exception_class) {
-    case DEBUG_ENTRY_BREAKPOINT:
+    ఎంపిక (exception_class) {
+    స్థితి DEBUG_నమోదు_BREAKPOINT:
         bp_reason = seL4_InstructionBreakpoint;
         bp_vaddr = fault_vaddr;
-        break;
-    case DEBUG_ENTRY_WATCHPOINT:
-        bp_reason = seL4_DataBreakpoint;
+        ఆపు;
+    స్థితి DEBUG_నమోదు_WATCHPOINT:
+        bp_reason = se_L4_దత్తాంశం_Breakpoint;
         bp_vaddr = getFAR();
-        break;
-    case DEBUG_ENTRY_SINGLE_STEP:
-        bp_reason = seL4_SingleStep;
+        ఆపు;
+    స్థితి DEBUG_నమోదు_SINGLE_అడుగు:
+        bp_reason = se_L4_Single_అడుగు;
         bp_vaddr = fault_vaddr;
-        active_bp = 0;
-        break;
-    default: /* EXPLICIT_BKPT: BKPT instruction */
-        assert(exception_class == DEBUG_ENTRY_EXPLICIT_BKPT);
+        చురుకైన_bp = 0;
+        ఆపు;
+    అప్రమేయ: /* EXPLICIT_BKPT: BKPT instruction */
+        ప్రతిజ్ఞా(exception_class == DEBUG_నమోదు_EXPLICIT_BKPT);
         bp_reason = seL4_SoftwareBreakRequest;
         bp_vaddr = fault_vaddr;
-        active_bp = 0;
+        చురుకైన_bp = 0;
     }
 
     /* There is no hardware register associated with BKPT instruction
     * triggers or single stepping.
     */
-    if (bp_reason != seL4_SoftwareBreakRequest && bp_reason != seL4_SingleStep) {
-        active_bp = getAndResetActiveBreakpoint(bp_vaddr, bp_reason);
-        active_bp = getBpNumFromType(active_bp, bp_reason);
-        assert(active_bp >= 0);
+    ఒకవేళ (bp_reason != seL4_SoftwareBreakRequest && bp_reason != se_L4_Single_అడుగు) {
+        చురుకైన_bp = get_And_Reset_చురుకైన_Breakpoint(bp_vaddr, bp_reason);
+        చురుకైన_bp = get_Bp_అంకె_From_Type(చురుకైన_bp, bp_reason);
+        ప్రతిజ్ఞా(చురుకైన_bp >= 0);
     }
 
-    if (bp_reason == seL4_SingleStep && !singleStepFaultCounterReady(NODE_STATE(ksCurThread))) {
-        return seL4_Fault_NullFault_new();
+    ఒకవేళ (bp_reason == se_L4_Single_అడుగు && !single_అడుగు_Fault_Counter_Ready(కణుపు_STATE(ksCurThread))) {
+        తిరిగి seL4_Fault_NullFault_new();
     }
 
-    return seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
+    తిరిగి seL4_Fault_DebugException_new(bp_vaddr, చురుకైన_bp, bp_reason);
 }
 
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#అయితే_ముగింపు /* CONFIG_HARDWARE_DEBUG_API */
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#నిర్వచితమైతే ARM_పునాది_CP14_SAVE_AND_RESTORE
 
 /** Pops debug register context for a thread into the CPU.
  *
  * Mirrors the idea of restore_user_context.
  */
-void aarch64_restore_user_debug_context(tcb_t *target_thread)
+శూన్య aarch64_restore_user_debug_context(tcb_t *లక్ష్యం_thread)
 {
-    assert(target_thread != NULL);
+    ప్రతిజ్ఞా(లక్ష్యం_thread != ఖాళీ);
 
     /* Set/unset single stepping if applicable */
-    word_t mdscr = 0, spsr = 0;
+    మాట_t mdscr = 0, spsr = 0;
     MRS("MDSCR_EL1", mdscr);
-    spsr = getRegister(target_thread, SPSR_EL1);
-    if (target_thread->tcbArch.tcbContext.breakpointState.single_step_enabled) {
+    spsr = get_రిజిస్టరు(లక్ష్యం_thread, SPSR_EL1);
+    ఒకవేళ (లక్ష్యం_thread->tcbArch.tcbContext.breakpointState.single_అడుగు_enabled) {
         /* Enable single stepping */
         mdscr |= MDSCR_SS;
         spsr |= SPSR_SS;
-    } else {
+    } లేకపోతే {
         /* Disable single stepping */
         mdscr &= ~MDSCR_SS;
         spsr &= ~SPSR_SS;
     }
     MSR("MDSCR_EL1", mdscr);
-    setRegister(target_thread, SPSR_EL1, spsr);
+    సమితి_రిజిస్టరు(లక్ష్యం_thread, SPSR_EL1, spsr);
 }
 
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#అయితే_ముగింపు /* ARM_BASE_CP14_SAVE_AND_RESTORE */

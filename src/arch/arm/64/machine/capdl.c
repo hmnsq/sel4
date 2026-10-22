@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#అన్తర్భావ <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
+#అన్తర్భావ <arch/machine/capdl.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <kernel/cspace.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+మాట_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP_EL0];
+    తిరిగి tcb->tcbArch.tcbContext.registers[SP_EL0];
 }
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
 
-static void obj_frame_print_attrs(vm_page_size_t frameSize, paddr_t frameBase);
-static void cap_frame_print_attrs_pt(pte_t *ptSlot);
-static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN);
-static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace);
+స్థిర శూన్య obj_చట్రం_print_attrs(vm_పుట_కొలత_t చట్రం_కొలత, paddr_t చట్రం_పునాది);
+స్థిర శూన్య cap_చట్రం_print_attrs_pt(pte_t *pt_స్థానం);
+స్థిర శూన్య cap_చట్రం_print_attrs_impl(మాట_t SH, మాట_t AP, మాట_t NXN);
+స్థిర శూన్య cap_చట్రం_print_attrs_vptr(మాట_t vptr, cap_t vspace);
 
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspaceRoot);
+స్థిర శూన్య cap_చట్రం_print_attrs_vptr_2(మాట_t vptr, vspace_మూలం_t *vspace_మూలం_2);
 
-static void arm64_obj_pt_print_slots(pte_t *pdSlot);
-static void arm64_obj_pd_print_slots(pte_t *pudSlot);
-static void arm64_obj_pud_print_slots(void *pgdSlot_or_vspace);
+స్థిర శూన్య arm64_obj_pt_print_slots(pte_t *pd_స్థానం);
+స్థిర శూన్య arm64_obj_pd_print_slots(pte_t *pud_స్థానం);
+స్థిర శూన్య arm64_obj_pud_print_slots(శూన్య *pgd_స్థానం_or_vspace);
 
-static void arm64_cap_pt_print_slots(pte_t *pdSlot, vptr_t vptr);
-static void arm64_cap_pd_print_slots(pte_t *pudSlot, vptr_t vptr);
-static void arm64_cap_pud_print_slots(void *pgdSlot_or_vspace, vptr_t vptr);
+స్థిర శూన్య arm64_cap_pt_print_slots(pte_t *pd_స్థానం, vptr_t vptr);
+స్థిర శూన్య arm64_cap_pd_print_slots(pte_t *pud_స్థానం, vptr_t vptr);
+స్థిర శూన్య arm64_cap_pud_print_slots(శూన్య *pgd_స్థానం_or_vspace, vptr_t vptr);
 
 /* Stage-1 access permissions:
  * AP[2:1]  higher EL        EL0
@@ -53,458 +53,458 @@ static void arm64_cap_pud_print_slots(void *pgdSlot_or_vspace, vptr_t vptr);
  *  EL2 still uses the Stage-1 AP format.
  */
 /* use when only have access to pte of frames */
-static void cap_frame_print_attrs_pt(pte_t *ptSlot)
+స్థిర శూన్య cap_చట్రం_print_attrs_pt(pte_t *pt_స్థానం)
 {
-    cap_frame_print_attrs_impl(pte_pte_page_ptr_get_SH(ptSlot),
-                               pte_pte_page_ptr_get_AP(ptSlot),
-                               pte_pte_page_ptr_get_UXN(ptSlot));
+    cap_చట్రం_print_attrs_impl(pte_pte_పుట_ptr_get_SH(pt_స్థానం),
+                               pte_pte_పుట_ptr_get_AP(pt_స్థానం),
+                               pte_pte_పుట_ptr_get_UXN(pt_స్థానం));
 }
 
-static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN)
+స్థిర శూన్య cap_చట్రం_print_attrs_impl(మాట_t SH, మాట_t AP, మాట_t NXN)
 {
-    printf("(");
+    రాయి("(");
 
     /* rights */
-    switch (AP) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case 0b00:
-        break;
-    case 0b01:
-        printf("R");
-        break;
-    case 0b10:
-        printf("W");
-        break;
-    case 0b11:
-        printf("RW");
-        break;
-#else
-    case 0b00:
-        break;
-    case 0b01:
-        printf("RW");
-    case 0b10:
-        break;
-    case 0b11:
-        printf("R");
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-    default:
-        break;
+    ఎంపిక (AP) {
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    స్థితి 0b00:
+        ఆపు;
+    స్థితి 0b01:
+        రాయి("R");
+        ఆపు;
+    స్థితి 0b10:
+        రాయి("W");
+        ఆపు;
+    స్థితి 0b11:
+        రాయి("RW");
+        ఆపు;
+#లేకపోతే
+    స్థితి 0b00:
+        ఆపు;
+    స్థితి 0b01:
+        రాయి("RW");
+    స్థితి 0b10:
+        ఆపు;
+    స్థితి 0b11:
+        రాయి("R");
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+    అప్రమేయ:
+        ఆపు;
     }
 
-    if (!NXN) {
-        printf("X");
+    ఒకవేళ (!NXN) {
+        రాయి("X");
     }
 
     /* Only has effect if SMP enabled */
-    if (SH != SMP_TERNARY(SMP_SHARE, 0)) {
-        printf(", uncached");
+    ఒకవేళ (SH != SMP_TERNARY(SMP_SHARE, 0)) {
+        రాయి(", uncached");
     }
 
-    printf(")\n");
+    రాయి(")\n");
 }
 
 /* use when only have access to vptr of frames */
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
+స్థిర శూన్య cap_చట్రం_print_attrs_vptr_2(మాట_t vptr, vspace_మూలం_t *vspace)
 {
     lookupPTSlot_ret_t ret = lookupPTSlot(vspace, vptr);
 
     /* Check that the returned slot is a page. */
-    if (!pte_ptr_get_valid(ret.ptSlot) ||
-        (pte_pte_table_ptr_get_present(ret.ptSlot) && ret.ptBitsLeft > PAGE_BITS)) {
-        assert(0);
+    ఒకవేళ (!pte_ptr_get_valid(ret.pt_స్థానం) ||
+        (pte_pte_పట్టిక_ptr_get_present(ret.pt_స్థానం) && ret.pt_బిట్లు_ఎడమ > పుట_బిట్లు)) {
+        ప్రతిజ్ఞా(0);
     }
 
-    word_t table_index;
-    switch (ret.ptBitsLeft) {
+    మాట_t పట్టిక_సూచీ;
+    ఎంపిక (ret.pt_బిట్లు_ఎడమ) {
 
-    case ARMHugePage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1));
-        break;
-    case ARMLargePage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2));
-        break;
-    case ARMSmallPage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(3));
-        break;
-    default:
-        assert(0);
+    స్థితి ARMHuge_పుట:
+        పట్టిక_సూచీ = GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(1));
+        ఆపు;
+    స్థితి ARMLarge_పుట:
+        పట్టిక_సూచీ = GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(2));
+        ఆపు;
+    స్థితి ARMSmall_పుట:
+        పట్టిక_సూచీ = GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(3));
+        ఆపు;
+    అప్రమేయ:
+        ప్రతిజ్ఞా(0);
 
     }
-    printf("frame_%p_%04lu ", ret.ptSlot, table_index);
-    cap_frame_print_attrs_pt(ret.ptSlot);
+    రాయి("frame_%p_%04lu ", ret.pt_స్థానం, పట్టిక_సూచీ);
+    cap_చట్రం_print_attrs_pt(ret.pt_స్థానం);
 }
 
-void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace)
+శూన్య cap_చట్రం_print_attrs_vptr(మాట_t vptr, cap_t vspace)
 {
-    _cap_frame_print_attrs_vptr(vptr, VSPACE_PTR(pptr_of_cap(vspace)));
+    cap_చట్రం_print_attrs_vptr_2(vptr, VSPACE_PTR(pptr_యొక్క_cap(vspace)));
 }
 
 /*
  * print object slots
  */
-static void arm64_cap_pt_print_slots(pte_t *pdSlot, vptr_t vptr)
+స్థిర శూన్య arm64_cap_pt_print_slots(pte_t *pd_స్థానం, vptr_t vptr)
 {
-    pte_t *pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pdSlot));
-    printf("pt_%p_%04lu {\n", pdSlot, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2)));
+    pte_t *pt = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pd_స్థానం));
+    రాయి("pt_%p_%04lu {\n", pd_స్థానం, GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(2)));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i ++) {
-        pte_t *ptSlot = pt + i;
+    కొరకు (మాట_t i = 0; i < బిట్టు(PT_సూచీ_బిట్లు); i ++) {
+        pte_t *pt_స్థానం = pt + i;
 
-        if (pte_4k_page_ptr_get_present(ptSlot)) {
+        ఒకవేళ (pte_4k_పుట_ptr_get_present(pt_స్థానం)) {
             // print pte entries
-            printf("0x%lx: frame_%p_%04lu", i, ptSlot, i);
-            cap_frame_print_attrs_pt(ptSlot);
+            రాయి("0x%lx: frame_%p_%04lu", i, pt_స్థానం, i);
+            cap_చట్రం_print_attrs_pt(pt_స్థానం);
         }
     }
-    printf("}\n"); /* pt */
+    రాయి("}\n"); /* pt */
 }
 
-static void arm64_cap_pd_print_slots(pte_t *pudSlot, vptr_t vptr)
+స్థిర శూన్య arm64_cap_pd_print_slots(pte_t *pud_స్థానం, vptr_t vptr)
 {
-    printf("pd_%p_%04lu {\n", pudSlot, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1)));
-    pte_t *pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pudSlot));
+    రాయి("pd_%p_%04lu {\n", pud_స్థానం, GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(1)));
+    pte_t *pd = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pud_స్థానం));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        pte_t *pdSlot = pd + i;
+    కొరకు (మాట_t i = 0; i < బిట్టు(PT_సూచీ_బిట్లు); i++) {
+        pte_t *pd_స్థానం = pd + i;
 
-        switch (pte_ptr_get_pte_type(pdSlot)) {
+        ఎంపిక (pte_ptr_get_pte_type(pd_స్థానం)) {
 
-        case pte_pte_page:
-            printf("0x%lx: frame_%p_%04lu", i, pdSlot, i);
-            cap_frame_print_attrs_pt(pdSlot);
-            break;
+        స్థితి pte_pte_పుట:
+            రాయి("0x%lx: frame_%p_%04lu", i, pd_స్థానం, i);
+            cap_చట్రం_print_attrs_pt(pd_స్థానం);
+            ఆపు;
 
-        case pte_pte_table:
-            printf("0x%lx: pt_%p_%04lu\n", i, pdSlot, i);
-            break;
+        స్థితి pte_pte_పట్టిక:
+            రాయి("0x%lx: pt_%p_%04lu\n", i, pd_స్థానం, i);
+            ఆపు;
         }
     }
 
-    printf("}\n"); /* pd */
+    రాయి("}\n"); /* pd */
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        pte_t *pdSlot = pd + i;
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
-            arm64_cap_pt_print_slots(pdSlot, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(2))));
-        }
-    }
-}
-
-static void arm64_cap_pud_print_slots(void *pgdSlot_or_vspace, vptr_t vptr)
-{
-#ifdef AARCH64_VSPACE_S2_START_L1
-    pte_t *pud = pgdSlot_or_vspace;
-    word_t index_bits = seL4_VSpaceIndexBits;
-    printf("%p_pd {\n", pgdSlot_or_vspace);
-#else
-    pte_t *pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pgdSlot_or_vspace));
-    word_t index_bits = seL4_PageTableIndexBits;
-    printf("pud_%p_%04lu {\n", pgdSlot_or_vspace, GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0)));
-#endif
-
-    for (word_t i = 0; i < BIT(index_bits); i++) {
-        pte_t *pudSlot = pud + i;
-        if (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
-            printf("0x%lx: pd_%p_%04lu\n", i, pudSlot, i);
-        }
-    }
-
-    printf("}\n"); /* pgd/pud */
-
-    for (word_t i = 0; i < BIT(index_bits); i++) {
-        pte_t *pudSlot = pud + GET_UPT_INDEX(i, ULVL_FRM_ARM_PT_LVL(1));
-        if (pte_ptr_get_pte_type(pudSlot) == pte_pte_table) {
-            arm64_cap_pd_print_slots(pudSlot, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(1))));
+    కొరకు (మాట_t i = 0; i < బిట్టు(PT_సూచీ_బిట్లు); i++) {
+        pte_t *pd_స్థానం = pd + i;
+        ఒకవేళ (pte_ptr_get_pte_type(pd_స్థానం) == pte_pte_పట్టిక) {
+            arm64_cap_pt_print_slots(pd_స్థానం, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(2))));
         }
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+స్థిర శూన్య arm64_cap_pud_print_slots(శూన్య *pgd_స్థానం_or_vspace, vptr_t vptr)
 {
-    if (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        vspace_root_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+#నిర్వచితమైతే AARCH64_VSPACE_S2_ప్రారంభం_L1
+    pte_t *pud = pgd_స్థానం_or_vspace;
+    మాట_t సూచీ_బిట్లు = se_L4_VSpace_సూచీ_బిట్లు;
+    రాయి("%p_pd {\n", pgd_స్థానం_or_vspace);
+#లేకపోతే
+    pte_t *pud = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pgd_స్థానం_or_vspace));
+    మాట_t సూచీ_బిట్లు = se_L4_పుట_పట్టిక_సూచీ_బిట్లు;
+    రాయి("pud_%p_%04lu {\n", pgd_స్థానం_or_vspace, GET_UPT_సూచీ(vptr, ULVL_FRM_ARM_PT_LVL(0)));
+#అయితే_ముగింపు
+
+    కొరకు (మాట_t i = 0; i < బిట్టు(సూచీ_బిట్లు); i++) {
+        pte_t *pud_స్థానం = pud + i;
+        ఒకవేళ (pte_ptr_get_pte_type(pud_స్థానం) == pte_pte_పట్టిక) {
+            రాయి("0x%lx: pd_%p_%04lu\n", i, pud_స్థానం, i);
+        }
+    }
+
+    రాయి("}\n"); /* pgd/pud */
+
+    కొరకు (మాట_t i = 0; i < బిట్టు(సూచీ_బిట్లు); i++) {
+        pte_t *pud_స్థానం = pud + GET_UPT_సూచీ(i, ULVL_FRM_ARM_PT_LVL(1));
+        ఒకవేళ (pte_ptr_get_pte_type(pud_స్థానం) == pte_pte_పట్టిక) {
+            arm64_cap_pd_print_slots(pud_స్థానం, vptr + (i * GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(1))));
+        }
+    }
+}
+
+శూన్య obj_vtable_print_slots(tcb_t *tcb)
+{
+    ఒకవేళ (is_VTable_మూలం(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !చూసిన(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        కూడు_గమ్యం_చూసిన(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        vspace_మూలం_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
         /*
         * ARM hyp uses 3 level translation rather than the usual 4 level.
         * levels: PGD -> UPD -> PD -> PT
         */
-#ifdef AARCH64_VSPACE_S2_START_L1
+#నిర్వచితమైతే AARCH64_VSPACE_S2_ప్రారంభం_L1
         arm64_cap_pud_print_slots(vspace, 0);
-#else
-        printf("%p_pd {\n", vspace);
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
-            pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
-                printf("0x%lx: pud_%p_%04lu\n", i, ptSlot, i);
+#లేకపోతే
+        రాయి("%p_pd {\n", vspace);
+        కొరకు (మాట_t i = 0; i < PT_సూచీ_బిట్లు; i++) {
+            pte_t *pt_స్థానం = vspace + i;
+            ఒకవేళ (pte_pte_పట్టిక_ptr_get_present(pt_స్థానం)) {
+                రాయి("0x%lx: pud_%p_%04lu\n", i, pt_స్థానం, i);
             }
         }
-        printf("}\n"); /* pd */
+        రాయి("}\n"); /* pd */
 
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
-            pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
-                arm64_cap_pud_print_slots(ptSlot, i * GET_ULVL_PGSIZE(0));
+        కొరకు (మాట_t i = 0; i < PT_సూచీ_బిట్లు; i++) {
+            pte_t *pt_స్థానం = vspace + i;
+            ఒకవేళ (pte_pte_పట్టిక_ptr_get_present(pt_స్థానం)) {
+                arm64_cap_pud_print_slots(pt_స్థానం, i * GET_ULVL_PGSIZE(0));
             }
         }
-#endif
+#అయితే_ముగింపు
     }
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+శూన్య print_ipc_బఫరు_స్థానం(tcb_t *tcb)
 {
-    word_t vptr = tcb->tcbIPCBuffer;
-    printf("ipc_buffer_slot: ");
-    cap_frame_print_attrs_vptr(vptr, TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    మాట_t vptr = tcb->tcbIPCBuffer;
+    రాయి("ipc_buffer_slot: ");
+    cap_చట్రం_print_attrs_vptr(vptr, TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
 }
 
-void print_cap_arch(cap_t cap)
+శూన్య print_cap_arch(cap_t cap)
 {
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        pte_t *target_pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_పుట_పట్టిక_cap: {
+        asid_t asid = cap_పుట_పట్టిక_cap_get_cap_PTMapped_ASID(cap);
+        vptr_t vptr = cap_పుట_పట్టిక_cap_get_cap_PTMapped_చిరునామా(cap);
+        pte_t *లక్ష్యం_pt = PT_PTR(cap_పుట_పట్టిక_cap_get_cap_PTBase_Ptr(cap));
 
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        pte_t *ptSlot = NULL;
-        pte_t *pt = (pte_t *)find_ret.vspace_root;
-        word_t level;
-        for (level = 0; level < UPT_LEVELS - 1 && pt != target_pt; level++) {
-            ptSlot = pt + GET_UPT_INDEX(vptr, level);
-            if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
+        కనుగొను_VSpace_For_ASID_ret_t కనుగొను_ret = కనుగొను_VSpace_For_ASID(asid);
+        pte_t *pt_స్థానం = ఖాళీ;
+        pte_t *pt = (pte_t *)కనుగొను_ret.vspace_మూలం;
+        మాట_t level;
+        కొరకు (level = 0; level < UPT_స్థాయిలు - 1 && pt != లక్ష్యం_pt; level++) {
+            pt_స్థానం = pt + GET_UPT_సూచీ(vptr, level);
+            ఒకవేళ (unlikely(!pte_pte_పట్టిక_ptr_get_present(pt_స్థానం))) {
                 /* couldn't find it */
-                break;
+                ఆపు;
             }
-            pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
+            pt = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pt_స్థానం));
         }
-        if (pt != target_pt) {
+        ఒకవేళ (pt != లక్ష్యం_pt) {
             /* didn't find it */
-            break;
+            ఆపు;
         }
 
 
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   target_pt, GET_UPT_INDEX(vptr, level), (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", target_pt, GET_UPT_INDEX(vptr, level));
+        ఒకవేళ (asid) {
+            రాయి("pt_%p_%04lu (asid: %lu)\n",
+                   లక్ష్యం_pt, GET_UPT_సూచీ(vptr, level), (దీర్ఘ గుర్తులేని పూర్ణాంకం)asid);
+        } లేకపోతే {
+            రాయి("pt_%p_%04lu\n", లక్ష్యం_pt, GET_UPT_సూచీ(vptr, level));
         }
-        break;
+        ఆపు;
     }
-    case cap_vspace_cap: {
+    స్థితి cap_vspace_cap: {
         asid_t asid = cap_vspace_cap_get_capVSMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (asid) {
-            printf("%p_pd (asid: %lu)\n",
-                   find_ret.vspace_root, (long unsigned int)asid);
-        } else {
-            printf("%p_pd\n", find_ret.vspace_root);
+        కనుగొను_VSpace_For_ASID_ret_t కనుగొను_ret = కనుగొను_VSpace_For_ASID(asid);
+        ఒకవేళ (asid) {
+            రాయి("%p_pd (asid: %lu)\n",
+                   కనుగొను_ret.vspace_మూలం, (దీర్ఘ గుర్తులేని పూర్ణాంకం)asid);
+        } లేకపోతే {
+            రాయి("%p_pd\n", కనుగొను_ret.vspace_మూలం);
         }
-        break;
+        ఆపు;
     }
-    case cap_asid_control_cap: {
+    స్థితి cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        రాయి("asid_control\n");
+        ఆపు;
     }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
-        _cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
-        break;
+    స్థితి cap_చట్రం_cap: {
+        vptr_t vptr = cap_చట్రం_cap_get_cap_FMapped_చిరునామా(cap);
+        కనుగొను_VSpace_For_ASID_ret_t కనుగొను_ret = కనుగొను_VSpace_For_ASID(cap_చట్రం_cap_get_cap_FMapped_ASID(cap));
+        ప్రతిజ్ఞా(కనుగొను_ret.స్థితి_2 == EXCEPTION_NONE);
+        cap_చట్రం_print_attrs_vptr_2(vptr, కనుగొను_ret.vspace_మూలం);
+        ఆపు;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    స్థితి cap_asid_pool_cap: {
+        రాయి("%p_asid_pool\n", (శూన్య *)cap_asid_pool_cap_get_capASIDPool(cap));
+        ఆపు;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    స్థితి cap_vcpu_cap: {
+        రాయి("%p_vcpu\n", (శూన్య *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        ఆపు;
     }
-#endif
+#అయితే_ముగింపు
 
         /* ARM specific caps */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space\n", (void *)cap_io_space_cap_get_capModuleID(cap));
-        break;
+#నిర్వచితమైతే CONFIG_TK1_SMMU
+    స్థితి cap_io_space_cap: {
+        రాయి("%p_io_space\n", (శూన్య *)cap_io_space_cap_get_capModuleID(cap));
+        ఆపు;
     }
-#endif
-    default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+#అయితే_ముగింపు
+    అప్రమేయ: {
+        రాయి("[unknown cap %lu]\n", (దీర్ఘ గుర్తులేని పూర్ణాంకం)cap_get_capType(cap));
+        ఆపు;
     }
     }
 }
 
-void print_object_arch(cap_t cap)
+శూన్య print_object_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-    case cap_page_table_cap:
-    case cap_vspace_cap:
+    ఎంపిక (cap_get_capType(cap)) {
+    స్థితి cap_చట్రం_cap:
+    స్థితి cap_పుట_పట్టిక_cap:
+    స్థితి cap_vspace_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        ఆపు;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    స్థితి cap_asid_pool_cap: {
+        రాయి("%p_asid_pool = asid_pool ",
+               (శూన్య *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        ఆపు;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu = vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+    స్థితి cap_vcpu_cap: {
+        రాయి("%p_vcpu = vcpu\n", (శూన్య *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        ఆపు;
     }
-#endif
+#అయితే_ముగింపు
         /* ARM specific objects */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space = io_space ", (void *)cap_io_space_cap_get_capModuleID(cap));
+#నిర్వచితమైతే CONFIG_TK1_SMMU
+    స్థితి cap_io_space_cap: {
+        రాయి("%p_io_space = io_space ", (శూన్య *)cap_io_space_cap_get_capModuleID(cap));
         arm_obj_iospace_print_attrs(cap);
-        break;
+        ఆపు;
     }
-#endif
-    default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+#అయితే_ముగింపు
+    అప్రమేయ: {
+        రాయి("[unknown object %lu]\n", (దీర్ఘ గుర్తులేని పూర్ణాంకం)cap_get_capType(cap));
+        ఆపు;
     }
     }
 }
 
-void obj_frame_print_attrs(vm_page_size_t frameSize, paddr_t frameBase)
+శూన్య obj_చట్రం_print_attrs(vm_పుట_కొలత_t చట్రం_కొలత, paddr_t చట్రం_పునాది)
 {
-    printf("(");
+    రాయి("(");
 
     /* VM size */
-    switch (frameSize) {
-    case ARMHugePage:
-        printf("1G");
-        break;
-    case ARMLargePage:
-        printf("2M");
-        break;
-    case ARMSmallPage:
-        printf("4k");
-        break;
+    ఎంపిక (చట్రం_కొలత) {
+    స్థితి ARMHuge_పుట:
+        రాయి("1G");
+        ఆపు;
+    స్థితి ARMLarge_పుట:
+        రాయి("2M");
+        ఆపు;
+    స్థితి ARMSmall_పుట:
+        రాయి("4k");
+        ఆపు;
     }
 
-    printf(", paddr: 0x%p)\n", (void *)frameBase);
+    రాయి(", paddr: 0x%p)\n", (శూన్య *)చట్రం_పునాది);
 }
 
-void arm64_obj_pt_print_slots(pte_t *pdSlot)
+శూన్య arm64_obj_pt_print_slots(pte_t *pd_స్థానం)
 {
-    pte_t *pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pdSlot));
+    pte_t *pt = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pd_స్థానం));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        pte_t *ptSlot = pt + i;
+    కొరకు (మాట_t i = 0; i < బిట్టు(PT_సూచీ_బిట్లు); i++) {
+        pte_t *pt_స్థానం = pt + i;
 
-        if (pte_4k_page_ptr_get_present(ptSlot)) {
-            printf("frame_%p_%04lu = frame ", ptSlot, i);
-            obj_frame_print_attrs(ARMSmallPage, pte_page_ptr_get_page_base_address(ptSlot));
-        }
-    }
-}
-
-void arm64_obj_pd_print_slots(pte_t *pudSlot)
-{
-    pte_t *pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pudSlot));
-
-    for (word_t i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        pte_t *pdSlot = pd + i;
-
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_page) {
-            printf("frame_%p_%04lu = frame ", pdSlot, i);
-            obj_frame_print_attrs(ARMLargePage, pte_page_ptr_get_page_base_address(pdSlot));
-        }
-
-        if (pte_ptr_get_pte_type(pdSlot) == pte_pte_table) {
-            printf("pt_%p_%04lu = pt\n", pdSlot, i);
-            arm64_obj_pt_print_slots(pdSlot);
+        ఒకవేళ (pte_4k_పుట_ptr_get_present(pt_స్థానం)) {
+            రాయి("frame_%p_%04lu = frame ", pt_స్థానం, i);
+            obj_చట్రం_print_attrs(ARMSmall_పుట, pte_పుట_ptr_get_పుట_పునాది_చిరునామా(pt_స్థానం));
         }
     }
 }
 
-void arm64_obj_pud_print_slots(void *pgdSlot_or_vspace)
+శూన్య arm64_obj_pd_print_slots(pte_t *pud_స్థానం)
 {
-    pte_t *pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pgdSlot_or_vspace));
-#ifdef AARCH64_VSPACE_S2_START_L1
-    word_t index_bits = seL4_VSpaceIndexBits;
-#else
-    word_t index_bits = seL4_PageTableIndexBits;
-#endif
-    for (word_t i = 0; i < BIT(index_bits); i++) {
-        pte_t *pudSlot = pud + i;
+    pte_t *pd = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pud_స్థానం));
 
-        switch (pte_ptr_get_pte_type(pudSlot)) {
-        case pte_pte_page:
-            printf("frame_%p_%04lu = frame ", pudSlot, i);
-            obj_frame_print_attrs(ARMHugePage, pte_page_ptr_get_page_base_address(pudSlot));
-            break;
+    కొరకు (మాట_t i = 0; i < బిట్టు(PT_సూచీ_బిట్లు); i++) {
+        pte_t *pd_స్థానం = pd + i;
 
-        case pte_pte_table: {
-            printf("pd_%p_%04lu = pd\n", pudSlot, i);
-            arm64_obj_pd_print_slots(pudSlot);
+        ఒకవేళ (pte_ptr_get_pte_type(pd_స్థానం) == pte_pte_పుట) {
+            రాయి("frame_%p_%04lu = frame ", pd_స్థానం, i);
+            obj_చట్రం_print_attrs(ARMLarge_పుట, pte_పుట_ptr_get_పుట_పునాది_చిరునామా(pd_స్థానం));
+        }
+
+        ఒకవేళ (pte_ptr_get_pte_type(pd_స్థానం) == pte_pte_పట్టిక) {
+            రాయి("pt_%p_%04lu = pt\n", pd_స్థానం, i);
+            arm64_obj_pt_print_slots(pd_స్థానం);
+        }
+    }
+}
+
+శూన్య arm64_obj_pud_print_slots(శూన్య *pgd_స్థానం_or_vspace)
+{
+    pte_t *pud = paddr_గమ్యం_pptr(pte_pte_పట్టిక_ptr_get_pt_పునాది_చిరునామా(pgd_స్థానం_or_vspace));
+#నిర్వచితమైతే AARCH64_VSPACE_S2_ప్రారంభం_L1
+    మాట_t సూచీ_బిట్లు = se_L4_VSpace_సూచీ_బిట్లు;
+#లేకపోతే
+    మాట_t సూచీ_బిట్లు = se_L4_పుట_పట్టిక_సూచీ_బిట్లు;
+#అయితే_ముగింపు
+    కొరకు (మాట_t i = 0; i < బిట్టు(సూచీ_బిట్లు); i++) {
+        pte_t *pud_స్థానం = pud + i;
+
+        ఎంపిక (pte_ptr_get_pte_type(pud_స్థానం)) {
+        స్థితి pte_pte_పుట:
+            రాయి("frame_%p_%04lu = frame ", pud_స్థానం, i);
+            obj_చట్రం_print_attrs(ARMHuge_పుట, pte_పుట_ptr_get_పుట_పునాది_చిరునామా(pud_స్థానం));
+            ఆపు;
+
+        స్థితి pte_pte_పట్టిక: {
+            రాయి("pd_%p_%04lu = pd\n", pud_స్థానం, i);
+            arm64_obj_pd_print_slots(pud_స్థానం);
 
         }
         }
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+శూన్య obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        vspace_root_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+    ఒకవేళ (is_VTable_మూలం(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !చూసిన(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        కూడు_గమ్యం_చూసిన(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        vspace_మూలం_t *vspace = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
 
         /*
          * ARM hyp uses 3 level translation rather than the usual 4 level.
          * levels: PGD -> PUD -> PD -> PT
          */
-#ifdef AARCH64_VSPACE_S2_START_L1
-        printf("%p_pd = pud\n", vspace);
+#నిర్వచితమైతే AARCH64_VSPACE_S2_ప్రారంభం_L1
+        రాయి("%p_pd = pud\n", vspace);
         arm64_obj_pud_print_slots(vspace);
-#else
-        printf("%p_pd = pgd\n", vspace);
-        for (word_t i = 0; i < PT_INDEX_BITS; i++) {
-            pte_t *ptSlot = vspace + i;
-            if (pte_pte_table_ptr_get_present(ptSlot)) {
-                printf("pud_%p_%04lu = pud\n", ptSlot, i);
-                arm64_obj_pud_print_slots(ptSlot);
+#లేకపోతే
+        రాయి("%p_pd = pgd\n", vspace);
+        కొరకు (మాట_t i = 0; i < PT_సూచీ_బిట్లు; i++) {
+            pte_t *pt_స్థానం = vspace + i;
+            ఒకవేళ (pte_pte_పట్టిక_ptr_get_present(pt_స్థానం)) {
+                రాయి("pud_%p_%04lu = pud\n", pt_స్థానం, i);
+                arm64_obj_pud_print_slots(pt_స్థానం);
             }
         }
-#endif
+#అయితే_ముగింపు
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+శూన్య debug_capDL(శూన్య)
 {
-    printf("arch aarch64\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    రాయి("arch aarch64\n");
+    రాయి("objects {\n");
+#నిర్వచితమైతే CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#అయితే_ముగింపు
+    రాయి("}\n");
 
-    printf("caps {\n");
+    రాయి("caps {\n");
 
     /* reset the seen list */
-    reset_seen_list();
+    reset_చూసిన_list();
 
-#ifdef CONFIG_PRINTING
+#నిర్వచితమైతే CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    రాయి("}\n");
 
     obj_irq_print_maps();
-#endif /* CONFIG_PRINTING */
+#అయితే_ముగింపు /* CONFIG_PRINTING */
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */

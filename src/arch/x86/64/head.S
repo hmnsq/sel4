@@ -64,8 +64,8 @@ BEGIN_FUNC(huge_page_check)
 1:
     movl $huge_page_error_string, %ebx
     movl $huge_page_error_size, %ecx
-    call print_string
-    call hang
+    పిలువు print_string
+    పిలువు hang
 
 huge_page_error_string:
     .string "Huge page not supported by the processor\r\n"
@@ -75,7 +75,7 @@ END_FUNC(huge_page_check)
 
 BEGIN_FUNC(setup_pml4)
 #ifdef CONFIG_HUGE_PAGE
-    call huge_page_check
+    పిలువు huge_page_check
 #endif /* CONFIG_HUGE_PAGE */
     movl %cr0, %eax
     andl $0x7fffffff, %eax
@@ -138,8 +138,8 @@ BEGIN_FUNC(pcid_check)
 1:
     movl $pcid_error_string, %ebx
     movl $pcid_error_size, %ecx
-    call print_string
-    call hang
+    పిలువు print_string
+    పిలువు hang
 
 pcid_error_string:
     .string "PCIDs not supported by the processor\r\n"
@@ -156,8 +156,8 @@ BEGIN_FUNC(invpcid_check)
 1:
     movl  $invpcid_error_string, %ebx
     movl  $invpcid_error_size, %ecx
-    call  print_string
-    call  hang
+    పిలువు  print_string
+    పిలువు  hang
 
 invpcid_error_string:
     .string "INVPCID instruction not supported by the processor\r\n"
@@ -175,8 +175,8 @@ BEGIN_FUNC(syscall_check)
 1:
     movl  $syscall_error_string, %ebx
     movl  $syscall_error_size, %ecx
-    call  print_string
-    call  hang
+    పిలువు  print_string
+    పిలువు  hang
 
 syscall_error_string:
     .string "SYSCALL/SYSRET instruction not supported by the processor\r\n"
@@ -198,8 +198,8 @@ BEGIN_FUNC(fsgsbase_enable)
 1:
     movl $fsgsbase_error_string, %ebx
     movl $fsgsbase_error_size, %ecx
-    call print_string
-    call hang
+    పిలువు print_string
+    పిలువు hang
 
 fsgsbase_error_string:
     .string "fsgsbase instructions not supported by the processor\r\n"
@@ -209,7 +209,7 @@ END_FUNC(fsgsbase_enable)
 
 #ifdef CONFIG_SYSCALL
 BEGIN_FUNC(syscall_enable)
-    call syscall_check
+    పిలువు syscall_check
     /* Set SCE (bit 0) in the extended feature MSR. */
     movl $IA32_EFER_MSR, %ecx
     rdmsr
@@ -221,8 +221,8 @@ END_FUNC(syscall_enable)
 
 BEGIN_FUNC(enable_x64_mode)
 #ifdef CONFIG_SUPPORT_PCID
-    call pcid_check
-    call invpcid_check
+    పిలువు pcid_check
+    పిలువు invpcid_check
 #endif
     /* Put base pointer in cr3. */
     movl $boot_pml4, %eax
@@ -256,16 +256,16 @@ BEGIN_FUNC(common_init)
     movl %eax, %cr0
 
 #ifdef CONFIG_FSGSBASE_INST
-    call fsgsbase_enable
+    పిలువు fsgsbase_enable
 #endif /* CONFIG_FSGSBASE_INST */
 
     /* Initialize boot PML4 and switch to long mode. */
-    call setup_pml4
-    call enable_x64_mode
+    పిలువు setup_pml4
+    పిలువు enable_x64_mode
     lgdt _gdt64_ptr
 
 #ifdef CONFIG_SYSCALL
-    call syscall_enable
+    పిలువు syscall_enable
 #endif
 
     ret
@@ -292,7 +292,7 @@ BEGIN_FUNC(_start)
     pushl $0
     pushl %edi /* 1st parameter: multiboot_magic    */
 
-    call common_init
+    పిలువు common_init
 
     /* Reload CS with long bit to enable long mode. */
     ljmp $8, $_start64
@@ -387,7 +387,7 @@ BEGIN_FUNC(boot_cpu_start)
     pushl $0
     popf
 
-    call common_init
+    పిలువు common_init
 
     /* Reload CS with long bit to enable long mode. */
     ljmp $8, $_start_ap64
@@ -412,7 +412,7 @@ _boot_gdt:
     .quad 0x00cf9b000000ffff /* 4GB kernel code segment */
     .quad 0x00cf93000000ffff /* 4GB kernel data segment */
 
-.global boot_cpu_end
+.వైశ్విక boot_cpu_end
 boot_cpu_end:
 
 .section .boot.text

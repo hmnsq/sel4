@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#అన్తర్భావ <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+స్థిర అంతఃవరుస శూన్య cleanByWSL(మాట_t wsl)
 {
-    asm volatile("dc csw, %0" : : "r"(wsl));
+    asm అస్థిర("dc csw, %0" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+స్థిర అంతఃవరుస శూన్య cleanInvalidateByWSL(మాట_t wsl)
 {
-    asm volatile("dc cisw, %0" : : "r"(wsl));
+    asm అస్థిర("dc cisw, %0" : : "r"(wsl));
 }
 
-static inline word_t readCLID(void)
+స్థిర అంతఃవరుస మాట_t readCLID(శూన్య)
 {
-    word_t CLID;
+    మాట_t CLID;
     MRS("clidr_el1", CLID);
-    return CLID;
+    తిరిగి CLID;
 }
 
-#define LOUU(x)    (((x) >> 27)        & MASK(3))
-#define LOC(x)     (((x) >> 24)        & MASK(3))
-#define LOUIS(x)   (((x) >> 21)        & MASK(3))
-#define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
+#నిర్వచించు LOUU(x)    (((x) >> 27)        & ముసుగు(3))
+#నిర్వచించు LOC(x)     (((x) >> 24)        & ముసుగు(3))
+#నిర్వచించు LOUIS(x)   (((x) >> 21)        & ముసుగు(3))
+#నిర్వచించు CTYPE(x,n) (((x) >> (n*3))     & ముసుగు(3))
 
-enum arm_cache_type {
+గణన arm_cache_type {
     ARMCacheI =    1,
     ARMCacheD =    2,
     ARMCacheID =   3,
 };
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+స్థిర అంతఃవరుస మాట_t read_Cache_కొలత(పూర్ణాంకం level, bool_t instruction)
 {
-    word_t size, csselr_old;
+    మాట_t కొలత, csselr_old;
     /* Save CSSELR */
     MRS("csselr_el1", csselr_old);
     /* Select cache level */
     MSR("csselr_el1", ((level << 1) | instruction));
     /* Read 'size' */
-    MRS("ccsidr_el1", size);
+    MRS("ccsidr_el1", కొలత);
     /* Restore CSSELR */
     MSR("csselr_el1", csselr_old);
-    return size;
+    తిరిగి కొలత;
 }
 
-#define LINEBITS(s)     (((s) & MASK(3)) + 4)
-#define ASSOC(s)        ((((s) >> 3) & MASK(10)) + 1)
-#define NSETS(s)        ((((s) >> 13) & MASK(15)) + 1)
+#నిర్వచించు LINEBITS(s)     (((s) & ముసుగు(3)) + 4)
+#నిర్వచించు ASSOC(s)        ((((s) >> 3) & ముసుగు(10)) + 1)
+#నిర్వచించు NSETS(s)        ((((s) >> 13) & ముసుగు(15)) + 1)
 
-void clean_D_PoU(void)
+శూన్య clean_D_PoU(శూన్య)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
+    పూర్ణాంకం clid = readCLID();
+    పూర్ణాంకం lou = LOUU(clid);
 
-    for (int l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
-            word_t lsize = readCacheSize(l, 0);
-            int lbits = LINEBITS(lsize);
-            int assoc = ASSOC(lsize);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(lsize);
-            for (int w = 0; w < assoc; w++) {
-                for (int s = 0; s < nsets; s++) {
-                    cleanByWSL((w << (32 - assoc_bits)) |
+    కొరకు (పూర్ణాంకం l = 0; l < lou; l++) {
+        ఒకవేళ (CTYPE(clid, l) > ARMCacheI) {
+            మాట_t lsize = read_Cache_కొలత(l, 0);
+            పూర్ణాంకం lbits = LINEBITS(lsize);
+            పూర్ణాంకం assoc = ASSOC(lsize);
+            పూర్ణాంకం assoc_బిట్లు = మాట_బిట్లు - clzl(assoc - 1);
+            పూర్ణాంకం nsets = NSETS(lsize);
+            కొరకు (పూర్ణాంకం w = 0; w < assoc; w++) {
+                కొరకు (పూర్ణాంకం s = 0; s < nsets; s++) {
+                    cleanByWSL((w << (32 - assoc_బిట్లు)) |
                                (s << lbits) | (l << 1));
                 }
             }
@@ -74,35 +74,35 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+స్థిర అంతఃవరుస శూన్య cleanInvalidate_D_by_level(పూర్ణాంకం l)
 {
-    word_t lsize = readCacheSize(l, 0);
-    int lbits = LINEBITS(lsize);
-    int assoc = ASSOC(lsize);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(lsize);
+    మాట_t lsize = read_Cache_కొలత(l, 0);
+    పూర్ణాంకం lbits = LINEBITS(lsize);
+    పూర్ణాంకం assoc = ASSOC(lsize);
+    పూర్ణాంకం assoc_బిట్లు = మాట_బిట్లు - clzl(assoc - 1);
+    పూర్ణాంకం nsets = NSETS(lsize);
 
-    for (int w = 0; w < assoc; w++) {
-        for (int s = 0; s < nsets; s++) {
-            cleanInvalidateByWSL((w << (32 - assoc_bits)) |
+    కొరకు (పూర్ణాంకం w = 0; w < assoc; w++) {
+        కొరకు (పూర్ణాంకం s = 0; s < nsets; s++) {
+            cleanInvalidateByWSL((w << (32 - assoc_బిట్లు)) |
                                  (s << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+శూన్య cleanInvalidate_D_PoC(శూన్య)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
+    పూర్ణాంకం clid = readCLID();
+    పూర్ణాంకం loc = LOC(clid);
 
-    for (int l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    కొరకు (పూర్ణాంకం l = 0; l < loc; l++) {
+        ఒకవేళ (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+శూన్య cleanInvalidate_L1D(శూన్య)
 {
     cleanInvalidate_D_by_level(0);
 }

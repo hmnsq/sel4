@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object/reply.h>
+#అన్తర్భావ <object/reply.h>
 
-void reply_push(tcb_t *tcb_caller, tcb_t *tcb_callee, reply_t *reply, bool_t canDonate)
+శూన్య జవాబు_నెట్టు(tcb_t *tcb_caller, tcb_t *tcb_callee, జవాబు_t *జవాబు, bool_t canDonate)
 {
     sched_context_t *sc_donated = tcb_caller->tcbSchedContext;
 
-    assert(tcb_caller != NULL);
-    assert(reply != NULL);
-    assert(reply->replyTCB == NULL);
+    ప్రతిజ్ఞా(tcb_caller != ఖాళీ);
+    ప్రతిజ్ఞా(జవాబు != ఖాళీ);
+    ప్రతిజ్ఞా(జవాబు->జవాబు_TCB == ఖాళీ);
 
-    assert(call_stack_get_callStackPtr(reply->replyPrev) == 0);
-    assert(call_stack_get_callStackPtr(reply->replyNext) == 0);
+    ప్రతిజ్ఞా(call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_Prev) == 0);
+    ప్రతిజ్ఞా(call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_తదుపరి) == 0);
 
     /* caller state must be blocked on send or active, so cannot be in a existing call stack */
-    assert(thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_BlockedOnSend ||
+    ప్రతిజ్ఞా(thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_BlockedOnSend ||
            thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_Running ||
            thread_state_get_tsType(tcb_caller->tcbState) == ThreadState_Restart);
 
     /* callee state must be simple at this point (inactive, restart, or running),
        so it also cannot have a reply reference associated with it. */
-    assert(thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Inactive ||
+    ప్రతిజ్ఞా(thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Inactive ||
            thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Running ||
            thread_state_get_tsType(tcb_callee->tcbState) == ThreadState_Restart);
 
     /* link caller and reply */
-    reply->replyTCB = tcb_caller;
-    setThreadStateBlockedOnReply(tcb_caller, reply);
+    జవాబు->జవాబు_TCB = tcb_caller;
+    సమితి_Thread_State_Blocked_On_జవాబు(tcb_caller, జవాబు);
 
-    if (sc_donated != NULL && tcb_callee->tcbSchedContext == NULL && canDonate) {
-        reply_t *old_caller = sc_donated->scReply;
+    ఒకవేళ (sc_donated != ఖాళీ && tcb_callee->tcbSchedContext == ఖాళీ && canDonate) {
+        జవాబు_t *old_caller = sc_donated->sc_జవాబు;
 
         /* check stack integrity */
-        assert(old_caller == NULL ||
-               SC_PTR(call_stack_get_callStackPtr(old_caller->replyNext)) == sc_donated);
+        ప్రతిజ్ఞా(old_caller == ఖాళీ ||
+               SC_PTR(call_దొంతర_get_call_దొంతర_Ptr(old_caller->జవాబు_తదుపరి)) == sc_donated);
 
         /* push on to stack */
-        if (old_caller) {
-            old_caller->replyNext = call_stack_new(REPLY_REF(reply), false);
+        ఒకవేళ (old_caller) {
+            old_caller->జవాబు_తదుపరి = call_దొంతర_new(జవాబు_REF(జవాబు), false);
         }
-        reply->replyPrev = call_stack_new(REPLY_REF(old_caller), false);
-        sc_donated->scReply = reply;
-        reply->replyNext = call_stack_new(SC_REF(sc_donated), true);
+        జవాబు->జవాబు_Prev = call_దొంతర_new(జవాబు_REF(old_caller), false);
+        sc_donated->sc_జవాబు = జవాబు;
+        జవాబు->జవాబు_తదుపరి = call_దొంతర_new(SC_REF(sc_donated), true);
 
         /* now do the actual donation */
         schedContext_donate(sc_donated, tcb_callee);
@@ -53,84 +53,84 @@ void reply_push(tcb_t *tcb_caller, tcb_t *tcb_callee, reply_t *reply, bool_t can
 }
 
 /* Pop the head reply from the call stack */
-void reply_pop(reply_t *reply, tcb_t *tcb)
+శూన్య జవాబు_తీయి(జవాబు_t *జవాబు, tcb_t *tcb)
 {
-    assert(reply != NULL);
-    assert(reply->replyTCB == tcb);
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    assert(thread_state_get_replyObject(tcb->tcbState) == REPLY_REF(reply));
+    ప్రతిజ్ఞా(జవాబు != ఖాళీ);
+    ప్రతిజ్ఞా(జవాబు->జవాబు_TCB == tcb);
+    ప్రతిజ్ఞా(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_జవాబు);
+    ప్రతిజ్ఞా(thread_state_get_జవాబు_Object(tcb->tcbState) == జవాబు_REF(జవాబు));
 
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    మాట_t తదుపరి_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_తదుపరి);
+    మాట_t prev_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_Prev);
 
-    SC_PTR(next_ptr)->scReply = REPLY_PTR(prev_ptr);
-    if (prev_ptr != 0) {
-        REPLY_PTR(prev_ptr)->replyNext = reply->replyNext;
-        assert(call_stack_get_isHead(REPLY_PTR(prev_ptr)->replyNext));
+    SC_PTR(తదుపరి_ptr)->sc_జవాబు = జవాబు_PTR(prev_ptr);
+    ఒకవేళ (prev_ptr != 0) {
+        జవాబు_PTR(prev_ptr)->జవాబు_తదుపరి = జవాబు->జవాబు_తదుపరి;
+        ప్రతిజ్ఞా(call_దొంతర_get_is_తల(జవాబు_PTR(prev_ptr)->జవాబు_తదుపరి));
     }
 
-    reply->replyNext = call_stack_new(0, false);
+    జవాబు->జవాబు_తదుపరి = call_దొంతర_new(0, false);
 
     /* give it back */
-    if (tcb->tcbSchedContext == NULL) {
+    ఒకవేళ (tcb->tcbSchedContext == ఖాళీ) {
         /* only give the SC back if our SC is NULL. This prevents
          * strange behaviour when a thread is bound to an sc while it is
          * in the BlockedOnReply state. The semantics in this case are that the
          * SC cannot go back to the caller if the caller has received another one */
-        schedContext_donate(SC_PTR(next_ptr), tcb);
+        schedContext_donate(SC_PTR(తదుపరి_ptr), tcb);
     }
 
-    reply->replyPrev = call_stack_new(0, false);
-    reply_unlink(reply, tcb);
+    జవాబు->జవాబు_Prev = call_దొంతర_new(0, false);
+    జవాబు_unlink(జవాబు, tcb);
 }
 
 /* Remove a reply from the middle of the call stack */
-void reply_remove(reply_t *reply, tcb_t *tcb)
+శూన్య జవాబు_remove(జవాబు_t *జవాబు, tcb_t *tcb)
 {
-    assert(reply->replyTCB == tcb);
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    assert(thread_state_get_replyObject(tcb->tcbState) == REPLY_REF(reply));
+    ప్రతిజ్ఞా(జవాబు->జవాబు_TCB == tcb);
+    ప్రతిజ్ఞా(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_జవాబు);
+    ప్రతిజ్ఞా(thread_state_get_జవాబు_Object(tcb->tcbState) == జవాబు_REF(జవాబు));
 
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    మాట_t తదుపరి_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_తదుపరి);
+    మాట_t prev_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_Prev);
 
-    if (likely(next_ptr && call_stack_get_isHead(reply->replyNext))) {
+    ఒకవేళ (likely(తదుపరి_ptr && call_దొంతర_get_is_తల(జవాబు->జవాబు_తదుపరి))) {
         /* head of the call stack -> just pop */
-        reply_pop(reply, tcb);
-    } else {
-        if (next_ptr) {
+        జవాబు_తీయి(జవాబు, tcb);
+    } లేకపోతే {
+        ఒకవేళ (తదుపరి_ptr) {
             /* not the head, remove from middle - break the chain */
-            REPLY_PTR(next_ptr)->replyPrev = call_stack_new(0, false);
+            జవాబు_PTR(తదుపరి_ptr)->జవాబు_Prev = call_దొంతర_new(0, false);
         }
-        if (prev_ptr) {
-            REPLY_PTR(prev_ptr)->replyNext = call_stack_new(0, false);
+        ఒకవేళ (prev_ptr) {
+            జవాబు_PTR(prev_ptr)->జవాబు_తదుపరి = call_దొంతర_new(0, false);
         }
-        reply->replyPrev = call_stack_new(0, false);
-        reply->replyNext = call_stack_new(0, false);
-        reply_unlink(reply, tcb);
+        జవాబు->జవాబు_Prev = call_దొంతర_new(0, false);
+        జవాబు->జవాబు_తదుపరి = call_దొంతర_new(0, false);
+        జవాబు_unlink(జవాబు, tcb);
     }
 }
 
-void reply_remove_tcb(tcb_t *tcb)
+శూన్య జవాబు_remove_tcb(tcb_t *tcb)
 {
-    assert(thread_state_get_tsType(tcb->tcbState) == ThreadState_BlockedOnReply);
-    reply_t *reply = REPLY_PTR(thread_state_get_replyObject(tcb->tcbState));
-    word_t next_ptr = call_stack_get_callStackPtr(reply->replyNext);
-    word_t prev_ptr = call_stack_get_callStackPtr(reply->replyPrev);
+    ప్రతిజ్ఞా(thread_state_get_tsType(tcb->tcbState) == Thread_State_Blocked_On_జవాబు);
+    జవాబు_t *జవాబు = జవాబు_PTR(thread_state_get_జవాబు_Object(tcb->tcbState));
+    మాట_t తదుపరి_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_తదుపరి);
+    మాట_t prev_ptr = call_దొంతర_get_call_దొంతర_Ptr(జవాబు->జవాబు_Prev);
 
-    if (next_ptr) {
-        if (call_stack_get_isHead(reply->replyNext)) {
-            SC_PTR(next_ptr)->scReply = NULL;
-        } else {
-            REPLY_PTR(next_ptr)->replyPrev = call_stack_new(0, false);
+    ఒకవేళ (తదుపరి_ptr) {
+        ఒకవేళ (call_దొంతర_get_is_తల(జవాబు->జవాబు_తదుపరి)) {
+            SC_PTR(తదుపరి_ptr)->sc_జవాబు = ఖాళీ;
+        } లేకపోతే {
+            జవాబు_PTR(తదుపరి_ptr)->జవాబు_Prev = call_దొంతర_new(0, false);
         }
     }
 
-    if (prev_ptr) {
-        REPLY_PTR(prev_ptr)->replyNext = call_stack_new(0, false);
+    ఒకవేళ (prev_ptr) {
+        జవాబు_PTR(prev_ptr)->జవాబు_తదుపరి = call_దొంతర_new(0, false);
     }
 
-    reply->replyPrev = call_stack_new(0, false);
-    reply->replyNext = call_stack_new(0, false);
-    reply_unlink(reply, tcb);
+    జవాబు->జవాబు_Prev = call_దొంతర_new(0, false);
+    జవాబు->జవాబు_తదుపరి = call_దొంతర_new(0, false);
+    జవాబు_unlink(జవాబు, tcb);
 }

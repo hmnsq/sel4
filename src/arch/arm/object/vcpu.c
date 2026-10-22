@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#అన్తర్భావ <config.h>
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
 
-#include <arch/object/vcpu.h>
-#include <armv/vcpu.h>
-#include <arch/machine/debug.h> /* Arch_debug[A/Di]ssociateVCPUTCB() */
-#include <arch/machine/debug_conf.h>
-#include <drivers/timer/arm_generic.h>
-#include <plat/platform_gen.h> /* Ensure correct GIC header is included */
+#అన్తర్భావ <arch/object/vcpu.h>
+#అన్తర్భావ <armv/vcpu.h>
+#అన్తర్భావ <arch/machine/debug.h> /* Arch_debug[A/Di]ssociateVCPUTCB() */
+#అన్తర్భావ <arch/machine/debug_conf.h>
+#అన్తర్భావ <drivers/timer/arm_generic.h>
+#అన్తర్భావ <plat/platform_gen.h> /* Ensure correct GIC header is included */
 
-BOOT_CODE void vcpu_boot_init(void)
+BOOT_సంకేతం శూన్య vcpu_boot_init(శూన్య)
 {
     armv_vcpu_boot_init();
-    gic_vcpu_num_list_regs = VGIC_VTR_NLISTREGS(get_gic_vcpu_ctrl_vtr());
-    if (gic_vcpu_num_list_regs > GIC_VCPU_MAX_NUM_LR) {
-        printf("Warning: VGIC is reporting more list registers than we support. Truncating\n");
-        gic_vcpu_num_list_regs = GIC_VCPU_MAX_NUM_LR;
+    gic_vcpu_అంకె_list_regs = VGIC_VTR_NLISTREGS(get_gic_vcpu_ctrl_vtr());
+    ఒకవేళ (gic_vcpu_అంకె_list_regs > GIC_VCPU_MAX_అంకె_LR) {
+        రాయి("Warning: VGIC is reporting more list registers than we support. Truncating\n");
+        gic_vcpu_అంకె_list_regs = GIC_VCPU_MAX_అంకె_LR;
     }
-    vcpu_disable(NULL);
-    ARCH_NODE_STATE(armHSCurVCPU) = NULL;
-    ARCH_NODE_STATE(armHSVCPUActive) = false;
+    vcpu_disable(ఖాళీ);
+    ARCH_కణుపు_STATE(armHSCurVCPU) = ఖాళీ;
+    ARCH_కణుపు_STATE(armHSVCPUActive) = false;
 
 }
 
-static void vcpu_save(vcpu_t *vcpu, bool_t active)
+స్థిర శూన్య vcpu_save(vcpu_t *vcpu, bool_t చురుకైన)
 {
-    word_t i;
-    word_t lr_num;
+    మాట_t i;
+    మాట_t lr_అంకె;
 
-    assert(vcpu);
+    ప్రతిజ్ఞా(vcpu);
     dsb();
     /* If we aren't active then this state already got stored when
      * we were disabled */
-    if (active) {
+    ఒకవేళ (చురుకైన) {
         vcpu_save_reg(vcpu, seL4_VCPUReg_SCTLR);
         vcpu->vgic.hcr = get_gic_vcpu_ctrl_hcr();
         save_virt_timer(vcpu);
@@ -47,65 +47,65 @@ static void vcpu_save(vcpu_t *vcpu, bool_t active)
     /* Store GIC VCPU control state */
     vcpu->vgic.vmcr = get_gic_vcpu_ctrl_vmcr();
     vcpu->vgic.apr = get_gic_vcpu_ctrl_apr();
-    lr_num = gic_vcpu_num_list_regs;
-    for (i = 0; i < lr_num; i++) {
+    lr_అంకె = gic_vcpu_అంకె_list_regs;
+    కొరకు (i = 0; i < lr_అంకె; i++) {
         vcpu->vgic.lr[i] = get_gic_vcpu_ctrl_lr(i);
     }
-    armv_vcpu_save(vcpu, active);
+    armv_vcpu_save(vcpu, చురుకైన);
 }
 
 
-static word_t readVCPUReg(vcpu_t *vcpu, word_t field)
+స్థిర మాట_t readVCPUReg(vcpu_t *vcpu, మాట_t క్షేత్రం)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        if (vcpu_reg_saved_when_disabled(field) && !ARCH_NODE_STATE(armHSVCPUActive)) {
-            return vcpu_read_reg(vcpu, field);
-        } else {
-            return vcpu_hw_read_reg(field);
+    ఒకవేళ (likely(ARCH_కణుపు_STATE(armHSCurVCPU) == vcpu)) {
+        ఒకవేళ (vcpu_reg_saved_when_disabled(క్షేత్రం) && !ARCH_కణుపు_STATE(armHSVCPUActive)) {
+            తిరిగి vcpu_read_reg(vcpu, క్షేత్రం);
+        } లేకపోతే {
+            తిరిగి vcpu_hw_read_reg(క్షేత్రం);
         }
-    } else {
-        return vcpu_read_reg(vcpu, field);
+    } లేకపోతే {
+        తిరిగి vcpu_read_reg(vcpu, క్షేత్రం);
     }
 }
 
-static void writeVCPUReg(vcpu_t *vcpu, word_t field, word_t value)
+స్థిర శూన్య writeVCPUReg(vcpu_t *vcpu, మాట_t క్షేత్రం, మాట_t విలువ)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        if (vcpu_reg_saved_when_disabled(field) && !ARCH_NODE_STATE(armHSVCPUActive)) {
-            vcpu_write_reg(vcpu, field, value);
-        } else {
-            vcpu_hw_write_reg(field, value);
+    ఒకవేళ (likely(ARCH_కణుపు_STATE(armHSCurVCPU) == vcpu)) {
+        ఒకవేళ (vcpu_reg_saved_when_disabled(క్షేత్రం) && !ARCH_కణుపు_STATE(armHSVCPUActive)) {
+            vcpu_write_reg(vcpu, క్షేత్రం, విలువ);
+        } లేకపోతే {
+            vcpu_hw_write_reg(క్షేత్రం, విలువ);
         }
-    } else {
-        vcpu_write_reg(vcpu, field, value);
+    } లేకపోతే {
+        vcpu_write_reg(vcpu, క్షేత్రం, విలువ);
     }
 }
 
-void vcpu_restore(vcpu_t *vcpu)
+శూన్య vcpu_restore(vcpu_t *vcpu)
 {
-    assert(vcpu);
-    word_t i;
-    word_t lr_num;
+    ప్రతిజ్ఞా(vcpu);
+    మాట_t i;
+    మాట_t lr_అంకె;
     /* Turn off the VGIC */
-    set_gic_vcpu_ctrl_hcr(0);
+    సమితి_gic_vcpu_ctrl_hcr(0);
     isb();
 
     /* Restore GIC VCPU control state */
-    set_gic_vcpu_ctrl_vmcr(vcpu->vgic.vmcr);
-    set_gic_vcpu_ctrl_apr(vcpu->vgic.apr);
-    lr_num = gic_vcpu_num_list_regs;
-    for (i = 0; i < lr_num; i++) {
-        set_gic_vcpu_ctrl_lr(i, vcpu->vgic.lr[i]);
+    సమితి_gic_vcpu_ctrl_vmcr(vcpu->vgic.vmcr);
+    సమితి_gic_vcpu_ctrl_apr(vcpu->vgic.apr);
+    lr_అంకె = gic_vcpu_అంకె_list_regs;
+    కొరకు (i = 0; i < lr_అంకె; i++) {
+        సమితి_gic_vcpu_ctrl_lr(i, vcpu->vgic.lr[i]);
     }
 
     /* restore registers */
-    vcpu_restore_reg_range(vcpu, seL4_VCPURegSaveRange_start, seL4_VCPURegSaveRange_end);
+    vcpu_restore_reg_range(vcpu, se_L4_VCPUReg_Save_Range_ప్రారంభం, se_L4_VCPUReg_Save_Range_చివర);
     vcpu_enable(vcpu);
 }
 
-void VPPIEvent(irq_t irq)
+శూన్య VPPIEvent(irq_t irq)
 {
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     /* If the current task is currently enqueued it will not be able to
      * correctly receive a fault IPC message. This may occur due to the
      * budget check that happens early in the handleInterruptEntry.
@@ -120,39 +120,39 @@ void VPPIEvent(irq_t irq)
      * our timeslice having ended, and we have a timeout fault handler for
      * this thread, we do not want to overwrite that with our VCPU fault.
      */
-    if (thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState) ||
-        !isSchedulable(NODE_STATE(ksCurThread))) {
-        return;
+    ఒకవేళ (thread_state_get_tcbQueued(కణుపు_STATE(ksCurThread)->tcbState) ||
+        !isSchedulable(కణుపు_STATE(ksCurThread))) {
+        తిరిగి;
     }
-#endif
+#అయితే_ముగింపు
 
-    if (ARCH_NODE_STATE(armHSVCPUActive)) {
-        maskInterrupt(true, irq);
-        assert(irqVPPIEventIndex(irq) != VPPIEventIRQ_invalid);
-        ARCH_NODE_STATE(armHSCurVCPU)->vppi_masked[irqVPPIEventIndex(irq)] = true;
-        current_fault = seL4_Fault_VPPIEvent_new(IRQT_TO_IRQ(irq));
+    ఒకవేళ (ARCH_కణుపు_STATE(armHSVCPUActive)) {
+        ముసుగు_అంతరాయం(true, irq);
+        ప్రతిజ్ఞా(irq_VPPIEvent_సూచీ(irq) != VPPIEventIRQ_invalid);
+        ARCH_కణుపు_STATE(armHSCurVCPU)->vppi_masked[irq_VPPIEvent_సూచీ(irq)] = true;
+        current_fault = seL4_Fault_VPPIEvent_new(IRQT_గమ్యం_IRQ(irq));
         /* Current VCPU being active should indicate that the current thread
          * is runnable. At present, verification cannot establish this so we
          * perform an extra check. */
-        assert(isRunnable(NODE_STATE(ksCurThread)));
-        if (isRunnable(NODE_STATE(ksCurThread))) {
-            handleFault(NODE_STATE(ksCurThread));
+        ప్రతిజ్ఞా(isRunnable(కణుపు_STATE(ksCurThread)));
+        ఒకవేళ (isRunnable(కణుపు_STATE(ksCurThread))) {
+            handleFault(కణుపు_STATE(ksCurThread));
         }
     }
 }
 
-void VGICMaintenance(void)
+శూన్య VGICMaintenance(శూన్య)
 {
     uint32_t eisr0, eisr1;
     uint32_t flags;
 
-#ifdef CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
     /* See VPPIEvent for details on this check. */
-    if (thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState) ||
-        !isSchedulable(NODE_STATE(ksCurThread))) {
-        return;
+    ఒకవేళ (thread_state_get_tcbQueued(కణుపు_STATE(ksCurThread)->tcbState) ||
+        !isSchedulable(కణుపు_STATE(ksCurThread))) {
+        తిరిగి;
     }
-#endif
+#అయితే_ముగింపు
 
     /* We shouldn't get a VGICMaintenance interrupt while a VCPU isn't active,
      * but if one becomes pending before the VGIC is disabled we might get one
@@ -160,55 +160,55 @@ void VGICMaintenance(void)
      * case we simply return and rely on the interrupt being raised again when
      * the VCPU is reenabled.
      */
-    if (!ARCH_NODE_STATE(armHSVCPUActive)) {
-        printf("Received VGIC maintenance without active VCPU!\n");
-        return;
+    ఒకవేళ (!ARCH_కణుపు_STATE(armHSVCPUActive)) {
+        రాయి("Received VGIC maintenance without active VCPU!\n");
+        తిరిగి;
     }
 
     eisr0 = get_gic_vcpu_ctrl_eisr0();
     eisr1 = get_gic_vcpu_ctrl_eisr1();
     flags = get_gic_vcpu_ctrl_misr();
 
-    if (flags & VGIC_MISR_EOI) {
-        int irq_idx;
-        if (eisr0) {
+    ఒకవేళ (flags & VGIC_MISR_EOI) {
+        పూర్ణాంకం irq_idx;
+        ఒకవేళ (eisr0) {
             irq_idx = ctzl(eisr0);
-        } else if (eisr1) {
+        } లేకపోతే ఒకవేళ (eisr1) {
             irq_idx = ctzl(eisr1) + 32;
-        } else {
+        } లేకపోతే {
             irq_idx = -1;
         }
 
         /* the hardware should never give us an invalid index, but we don't
          * want to trust it that far */
-        if (irq_idx == -1  || irq_idx >= gic_vcpu_num_list_regs) {
+        ఒకవేళ (irq_idx == -1  || irq_idx >= gic_vcpu_అంకె_list_regs) {
             current_fault = seL4_Fault_VGICMaintenance_new(0, 0);
-        } else {
+        } లేకపోతే {
             virq_t virq = get_gic_vcpu_ctrl_lr(irq_idx);
-            switch (virq_get_virqType(virq)) {
-            case virq_virq_active:
-                virq = virq_virq_active_set_virqEOIIRQEN(virq, 0);
-                break;
-            case virq_virq_pending:
-                virq = virq_virq_pending_set_virqEOIIRQEN(virq, 0);
-                break;
-            case virq_virq_invalid:
-                virq = virq_virq_invalid_set_virqEOIIRQEN(virq, 0);
-                break;
+            ఎంపిక (virq_get_virqType(virq)) {
+            స్థితి virq_virq_చురుకైన:
+                virq = virq_virq_చురుకైన_సమితి_virq_EOIIRQEN(virq, 0);
+                ఆపు;
+            స్థితి virq_virq_pending:
+                virq = virq_virq_pending_సమితి_virq_EOIIRQEN(virq, 0);
+                ఆపు;
+            స్థితి virq_virq_invalid:
+                virq = virq_virq_invalid_సమితి_virq_EOIIRQEN(virq, 0);
+                ఆపు;
             }
-            set_gic_vcpu_ctrl_lr(irq_idx, virq);
+            సమితి_gic_vcpu_ctrl_lr(irq_idx, virq);
             /* decodeVCPUInjectIRQ below checks the vgic.lr register,
              * so we should also sync the shadow data structure as well */
-            assert(ARCH_NODE_STATE(armHSCurVCPU) != NULL && ARCH_NODE_STATE(armHSVCPUActive));
-            if (ARCH_NODE_STATE(armHSCurVCPU) != NULL && ARCH_NODE_STATE(armHSVCPUActive)) {
-                ARCH_NODE_STATE(armHSCurVCPU)->vgic.lr[irq_idx] = virq;
-            } else {
+            ప్రతిజ్ఞా(ARCH_కణుపు_STATE(armHSCurVCPU) != ఖాళీ && ARCH_కణుపు_STATE(armHSVCPUActive));
+            ఒకవేళ (ARCH_కణుపు_STATE(armHSCurVCPU) != ఖాళీ && ARCH_కణుపు_STATE(armHSVCPUActive)) {
+                ARCH_కణుపు_STATE(armHSCurVCPU)->vgic.lr[irq_idx] = virq;
+            } లేకపోతే {
                 /* FIXME This should not happen */
             }
             current_fault = seL4_Fault_VGICMaintenance_new(irq_idx, 1);
         }
 
-    } else {
+    } లేకపోతే {
         /* Assume that it was an EOI for a LR that was not present */
         current_fault = seL4_Fault_VGICMaintenance_new(0, 0);
     }
@@ -216,395 +216,395 @@ void VGICMaintenance(void)
     /* Current VCPU being active should indicate that the current thread
      * is runnable. At present, verification cannot establish this so we
      * perform an extra check. */
-    assert(isRunnable(NODE_STATE(ksCurThread)));
-    if (isRunnable(NODE_STATE(ksCurThread))) {
-        handleFault(NODE_STATE(ksCurThread));
+    ప్రతిజ్ఞా(isRunnable(కణుపు_STATE(ksCurThread)));
+    ఒకవేళ (isRunnable(కణుపు_STATE(ksCurThread))) {
+        handleFault(కణుపు_STATE(ksCurThread));
     }
 }
 
-void vcpu_init(vcpu_t *vcpu)
+శూన్య vcpu_init(vcpu_t *vcpu)
 {
     armv_vcpu_init(vcpu);
     /* GICH VCPU interface control. Trap VCPU access to Group 0 registers on GICv3. */
     vcpu->vgic.hcr = VGIC_HCR_EN | VGIC_HCR_TALL0;
-#ifdef CONFIG_VTIMER_UPDATE_VOFFSET
+#నిర్వచితమైతే CONFIG_VTIMER_UPDATE_VOFFSET
     /* Virtual Timer interface */
-    vcpu->virtTimer.last_pcount = 0;
-#endif
+    vcpu->virtTimer.చివరి_pcount = 0;
+#అయితే_ముగింపు
 }
 
-void vcpu_switch(vcpu_t *new)
+శూన్య vcpu_switch(vcpu_t *new)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) != new)) {
-        if (unlikely(new != NULL)) {
-            if (unlikely(ARCH_NODE_STATE(armHSCurVCPU) != NULL)) {
-                vcpu_save(ARCH_NODE_STATE(armHSCurVCPU), ARCH_NODE_STATE(armHSVCPUActive));
+    ఒకవేళ (likely(ARCH_కణుపు_STATE(armHSCurVCPU) != new)) {
+        ఒకవేళ (unlikely(new != ఖాళీ)) {
+            ఒకవేళ (unlikely(ARCH_కణుపు_STATE(armHSCurVCPU) != ఖాళీ)) {
+                vcpu_save(ARCH_కణుపు_STATE(armHSCurVCPU), ARCH_కణుపు_STATE(armHSVCPUActive));
             }
             vcpu_restore(new);
-            ARCH_NODE_STATE(armHSCurVCPU) = new;
-            ARCH_NODE_STATE(armHSVCPUActive) = true;
-        } else if (unlikely(ARCH_NODE_STATE(armHSVCPUActive))) {
+            ARCH_కణుపు_STATE(armHSCurVCPU) = new;
+            ARCH_కణుపు_STATE(armHSVCPUActive) = true;
+        } లేకపోతే ఒకవేళ (unlikely(ARCH_కణుపు_STATE(armHSVCPUActive))) {
             /* leave the current VCPU state loaded, but disable vgic and mmu */
-#ifdef ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_THREADS
-            saveAllBreakpointState(ARCH_NODE_STATE(armHSCurVCPU)->vcpuTCB);
-#endif
-            vcpu_disable(ARCH_NODE_STATE(armHSCurVCPU));
-            ARCH_NODE_STATE(armHSVCPUActive) = false;
+#నిర్వచితమైతే ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_దారాలు
+            saveAllBreakpointState(ARCH_కణుపు_STATE(armHSCurVCPU)->vcpuTCB);
+#అయితే_ముగింపు
+            vcpu_disable(ARCH_కణుపు_STATE(armHSCurVCPU));
+            ARCH_కణుపు_STATE(armHSVCPUActive) = false;
         }
-    } else if (likely(!ARCH_NODE_STATE(armHSVCPUActive) && new != NULL)) {
+    } లేకపోతే ఒకవేళ (likely(!ARCH_కణుపు_STATE(armHSVCPUActive) && new != ఖాళీ)) {
         isb();
         vcpu_enable(new);
-        ARCH_NODE_STATE(armHSVCPUActive) = true;
+        ARCH_కణుపు_STATE(armHSVCPUActive) = true;
     }
 }
 
-static void vcpu_invalidate_active(void)
+స్థిర శూన్య vcpu_invalidate_చురుకైన(శూన్య)
 {
-    if (ARCH_NODE_STATE(armHSVCPUActive)) {
-        vcpu_disable(NULL);
-        ARCH_NODE_STATE(armHSVCPUActive) = false;
+    ఒకవేళ (ARCH_కణుపు_STATE(armHSVCPUActive)) {
+        vcpu_disable(ఖాళీ);
+        ARCH_కణుపు_STATE(armHSVCPUActive) = false;
     }
-    ARCH_NODE_STATE(armHSCurVCPU) = NULL;
+    ARCH_కణుపు_STATE(armHSCurVCPU) = ఖాళీ;
 }
 
-void vcpu_flush(void)
+శూన్య vcpu_flush(శూన్య)
 {
-    if (ARCH_NODE_STATE(armHSCurVCPU)) {
-        vcpu_save(ARCH_NODE_STATE(armHSCurVCPU), ARCH_NODE_STATE(armHSVCPUActive));
-        vcpu_invalidate_active();
+    ఒకవేళ (ARCH_కణుపు_STATE(armHSCurVCPU)) {
+        vcpu_save(ARCH_కణుపు_STATE(armHSCurVCPU), ARCH_కణుపు_STATE(armHSVCPUActive));
+        vcpu_invalidate_చురుకైన();
     }
 }
 
-void vcpu_flush_if_current(tcb_t *tptr)
+శూన్య vcpu_flush_if_current(tcb_t *tptr)
 {
-    if (tptr->tcbArch.tcbVCPU == ARCH_NODE_STATE(armHSCurVCPU)) {
+    ఒకవేళ (tptr->tcbArch.tcbVCPU == ARCH_కణుపు_STATE(armHSCurVCPU)) {
         vcpu_flush();
     }
 }
 
-void vcpu_finalise(vcpu_t *vcpu)
+శూన్య vcpu_finalise(vcpu_t *vcpu)
 {
-    if (vcpu->vcpuTCB) {
+    ఒకవేళ (vcpu->vcpuTCB) {
         dissociateVCPUTCB(vcpu, vcpu->vcpuTCB);
     }
 }
 
-void associateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
+శూన్య associateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
 {
-    if (tcb->tcbArch.tcbVCPU) {
+    ఒకవేళ (tcb->tcbArch.tcbVCPU) {
         dissociateVCPUTCB(tcb->tcbArch.tcbVCPU, tcb);
     }
-    if (vcpu->vcpuTCB) {
+    ఒకవేళ (vcpu->vcpuTCB) {
         dissociateVCPUTCB(vcpu, vcpu->vcpuTCB);
     }
     tcb->tcbArch.tcbVCPU = vcpu;
     vcpu->vcpuTCB = tcb;
 
-    if (tcb == NODE_STATE(ksCurThread)) {
+    ఒకవేళ (tcb == కణుపు_STATE(ksCurThread)) {
         vcpu_switch(vcpu);
     }
 }
 
-void dissociateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
+శూన్య dissociateVCPUTCB(vcpu_t *vcpu, tcb_t *tcb)
 {
-    if (tcb->tcbArch.tcbVCPU != vcpu || vcpu->vcpuTCB != tcb) {
+    ఒకవేళ (tcb->tcbArch.tcbVCPU != vcpu || vcpu->vcpuTCB != tcb) {
         fail("TCB and VCPU not associated.");
     }
-    if (vcpu == ARCH_NODE_STATE(armHSCurVCPU)) {
-        vcpu_invalidate_active();
+    ఒకవేళ (vcpu == ARCH_కణుపు_STATE(armHSCurVCPU)) {
+        vcpu_invalidate_చురుకైన();
     }
-    tcb->tcbArch.tcbVCPU = NULL;
-    vcpu->vcpuTCB = NULL;
-#ifdef ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_THREADS
+    tcb->tcbArch.tcbVCPU = ఖాళీ;
+    vcpu->vcpuTCB = ఖాళీ;
+#నిర్వచితమైతే ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_దారాలు
     Arch_debugDissociateVCPUTCB(tcb);
-#endif
+#అయితే_ముగింపు
 
     /* sanitize the CPSR as without a VCPU a thread should only be in user mode */
-#ifdef CONFIG_ARCH_AARCH64
-    setRegister(tcb, SPSR_EL1, sanitiseRegister(SPSR_EL1, getRegister(tcb, SPSR_EL1), false));
-#else
-    setRegister(tcb, CPSR, sanitiseRegister(CPSR, getRegister(tcb, CPSR), false));
-#endif
+#నిర్వచితమైతే CONFIG_ARCH_AARCH64
+    సమితి_రిజిస్టరు(tcb, SPSR_EL1, sanitise_రిజిస్టరు(SPSR_EL1, get_రిజిస్టరు(tcb, SPSR_EL1), false));
+#లేకపోతే
+    సమితి_రిజిస్టరు(tcb, CPSR, sanitise_రిజిస్టరు(CPSR, get_రిజిస్టరు(tcb, CPSR), false));
+#అయితే_ముగింపు
 }
 
-exception_t invokeVCPUWriteReg(vcpu_t *vcpu, word_t field, word_t value)
+exception_t invokeVCPUWriteReg(vcpu_t *vcpu, మాట_t క్షేత్రం, మాట_t విలువ)
 {
-    writeVCPUReg(vcpu, field, value);
-    return EXCEPTION_NONE;
+    writeVCPUReg(vcpu, క్షేత్రం, విలువ);
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t decodeVCPUWriteReg(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeVCPUWriteReg(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    word_t field;
-    word_t value;
-    if (length < 2) {
+    మాట_t క్షేత్రం;
+    మాట_t విలువ;
+    ఒకవేళ (నిడివి < 2) {
         userError("VCPUWriteReg: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    field = getSyscallArg(0, buffer);
-    value = getSyscallArg(1, buffer);
-    if (field >= seL4_VCPUReg_Num) {
-        userError("VCPUWriteReg: Invalid field 0x%lx.", (long)field);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+    క్షేత్రం = getSyscallArg(0, బఫరు);
+    విలువ = getSyscallArg(1, బఫరు);
+    ఒకవేళ (క్షేత్రం >= se_L4_VCPUReg_అంకె) {
+        userError("VCPUWriteReg: Invalid field 0x%lx.", (దీర్ఘ)క్షేత్రం);
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUWriteReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, value);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeVCPUWriteReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), క్షేత్రం, విలువ);
 }
 
-exception_t invokeVCPUReadReg(vcpu_t *vcpu, word_t field, bool_t call)
+exception_t invokeVCPUReadReg(vcpu_t *vcpu, మాట_t క్షేత్రం, bool_t call)
 {
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    word_t value = readVCPUReg(vcpu, field);
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, value);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    thread = కణుపు_STATE(ksCurThread);
+    మాట_t విలువ = readVCPUReg(vcpu, క్షేత్రం);
+    ఒకవేళ (call) {
+        మాట_t *ipc_బఫరు = lookupIPCBuffer(true, thread);
+        సమితి_రిజిస్టరు(thread, badge_రిజిస్టరు, 0);
+        గుర్తులేని పూర్ణాంకం నిడివి = సమితి_MR(thread, ipc_బఫరు, 0, విలువ);
+        సమితి_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు, మాట_From_సందేశం_Info(
+                        se_L4_సందేశం_Info_new(0, 0, 0, నిడివి)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Running);
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t decodeVCPUReadReg(cap_t cap, word_t length, bool_t call, word_t *buffer)
+exception_t decodeVCPUReadReg(cap_t cap, మాట_t నిడివి, bool_t call, మాట_t *బఫరు)
 {
-    word_t field;
-    if (length < 1) {
+    మాట_t క్షేత్రం;
+    ఒకవేళ (నిడివి < 1) {
         userError("VCPUReadReg: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    field = getSyscallArg(0, buffer);
+    క్షేత్రం = getSyscallArg(0, బఫరు);
 
-    if (field >= seL4_VCPUReg_Num) {
-        userError("VCPUReadReg: Invalid field 0x%lx.", (long)field);
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (క్షేత్రం >= se_L4_VCPUReg_అంకె) {
+        userError("VCPUReadReg: Invalid field 0x%lx.", (దీర్ఘ)క్షేత్రం);
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUReadReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeVCPUReadReg(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), క్షేత్రం, call);
 }
 
-exception_t invokeVCPUInjectIRQ(vcpu_t *vcpu, unsigned long index, virq_t virq)
+exception_t invokeVCPUInjectIRQ(vcpu_t *vcpu, గుర్తులేని దీర్ఘ సూచీ, virq_t virq)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        set_gic_vcpu_ctrl_lr(index, virq);
-#ifdef ENABLE_SMP_SUPPORT
-    } else if (vcpu->vcpuTCB != NULL && vcpu->vcpuTCB->tcbAffinity != getCurrentCPUIndex()) {
-        doRemoteOp3Arg(IpiRemoteCall_VCPUInjectInterrupt,
-                       (word_t)vcpu, index, virq.words[0],
+    ఒకవేళ (likely(ARCH_కణుపు_STATE(armHSCurVCPU) == vcpu)) {
+        సమితి_gic_vcpu_ctrl_lr(సూచీ, virq);
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+    } లేకపోతే ఒకవేళ (vcpu->vcpuTCB != ఖాళీ && vcpu->vcpuTCB->tcbAffinity != getCurrentCPUIndex()) {
+        doRemoteOp3Arg(Ipi_Remote_Call_VCPUInject_అంతరాయం,
+                       (మాట_t)vcpu, సూచీ, virq.పదాలు[0],
                        vcpu->vcpuTCB->tcbAffinity);
-#endif /* CONFIG_ENABLE_SMP */
-    } else {
-        vcpu->vgic.lr[index] = virq;
+#అయితే_ముగింపు /* CONFIG_ENABLE_SMP */
+    } లేకపోతే {
+        vcpu->vgic.lr[సూచీ] = virq;
     }
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t decodeVCPUInjectIRQ(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeVCPUInjectIRQ(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
-    word_t vid, priority, group, index;
+    మాట_t vid, ప్రాధాన్యత, సమూహం, సూచీ;
     vcpu_t *vcpu;
-#ifdef CONFIG_ARCH_AARCH64
-    word_t mr0;
+#నిర్వచితమైతే CONFIG_ARCH_AARCH64
+    మాట_t mr0;
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
-    if (length < 1) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (నిడివి < 1) {
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    mr0 = getSyscallArg(0, buffer);
+    mr0 = getSyscallArg(0, బఫరు);
     vid = mr0 & 0xffff;
-    priority = (mr0 >> 16) & 0xff;
-    group = (mr0 >> 24) & 0xff;
-    index = (mr0 >> 32) & 0xff;
-#else
+    ప్రాధాన్యత = (mr0 >> 16) & 0xff;
+    సమూహం = (mr0 >> 24) & 0xff;
+    సూచీ = (mr0 >> 32) & 0xff;
+#లేకపోతే
     uint32_t mr0, mr1;
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
-    if (length < 2) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (నిడివి < 2) {
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    mr0 = getSyscallArg(0, buffer);
-    mr1 = getSyscallArg(1, buffer);
+    mr0 = getSyscallArg(0, బఫరు);
+    mr1 = getSyscallArg(1, బఫరు);
     vid = mr0 & 0xffff;
-    priority = (mr0 >> 16) & 0xff;
-    group = (mr0 >> 24) & 0xff;
-    index = mr1 & 0xff;
-#endif
+    ప్రాధాన్యత = (mr0 >> 16) & 0xff;
+    సమూహం = (mr0 >> 24) & 0xff;
+    సూచీ = mr1 & 0xff;
+#అయితే_ముగింపు
 
     /* Check IRQ parameters */
-    if (vid > (1U << 10) - 1) {
+    ఒకవేళ (vid > (1U << 10) - 1) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = (1U << 10) - 1;
-        current_syscall_error.invalidArgumentNumber = 1;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 1;
         current_syscall_error.type = seL4_RangeError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (priority > 31) {
+    ఒకవేళ (ప్రాధాన్యత > 31) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 31;
-        current_syscall_error.invalidArgumentNumber = 2;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 2;
         current_syscall_error.type = seL4_RangeError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    if (group > 1) {
+    ఒకవేళ (సమూహం > 1) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = 1;
-        current_syscall_error.invalidArgumentNumber = 3;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 3;
         current_syscall_error.type = seL4_RangeError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
     /* LR index out of range */
-    if (index >= gic_vcpu_num_list_regs) {
+    ఒకవేళ (సూచీ >= gic_vcpu_అంకె_list_regs) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = gic_vcpu_num_list_regs - 1;
-        current_syscall_error.invalidArgumentNumber = 4;
+        current_syscall_error.rangeErrorMax = gic_vcpu_అంకె_list_regs - 1;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 4;
         current_syscall_error.type = seL4_RangeError;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
     /* LR index is in use */
-    if (virq_get_virqType(vcpu->vgic.lr[index]) == virq_virq_active) {
+    ఒకవేళ (virq_get_virqType(vcpu->vgic.lr[సూచీ]) == virq_virq_చురుకైన) {
         userError("VGIC List register in use.");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_మొదటి;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
-    virq_t virq = virq_virq_pending_new(group, priority, 1, vid);
+    virq_t virq = virq_virq_pending_new(సమూహం, ప్రాధాన్యత, 1, vid);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUInjectIRQ(vcpu, index, virq);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeVCPUInjectIRQ(vcpu, సూచీ, virq);
 }
 
 exception_t decodeARMVCPUInvocation(
-    word_t label,
-    word_t length,
+    మాట_t label,
+    మాట_t నిడివి,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *స్థానం,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    మాట_t *బఫరు
 )
 {
-    switch (label) {
-    case ARMVCPUSetTCB:
-        return decodeVCPUSetTCB(cap);
-    case ARMVCPUReadReg:
-        return decodeVCPUReadReg(cap, length, call, buffer);
-    case ARMVCPUWriteReg:
-        return decodeVCPUWriteReg(cap, length, buffer);
-    case ARMVCPUInjectIRQ:
-        return decodeVCPUInjectIRQ(cap, length, buffer);
-    case ARMVCPUAckVPPI:
-        return decodeVCPUAckVPPI(cap, length, buffer);
-    default:
+    ఎంపిక (label) {
+    స్థితి ARMVCPUSetTCB:
+        తిరిగి decodeVCPUSetTCB(cap);
+    స్థితి ARMVCPUReadReg:
+        తిరిగి decodeVCPUReadReg(cap, నిడివి, call, బఫరు);
+    స్థితి ARMVCPUWriteReg:
+        తిరిగి decodeVCPUWriteReg(cap, నిడివి, బఫరు);
+    స్థితి ARMVCPUInjectIRQ:
+        తిరిగి decodeVCPUInjectIRQ(cap, నిడివి, బఫరు);
+    స్థితి ARMVCPUAckVPPI:
+        తిరిగి decodeVCPUAckVPPI(cap, నిడివి, బఫరు);
+    అప్రమేయ:
         userError("VCPU: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-exception_t decodeVCPUAckVPPI(cap_t cap, word_t length, word_t *buffer)
+exception_t decodeVCPUAckVPPI(cap_t cap, మాట_t నిడివి, మాట_t *బఫరు)
 {
     vcpu_t *vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
-    if (length < 1) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ఒకవేళ (నిడివి < 1) {
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    word_t irq_w = getSyscallArg(0, buffer);
-    irq_t irq = (irq_t) CORE_IRQ_TO_IRQT(CURRENT_CPU_INDEX(), irq_w);
-    exception_t status = Arch_checkIRQ(irq_w);
-    if (status != EXCEPTION_NONE) {
-        return status;
+    మాట_t irq_w = getSyscallArg(0, బఫరు);
+    irq_t irq = (irq_t) CORE_IRQ_గమ్యం_IRQT(CURRENT_CPU_సూచీ(), irq_w);
+    exception_t స్థితి_2 = Arch_checkIRQ(irq_w);
+    ఒకవేళ (స్థితి_2 != EXCEPTION_NONE) {
+        తిరిగి స్థితి_2;
     }
 
-    VPPIEventIRQ_t vppi = irqVPPIEventIndex(irq);
-    if (vppi == VPPIEventIRQ_invalid) {
+    VPPIEventIRQ_t vppi = irq_VPPIEvent_సూచీ(irq);
+    ఒకవేళ (vppi == VPPIEventIRQ_invalid) {
         userError("VCPUAckVPPI: Invalid irq number.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_వాదం;
+        current_syscall_error.invalid_వాదం_సంఖ్య = 0;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUAckVPPI(vcpu, vppi);
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeVCPUAckVPPI(vcpu, vppi);
 }
 
 exception_t invokeVCPUAckVPPI(vcpu_t *vcpu, VPPIEventIRQ_t vppi)
 {
     vcpu->vppi_masked[vppi] = false;
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 exception_t decodeVCPUSetTCB(cap_t cap)
 {
     cap_t tcbCap;
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    ఒకవేళ (current_extra_caps.excaprefs[0] == ఖాళీ) {
         userError("VCPU SetTCB: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_సందేశం;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
     tcbCap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(tcbCap) != cap_thread_cap) {
+    ఒకవేళ (cap_get_capType(tcbCap) != cap_thread_cap) {
         userError("TCB cap is not a TCB cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeVCPUSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
+    సమితి_Thread_State(కణుపు_STATE(ksCurThread), ThreadState_Restart);
+    తిరిగి invokeVCPUSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
 }
 
 exception_t invokeVCPUSetTCB(vcpu_t *vcpu, tcb_t *tcb)
 {
     associateVCPUTCB(vcpu, tcb);
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
 
-void handleVCPUFault(word_t hsr)
+శూన్య handleVCPUFault(మాట_t hsr)
 {
     MCS_DO_IF_BUDGET({
-        if (armv_handleVCPUFault(hsr))
+        ఒకవేళ (armv_handleVCPUFault(hsr))
         {
-            return;
+            తిరిగి;
         }
         current_fault = seL4_Fault_VCPUFault_new(hsr);
-        handleFault(NODE_STATE(ksCurThread));
+        handleFault(కణుపు_STATE(ksCurThread));
     })
-    schedule();
+    కాలపట్టిక();
     activateThread();
 }
 
-#ifdef ENABLE_SMP_SUPPORT
-void handleVCPUInjectInterruptIPI(vcpu_t *vcpu, unsigned long index, virq_t virq)
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
+శూన్య handle_VCPUInject_అంతరాయం_IPI(vcpu_t *vcpu, గుర్తులేని దీర్ఘ సూచీ, virq_t virq)
 {
-    if (likely(ARCH_NODE_STATE(armHSCurVCPU) == vcpu)) {
-        set_gic_vcpu_ctrl_lr(index, virq);
-    } else {
-        vcpu->vgic.lr[index] = virq;
+    ఒకవేళ (likely(ARCH_కణుపు_STATE(armHSCurVCPU) == vcpu)) {
+        సమితి_gic_vcpu_ctrl_lr(సూచీ, virq);
+    } లేకపోతే {
+        vcpu->vgic.lr[సూచీ] = virq;
     }
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#అయితే_ముగింపు /* ENABLE_SMP_SUPPORT */
 
-#endif
+#అయితే_ముగింపు

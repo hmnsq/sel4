@@ -4,153 +4,153 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#అన్తర్భావ <config.h>
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
+#నిర్వచితమైతే CONFIG_ENABLE_BENCHMARKS
 
-#include <types.h>
-#include <mode/machine.h>
-#include <benchmark/benchmark.h>
-#include <benchmark/benchmark_utilisation.h>
+#అన్తర్భావ <types.h>
+#అన్తర్భావ <mode/machine.h>
+#అన్తర్భావ <benchmark/benchmark.h>
+#అన్తర్భావ <benchmark/benchmark_utilisation.h>
 
 
-exception_t handle_SysBenchmarkFlushCaches(void)
+exception_t handle_SysBenchmarkFlushCaches(శూన్య)
 {
-#ifdef CONFIG_ARCH_ARM
-    tcb_t *thread = NODE_STATE(ksCurThread);
-    if (getRegister(thread, capRegister)) {
-        arch_clean_invalidate_L1_caches(getRegister(thread, msgInfoRegister));
-    } else {
+#నిర్వచితమైతే CONFIG_ARCH_ARM
+    tcb_t *thread = కణుపు_STATE(ksCurThread);
+    ఒకవేళ (get_రిజిస్టరు(thread, cap_రిజిస్టరు)) {
+        arch_clean_invalidate_L1_caches(get_రిజిస్టరు(thread, సందేశం_Info_రిజిస్టరు));
+    } లేకపోతే {
         arch_clean_invalidate_caches();
     }
-#else
+#లేకపోతే
     arch_clean_invalidate_caches();
-#endif
-    return EXCEPTION_NONE;
+#అయితే_ముగింపు
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetLog(void)
+exception_t handle_SysBenchmarkResetLog(శూన్య)
 {
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    if (ksUserLogBuffer == 0) {
-        userError("A user-level buffer has to be set before resetting benchmark.\
-                Use seL4_BenchmarkSetLogBuffer\n");
-        setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
+    ఒకవేళ (ks_User_Log_బఫరు == 0) {
+        userError("A user-level బఫరు has గమ్యం be సమితి before resetting benchmark.\
+                Use se_L4_Benchmark_సమితి_Log_బఫరు\n");
+        సమితి_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు, seL4_IllegalOperation);
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    ksLogIndex = 0;
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+    ks_Log_సూచీ = 0;
+#అయితే_ముగింపు /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    NODE_STATE(benchmark_log_utilisation_enabled) = true;
-    benchmark_track_reset_utilisation(NODE_STATE(ksIdleThread));
-    NODE_STATE(ksCurThread)->benchmark.schedule_start_time = ksEnter;
-    NODE_STATE(ksCurThread)->benchmark.number_schedules++;
-    NODE_STATE(benchmark_start_time) = ksEnter;
-    NODE_STATE(benchmark_kernel_time) = 0;
-    NODE_STATE(benchmark_kernel_number_entries) = 0;
-    NODE_STATE(benchmark_kernel_number_schedules) = 1;
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_UTILISATION
+    కణుపు_STATE(benchmark_log_utilisation_enabled) = true;
+    benchmark_track_reset_utilisation(కణుపు_STATE(ksIdleThread));
+    కణుపు_STATE(ksCurThread)->benchmark.కాలపట్టిక_ప్రారంభం_సమయం = ksEnter;
+    కణుపు_STATE(ksCurThread)->benchmark.సంఖ్య_schedules++;
+    కణుపు_STATE(benchmark_ప్రారంభం_సమయం) = ksEnter;
+    కణుపు_STATE(benchmark_kernel_సమయం) = 0;
+    కణుపు_STATE(benchmark_kernel_సంఖ్య_entries) = 0;
+    కణుపు_STATE(benchmark_kernel_సంఖ్య_schedules) = 1;
     benchmark_arch_utilisation_reset();
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#అయితే_ముగింపు /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
-    setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    సమితి_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు, seL4_NoError);
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkFinalizeLog(void)
+exception_t handle_SysBenchmarkFinalizeLog(శూన్య)
 {
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    ksLogIndexFinalized = ksLogIndex;
-    setRegister(NODE_STATE(ksCurThread), capRegister, ksLogIndexFinalized);
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
+    ks_Log_సూచీ_Finalized = ks_Log_సూచీ;
+    సమితి_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు, ks_Log_సూచీ_Finalized);
+#అయితే_ముగింపు /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_UTILISATION
     benchmark_utilisation_finalise();
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#అయితే_ముగింపు /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-exception_t handle_SysBenchmarkSetLogBuffer(void)
+#నిర్వచితమైతే CONFIG_KERNEL_LOG_బఫరు
+exception_t handle_Sys_Benchmark_సమితి_Log_బఫరు(శూన్య)
 {
-    word_t cptr_userFrame = getRegister(NODE_STATE(ksCurThread), capRegister);
-    if (benchmark_arch_map_logBuffer(cptr_userFrame) != EXCEPTION_NONE) {
-        setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+    మాట_t cptr_user_చట్రం = get_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు);
+    ఒకవేళ (benchmark_arch_map_log_బఫరు(cptr_user_చట్రం) != EXCEPTION_NONE) {
+        సమితి_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు, seL4_IllegalOperation);
+        తిరిగి EXCEPTION_SYSCALL_ERROR;
     }
 
-    setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    సమితి_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు, seL4_NoError);
+    తిరిగి EXCEPTION_NONE;
 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#అయితే_ముగింపు /* CONFIG_KERNEL_LOG_BUFFER */
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_UTILISATION
 
-exception_t handle_SysBenchmarkGetThreadUtilisation(void)
+exception_t handle_SysBenchmarkGetThreadUtilisation(శూన్య)
 {
     benchmark_track_utilisation_dump();
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetThreadUtilisation(void)
+exception_t handle_SysBenchmarkResetThreadUtilisation(శూన్య)
 {
-    word_t tcb_cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    మాట_t tcb_cptr = get_రిజిస్టరు(కణుపు_STATE(ksCurThread), cap_రిజిస్టరు);
     lookupCap_ret_t lu_ret;
-    word_t cap_type;
+    మాట_t cap_type;
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
+    lu_ret = lookupCap(కణుపు_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    ఒకవేళ (cap_type != cap_thread_cap) {
         userError("SysBenchmarkResetThreadUtilisation: cap is not a TCB, halting");
-        return EXCEPTION_NONE;
+        తిరిగి EXCEPTION_NONE;
     }
 
     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
 
     benchmark_track_reset_utilisation(tcb);
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_DEBUG_BUILD
+#నిర్వచితమైతే CONFIG_DEBUG_BUILD
 
-exception_t handle_SysBenchmarkDumpAllThreadsUtilisation(void)
+exception_t handle_Sys_Benchmark_Dump_All_దారాలు_Utilisation(శూన్య)
 {
-    printf("{\n");
-    printf("  \"BENCHMARK_TOTAL_UTILISATION\":%lu,\n",
-           (word_t)(NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time)));
-    printf("  \"BENCHMARK_TOTAL_KERNEL_UTILISATION\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_time));
-    printf("  \"BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_number_entries));
-    printf("  \"BENCHMARK_TOTAL_NUMBER_SCHEDULES\":%lu,\n", (word_t) NODE_STATE(benchmark_kernel_number_schedules));
-    printf("  \"BENCHMARK_TCB_\": [\n");
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
-        printf("    {\n");
-        printf("      \"NAME\":\"%s\",\n", TCB_PTR_DEBUG_PTR(curr)->tcbName);
-        printf("      \"UTILISATION\":%lu,\n", (word_t) curr->benchmark.utilisation);
-        printf("      \"NUMBER_SCHEDULES\":%lu,\n", (word_t) curr->benchmark.number_schedules);
-        printf("      \"KERNEL_UTILISATION\":%lu,\n", (word_t) curr->benchmark.kernel_utilisation);
-        printf("      \"NUMBER_KERNEL_ENTRIES\":%lu\n", (word_t) curr->benchmark.number_kernel_entries);
-        printf("    }");
-        if (TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext != NULL) {
-            printf(",\n");
-        } else {
-            printf("\n");
+    రాయి("{\n");
+    రాయి("  \"BENCHMARK_TOTAL_UTILISATION\":%lu,\n",
+           (మాట_t)(కణుపు_STATE(benchmark_చివర_సమయం) - కణుపు_STATE(benchmark_ప్రారంభం_సమయం)));
+    రాయి("  \"BENCHMARK_TOTAL_KERNEL_UTILISATION\":%lu,\n", (మాట_t) కణుపు_STATE(benchmark_kernel_సమయం));
+    రాయి("  \"BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES\":%lu,\n", (మాట_t) కణుపు_STATE(benchmark_kernel_సంఖ్య_entries));
+    రాయి("  \"BENCHMARK_TOTAL_NUMBER_SCHEDULES\":%lu,\n", (మాట_t) కణుపు_STATE(benchmark_kernel_సంఖ్య_schedules));
+    రాయి("  \"BENCHMARK_TCB_\": [\n");
+    కొరకు (tcb_t *curr = కణుపు_STATE(ksDebugTCBs); curr != ఖాళీ; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_తదుపరి) {
+        రాయి("    {\n");
+        రాయి("      \"NAME\":\"%s\",\n", TCB_PTR_DEBUG_PTR(curr)->tcbName);
+        రాయి("      \"UTILISATION\":%lu,\n", (మాట_t) curr->benchmark.utilisation);
+        రాయి("      \"NUMBER_SCHEDULES\":%lu,\n", (మాట_t) curr->benchmark.సంఖ్య_schedules);
+        రాయి("      \"KERNEL_UTILISATION\":%lu,\n", (మాట_t) curr->benchmark.kernel_utilisation);
+        రాయి("      \"NUMBER_KERNEL_ENTRIES\":%lu\n", (మాట_t) curr->benchmark.సంఖ్య_kernel_entries);
+        రాయి("    }");
+        ఒకవేళ (TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_తదుపరి != ఖాళీ) {
+            రాయి(",\n");
+        } లేకపోతే {
+            రాయి("\n");
         }
     }
-    printf("  ]\n}\n");
-    return EXCEPTION_NONE;
+    రాయి("  ]\n}\n");
+    తిరిగి EXCEPTION_NONE;
 }
 
-exception_t handle_SysBenchmarkResetAllThreadsUtilisation(void)
+exception_t handle_Sys_Benchmark_Reset_All_దారాలు_Utilisation(శూన్య)
 {
-    for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
+    కొరకు (tcb_t *curr = కణుపు_STATE(ksDebugTCBs); curr != ఖాళీ; curr = TCB_PTR_DEBUG_PTR(curr)->tcb_Debug_తదుపరి) {
         benchmark_track_reset_utilisation(curr);
     }
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
-#endif /* CONFIG_ENABLE_BENCHMARKS */
+#అయితే_ముగింపు /* CONFIG_DEBUG_BUILD */
+#అయితే_ముగింపు /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#అయితే_ముగింపు /* CONFIG_ENABLE_BENCHMARKS */

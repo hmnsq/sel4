@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#అన్తర్భావ <config.h>
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
 
-#include <arch/machine/debug.h>
-#include <mode/machine/debug.h>
-#include <arch/machine.h>
-#include <machine/registerset.h>
-#include <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
+#అన్తర్భావ <arch/machine/debug.h>
+#అన్తర్భావ <mode/machine/debug.h>
+#అన్తర్భావ <arch/machine.h>
+#అన్తర్భావ <machine/registerset.h>
+#అన్తర్భావ <sel4/plat/api/constants.h> /* seL4_NumHWBReakpoints */
 
 /* Intel manual Vol3, 17.2.4 */
-#define X86_DEBUG_BP_SIZE_1B                (0x0u)
-#define X86_DEBUG_BP_SIZE_2B                (0x1u)
-#define X86_DEBUG_BP_SIZE_4B                (0x3u)
-#define X86_DEBUG_BP_SIZE_8B                (0x2u)
+#నిర్వచించు X86_DEBUG_BP_కొలత_1_B                (0x0u)
+#నిర్వచించు X86_DEBUG_BP_కొలత_2_B                (0x1u)
+#నిర్వచించు X86_DEBUG_BP_కొలత_4_B                (0x3u)
+#నిర్వచించు X86_DEBUG_BP_కొలత_8_B                (0x2u)
 
-#define X86_DEBUG_BP0_SIZE_SHIFT            (18)
-#define X86_DEBUG_BP1_SIZE_SHIFT            (22)
-#define X86_DEBUG_BP2_SIZE_SHIFT            (26)
-#define X86_DEBUG_BP3_SIZE_SHIFT            (30)
+#నిర్వచించు X86_DEBUG_BP0_కొలత_జరుపు            (18)
+#నిర్వచించు X86_DEBUG_BP1_కొలత_జరుపు            (22)
+#నిర్వచించు X86_DEBUG_BP2_కొలత_జరుపు            (26)
+#నిర్వచించు X86_DEBUG_BP3_కొలత_జరుపు            (30)
 
 /* NOTE: Intel manual 17.2.4:
  * I/O breakpoints are supported by every processor later than i486, but only
@@ -32,74 +32,74 @@
  * which is not the same as "Reserved", so it won't trigger an exception - it
  * will just cause an undefined reaction from the CPU.
  */
-#define X86_DEBUG_BP_TYPE_IO                (0x2u)
-#define X86_DEBUG_BP_TYPE_INSTR             (0x0u)
-#define X86_DEBUG_BP_TYPE_DATA_WRITE        (0x1u)
-#define X86_DEBUG_BP_TYPE_DATA_READWRITE    (0x3u)
+#నిర్వచించు X86_DEBUG_BP_TYPE_IO                (0x2u)
+#నిర్వచించు X86_DEBUG_BP_TYPE_INSTR             (0x0u)
+#నిర్వచించు X86_DEBUG_BP_TYPE_దత్తాంశం_WRITE        (0x1u)
+#నిర్వచించు X86_DEBUG_BP_TYPE_దత్తాంశం_READWRITE    (0x3u)
 
-#define X86_DEBUG_BP0_TYPE_SHIFT            (16)
-#define X86_DEBUG_BP1_TYPE_SHIFT            (20)
-#define X86_DEBUG_BP2_TYPE_SHIFT            (24)
-#define X86_DEBUG_BP3_TYPE_SHIFT            (28)
+#నిర్వచించు X86_DEBUG_BP0_TYPE_జరుపు            (16)
+#నిర్వచించు X86_DEBUG_BP1_TYPE_జరుపు            (20)
+#నిర్వచించు X86_DEBUG_BP2_TYPE_జరుపు            (24)
+#నిర్వచించు X86_DEBUG_BP3_TYPE_జరుపు            (28)
 
-#define X86_DEBUG_EFLAGS_TRAP_FLAG    ((word_t)BIT(8))
-#define X86_DEBUG_EFLAGS_RESUME_FLAG    ((word_t)BIT(16))
-#define X86_DEBUG_DR6_SINGLE_STEP_FLAG  ((word_t)BIT(14))
+#నిర్వచించు X86_DEBUG_EFLAGS_TRAP_FLAG    ((మాట_t)బిట్టు(8))
+#నిర్వచించు X86_DEBUG_EFLAGS_RESUME_FLAG    ((మాట_t)బిట్టు(16))
+#నిర్వచించు X86_DEBUG_DR6_SINGLE_అడుగు_FLAG  ((మాట_t)బిట్టు(14))
 
-#define X86_DEBUG_DR6_BP_MASK     (0xFu)
+#నిర్వచించు X86_DEBUG_DR6_BP_ముసుగు     (0xFu)
 
-static bool_t byte8_bps_supported = false;
+స్థిర bool_t byte8_bps_supported = false;
 
-bool_t byte8BreakpointsSupported(void)
+bool_t byte8BreakpointsSupported(శూన్య)
 {
-    return byte8_bps_supported;
+    తిరిగి byte8_bps_supported;
 }
 
-static inline void bitwiseAndDr6Reg(word_t mask)
+స్థిర అంతఃవరుస శూన్య bitwiseAndDr6Reg(మాట_t ముసుగు_2)
 {
-    word_t tmp;
+    మాట_t tmp;
 
-    tmp = readDr6Reg() & mask;
+    tmp = readDr6Reg() & ముసుగు_2;
     writeDr6Reg(tmp);
 }
 
-static inline word_t readDr7Context(tcb_t *t)
+స్థిర అంతఃవరుస మాట_t readDr7Context(tcb_t *t)
 {
-    return t->tcbArch.tcbContext.breakpointState.dr[5];
+    తిరిగి t->tcbArch.tcbContext.breakpointState.dr[5];
 }
 
-static inline void bitwiseOrDr7Context(tcb_t *t, word_t val)
+స్థిర అంతఃవరుస శూన్య bitwiseOrDr7Context(tcb_t *t, మాట_t val)
 {
     t->tcbArch.tcbContext.breakpointState.dr[5] |= val;
 }
 
-static inline void bitwiseAndDr7Context(tcb_t *t, word_t mask)
+స్థిర అంతఃవరుస శూన్య bitwiseAndDr7Context(tcb_t *t, మాట_t ముసుగు_2)
 {
-    t->tcbArch.tcbContext.breakpointState.dr[5] &= mask;
+    t->tcbArch.tcbContext.breakpointState.dr[5] &= ముసుగు_2;
 }
 
-static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
+స్థిర శూన్య unset_Dr7_బిట్లు_For(tcb_t *t, uint16_t bp_అంకె)
 {
-    word_t mask;
+    మాట_t ముసుగు_2;
 
-    switch (bp_num) {
-    case 0:
-        mask = (0x3u << X86_DEBUG_BP0_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        break;
-    case 1:
-        mask = (0x3u << X86_DEBUG_BP1_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        break;
-    case 2:
-        mask = (0x3u << X86_DEBUG_BP2_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        mask = (0x3u << X86_DEBUG_BP3_SIZE_SHIFT) | (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        break;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        ముసుగు_2 = (0x3u << X86_DEBUG_BP0_కొలత_జరుపు) | (0x3u << X86_DEBUG_BP0_TYPE_జరుపు);
+        ఆపు;
+    స్థితి 1:
+        ముసుగు_2 = (0x3u << X86_DEBUG_BP1_కొలత_జరుపు) | (0x3u << X86_DEBUG_BP1_TYPE_జరుపు);
+        ఆపు;
+    స్థితి 2:
+        ముసుగు_2 = (0x3u << X86_DEBUG_BP2_కొలత_జరుపు) | (0x3u << X86_DEBUG_BP2_TYPE_జరుపు);
+        ఆపు;
+    అప్రమేయ: /* 3 */
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        ముసుగు_2 = (0x3u << X86_DEBUG_BP3_కొలత_జరుపు) | (0x3u << X86_DEBUG_BP3_TYPE_జరుపు);
+        ఆపు;
     }
 
-    mask = ~mask;
-    bitwiseAndDr7Context(t, mask);
+    ముసుగు_2 = ~ముసుగు_2;
+    bitwiseAndDr7Context(t, ముసుగు_2);
 }
 
 /** Converts an seL4_BreakpointType value into the underlying hardware
@@ -109,29 +109,29 @@ static void unsetDr7BitsFor(tcb_t *t, uint16_t bp_num)
  * @param rw Access trigger condition (read/write).
  * @return Hardware specific register value representing the inputs.
  */
-PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t type, word_t rw)
+శుద్ధ స్థిర అంతఃవరుస మాట_t convert_Type_And_Access_గమ్యం_Arch(uint16_t bp_అంకె, మాట_t type, మాట_t rw)
 {
-    switch (type) {
-    case seL4_InstructionBreakpoint:
+    ఎంపిక (type) {
+    స్థితి seL4_InstructionBreakpoint:
         type = X86_DEBUG_BP_TYPE_INSTR;
-        break;
-    default: /* seL4_DataBreakpoint */
-        assert(type == seL4_DataBreakpoint);
+        ఆపు;
+    అప్రమేయ: /* seL4_DataBreakpoint */
+        ప్రతిజ్ఞా(type == se_L4_దత్తాంశం_Breakpoint);
         type = (rw == seL4_BreakOnWrite)
-               ? X86_DEBUG_BP_TYPE_DATA_WRITE
-               : X86_DEBUG_BP_TYPE_DATA_READWRITE;
+               ? X86_DEBUG_BP_TYPE_దత్తాంశం_WRITE
+               : X86_DEBUG_BP_TYPE_దత్తాంశం_READWRITE;
     }
 
-    switch (bp_num) {
-    case 0:
-        return type << X86_DEBUG_BP0_TYPE_SHIFT;
-    case 1:
-        return type << X86_DEBUG_BP1_TYPE_SHIFT;
-    case 2:
-        return type << X86_DEBUG_BP2_TYPE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return type << X86_DEBUG_BP3_TYPE_SHIFT;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        తిరిగి type << X86_DEBUG_BP0_TYPE_జరుపు;
+    స్థితి 1:
+        తిరిగి type << X86_DEBUG_BP1_TYPE_జరుపు;
+    స్థితి 2:
+        తిరిగి type << X86_DEBUG_BP2_TYPE_జరుపు;
+    అప్రమేయ: /* 3 */
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        తిరిగి type << X86_DEBUG_BP3_TYPE_జరుపు;
     }
 }
 
@@ -142,49 +142,49 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
  * @param type[out] Converted type value.
  * @param rw[out] Converted output access trigger value.
  */
-typedef struct {
-    word_t type, rw;
+రకనిర్వచనం నిర్మాణం {
+    మాట_t type, rw;
 } convertedTypeAndAccess_t;
 
-PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr7, uint16_t bp_num)
+శుద్ధ స్థిర అంతఃవరుస convertedTypeAndAccess_t convert_Arch_గమ్యం_Type_And_Access(మాట_t dr7, uint16_t bp_అంకె)
 {
     convertedTypeAndAccess_t ret;
 
-    switch (bp_num) {
-    case 0:
-        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        break;
-    case 1:
-        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        break;
-    case 2:
-        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_TYPE_SHIFT;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        dr7 &= 0x3u << X86_DEBUG_BP0_TYPE_జరుపు;
+        dr7 >>= X86_DEBUG_BP0_TYPE_జరుపు;
+        ఆపు;
+    స్థితి 1:
+        dr7 &= 0x3u << X86_DEBUG_BP1_TYPE_జరుపు;
+        dr7 >>= X86_DEBUG_BP1_TYPE_జరుపు;
+        ఆపు;
+    స్థితి 2:
+        dr7 &= 0x3u << X86_DEBUG_BP2_TYPE_జరుపు;
+        dr7 >>= X86_DEBUG_BP2_TYPE_జరుపు;
+        ఆపు;
+    అప్రమేయ: /* 3 */
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        dr7 &= 0x3u << X86_DEBUG_BP3_TYPE_జరుపు;
+        dr7 >>= X86_DEBUG_BP3_TYPE_జరుపు;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_TYPE_INSTR:
+    ఎంపిక (dr7) {
+    స్థితి X86_DEBUG_BP_TYPE_INSTR:
         ret.type = seL4_InstructionBreakpoint;
         ret.rw = seL4_BreakOnRead;
-        break;
-    case X86_DEBUG_BP_TYPE_DATA_WRITE:
-        ret.type = seL4_DataBreakpoint;
+        ఆపు;
+    స్థితి X86_DEBUG_BP_TYPE_దత్తాంశం_WRITE:
+        ret.type = se_L4_దత్తాంశం_Breakpoint;
         ret.rw = seL4_BreakOnWrite;
-        break;
-    default: /* Read-write */
-        assert(dr7 == X86_DEBUG_BP_TYPE_DATA_READWRITE);
-        ret.type = seL4_DataBreakpoint;
+        ఆపు;
+    అప్రమేయ: /* Read-write */
+        ప్రతిజ్ఞా(dr7 == X86_DEBUG_BP_TYPE_దత్తాంశం_READWRITE);
+        ret.type = se_L4_దత్తాంశం_Breakpoint;
         ret.rw = seL4_BreakOnReadWrite;
-        break;
+        ఆపు;
     }
-    return ret;
+    తిరిగి ret;
 }
 
 /** Converts an integer size number into an equivalent hardware register value.
@@ -193,41 +193,41 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
  * @param size An integer for the operand size of the breakpoint.
  * @return Converted, hardware-specific value.
  */
-PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
+శుద్ధ స్థిర అంతఃవరుస మాట_t convert_కొలత_గమ్యం_Arch(uint16_t bp_అంకె, మాట_t type, మాట_t కొలత)
 {
-    if (type == seL4_InstructionBreakpoint) {
+    ఒకవేళ (type == seL4_InstructionBreakpoint) {
         /* Intel manual vol3 17.2.4:
          * "If the corresponding RWn field in register DR7 is 00 (instruction
          * execution), then the LENn field should also be 00"
          */
-        size = 0;
-    } else {
-        switch (size) {
-        case 1:
-            size = X86_DEBUG_BP_SIZE_1B;
-            break;
-        case 2:
-            size = X86_DEBUG_BP_SIZE_2B;
-            break;
-        case 8:
-            size = X86_DEBUG_BP_SIZE_8B;
-            break;
-        default: /* 4B */
-            assert(size == 4);
-            size = X86_DEBUG_BP_SIZE_4B;
+        కొలత = 0;
+    } లేకపోతే {
+        ఎంపిక (కొలత) {
+        స్థితి 1:
+            కొలత = X86_DEBUG_BP_కొలత_1_B;
+            ఆపు;
+        స్థితి 2:
+            కొలత = X86_DEBUG_BP_కొలత_2_B;
+            ఆపు;
+        స్థితి 8:
+            కొలత = X86_DEBUG_BP_కొలత_8_B;
+            ఆపు;
+        అప్రమేయ: /* 4B */
+            ప్రతిజ్ఞా(కొలత == 4);
+            కొలత = X86_DEBUG_BP_కొలత_4_B;
         }
     }
 
-    switch (bp_num) {
-    case 0:
-        return size << X86_DEBUG_BP0_SIZE_SHIFT;
-    case 1:
-        return size << X86_DEBUG_BP1_SIZE_SHIFT;
-    case 2:
-        return size << X86_DEBUG_BP2_SIZE_SHIFT;
-    default: /* 3 */
-        assert(bp_num == 3);
-        return size << X86_DEBUG_BP3_SIZE_SHIFT;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        తిరిగి కొలత << X86_DEBUG_BP0_కొలత_జరుపు;
+    స్థితి 1:
+        తిరిగి కొలత << X86_DEBUG_BP1_కొలత_జరుపు;
+    స్థితి 2:
+        తిరిగి కొలత << X86_DEBUG_BP2_కొలత_జరుపు;
+    అప్రమేయ: /* 3 */
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        తిరిగి కొలత << X86_DEBUG_BP3_కొలత_జరుపు;
     }
 }
 
@@ -237,155 +237,155 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
  * @param n Breakpoint number.
  * @return Converted size value.
  */
-PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
+శుద్ధ స్థిర అంతఃవరుస మాట_t convert_Arch_గమ్యం_కొలత(మాట_t dr7, uint16_t bp_అంకె)
 {
-    word_t type;
+    మాట_t type;
 
-    switch (bp_num) {
-    case 0:
-        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP0_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP0_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP0_SIZE_SHIFT;
-        break;
-    case 1:
-        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP1_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP1_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP1_SIZE_SHIFT;
-        break;
-    case 2:
-        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP2_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP2_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP2_SIZE_SHIFT;
-        break;
-    default: /* 3 */
-        assert(bp_num == 3);
-        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_SHIFT);
-        type >>= X86_DEBUG_BP3_TYPE_SHIFT;
-        dr7 &= 0x3u << X86_DEBUG_BP3_SIZE_SHIFT;
-        dr7 >>= X86_DEBUG_BP3_SIZE_SHIFT;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        type = dr7 & (0x3u << X86_DEBUG_BP0_TYPE_జరుపు);
+        type >>= X86_DEBUG_BP0_TYPE_జరుపు;
+        dr7 &= 0x3u << X86_DEBUG_BP0_కొలత_జరుపు;
+        dr7 >>= X86_DEBUG_BP0_కొలత_జరుపు;
+        ఆపు;
+    స్థితి 1:
+        type = dr7 & (0x3u << X86_DEBUG_BP1_TYPE_జరుపు);
+        type >>= X86_DEBUG_BP1_TYPE_జరుపు;
+        dr7 &= 0x3u << X86_DEBUG_BP1_కొలత_జరుపు;
+        dr7 >>= X86_DEBUG_BP1_కొలత_జరుపు;
+        ఆపు;
+    స్థితి 2:
+        type = dr7 & (0x3u << X86_DEBUG_BP2_TYPE_జరుపు);
+        type >>= X86_DEBUG_BP2_TYPE_జరుపు;
+        dr7 &= 0x3u << X86_DEBUG_BP2_కొలత_జరుపు;
+        dr7 >>= X86_DEBUG_BP2_కొలత_జరుపు;
+        ఆపు;
+    అప్రమేయ: /* 3 */
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        type = dr7 & (0x3u << X86_DEBUG_BP3_TYPE_జరుపు);
+        type >>= X86_DEBUG_BP3_TYPE_జరుపు;
+        dr7 &= 0x3u << X86_DEBUG_BP3_కొలత_జరుపు;
+        dr7 >>= X86_DEBUG_BP3_కొలత_జరుపు;
     }
 
     /* Force size to 0 if type is instruction breakpoint. */
-    if (type == X86_DEBUG_BP_TYPE_INSTR) {
-        return 0;
+    ఒకవేళ (type == X86_DEBUG_BP_TYPE_INSTR) {
+        తిరిగి 0;
     }
 
-    switch (dr7) {
-    case X86_DEBUG_BP_SIZE_1B:
-        return 1;
-    case X86_DEBUG_BP_SIZE_2B:
-        return 2;
-    case X86_DEBUG_BP_SIZE_8B:
-        return 8;
-    default: /* 4B */
-        assert(dr7 == X86_DEBUG_BP_SIZE_4B);
-        return 4;
+    ఎంపిక (dr7) {
+    స్థితి X86_DEBUG_BP_కొలత_1_B:
+        తిరిగి 1;
+    స్థితి X86_DEBUG_BP_కొలత_2_B:
+        తిరిగి 2;
+    స్థితి X86_DEBUG_BP_కొలత_8_B:
+        తిరిగి 8;
+    అప్రమేయ: /* 4B */
+        ప్రతిజ్ఞా(dr7 == X86_DEBUG_BP_కొలత_4_B);
+        తిరిగి 4;
     }
 }
 
 /** Enables a breakpoint.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void enableBreakpoint(tcb_t *t, uint16_t bp_num)
+స్థిర శూన్య enableBreakpoint(tcb_t *t, uint16_t bp_అంకె)
 {
-    word_t enable_bit;
+    మాట_t enable_బిట్టు;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ప్రతిజ్ఞా(t != ఖాళీ);
+    ప్రతిజ్ఞా(bp_అంకె < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        enable_bit = X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        enable_bit = X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        enable_bit = X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        enable_bit = X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        enable_బిట్టు = X86_DEBUG_BP0_ENABLE_బిట్టు;
+        ఆపు;
+    స్థితి 1:
+        enable_బిట్టు = X86_DEBUG_BP1_ENABLE_బిట్టు;
+        ఆపు;
+    స్థితి 2:
+        enable_బిట్టు = X86_DEBUG_BP2_ENABLE_బిట్టు;
+        ఆపు;
+    అప్రమేయ:
+        enable_బిట్టు = X86_DEBUG_BP3_ENABLE_బిట్టు;
+        ఆపు;
     }
 
-    bitwiseOrDr7Context(t, enable_bit);
+    bitwiseOrDr7Context(t, enable_బిట్టు);
 }
 
 /** Disables a breakpoint without clearing its configuration.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static void disableBreakpoint(tcb_t *t, uint16_t bp_num)
+స్థిర శూన్య disableBreakpoint(tcb_t *t, uint16_t bp_అంకె)
 {
-    word_t disable_mask;
+    మాట_t disable_ముసుగు;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ప్రతిజ్ఞా(t != ఖాళీ);
+    ప్రతిజ్ఞా(bp_అంకె < X86_DEBUG_BP_N_REGS);
 
-    switch (bp_num) {
-    case 0:
-        disable_mask = ~X86_DEBUG_BP0_ENABLE_BIT;
-        break;
-    case 1:
-        disable_mask = ~X86_DEBUG_BP1_ENABLE_BIT;
-        break;
-    case 2:
-        disable_mask = ~X86_DEBUG_BP2_ENABLE_BIT;
-        break;
-    default:
-        disable_mask = ~X86_DEBUG_BP3_ENABLE_BIT;
-        break;
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        disable_ముసుగు = ~X86_DEBUG_BP0_ENABLE_బిట్టు;
+        ఆపు;
+    స్థితి 1:
+        disable_ముసుగు = ~X86_DEBUG_BP1_ENABLE_బిట్టు;
+        ఆపు;
+    స్థితి 2:
+        disable_ముసుగు = ~X86_DEBUG_BP2_ENABLE_బిట్టు;
+        ఆపు;
+    అప్రమేయ:
+        disable_ముసుగు = ~X86_DEBUG_BP3_ENABLE_బిట్టు;
+        ఆపు;
     }
 
-    bitwiseAndDr7Context(t, disable_mask);
+    bitwiseAndDr7Context(t, disable_ముసుగు);
 }
 
 /** Returns a boolean for whether or not a breakpoint is enabled.
  * @param bp_num Hardware breakpoint ID. Usually an integer from 0..N.
  */
-static bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_num)
+స్థిర bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_అంకె)
 {
-    word_t dr7;
+    మాట_t dr7;
 
-    assert(t != NULL);
-    assert(bp_num < X86_DEBUG_BP_N_REGS);
+    ప్రతిజ్ఞా(t != ఖాళీ);
+    ప్రతిజ్ఞా(bp_అంకె < X86_DEBUG_BP_N_REGS);
 
     dr7 = readDr7Context(t);
-    switch (bp_num) {
-    case 0:
-        return !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
-    case 1:
-        return !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
-    case 2:
-        return !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
-    default:
-        return !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        తిరిగి !!(dr7 & X86_DEBUG_BP0_ENABLE_బిట్టు);
+    స్థితి 1:
+        తిరిగి !!(dr7 & X86_DEBUG_BP1_ENABLE_బిట్టు);
+    స్థితి 2:
+        తిరిగి !!(dr7 & X86_DEBUG_BP2_ENABLE_బిట్టు);
+    అప్రమేయ:
+        తిరిగి !!(dr7 & X86_DEBUG_BP3_ENABLE_బిట్టు);
     }
 }
 
-static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
+స్థిర శూన్య సమితి_Bp_Vaddr_Context(tcb_t *t, uint16_t bp_అంకె, మాట_t vaddr)
 {
-    assert(t != NULL);
+    ప్రతిజ్ఞా(t != ఖాళీ);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
         ubs->dr[0] = vaddr;
-        break;
-    case 1:
+        ఆపు;
+    స్థితి 1:
         ubs->dr[1] = vaddr;
-        break;
-    case 2:
+        ఆపు;
+    స్థితి 2:
         ubs->dr[2] = vaddr;
-        break;
-    default:
-        assert(bp_num == 3);
+        ఆపు;
+    అప్రమేయ:
+        ప్రతిజ్ఞా(bp_అంకె == 3);
         ubs->dr[3] = vaddr;
-        break;
+        ఆపు;
     }
-    return;
+    తిరిగి;
 }
 
 /** Backend for the seL4_TCB_SetBreakpoint invocation.
@@ -399,37 +399,37 @@ static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
  *        trigger the breakpoint. 0 is valid for Instruction breakpoints.
  * @param rw Access type that should trigger the BP (read/write).
  */
-void setBreakpoint(tcb_t *t,
-                   uint16_t bp_num, word_t vaddr, word_t types, word_t size, word_t rw)
+శూన్య సమితి_Breakpoint(tcb_t *t,
+                   uint16_t bp_అంకె, మాట_t vaddr, మాట_t types, మాట_t కొలత, మాట_t rw)
 {
-    word_t dr7val;
+    మాట_t dr7val;
 
-    assert(t != NULL);
+    ప్రతిజ్ఞా(t != ఖాళీ);
 
-    dr7val = convertTypeAndAccessToArch(bp_num, types, rw);
-    dr7val |= convertSizeToArch(bp_num, types, size);
+    dr7val = convert_Type_And_Access_గమ్యం_Arch(bp_అంకె, types, rw);
+    dr7val |= convert_కొలత_గమ్యం_Arch(bp_అంకె, types, కొలత);
 
-    setBpVaddrContext(t, bp_num, vaddr);
-    unsetDr7BitsFor(t, bp_num);
+    సమితి_Bp_Vaddr_Context(t, bp_అంకె, vaddr);
+    unset_Dr7_బిట్లు_For(t, bp_అంకె);
     bitwiseOrDr7Context(t, dr7val);
-    enableBreakpoint(t, bp_num);
+    enableBreakpoint(t, bp_అంకె);
 }
 
-static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
+స్థిర మాట_t getBpVaddrContext(tcb_t *t, uint16_t bp_అంకె)
 {
-    assert(t != NULL);
+    ప్రతిజ్ఞా(t != ఖాళీ);
     user_breakpoint_state_t *ubs = &t->tcbArch.tcbContext.breakpointState;
 
-    switch (bp_num) {
-    case 0:
-        return ubs->dr[0];
-    case 1:
-        return ubs->dr[1];
-    case 2:
-        return ubs->dr[2];
-    default:
-        assert(bp_num == 3);
-        return ubs->dr[3];
+    ఎంపిక (bp_అంకె) {
+    స్థితి 0:
+        తిరిగి ubs->dr[0];
+    స్థితి 1:
+        తిరిగి ubs->dr[1];
+    స్థితి 2:
+        తిరిగి ubs->dr[2];
+    అప్రమేయ:
+        ప్రతిజ్ఞా(bp_అంకె == 3);
+        తిరిగి ubs->dr[3];
     }
 }
 
@@ -442,20 +442,20 @@ static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
  * @param bp_num Hardware breakpoint ID of the BP you'd like to query.
  * @return Structure containing information about the status of the breakpoint.
  */
-getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
+getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_అంకె)
 {
-    word_t dr7val;
+    మాట_t dr7val;
     getBreakpoint_t ret;
     convertedTypeAndAccess_t res;
 
     dr7val = readDr7Context(t);
-    ret.vaddr = getBpVaddrContext(t, bp_num);
-    ret.size = convertArchToSize(dr7val, bp_num);
-    res = convertArchToTypeAndAccess(dr7val, bp_num);
+    ret.vaddr = getBpVaddrContext(t, bp_అంకె);
+    ret.కొలత = convert_Arch_గమ్యం_కొలత(dr7val, bp_అంకె);
+    res = convert_Arch_గమ్యం_Type_And_Access(dr7val, bp_అంకె);
     ret.type = res.type;
     ret.rw = res.rw;
-    ret.is_enabled = breakpointIsEnabled(t, bp_num);
-    return ret;
+    ret.is_enabled = breakpointIsEnabled(t, bp_అంకె);
+    తిరిగి ret;
 }
 
 /** Backend for the x86 seL4_TCB_UnsetBreakpoint invocation.
@@ -464,11 +464,11 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
  * @param uds Arch TCB register context pointer.
  * @param bp_num The hardware breakpoint ID you'd like to clear.
  */
-void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
+శూన్య unsetBreakpoint(tcb_t *t, uint16_t bp_అంకె)
 {
-    disableBreakpoint(t, bp_num);
-    unsetDr7BitsFor(t, bp_num);
-    setBpVaddrContext(t, bp_num, 0);
+    disableBreakpoint(t, bp_అంకె);
+    unset_Dr7_బిట్లు_For(t, bp_అంకె);
+    సమితి_Bp_Vaddr_Context(t, bp_అంకె, 0);
 }
 
 /** Used in the exception path to determine if an exception was caused by
@@ -478,25 +478,25 @@ void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
  * @return a structure stating whether or not the exception was caused by
  *          hardware single-stepping, and what the instruction vaddr was.
  */
-typedef struct {
+రకనిర్వచనం నిర్మాణం {
     bool_t ret;
-    word_t instr_vaddr;
-} testAndResetSingleStepException_t;
+    మాట_t instr_vaddr;
+} test_And_Reset_Single_అడుగు_Exception_t;
 
-static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *t)
+స్థిర test_And_Reset_Single_అడుగు_Exception_t test_And_Reset_Single_అడుగు_Exception(tcb_t *t)
 {
-    testAndResetSingleStepException_t ret;
-    word_t dr6;
+    test_And_Reset_Single_అడుగు_Exception_t ret;
+    మాట_t dr6;
 
     dr6 = readDr6Reg();
-    if (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
+    ఒకవేళ (!(dr6 & X86_DEBUG_DR6_SINGLE_అడుగు_FLAG)) {
         ret.ret = false;
-        return ret;
+        తిరిగి ret;
     }
 
     ret.ret = true;
     ret.instr_vaddr = t->tcbArch.tcbContext.registers[FaultIP];
-    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+    bitwiseAndDr6Reg(~X86_DEBUG_DR6_SINGLE_అడుగు_FLAG);
 
     /* And that's not all: if the breakpoint is an instruction breakpoint, we
      * also need to set EFLAGS.RF. The processor raises the #DB exception BEFORE
@@ -511,25 +511,25 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
      */
     /* This will automatically be popped by restore_user_context() */
     t->tcbArch.tcbContext.registers[FLAGS] |= X86_DEBUG_EFLAGS_RESUME_FLAG;
-    return ret;
+    తిరిగి ret;
 }
 
-bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
-                               UNUSED bool_t is_reply)
+bool_t configureSingleStepping(tcb_t *t, uint16_t bp_అంకె, మాట_t n_instr,
+                               వాడని bool_t is_జవాబు)
 {
     /* On x86 no hardware breakpoints are needed for single stepping. */
-    if (n_instr == 0) {
+    ఒకవేళ (n_instr == 0) {
         /* If n_instr (number of instructions to single-step) is 0, that is the
           * same as requesting that single-stepping be disabled.
           */
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
+        t->tcbArch.tcbContext.breakpointState.single_అడుగు_enabled = false;
         t->tcbArch.tcbContext.registers[FLAGS] &= ~X86_DEBUG_EFLAGS_TRAP_FLAG;
-    } else {
-        t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
+    } లేకపోతే {
+        t->tcbArch.tcbContext.breakpointState.single_అడుగు_enabled = true;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return false;
+    తిరిగి false;
 }
 
 /** Used in the exception path to determine which breakpoint triggered the
@@ -548,131 +548,131 @@ bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
  *          breakpoint was triggered, and gives information describing the
  *          breakpoint.
  */
-typedef struct {
-    int bp_num;
-    word_t vaddr, reason;
-} getAndResetActiveBreakpoint_t;
+రకనిర్వచనం నిర్మాణం {
+    పూర్ణాంకం bp_అంకె;
+    మాట_t vaddr, reason;
+} get_And_Reset_చురుకైన_Breakpoint_t;
 
-static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
+స్థిర get_And_Reset_చురుకైన_Breakpoint_t get_And_Reset_చురుకైన_Breakpoint(tcb_t *t)
 {
     convertedTypeAndAccess_t tmp;
-    getAndResetActiveBreakpoint_t ret;
+    get_And_Reset_చురుకైన_Breakpoint_t ret;
 
     /* Read from the hardware regs, not user context */
-    word_t dr6 = readDr6Reg();
-    if (dr6 & BIT(0)) {
-        ret.bp_num = 0;
-    } else if (dr6 & BIT(1)) {
-        ret.bp_num = 1;
-    } else if (dr6 & BIT(2)) {
-        ret.bp_num = 2;
-    } else if (dr6 & BIT(3)) {
-        ret.bp_num = 3;
-    } else {
-        ret.bp_num = -1;
-        return ret;
+    మాట_t dr6 = readDr6Reg();
+    ఒకవేళ (dr6 & బిట్టు(0)) {
+        ret.bp_అంకె = 0;
+    } లేకపోతే ఒకవేళ (dr6 & బిట్టు(1)) {
+        ret.bp_అంకె = 1;
+    } లేకపోతే ఒకవేళ (dr6 & బిట్టు(2)) {
+        ret.bp_అంకె = 2;
+    } లేకపోతే ఒకవేళ (dr6 & బిట్టు(3)) {
+        ret.bp_అంకె = 3;
+    } లేకపోతే {
+        ret.bp_అంకె = -1;
+        తిరిగి ret;
     }
 
-    tmp = convertArchToTypeAndAccess(readDr7Context(t), ret.bp_num);
-    ret.vaddr = getBpVaddrContext(t, ret.bp_num);
+    tmp = convert_Arch_గమ్యం_Type_And_Access(readDr7Context(t), ret.bp_అంకె);
+    ret.vaddr = getBpVaddrContext(t, ret.bp_అంకె);
     ret.reason = tmp.type;
 
-    bitwiseAndDr6Reg(~BIT(ret.bp_num));
-    return ret;
+    bitwiseAndDr6Reg(~బిట్టు(ret.bp_అంకె));
+    తిరిగి ret;
 }
 
-exception_t handleUserLevelDebugException(int int_vector)
+exception_t handleUserLevelDebugException(పూర్ణాంకం int_సదిశ)
 {
     tcb_t *ct;
-    getAndResetActiveBreakpoint_t active_bp;
-    testAndResetSingleStepException_t single_step_info;
+    get_And_Reset_చురుకైన_Breakpoint_t చురుకైన_bp;
+    test_And_Reset_Single_అడుగు_Exception_t single_అడుగు_info;
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = int_vector;
-#endif /* DEBUG */
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_User_Level_Fault;
+    ks_Kernel_నమోదు.మాట = int_సదిశ;
+#అయితే_ముగింపు /* DEBUG */
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
-    benchmark_track_start();
-#endif
+#నిర్వచితమైతే CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+    benchmark_track_ప్రారంభం();
+#అయితే_ముగింపు
 
-    ct = NODE_STATE(ksCurThread);
+    ct = కణుపు_STATE(ksCurThread);
 
     /* Software break request (INT3) is detected by the vector number */
-    if (int_vector == int_software_break_request) {
-        current_fault = seL4_Fault_DebugException_new(getRestartPC(NODE_STATE(ksCurThread)),
+    ఒకవేళ (int_సదిశ == int_software_break_request) {
+        current_fault = seL4_Fault_DebugException_new(getRestartPC(కణుపు_STATE(ksCurThread)),
                                                       0, seL4_SoftwareBreakRequest);
-    } else {
+    } లేకపోతే {
         /* Hardware breakpoint trigger is detected using DR6 */
-        active_bp = getAndResetActiveBreakpoint(ct);
-        if (active_bp.bp_num >= 0) {
-            current_fault = seL4_Fault_DebugException_new(active_bp.vaddr,
-                                                          active_bp.bp_num,
-                                                          active_bp.reason);
-        } else {
-            single_step_info = testAndResetSingleStepException(ct);
-            if (single_step_info.ret == true) {
+        చురుకైన_bp = get_And_Reset_చురుకైన_Breakpoint(ct);
+        ఒకవేళ (చురుకైన_bp.bp_అంకె >= 0) {
+            current_fault = seL4_Fault_DebugException_new(చురుకైన_bp.vaddr,
+                                                          చురుకైన_bp.bp_అంకె,
+                                                          చురుకైన_bp.reason);
+        } లేకపోతే {
+            single_అడుగు_info = test_And_Reset_Single_అడుగు_Exception(ct);
+            ఒకవేళ (single_అడుగు_info.ret == true) {
                 /* If the caller asked us to skip over N instructions before
                  * generating the next single-step breakpoint, we shouldn't
                  * bother to construct a fault message until we've skipped N
                  * instructions.
                  */
-                if (singleStepFaultCounterReady(ct) == false) {
-                    return EXCEPTION_NONE;
+                ఒకవేళ (single_అడుగు_Fault_Counter_Ready(ct) == false) {
+                    తిరిగి EXCEPTION_NONE;
                 }
-                current_fault = seL4_Fault_DebugException_new(single_step_info.instr_vaddr,
-                                                              0, seL4_SingleStep);
-            } else {
-                return EXCEPTION_SYSCALL_ERROR;
+                current_fault = seL4_Fault_DebugException_new(single_అడుగు_info.instr_vaddr,
+                                                              0, se_L4_Single_అడుగు);
+            } లేకపోతే {
+                తిరిగి EXCEPTION_SYSCALL_ERROR;
             }
         }
     }
 
-    handleFault(NODE_STATE(ksCurThread));
+    handleFault(కణుపు_STATE(ksCurThread));
 
-    schedule();
+    కాలపట్టిక();
     activateThread();
 
-    return EXCEPTION_NONE;
+    తిరిగి EXCEPTION_NONE;
 }
 
-BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
+BOOT_సంకేతం bool_t Arch_initHardwareBreakpoints(శూన్య)
 {
-    x86_cpu_identity_t *modelinfo;
+    x86_cpu_తటస్థం_t *modelinfo;
 
     modelinfo = x86_cpuid_get_model_info();
     /* Intel manuals, vol3, section 17.2.4, "NOTES". */
-    if (modelinfo->family == 15) {
-        if (modelinfo->model == 3 || modelinfo->model == 4
+    ఒకవేళ (modelinfo->family == 15) {
+        ఒకవేళ (modelinfo->model == 3 || modelinfo->model == 4
             || modelinfo->model == 6) {
             byte8_bps_supported = true;
         }
     }
-    if (modelinfo->family == 6) {
-        if (modelinfo->model == 15 || modelinfo->model == 23
+    ఒకవేళ (modelinfo->family == 6) {
+        ఒకవేళ (modelinfo->model == 15 || modelinfo->model == 23
             || modelinfo->model == 0x1C) {
             byte8_bps_supported = true;
         }
     }
-    return true;
+    తిరిగి true;
 }
 
-void Arch_initBreakpointContext(user_breakpoint_state_t *uds)
+శూన్య Arch_initBreakpointContext(user_breakpoint_state_t *uds)
 {
-    memset(uds, 0, sizeof(*uds));
+    memset(uds, 0, పరిమాణం(*uds));
 
     /* Preload reserved values into register context */
     uds->dr[4] = readDr6Reg() &
-                 ~(BIT(0)
-                   | BIT(1)
-                   | BIT(2)
-                   | BIT(3)
-                   | X86_DEBUG_DR6_SINGLE_STEP_FLAG);
+                 ~(బిట్టు(0)
+                   | బిట్టు(1)
+                   | బిట్టు(2)
+                   | బిట్టు(3)
+                   | X86_DEBUG_DR6_SINGLE_అడుగు_FLAG);
 
     uds->dr[5] = readDr7Reg() &
-                 ~(X86_DEBUG_BP0_ENABLE_BIT | X86_DEBUG_BP1_ENABLE_BIT
-                   | X86_DEBUG_BP2_ENABLE_BIT
-                   | X86_DEBUG_BP3_ENABLE_BIT);
+                 ~(X86_DEBUG_BP0_ENABLE_బిట్టు | X86_DEBUG_BP1_ENABLE_బిట్టు
+                   | X86_DEBUG_BP2_ENABLE_బిట్టు
+                   | X86_DEBUG_BP3_ENABLE_బిట్టు);
 }
 
-#endif
+#అయితే_ముగింపు

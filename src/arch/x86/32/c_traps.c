@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <kernel/stack.h>
-#include <machine/fpu.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/machine/debug.h>
-#include <benchmark/benchmark_track.h>
-#include <mode/stack.h>
-#include <arch/object/vcpu.h>
-#include <arch/kernel/traps.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <model/statedata.h>
+#అన్తర్భావ <kernel/stack.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <arch/fastpath/fastpath.h>
+#అన్తర్భావ <arch/machine/debug.h>
+#అన్తర్భావ <benchmark/benchmark_track.h>
+#అన్తర్భావ <mode/stack.h>
+#అన్తర్భావ <arch/object/vcpu.h>
+#అన్తర్భావ <arch/kernel/traps.h>
 
-#include <api/syscall.h>
-#include <util.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <util.h>
 
-#ifdef CONFIG_VTX
-USED static void NORETURN vmlaunch_failed(void)
+#నిర్వచితమైతే CONFIG_VTX
+వాడిన స్థిర శూన్య NORETURN vmlaunch_failed(శూన్య)
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
+    c_నమోదు_hook();
 
-    handleVmEntryFail();
+    handle_Vm_నమోదు_Fail();
     restore_user_context();
 }
 
-static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
+స్థిర శూన్య NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 {
     restoreVMCS();
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
     /* Do not support breakpoints in VMs, so just disable all breakpoints */
-    loadAllDisabledBreakpointState(cur_thread);
-#endif
-    word_t *guest_regs_ptr = vcpu->gp_registers;
-    if (vcpu->launched) {
+    ఎక్కించు_All_Disabled_Breakpoint_State(cur_thread);
+#అయితే_ముగింపు
+    మాట_t *guest_regs_ptr = vcpu->gp_registers;
+    ఒకవేళ (vcpu->launched) {
         /* attempt to do a vmresume */
-        asm volatile(
+        asm అస్థిర(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %[guest_regs], %%esp\n"
             "popl %%eax\n"
@@ -52,21 +52,21 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // Now do the vmresume
             "vmresume\n"
             // if we get here we failed
-#ifdef ENABLE_SMP_SUPPORT
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#లేకపోతే
             "leal kernel_stack_alloc + %c1, %%esp\n"
-#endif
+#అయితే_ముగింపు
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(బిట్టు(CONFIG_KERNEL_దొంతర_బిట్లు) - పరిమాణం(మాట_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
         );
-    } else {
+    } లేకపోతే {
         /* attempt to do a vmlaunch */
-        asm volatile(
+        asm అస్థిర(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %[guest_regs], %%esp\n"
             "popl %%eax\n"
@@ -79,14 +79,14 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
             // Now do the vmresume
             "vmlaunch\n"
             // if we get here we failed
-#ifdef ENABLE_SMP_SUPPORT
+#నిర్వచితమైతే ENABLE_SMP_SUPPORT
             "movl (%%esp), %%esp\n"
-#else
+#లేకపోతే
             "leal kernel_stack_alloc + %c1, %%esp\n"
-#endif
+#అయితే_ముగింపు
             "call vmlaunch_failed\n"
             : [guest_regs] "+a"(guest_regs_ptr)
-            : "i"(BIT(CONFIG_KERNEL_STACK_BITS) - sizeof(word_t))
+            : "i"(బిట్టు(CONFIG_KERNEL_దొంతర_బిట్లు) - పరిమాణం(మాట_t))
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "ebx", "ecx", "edx", "esi", "edi", "ebp", "memory"
@@ -94,58 +94,58 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
     }
     UNREACHABLE();
 }
-#endif
+#అయితే_ముగింపు
 
-void NORETURN VISIBLE restore_user_context(void);
-void NORETURN VISIBLE restore_user_context(void)
+శూన్య NORETURN VISIBLE restore_user_context(శూన్య);
+శూన్య NORETURN VISIBLE restore_user_context(శూన్య)
 {
     c_exit_hook();
 
-    NODE_UNLOCK_IF_HELD;
+    కణుపు_UNLOCK_IF_HELD;
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
+    ఒకవేళ (ARCH_కణుపు_STATE(x86_KSPending_అంతరాయం) != int_invalid) {
         /* put this in service */
-        interrupt_t irq = servicePendingIRQ();
+        అంతరాయం_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
-        asm volatile(
+        asm అస్థిర(
             "mov %[stack_top], %%esp\n"
             "push %[syscall] \n"
             "push %[irq]\n"
             "call c_handle_interrupt"
             :
-            : [stack_top] "r"(&(kernel_stack_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_STACK_BITS)])),
+            : [దొంతర_శిఖరం] "r"(&(kernel_దొంతర_alloc[CURRENT_CPU_సూచీ()][బిట్టు(CONFIG_KERNEL_దొంతర_బిట్లు)])),
             [syscall] "r"(0), /* syscall is unused for irq path */
             [irq] "r"(irq)
             : "memory");
         UNREACHABLE();
     }
 
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-#ifdef CONFIG_VTX
+    tcb_t *cur_thread = కణుపు_STATE(ksCurThread);
+#నిర్వచితమైతే CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
-    if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
-        vcpu_fpu_to_guest(cur_thread, vcpu);
+    ఒకవేళ (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
+        vcpu_fpu_గమ్యం_guest(cur_thread, vcpu);
         restore_vmx(cur_thread, vcpu);
-    } else if (vcpu) {
-        vcpu_fpu_to_host(cur_thread, vcpu);
+    } లేకపోతే ఒకవేళ (vcpu) {
+        vcpu_fpu_గమ్యం_host(cur_thread, vcpu);
     }
-#endif
-    setKernelEntryStackPointer(cur_thread);
+#అయితే_ముగింపు
+    సమితి_Kernel_నమోదు_దొంతర_సూచిక(cur_thread);
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
     restore_user_debug_context(cur_thread);
-#endif
+#అయితే_ముగింపు
 
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    ఒకవేళ (config_సమితి(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_disable_ibrs();
     }
 
     /* see if we entered via syscall */
-    if (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
+    ఒకవేళ (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1)) {
         cur_thread->tcbArch.tcbContext.registers[FLAGS] &= ~FLAGS_IF;
-        asm volatile(
+        asm అస్థిర(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %0, %%esp\n"
             // restore syscall number
@@ -178,8 +178,8 @@ void NORETURN VISIBLE restore_user_context(void)
             // before running this assembler
             : "memory"
         );
-    } else {
-        asm volatile(
+    } లేకపోతే {
+        asm అస్థిర(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movl %0, %%esp\n"
             "popl %%eax\n"

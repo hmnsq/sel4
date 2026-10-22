@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <util.h>
-#include <stdint.h>
-#include <plat/machine.h>
-BOOT_CODE void initIRQController(void)
+#అన్తర్భావ <util.h>
+#అన్తర్భావ <stdint.h>
+#అన్తర్భావ <plat/machine.h>
+BOOT_సంకేతం శూన్య initIRQController(శూన్య)
 {
     /* Disable all interrupts */
     intc_regs->bfDisableIRQs[0] = 0xffffffff;
@@ -16,115 +16,115 @@ BOOT_CODE void initIRQController(void)
     /* Disable FIQ */
     intc_regs->FIQ_control &= ~FIQCTRL_FIQ_ENABLE;
     /* Enable IRQ control for GPU */
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    intc_regs->bfEnableBasicIRQs = BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
+    intc_regs->bfEnableBasicIRQs = బిట్టు(అంతరాయం_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_స్థానభ్రంశం);
+    intc_regs->bfEnableBasicIRQs = బిట్టు(అంతరాయం_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_స్థానభ్రంశం);
 
     core_regs->coreTimerPrescaler = 0x80000000;
 }
 
-BOOT_CODE void cpu_initLocalIRQController(void) {}
+BOOT_సంకేతం శూన్య cpu_initLocalIRQController(శూన్య) {}
 
-static inline irq_t getActiveIRQ(void)
+స్థిర అంతఃవరుస irq_t get_చురుకైన_IRQ(శూన్య)
 {
     uint32_t pending;
     uint32_t irq;
     /* Read core interrupt register */
     pending = core_regs->coreIRQSource[0];
     /* Mask out invalid bits */
-    pending &= MASK(12);
+    pending &= ముసుగు(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    ఒకవేళ (pending == 0) {
+        తిరిగి irqInvalid;
     }
 
     /* Get IRQ number */
-    irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    irq = (మాట_బిట్లు - 1 - clzl(pending));
+    ఒకవేళ (irq != అంతరాయం_CORE_GPU) {
+        తిరిగి irq;
     }
 
     /* GPU interrupt */
     pending = intc_regs->bfIRQBasicPending;
     pending &= intc_regs->bfEnableBasicIRQs;
     /* Mask out pending register 0 and 1 */
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
-    pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    pending &= ~బిట్టు(అంతరాయం_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_స్థానభ్రంశం);
+    pending &= ~బిట్టు(అంతరాయం_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_స్థానభ్రంశం);
+    ఒకవేళ (pending) {
+        తిరిగి (మాట_బిట్లు - 1 - clzl(pending)) + BASIC_IRQ_స్థానభ్రంశం;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    ఒకవేళ (pending) {
+        తిరిగి (మాట_బిట్లు - 1 - clzl(pending)) + 32 + సాధారణ_IRQ_స్థానభ్రంశం;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    ఒకవేళ (pending) {
+        తిరిగి (మాట_బిట్లు - 1 - clzl(pending)) + 0 + సాధారణ_IRQ_స్థానభ్రంశం;
     }
 
-    return irqInvalid;
+    తిరిగి irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+స్థిర అంతఃవరుస శూన్య ముసుగు_అంతరాయం(bool_t disable, irq_t irq)
 {
-    switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
-            core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
-            core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
+    ఎంపిక (irq) {
+    స్థితి అంతరాయం_CORE_CNTPSIRQ :
+    స్థితి అంతరాయం_CORE_CNTPNSIRQ:
+    స్థితి అంతరాయం_CORE_CNTHPIRQ :
+    స్థితి అంతరాయం_CORE_CNTVIRQ  :
+        ఒకవేళ (disable) {
+            core_regs->coreTimersIrqCtrl[0] &= ~బిట్టు(irq);
+        } లేకపోతే {
+            core_regs->coreTimersIrqCtrl[0] |= బిట్టు(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
-            core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
-            core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
+        తిరిగి;
+    స్థితి అంతరాయం_CORE_MAILBOX_0:
+    స్థితి అంతరాయం_CORE_MAILBOX_1:
+    స్థితి అంతరాయం_CORE_MAILBOX_2:
+    స్థితి అంతరాయం_CORE_MAILBOX_3:
+        ఒకవేళ (disable) {
+            core_regs->coreMailboxesIrqCtrl[0] &= ~బిట్టు(irq);
+        } లేకపోతే {
+            core_regs->coreMailboxesIrqCtrl[0] |= బిట్టు(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
-            core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
-            core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
+        తిరిగి;
+    స్థితి అంతరాయం_CORE_LOCAL_TIMER:
+        ఒకవేళ (disable) {
+            core_regs->localTimerCtl &= ~బిట్టు(LOCAL_TIMER_CTRL_IRQ_బిట్టు);
+        } లేకపోతే {
+            core_regs->localTimerCtl |= బిట్టు(LOCAL_TIMER_CTRL_IRQ_బిట్టు);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        తిరిగి;
+    స్థితి అంతరాయం_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    స్థితి అంతరాయం_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    స్థితి అంతరాయం_CORE_AXI:
         // Not currently handled
-        return;
-    default:
-        break;
+        తిరిగి;
+    అప్రమేయ:
+        ఆపు;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    ఒకవేళ (irq < BASIC_IRQ_స్థానభ్రంశం) {
         // Other invalid irq
-        return;
+        తిరిగి;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
-            intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
-            intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
+    ఒకవేళ (irq < సాధారణ_IRQ_స్థానభ్రంశం) {
+        ఒకవేళ (disable) {
+            intc_regs->bfDisableBasicIRQs = బిట్టు(irq - BASIC_IRQ_స్థానభ్రంశం);
+        } లేకపోతే {
+            intc_regs->bfEnableBasicIRQs = బిట్టు(irq - BASIC_IRQ_స్థానభ్రంశం);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
-            intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
-            intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
+    } లేకపోతే ఒకవేళ (irq <= maxIRQ) {
+        పూర్ణాంకం సాధారణ_irq = irq - సాధారణ_IRQ_స్థానభ్రంశం;
+        పూర్ణాంకం సూచీ = సాధారణ_irq / 32;
+        ఒకవేళ (disable) {
+            intc_regs->bfDisableIRQs[సూచీ] = బిట్టు(సాధారణ_irq % 32);
+        } లేకపోతే {
+            intc_regs->bfEnableIRQs[సూచీ] = బిట్టు(సాధారణ_irq % 32);
         }
     }
 }

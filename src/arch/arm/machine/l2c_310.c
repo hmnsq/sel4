@@ -5,143 +5,143 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/l2c_310.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <arch/machine/l2c_310.h>
 
-#define L2_LINE_SIZE_BITS 5
-#define L2_LINE_SIZE BIT(L2_LINE_SIZE_BITS) /* 32 byte line size */
+#నిర్వచించు L2_పంక్తి_కొలత_బిట్లు 5
+#నిర్వచించు L2_పంక్తి_కొలత బిట్టు(L2_పంక్తి_కొలత_బిట్లు) /* 32 byte line size */
 
-#define L2_LINE_START(a) ROUND_DOWN(a, L2_LINE_SIZE_BITS)
+#నిర్వచించు L2_పంక్తి_ప్రారంభం(a) విడత_కిందికి(a, L2_పంక్తి_కొలత_బిట్లు)
 
-compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BITS)
+compile_assert(l2_l1_same_పంక్తి_కొలత, L2_పంక్తి_కొలత_బిట్లు == L1_CACHE_పంక్తి_కొలత_బిట్లు)
 
 /* MSHIELD Control */
-#define MSHIELD_SMC_ROM_CTRL_CTRL         0x102
-#define MSHIELD_SMC_ROM_CTRL_AUX          0x109
-#define MSHIELD_SMC_ROM_CTRL_LATENCY      0x112
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL_CTRL         0x102
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL_AUX          0x109
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL_LATENCY      0x112
 /* MSHIELD Address Filter */
-#define MSHIELD_SMC_ROM_ADDR_FILT_START   /* ? */
-#define MSHIELD_SMC_ROM_ADDR_FILT_END     /* ? */
+#నిర్వచించు MSHIELD_SMC_ROM_ADDR_FILT_ప్రారంభం   /* ? */
+#నిర్వచించు MSHIELD_SMC_ROM_ADDR_FILT_చివర     /* ? */
 /* MSHIELD Control 2 */
-#define MSHIELD_SMC_ROM_CTRL2_DEBUG       0x100
-#define MSHIELD_SMC_ROM_CTRL2_PREFETCH    0x113 /* ? */
-#define MSHIELD_SMC_ROM_CTRL2_POWER       /* ? */
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL2_DEBUG       0x100
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL2_PREFETCH    0x113 /* ? */
+#నిర్వచించు MSHIELD_SMC_ROM_CTRL2_POWER       /* ? */
 /* MSHIELD Cache maintenance */
-#define MSHIELD_SMC_ROM_MAINT_INVALIDATE  0x101
+#నిర్వచించు MSHIELD_SMC_ROM_MAINT_INVALIDATE  0x101
 
 
 /* Cache ID */
-#define PL310_LOCKDOWN_BY_MASK            (0xf<<25)
-#define PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
-#define PL310_LOCKDOWN_BY_LINE            (0xf<<25)
+#నిర్వచించు PL310_LOCKDOWN_BY_ముసుగు            (0xf<<25)
+#నిర్వచించు PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
+#నిర్వచించు PL310_LOCKDOWN_BY_పంక్తి            (0xf<<25)
 
 /* Primary control */
-#define CTRL_CTRL_EN BIT(0)
+#నిర్వచించు CTRL_CTRL_EN బిట్టు(0)
 
 /* Auxiliary control */
-#define CTRL_AUX_EARLY_BRESP_EN                            BIT(30)
-#define CTRL_AUX_IPREFETCH_EN                              BIT(29)
-#define CTRL_AUX_DPREFETCH_EN                              BIT(28)
-#define CTRL_AUX_NSECURE_INT_ACCESS                        BIT(27)
-#define CTRL_AUX_NSECURE_LOCKDOWN_EN                       BIT(26)
-#define CTRL_AUX_REPLACEMENT_POLICY                        BIT(25)
-#define CTRL_AUX_FORCE_WR_ALLOC(X)            (((X)&0x3) * BIT(23)
-#define CTRL_AUX_SHARED_ATTRIB_OVERRIDE_EN                 BIT(22)
-#define CTRL_AUX_PARITY_EN                                 BIT(21)
-#define CTRL_AUX_EVENT_MONITOR_BUS_EN                      BIT(20)
-#define CTRL_AUX_WAYSIZE(X)                   (((X)&0x7) * BIT(17) )
-#define CTRL_AUX_ASSOCIATIVITY                             BIT(16)
-#define CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               BIT(13)
-#define CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    BIT(12)
-#define CTRL_AUX_STOREBUFDEV_LIMIT_EN                      BIT(11)
-#define CTRL_AUX_HIGH_PRIO_SODEV_EN                        BIT(10)
-#define CTRL_AUX_FULL_LINE_ZEROS_ENABLE                    BIT( 0)
+#నిర్వచించు CTRL_AUX_EARLY_BRESP_EN                            బిట్టు(30)
+#నిర్వచించు CTRL_AUX_IPREFETCH_EN                              బిట్టు(29)
+#నిర్వచించు CTRL_AUX_DPREFETCH_EN                              బిట్టు(28)
+#నిర్వచించు CTRL_AUX_NSECURE_INT_ACCESS                        బిట్టు(27)
+#నిర్వచించు CTRL_AUX_NSECURE_LOCKDOWN_EN                       బిట్టు(26)
+#నిర్వచించు CTRL_AUX_REPLACEMENT_POLICY                        బిట్టు(25)
+#నిర్వచించు CTRL_AUX_FORCE_WR_ALLOC(X)            (((X)&0x3) * బిట్టు(23)
+#నిర్వచించు CTRL_AUX_SHARED_ATTRIB_OVERRIDE_EN                 బిట్టు(22)
+#నిర్వచించు CTRL_AUX_PARITY_EN                                 బిట్టు(21)
+#నిర్వచించు CTRL_AUX_EVENT_MONITOR_BUS_EN                      బిట్టు(20)
+#నిర్వచించు CTRL_AUX_WAYSIZE(X)                   (((X)&0x7) * బిట్టు(17) )
+#నిర్వచించు CTRL_AUX_ASSOCIATIVITY                             బిట్టు(16)
+#నిర్వచించు CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               బిట్టు(13)
+#నిర్వచించు CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    బిట్టు(12)
+#నిర్వచించు CTRL_AUX_STOREBUFDEV_హద్దు_EN                      బిట్టు(11)
+#నిర్వచించు CTRL_AUX_ఎగువ_PRIO_SODEV_EN                        బిట్టు(10)
+#నిర్వచించు CTRL_AUX_నిండిన_పంక్తి_ZEROS_ENABLE                    బిట్టు( 0)
 
-#define CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
-#define CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
-#define CTRL_AUX_WAYSIZE_64K         CTRL_AUX_WAYSIZE(3)
-#define CTRL_AUX_WAYSIZE_128K        CTRL_AUX_WAYSIZE(4)
-#define CTRL_AUX_WAYSIZE_256K        CTRL_AUX_WAYSIZE(5)
-#define CTRL_AUX_WAYSIZE_512K        CTRL_AUX_WAYSIZE(6)
+#నిర్వచించు CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
+#నిర్వచించు CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
+#నిర్వచించు CTRL_AUX_WAYSIZE_64K         CTRL_AUX_WAYSIZE(3)
+#నిర్వచించు CTRL_AUX_WAYSIZE_128K        CTRL_AUX_WAYSIZE(4)
+#నిర్వచించు CTRL_AUX_WAYSIZE_256K        CTRL_AUX_WAYSIZE(5)
+#నిర్వచించు CTRL_AUX_WAYSIZE_512K        CTRL_AUX_WAYSIZE(6)
 
-#define CTRL_AUX_ASSOCIATIVITY_8WAY   (0 * CTRL_AUX_ASSOCIATIVITY)
-#define CTRL_AUX_ASSOCIATIVITY_16WAY  (1 * CTRL_AUX_ASSOCIATIVITY)
+#నిర్వచించు CTRL_AUX_ASSOCIATIVITY_8WAY   (0 * CTRL_AUX_ASSOCIATIVITY)
+#నిర్వచించు CTRL_AUX_ASSOCIATIVITY_16WAY  (1 * CTRL_AUX_ASSOCIATIVITY)
 
-#define CTRL_AUS_REPLPOLICY_RROBIN    (0 * CTRL_AUX_REPLACEMENT_POLICY)
-#define CTRL_AUS_REPLPOLICY_PRAND     (1 * CTRL_AUX_REPLACEMENT_POLICY)
+#నిర్వచించు CTRL_AUS_REPLPOLICY_RROBIN    (0 * CTRL_AUX_REPLACEMENT_POLICY)
+#నిర్వచించు CTRL_AUS_REPLPOLICY_PRAND     (1 * CTRL_AUX_REPLACEMENT_POLICY)
 
 /* Latency */
-#define CTRL_RAM_LATENCY_SET(X,S)    (((X)&0x7) * BIT(S))
-#define CTRL_RAM_LATENCY_SETUP(X)    CTRL_RAM_LATENCY_SET(X, 0)
-#define CTRL_RAM_LATENCY_READ(X)     CTRL_RAM_LATENCY_SET(X, 4)
-#define CTRL_RAM_LATENCY_WRITE(X)    CTRL_RAM_LATENCY_SET(X, 8)
+#నిర్వచించు CTRL_RAM_LATENCY_సమితి(X,S)    (((X)&0x7) * బిట్టు(S))
+#నిర్వచించు CTRL_RAM_LATENCY_అమరిక(X)    CTRL_RAM_LATENCY_సమితి(X, 0)
+#నిర్వచించు CTRL_RAM_LATENCY_READ(X)     CTRL_RAM_LATENCY_సమితి(X, 4)
+#నిర్వచించు CTRL_RAM_LATENCY_WRITE(X)    CTRL_RAM_LATENCY_సమితి(X, 8)
 
-#define CTRL_RAM_LATENCY(W,R,S)    ( CTRL_RAM_LATENCY_SETUP(S) \
+#నిర్వచించు CTRL_RAM_LATENCY(W,R,S)    ( CTRL_RAM_LATENCY_అమరిక(S) \
                                    | CTRL_RAM_LATENCY_READ(R)  \
                                    | CTRL_RAM_LATENCY_WRITE(W) )
 
 
 /* Maintenance */
-#define MAINTENANCE_PENDING          BIT(0)
+#నిర్వచించు MAINTENANCE_PENDING          బిట్టు(0)
 
 /* POWER */
-#define CTRL2_PWR_DYNAMIC_CLK_EN     BIT(1)
-#define CTRL2_PWR_STANDBY_ON         BIT(0)
+#నిర్వచించు CTRL2_PWR_DYNAMIC_CLK_EN     బిట్టు(1)
+#నిర్వచించు CTRL2_PWR_STANDBY_ON         బిట్టు(0)
 
 /* PREFECTCH */
-#define CTRL2_PFET_DBL_LINEFILL_EN              BIT(30)
-#define CTRL2_PFET_INST_PREFETCH_EN             BIT(29)
-#define CTRL2_PFET_DATA_PREFETCH_EN             BIT(28)
-#define CTRL2_PFET_DBL_LINEFILL_ON_WRAP_EN      BIT(27)
-#define CTRL2_PFET_PREFETCH_DROP_EN             BIT(24)
-#define CTRL2_PFET_INCR_DBL_LINEFILL_EN         BIT(23)
-#define CTRL2_PFET_NOT_SAME_ID_ON_EXCL_SEQ_EN   BIT(21)
-#define CTRL2_PFET_PREFETCH_OFFSET(X)    ((X) * BIT( 0) )
+#నిర్వచించు CTRL2_PFET_DBL_LINEFILL_EN              బిట్టు(30)
+#నిర్వచించు CTRL2_PFET_INST_PREFETCH_EN             బిట్టు(29)
+#నిర్వచించు CTRL2_PFET_దత్తాంశం_PREFETCH_EN             బిట్టు(28)
+#నిర్వచించు CTRL2_PFET_DBL_LINEFILL_ON_WRAP_EN      బిట్టు(27)
+#నిర్వచించు CTRL2_PFET_PREFETCH_DROP_EN             బిట్టు(24)
+#నిర్వచించు CTRL2_PFET_INCR_DBL_LINEFILL_EN         బిట్టు(23)
+#నిర్వచించు CTRL2_PFET_NOT_SAME_ID_ON_EXCL_SEQ_EN   బిట్టు(21)
+#నిర్వచించు CTRL2_PFET_PREFETCH_స్థానభ్రంశం(X)    ((X) * బిట్టు( 0) )
 
 
-struct l2cc_map {
+నిర్మాణం l2cc_map {
 
-    struct {
+    నిర్మాణం {
         uint32_t cache_id;              /* 0x000 */
         uint32_t cache_type;            /* 0x004 */
         uint32_t res[62];
     } id /* reg0 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t control;               /* 0x100 */
         uint32_t aux_control;           /* 0x104 */
-        uint32_t tag_ram_control;       /* 0x108 */
-        uint32_t data_ram_control;      /* 0x10C */
+        uint32_t ట్యాగ్_ram_control;       /* 0x108 */
+        uint32_t దత్తాంశం_ram_control;      /* 0x10C */
         uint32_t res[60];
     } control /* reg1 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t ev_counter_ctrl;       /* 0x200 */
         uint32_t ev_counter1_cfg;       /* 0x204 */
         uint32_t ev_counter0_cfg;       /* 0x208 */
         uint32_t ev_counter1;           /* 0x20C */
         uint32_t ev_counter0;           /* 0x210 */
-        uint32_t int_mask;              /* 0x214 */
-        uint32_t int_mask_status;       /* 0x218 */
-        uint32_t int_raw_status;        /* 0x21C */
+        uint32_t int_ముసుగు;              /* 0x214 */
+        uint32_t int_ముసుగు_స్థితి;       /* 0x218 */
+        uint32_t int_raw_స్థితి;        /* 0x21C */
         uint32_t int_clear;             /* 0x220 */
         uint32_t res[55];
-    } interrupt /* reg2 */;
+    } అంతరాయం /* reg2 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg3;
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg4;
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg5;
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg6;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[12];
         uint32_t cache_sync;            /* 0x730 */
         uint32_t res1[15];
@@ -151,20 +151,20 @@ struct l2cc_map {
         uint32_t res3[12];
         uint32_t clean_pa;              /* 0x7B0 */
         uint32_t res4[1];
-        uint32_t clean_index;           /* 0x7B8 */
+        uint32_t clean_సూచీ;           /* 0x7B8 */
         uint32_t clean_way;             /* 0x7BC */
         uint32_t res5[12];
         uint32_t clean_inv_pa;          /* 0x7F0 */
         uint32_t res6[1];
-        uint32_t clean_inv_index;       /* 0x7F8 */
+        uint32_t clean_inv_సూచీ;       /* 0x7F8 */
         uint32_t clean_inv_way;         /* 0x7FC */
     } maintenance /* reg7 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg8;
 
-    struct {
+    నిర్మాణం {
         uint32_t d_lockdown0;           /* 0x900 */
         uint32_t i_lockdown0;           /* 0x904 */
         uint32_t d_lockdown1;           /* 0x908 */
@@ -182,32 +182,32 @@ struct l2cc_map {
         uint32_t d_lockdown7;           /* 0x938 */
         uint32_t i_lockdown7;           /* 0x93C */
         uint32_t res[4];
-        uint32_t lock_line_eng;         /* 0x950 */
+        uint32_t తాళం_పంక్తి_eng;         /* 0x950 */
         uint32_t unlock_wayg;           /* 0x954 */
         uint32_t res1[42];
     } lockdown /* reg9 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg10;
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg11;
 
-    struct {
-        uint32_t addr_filtering_start;  /* 0xC00 */
-        uint32_t addr_filtering_end;    /* 0xC04 */
+    నిర్మాణం {
+        uint32_t addr_filtering_ప్రారంభం;  /* 0xC00 */
+        uint32_t addr_filtering_చివర;    /* 0xC04 */
         uint32_t res[62];
     } filter /* reg12 */;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg13;
-    struct {
+    నిర్మాణం {
         uint32_t res[64];
     } reg14;
 
-    struct {
+    నిర్మాణం {
         uint32_t res[16];
         uint32_t debug_ctrl;            /* 0xF40 */
         uint32_t res1[7];
@@ -219,49 +219,49 @@ struct l2cc_map {
 };
 
 
-#ifndef L2CC_L2C310_PPTR
-#error L2CC_L2C310_PPTR must be defined for virtual memory access to the L2 cache controller
-#else  /* L2CC_PPTR */
-volatile struct l2cc_map *const l2cc
-    = (volatile struct l2cc_map *)L2CC_L2C310_PPTR;
-#endif /* !L2CC_PPTR */
+#నిర్వచితం_కాకపోతే L2CC_L2C310_PPTR
+#దోషం L2CC_L2C310_PPTR must be defined కొరకు మాయా జ్ఞాపకం access గమ్యం the L2 cache controller
+#లేకపోతే  /* L2CC_PPTR */
+అస్థిర నిర్మాణం l2cc_map *స్థిరరాశి l2cc
+    = (అస్థిర నిర్మాణం l2cc_map *)L2CC_L2C310_PPTR;
+#అయితే_ముగింపు /* !L2CC_PPTR */
 
 
-#ifdef TI_MSHIELD
-BOOT_CODE static void mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
+#నిర్వచితమైతే TI_MSHIELD
+BOOT_సంకేతం స్థిర శూన్య mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
 {
-    register uint32_t _arg1 asm("r0") = arg1;
-    register uint32_t _arg2 asm("r1") = arg2;
-    register uint32_t _callid asm("r12") = callid;
-    asm volatile("push {r2-r12, lr}\n"
+    నమోదు uint32_t _arg1 asm("r0") = arg1;
+    నమోదు uint32_t _arg2 asm("r1") = arg2;
+    నమోదు uint32_t _callid asm("r12") = callid;
+    asm అస్థిర("push {r2-r12, lr}\n"
                  "dsb\n"
                  "smc #0\n"
                  "pop {r2-r12, lr}"
                  :: "r"(_callid), "r"(_arg1), "r"(_arg2));
 }
-#endif /* TI_MSHIELD */
+#అయితే_ముగింపు /* TI_MSHIELD */
 
-BOOT_CODE void initL2Cache(void)
+BOOT_సంకేతం శూన్య initL2Cache(శూన్య)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#నిర్వచితం_కాకపోతే CONFIG_DEBUG_DISABLE_L2_CACHE
     uint32_t aux;
-    uint32_t tag_ram;
-    uint32_t data_ram;
+    uint32_t ట్యాగ్_ram;
+    uint32_t దత్తాంశం_ram;
     uint32_t prefetch;
 
     /* L2 cache must be disabled during initialisation */
-#ifndef TI_MSHIELD
+#నిర్వచితం_కాకపోతే TI_MSHIELD
     l2cc->control.control &= ~CTRL_CTRL_EN;
-#endif
+#అయితే_ముగింపు
 
-    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_DATA_PREFETCH_EN;
-#if defined(CONFIG_PLAT_IMX6)
-    tag_ram  = CTRL_RAM_LATENCY(1, 2, 1);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 1);
-#else
-    tag_ram  = CTRL_RAM_LATENCY(1, 1, 0);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 0);
-#endif
+    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_దత్తాంశం_PREFETCH_EN;
+#ఒకవేళ defined(CONFIG_PLAT_IMX6)
+    ట్యాగ్_ram  = CTRL_RAM_LATENCY(1, 2, 1);
+    దత్తాంశం_ram = CTRL_RAM_LATENCY(1, 2, 1);
+#లేకపోతే
+    ట్యాగ్_ram  = CTRL_RAM_LATENCY(1, 1, 0);
+    దత్తాంశం_ram = CTRL_RAM_LATENCY(1, 2, 0);
+#అయితే_ముగింపు
 
     aux      = 0
                | CTRL_AUX_IPREFETCH_EN
@@ -271,39 +271,39 @@ BOOT_CODE void initL2Cache(void)
                | CTRL_AUX_ASSOCIATIVITY_16WAY
                | CTRL_AUS_REPLPOLICY_RROBIN;
 
-#if defined(CONFIG_PLAT_IMX6SX)
+#ఒకవేళ defined(CONFIG_PLAT_IMX6SX)
     aux |= CTRL_AUX_WAYSIZE_16K;
-#elif defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
+#లేదావేళ defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
     aux |= CTRL_AUX_WAYSIZE_64K;
-#elif defined(OMAP4)
+#లేదావేళ defined(OMAP4)
     aux |= CTRL_AUX_WAYSIZE_32K;
-#else /* ! (EXYNOS4 || OMAP4 || IMX6) */
-#error Unknown platform for L2C-310
-#endif /* EXYNOS4 || OMAP4 || IMX6 */
+#లేకపోతే /* ! (EXYNOS4 || OMAP4 || IMX6) */
+#దోషం Unknown platform కొరకు L2C-310
+#అయితే_ముగింపు /* EXYNOS4 || OMAP4 || IMX6 */
 
-#ifdef TI_MSHIELD
+#నిర్వచితమైతే TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 0, 0);
     mshield_smc(MSHIELD_SMC_ROM_CTRL_AUX, aux, 0);
-    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, data_ram);
+    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, ట్యాగ్_ram, దత్తాంశం_ram);
 
-#else /* !TI_MSHIELD */
+#లేకపోతే /* !TI_MSHIELD */
     /* Direct register access */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     l2cc->control.aux_control      = aux;
-    l2cc->control.tag_ram_control  = tag_ram;
-    l2cc->control.data_ram_control = data_ram;
+    l2cc->control.ట్యాగ్_ram_control  = ట్యాగ్_ram;
+    l2cc->control.దత్తాంశం_ram_control = దత్తాంశం_ram;
     l2cc->control2.prefetch_ctrl   = prefetch;
 
-#endif /* TI_MSHIELD */
+#అయితే_ముగింపు /* TI_MSHIELD */
 
     /* 2: Invalidate by way. */
     l2cc->maintenance.inv_way = 0xffff;
-    while (l2cc->maintenance.inv_way & 0xffff);
+    అయితే (l2cc->maintenance.inv_way & 0xffff);
 
     /* 3: write to lockdown D & I reg9 if required  */
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
+    ఒకవేళ ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_ముసుగు) == PL310_LOCKDOWN_BY_MASTER) {
         /* disable lockdown */
         l2cc->lockdown.d_lockdown0 = 0;
         l2cc->lockdown.i_lockdown0 = 0;
@@ -322,43 +322,43 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    ఒకవేళ ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_ముసుగు) == PL310_LOCKDOWN_BY_పంక్తి) {
         /* disable lockdown */
-        l2cc->lockdown.lock_line_eng = 0;
+        l2cc->lockdown.తాళం_పంక్తి_eng = 0;
     }
 
     /* 4: write to interrupt clear register to clear any residual raw interrupts set */
-    l2cc->interrupt.int_mask  = 0x0;
+    l2cc->అంతరాయం.int_ముసుగు  = 0x0;
     /* 5: write to interrupt mask register if you want to enable interrupts (active high) */
-    l2cc->interrupt.int_clear = MASK(9);
+    l2cc->అంతరాయం.int_clear = ముసుగు(9);
 
     /* 6: Enable the L2 cache */
-#ifdef TI_MSHIELD
+#నిర్వచితమైతే TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 1, 0);
-#else /* !TI_MSHIELD */
+#లేకపోతే /* !TI_MSHIELD */
     /* Direct register access */
     l2cc->control.control |= CTRL_CTRL_EN;
-#endif /* TI_MSHIELD */
+#అయితే_ముగింపు /* TI_MSHIELD */
     /* Guarantee that the setACTLR() doesn't start executing until the completion
      * of the l2cc register updates */
     dsb();
 
-#if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
+#ఒకవేళ defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 1 in the ACTLR, which on the cortex-a9 is the l2 prefetch enable
      * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
-    setACTLR(getACTLR() | BIT(1));
-#endif
+    సమితి_ACTLR(getACTLR() | బిట్టు(1));
+#అయితే_ముగింపు
 
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#అయితే_ముగింపు /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-static inline void L2_cacheSync(void)
+స్థిర అంతఃవరుస శూన్య L2_cacheSync(శూన్య)
 {
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     l2cc->maintenance.cache_sync = 0;
-    while (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
+    అయితే (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
     /* Wait till the L2 cache operation has completed and avoid later memoy
      * operations being reordered to before this point */
     dsb();
@@ -372,82 +372,82 @@ static inline void L2_cacheSync(void)
  * The same is true when doing separate clean and invalidate operations,
  * hence that is not a proper work-around and worse than the errata.
  */
-void plat_cleanInvalidateL2Cache(void)
+శూన్య plat_cleanInvalidateL2Cache(శూన్య)
 {
-    if (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
+    ఒకవేళ (!config_సమితి(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
         /* Avoid normal memory writes being reordered with device memory writes */
         dmb();
         l2cc->maintenance.clean_inv_way = 0xffff;
-        while (l2cc->maintenance.clean_inv_way);
+        అయితే (l2cc->maintenance.clean_inv_way);
         L2_cacheSync();
     }
 }
 
-void plat_cleanCache(void)
+శూన్య plat_cleanCache(శూన్య)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#నిర్వచితం_కాకపోతే CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* Clean by way. */
     l2cc->maintenance.clean_way = 0xffff;
-    while (l2cc->maintenance.clean_way & 0xffff);
+    అయితే (l2cc->maintenance.clean_way & 0xffff);
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#అయితే_ముగింపు /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanL2Range(paddr_t start, paddr_t end)
+శూన్య plat_cleanL2Range(paddr_t ప్రారంభం, paddr_t చివర)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#నిర్వచితం_కాకపోతే CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    ప్రతిజ్ఞా(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.clean_pa = start;
+    కొరకు (ప్రారంభం = L2_పంక్తి_ప్రారంభం(ప్రారంభం);
+         ప్రారంభం != L2_పంక్తి_ప్రారంభం(చివర + L2_పంక్తి_కొలత);
+         ప్రారంభం += L2_పంక్తి_కొలత) {
+        l2cc->maintenance.clean_pa = ప్రారంభం;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#అయితే_ముగింపు /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_invalidateL2Range(paddr_t start, paddr_t end)
+శూన్య plat_invalidateL2Range(paddr_t ప్రారంభం, paddr_t చివర)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#నిర్వచితం_కాకపోతే CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    ప్రతిజ్ఞా(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.inv_pa = start;
+    కొరకు (ప్రారంభం = L2_పంక్తి_ప్రారంభం(ప్రారంభం);
+         ప్రారంభం != L2_పంక్తి_ప్రారంభం(చివర + L2_పంక్తి_కొలత);
+         ప్రారంభం += L2_పంక్తి_కొలత) {
+        l2cc->maintenance.inv_pa = ప్రారంభం;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#అయితే_ముగింపు /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
+శూన్య plat_cleanInvalidateL2Range(paddr_t ప్రారంభం, paddr_t చివర)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#నిర్వచితం_కాకపోతే CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    ప్రతిజ్ఞా(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.clean_inv_pa = start;
+    కొరకు (ప్రారంభం = L2_పంక్తి_ప్రారంభం(ప్రారంభం);
+         ప్రారంభం != L2_పంక్తి_ప్రారంభం(చివర + L2_పంక్తి_కొలత);
+         ప్రారంభం += L2_పంక్తి_కొలత) {
+        l2cc->maintenance.clean_inv_pa = ప్రారంభం;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#అయితే_ముగింపు /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 

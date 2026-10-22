@@ -4,116 +4,116 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/traps.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/registerset.h>
-#include <api/syscall.h>
-#include <machine/fpu.h>
-#include <mode/machine/debug.h>
+#అన్తర్భావ <config.h>
+#అన్తర్భావ <arch/kernel/traps.h>
+#అన్తర్భావ <arch/object/vcpu.h>
+#అన్తర్భావ <arch/machine/registerset.h>
+#అన్తర్భావ <api/syscall.h>
+#అన్తర్భావ <machine/fpu.h>
+#అన్తర్భావ <mode/machine/debug.h>
 
-#include <sel4/benchmark_track_types.h>
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
-#include <arch/machine.h>
+#అన్తర్భావ <sel4/benchmark_track_types.h>
+#అన్తర్భావ <benchmark/benchmark_track.h>
+#అన్తర్భావ <benchmark/benchmark_utilisation.h>
+#అన్తర్భావ <arch/machine.h>
 
-void VISIBLE NORETURN c_handle_undefined_instruction(void)
+శూన్య VISIBLE NORETURN c_handle_undefined_instruction(శూన్య)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    కణుపు_తాళం_SYS;
+    c_నమోదు_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_UserLevelFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-#endif
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_User_Level_Fault;
+    ks_Kernel_నమోదు.మాట = get_రిజిస్టరు(కణుపు_STATE(ksCurThread), తదుపరి_IP);
+#అయితే_ముగింపు
 
     /* There's only one user-level fault on ARM, and the code is (0,0) */
-#ifdef CONFIG_ARCH_AARCH32
+#నిర్వచితమైతే CONFIG_ARCH_AARCH32
     handleUserLevelFault(0, 0);
-#elif CONFIG_ARCH_AARCH64
-    word_t esr = getESR();
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    if (isDebugFault(esr)) {
+#లేదావేళ CONFIG_ARCH_AARCH64
+    మాట_t esr = getESR();
+#నిర్వచితమైతే CONFIG_HARDWARE_DEBUG_API
+    ఒకవేళ (isDebugFault(esr)) {
         handleDebugFaultEvent(esr);
-    } else
-#endif
+    } లేకపోతే
+#అయితే_ముగింపు
     {
         handleUserLevelFault(esr, 0);
     }
-#endif
+#అయితే_ముగింపు
     restore_user_context();
     UNREACHABLE();
 }
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
-void NORETURN vm_fault_slowpath(vm_fault_type_t type)
+#నిర్వచితమైతే CONFIG_EXCEPTION_FASTPATH
+శూన్య NORETURN vm_fault_slowpath(vm_fault_type_t type)
 {
     handleVMFaultEvent(type);
     restore_user_context();
     UNREACHABLE();
 }
-#endif
+#అయితే_ముగింపు
 
-static inline void NORETURN c_handle_vm_fault(vm_fault_type_t type)
+స్థిర అంతఃవరుస శూన్య NORETURN c_handle_vm_fault(vm_fault_type_t type)
 {
-    NODE_LOCK_SYS;
-    c_entry_hook();
+    కణుపు_తాళం_SYS;
+    c_నమోదు_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VMFault;
-    ksKernelEntry.word = getRegister(NODE_STATE(ksCurThread), NextIP);
-    ksKernelEntry.is_fastpath = false;
-#endif
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_VMFault;
+    ks_Kernel_నమోదు.మాట = get_రిజిస్టరు(కణుపు_STATE(ksCurThread), తదుపరి_IP);
+    ks_Kernel_నమోదు.is_fastpath = false;
+#అయితే_ముగింపు
 
-#ifdef CONFIG_EXCEPTION_FASTPATH
+#నిర్వచితమైతే CONFIG_EXCEPTION_FASTPATH
     fastpath_vm_fault(type);
-# else
+# లేకపోతే
     handleVMFaultEvent(type);
     restore_user_context();
-#endif
+#అయితే_ముగింపు
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_data_fault(void)
+శూన్య VISIBLE NORETURN c_handle_దత్తాంశం_fault(శూన్య)
 {
-    c_handle_vm_fault(seL4_DataFault);
+    c_handle_vm_fault(se_L4_దత్తాంశం_Fault);
 }
 
-void VISIBLE NORETURN c_handle_instruction_fault(void)
+శూన్య VISIBLE NORETURN c_handle_instruction_fault(శూన్య)
 {
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+శూన్య VISIBLE NORETURN c_handle_అంతరాయం(శూన్య)
 {
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
-    c_entry_hook();
+    కణుపు_తాళం_IRQ_IF(IRQT_గమ్యం_IRQ(get_చురుకైన_IRQ()) != irq_remote_call_ipi);
+    c_నమోదు_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_Interrupt;
-    ksKernelEntry.word = IRQT_TO_IRQ(getActiveIRQ());
-    ksKernelEntry.core = CURRENT_CPU_INDEX();
-#endif
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_అంతరాయం;
+    ks_Kernel_నమోదు.మాట = IRQT_గమ్యం_IRQ(get_చురుకైన_IRQ());
+    ks_Kernel_నమోదు.core = CURRENT_CPU_సూచీ();
+#అయితే_ముగింపు
 
-    handleInterruptEntry();
+    handle_అంతరాయం_నమోదు();
     restore_user_context();
 }
 
-void NORETURN slowpath(syscall_t syscall)
+శూన్య NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
+    ఒకవేళ (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+        ks_Kernel_నమోదు.మార్గం = నమోదు_Unknown_Syscall;
         /* ksKernelEntry.word word is already set to syscall */
-#endif /* TRACK_KERNEL_ENTRIES */
+#అయితే_ముగింపు /* TRACK_KERNEL_ENTRIES */
         /* Contrary to the name, this handles all non-standard syscalls used in
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
+    } లేకపోతే {
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+        ks_Kernel_నమోదు.is_fastpath = 0;
+#అయితే_ముగింపు /* TRACK KERNEL ENTRIES */
         handleSyscall(syscall);
     }
 
@@ -121,92 +121,92 @@ void NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+శూన్య VISIBLE c_handle_syscall(మాట_t cptr, మాట_t సందేశం_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
+    c_నమోదు_hook();
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ప్రారంభం(cptr, సందేశం_Info, syscall);
+    ks_Kernel_నమోదు.is_fastpath = 0;
+#అయితే_ముగింపు /* DEBUG */
 
     slowpath(syscall);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+#నిర్వచితమైతే CONFIG_FASTPATH
+ALIGN(L1_CACHE_పంక్తి_కొలత)
+శూన్య VISIBLE c_handle_fastpath_call(మాట_t cptr, మాట_t సందేశం_Info)
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_నమోదు_hook();
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ప్రారంభం(cptr, సందేశం_Info, SysCall);
+    ks_Kernel_నమోదు.is_fastpath = 1;
+#అయితే_ముగింపు /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, సందేశం_Info);
     UNREACHABLE();
 }
 
-#ifdef CONFIG_KERNEL_MCS
-#ifdef CONFIG_SIGNAL_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_signal(word_t cptr, word_t msgInfo)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+#నిర్వచితమైతే CONFIG_SIGNAL_FASTPATH
+ALIGN(L1_CACHE_పంక్తి_కొలత)
+శూన్య VISIBLE c_handle_fastpath_signal(మాట_t cptr, మాట_t సందేశం_Info)
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
-    fastpath_signal(cptr, msgInfo);
+    c_నమోదు_hook();
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ప్రారంభం(cptr, సందేశం_Info, SysCall);
+    ks_Kernel_నమోదు.is_fastpath = 1;
+#అయితే_ముగింపు /* DEBUG */
+    fastpath_signal(cptr, సందేశం_Info);
     UNREACHABLE();
 }
-#endif /* CONFIG_SIGNAL_FASTPATH */
-#endif /* CONFIG_KERNEL_MCS */
+#అయితే_ముగింపు /* CONFIG_SIGNAL_FASTPATH */
+#అయితే_ముగింపు /* CONFIG_KERNEL_MCS */
 
-ALIGN(L1_CACHE_LINE_SIZE)
-#ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
-#endif
+ALIGN(L1_CACHE_పంక్తి_కొలత)
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+శూన్య VISIBLE c_handle_fastpath_జవాబు_recv(మాట_t cptr, మాట_t సందేశం_Info, మాట_t జవాబు)
+#లేకపోతే
+శూన్య VISIBLE c_handle_fastpath_జవాబు_recv(మాట_t cptr, మాట_t సందేశం_Info)
+#అయితే_ముగింపు
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_నమోదు_hook();
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_ప్రారంభం(cptr, సందేశం_Info, Sys_జవాబు_Recv);
+    ks_Kernel_నమోదు.is_fastpath = 1;
+#అయితే_ముగింపు /* DEBUG */
 
-#ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_MCS
+    fastpath_జవాబు_recv(cptr, సందేశం_Info, జవాబు);
+#లేకపోతే
+    fastpath_జవాబు_recv(cptr, సందేశం_Info);
+#అయితే_ముగింపు
     UNREACHABLE();
 }
 
-#endif
+#అయితే_ముగింపు
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-VISIBLE NORETURN void c_handle_vcpu_fault(word_t hsr)
+#నిర్వచితమైతే CONFIG_ARM_HYPERVISOR_SUPPORT
+VISIBLE NORETURN శూన్య c_handle_vcpu_fault(మాట_t hsr)
 {
-    NODE_LOCK_SYS;
+    కణుపు_తాళం_SYS;
 
-    c_entry_hook();
+    c_నమోదు_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_VCPUFault;
-    ksKernelEntry.word = hsr;
-#endif
+#నిర్వచితమైతే TRACK_KERNEL_ENTRIES
+    ks_Kernel_నమోదు.మార్గం = నమోదు_VCPUFault;
+    ks_Kernel_నమోదు.మాట = hsr;
+#అయితే_ముగింపు
     handleVCPUFault(hsr);
     restore_user_context();
     UNREACHABLE();
 }
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+#అయితే_ముగింపు /* CONFIG_ARM_HYPERVISOR_SUPPORT */

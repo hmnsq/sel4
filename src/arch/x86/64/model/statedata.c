@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/model/statedata.h>
+#అన్తర్భావ <arch/model/statedata.h>
 
 /* The privileged kernel mapping PD & PT */
-pml4e_t x64KSKernelPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits)) VISIBLE;
-pdpte_t x64KSKernelPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-#ifdef CONFIG_HUGE_PAGE
-pde_t x64KSKernelPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#else
-pde_t x64KSKernelPDs[BIT(PDPT_INDEX_BITS)][BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
-pte_t x64KSKernelPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
+pml4e_t x64KSKernelPML4[బిట్టు(PML4_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_PML4_బిట్లు)) VISIBLE;
+pdpte_t x64KSKernelPDPT[బిట్టు(PDPT_సూచీ_బిట్లు)] ALIGN(బిట్టు(seL4_PDPTBits));
+#నిర్వచితమైతే CONFIG_HUGE_పుట
+pde_t x64KSKernelPD[బిట్టు(PD_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_పుట_Dir_బిట్లు));
+#లేకపోతే
+pde_t x64KSKernelPDs[బిట్టు(PDPT_సూచీ_బిట్లు)][బిట్టు(PD_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_పుట_Dir_బిట్లు));
+#అయితే_ముగింపు
+pte_t x64KSKernelPT[బిట్టు(PT_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_పుట_పట్టిక_బిట్లు));
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-pml4e_t x64KSSKIMPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits));
-pdpte_t x64KSSKIMPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-pde_t x64KSSKIMPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_SKIM_కిటికీ
+pml4e_t x64KSSKIMPML4[బిట్టు(PML4_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_PML4_బిట్లు));
+pdpte_t x64KSSKIMPDPT[బిట్టు(PDPT_సూచీ_బిట్లు)] ALIGN(బిట్టు(seL4_PDPTBits));
+pde_t x64KSSKIMPD[బిట్టు(PD_సూచీ_బిట్లు)] ALIGN(బిట్టు(se_L4_పుట_Dir_బిట్లు));
+#అయితే_ముగింపు
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-UP_STATE_DEFINE(word_t, x64KSCurrentUserCR3);
-#else
-UP_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
-#endif
+#నిర్వచితమైతే CONFIG_KERNEL_SKIM_కిటికీ
+పైకి_STATE_DEFINE(మాట_t, x64KSCurrentUserCR3);
+#లేకపోతే
+పైకి_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
+#అయితే_ముగింపు
 
-word_t x64KSIRQStack[CONFIG_MAX_NUM_NODES][IRQ_STACK_SIZE + 2] ALIGN(64) VISIBLE SKIM_BSS;
+మాట_t x64KSIRQStack[CONFIG_MAX_అంకె_NODES][IRQ_దొంతర_కొలత + 2] ALIGN(64) VISIBLE SKIM_BSS;
