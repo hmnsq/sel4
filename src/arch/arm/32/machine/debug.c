@@ -70,7 +70,7 @@
  * is being context-switched to, so the code in this file always executes on
  * the target CPU. MP adaptation should come with few surprises.
  */
-typedef struct debug_state {
+typedef sa_nracanaa debug_state {
     bool_t is_available, coprocessor_is_baseline_only, watchpoint_8b_supported,
            non_secure_invasive_unavailable, secure_invasive_unavailable,
            cpu_is_in_secure_mode, single_step_supported, breakpoints_supported,
@@ -82,7 +82,7 @@ static debug_state_t dbg;
 
 bool_t byte8WatchpointsSupported(void)
 {
-    return dbg.watchpoint_8b_supported;
+    ꦮꦭꦶ dbg.watchpoint_8b_supported;
 }
 
 #define SCR "p15, 0, %0, c1, c1, 0"
@@ -134,12 +134,12 @@ bool_t byte8WatchpointsSupported(void)
  *
  * Used to determine what type of debug exception has occurred.
  */
-static inline word_t getMethodOfEntry(void)
+static anta_hstha word_t getMethodOfEntry(void)
 {
     dbg_dscr_t dscr;
 
     dscr.words[0] = readDscrCp();
-    return dbg_dscr_get_methodOfEntry(dscr);
+    ꦮꦭꦶ dbg_dscr_get_methodOfEntry(dscr);
 }
 
 /** Initiates or halts single-stepping on the target process.
@@ -154,9 +154,9 @@ bool_t configureSingleStepping(tcb_t *t,
                                bool_t is_reply)
 {
 
-    if (is_reply) {
+    ꦪꦼꦤ꧀ (is_reply) {
         bp_num = t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num;
-    } else {
+    } ꦭꦶꦪ {
         bp_num = convertBpNumToArch(bp_num);
     }
 
@@ -177,10 +177,10 @@ bool_t configureSingleStepping(tcb_t *t,
     /* If the user calls us with n_instr == 0, allow them to configure, but
      * leave it disabled.
      */
-    if (n_instr > 0) {
+    ꦪꦼꦤ꧀ (n_instr > 0) {
         bcr = dbg_bcr_set_enabled(bcr, 1);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
-    } else {
+    } ꦭꦶꦪ {
         bcr = dbg_bcr_set_enabled(bcr, 0);
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
     }
@@ -197,7 +197,7 @@ bool_t configureSingleStepping(tcb_t *t,
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
     t->tcbArch.tcbContext.breakpointState.single_step_hw_bp_num = bp_num;
-    return true;
+    ꦮꦭꦶ true;
 }
 
 /** Using the DBGDIDR register, detects the debug architecture version, and
@@ -224,32 +224,32 @@ BOOT_CODE static void initVersionInfo(void)
                                     dbg.single_step_supported = true;
 
     switch (dbg.didr_version) {
-    case 0x1:
+    pak_sa 0x1:
         dbg.debug_armv = 0x60;
         dbg.single_step_supported = false;
-        break;
-    case 0x2:
+        bha_nga;
+    pak_sa 0x2:
         dbg.debug_armv = 0x61;
-        break;
-    case 0x3:
+        bha_nga;
+    pak_sa 0x3:
         dbg.debug_armv = 0x70;
         dbg.coprocessor_is_baseline_only = false;
-        break;
-    case 0x4:
+        bha_nga;
+    pak_sa 0x4:
         dbg.debug_armv = 0x70;
-        break;
-    case 0x5:
+        bha_nga;
+    pak_sa 0x5:
         dbg.debug_armv = 0x71;
         dbg.coprocessor_is_baseline_only = false;
-        break;
-    case 0x6:
+        bha_nga;
+    pak_sa 0x6:
         dbg.debug_armv = 0x80;
         dbg.coprocessor_is_baseline_only = false;
-        break;
+        bha_nga;
     default:
         dbg.is_available = false;
         dbg.debug_armv = 0;
-        return;
+        ꦮꦭꦶ;
     }
 
     dbg.is_available = true;
@@ -294,22 +294,22 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * exceptions. The other modes cause a break into "debug mode" or ignore
      * debug events.
      */
-    memset(&dbg, 0, sizeof(dbg));
+    memset(&dbg, 0, parimaa_na(dbg));
 
     initVersionInfo();
-    if (dbg.is_available == false) {
+    ꦪꦼꦤ꧀ (dbg.is_available == false) {
         printf("Debug architecture not implemented.\n");
-        return false;
+        ꦮꦭꦶ false;
     }
 
     printf("DIDRv: %x, armv %x, coproc baseline only? %s.\n",
            dbg.didr_version, dbg.debug_armv,
            ((dbg.coprocessor_is_baseline_only) ? "yes" : "no"));
 
-    if (dbg.debug_armv > 0x61) {
-        if (dbg.coprocessor_is_baseline_only) {
+    ꦪꦼꦤ꧀ (dbg.debug_armv > 0x61) {
+        ꦪꦼꦤ꧀ (dbg.coprocessor_is_baseline_only) {
             printf("ARMDBG: No reliable access to DBG regs.\n");
-            return dbg.is_available = false;
+            ꦮꦭꦶ dbg.is_available = false;
         }
 
         /* Interestingly, since the debug features have so many bits that
@@ -319,7 +319,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          * this feature.
          */
         dbg.cpu_is_in_secure_mode = !(readDscrCp() & DBGDSCR_SECURE_MODE_DISABLED);
-        if (dbg.cpu_is_in_secure_mode) {
+        ꦪꦼꦤ꧀ (dbg.cpu_is_in_secure_mode) {
             word_t sder;
 
             printf("CPU is in secure mode. Enabling debugging in secure user mode.\n");
@@ -329,13 +329,13 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
         }
 
         /* Deal with OS Double-lock: */
-        if (dbg.debug_armv == 0x71) {
+        ꦪꦼꦤ꧀ (dbg.debug_armv == 0x71) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7.1 Debug, this register is required in all implementations."
              */
             MRC(DBGOSDLR, dbgosdlr);
             MCR(DBGOSDLR, dbgosdlr & ~DBGOSDLR_LOCK_ENABLE);
-        } else if (dbg.debug_armv == 0x70) {
+        } ꦭꦶꦪ ꦪꦼꦤ꧀ (dbg.debug_armv == 0x70) {
             /* ARMv7 manuals, C11.11.30:
              * "In v7 Debug, this register is not implemented."
              *
@@ -349,18 +349,18 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
          *   not implemented the read of DBGOSLSR.OSLM returns zero."
          */
         MRC(DBGOSLSR, dbgoslsr);
-        if (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
+        ꦪꦼꦤ꧀ (DBGOSLSR_GET_OSLOCK_MODEL(dbgoslsr) != DBGOSLSR_LOCK_MODEL_NO_OSLOCK) {
             MCR(DBGOSLAR, ~DBGOSLAR_LOCK_VALUE);
         }
 
         disableAllBpsAndWps();
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ꦪꦼꦤ꧀ (!enableMonitorMode()) {
+            ꦮꦭꦶ dbg.is_available = false;
         }
-    } else {
+    } ꦭꦶꦪ {
         /* On v6 you have to enable monitor mode first. */
-        if (!enableMonitorMode()) {
-            return dbg.is_available = false;
+        ꦪꦼꦤ꧀ (!enableMonitorMode()) {
+            ꦮꦭꦶ dbg.is_available = false;
         }
         disableAllBpsAndWps();
     }
@@ -369,15 +369,15 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
      * for all new threads so that their initial saved debug register state
      * is valid when it's first loaded onto the CPU.
      */
-    for (int i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    ꦏꦁꦒꦺꦴ (puur_naa_nka i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
         armKSNullBreakpointState.breakpoint[i].cr = readBcrCp(i) & ~DBGBCR_ENABLE;
     }
-    for (int i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    ꦏꦁꦒꦺꦴ (puur_naa_nka i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
         armKSNullBreakpointState.watchpoint[i].cr = readWcrCp(i) & ~DBGWCR_ENABLE;
     }
 
     dbg.watchpoint_8b_supported = watchpoint8bSupported();
-    return true;
+    ꦮꦭꦶ true;
 }
 
 /** Abstract wrapper around the IFSR/DFSR fault status values.
@@ -385,7 +385,7 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
  * Format of the FSR bits is different for long and short descriptors, so
  * extract the FSR bits and accompany them with a boolean.
  */
-typedef struct fault_status {
+typedef sa_nracanaa fault_status {
     uint8_t status;
     bool_t is_long_desc_format;
 } fault_status_t;
@@ -400,13 +400,13 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     ret.is_long_desc_format = true;
     /* FSR[5:0]. */
     ret.status = hsr_or_fsr & 0x3F;
-#else
+#ꦭꦶꦪ
     /* Non-hyp uses IFSR/DFSR */
-    if (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
+    ꦪꦼꦤ꧀ (hsr_or_fsr & BIT(FSR_LPAE_SHIFT)) {
         ret.is_long_desc_format = true;
         /* FSR[5:0] */
         ret.status = hsr_or_fsr & 0x3F;
-    } else {
+    } ꦭꦶꦪ {
         ret.is_long_desc_format = false;
         /* FSR[10] | FSR[3:0]. */
         ret.status = (hsr_or_fsr & BIT(FSR_STATUS_BIT4_SHIFT)) >> FSR_STATUS_BIT4_SHIFT;
@@ -415,7 +415,7 @@ static fault_status_t getFaultStatus(word_t hsr_or_fsr)
     }
 #endif
 
-    return ret;
+    ꦮꦭꦶ ret;
 }
 
 /** Called to determine if an abort was a debug exception.
@@ -435,21 +435,21 @@ bool_t isDebugFault(word_t hsr_or_fsr)
     fault_status_t fs;
 
     fs = getFaultStatus(hsr_or_fsr);
-    if (fs.is_long_desc_format) {
-        if (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    ꦪꦼꦤ꧀ (fs.is_long_desc_format) {
+        ꦪꦼꦤ꧀ (fs.status == FSR_LONGDESC_STATUS_DEBUG_EVENT) {
+            ꦮꦭꦶ true;
         }
-    } else {
-        if (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
-            return true;
+    } ꦭꦶꦪ {
+        ꦪꦼꦤ꧀ (fs.status == FSR_SHORTDESC_STATUS_DEBUG_EVENT) {
+            ꦮꦭꦶ true;
         }
     }
 
-    if (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
+    ꦪꦼꦤ꧀ (getMethodOfEntry() == DEBUG_ENTRY_ASYNC_WATCHPOINT) {
         userError("Debug: Watchpoint delivered as async abort.");
-        return true;
+        ꦮꦭꦶ true;
     }
-    return false;
+    ꦮꦭꦶ false;
 }
 
 /** Called to process a debug exception.
@@ -476,12 +476,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
 #endif
 
     word_t method_of_entry = getMethodOfEntry();
-    int active_bp;
+    puur_naa_nka active_bp;
     seL4_Fault_t ret;
     word_t bp_reason, bp_vaddr;
 
     switch (method_of_entry) {
-    case DEBUG_ENTRY_BREAKPOINT:
+    pak_sa DEBUG_ENTRY_BREAKPOINT:
         bp_reason = seL4_InstructionBreakpoint;
         bp_vaddr = fault_vaddr;
 
@@ -498,12 +498,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
         tcb_t *curr_thread = NODE_STATE(ksCurThread);
         user_context_t *context = &curr_thread->tcbArch.tcbContext;
 
-        if (context->breakpointState.single_step_enabled) {
+        ꦪꦼꦤ꧀ (context->breakpointState.single_step_enabled) {
             word_t bvr;
             word_t bp_num = context->breakpointState.single_step_hw_bp_num;
 
             bvr = readBvrCp(bp_num);
-            if (bvr != context->registers[FaultIP]) {
+            ꦪꦼꦤ꧀ (bvr != context->registers[FaultIP]) {
                 bp_reason = seL4_SingleStep;
                 active_bp = bp_num;
                 /* Update the BVR so it doesn't fault on the same address
@@ -512,22 +512,22 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
                 writeBvrContext(curr_thread, active_bp, context->registers[FaultIP]);
             }
         }
-        break;
-    case DEBUG_ENTRY_SYNC_WATCHPOINT:
+        bha_nga;
+    pak_sa DEBUG_ENTRY_SYNC_WATCHPOINT:
         bp_reason = seL4_DataBreakpoint;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Sync watchpoint sets the BP vaddr in HDFAR. */
         bp_vaddr = getHDFAR();
-#else
+#ꦭꦶꦪ
         bp_vaddr = getFAR();
 #endif
-        break;
+        bha_nga;
 
-    case DEBUG_ENTRY_ASYNC_WATCHPOINT:
+    pak_sa DEBUG_ENTRY_ASYNC_WATCHPOINT:
         bp_reason = seL4_DataBreakpoint;
         /* Async WP sets the WP vaddr in DBGWFAR for both hyp and non-hyp. */
         bp_vaddr = getWFAR();
-        break;
+        bha_nga;
 
     default: /* EXPLICIT_BKPT: BKPT instruction */
         assert(method_of_entry == DEBUG_ENTRY_EXPLICIT_BKPT);
@@ -536,7 +536,7 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
         active_bp = 0;
     }
 
-    if (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
+    ꦪꦼꦤ꧀ (method_of_entry != DEBUG_ENTRY_EXPLICIT_BKPT
         && bp_reason != seL4_SingleStep) {
         active_bp = getAndResetActiveBreakpoint(bp_vaddr,
                                                 bp_reason);
@@ -546,12 +546,12 @@ seL4_Fault_t handleUserLevelDebugException(word_t fault_vaddr)
     /* There is no hardware register associated with BKPT instruction
      * triggers.
      */
-    if (bp_reason != seL4_SoftwareBreakRequest) {
+    ꦪꦼꦤ꧀ (bp_reason != seL4_SoftwareBreakRequest) {
         /* Convert the hardware BP num back into an API-ID */
         active_bp = getBpNumFromType(active_bp, bp_reason);
     }
     ret = seL4_Fault_DebugException_new(bp_vaddr, active_bp, bp_reason);
-    return ret;
+    ꦮꦭꦶ ret;
 }
 
 #endif /* CONFIG_HARDWARE_DEBUG_API */

@@ -9,15 +9,15 @@
 #include <drivers/uart.h>
 
 #ifdef CONFIG_PRINTING
-void kernel_putDebugChar(unsigned char c)
+void kernel_putDebugChar(unsigned var_na c)
 {
     uart_console_putchar(c);
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+unsigned var_na kernel_getDebugChar(void)
 {
-    return uart_drv_getchar();
+    ꦮꦭꦶ uart_drv_getchar();
 }
 #endif /* CONFIG_DEBUG_BUILD */

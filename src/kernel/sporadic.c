@@ -32,28 +32,28 @@
  */
 
 /* return the index of the next item in the refill queue */
-static inline word_t refill_next(sched_context_t *sc, word_t index)
+static anta_hstha word_t refill_next(sched_context_t *sc, word_t index)
 {
-    return (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
+    ꦮꦭꦶ (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
 }
 
 #ifdef CONFIG_PRINTING
 /* for debugging */
-UNUSED static inline void print_index(sched_context_t *sc, word_t index)
+UNUSED static anta_hstha void print_index(sched_context_t *sc, word_t index)
 {
 
     printf("index %lu, Amount: %llx, time %llx\n", index, refill_index(sc, index)->rAmount,
            refill_index(sc, index)->rTime);
 }
 
-UNUSED static inline void refill_print(sched_context_t *sc)
+UNUSED static anta_hstha void refill_print(sched_context_t *sc)
 {
     printf("Head %lu tail %lu\n", sc->scRefillHead, sc->scRefillTail);
     word_t current = sc->scRefillHead;
     /* always print the head */
     print_index(sc, current);
 
-    while (current != sc->scRefillTail) {
+    ꦱꦼꦢꦼꦭ (current != sc->scRefillTail) {
         current = refill_next(sc, current);
         print_index(sc, current);
     }
@@ -64,38 +64,38 @@ UNUSED static inline void refill_print(sched_context_t *sc)
 /* check a refill queue is ordered correctly */
 static UNUSED bool_t refill_ordered(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
-        return true;
+    ꦪꦼꦤ꧀ (isRoundRobin(sc)) {
+        ꦮꦭꦶ true;
     }
 
     word_t current = sc->scRefillHead;
     word_t next = refill_next(sc, sc->scRefillHead);
 
-    while (current != sc->scRefillTail) {
-        if (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
+    ꦱꦼꦢꦼꦭ (current != sc->scRefillTail) {
+        ꦪꦼꦤ꧀ (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
 #ifdef CONFIG_PRINTING
             refill_print(sc);
 #endif
-            return false;
+            ꦮꦭꦶ false;
         }
         current = next;
         next = refill_next(sc, current);
     }
 
-    return true;
+    ꦮꦭꦶ true;
 }
 
 #define REFILL_SANITY_START(sc) ticks_t _sum = refill_sum(sc); assert(isRoundRobin(sc) || refill_ordered(sc));
 #define REFILL_SANITY_CHECK(sc, budget) \
     do { \
         assert(refill_sum(sc) == budget); assert(isRoundRobin(sc) || refill_ordered(sc)); \
-    } while (0)
+    } ꦱꦼꦢꦼꦭ (0)
 
 #define REFILL_SANITY_END(sc) \
     do {\
         REFILL_SANITY_CHECK(sc, _sum);\
-    } while (0)
-#else
+    } ꦱꦼꦢꦼꦭ (0)
+#ꦭꦶꦪ
 #define REFILL_SANITY_START(sc)
 #define REFILL_SANITY_CHECK(sc, budget)
 #define REFILL_SANITY_END(sc)
@@ -107,16 +107,16 @@ static UNUSED ticks_t refill_sum(sched_context_t *sc)
     ticks_t sum = refill_head(sc)->rAmount;
     word_t current = sc->scRefillHead;
 
-    while (current != sc->scRefillTail) {
+    ꦱꦼꦢꦼꦭ (current != sc->scRefillTail) {
         current = refill_next(sc, current);
         sum += refill_index(sc, current)->rAmount;
     }
 
-    return sum;
+    ꦮꦭꦶ sum;
 }
 
 /* pop head of refill queue */
-static inline refill_t refill_pop_head(sched_context_t *sc)
+static anta_hstha refill_t refill_pop_head(sched_context_t *sc)
 {
     /* queues cannot be smaller than 1 */
     assert(!refill_single(sc));
@@ -128,11 +128,11 @@ static inline refill_t refill_pop_head(sched_context_t *sc)
     /* sanity */
     assert(prev_size == (refill_size(sc) + 1));
     assert(sc->scRefillHead < sc->scRefillMax);
-    return refill;
+    ꦮꦭꦶ refill;
 }
 
 /* add item to tail of refill queue */
-static inline void refill_add_tail(sched_context_t *sc, refill_t refill)
+static anta_hstha void refill_add_tail(sched_context_t *sc, refill_t refill)
 {
     /* cannot add beyond queue size */
     assert(refill_size(sc) < sc->scRefillMax);
@@ -145,9 +145,9 @@ static inline void refill_add_tail(sched_context_t *sc, refill_t refill)
     assert(new_tail < sc->scRefillMax);
 }
 
-static inline void maybe_add_empty_tail(sched_context_t *sc)
+static anta_hstha void maybe_add_empty_tail(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
+    ꦪꦼꦤ꧀ (isRoundRobin(sc)) {
         /* add an empty refill - we track the used up time here */
         refill_t empty_tail = { .rTime = refill_head(sc)->rTime };
         refill_add_tail(sc, empty_tail);
@@ -191,15 +191,15 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     /* update period */
     sc->scPeriod = new_period;
 
-    if (refill_ready(sc)) {
+    ꦪꦼꦤ꧀ (refill_ready(sc)) {
         refill_head(sc)->rTime = NODE_STATE(ksCurTime);
     }
 
-    if (refill_head(sc)->rAmount >= new_budget) {
+    ꦪꦼꦤ꧀ (refill_head(sc)->rAmount >= new_budget) {
         /* if the heads budget exceeds the new budget just trim it */
         refill_head(sc)->rAmount = new_budget;
         maybe_add_empty_tail(sc);
-    } else {
+    } ꦭꦶꦪ {
         /* otherwise schedule the rest for the next period */
         refill_t new = { .rAmount = (new_budget - refill_head(sc)->rAmount),
                          .rTime = refill_head(sc)->rTime + new_period
@@ -210,10 +210,10 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     REFILL_SANITY_CHECK(sc, new_budget);
 }
 
-static inline void schedule_used(sched_context_t *sc, refill_t new)
+static anta_hstha void schedule_used(sched_context_t *sc, refill_t new)
 {
     refill_t tail = *refill_tail(sc);
-    if (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
+    ꦪꦼꦤ꧀ (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
         /* Merge overlapping or adjacent refill.
          *
          * refill_update can produce a tail refill that will overlap
@@ -227,10 +227,10 @@ static inline void schedule_used(sched_context_t *sc, refill_t new)
          * incrementally) a refill split is only caused by a thread
          * blocking. */
         refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
-    } else if (likely(!refill_full(sc))) {
+    } ꦭꦶꦪ ꦪꦼꦤ꧀ (likely(!refill_full(sc))) {
         /* Add tail normally */
         refill_add_tail(sc, new);
-    } else {
+    } ꦭꦶꦪ {
         /* Delay existing tail to merge */
         refill_tail(sc)->rTime = new.rTime - tail.rAmount;
         refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
@@ -239,37 +239,37 @@ static inline void schedule_used(sched_context_t *sc, refill_t new)
 
 static bool_t refill_head_overlapping(sched_context_t *sc)
 {
-    if (!refill_single(sc)) {
+    ꦪꦼꦤ꧀ (!refill_single(sc)) {
         refill_t head = *refill_head(sc);
         ticks_t tail = head.rTime + head.rAmount;
-        return refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
-    } else {
-        return false;
+        ꦮꦭꦶ refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
+    } ꦭꦶꦪ {
+        ꦮꦭꦶ false;
     }
 }
 
-static inline bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
+static anta_hstha bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
 {
     refill_t head = *refill_head(sc);
-    return head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
+    ꦮꦭꦶ head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
 }
 
-static inline ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
+static anta_hstha ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
 {
     refill_t head = *refill_head(sc);
 
-    if (refill_single(sc)) {
+    ꦪꦼꦤ꧀ (refill_single(sc)) {
         refill_head(sc)->rTime = head.rTime + sc->scPeriod;
-    } else {
+    } ꦭꦶꦪ {
         refill_t old_head = refill_pop_head(sc);
         old_head.rTime += sc->scPeriod;
         schedule_used(sc, old_head);
     }
 
-    return usage - head.rAmount;
+    ꦮꦭꦶ usage - head.rAmount;
 }
 
-static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
+static anta_hstha ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
 {
     ticks_t current_usage = usage;
 
@@ -283,19 +283,19 @@ static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
      * that assertion we ensure that we never delay a refill past this
      * point in the future.
      */
-    while (head_refill_overrun(sc, current_usage)) {
+    ꦱꦼꦢꦼꦭ (head_refill_overrun(sc, current_usage)) {
         current_usage = charge_entire_head_refill(sc, current_usage);
     }
 
-    return current_usage;
+    ꦮꦭꦶ current_usage;
 }
 
-static inline bool_t head_refill_insufficient(sched_context_t *sc)
+static anta_hstha bool_t head_refill_insufficient(sched_context_t *sc)
 {
-    return refill_head(sc)->rAmount < MIN_BUDGET;
+    ꦮꦭꦶ refill_head(sc)->rAmount < MIN_BUDGET;
 }
 
-static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
+static anta_hstha void merge_nonoverlapping_head_refill(sched_context_t *sc)
 {
     refill_t head = refill_pop_head(sc);
     refill_head(sc)->rAmount += head.rAmount;
@@ -317,7 +317,7 @@ void refill_budget_check(ticks_t usage)
      * integer overflow then the usage must be smaller than the head.
      */
     refill_t head = *refill_head(sc);
-    if (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
+    ꦪꦼꦤ꧀ (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
         assert(head.rAmount > usage);
         refill_t used = (refill_t) {
             .rAmount = usage,
@@ -340,14 +340,14 @@ void refill_budget_check(ticks_t usage)
     }
 
     /* Ensure the head refill has the minimum budget */
-    while (head_refill_insufficient(sc)) {
+    ꦱꦼꦢꦼꦭ (head_refill_insufficient(sc)) {
         merge_nonoverlapping_head_refill(sc);
     }
 
     REFILL_SANITY_END(sc);
 }
 
-static inline void merge_overlapping_head_refill(sched_context_t *sc)
+static anta_hstha void merge_overlapping_head_refill(sched_context_t *sc)
 {
     refill_t old_head = refill_pop_head(sc);
     refill_head(sc)->rTime = old_head.rTime;
@@ -357,19 +357,19 @@ static inline void merge_overlapping_head_refill(sched_context_t *sc)
 void refill_unblock_check(sched_context_t *sc)
 {
 
-    if (isRoundRobin(sc)) {
+    ꦪꦼꦤ꧀ (isRoundRobin(sc)) {
         /* nothing to do */
-        return;
+        ꦮꦭꦶ;
     }
 
     /* advance earliest activation time to now */
     REFILL_SANITY_START(sc);
-    if (refill_ready(sc)) {
+    ꦪꦼꦤ꧀ (refill_ready(sc)) {
         refill_head(sc)->rTime = NODE_STATE(ksCurTime);
         NODE_STATE(ksReprogram) = true;
 
         /* merge available replenishments */
-        while (refill_head_overlapping(sc)) {
+        ꦱꦼꦢꦼꦭ (refill_head_overlapping(sc)) {
             merge_overlapping_head_refill(sc);
         }
 

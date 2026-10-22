@@ -12,8 +12,8 @@
 
 void migrateTCB(tcb_t *tcb, word_t new_core)
 {
-    if (new_core == tcb->tcbAffinity) {
-        return;
+    ꦪꦼꦤ꧀ (new_core == tcb->tcbAffinity) {
+        ꦮꦭꦶ;
     }
 #ifdef CONFIG_DEBUG_BUILD
     tcbDebugRemove(tcb);

@@ -13,7 +13,7 @@
 
 void Arch_switchToThread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ꦪꦼꦤ꧀ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
     setVMRoot(tcb);
@@ -27,7 +27,7 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
 
 void Arch_switchToIdleThread(void)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ꦪꦼꦤ꧀ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(NULL);
     }
     setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
