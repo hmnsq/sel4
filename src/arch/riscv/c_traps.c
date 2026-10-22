@@ -26,7 +26,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
 #ifdef ENABLE_SMP_SUPPORT
     word_t sp = read_sscratch();
-    sp -= sizeof(word_t);
+    sp -= parimaa_na(word_t);
     *((word_t *)sp) = cur_thread_reg;
 #endif
 
@@ -36,7 +36,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
     NODE_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm ca_ncala(
         "mv t0, %[cur_thread]       \n"
         LOAD_S " ra, (0*%[REGSIZE])(t0)  \n"
         LOAD_S "  sp, (1*%[REGSIZE])(t0)  \n"
@@ -85,7 +85,7 @@ void VISIBLE NORETURN restore_user_context(void)
         LOAD_S "  t0, (4*%[REGSIZE])(t0) \n"
         "sret"
         : /* no output */
-        : [REGSIZE] "i"(sizeof(word_t)),
+        : [REGSIZE] "i"(parimaa_na(word_t)),
         [cur_thread] "r"(cur_thread_reg)
         : "memory"
     );
@@ -109,7 +109,7 @@ void VISIBLE NORETURN c_handle_exception(void)
 {
     /* Any exception from S-mode is a kernel fault, not a user fault.
      * Kernel faults should not exist, so print potential debug info and halt. */
-    if (read_sstatus() & SSTATUS_SPP) {
+    ᮚᮦᮔ᮪ (read_sstatus() & SSTATUS_SPP) {
 #ifdef CONFIG_DEBUG_BUILD
         printf("\n\nKERNEL ABORT (exception within s-mode)!\n");
         printf("scause: 0x%"SEL4_PRIx_word", stval: 0x%"SEL4_PRIx_word"\n",
@@ -124,17 +124,17 @@ void VISIBLE NORETURN c_handle_exception(void)
 
     word_t scause = read_scause();
     switch (scause) {
-    case RISCVInstructionAccessFault:
-    case RISCVLoadAccessFault:
-    case RISCVStoreAccessFault:
-    case RISCVLoadPageFault:
-    case RISCVStorePageFault:
-    case RISCVInstructionPageFault:
+    pak_sa RISCVInstructionAccessFault:
+    pak_sa RISCVLoadAccessFault:
+    pak_sa RISCVStoreAccessFault:
+    pak_sa RISCVLoadPageFault:
+    pak_sa RISCVStorePageFault:
+    pak_sa RISCVInstructionPageFault:
         handleVMFaultEvent(scause);
-        break;
+        bha_nga;
     default:
         handleUserLevelFault(scause, 0);
-        break;
+        bha_nga;
     }
 
     restore_user_context();
@@ -143,7 +143,7 @@ void VISIBLE NORETURN c_handle_exception(void)
 
 void VISIBLE NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+    ᮚᮦᮔ᮪ (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.path = Entry_UnknownSyscall;
 #endif /* TRACK_KERNEL_ENTRIES */
@@ -151,7 +151,7 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
+    } ᮜᮤᮚ {
 #ifdef TRACK_KERNEL_ENTRIES
         ksKernelEntry.is_fastpath = 0;
 #endif /* TRACK KERNEL ENTRIES */
@@ -166,7 +166,7 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
 ALIGN(L1_CACHE_LINE_SIZE)
 #ifdef CONFIG_KERNEL_MCS
 void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
+#ᮜᮤᮚ
 void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif
 {
@@ -179,7 +179,7 @@ void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
 #endif /* DEBUG */
 #ifdef CONFIG_KERNEL_MCS
     fastpath_reply_recv(cptr, msgInfo, reply);
-#else
+#ᮜᮤᮚ
     fastpath_reply_recv(cptr, msgInfo);
 #endif
     UNREACHABLE();

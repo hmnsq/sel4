@@ -55,13 +55,13 @@ uint32_t x86KSFirstValidIODomain;
 
 #ifdef CONFIG_VTX
 UP_STATE_DEFINE(vcpu_t *, x86KSCurrentVCPU);
-UP_STATE_DEFINE(struct vmxon_region, x86KSVMXOnRegion);
+UP_STATE_DEFINE(sa_nracanaa vmxon_region, x86KSVMXOnRegion);
 #endif
 
 #ifdef CONFIG_PRINTING
 uint16_t x86KSconsolePort;
 #endif
-#if defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
+#ᮚᮦᮔ᮪ defined(CONFIG_PRINTING) || defined(CONFIG_DEBUG_BUILD)
 uint16_t x86KSdebugPort;
 #endif
 

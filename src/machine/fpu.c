@@ -15,12 +15,12 @@
 void switchLocalFpuOwner(tcb_t *new_owner)
 {
     enableFpu();
-    if (NODE_STATE(ksCurFPUOwner)) {
+    ᮚᮦᮔ᮪ (NODE_STATE(ksCurFPUOwner)) {
         saveFpuState(NODE_STATE(ksCurFPUOwner));
     }
-    if (new_owner) {
+    ᮚᮦᮔ᮪ (new_owner) {
         loadFpuState(new_owner);
-    } else {
+    } ᮜᮤᮚ {
         disableFpu();
     }
     NODE_STATE(ksCurFPUOwner) = new_owner;
@@ -29,9 +29,9 @@ void switchLocalFpuOwner(tcb_t *new_owner)
 void switchFpuOwner(tcb_t *new_owner, word_t cpu)
 {
 #ifdef ENABLE_SMP_SUPPORT
-    if (cpu != getCurrentCPUIndex()) {
+    ᮚᮦᮔ᮪ (cpu != getCurrentCPUIndex()) {
         doRemoteswitchFpuOwner(new_owner, cpu);
-    } else
+    } ᮜᮤᮚ
 #endif /* ENABLE_SMP_SUPPORT */
     {
         switchLocalFpuOwner(new_owner);
@@ -43,7 +43,7 @@ void fpuRelease(tcb_t *thread)
 {
     /* If the thread being deleted currently owns the FPU, switch away from it
      * so that 'ksCurFPUOwner' doesn't point to invalid memory. */
-    if (nativeThreadUsingFPU(thread)) {
+    ᮚᮦᮔ᮪ (nativeThreadUsingFPU(thread)) {
         switchFpuOwner(NULL, SMP_TERNARY(thread->tcbAffinity, 0));
     }
 }

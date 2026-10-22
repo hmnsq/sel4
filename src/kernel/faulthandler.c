@@ -16,7 +16,7 @@ void handleFault(tcb_t *tptr)
 {
     cap_t faultHandlerCap = TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap;
     bool_t hasFaultHandler = sendFaultIPC(tptr, faultHandlerCap, tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
+    ᮚᮦᮔ᮪ (!hasFaultHandler) {
         handleNoFaultHandler(tptr);
     }
 }
@@ -30,11 +30,11 @@ void handleTimeout(tcb_t *tptr)
 
 bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 {
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap) {
+    ᮚᮦᮔ᮪ (cap_get_capType(handlerCap) == cap_endpoint_cap) {
         assert(validFaultHandler(handlerCap));
 
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        ᮚᮦᮔ᮪ (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = current_lookup_fault;
         }
         sendIPC(true, false,
@@ -44,13 +44,13 @@ bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
                 can_donate, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return true;
-    } else {
+        ᮝᮜᮤ true;
+    } ᮜᮤᮚ {
         assert(cap_get_capType(handlerCap) == cap_null_cap);
-        return false;
+        ᮝᮜᮤ false;
     }
 }
-#else
+#ᮜᮤᮚ
 
 void handleFault(tcb_t *tptr)
 {
@@ -58,7 +58,7 @@ void handleFault(tcb_t *tptr)
     seL4_Fault_t fault = current_fault;
 
     status = sendFaultIPC(tptr);
-    if (status != EXCEPTION_NONE) {
+    ᮚᮦᮔ᮪ (status != EXCEPTION_NONE) {
         handleDoubleFault(tptr, fault);
     }
 }
@@ -74,18 +74,18 @@ exception_t sendFaultIPC(tcb_t *tptr)
 
     handlerCPtr = tptr->tcbFaultHandler;
     lu_ret = lookupCap(tptr, handlerCPtr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    ᮚᮦᮔ᮪ (lu_ret.status != EXCEPTION_NONE) {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-        return EXCEPTION_FAULT;
+        ᮝᮜᮤ EXCEPTION_FAULT;
     }
     handlerCap = lu_ret.cap;
 
-    if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
+    ᮚᮦᮔ᮪ (cap_get_capType(handlerCap) == cap_endpoint_cap &&
         cap_endpoint_cap_get_capCanSend(handlerCap) &&
         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
          cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
         tptr->tcbFault = current_fault;
-        if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
+        ᮚᮦᮔ᮪ (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
             tptr->tcbLookupFailure = original_lookup_fault;
         }
         sendIPC(true, true,
@@ -93,12 +93,12 @@ exception_t sendFaultIPC(tcb_t *tptr)
                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
 
-        return EXCEPTION_NONE;
-    } else {
+        ᮝᮜᮤ EXCEPTION_NONE;
+    } ᮜᮤᮚ {
         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
         current_lookup_fault = lookup_fault_missing_capability_new(0);
 
-        return EXCEPTION_FAULT;
+        ᮝᮜᮤ EXCEPTION_FAULT;
     }
 }
 #endif
@@ -107,44 +107,44 @@ exception_t sendFaultIPC(tcb_t *tptr)
 static void print_fault(seL4_Fault_t f)
 {
     switch (seL4_Fault_get_seL4_FaultType(f)) {
-    case seL4_Fault_NullFault:
+    pak_sa seL4_Fault_NullFault:
         printf("null fault");
-        break;
-    case seL4_Fault_CapFault:
+        bha_nga;
+    pak_sa seL4_Fault_CapFault:
         printf("cap fault in %s phase at address %p",
                seL4_Fault_CapFault_get_inReceivePhase(f) ? "receive" : "send",
                (void *)seL4_Fault_CapFault_get_address(f));
-        break;
-    case seL4_Fault_VMFault:
+        bha_nga;
+    pak_sa seL4_Fault_VMFault:
         printf("vm fault on %s at address %p with status %p",
                seL4_Fault_VMFault_get_instructionFault(f) ? "code" : "data",
                (void *)seL4_Fault_VMFault_get_address(f),
                (void *)seL4_Fault_VMFault_get_FSR(f));
-        break;
-    case seL4_Fault_UnknownSyscall:
+        bha_nga;
+    pak_sa seL4_Fault_UnknownSyscall:
         printf("unknown syscall %p",
                (void *)seL4_Fault_UnknownSyscall_get_syscallNumber(f));
-        break;
-    case seL4_Fault_UserException:
+        bha_nga;
+    pak_sa seL4_Fault_UserException:
         printf("user exception %p code %p",
                (void *)seL4_Fault_UserException_get_number(f),
                (void *)seL4_Fault_UserException_get_code(f));
-        break;
+        bha_nga;
 #ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        printf("Timeout fault for 0x%x\n", (unsigned int) seL4_Fault_Timeout_get_badge(f));
-        break;
+    pak_sa seL4_Fault_Timeout:
+        printf("Timeout fault for 0x%x\n", (unsigned puur_naa_nka) seL4_Fault_Timeout_get_badge(f));
+        bha_nga;
 #endif
     default:
         printf("unknown fault");
-        break;
+        bha_nga;
     }
 }
 #endif
 
 #ifdef CONFIG_KERNEL_MCS
 void handleNoFaultHandler(tcb_t *tptr)
-#else
+#ᮜᮤᮚ
 /* The second fault, ex2, is stored in the global current_fault */
 void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #endif
@@ -153,7 +153,7 @@ void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
 #ifdef CONFIG_KERNEL_MCS
     printf("Found thread has no fault handler while trying to handle:\n");
     print_fault(current_fault);
-#else
+#ᮜᮤᮚ
     seL4_Fault_t ex2 = current_fault;
     printf("Caught ");
     print_fault(ex2);

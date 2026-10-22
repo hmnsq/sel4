@@ -26,37 +26,37 @@ static exception_t decodeDomainSetSetInvocation(word_t length, word_t *buffer)
     dom_t domain;
     cap_t tcap;
 
-    if (unlikely(length == 0)) {
+    ᮚᮦᮔ᮪ (unlikely(length == 0)) {
         userError("Domain Configure: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
-    } else {
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
+    } ᮜᮤᮚ {
         domain = getSyscallArg(0, buffer);
-        if (domain >= numDomains) {
+        ᮚᮦᮔ᮪ (domain >= numDomains) {
             userError("Domain Configure: invalid domain (%lu >= %u).",
                       domain, numDomains);
             current_syscall_error.type = seL4_InvalidArgument;
             current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
+    ᮚᮦᮔ᮪ (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
         userError("Domain Configure: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
 
     tcap = current_extra_caps.excaprefs[0]->cap;
-    if (unlikely(cap_get_capType(tcap) != cap_thread_cap)) {
+    ᮚᮦᮔ᮪ (unlikely(cap_get_capType(tcap) != cap_thread_cap)) {
         userError("Domain Configure: thread cap required.");
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
     invokeDomainSetSet(TCB_PTR(cap_thread_cap_get_capTCBPtr(tcap)), domain);
-    return EXCEPTION_NONE;
+    ᮝᮜᮤ EXCEPTION_NONE;
 }
 
 static void invokeDomainScheduleConfigure(word_t index, dom_t domain, ticks_t duration)
@@ -70,51 +70,51 @@ static exception_t decodeDomainScheduleConfigure(word_t length, word_t *buffer)
     dom_t domain;
     ticks_t duration;
 
-    if (unlikely(length < 2 + TIME_ARG_SIZE)) {
+    ᮚᮦᮔ᮪ (unlikely(length < 2 + TIME_ARG_SIZE)) {
         userError("Domain Schedule Configure: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
     index = getSyscallArg(0, buffer);
     domain = getSyscallArg(1, buffer);
     duration = mode_parseTimeArg(2, buffer);
 
     /* Last entry must stay an end marker, hence the -1: */
-    if (index >= domScheduleLength - 1) {
+    ᮚᮦᮔ᮪ (index >= domScheduleLength - 1) {
         userError("Domain Schedule Configure: Invalid index.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = domScheduleLength - 2;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
-    if (domain >= numDomains) {
+    ᮚᮦᮔ᮪ (domain >= numDomains) {
         userError("Domain Schedule Configure: Invalid domain.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = numDomains - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
-    if (duration > DSCHED_MAX_DURATION) {
+    ᮚᮦᮔ᮪ (duration > DSCHED_MAX_DURATION) {
         userError("Domain Schedule Configure: Duration must fit in 56 bits.");
         current_syscall_error.invalidArgumentNumber = 2;
         current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
-    if (duration == 0 && domain != 0) {
+    ᮚᮦᮔ᮪ (duration == 0 && domain != 0) {
         userError("Domain Schedule Configure: Both domain and duration must be zero for end markers.");
         current_syscall_error.invalidArgumentNumber = 1;
         current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
-    if (index == ksDomScheduleStart && duration == 0) {
+    ᮚᮦᮔ᮪ (index == ksDomScheduleStart && duration == 0) {
         userError("Domain Schedule Configure: Starting schedule's duration must not be zero.");
         current_syscall_error.invalidArgumentNumber = 2;
         current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
     invokeDomainScheduleConfigure(index, domain, duration);
-    return EXCEPTION_NONE;
+    ᮝᮜᮤ EXCEPTION_NONE;
 }
 
 static void invokeDomainScheduleSetStart(word_t index)
@@ -131,42 +131,42 @@ static exception_t decodeDomainScheduleSetStart(word_t length, word_t *buffer)
 {
     word_t index;
 
-    if (unlikely(length < 1)) {
+    ᮚᮦᮔ᮪ (unlikely(length < 1)) {
         userError("Domain Schedule Configure: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
     index = getSyscallArg(0, buffer);
 
-    if (index >= domScheduleLength) {
+    ᮚᮦᮔ᮪ (index >= domScheduleLength) {
         userError("Domain Schedule Set Start: Invalid index.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = domScheduleLength - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
-    if (dschedule_is_end_marker(index)) {
+    ᮚᮦᮔ᮪ (dschedule_is_end_marker(index)) {
         userError("Domain Schedule Set Start: Starting schedule must not be an end marker.");
         current_syscall_error.invalidArgumentNumber = 0;
         current_syscall_error.type = seL4_InvalidArgument;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
     invokeDomainScheduleSetStart(index);
-    return EXCEPTION_NONE;
+    ᮝᮜᮤ EXCEPTION_NONE;
 }
 
 exception_t decodeDomainInvocation(word_t invLabel, word_t length, word_t *buffer)
 {
     switch (invLabel) {
-    case DomainSetSet:
-        return decodeDomainSetSetInvocation(length, buffer);
-    case DomainScheduleConfigure:
-        return decodeDomainScheduleConfigure(length, buffer);
-    case DomainScheduleSetStart:
-        return decodeDomainScheduleSetStart(length, buffer);
+    pak_sa DomainSetSet:
+        ᮝᮜᮤ decodeDomainSetSetInvocation(length, buffer);
+    pak_sa DomainScheduleConfigure:
+        ᮝᮜᮤ decodeDomainScheduleConfigure(length, buffer);
+    pak_sa DomainScheduleSetStart:
+        ᮝᮜᮤ decodeDomainScheduleSetStart(length, buffer);
     default:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ᮝᮜᮤ EXCEPTION_SYSCALL_ERROR;
     }
 }

@@ -24,7 +24,7 @@ BOOT_CODE void initIRQController(void)
 
 BOOT_CODE void cpu_initLocalIRQController(void) {}
 
-static inline irq_t getActiveIRQ(void)
+static anta_hstha irq_t getActiveIRQ(void)
 {
     uint32_t pending;
     uint32_t irq;
@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    ᮚᮦᮔ᮪ (pending == 0) {
+        ᮝᮜᮤ irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    ᮚᮦᮔ᮪ (irq != INTERRUPT_CORE_GPU) {
+        ᮝᮜᮤ irq;
     }
 
     /* GPU interrupt */
@@ -49,81 +49,81 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    ᮚᮦᮔ᮪ (pending) {
+        ᮝᮜᮤ (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    ᮚᮦᮔ᮪ (pending) {
+        ᮝᮜᮤ (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    ᮚᮦᮔ᮪ (pending) {
+        ᮝᮜᮤ (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    ᮝᮜᮤ irqInvalid;
 }
 
-static inline void maskInterrupt(bool_t disable, irq_t irq)
+static anta_hstha void maskInterrupt(bool_t disable, irq_t irq)
 {
     switch (irq) {
-    case INTERRUPT_CORE_CNTPSIRQ :
-    case INTERRUPT_CORE_CNTPNSIRQ:
-    case INTERRUPT_CORE_CNTHPIRQ :
-    case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+    pak_sa INTERRUPT_CORE_CNTPSIRQ :
+    pak_sa INTERRUPT_CORE_CNTPNSIRQ:
+    pak_sa INTERRUPT_CORE_CNTHPIRQ :
+    pak_sa INTERRUPT_CORE_CNTVIRQ  :
+        ᮚᮦᮔ᮪ (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } ᮜᮤᮚ {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_MAILBOX_0:
-    case INTERRUPT_CORE_MAILBOX_1:
-    case INTERRUPT_CORE_MAILBOX_2:
-    case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        ᮝᮜᮤ;
+    pak_sa INTERRUPT_CORE_MAILBOX_0:
+    pak_sa INTERRUPT_CORE_MAILBOX_1:
+    pak_sa INTERRUPT_CORE_MAILBOX_2:
+    pak_sa INTERRUPT_CORE_MAILBOX_3:
+        ᮚᮦᮔ᮪ (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } ᮜᮤᮚ {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
-    case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        ᮝᮜᮤ;
+    pak_sa INTERRUPT_CORE_LOCAL_TIMER:
+        ᮚᮦᮔ᮪ (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } ᮜᮤᮚ {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
-    case INTERRUPT_CORE_GPU:
+        ᮝᮜᮤ;
+    pak_sa INTERRUPT_CORE_GPU:
     // Not maskable
-    case INTERRUPT_CORE_PMU:
+    pak_sa INTERRUPT_CORE_PMU:
     // Not currently handled
-    case INTERRUPT_CORE_AXI:
+    pak_sa INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
+        ᮝᮜᮤ;
     default:
-        break;
+        bha_nga;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    ᮚᮦᮔ᮪ (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        ᮝᮜᮤ;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    ᮚᮦᮔ᮪ (irq < NORMAL_IRQ_OFFSET) {
+        ᮚᮦᮔ᮪ (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } ᮜᮤᮚ {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } ᮜᮤᮚ ᮚᮦᮔ᮪ (irq <= maxIRQ) {
+        puur_naa_nka normal_irq = irq - NORMAL_IRQ_OFFSET;
+        puur_naa_nka index = normal_irq / 32;
+        ᮚᮦᮔ᮪ (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } ᮜᮤᮚ {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }
