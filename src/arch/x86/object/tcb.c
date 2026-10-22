@@ -4,79 +4,79 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <machine/registerset.h>
-#include <object/structures.h>
-#include <arch/object/tcb.h>
-#include <arch/machine.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <api/failures.h>
+#अन्तर्भाव <machine/registerset.h>
+#अन्तर्भाव <object/structures.h>
+#अन्तर्भाव <arch/object/tcb.h>
+#अन्तर्भाव <arch/machine.h>
 
 word_t CONST Arch_decodeTransfer(word_t flags)
 {
-    return 0;
+    प्रत्यागम 0;
 }
 
 exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_VTX
-void Arch_leaveVMAsyncTransfer(tcb_t *tcb)
+शून्य Arch_leaveVMAsyncTransfer(tcb_t *tcb)
 {
     vcpu_sysvmenter_reply_to_user(tcb);
 }
 
-static exception_t performSetEPTRoot(tcb_t *tcb, cap_t cap, cte_t *slot)
+स्थिर exception_t performSetEPTRoot(tcb_t *tcb, cap_t cap, cte_t *slot)
 {
-    cte_t *rootSlot;
+    cte_t *मूलम्_Slot;
     exception_t e;
 
-    rootSlot = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
-    e = cteDelete(rootSlot, true);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    मूलम्_Slot = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
+    e = cteDelete(मूलम्_Slot, true);
+    जइ (e != EXCEPTION_NONE) {
+        प्रत्यागम e;
     }
 
-    cteInsert(cap, slot, rootSlot);
+    cte_निवेशय(cap, slot, मूलम्_Slot);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    setThreadState(ग्रन्थिः_STATE(ksCurThread), ThreadState_Restart);
+    प्रत्यागम EXCEPTION_NONE;
 }
 
 exception_t decodeSetEPTRoot(cap_t cap)
 {
-    cap_t rootCap;
-    cte_t *rootSlot;
+    cap_t मूलम्_Cap;
+    cte_t *मूलम्_Slot;
     deriveCap_ret_t dc_ret;
 
-    rootSlot = current_extra_caps.excaprefs[0];
+    मूलम्_Slot = current_extra_caps.excaprefs[0];
 
-    if (rootSlot == NULL) {
+    जइ (मूलम्_Slot == रिक्त) {
         userError("TCB SetEPTRoot: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    rootCap = rootSlot->cap;
+    मूलम्_Cap = मूलम्_Slot->cap;
 
-    if (cap_get_capType(rootCap) != cap_ept_pml4_cap) {
+    जइ (cap_get_capType(मूलम्_Cap) != cap_ept_pml4_cap) {
         userError("TCB SetEPTRoot: EPT PDPT is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    dc_ret = deriveCap(rootSlot, rootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(मूलम्_Slot, मूलम्_Cap);
+    जइ (dc_ret.status != EXCEPTION_NONE) {
+        प्रत्यागम dc_ret.status;
     }
 
-    if (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
+    जइ (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
         userError("decodeSetEPTRoot: Invalid EPT cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    return performSetEPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, rootSlot);
+    प्रत्यागम performSetEPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, मूलम्_Slot);
 }
 #endif
