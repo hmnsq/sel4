@@ -17,12 +17,12 @@
 #define UART_TX_FULL        BIT(21)
 #define UART_RX_EMPTY       BIT(20)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ca_ncala uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while ((*UART_REG(UART_STATUS) & UART_TX_FULL));
+    ᰀᰬ ((*UART_REG(UART_STATUS) & UART_TX_FULL));
 
     /* Add character to the buffer. */
     *UART_REG(UART_WFIFO) = c;
@@ -30,9 +30,9 @@ void uart_drv_putchar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    while ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
-    return *UART_REG(UART_RFIFO);
+    ᰀᰬ ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
+    ᰀᰧᰌ *UART_REG(UART_RFIFO);
 }
 #endif /* CONFIG_DEBUG_BUILD */

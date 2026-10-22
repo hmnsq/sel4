@@ -15,19 +15,19 @@
 
 #define USART_ISR_TXE           0x80U
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ca_ncala uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    ᰀᰬ (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    return -1;
+    ᰀᰧᰌ -1;
 }
 #endif /* CONFIG_DEBUG_BUILD */
