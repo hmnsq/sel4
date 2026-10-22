@@ -32,20 +32,20 @@
 #define UART_SR2_TXFIFO_EMPTY BIT(14)
 #define UART_SR2_RXFIFO_RDR   BIT(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#define UART_REG(x) ((ca_ncala uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+void uart_drv_putchar(unsigned var_na c)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
+    ᤀᤠ᤺ (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
     *UART_REG(UTXD) = c;
 }
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+unsigned var_na uart_drv_getchar(void)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
-    return *UART_REG(URXD);
+    ᤀᤠ᤺ (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
+    ᤀᤡᤴ *UART_REG(URXD);
 }
 #endif /* CONFIG_DEBUG_BUILD */
