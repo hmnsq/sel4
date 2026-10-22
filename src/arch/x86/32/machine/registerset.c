@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <sel4/arch/constants.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
-#include <machine/debug.h>
+#ضمن <assert.h>
+#ضمن <config.h>
+#ضمن <sel4/arch/constants.h>
+#ضمن <arch/machine/registerset.h>
+#ضمن <machine/fpu.h>
+#ضمن <arch/object/structures.h>
+#ضمن <machine/debug.h>
 
-const register_t msgRegisters[] = {
+ثابت رجسٹر_t پیغام_Registers[] = {
     EDI,
-#ifndef CONFIG_KERNEL_MCS
+#جے_بنا_تعریف CONFIG_KERNEL_MCS
     EBP
-#endif
+#جے_انت
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_سنیہا_registers,
+    حجم(پیغام_Registers) / حجم(پیغام_Registers[0]) == n_پیغام_Registers
 );
 
-const register_t frameRegisters[] = {
+ثابت رجسٹر_t چوکھٹا_Registers[] = {
     FaultIP, ESP, FLAGS, EAX, EBX, ECX, EDX, ESI, EDI, EBP
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_چوکھٹا_registers,
+    حجم(چوکھٹا_Registers) / حجم(چوکھٹا_Registers[0]) == n_چوکھٹا_Registers
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+ثابت رجسٹر_t gpRegisters[] = {
+    FS_ادھار, GS_ادھار
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    حجم(gpRegisters) / حجم(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+فراغ منوال_init_Context(user_context_t *context)
 {
     context->registers[EAX] = 0;
     context->registers[EBX] = 0;
@@ -51,19 +51,19 @@ void Mode_initContext(user_context_t *context)
     context->registers[ESP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+لفظ_t منوال_sanitise_رجسٹر(رجسٹر_t reg, لفظ_t v)
 {
-    return v;
+    أرجع v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+لفظ_t getNBSendRecvDest(فراغ)
 {
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer *) lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (buffer != NULL) {
-        return buffer->userData;
-    } else {
-        return 0;
+    seL4_IPCBuffer *بفر = (seL4_IPCBuffer *) lookupIPCBuffer(false, گرہ_STATE(ksCurThread));
+    إذا (بفر != عدم) {
+        أرجع بفر->user_انکڑے;
+    } وإلا {
+        أرجع 0;
     }
 }
-#endif
+#جے_انت

@@ -5,87 +5,87 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <machine/debug.h>
-#include <api/syscall.h>
-#include <util.h>
-#include <arch/machine/hardware.h>
-#include <machine/fpu.h>
+#ضمن <config.h>
+#ضمن <model/statedata.h>
+#ضمن <arch/fastpath/fastpath.h>
+#ضمن <arch/kernel/traps.h>
+#ضمن <machine/debug.h>
+#ضمن <api/syscall.h>
+#ضمن <util.h>
+#ضمن <arch/machine/hardware.h>
+#ضمن <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#ضمن <benchmark/benchmark_track.h>
+#ضمن <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+فراغ VISIBLE NORETURN restore_user_context(فراغ)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers;
+    لفظ_t cur_thread_reg = (لفظ_t) گرہ_STATE(ksCurThread)->tcbArch.tcbContext.registers;
     c_exit_hook();
 
-#ifdef ENABLE_SMP_SUPPORT
-    word_t sp = read_sscratch();
-    sp -= sizeof(word_t);
-    *((word_t *)sp) = cur_thread_reg;
-#endif
+#جے_تعریف_شدہ ENABLE_SMP_SUPPORT
+    لفظ_t sp = read_sscratch();
+    sp -= حجم(لفظ_t);
+    *((لفظ_t *)sp) = cur_thread_reg;
+#جے_انت
 
-#ifdef CONFIG_HAVE_FPU
-    set_tcb_fs_state(NODE_STATE(ksCurThread), isFpuEnable());
-#endif
+#جے_تعریف_شدہ CONFIG_HAVE_FPU
+    سیٹ_tcb_fs_state(گرہ_STATE(ksCurThread), isFpuEnable());
+#جے_انت
 
-    NODE_UNLOCK_IF_HELD;
+    گرہ_UNLOCK_IF_HELD;
 
-    asm volatile(
+    asm متطاير(
         "mv t0, %[cur_thread]       \n"
-        LOAD_S " ra, (0*%[REGSIZE])(t0)  \n"
-        LOAD_S "  sp, (1*%[REGSIZE])(t0)  \n"
-        LOAD_S "  gp, (2*%[REGSIZE])(t0)  \n"
-        LOAD_S "  tp, (3*%[REGSIZE])(t0)  \n"
+        لدو_S " ra, (0*%[REGSIZE])(t0)  \n"
+        لدو_S "  sp, (1*%[REGSIZE])(t0)  \n"
+        لدو_S "  gp, (2*%[REGSIZE])(t0)  \n"
+        لدو_S "  tp, (3*%[REGSIZE])(t0)  \n"
         /* skip t0/x5, t1/x6, they are restored later */
         /* no-op store conditional to clear monitor state */
         /* this may succeed in implementations with very large reservations, but the saved ra is dead */
         "sc.w zero, zero, (t0)\n"
-        LOAD_S "  t2, (6*%[REGSIZE])(t0)  \n"
-        LOAD_S "  s0, (7*%[REGSIZE])(t0)  \n"
-        LOAD_S "  s1, (8*%[REGSIZE])(t0)  \n"
-        LOAD_S "  a0, (9*%[REGSIZE])(t0) \n"
-        LOAD_S "  a1, (10*%[REGSIZE])(t0) \n"
-        LOAD_S "  a2, (11*%[REGSIZE])(t0) \n"
-        LOAD_S "  a3, (12*%[REGSIZE])(t0) \n"
-        LOAD_S "  a4, (13*%[REGSIZE])(t0) \n"
-        LOAD_S "  a5, (14*%[REGSIZE])(t0) \n"
-        LOAD_S "  a6, (15*%[REGSIZE])(t0) \n"
-        LOAD_S "  a7, (16*%[REGSIZE])(t0) \n"
-        LOAD_S "  s2, (17*%[REGSIZE])(t0) \n"
-        LOAD_S "  s3, (18*%[REGSIZE])(t0) \n"
-        LOAD_S "  s4, (19*%[REGSIZE])(t0) \n"
-        LOAD_S "  s5, (20*%[REGSIZE])(t0) \n"
-        LOAD_S "  s6, (21*%[REGSIZE])(t0) \n"
-        LOAD_S "  s7, (22*%[REGSIZE])(t0) \n"
-        LOAD_S "  s8, (23*%[REGSIZE])(t0) \n"
-        LOAD_S "  s9, (24*%[REGSIZE])(t0) \n"
-        LOAD_S "  s10, (25*%[REGSIZE])(t0)\n"
-        LOAD_S "  s11, (26*%[REGSIZE])(t0)\n"
-        LOAD_S "  t3, (27*%[REGSIZE])(t0) \n"
-        LOAD_S "  t4, (28*%[REGSIZE])(t0) \n"
-        LOAD_S "  t5, (29*%[REGSIZE])(t0) \n"
-        LOAD_S "  t6, (30*%[REGSIZE])(t0) \n"
+        لدو_S "  t2, (6*%[REGSIZE])(t0)  \n"
+        لدو_S "  s0, (7*%[REGSIZE])(t0)  \n"
+        لدو_S "  s1, (8*%[REGSIZE])(t0)  \n"
+        لدو_S "  a0, (9*%[REGSIZE])(t0) \n"
+        لدو_S "  a1, (10*%[REGSIZE])(t0) \n"
+        لدو_S "  a2, (11*%[REGSIZE])(t0) \n"
+        لدو_S "  a3, (12*%[REGSIZE])(t0) \n"
+        لدو_S "  a4, (13*%[REGSIZE])(t0) \n"
+        لدو_S "  a5, (14*%[REGSIZE])(t0) \n"
+        لدو_S "  a6, (15*%[REGSIZE])(t0) \n"
+        لدو_S "  a7, (16*%[REGSIZE])(t0) \n"
+        لدو_S "  s2, (17*%[REGSIZE])(t0) \n"
+        لدو_S "  s3, (18*%[REGSIZE])(t0) \n"
+        لدو_S "  s4, (19*%[REGSIZE])(t0) \n"
+        لدو_S "  s5, (20*%[REGSIZE])(t0) \n"
+        لدو_S "  s6, (21*%[REGSIZE])(t0) \n"
+        لدو_S "  s7, (22*%[REGSIZE])(t0) \n"
+        لدو_S "  s8, (23*%[REGSIZE])(t0) \n"
+        لدو_S "  s9, (24*%[REGSIZE])(t0) \n"
+        لدو_S "  s10, (25*%[REGSIZE])(t0)\n"
+        لدو_S "  s11, (26*%[REGSIZE])(t0)\n"
+        لدو_S "  t3, (27*%[REGSIZE])(t0) \n"
+        لدو_S "  t4, (28*%[REGSIZE])(t0) \n"
+        لدو_S "  t5, (29*%[REGSIZE])(t0) \n"
+        لدو_S "  t6, (30*%[REGSIZE])(t0) \n"
         /* get sepc */
-        LOAD_S "  t1, (34*%[REGSIZE])(t0)\n"
+        لدو_S "  t1, (34*%[REGSIZE])(t0)\n"
         "csrw sepc, t1  \n"
-#ifndef ENABLE_SMP_SUPPORT
+#جے_بنا_تعریف ENABLE_SMP_SUPPORT
         /* Write back sscratch with cur_thread_reg to get it back on the next trap entry */
         "csrw sscratch, t0         \n"
-#endif
-        LOAD_S "  t1, (32*%[REGSIZE])(t0) \n"
+#جے_انت
+        لدو_S "  t1, (32*%[REGSIZE])(t0) \n"
         "csrw sstatus, t1\n"
 
-        LOAD_S "  t1, (5*%[REGSIZE])(t0) \n"
-        LOAD_S "  t0, (4*%[REGSIZE])(t0) \n"
+        لدو_S "  t1, (5*%[REGSIZE])(t0) \n"
+        لدو_S "  t0, (4*%[REGSIZE])(t0) \n"
         "sret"
         : /* no output */
-        : [REGSIZE] "i"(sizeof(word_t)),
+        : [REGSIZE] "i"(حجم(لفظ_t)),
         [cur_thread] "r"(cur_thread_reg)
         : "memory"
     );
@@ -93,68 +93,68 @@ void VISIBLE NORETURN restore_user_context(void)
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
+فراغ VISIBLE NORETURN c_handle_رکاوٹ(فراغ)
 {
-    NODE_LOCK_IRQ_IF(getActiveIRQ() != irq_remote_call_ipi);
+    گرہ_جندرا_IRQ_IF(get_سرگرم_IRQ() != irq_remote_call_ipi);
 
-    c_entry_hook();
+    c_اندراج_hook();
 
-    handleInterruptEntry();
+    handle_رکاوٹ_اندراج();
 
     restore_user_context();
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_handle_exception(void)
+فراغ VISIBLE NORETURN c_handle_exception(فراغ)
 {
     /* Any exception from S-mode is a kernel fault, not a user fault.
      * Kernel faults should not exist, so print potential debug info and halt. */
-    if (read_sstatus() & SSTATUS_SPP) {
-#ifdef CONFIG_DEBUG_BUILD
-        printf("\n\nKERNEL ABORT (exception within s-mode)!\n");
-        printf("scause: 0x%"SEL4_PRIx_word", stval: 0x%"SEL4_PRIx_word"\n",
+    إذا (read_sstatus() & SSTATUS_SPP) {
+#جے_تعریف_شدہ CONFIG_DEBUG_BUILD
+        لکھو("\n\nKERNEL ABORT (exception within s-mode)!\n");
+        لکھو("scause: 0x%"SEL4_PRIx_لفظ", stval: 0x%"SEL4_PRIx_لفظ"\n",
                read_scause(), read_stval());
-#endif
+#جے_انت
         halt();
     }
 
-    NODE_LOCK_SYS;
+    گرہ_جندرا_SYS;
 
-    c_entry_hook();
+    c_اندراج_hook();
 
-    word_t scause = read_scause();
-    switch (scause) {
-    case RISCVInstructionAccessFault:
-    case RISCVLoadAccessFault:
-    case RISCVStoreAccessFault:
-    case RISCVLoadPageFault:
-    case RISCVStorePageFault:
-    case RISCVInstructionPageFault:
+    لفظ_t scause = read_scause();
+    بدل (scause) {
+    حالة RISCVInstructionAccessFault:
+    حالة RISCVLoadAccessFault:
+    حالة RISCVStoreAccessFault:
+    حالة RISCVLoad_ورقہ_Fault:
+    حالة RISCVStore_ورقہ_Fault:
+    حالة RISCVInstruction_ورقہ_Fault:
         handleVMFaultEvent(scause);
-        break;
-    default:
+        اكسر;
+    افتراضي:
         handleUserLevelFault(scause, 0);
-        break;
+        اكسر;
     }
 
     restore_user_context();
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN slowpath(syscall_t syscall)
+فراغ VISIBLE NORETURN slowpath(syscall_t syscall)
 {
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
-#endif /* TRACK_KERNEL_ENTRIES */
+    إذا (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+#جے_تعریف_شدہ TRACK_KERNEL_ENTRIES
+        ks_Kernel_اندراج.رستہ = اندراج_Unknown_Syscall;
+#جے_انت /* TRACK_KERNEL_ENTRIES */
         /* Contrary to the name, this handles all non-standard syscalls used in
          * debug builds also.
          */
         handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
+    } وإلا {
+#جے_تعریف_شدہ TRACK_KERNEL_ENTRIES
+        ks_Kernel_اندراج.is_fastpath = 0;
+#جے_انت /* TRACK KERNEL ENTRIES */
         handleSyscall(syscall);
     }
 
@@ -162,55 +162,55 @@ void VISIBLE NORETURN slowpath(syscall_t syscall)
     UNREACHABLE();
 }
 
-#ifdef CONFIG_FASTPATH
-ALIGN(L1_CACHE_LINE_SIZE)
-#ifdef CONFIG_KERNEL_MCS
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
-#else
-void VISIBLE c_handle_fastpath_reply_recv(word_t cptr, word_t msgInfo)
-#endif
+#جے_تعریف_شدہ CONFIG_FASTPATH
+ALIGN(L1_CACHE_سطر_ناپ)
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+فراغ VISIBLE c_handle_fastpath_جواب_recv(لفظ_t cptr, لفظ_t پیغام_Info, لفظ_t جواب)
+#وإلا
+فراغ VISIBLE c_handle_fastpath_جواب_recv(لفظ_t cptr, لفظ_t پیغام_Info)
+#جے_انت
 {
-    NODE_LOCK_SYS;
+    گرہ_جندرا_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysReplyRecv);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
-#ifdef CONFIG_KERNEL_MCS
-    fastpath_reply_recv(cptr, msgInfo, reply);
-#else
-    fastpath_reply_recv(cptr, msgInfo);
-#endif
+    c_اندراج_hook();
+#جے_تعریف_شدہ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_شروع(cptr, پیغام_Info, Sys_جواب_Recv);
+    ks_Kernel_اندراج.is_fastpath = 1;
+#جے_انت /* DEBUG */
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+    fastpath_جواب_recv(cptr, پیغام_Info, جواب);
+#وإلا
+    fastpath_جواب_recv(cptr, پیغام_Info);
+#جے_انت
     UNREACHABLE();
 }
 
-ALIGN(L1_CACHE_LINE_SIZE)
-void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
+ALIGN(L1_CACHE_سطر_ناپ)
+فراغ VISIBLE c_handle_fastpath_call(لفظ_t cptr, لفظ_t پیغام_Info)
 {
-    NODE_LOCK_SYS;
+    گرہ_جندرا_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, SysCall);
-    ksKernelEntry.is_fastpath = 1;
-#endif /* DEBUG */
+    c_اندراج_hook();
+#جے_تعریف_شدہ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_شروع(cptr, پیغام_Info, SysCall);
+    ks_Kernel_اندراج.is_fastpath = 1;
+#جے_انت /* DEBUG */
 
-    fastpath_call(cptr, msgInfo);
+    fastpath_call(cptr, پیغام_Info);
 
     UNREACHABLE();
 }
-#endif
+#جے_انت
 
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+فراغ VISIBLE NORETURN c_handle_syscall(لفظ_t cptr, لفظ_t پیغام_Info, syscall_t syscall)
 {
-    NODE_LOCK_SYS;
+    گرہ_جندرا_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
+    c_اندراج_hook();
+#جے_تعریف_شدہ TRACK_KERNEL_ENTRIES
+    benchmark_debug_syscall_شروع(cptr, پیغام_Info, syscall);
+    ks_Kernel_اندراج.is_fastpath = 0;
+#جے_انت /* DEBUG */
     slowpath(syscall);
 
     UNREACHABLE();

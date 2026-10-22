@@ -11,30 +11,30 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ضمن <config.h>
+#ضمن <stdint.h>
+#ضمن <util.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/devices_gen.h>
 
-#define STAT 0x14
-#define TRANSMIT 0x1c
+#تعریف_کرو STAT 0x14
+#تعریف_کرو TRANSMIT 0x1c
 
-#define STAT_TDRE (1 << 23)
+#تعریف_کرو STAT_TDRE (1 << 23)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#تعریف_کرو UART_REG(x) ((متطاير uint32_t *)(UART_PPTR + (x)))
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
-void uart_drv_putchar(unsigned char c)
+#إذا defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+فراغ uart_drv_putchar(بنانشانی حرف c)
 {
-    while (!(*UART_REG(STAT) & STAT_TDRE)) { }
+    طالما (!(*UART_REG(STAT) & STAT_TDRE)) { }
     *UART_REG(TRANSMIT) = c;
 }
-#endif
+#جے_انت
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#جے_تعریف_شدہ CONFIG_DEBUG_BUILD
+بنانشانی حرف uart_drv_getchar(فراغ)
 {
-    return 0;
+    أرجع 0;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#جے_انت /* CONFIG_DEBUG_BUILD */

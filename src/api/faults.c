@@ -4,149 +4,149 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <kernel/thread.h>
-#include <arch/kernel/thread.h>
-#include <machine/debug.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <mode/api/ipc_buffer.h>
-#include <object/schedcontext.h>
-#endif
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/faults.h>
+#ضمن <api/syscall.h>
+#ضمن <kernel/thread.h>
+#ضمن <arch/kernel/thread.h>
+#ضمن <machine/debug.h>
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+#ضمن <mode/api/ipc_buffer.h>
+#ضمن <object/schedcontext.h>
+#جے_انت
 
 /* consistency with libsel4 */
-compile_assert(InvalidRoot, lookup_fault_invalid_root + 1 == seL4_InvalidRoot)
+compile_assert(Invalid_جڑ, lookup_fault_invalid_جڑ + 1 == se_L4_Invalid_جڑ)
 compile_assert(MissingCapability, lookup_fault_missing_capability + 1 == seL4_MissingCapability)
-compile_assert(DepthMismatch, lookup_fault_depth_mismatch + 1 == seL4_DepthMismatch)
+compile_assert(ڈونگھائی_Mismatch, lookup_fault_ڈونگھائی_mismatch + 1 == se_L4_ڈونگھائی_Mismatch)
 compile_assert(GuardMismatch, lookup_fault_guard_mismatch + 1 == seL4_GuardMismatch)
-compile_assert(seL4_UnknownSyscall_Syscall, (word_t) n_syscallMessage == seL4_UnknownSyscall_Syscall)
-compile_assert(seL4_UserException_Number, (word_t) n_exceptionMessage == seL4_UserException_Number)
-compile_assert(seL4_UserException_Code, (word_t) n_exceptionMessage + 1 == seL4_UserException_Code)
+compile_assert(seL4_UnknownSyscall_Syscall, (لفظ_t) n_syscall_سنیہا == seL4_UnknownSyscall_Syscall)
+compile_assert(se_L4_User_Exception_نمبر, (لفظ_t) n_exception_سنیہا == se_L4_User_Exception_نمبر)
+compile_assert(se_L4_User_Exception_کوڈ, (لفظ_t) n_exception_سنیہا + 1 == se_L4_User_Exception_کوڈ)
 
-static inline unsigned int
-setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
-                      lookup_fault_t luf, unsigned int offset)
+ساكن مضمن بنانشانی صحيح
+سیٹ_MRs_lookup_failure(tcb_t *receiver, لفظ_t *receiveIPCBuffer,
+                      lookup_fault_t luf, بنانشانی صحيح وتھ)
 {
-    word_t lufType = lookup_fault_get_lufType(luf);
-    word_t i;
+    لفظ_t lufType = lookup_fault_get_lufType(luf);
+    لفظ_t i;
 
-    i = setMR(receiver, receiveIPCBuffer, offset, lufType + 1);
+    i = سیٹ_MR(receiver, receiveIPCBuffer, وتھ, lufType + 1);
 
     /* check constants match libsel4 */
-    if (offset == seL4_CapFault_LookupFailureType) {
-        assert(offset + 1 == seL4_CapFault_BitsLeft);
-        assert(offset + 2 == seL4_CapFault_DepthMismatch_BitsFound);
-        assert(offset + 2 == seL4_CapFault_GuardMismatch_GuardFound);
-        assert(offset + 3 == seL4_CapFault_GuardMismatch_BitsFound);
-    } else {
-        assert(offset == 1);
+    إذا (وتھ == seL4_CapFault_LookupFailureType) {
+        أكد(وتھ + 1 == se_L4_Cap_Fault_بٹ_بایاں);
+        أكد(وتھ + 2 == se_L4_Cap_Fault_ڈونگھائی_Mismatch_بٹ_لبھیا);
+        أكد(وتھ + 2 == se_L4_Cap_Fault_Guard_Mismatch_Guard_لبھیا);
+        أكد(وتھ + 3 == se_L4_Cap_Fault_Guard_Mismatch_بٹ_لبھیا);
+    } وإلا {
+        أكد(وتھ == 1);
     }
 
-    switch (lufType) {
-    case lookup_fault_invalid_root:
-        return i;
+    بدل (lufType) {
+    حالة lookup_fault_invalid_جڑ:
+        أرجع i;
 
-    case lookup_fault_missing_capability:
-        return setMR(receiver, receiveIPCBuffer, offset + 1,
-                     lookup_fault_missing_capability_get_bitsLeft(luf));
+    حالة lookup_fault_missing_capability:
+        أرجع سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 1,
+                     lookup_fault_missing_capability_get_بٹ_بایاں(luf));
 
-    case lookup_fault_depth_mismatch:
-        setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_depth_mismatch_get_bitsLeft(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 2,
-                     lookup_fault_depth_mismatch_get_bitsFound(luf));
+    حالة lookup_fault_ڈونگھائی_mismatch:
+        سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 1,
+              lookup_fault_ڈونگھائی_mismatch_get_بٹ_بایاں(luf));
+        أرجع سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 2,
+                     lookup_fault_ڈونگھائی_mismatch_get_بٹ_لبھیا(luf));
 
-    case lookup_fault_guard_mismatch:
-        setMR(receiver, receiveIPCBuffer, offset + 1,
-              lookup_fault_guard_mismatch_get_bitsLeft(luf));
-        setMR(receiver, receiveIPCBuffer, offset + 2,
-              lookup_fault_guard_mismatch_get_guardFound(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 3,
-                     lookup_fault_guard_mismatch_get_bitsFound(luf));
+    حالة lookup_fault_guard_mismatch:
+        سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 1,
+              lookup_fault_guard_mismatch_get_بٹ_بایاں(luf));
+        سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 2,
+              lookup_fault_guard_mismatch_get_guard_لبھیا(luf));
+        أرجع سیٹ_MR(receiver, receiveIPCBuffer, وتھ + 3,
+                     lookup_fault_guard_mismatch_get_بٹ_لبھیا(luf));
 
-    default:
+    افتراضي:
         fail("Invalid lookup failure");
     }
 }
 
-static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t id, word_t length)
+ساكن مضمن فراغ copy_MRs_Fault_جواب(tcb_t *sender, tcb_t *receiver, سنیہا_ID_t id, لفظ_t لمائی)
 {
-    word_t i;
+    لفظ_t i;
     bool_t archInfo;
 
-    archInfo = Arch_getSanitiseRegisterInfo(receiver);
+    archInfo = Arch_get_Sanitise_رجسٹر_Info(receiver);
 
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
-        register_t r = fault_messages[id][i];
-        word_t v = getRegister(sender, msgRegisters[i]);
-        setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
+    لكل (i = 0; i < MIN(لمائی, n_پیغام_Registers); i++) {
+        رجسٹر_t r = fault_messages[id][i];
+        لفظ_t v = get_رجسٹر(sender, پیغام_Registers[i]);
+        سیٹ_رجسٹر(receiver, r, sanitise_رجسٹر(r, v, archInfo));
     }
 
-    if (i < length) {
-        word_t *sendBuf = lookupIPCBuffer(false, sender);
-        if (sendBuf) {
-            for (; i < length; i++) {
-                register_t r = fault_messages[id][i];
-                word_t v = sendBuf[i + 1];
-                setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
+    إذا (i < لمائی) {
+        لفظ_t *sendBuf = lookupIPCBuffer(false, sender);
+        إذا (sendBuf) {
+            لكل (; i < لمائی; i++) {
+                رجسٹر_t r = fault_messages[id][i];
+                لفظ_t v = sendBuf[i + 1];
+                سیٹ_رجسٹر(receiver, r, sanitise_رجسٹر(r, v, archInfo));
             }
         }
     }
 }
 
-static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
-                                word_t length, word_t *receiveIPCBuffer)
+ساكن مضمن فراغ copyMRsFault(tcb_t *sender, tcb_t *receiver, سنیہا_ID_t id,
+                                لفظ_t لمائی, لفظ_t *receiveIPCBuffer)
 {
-    word_t i;
-    for (i = 0; i < MIN(length, n_msgRegisters); i++) {
-        setRegister(receiver, msgRegisters[i], getRegister(sender, fault_messages[id][i]));
+    لفظ_t i;
+    لكل (i = 0; i < MIN(لمائی, n_پیغام_Registers); i++) {
+        سیٹ_رجسٹر(receiver, پیغام_Registers[i], get_رجسٹر(sender, fault_messages[id][i]));
     }
 
-    if (receiveIPCBuffer) {
-        for (; i < length; i++) {
-            receiveIPCBuffer[i + 1] = getRegister(sender, fault_messages[id][i]);
+    إذا (receiveIPCBuffer) {
+        لكل (; i < لمائی; i++) {
+            receiveIPCBuffer[i + 1] = get_رجسٹر(sender, fault_messages[id][i]);
         }
     }
 }
 
-bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
+bool_t handle_Fault_جواب(tcb_t *receiver, tcb_t *sender)
 {
     /* These lookups are moved inward from doReplyTransfer */
-    seL4_MessageInfo_t tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
-    word_t label = seL4_MessageInfo_get_label(tag);
-    word_t length = seL4_MessageInfo_get_length(tag);
+    se_L4_سنیہا_Info_t ٹیگ = سنیہا_Info_From_لفظ(get_رجسٹر(sender, پیغام_Info_رجسٹر));
+    لفظ_t label = se_L4_سنیہا_Info_get_label(ٹیگ);
+    لفظ_t لمائی = se_L4_سنیہا_Info_get_لمائی(ٹیگ);
     seL4_Fault_t fault = receiver->tcbFault;
 
-    switch (seL4_Fault_get_seL4_FaultType(fault)) {
-    case seL4_Fault_CapFault:
-        return true;
+    بدل (seL4_Fault_get_seL4_FaultType(fault)) {
+    حالة seL4_Fault_CapFault:
+        أرجع true;
 
-    case seL4_Fault_UnknownSyscall:
-        copyMRsFaultReply(sender, receiver, MessageID_Syscall, MIN(length, n_syscallMessage));
-        return (label == 0);
+    حالة seL4_Fault_UnknownSyscall:
+        copy_MRs_Fault_جواب(sender, receiver, سنیہا_ID_Syscall, MIN(لمائی, n_syscall_سنیہا));
+        أرجع (label == 0);
 
-    case seL4_Fault_UserException:
-        copyMRsFaultReply(sender, receiver, MessageID_Exception, MIN(length, n_exceptionMessage));
-        return (label == 0);
+    حالة seL4_Fault_UserException:
+        copy_MRs_Fault_جواب(sender, receiver, سنیہا_ID_Exception, MIN(لمائی, n_exception_سنیہا));
+        أرجع (label == 0);
 
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
-        copyMRsFaultReply(sender, receiver, MessageID_TimeoutReply, MIN(length, n_timeoutMessage));
-        return (label == 0);
-#endif
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
-        word_t n_instrs;
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+    حالة seL4_Fault_Timeout:
+        copy_MRs_Fault_جواب(sender, receiver, سنیہا_ID_Timeout_جواب, MIN(لمائی, n_timeout_سنیہا));
+        أرجع (label == 0);
+#جے_انت
+#جے_تعریف_شدہ CONFIG_HARDWARE_DEBUG_API
+    حالة seL4_Fault_DebugException: {
+        لفظ_t n_instrs;
 
-        if (seL4_Fault_DebugException_get_exceptionReason(fault) != seL4_SingleStep) {
+        إذا (seL4_Fault_DebugException_get_exceptionReason(fault) != se_L4_Single_قدم) {
             /* Only single-step replies are required to set message registers.
              */
-            return (label == 0);
+            أرجع (label == 0);
         }
 
-        if (length < DEBUG_REPLY_N_EXPECTED_REGISTERS) {
+        إذا (لمائی < DEBUG_جواب_N_EXPECTED_REGISTERS) {
             /* A single-step reply doesn't mean much if it isn't composed of the bp
              * number and number of instructions to skip. But even if both aren't
              * set, we can still allow the thread to continue because replying
@@ -161,16 +161,16 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
              * uses EFLAGS.TF.
              */
             n_instrs = 1;
-        } else {
+        } وإلا {
             /* If the reply had all expected registers set, proceed as normal */
-            n_instrs = getRegister(sender, msgRegisters[0]);
+            n_instrs = get_رجسٹر(sender, پیغام_Registers[0]);
         }
 
         syscall_error_t res;
 
         res = Arch_decodeConfigureSingleStepping(receiver, 0, n_instrs, true);
-        if (res.type != seL4_NoError) {
-            return false;
+        إذا (res.type != seL4_NoError) {
+            أرجع false;
         };
 
         configureSingleStepping(receiver, 0, n_instrs, true);
@@ -179,83 +179,83 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
          * is whether or not the thread will be resumed with stepping still
          * enabled.
          */
-        return (label == 0);
+        أرجع (label == 0);
     }
-#endif
+#جے_انت
 
-    default:
-        return Arch_handleFaultReply(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
+    افتراضي:
+        أرجع Arch_handle_Fault_جواب(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
     }
 }
 
-word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
+لفظ_t سیٹ_MRs_fault(tcb_t *sender, tcb_t *receiver, لفظ_t *receiveIPCBuffer)
 {
-    switch (seL4_Fault_get_seL4_FaultType(sender->tcbFault)) {
-    case seL4_Fault_CapFault:
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_IP, getRestartPC(sender));
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_Addr,
-              seL4_Fault_CapFault_get_address(sender->tcbFault));
-        setMR(receiver, receiveIPCBuffer, seL4_CapFault_InRecvPhase,
-              seL4_Fault_CapFault_get_inReceivePhase(sender->tcbFault));
-        return setMRs_lookup_failure(receiver, receiveIPCBuffer,
+    بدل (seL4_Fault_get_seL4_FaultType(sender->tcbFault)) {
+    حالة seL4_Fault_CapFault:
+        سیٹ_MR(receiver, receiveIPCBuffer, seL4_CapFault_IP, getRestartPC(sender));
+        سیٹ_MR(receiver, receiveIPCBuffer, seL4_CapFault_Addr,
+              se_L4_Fault_Cap_Fault_get_پتہ(sender->tcbFault));
+        سیٹ_MR(receiver, receiveIPCBuffer, se_L4_Cap_Fault_وچ_Recv_Phase,
+              se_L4_Fault_Cap_Fault_get_وچ_Receive_Phase(sender->tcbFault));
+        أرجع سیٹ_MRs_lookup_failure(receiver, receiveIPCBuffer,
                                      sender->tcbLookupFailure, seL4_CapFault_LookupFailureType);
 
-    case seL4_Fault_UnknownSyscall: {
-        copyMRsFault(sender, receiver, MessageID_Syscall, n_syscallMessage,
+    حالة seL4_Fault_UnknownSyscall: {
+        copyMRsFault(sender, receiver, سنیہا_ID_Syscall, n_syscall_سنیہا,
                      receiveIPCBuffer);
 
-        return setMR(receiver, receiveIPCBuffer, n_syscallMessage,
-                     seL4_Fault_UnknownSyscall_get_syscallNumber(sender->tcbFault));
+        أرجع سیٹ_MR(receiver, receiveIPCBuffer, n_syscall_سنیہا,
+                     se_L4_Fault_Unknown_Syscall_get_syscall_نمبر(sender->tcbFault));
     }
 
-    case seL4_Fault_UserException: {
-        copyMRsFault(sender, receiver, MessageID_Exception,
-                     n_exceptionMessage, receiveIPCBuffer);
-        setMR(receiver, receiveIPCBuffer, n_exceptionMessage,
-              seL4_Fault_UserException_get_number(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, n_exceptionMessage + 1u,
-                     seL4_Fault_UserException_get_code(sender->tcbFault));
+    حالة seL4_Fault_UserException: {
+        copyMRsFault(sender, receiver, سنیہا_ID_Exception,
+                     n_exception_سنیہا, receiveIPCBuffer);
+        سیٹ_MR(receiver, receiveIPCBuffer, n_exception_سنیہا,
+              se_L4_Fault_User_Exception_get_نمبر(sender->tcbFault));
+        أرجع سیٹ_MR(receiver, receiveIPCBuffer, n_exception_سنیہا + 1u,
+                     se_L4_Fault_User_Exception_get_کوڈ(sender->tcbFault));
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout: {
-        if (sender->tcbSchedContext) {
-            word_t len;
-            time_t consumed = schedContext_updateConsumed(sender->tcbSchedContext);
-            len = setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
+    حالة seL4_Fault_Timeout: {
+        إذا (sender->tcbSchedContext) {
+            لفظ_t len;
+            ویلا_t consumed = schedContext_updateConsumed(sender->tcbSchedContext);
+            len = سیٹ_MR(receiver, receiveIPCBuffer, se_L4_Timeout_انکڑے,
                         seL4_Fault_Timeout_get_badge(sender->tcbFault));
-            return mode_setTimeArg(len, consumed, receiveIPCBuffer, receiver);
-        } else {
-            return setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
+            أرجع منوال_سیٹ_ویلا_Arg(len, consumed, receiveIPCBuffer, receiver);
+        } وإلا {
+            أرجع سیٹ_MR(receiver, receiveIPCBuffer, se_L4_Timeout_انکڑے,
                          seL4_Fault_Timeout_get_badge(sender->tcbFault));
         }
     }
-#endif
-#ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
-        word_t reason = seL4_Fault_DebugException_get_exceptionReason(sender->tcbFault);
+#جے_انت
+#جے_تعریف_شدہ CONFIG_HARDWARE_DEBUG_API
+    حالة seL4_Fault_DebugException: {
+        لفظ_t reason = seL4_Fault_DebugException_get_exceptionReason(sender->tcbFault);
 
-        setMR(receiver, receiveIPCBuffer,
+        سیٹ_MR(receiver, receiveIPCBuffer,
               seL4_DebugException_FaultIP, getRestartPC(sender));
-        unsigned int ret = setMR(receiver, receiveIPCBuffer,
+        بنانشانی صحيح ret = سیٹ_MR(receiver, receiveIPCBuffer,
                                  seL4_DebugException_ExceptionReason, reason);
 
-        if (reason != seL4_SingleStep && reason != seL4_SoftwareBreakRequest) {
-            ret = setMR(receiver, receiveIPCBuffer,
-                        seL4_DebugException_TriggerAddress,
-                        seL4_Fault_DebugException_get_breakpointAddress(sender->tcbFault));
+        إذا (reason != se_L4_Single_قدم && reason != seL4_SoftwareBreakRequest) {
+            ret = سیٹ_MR(receiver, receiveIPCBuffer,
+                        se_L4_Debug_Exception_Trigger_پتہ,
+                        se_L4_Fault_Debug_Exception_get_breakpoint_پتہ(sender->tcbFault));
 
             /* Breakpoint messages also set a "breakpoint number" register. */
-            ret = setMR(receiver, receiveIPCBuffer,
-                        seL4_DebugException_BreakpointNumber,
-                        seL4_Fault_DebugException_get_breakpointNumber(sender->tcbFault));
+            ret = سیٹ_MR(receiver, receiveIPCBuffer,
+                        se_L4_Debug_Exception_Breakpoint_نمبر,
+                        se_L4_Fault_Debug_Exception_get_breakpoint_نمبر(sender->tcbFault));
         }
-        return ret;
+        أرجع ret;
     }
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#جے_انت /* CONFIG_HARDWARE_DEBUG_API */
 
-    default:
-        return Arch_setMRs_fault(sender, receiver, receiveIPCBuffer,
+    افتراضي:
+        أرجع Arch_سیٹ_MRs_fault(sender, receiver, receiveIPCBuffer,
                                  seL4_Fault_get_seL4_FaultType(sender->tcbFault));
     }
 }

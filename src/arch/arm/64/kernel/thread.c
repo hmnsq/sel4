@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ضمن <object.h>
+#ضمن <machine.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <arch/kernel/thread.h>
+#ضمن <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+فراغ Arch_switch_منزل_Thread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    إذا (config_سیٹ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
-    setVMRoot(tcb);
+    سیٹ_VMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_کوڈ فراغ Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, SPSR_EL1, PSTATE_IDLETHREAD);
-    setRegister(tcb, ELR_EL1, (word_t)&idle_thread);
+    سیٹ_رجسٹر(tcb, SPSR_EL1, PSTATE_IDLETHREAD);
+    سیٹ_رجسٹر(tcb, ELR_EL1, (لفظ_t)&idle_thread);
 }
 
-void Arch_switchToIdleThread(void)
+فراغ Arch_switch_منزل_Idle_Thread(فراغ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
+    إذا (config_سیٹ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        vcpu_switch(عدم);
     }
-    setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+    سیٹ_Current_User_VSpace_جڑ(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+فراغ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }

@@ -5,85 +5,85 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
 
-#include <arch/object/interrupt.h>
+#ضمن <arch/object/interrupt.h>
 
-exception_t Arch_checkIRQ(word_t irq)
+exception_t Arch_checkIRQ(لفظ_t irq)
 {
-    if (irq > maxIRQ || irq == irqInvalid) {
+    إذا (irq > maxIRQ || irq == irqInvalid) {
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
         current_syscall_error.rangeErrorMax = maxIRQ;
-        userError("Rejecting request for IRQ %u. IRQ is out of range [1..%u].", (int)irq, maxIRQ);
-        return EXCEPTION_SYSCALL_ERROR;
+        userError("Rejecting request for IRQ %u. IRQ is out of range [1..%u].", (صحيح)irq, maxIRQ);
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, bool_t trigger)
+ساكن exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handler_تھاں, cte_t *control_تھاں, bool_t trigger)
 {
-#ifdef HAVE_SET_TRIGGER
-    setIRQTrigger(irq, trigger);
-#endif
-    return invokeIRQControl(irq, handlerSlot, controlSlot);
+#جے_تعریف_شدہ HAVE_سیٹ_TRIGGER
+    سیٹ_IRQTrigger(irq, trigger);
+#جے_انت
+    أرجع invokeIRQControl(irq, handler_تھاں, control_تھاں);
 }
 
-exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
-                                            cte_t *srcSlot, word_t *buffer)
+exception_t Arch_decodeIRQControlInvocation(لفظ_t invLabel, لفظ_t لمائی,
+                                            cte_t *src_تھاں, لفظ_t *بفر)
 {
-    if (invLabel == RISCVIRQIssueIRQHandlerTrigger) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+    إذا (invLabel == RISCVIRQIssueIRQHandlerTrigger) {
+        إذا (لمائی < 4 || current_extra_caps.excaprefs[0] == عدم) {
+            current_syscall_error.type = se_L4_Truncated_سنیہا;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!config_set(HAVE_SET_TRIGGER)) {
+        إذا (!config_سیٹ(HAVE_سیٹ_TRIGGER)) {
             userError("This platform does not support setting the IRQ trigger");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t irq_w = getSyscallArg(0, buffer);
+        لفظ_t irq_w = getSyscallArg(0, بفر);
         irq_t irq = (irq_t) irq_w;
-        bool_t trigger = !!getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer);
+        bool_t trigger = !!getSyscallArg(1, بفر);
+        لفظ_t اشاریہ = getSyscallArg(2, بفر);
+        لفظ_t ڈونگھائی = getSyscallArg(3, بفر);
 
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-        exception_t status = Arch_checkIRQ(irq_w);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        exception_t حالت = Arch_checkIRQ(irq_w);
+        إذا (حالت != EXCEPTION_NONE) {
+            أرجع حالت;
         }
 
-        if (isIRQActive(irq)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)irq);
-            return EXCEPTION_SYSCALL_ERROR;
+        إذا (isIRQActive(irq)) {
+            current_syscall_error.type = se_L4_Revoke_پہلا;
+            userError("Rejecting request for IRQ %u. Already active.", (صحيح)irq);
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookup_تھاں_ret_t lu_ret = lookup_نشانہ_تھاں(cnodeCap, اشاریہ, ڈونگھائی);
+        إذا (lu_ret.حالت != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)irq);
-            return lu_ret.status;
+                      getExtraCPtr(بفر, 0), (صحيح)irq);
+            أرجع lu_ret.حالت;
         }
 
-        cte_t *destSlot = lu_ret.slot;
+        cte_t *dest_تھاں = lu_ret.تھاں;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        حالت = ensure_خالی_تھاواں_تھاں(dest_تھاں);
+        إذا (حالت != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)irq);
-            return status;
+                      getExtraCPtr(بفر, 0), (صحيح)irq);
+            أرجع حالت;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
-    } else {
+        سیٹ_Thread_State(گرہ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع Arch_invokeIRQControl(irq, dest_تھاں, src_تھاں, trigger);
+    } وإلا {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 }

@@ -4,51 +4,51 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <machine/io.h>
+#ضمن <kernel/vspace.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <plat/machine.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/devices_gen.h>
+#ضمن <plat/machine/hardware.h>
 
-#define TIOCP_CFG_SOFTRESET BIT(0)
+#تعریف_کرو TIOCP_CFG_SOFTRESET ثنائی_ہندسہ(0)
 
-#define TIER_MATCH_ENABLE BIT(0)
-#define TIER_OVERFLOW_ENABLE BIT(1)
-#define TIER_COMPARE_ENABLE BIT(2)
+#تعریف_کرو TIER_میل_ENABLE ثنائی_ہندسہ(0)
+#تعریف_کرو TIER_حد_توں_ودھ_ENABLE ثنائی_ہندسہ(1)
+#تعریف_کرو TIER_COMPARE_ENABLE ثنائی_ہندسہ(2)
 
-#define TCLR_STARTTIMER BIT(0)
-#define TCLR_AUTORELOAD BIT(1)
-#define TCLR_PRESCALE_ENABLE BIT(5)
-#define TCLR_COMPAREENABLE BIT(6)
+#تعریف_کرو TCLR_STARTTIMER ثنائی_ہندسہ(0)
+#تعریف_کرو TCLR_AUTORELOAD ثنائی_ہندسہ(1)
+#تعریف_کرو TCLR_PRESCALE_ENABLE ثنائی_ہندسہ(5)
+#تعریف_کرو TCLR_COMPAREENABLE ثنائی_ہندسہ(6)
 
 timer_t *timer = (timer_t *) TIMER_PPTR;
 
-#define WDT_REG(base, off) ((volatile uint32_t *)((base) + (off)))
-#define WDT_REG_WWPS 0x34
-#define WDT_REG_WSPR 0x48
-#define WDT_WWPS_PEND_WSPR BIT(4)
+#تعریف_کرو WDT_REG(ادھار, off) ((متطاير uint32_t *)((ادھار) + (off)))
+#تعریف_کرو WDT_REG_WWPS 0x34
+#تعریف_کرو WDT_REG_WSPR 0x48
+#تعریف_کرو WDT_WWPS_PEND_WSPR ثنائی_ہندسہ(4)
 
-#define SET_REGISTER(reg, mask) \
-        do {                    \
-            reg |= mask;        \
-        } while((reg & mask) != mask);
+#تعریف_کرو سیٹ_رجسٹر_2(reg, نقاب_2) \
+        افعل {                    \
+            reg |= نقاب_2;        \
+        } طالما((reg & نقاب_2) != نقاب_2);
 
-static BOOT_CODE void disableWatchdog(void)
+ساكن BOOT_کوڈ فراغ disableWatchdog(فراغ)
 {
     uint32_t wdt = WDT1_PPTR;
 
     // am335x ref man, sec 20.4.3.8
     *WDT_REG(wdt, WDT_REG_WSPR) = 0xaaaa;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    طالما ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
     *WDT_REG(wdt, WDT_REG_WSPR) = 0x5555;
-    while ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
+    طالما ((*WDT_REG(wdt, WDT_REG_WWPS) & WDT_WWPS_PEND_WSPR)) {
         ;
     }
 }
@@ -57,103 +57,103 @@ static BOOT_CODE void disableWatchdog(void)
  * Enable DMTIMER clocks, otherwise their registers wont be accessible.
  * This could be moved out of kernel.
  */
-static BOOT_CODE void enableTimers(void)
+ساكن BOOT_کوڈ فراغ enableTimers(فراغ)
 {
     uint32_t cmper = CMPER_PPTR;
 
     /* XXX repeat this for DMTIMER4..7 */
     /* select clock - Timer 3 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    طالما ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER3) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    طالما ((*CMPER_REG(cmper, CMPER_TIMER3_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 
     /* select clock - Timer 4 */
     *CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) = CMPER_CKLSEL_MOSC;
-    while ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
+    طالما ((*CMPER_REG(cmper, CMPER_CLKSEL_TIMER4) & RESERVED) != CMPER_CKLSEL_MOSC) {
         ;
     }
 
     /* enable clock */
     *CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) = CMPER_CLKCTRL_ENABLE;
-    while ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
+    طالما ((*CMPER_REG(cmper, CMPER_TIMER4_CLKCTRL) & RESERVED) != CMPER_CLKCTRL_ENABLE) {
         ;
     }
 }
-#ifdef CONFIG_KERNEL_MCS
+#جے_تعریف_شدہ CONFIG_KERNEL_MCS
 
 /* The idea here is to use the functionality of overflow interrupts to calculate time
    and use match interrupts for setting a deadline. */
 
-uint32_t high_bits = 0;
-BOOT_CODE void initTimer(void)
+uint32_t بلند_بٹ = 0;
+BOOT_کوڈ فراغ initTimer(فراغ)
 {
-    int timeout;
+    صحيح timeout;
     disableWatchdog();
     enableTimers();
 
     /* Configure dmtimer0 as kernel timer */
-    SET_REGISTER(timer->cfg, TIOCP_CFG_SOFTRESET);
+    سیٹ_رجسٹر_2(timer->cfg, TIOCP_CFG_SOFTRESET);
 
     /* disable */
-    SET_REGISTER(timer->tclr, 0u);
+    سیٹ_رجسٹر_2(timer->tclr, 0u);
 
     /* wait for reset */
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
+    لكل (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--);
 
-    if (!timeout) {
-        printf("init timer failed\n");
-        return;
+    إذا (!timeout) {
+        لکھو("init timer failed\n");
+        أرجع;
     }
 
-    maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
+    نقاب_رکاوٹ(/*disable*/ true, KERNEL_TIMER_IRQ);
 
     /* Set the reload value */
-    SET_REGISTER(timer->tldr, 0u);
+    سیٹ_رجسٹر_2(timer->tldr, 0u);
 
     /* Enables interrupt on overflow and match */
-    SET_REGISTER(timer->tier, (TIER_OVERFLOW_ENABLE | TIER_MATCH_ENABLE));
+    سیٹ_رجسٹر_2(timer->tier, (TIER_حد_توں_ودھ_ENABLE | TIER_میل_ENABLE));
 
     /* Clear the read register */
-    SET_REGISTER(timer->tcrr, 0u);
+    سیٹ_رجسٹر_2(timer->tcrr, 0u);
 
     /* start the timer */
-    SET_REGISTER(timer->tclr, (TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE));
+    سیٹ_رجسٹر_2(timer->tclr, (TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE));
 }
 
-#else /* CONFIG_KERNEL_MCS */
+#وإلا /* CONFIG_KERNEL_MCS */
 
 
 /* Configure dmtimer0 as kernel preemption timer */
-BOOT_CODE void initTimer(void)
+BOOT_کوڈ فراغ initTimer(فراغ)
 {
-    int timeout;
+    صحيح timeout;
 
     disableWatchdog();
     enableTimers();
 
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    for (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
+    لكل (timeout = 10000; (timer->cfg & TIOCP_CFG_SOFTRESET) && timeout > 0; timeout--)
         ;
-    if (!timeout) {
-        printf("init timer failed\n");
-        return;
+    إذا (!timeout) {
+        لکھو("init timer failed\n");
+        أرجع;
     }
 
-    maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
+    نقاب_رکاوٹ(/*disable*/ true, KERNEL_TIMER_IRQ);
 
     /* Set the reload value */
     timer->tldr = 0xFFFFFFFFUL - TIMER_RELOAD;
 
     /* Enables interrupt on overflow */
-    timer->tier = TIER_OVERFLOW_ENABLE;
+    timer->tier = TIER_حد_توں_ودھ_ENABLE;
 
     /* Clear the read register */
     timer->tcrr = 0xFFFFFFFFUL - TIMER_RELOAD;
@@ -161,4 +161,4 @@ BOOT_CODE void initTimer(void)
     /* Set autoreload and start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER;
 }
-#endif /* CONFIG_KERNEL_MCS */
+#جے_انت /* CONFIG_KERNEL_MCS */

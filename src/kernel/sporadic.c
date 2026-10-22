@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <object/structures.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <object/structures.h>
 
 /* functions to manage the circular buffer of
  * sporadic budget replenishments (refills for short).
@@ -32,149 +32,149 @@
  */
 
 /* return the index of the next item in the refill queue */
-static inline word_t refill_next(sched_context_t *sc, word_t index)
+ساكن مضمن لفظ_t refill_اگلا(sched_context_t *sc, لفظ_t اشاریہ)
 {
-    return (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
+    أرجع (اشاریہ == sc->scRefillMax - 1u) ? (0) : اشاریہ + 1u;
 }
 
-#ifdef CONFIG_PRINTING
+#جے_تعریف_شدہ CONFIG_PRINTING
 /* for debugging */
-UNUSED static inline void print_index(sched_context_t *sc, word_t index)
+بن_ورتیا ساكن مضمن فراغ print_اشاریہ(sched_context_t *sc, لفظ_t اشاریہ)
 {
 
-    printf("index %lu, Amount: %llx, time %llx\n", index, refill_index(sc, index)->rAmount,
-           refill_index(sc, index)->rTime);
+    لکھو("index %lu, Amount: %llx, time %llx\n", اشاریہ, refill_اشاریہ(sc, اشاریہ)->rAmount,
+           refill_اشاریہ(sc, اشاریہ)->r_ویلا);
 }
 
-UNUSED static inline void refill_print(sched_context_t *sc)
+بن_ورتیا ساكن مضمن فراغ refill_print(sched_context_t *sc)
 {
-    printf("Head %lu tail %lu\n", sc->scRefillHead, sc->scRefillTail);
-    word_t current = sc->scRefillHead;
+    لکھو("Head %lu tail %lu\n", sc->sc_Refill_سر, sc->sc_Refill_پوچھ);
+    لفظ_t current = sc->sc_Refill_سر;
     /* always print the head */
-    print_index(sc, current);
+    print_اشاریہ(sc, current);
 
-    while (current != sc->scRefillTail) {
-        current = refill_next(sc, current);
-        print_index(sc, current);
+    طالما (current != sc->sc_Refill_پوچھ) {
+        current = refill_اگلا(sc, current);
+        print_اشاریہ(sc, current);
     }
 
 }
-#endif /* CONFIG_PRINTING */
-#ifdef CONFIG_DEBUG_BUILD
+#جے_انت /* CONFIG_PRINTING */
+#جے_تعریف_شدہ CONFIG_DEBUG_BUILD
 /* check a refill queue is ordered correctly */
-static UNUSED bool_t refill_ordered(sched_context_t *sc)
+ساكن بن_ورتیا bool_t refill_ordered(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
-        return true;
+    إذا (is_گیڑا_Robin(sc)) {
+        أرجع true;
     }
 
-    word_t current = sc->scRefillHead;
-    word_t next = refill_next(sc, sc->scRefillHead);
+    لفظ_t current = sc->sc_Refill_سر;
+    لفظ_t اگلا = refill_اگلا(sc, sc->sc_Refill_سر);
 
-    while (current != sc->scRefillTail) {
-        if (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
-#ifdef CONFIG_PRINTING
+    طالما (current != sc->sc_Refill_پوچھ) {
+        إذا (!(refill_اشاریہ(sc, current)->r_ویلا + refill_اشاریہ(sc, current)->rAmount <= refill_اشاریہ(sc, اگلا)->r_ویلا)) {
+#جے_تعریف_شدہ CONFIG_PRINTING
             refill_print(sc);
-#endif
-            return false;
+#جے_انت
+            أرجع false;
         }
-        current = next;
-        next = refill_next(sc, current);
+        current = اگلا;
+        اگلا = refill_اگلا(sc, current);
     }
 
-    return true;
+    أرجع true;
 }
 
-#define REFILL_SANITY_START(sc) ticks_t _sum = refill_sum(sc); assert(isRoundRobin(sc) || refill_ordered(sc));
-#define REFILL_SANITY_CHECK(sc, budget) \
-    do { \
-        assert(refill_sum(sc) == budget); assert(isRoundRobin(sc) || refill_ordered(sc)); \
-    } while (0)
+#تعریف_کرو REFILL_SANITY_شروع(sc) ticks_t جوڑ = refill_جوڑ(sc); أكد(is_گیڑا_Robin(sc) || refill_ordered(sc));
+#تعریف_کرو REFILL_SANITY_CHECK(sc, budget) \
+    افعل { \
+        أكد(refill_جوڑ(sc) == budget); أكد(is_گیڑا_Robin(sc) || refill_ordered(sc)); \
+    } طالما (0)
 
-#define REFILL_SANITY_END(sc) \
-    do {\
-        REFILL_SANITY_CHECK(sc, _sum);\
-    } while (0)
-#else
-#define REFILL_SANITY_START(sc)
-#define REFILL_SANITY_CHECK(sc, budget)
-#define REFILL_SANITY_END(sc)
-#endif /* CONFIG_DEBUG_BUILD */
+#تعریف_کرو REFILL_SANITY_سرا(sc) \
+    افعل {\
+        REFILL_SANITY_CHECK(sc, جوڑ);\
+    } طالما (0)
+#وإلا
+#تعریف_کرو REFILL_SANITY_شروع(sc)
+#تعریف_کرو REFILL_SANITY_CHECK(sc, budget)
+#تعریف_کرو REFILL_SANITY_سرا(sc)
+#جے_انت /* CONFIG_DEBUG_BUILD */
 
 /* compute the sum of a refill queue */
-static UNUSED ticks_t refill_sum(sched_context_t *sc)
+ساكن بن_ورتیا ticks_t refill_جوڑ(sched_context_t *sc)
 {
-    ticks_t sum = refill_head(sc)->rAmount;
-    word_t current = sc->scRefillHead;
+    ticks_t جوڑ_2 = refill_سر(sc)->rAmount;
+    لفظ_t current = sc->sc_Refill_سر;
 
-    while (current != sc->scRefillTail) {
-        current = refill_next(sc, current);
-        sum += refill_index(sc, current)->rAmount;
+    طالما (current != sc->sc_Refill_پوچھ) {
+        current = refill_اگلا(sc, current);
+        جوڑ_2 += refill_اشاریہ(sc, current)->rAmount;
     }
 
-    return sum;
+    أرجع جوڑ_2;
 }
 
 /* pop head of refill queue */
-static inline refill_t refill_pop_head(sched_context_t *sc)
+ساكن مضمن refill_t refill_نکالو_سر(sched_context_t *sc)
 {
     /* queues cannot be smaller than 1 */
-    assert(!refill_single(sc));
+    أكد(!refill_single(sc));
 
-    UNUSED word_t prev_size = refill_size(sc);
-    refill_t refill = *refill_head(sc);
-    sc->scRefillHead = refill_next(sc, sc->scRefillHead);
+    بن_ورتیا لفظ_t prev_ناپ = refill_ناپ(sc);
+    refill_t refill = *refill_سر(sc);
+    sc->sc_Refill_سر = refill_اگلا(sc, sc->sc_Refill_سر);
 
     /* sanity */
-    assert(prev_size == (refill_size(sc) + 1));
-    assert(sc->scRefillHead < sc->scRefillMax);
-    return refill;
+    أكد(prev_ناپ == (refill_ناپ(sc) + 1));
+    أكد(sc->sc_Refill_سر < sc->scRefillMax);
+    أرجع refill;
 }
 
 /* add item to tail of refill queue */
-static inline void refill_add_tail(sched_context_t *sc, refill_t refill)
+ساكن مضمن فراغ refill_جوڑو_پوچھ(sched_context_t *sc, refill_t refill)
 {
     /* cannot add beyond queue size */
-    assert(refill_size(sc) < sc->scRefillMax);
+    أكد(refill_ناپ(sc) < sc->scRefillMax);
 
-    word_t new_tail = refill_next(sc, sc->scRefillTail);
-    sc->scRefillTail = new_tail;
-    *refill_tail(sc) = refill;
+    لفظ_t new_پوچھ = refill_اگلا(sc, sc->sc_Refill_پوچھ);
+    sc->sc_Refill_پوچھ = new_پوچھ;
+    *refill_پوچھ(sc) = refill;
 
     /* sanity */
-    assert(new_tail < sc->scRefillMax);
+    أكد(new_پوچھ < sc->scRefillMax);
 }
 
-static inline void maybe_add_empty_tail(sched_context_t *sc)
+ساكن مضمن فراغ maybe_جوڑو_خالی_تھاواں_پوچھ(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
+    إذا (is_گیڑا_Robin(sc)) {
         /* add an empty refill - we track the used up time here */
-        refill_t empty_tail = { .rTime = refill_head(sc)->rTime };
-        refill_add_tail(sc, empty_tail);
-        assert(refill_size(sc) == MIN_REFILLS);
+        refill_t خالی_تھاواں_پوچھ = { .r_ویلا = refill_سر(sc)->r_ویلا };
+        refill_جوڑو_پوچھ(sc, خالی_تھاواں_پوچھ);
+        أكد(refill_ناپ(sc) == MIN_REFILLS);
     }
 }
 
-void refill_new(sched_context_t *sc, word_t max_refills, ticks_t budget, ticks_t period)
+فراغ refill_new(sched_context_t *sc, لفظ_t max_refills, ticks_t budget, ticks_t period)
 {
     sc->scPeriod = period;
-    sc->scRefillHead = 0;
-    sc->scRefillTail = 0;
+    sc->sc_Refill_سر = 0;
+    sc->sc_Refill_پوچھ = 0;
     sc->scRefillMax = max_refills;
-    assert(budget >= MIN_BUDGET);
+    أكد(budget >= MIN_BUDGET);
     /* full budget available */
-    refill_head(sc)->rAmount = budget;
+    refill_سر(sc)->rAmount = budget;
     /* budget can be used from now */
-    refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-    maybe_add_empty_tail(sc);
+    refill_سر(sc)->r_ویلا = گرہ_STATE(ks_Cur_ویلا);
+    maybe_جوڑو_خالی_تھاواں_پوچھ(sc);
     REFILL_SANITY_CHECK(sc, budget);
 }
 
-void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, word_t new_max_refills)
+فراغ refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, لفظ_t new_max_refills)
 {
 
     /* refill must be initialised in order to be updated - otherwise refill_new should be used */
-    assert(sc->scRefillMax > 0);
+    أكد(sc->scRefillMax > 0);
 
     /* this is called on an active thread. We want to preserve the sliding window constraint -
      * so over new_period, new_budget should not be exceeded even temporarily */
@@ -182,38 +182,38 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     /* move the head refill to the start of the list - it's ok as we're going to truncate the
      * list to size 1 - and this way we can't be in an invalid list position once new_max_refills
      * is updated */
-    *refill_index(sc, 0) = *refill_head(sc);
-    sc->scRefillHead = 0;
+    *refill_اشاریہ(sc, 0) = *refill_سر(sc);
+    sc->sc_Refill_سر = 0;
     /* truncate refill list to size 1 */
-    sc->scRefillTail = sc->scRefillHead;
+    sc->sc_Refill_پوچھ = sc->sc_Refill_سر;
     /* update max refills */
     sc->scRefillMax = new_max_refills;
     /* update period */
     sc->scPeriod = new_period;
 
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+    إذا (refill_ready(sc)) {
+        refill_سر(sc)->r_ویلا = گرہ_STATE(ks_Cur_ویلا);
     }
 
-    if (refill_head(sc)->rAmount >= new_budget) {
+    إذا (refill_سر(sc)->rAmount >= new_budget) {
         /* if the heads budget exceeds the new budget just trim it */
-        refill_head(sc)->rAmount = new_budget;
-        maybe_add_empty_tail(sc);
-    } else {
+        refill_سر(sc)->rAmount = new_budget;
+        maybe_جوڑو_خالی_تھاواں_پوچھ(sc);
+    } وإلا {
         /* otherwise schedule the rest for the next period */
-        refill_t new = { .rAmount = (new_budget - refill_head(sc)->rAmount),
-                         .rTime = refill_head(sc)->rTime + new_period
+        refill_t new = { .rAmount = (new_budget - refill_سر(sc)->rAmount),
+                         .r_ویلا = refill_سر(sc)->r_ویلا + new_period
                        };
-        refill_add_tail(sc, new);
+        refill_جوڑو_پوچھ(sc, new);
     }
 
     REFILL_SANITY_CHECK(sc, new_budget);
 }
 
-static inline void schedule_used(sched_context_t *sc, refill_t new)
+ساكن مضمن فراغ ویلا_سارنی_ورتیا(sched_context_t *sc, refill_t new)
 {
-    refill_t tail = *refill_tail(sc);
-    if (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
+    refill_t پوچھ = *refill_پوچھ(sc);
+    إذا (unlikely(پوچھ.r_ویلا + پوچھ.rAmount >= new.r_ویلا)) {
         /* Merge overlapping or adjacent refill.
          *
          * refill_update can produce a tail refill that will overlap
@@ -226,50 +226,50 @@ static inline void schedule_used(sched_context_t *sc, refill_t new)
          * that (beyond a refill being split as it is charged
          * incrementally) a refill split is only caused by a thread
          * blocking. */
-        refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
-    } else if (likely(!refill_full(sc))) {
+        refill_پوچھ(sc)->rAmount = پوچھ.rAmount + new.rAmount;
+    } وإلا إذا (likely(!refill_بھریا(sc))) {
         /* Add tail normally */
-        refill_add_tail(sc, new);
-    } else {
+        refill_جوڑو_پوچھ(sc, new);
+    } وإلا {
         /* Delay existing tail to merge */
-        refill_tail(sc)->rTime = new.rTime - tail.rAmount;
-        refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
+        refill_پوچھ(sc)->r_ویلا = new.r_ویلا - پوچھ.rAmount;
+        refill_پوچھ(sc)->rAmount = پوچھ.rAmount + new.rAmount;
     }
 }
 
-static bool_t refill_head_overlapping(sched_context_t *sc)
+ساكن bool_t refill_سر_overlapping(sched_context_t *sc)
 {
-    if (!refill_single(sc)) {
-        refill_t head = *refill_head(sc);
-        ticks_t tail = head.rTime + head.rAmount;
-        return refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
-    } else {
-        return false;
+    إذا (!refill_single(sc)) {
+        refill_t سر = *refill_سر(sc);
+        ticks_t پوچھ = سر.r_ویلا + سر.rAmount;
+        أرجع refill_اشاریہ(sc, refill_اگلا(sc, sc->sc_Refill_سر))->r_ویلا <= پوچھ;
+    } وإلا {
+        أرجع false;
     }
 }
 
-static inline bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
+ساكن مضمن bool_t سر_refill_overrun(sched_context_t *sc, ticks_t usage)
 {
-    refill_t head = *refill_head(sc);
-    return head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
+    refill_t سر = *refill_سر(sc);
+    أرجع سر.rAmount <= usage && سر.r_ویلا < MAX_RELEASE_ویلا;
 }
 
-static inline ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
+ساكن مضمن ticks_t charge_entire_سر_refill(sched_context_t *sc, ticks_t usage)
 {
-    refill_t head = *refill_head(sc);
+    refill_t سر = *refill_سر(sc);
 
-    if (refill_single(sc)) {
-        refill_head(sc)->rTime = head.rTime + sc->scPeriod;
-    } else {
-        refill_t old_head = refill_pop_head(sc);
-        old_head.rTime += sc->scPeriod;
-        schedule_used(sc, old_head);
+    إذا (refill_single(sc)) {
+        refill_سر(sc)->r_ویلا = سر.r_ویلا + sc->scPeriod;
+    } وإلا {
+        refill_t old_سر = refill_نکالو_سر(sc);
+        old_سر.r_ویلا += sc->scPeriod;
+        ویلا_سارنی_ورتیا(sc, old_سر);
     }
 
-    return usage - head.rAmount;
+    أرجع usage - سر.rAmount;
 }
 
-static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
+ساكن مضمن ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
 {
     ticks_t current_usage = usage;
 
@@ -283,32 +283,32 @@ static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
      * that assertion we ensure that we never delay a refill past this
      * point in the future.
      */
-    while (head_refill_overrun(sc, current_usage)) {
-        current_usage = charge_entire_head_refill(sc, current_usage);
+    طالما (سر_refill_overrun(sc, current_usage)) {
+        current_usage = charge_entire_سر_refill(sc, current_usage);
     }
 
-    return current_usage;
+    أرجع current_usage;
 }
 
-static inline bool_t head_refill_insufficient(sched_context_t *sc)
+ساكن مضمن bool_t سر_refill_insufficient(sched_context_t *sc)
 {
-    return refill_head(sc)->rAmount < MIN_BUDGET;
+    أرجع refill_سر(sc)->rAmount < MIN_BUDGET;
 }
 
-static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
+ساكن مضمن فراغ ملاؤ_nonoverlapping_سر_refill(sched_context_t *sc)
 {
-    refill_t head = refill_pop_head(sc);
-    refill_head(sc)->rAmount += head.rAmount;
+    refill_t سر = refill_نکالو_سر(sc);
+    refill_سر(sc)->rAmount += سر.rAmount;
     /* Delay head to ensure the subsequent refill doesn't end any
      * later (rather than simply combining refills). */
-    refill_head(sc)->rTime -= head.rAmount;
+    refill_سر(sc)->r_ویلا -= سر.rAmount;
 }
 
-void refill_budget_check(ticks_t usage)
+فراغ refill_budget_check(ticks_t usage)
 {
-    sched_context_t *sc = NODE_STATE(ksCurSC);
-    assert(!isRoundRobin(sc));
-    REFILL_SANITY_START(sc);
+    sched_context_t *sc = گرہ_STATE(ksCurSC);
+    أكد(!is_گیڑا_Robin(sc));
+    REFILL_SANITY_شروع(sc);
 
     usage = handle_overrun(sc, usage);
 
@@ -316,15 +316,15 @@ void refill_budget_check(ticks_t usage)
      * If the head time is still sufficiently far from the point of
      * integer overflow then the usage must be smaller than the head.
      */
-    refill_t head = *refill_head(sc);
-    if (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
-        assert(head.rAmount > usage);
-        refill_t used = (refill_t) {
+    refill_t سر = *refill_سر(sc);
+    إذا (usage > 0 && سر.r_ویلا < MAX_RELEASE_ویلا) {
+        أكد(سر.rAmount > usage);
+        refill_t ورتیا_2 = (refill_t) {
             .rAmount = usage,
-            .rTime = head.rTime + sc->scPeriod,
+            .r_ویلا = سر.r_ویلا + sc->scPeriod,
         };
 
-        refill_head(sc)->rAmount = head.rAmount - usage;
+        refill_سر(sc)->rAmount = سر.rAmount - usage;
         /* We need to keep the head refill no more than a period before
          * the start of the tail refill. This ensures that new refills
          * are never added before the tail refill (breaking the ordered
@@ -335,45 +335,45 @@ void refill_budget_check(ticks_t usage)
          * schedule_used, the following will still ensure that
          * incremental charging of a refill across preemptions only
          * produces a single new refill one period in the future. */
-        refill_head(sc)->rTime = head.rTime + usage;
-        schedule_used(sc, used);
+        refill_سر(sc)->r_ویلا = سر.r_ویلا + usage;
+        ویلا_سارنی_ورتیا(sc, ورتیا_2);
     }
 
     /* Ensure the head refill has the minimum budget */
-    while (head_refill_insufficient(sc)) {
-        merge_nonoverlapping_head_refill(sc);
+    طالما (سر_refill_insufficient(sc)) {
+        ملاؤ_nonoverlapping_سر_refill(sc);
     }
 
-    REFILL_SANITY_END(sc);
+    REFILL_SANITY_سرا(sc);
 }
 
-static inline void merge_overlapping_head_refill(sched_context_t *sc)
+ساكن مضمن فراغ ملاؤ_overlapping_سر_refill(sched_context_t *sc)
 {
-    refill_t old_head = refill_pop_head(sc);
-    refill_head(sc)->rTime = old_head.rTime;
-    refill_head(sc)->rAmount += old_head.rAmount;
+    refill_t old_سر = refill_نکالو_سر(sc);
+    refill_سر(sc)->r_ویلا = old_سر.r_ویلا;
+    refill_سر(sc)->rAmount += old_سر.rAmount;
 }
 
-void refill_unblock_check(sched_context_t *sc)
+فراغ refill_unblock_check(sched_context_t *sc)
 {
 
-    if (isRoundRobin(sc)) {
+    إذا (is_گیڑا_Robin(sc)) {
         /* nothing to do */
-        return;
+        أرجع;
     }
 
     /* advance earliest activation time to now */
-    REFILL_SANITY_START(sc);
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-        NODE_STATE(ksReprogram) = true;
+    REFILL_SANITY_شروع(sc);
+    إذا (refill_ready(sc)) {
+        refill_سر(sc)->r_ویلا = گرہ_STATE(ks_Cur_ویلا);
+        گرہ_STATE(ksReprogram) = true;
 
         /* merge available replenishments */
-        while (refill_head_overlapping(sc)) {
-            merge_overlapping_head_refill(sc);
+        طالما (refill_سر_overlapping(sc)) {
+            ملاؤ_overlapping_سر_refill(sc);
         }
 
-        assert(refill_sufficient(sc, 0));
+        أكد(refill_sufficient(sc, 0));
     }
-    REFILL_SANITY_END(sc);
+    REFILL_SANITY_سرا(sc);
 }
