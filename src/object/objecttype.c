@@ -32,29 +32,29 @@
 
 word_t getObjectSize(word_t t, word_t userObjSize)
 {
-    if (t >= seL4_NonArchObjectTypeCount) {
-        return Arch_getObjectSize(t);
-    } else {
+    만약 (t >= seL4_NonArchObjectTypeCount) {
+        반환 Arch_getObjectSize(t);
+    } 아니면 {
         switch (t) {
         case seL4_TCBObject:
-            return seL4_TCBBits;
+            반환 seL4_TCBBits;
         case seL4_EndpointObject:
-            return seL4_EndpointBits;
+            반환 seL4_EndpointBits;
         case seL4_NotificationObject:
-            return seL4_NotificationBits;
+            반환 seL4_NotificationBits;
         case seL4_CapTableObject:
-            return seL4_SlotBits + userObjSize;
+            반환 seL4_SlotBits + userObjSize;
         case seL4_UntypedObject:
-            return userObjSize;
+            반환 userObjSize;
 #ifdef CONFIG_KERNEL_MCS
         case seL4_SchedContextObject:
-            return userObjSize;
+            반환 userObjSize;
         case seL4_ReplyObject:
-            return seL4_ReplyBits;
+            반환 seL4_ReplyBits;
 #endif
         default:
             fail("Invalid object type");
-            return 0;
+            반환 0;
         }
     }
 }
@@ -63,8 +63,8 @@ deriveCap_ret_t deriveCap(cte_t *slot, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    if (isArchCap(cap)) {
-        return Arch_deriveCap(slot, cap);
+    만약 (isArchCap(cap)) {
+        반환 Arch_deriveCap(slot, cap);
     }
 
     switch (cap_get_capType(cap)) {
@@ -80,9 +80,9 @@ deriveCap_ret_t deriveCap(cte_t *slot, cap_t cap)
 
     case cap_untyped_cap:
         ret.status = ensureNoChildren(slot);
-        if (ret.status != EXCEPTION_NONE) {
+        만약 (ret.status != EXCEPTION_NONE) {
             ret.cap = cap_null_cap_new();
-        } else {
+        } 아니면 {
             ret.cap = cap;
         }
         break;
@@ -98,29 +98,29 @@ deriveCap_ret_t deriveCap(cte_t *slot, cap_t cap)
         ret.cap = cap;
     }
 
-    return ret;
+    반환 ret;
 }
 
 finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
 {
     finaliseCap_ret_t fc_ret;
 
-    if (isArchCap(cap)) {
-        return Arch_finaliseCap(cap, final);
+    만약 (isArchCap(cap)) {
+        반환 Arch_finaliseCap(cap, final);
     }
 
     switch (cap_get_capType(cap)) {
     case cap_endpoint_cap:
-        if (final) {
+        만약 (final) {
             cancelAllIPC(EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)));
         }
 
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        반환 fc_ret;
 
     case cap_notification_cap:
-        if (final) {
+        만약 (final) {
             notification_t *ntfn = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 #ifdef CONFIG_KERNEL_MCS
             schedContextMaybeUnbindNtfn(ntfn);
@@ -130,13 +130,13 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        반환 fc_ret;
 
     case cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (final) {
+        만약 (final) {
             reply_t *reply = REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-            if (reply && reply->replyTCB) {
+            만약 (reply && reply->replyTCB) {
                 tcb_t *tcb = reply->replyTCB;
                 switch (thread_state_get_tsType(tcb->tcbState)) {
                 case ThreadState_BlockedOnReply:
@@ -152,22 +152,22 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        반환 fc_ret;
 #endif
     case cap_null_cap:
     case cap_domain_cap:
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        반환 fc_ret;
     }
 
-    if (exposed) {
+    만약 (exposed) {
         fail("finaliseCap: failed to finalise immediately.");
     }
 
     switch (cap_get_capType(cap)) {
     case cap_cnode_cap: {
-        if (final) {
+        만약 (final) {
             fc_ret.remainder =
                 Zombie_new(
                     1ul << cap_cnode_cap_get_capCNodeRadix(cap),
@@ -175,13 +175,13 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     cap_cnode_cap_get_capCNodePtr(cap)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            반환 fc_ret;
         }
         break;
     }
 
     case cap_thread_cap: {
-        if (final) {
+        만약 (final) {
             tcb_t *tcb;
             cte_t *cte_ptr;
 
@@ -191,9 +191,9 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
             unbindNotification(tcb);
 #ifdef CONFIG_KERNEL_MCS
             sched_context_t *sc = SC_PTR(tcb->tcbSchedContext);
-            if (sc) {
+            만약 (sc) {
                 schedContext_unbindTCB(sc);
-                if (sc->scYieldFrom) {
+                만약 (sc->scYieldFrom) {
                     schedContext_completeYieldTo(sc->scYieldFrom);
                 }
             }
@@ -210,19 +210,19 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     CTE_REF(cte_ptr)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            반환 fc_ret;
         }
         break;
     }
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_context_cap:
-        if (final) {
+        만약 (final) {
             sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
             schedContext_unbindAllTCBs(sc);
             schedContext_unbindNtfn(sc);
             schedContext_unbindReply(sc);
-            if (sc->scYieldFrom) {
+            만약 (sc->scYieldFrom) {
                 schedContext_completeYieldTo(sc->scYieldFrom);
             }
             /* mark the sc as no longer valid */
@@ -230,7 +230,7 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
             sc->scSporadic = false;
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            반환 fc_ret;
         }
         break;
 #endif
@@ -238,37 +238,37 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
     case cap_zombie_cap:
         fc_ret.remainder = cap;
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        반환 fc_ret;
 
     case cap_irq_handler_cap:
-        if (final) {
+        만약 (final) {
             irq_t irq = IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap));
 
             deletingIRQHandler(irq);
 
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap;
-            return fc_ret;
+            반환 fc_ret;
         }
         break;
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    반환 fc_ret;
 }
 
 bool_t CONST hasCancelSendRights(cap_t cap)
 {
     switch (cap_get_capType(cap)) {
     case cap_endpoint_cap:
-        return cap_endpoint_cap_get_capCanSend(cap) &&
+        반환 cap_endpoint_cap_get_capCanSend(cap) &&
                cap_endpoint_cap_get_capCanReceive(cap) &&
                cap_endpoint_cap_get_capCanGrantReply(cap) &&
                cap_endpoint_cap_get_capCanGrant(cap);
 
     default:
-        return false;
+        반환 false;
     }
 }
 
@@ -276,7 +276,7 @@ bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
     switch (cap_get_capType(cap_a)) {
     case cap_untyped_cap:
-        if (cap_get_capIsPhysical(cap_b)) {
+        만약 (cap_get_capIsPhysical(cap_b)) {
             word_t aBase, bBase, aTop, bTop;
 
             aBase = (word_t)WORD_PTR(cap_untyped_cap_get_capPtr(cap_a));
@@ -285,27 +285,27 @@ bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
             aTop = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
             bTop = bBase + MASK(cap_get_capSizeBits(cap_b));
 
-            return (aBase <= bBase) && (bTop <= aTop) && (bBase <= bTop);
+            반환 (aBase <= bBase) && (bTop <= aTop) && (bBase <= bTop);
         }
         break;
 
     case cap_endpoint_cap:
-        if (cap_get_capType(cap_b) == cap_endpoint_cap) {
-            return cap_endpoint_cap_get_capEPPtr(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_endpoint_cap) {
+            반환 cap_endpoint_cap_get_capEPPtr(cap_a) ==
                    cap_endpoint_cap_get_capEPPtr(cap_b);
         }
         break;
 
     case cap_notification_cap:
-        if (cap_get_capType(cap_b) == cap_notification_cap) {
-            return cap_notification_cap_get_capNtfnPtr(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_notification_cap) {
+            반환 cap_notification_cap_get_capNtfnPtr(cap_a) ==
                    cap_notification_cap_get_capNtfnPtr(cap_b);
         }
         break;
 
     case cap_cnode_cap:
-        if (cap_get_capType(cap_b) == cap_cnode_cap) {
-            return (cap_cnode_cap_get_capCNodePtr(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_cnode_cap) {
+            반환 (cap_cnode_cap_get_capCNodePtr(cap_a) ==
                     cap_cnode_cap_get_capCNodePtr(cap_b)) &&
                    (cap_cnode_cap_get_capCNodeRadix(cap_a) ==
                     cap_cnode_cap_get_capCNodeRadix(cap_b));
@@ -313,104 +313,104 @@ bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
         break;
 
     case cap_thread_cap:
-        if (cap_get_capType(cap_b) == cap_thread_cap) {
-            return cap_thread_cap_get_capTCBPtr(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_thread_cap) {
+            반환 cap_thread_cap_get_capTCBPtr(cap_a) ==
                    cap_thread_cap_get_capTCBPtr(cap_b);
         }
         break;
 
     case cap_reply_cap:
-        if (cap_get_capType(cap_b) == cap_reply_cap) {
+        만약 (cap_get_capType(cap_b) == cap_reply_cap) {
 #ifdef CONFIG_KERNEL_MCS
-            return cap_reply_cap_get_capReplyPtr(cap_a) ==
+            반환 cap_reply_cap_get_capReplyPtr(cap_a) ==
                    cap_reply_cap_get_capReplyPtr(cap_b);
-#else
-            return cap_reply_cap_get_capTCBPtr(cap_a) ==
+#아니면
+            반환 cap_reply_cap_get_capTCBPtr(cap_a) ==
                    cap_reply_cap_get_capTCBPtr(cap_b);
 #endif
         }
         break;
 
     case cap_domain_cap:
-        if (cap_get_capType(cap_b) == cap_domain_cap) {
-            return true;
+        만약 (cap_get_capType(cap_b) == cap_domain_cap) {
+            반환 true;
         }
         break;
 
     case cap_irq_control_cap:
-        if (cap_get_capType(cap_b) == cap_irq_control_cap ||
+        만약 (cap_get_capType(cap_b) == cap_irq_control_cap ||
             cap_get_capType(cap_b) == cap_irq_handler_cap ||
             Arch_isIRQControlDescendant(cap_b)) {
-            return true;
+            반환 true;
         }
         break;
 
     case cap_irq_handler_cap:
-        if (cap_get_capType(cap_b) == cap_irq_handler_cap) {
-            return (word_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_irq_handler_cap) {
+            반환 (word_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
                    (word_t)cap_irq_handler_cap_get_capIRQ(cap_b);
         }
         break;
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_context_cap:
-        if (cap_get_capType(cap_b) == cap_sched_context_cap) {
-            return (cap_sched_context_cap_get_capSCPtr(cap_a) ==
+        만약 (cap_get_capType(cap_b) == cap_sched_context_cap) {
+            반환 (cap_sched_context_cap_get_capSCPtr(cap_a) ==
                     cap_sched_context_cap_get_capSCPtr(cap_b)) &&
                    (cap_sched_context_cap_get_capSCSizeBits(cap_a) ==
                     cap_sched_context_cap_get_capSCSizeBits(cap_b));
         }
         break;
     case cap_sched_control_cap:
-        if (cap_get_capType(cap_b) == cap_sched_control_cap) {
-            return true;
+        만약 (cap_get_capType(cap_b) == cap_sched_control_cap) {
+            반환 true;
         }
         break;
 #endif
     default:
-        if (isArchCap(cap_a) &&
+        만약 (isArchCap(cap_a) &&
             isArchCap(cap_b)) {
-            return Arch_sameRegionAs(cap_a, cap_b);
+            반환 Arch_sameRegionAs(cap_a, cap_b);
         }
         break;
     }
 
-    return false;
+    반환 false;
 }
 
 bool_t CONST sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_untyped_cap) {
-        return false;
+    만약 (cap_get_capType(cap_a) == cap_untyped_cap) {
+        반환 false;
     }
-    if (cap_get_capType(cap_a) == cap_irq_control_cap) {
-        return false;
+    만약 (cap_get_capType(cap_a) == cap_irq_control_cap) {
+        반환 false;
     }
-    if (isArchCap(cap_a) && isArchCap(cap_b)) {
-        return Arch_sameObjectAs(cap_a, cap_b);
+    만약 (isArchCap(cap_a) && isArchCap(cap_b)) {
+        반환 Arch_sameObjectAs(cap_a, cap_b);
     }
-    return sameRegionAs(cap_a, cap_b);
+    반환 sameRegionAs(cap_a, cap_b);
 }
 
 cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_updateCapData(preserve, newData, cap);
+    만약 (isArchCap(cap)) {
+        반환 Arch_updateCapData(preserve, newData, cap);
     }
 
     switch (cap_get_capType(cap)) {
     case cap_endpoint_cap:
-        if (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
-            return cap_endpoint_cap_set_capEPBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+        만약 (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
+            반환 cap_endpoint_cap_set_capEPBadge(cap, newData);
+        } 아니면 {
+            반환 cap_null_cap_new();
         }
 
     case cap_notification_cap:
-        if (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
-            return cap_notification_cap_set_capNtfnBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+        만약 (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
+            반환 cap_notification_cap_set_capNtfnBadge(cap, newData);
+        } 아니면 {
+            반환 cap_null_cap_new();
         }
 
     case cap_cnode_cap: {
@@ -419,9 +419,9 @@ cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
 
         guardSize = seL4_CNode_CapData_get_guardSize(w);
 
-        if (guardSize + cap_cnode_cap_get_capCNodeRadix(cap) > wordBits) {
-            return cap_null_cap_new();
-        } else {
+        만약 (guardSize + cap_cnode_cap_get_capCNodeRadix(cap) > wordBits) {
+            반환 cap_null_cap_new();
+        } 아니면 {
             cap_t new_cap;
 
             guard = seL4_CNode_CapData_get_guard(w) & MASK(guardSize);
@@ -429,19 +429,19 @@ cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
             new_cap = cap_cnode_cap_set_capCNodeGuardSize(new_cap,
                                                           guardSize);
 
-            return new_cap;
+            반환 new_cap;
         }
     }
 
     default:
-        return cap;
+        반환 cap;
     }
 }
 
 cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_maskCapRights(cap_rights, cap);
+    만약 (isArchCap(cap)) {
+        반환 Arch_maskCapRights(cap_rights, cap);
     }
 
     switch (cap_get_capType(cap)) {
@@ -457,7 +457,7 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
     case cap_sched_context_cap:
     case cap_sched_control_cap:
 #endif
-        return cap;
+        반환 cap;
 
     case cap_endpoint_cap: {
         cap_t new_cap;
@@ -475,7 +475,7 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
                       new_cap, cap_endpoint_cap_get_capCanGrantReply(cap) &
                       seL4_CapRights_get_capAllowGrantReply(cap_rights));
 
-        return new_cap;
+        반환 new_cap;
     }
 
     case cap_notification_cap: {
@@ -488,7 +488,7 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
                                                              cap_notification_cap_get_capNtfnCanReceive(cap) &
                                                              seL4_CapRights_get_capAllowRead(cap_rights));
 
-        return new_cap;
+        반환 new_cap;
     }
     case cap_reply_cap: {
         cap_t new_cap;
@@ -496,7 +496,7 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
         new_cap = cap_reply_cap_set_capReplyCanGrant(
                       cap, cap_reply_cap_get_capReplyCanGrant(cap) &
                       seL4_CapRights_get_capAllowGrant(cap_rights));
-        return new_cap;
+        반환 new_cap;
     }
 
 
@@ -508,8 +508,8 @@ cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
 cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
 {
     /* Handle architecture-specific objects. */
-    if (t >= (object_t) seL4_NonArchObjectTypeCount) {
-        return Arch_createObject(t, regionBase, userSize, deviceMemory);
+    만약 (t >= (object_t) seL4_NonArchObjectTypeCount) {
+        반환 Arch_createObject(t, regionBase, userSize, deviceMemory);
     }
 
     /* Create objects. */
@@ -539,19 +539,19 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
         tcbDebugAppend(tcb);
 #endif /* CONFIG_DEBUG_BUILD */
 
-        return cap_thread_cap_new(TCB_REF(tcb));
+        반환 cap_thread_cap_new(TCB_REF(tcb));
     }
 
     case seL4_EndpointObject:
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: endpoint_C ptr))" */
-        return cap_endpoint_cap_new(0, true, true, true, true,
+        반환 cap_endpoint_cap_new(0, true, true, true, true,
                                     EP_REF(regionBase));
 
     case seL4_NotificationObject:
         /** AUXUPD: "(True, ptr_retyp
               (Ptr (ptr_val \<acute>regionBase) :: notification_C ptr))" */
-        return cap_notification_cap_new(0, true, true,
+        반환 cap_notification_cap_new(0, true, true,
                                         NTFN_REF(regionBase));
 
     case seL4_CapTableObject:
@@ -560,14 +560,14 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
         /** GHOSTUPD: "(True, gs_new_cnodes (unat \<acute>userSize)
                                 (ptr_val \<acute>regionBase)
                                 (4 + unat \<acute>userSize))" */
-        return cap_cnode_cap_new(userSize, 0, 0, CTE_REF(regionBase));
+        반환 cap_cnode_cap_new(userSize, 0, 0, CTE_REF(regionBase));
 
     case seL4_UntypedObject:
         /*
          * No objects need to be created; instead, just insert caps into
          * the destination slots.
          */
-        return cap_untyped_cap_new(0, !!deviceMemory, userSize, WORD_REF(regionBase));
+        반환 cap_untyped_cap_new(0, !!deviceMemory, userSize, WORD_REF(regionBase));
 
 #ifdef CONFIG_KERNEL_MCS
     case seL4_SchedContextObject:
@@ -580,11 +580,11 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
                                    word_of_nat (size_of TYPE(sched_context_C))) :: refill_C ptr)
               \<circ> ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: sched_context_C ptr))" */
         /** GHOSTUPD: "(True, gs_new_sc_size (ptr_val \<acute>regionBase) (unat \<acute>userSize))" */
-        return cap_sched_context_cap_new(SC_REF(regionBase), userSize);
+        반환 cap_sched_context_cap_new(SC_REF(regionBase), userSize);
 
     case seL4_ReplyObject:
         /** AUXUPD: "(True, ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: reply_C ptr))" */
-        return cap_reply_cap_new(REPLY_REF(regionBase), true);
+        반환 cap_reply_cap_new(REPLY_REF(regionBase), true);
 #endif
 
     default:
@@ -609,7 +609,7 @@ void createNewObjects(object_t t, cte_t *parent,
 
     /* Create the objects. */
     nextFreeArea = regionBase;
-    for (i = 0; i < destLength; i++) {
+    위해 (i = 0; i < destLength; i++) {
         /* Create the object. */
         /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute> nextFreeArea + ((\<acute> i) << unat (\<acute> objectSize))) (unat (\<acute> objectSize)))" */
         cap_t cap = createObject(t, (void *)((word_t)nextFreeArea + (i << objectSize)), userSize, deviceMemory);
@@ -626,15 +626,15 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
                              cptr_t capIndex, cte_t *slot, cap_t cap,
                              bool_t block, bool_t call,
                              bool_t canDonate, bool_t firstPhase, word_t *buffer)
-#else
+#아니면
 exception_t decodeInvocation(word_t invLabel, word_t length,
                              cptr_t capIndex, cte_t *slot, cap_t cap,
                              bool_t block, bool_t call,
                              word_t *buffer)
 #endif
 {
-    if (isArchCap(cap)) {
-        return Arch_decodeInvocation(invLabel, length, capIndex,
+    만약 (isArchCap(cap)) {
+        반환 Arch_decodeInvocation(invLabel, length, capIndex,
                                      slot, cap, call, buffer);
     }
 
@@ -643,32 +643,32 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
         userError("Attempted to invoke a null cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
 
     case cap_zombie_cap:
         userError("Attempted to invoke a zombie cap #%lu.", capIndex);
         current_syscall_error.type = seL4_InvalidCapability;
         current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
 
     case cap_endpoint_cap:
-        if (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
+        만약 (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
             userError("Attempted to invoke a read-only endpoint cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
 #ifdef CONFIG_KERNEL_MCS
-        return performInvocation_Endpoint(
+        반환 performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
                    cap_endpoint_cap_get_capCanGrantReply(cap), block, call, canDonate);
-#else
-        return performInvocation_Endpoint(
+#아니면
+        반환 performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
@@ -676,16 +676,16 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
 #endif
 
     case cap_notification_cap: {
-        if (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
+        만약 (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
             userError("Attempted to invoke a read-only notification cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Notification(
+        반환 performInvocation_Notification(
                    NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)),
                    cap_notification_cap_get_capNtfnBadge(cap));
     }
@@ -693,22 +693,22 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
 #ifdef CONFIG_KERNEL_MCS
     case cap_reply_cap:
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
+        반환 performInvocation_Reply(
                    NODE_STATE(ksCurThread),
                    REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap)),
                    cap_reply_cap_get_capReplyCanGrant(cap));
-#else
+#아니면
     case cap_reply_cap:
-        if (unlikely(cap_reply_cap_get_capReplyMaster(cap))) {
+        만약 (unlikely(cap_reply_cap_get_capReplyMaster(cap))) {
             userError("Attempted to invoke an invalid reply cap #%lu.",
                       capIndex);
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
+        반환 performInvocation_Reply(
                    TCB_PTR(cap_reply_cap_get_capTCBPtr(cap)), slot,
                    cap_reply_cap_get_capReplyCanGrant(cap));
 
@@ -716,66 +716,66 @@ exception_t decodeInvocation(word_t invLabel, word_t length,
 
     case cap_thread_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        만약 (unlikely(firstPhase)) {
             userError("Cannot invoke thread capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeTCBInvocation(invLabel, length, cap, slot, call, buffer);
+        반환 decodeTCBInvocation(invLabel, length, cap, slot, call, buffer);
 
     case cap_domain_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        만약 (unlikely(firstPhase)) {
             userError("Cannot invoke domain capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeDomainInvocation(invLabel, length, buffer);
+        반환 decodeDomainInvocation(invLabel, length, buffer);
 
     case cap_cnode_cap:
 #ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+        만약 (unlikely(firstPhase)) {
             userError("Cannot invoke cnode capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 #endif
-        return decodeCNodeInvocation(invLabel, length, cap, buffer);
+        반환 decodeCNodeInvocation(invLabel, length, cap, buffer);
 
     case cap_untyped_cap:
-        return decodeUntypedInvocation(invLabel, length, slot, cap, call, buffer);
+        반환 decodeUntypedInvocation(invLabel, length, slot, cap, call, buffer);
 
     case cap_irq_control_cap:
-        return decodeIRQControlInvocation(invLabel, length, slot, buffer);
+        반환 decodeIRQControlInvocation(invLabel, length, slot, buffer);
 
     case cap_irq_handler_cap:
-        return decodeIRQHandlerInvocation(invLabel,
+        반환 decodeIRQHandlerInvocation(invLabel,
                                           IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap)));
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_control_cap:
-        if (unlikely(firstPhase)) {
+        만약 (unlikely(firstPhase)) {
             userError("Cannot invoke sched control capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
-        return decodeSchedControlInvocation(invLabel, cap, length, buffer);
+        반환 decodeSchedControlInvocation(invLabel, cap, length, buffer);
 
     case cap_sched_context_cap:
-        if (unlikely(firstPhase)) {
+        만약 (unlikely(firstPhase)) {
             userError("Cannot invoke sched context capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
             current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
         sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
-        return decodeSchedContextInvocation(invLabel, sc, call);
+        반환 decodeSchedContextInvocation(invLabel, sc, call);
 #endif
     default:
         fail("Invalid cap type");
@@ -789,16 +789,16 @@ exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
 {
     sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, NODE_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
-#else
+#아니면
 exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
                                        bool_t canGrant, bool_t canGrantReply,
                                        bool_t block, bool_t call)
 {
     sendIPC(block, call, badge, canGrant, canGrantReply, NODE_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 #endif
 
@@ -806,20 +806,20 @@ exception_t performInvocation_Notification(notification_t *ntfn, word_t badge)
 {
     sendSignal(ntfn, badge);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 exception_t performInvocation_Reply(tcb_t *thread, reply_t *reply, bool_t canGrant)
 {
     doReplyTransfer(thread, reply, canGrant);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
-#else
+#아니면
 exception_t performInvocation_Reply(tcb_t *thread, cte_t *slot, bool_t canGrant)
 {
     doReplyTransfer(NODE_STATE(ksCurThread), thread, slot, canGrant);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 #endif
 
@@ -832,57 +832,57 @@ word_t CONST cap_get_capSizeBits(cap_t cap)
 
     switch (ctag) {
     case cap_untyped_cap:
-        return cap_untyped_cap_get_capBlockSize(cap);
+        반환 cap_untyped_cap_get_capBlockSize(cap);
 
     case cap_endpoint_cap:
-        return seL4_EndpointBits;
+        반환 seL4_EndpointBits;
 
     case cap_notification_cap:
-        return seL4_NotificationBits;
+        반환 seL4_NotificationBits;
 
     case cap_cnode_cap:
-        return cap_cnode_cap_get_capCNodeRadix(cap) + seL4_SlotBits;
+        반환 cap_cnode_cap_get_capCNodeRadix(cap) + seL4_SlotBits;
 
     case cap_thread_cap:
-        return seL4_TCBBits;
+        반환 seL4_TCBBits;
 
     case cap_zombie_cap: {
         word_t type = cap_zombie_cap_get_capZombieType(cap);
-        if (type == ZombieType_ZombieTCB) {
-            return seL4_TCBBits;
+        만약 (type == ZombieType_ZombieTCB) {
+            반환 seL4_TCBBits;
         }
-        return ZombieType_ZombieCNode(type) + seL4_SlotBits;
+        반환 ZombieType_ZombieCNode(type) + seL4_SlotBits;
     }
 
     case cap_null_cap:
-        return 0;
+        반환 0;
 
     case cap_domain_cap:
-        return 0;
+        반환 0;
 
     case cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return seL4_ReplyBits;
-#else
-        return 0;
+        반환 seL4_ReplyBits;
+#아니면
+        반환 0;
 #endif
 
     case cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_control_cap:
 #endif
-        return 0;
+        반환 0;
 
     case cap_irq_handler_cap:
-        return 0;
+        반환 0;
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_context_cap:
-        return cap_sched_context_cap_get_capSCSizeBits(cap);
+        반환 cap_sched_context_cap_get_capSCSizeBits(cap);
 #endif
 
     default:
-        return cap_get_archCapSizeBits(cap);
+        반환 cap_get_archCapSizeBits(cap);
     }
 
 }
@@ -898,47 +898,47 @@ bool_t CONST cap_get_capIsPhysical(cap_t cap)
 
     switch (ctag) {
     case cap_untyped_cap:
-        return true;
+        반환 true;
 
     case cap_endpoint_cap:
-        return true;
+        반환 true;
 
     case cap_notification_cap:
-        return true;
+        반환 true;
 
     case cap_cnode_cap:
-        return true;
+        반환 true;
 
     case cap_thread_cap:
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_context_cap:
 #endif
-        return true;
+        반환 true;
 
     case cap_zombie_cap:
-        return true;
+        반환 true;
 
     case cap_domain_cap:
-        return false;
+        반환 false;
 
     case cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return true;
-#else
-        return false;
+        반환 true;
+#아니면
+        반환 false;
 #endif
 
     case cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_control_cap:
 #endif
-        return false;
+        반환 false;
 
     case cap_irq_handler_cap:
-        return false;
+        반환 false;
 
     default:
-        return cap_get_archCapIsPhysical(cap);
+        반환 cap_get_archCapIsPhysical(cap);
     }
 }
 
@@ -950,75 +950,75 @@ void *CONST cap_get_capPtr(cap_t cap)
 
     switch (ctag) {
     case cap_untyped_cap:
-        return WORD_PTR(cap_untyped_cap_get_capPtr(cap));
+        반환 WORD_PTR(cap_untyped_cap_get_capPtr(cap));
 
     case cap_endpoint_cap:
-        return EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
+        반환 EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
 
     case cap_notification_cap:
-        return NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
+        반환 NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 
     case cap_cnode_cap:
-        return CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
+        반환 CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
 
     case cap_thread_cap:
-        return TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
+        반환 TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
 
     case cap_zombie_cap:
-        return CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
+        반환 CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
 
     case cap_domain_cap:
-        return NULL;
+        반환 NULL;
 
     case cap_reply_cap:
 #ifdef CONFIG_KERNEL_MCS
-        return REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-#else
-        return NULL;
+        반환 REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
+#아니면
+        반환 NULL;
 #endif
 
     case cap_irq_control_cap:
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_control_cap:
 #endif
-        return NULL;
+        반환 NULL;
 
     case cap_irq_handler_cap:
-        return NULL;
+        반환 NULL;
 
 #ifdef CONFIG_KERNEL_MCS
     case cap_sched_context_cap:
-        return SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
+        반환 SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
 #endif
 
     default:
-        return cap_get_archCapPtr(cap);
+        반환 cap_get_archCapPtr(cap);
 
     }
 }
 
 bool_t CONST isCapRevocable(cap_t derivedCap, cap_t srcCap)
 {
-    if (isArchCap(derivedCap)) {
-        return Arch_isCapRevocable(derivedCap, srcCap);
+    만약 (isArchCap(derivedCap)) {
+        반환 Arch_isCapRevocable(derivedCap, srcCap);
     }
     switch (cap_get_capType(derivedCap)) {
     case cap_endpoint_cap:
-        return (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
+        반환 (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
                 cap_endpoint_cap_get_capEPBadge(srcCap));
 
     case cap_notification_cap:
-        return (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
+        반환 (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
                 cap_notification_cap_get_capNtfnBadge(srcCap));
 
     case cap_irq_handler_cap:
-        return (cap_get_capType(srcCap) ==
+        반환 (cap_get_capType(srcCap) ==
                 cap_irq_control_cap);
 
     case cap_untyped_cap:
-        return true;
+        반환 true;
 
     default:
-        return false;
+        반환 false;
     }
 }

@@ -40,19 +40,19 @@ static inline smc_args_t doSMC(smc_args_t smc_args)
     smc_args.arg[5] = r5;
     smc_args.arg[6] = r6;
     smc_args.arg[7] = r7;
-    return smc_args;
+    반환 smc_args;
 }
 
 static exception_t invokeSMCCall(smc_args_t smc_args, bool_t call)
 {
     smc_args = doSMC(smc_args);
 
-    if (call) {
+    만약 (call) {
         tcb_t *thread = NODE_STATE(ksCurThread);
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
 
         setRegister(thread, badgeRegister, 0);
-        for (word_t i = 0; i < NUM_SMC_REGS; i++) {
+        위해 (word_t i = 0; i < NUM_SMC_REGS; i++) {
             setMR(thread, ipcBuffer, i, smc_args.arg[i]);
         }
 
@@ -61,39 +61,39 @@ static exception_t invokeSMCCall(smc_args_t smc_args, bool_t call)
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t decodeARMSMCInvocation(word_t label, word_t length, cap_t cap, bool_t call, word_t *buffer)
 {
-    if (label != ARMSMCCall) {
+    만약 (label != ARMSMCCall) {
         userError("ARMSMCInvocation: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < NUM_SMC_REGS) {
+    만약 (length < NUM_SMC_REGS) {
         userError("ARMSMCCall: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     word_t badge = cap_smc_cap_get_capSMCBadge(cap);
     word_t smc_func_id = getSyscallArg(0, buffer);
 
-    if (badge != 0 && badge != smc_func_id) {
+    만약 (badge != 0 && badge != smc_func_id) {
         userError("ARMSMCCall: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     smc_args_t smc_args;
-    for (word_t i = 0; i < NUM_SMC_REGS; i++) {
+    위해 (word_t i = 0; i < NUM_SMC_REGS; i++) {
         smc_args.arg[i] = getSyscallArg(i, buffer);
     }
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSMCCall(smc_args, call);
+    반환 invokeSMCCall(smc_args, call);
 }
 
 #endif

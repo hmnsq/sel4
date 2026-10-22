@@ -44,18 +44,18 @@
  **/
 #ifdef CONFIG_IRQ_REPORTING
 static inline void checkInterrupt(bool_t was_interrupt_entry)
-#else
+#아니면
 static inline void checkInterrupt(void)
 #endif
 {
     irq_t irq;
 
     irq = getActiveIRQ();
-    if (IRQT_TO_IRQ(irq) != IRQT_TO_IRQ(irqInvalid)) {
+    만약 (IRQT_TO_IRQ(irq) != IRQT_TO_IRQ(irqInvalid)) {
         handleInterrupt(irq);
-    } else {
+    } 아니면 {
 #ifdef CONFIG_IRQ_REPORTING
-        if (was_interrupt_entry) {
+        만약 (was_interrupt_entry) {
             userError("Spurious interrupt!");
         }
 #endif
@@ -74,7 +74,7 @@ static inline void checkInterrupt(void)
 exception_t handleInterruptEntry(void)
 {
 #ifdef CONFIG_KERNEL_MCS
-    if (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
+    만약 (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
         updateTimestamp();
         checkBudget();
     }
@@ -83,7 +83,7 @@ exception_t handleInterruptEntry(void)
     checkInterrupt(/* was_interrupt_entry */ true);
 
 #ifdef CONFIG_KERNEL_MCS
-    if (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
+    만약 (SMP_TERNARY(clh_is_self_in_queue(), 1)) {
 #endif
         schedule();
         activateThread();
@@ -91,45 +91,45 @@ exception_t handleInterruptEntry(void)
     }
 #endif
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t handleUnknownSyscall(word_t w)
 {
 #ifdef CONFIG_PRINTING
-    if (w == SysDebugPutChar) {
+    만약 (w == SysDebugPutChar) {
         kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
-    if (w == SysDebugDumpScheduler) {
+    만약 (w == SysDebugDumpScheduler) {
 #ifdef CONFIG_DEBUG_BUILD
         debug_dumpScheduler();
 #endif
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 #endif
 #ifdef CONFIG_DEBUG_BUILD
-    if (w == SysDebugHalt) {
+    만약 (w == SysDebugHalt) {
         tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
         printf("Debug halt syscall from user thread %p \"%s\"\n", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
         halt();
     }
-    if (w == SysDebugSnapshot) {
+    만약 (w == SysDebugSnapshot) {
         tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
         printf("Debug snapshot syscall from user thread %p \"%s\"\n",
                tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
         debug_capDL();
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
-    if (w == SysDebugCapIdentify) {
+    만약 (w == SysDebugCapIdentify) {
         word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
         lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
         word_t cap_type = cap_get_capType(lu_ret.cap);
         setRegister(NODE_STATE(ksCurThread), capRegister, cap_type);
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 
-    if (w == SysDebugNameThread) {
+    만약 (w == SysDebugNameThread) {
         /* This is a syscall meant to aid debugging, so if anything goes wrong
          * then assume the system is completely misconfigured and halt */
         const char *name;
@@ -138,107 +138,107 @@ exception_t handleUnknownSyscall(word_t w)
         lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
         /* ensure we got a TCB cap */
         word_t cap_type = cap_get_capType(lu_ret.cap);
-        if (cap_type != cap_thread_cap) {
+        만약 (cap_type != cap_thread_cap) {
             userError("SysDebugNameThread: cap is not a TCB, halting");
             halt();
         }
         /* Add 1 to the IPC buffer to skip the message info word */
         name = (const char *)(lookupIPCBuffer(true, NODE_STATE(ksCurThread)) + 1);
-        if (!name) {
+        만약 (!name) {
             userError("SysDebugNameThread: Failed to lookup IPC buffer, halting");
             halt();
         }
         /* ensure the name isn't too long */
         len = strnlen(name, seL4_MsgMaxLength * sizeof(word_t));
-        if (len == seL4_MsgMaxLength * sizeof(word_t)) {
+        만약 (len == seL4_MsgMaxLength * sizeof(word_t)) {
             userError("SysDebugNameThread: Name too long, halting");
             halt();
         }
         setThreadName(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 #ifdef ENABLE_SMP_SUPPORT
-    if (w == SysDebugGetThreadAffinity) {
+    만약 (w == SysDebugGetThreadAffinity) {
         word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
         lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
         /* ensure we got a TCB cap */
         word_t cap_type = cap_get_capType(lu_ret.cap);
-        if (cap_type != cap_thread_cap) {
+        만약 (cap_type != cap_thread_cap) {
             userError("SysDebugGetThreadAffinity: cap is not a TCB, halting");
             halt();
         }
         word_t affinity = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap))->tcbAffinity;
         setRegister(NODE_STATE(ksCurThread), capRegister, affinity);
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
-    if (w == SysDebugSendIPI) {
-        return handle_SysDebugSendIPI();
+    만약 (w == SysDebugSendIPI) {
+        반환 handle_SysDebugSendIPI();
     }
 #endif /* ENABLE_SMP_SUPPORT */
 #endif /* CONFIG_DEBUG_BUILD */
 
 #ifdef CONFIG_DANGEROUS_CODE_INJECTION
-    if (w == SysDebugRun) {
+    만약 (w == SysDebugRun) {
         ((void (*)(void *))getRegister(NODE_STATE(ksCurThread), capRegister))((void *)getRegister(NODE_STATE(ksCurThread),
                                                                                                   msgInfoRegister));
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 #endif
 
 #ifdef CONFIG_KERNEL_X86_DANGEROUS_MSR
-    if (w == SysX86DangerousWRMSR) {
+    만약 (w == SysX86DangerousWRMSR) {
         uint64_t val;
         uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
-        if (CONFIG_WORD_SIZE == 32) {
+        만약 (CONFIG_WORD_SIZE == 32) {
             val = (uint64_t)getSyscallArg(0, NULL) | ((uint64_t)getSyscallArg(1, NULL) << 32);
-        } else {
+        } 아니면 {
             val = getSyscallArg(0, NULL);
         }
         x86_wrmsr(reg, val);
-        return EXCEPTION_NONE;
-    } else if (w == SysX86DangerousRDMSR) {
+        반환 EXCEPTION_NONE;
+    } 아니면 만약 (w == SysX86DangerousRDMSR) {
         uint64_t val;
         uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
         val = x86_rdmsr(reg);
-        int num = 1;
-        if (CONFIG_WORD_SIZE == 32) {
+        정수 num = 1;
+        만약 (CONFIG_WORD_SIZE == 32) {
             setMR(NODE_STATE(ksCurThread), NULL, 0, val & 0xffffffff);
             setMR(NODE_STATE(ksCurThread), NULL, 1, val >> 32);
             num++;
-        } else {
+        } 아니면 {
             setMR(NODE_STATE(ksCurThread), NULL, 0, val);
         }
         setRegister(NODE_STATE(ksCurThread), msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, num)));
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 #endif
 
 #ifdef CONFIG_ENABLE_BENCHMARKS
     switch (w) {
     case SysBenchmarkFlushCaches:
-        return handle_SysBenchmarkFlushCaches();
+        반환 handle_SysBenchmarkFlushCaches();
     case SysBenchmarkResetLog:
-        return handle_SysBenchmarkResetLog();
+        반환 handle_SysBenchmarkResetLog();
     case SysBenchmarkFinalizeLog:
-        return handle_SysBenchmarkFinalizeLog();
+        반환 handle_SysBenchmarkFinalizeLog();
 #ifdef CONFIG_KERNEL_LOG_BUFFER
     case SysBenchmarkSetLogBuffer:
-        return handle_SysBenchmarkSetLogBuffer();
+        반환 handle_SysBenchmarkSetLogBuffer();
 #endif /* CONFIG_KERNEL_LOG_BUFFER */
 #ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
     case SysBenchmarkGetThreadUtilisation:
-        return handle_SysBenchmarkGetThreadUtilisation();
+        반환 handle_SysBenchmarkGetThreadUtilisation();
     case SysBenchmarkResetThreadUtilisation:
-        return handle_SysBenchmarkResetThreadUtilisation();
+        반환 handle_SysBenchmarkResetThreadUtilisation();
 #ifdef CONFIG_DEBUG_BUILD
     case SysBenchmarkDumpAllThreadsUtilisation:
-        return handle_SysBenchmarkDumpAllThreadsUtilisation();
+        반환 handle_SysBenchmarkDumpAllThreadsUtilisation();
     case SysBenchmarkResetAllThreadsUtilisation:
-        return handle_SysBenchmarkResetAllThreadsUtilisation();
+        반환 handle_SysBenchmarkResetAllThreadsUtilisation();
 #endif /* CONFIG_DEBUG_BUILD */
 #endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
     case SysBenchmarkNullSyscall:
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     default:
         break; /* syscall is not for benchmarking */
     } /* end switch(w) */
@@ -246,7 +246,7 @@ exception_t handleUnknownSyscall(word_t w)
 
     MCS_DO_IF_BUDGET({
 #ifdef CONFIG_SET_TLS_BASE_SELF
-        if (w == SysSetTLSBase)
+        만약 (w == SysSetTLSBase)
         {
             word_t tls_base = getRegister(NODE_STATE(ksCurThread), capRegister);
             /*
@@ -254,7 +254,7 @@ exception_t handleUnknownSyscall(word_t w)
              * value. For many architectures, the TLS variables only get
              * updated on a thread switch.
              */
-            return Arch_setTLSRegister(tls_base);
+            반환 Arch_setTLSRegister(tls_base);
         }
 #endif
         current_fault = seL4_Fault_UnknownSyscall_new(w);
@@ -264,7 +264,7 @@ exception_t handleUnknownSyscall(word_t w)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t handleUserLevelFault(word_t w_a, word_t w_b)
@@ -276,7 +276,7 @@ exception_t handleUserLevelFault(word_t w_a, word_t w_b)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t handleVMFaultEvent(vm_fault_type_t vm_faultType)
@@ -284,7 +284,7 @@ exception_t handleVMFaultEvent(vm_fault_type_t vm_faultType)
     MCS_DO_IF_BUDGET({
 
         exception_t status = handleVMFault(NODE_STATE(ksCurThread), vm_faultType);
-        if (status != EXCEPTION_NONE)
+        만약 (status != EXCEPTION_NONE)
         {
             handleFault(NODE_STATE(ksCurThread));
         }
@@ -293,12 +293,12 @@ exception_t handleVMFaultEvent(vm_fault_type_t vm_faultType)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_KERNEL_MCS
 static exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t firstPhase, cptr_t cptr)
-#else
+#아니면
 static exception_t handleInvocation(bool_t isCall, bool_t isBlocking)
 #endif
 {
@@ -319,32 +319,32 @@ static exception_t handleInvocation(bool_t isCall, bool_t isBlocking)
     /* faulting section */
     lu_ret = lookupCapAndSlot(thread, cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    만약 (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Invocation of invalid cap #%lu.", cptr);
         current_fault = seL4_Fault_CapFault_new(cptr, false);
 
-        if (isBlocking) {
+        만약 (isBlocking) {
             handleFault(thread);
         }
 
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 
     buffer = lookupIPCBuffer(false, thread);
 
     status = lookupExtraCaps(thread, buffer, info);
 
-    if (unlikely(status != EXCEPTION_NONE)) {
+    만약 (unlikely(status != EXCEPTION_NONE)) {
         userError("Lookup of extra caps failed.");
-        if (isBlocking) {
+        만약 (isBlocking) {
             handleFault(thread);
         }
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 
     /* Syscall error/Preemptible section */
     length = seL4_MessageInfo_get_length(info);
-    if (unlikely(length > n_msgRegisters && !buffer)) {
+    만약 (unlikely(length > n_msgRegisters && !buffer)) {
         /* If no IPC buffer is present the kernel truncates the maximum message length to n_msgRegisters.
          * The kernel truncates rather than returns because not all message transfer points in the kernel
          * are allowed to return an error.
@@ -357,32 +357,32 @@ static exception_t handleInvocation(bool_t isCall, bool_t isBlocking)
                               cptr, lu_ret.slot, lu_ret.cap,
                               isBlocking, isCall,
                               canDonate, firstPhase, buffer);
-#else
+#아니면
     status = decodeInvocation(seL4_MessageInfo_get_label(info), length,
                               cptr, lu_ret.slot, lu_ret.cap,
                               isBlocking, isCall, buffer);
 #endif
 
-    if (unlikely(status == EXCEPTION_PREEMPTED)) {
-        return status;
+    만약 (unlikely(status == EXCEPTION_PREEMPTED)) {
+        반환 status;
     }
 
-    if (unlikely(status == EXCEPTION_SYSCALL_ERROR)) {
-        if (isCall) {
+    만약 (unlikely(status == EXCEPTION_SYSCALL_ERROR)) {
+        만약 (isCall) {
             replyFromKernel_error(thread);
         }
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 
-    if (unlikely(
+    만약 (unlikely(
             thread_state_get_tsType(thread->tcbState) == ThreadState_Restart)) {
-        if (isCall) {
+        만약 (isCall) {
             replyFromKernel_success_empty(thread);
         }
         setThreadState(thread, ThreadState_Running);
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_KERNEL_MCS
@@ -390,24 +390,24 @@ static inline lookupCap_ret_t lookupReply(void)
 {
     word_t replyCPtr = getRegister(NODE_STATE(ksCurThread), replyRegister);
     lookupCap_ret_t lu_ret = lookupCap(NODE_STATE(ksCurThread), replyCPtr);
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    만약 (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         userError("Reply cap lookup failed");
         /* current_lookup_fault has been set by lookupCap */
         current_fault = seL4_Fault_CapFault_new(replyCPtr, true);
-        return lu_ret;
+        반환 lu_ret;
     }
 
-    if (unlikely(cap_get_capType(lu_ret.cap) != cap_reply_cap)) {
+    만약 (unlikely(cap_get_capType(lu_ret.cap) != cap_reply_cap)) {
         userError("Cap in reply slot is not a reply cap");
         current_lookup_fault = lookup_fault_missing_capability_new(0);
         current_fault = seL4_Fault_CapFault_new(replyCPtr, true);
         lu_ret.status = EXCEPTION_FAULT;
-        return lu_ret;
+        반환 lu_ret;
     }
 
-    return lu_ret;
+    반환 lu_ret;
 }
-#else
+#아니면
 static void handleReply(void)
 {
     cte_t *callerSlot;
@@ -420,7 +420,7 @@ static void handleReply(void)
     case cap_reply_cap: {
         tcb_t *caller;
 
-        if (cap_reply_cap_get_capReplyMaster(callerCap)) {
+        만약 (cap_reply_cap_get_capReplyMaster(callerCap)) {
             break;
         }
         caller = TCB_PTR(cap_reply_cap_get_capTCBPtr(callerCap));
@@ -429,12 +429,12 @@ static void handleReply(void)
         assert(caller != NODE_STATE(ksCurThread));
         doReplyTransfer(NODE_STATE(ksCurThread), caller, callerSlot,
                         cap_reply_cap_get_capReplyCanGrant(callerCap));
-        return;
+        반환;
     }
 
     case cap_null_cap:
         /* Do nothing when no caller is pending */
-        return;
+        반환;
 
     default:
         break;
@@ -446,7 +446,7 @@ static void handleReply(void)
 
 #ifdef CONFIG_KERNEL_MCS
 static void handleRecv(bool_t isBlocking, bool_t canReply)
-#else
+#아니면
 static void handleRecv(bool_t isBlocking)
 #endif
 {
@@ -457,16 +457,16 @@ static void handleRecv(bool_t isBlocking)
 
     lu_ret = lookupCap(NODE_STATE(ksCurThread), epCPtr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
+    만약 (unlikely(lu_ret.status != EXCEPTION_NONE)) {
         /* current_lookup_fault has been set by lookupCap */
         current_fault = seL4_Fault_CapFault_new(epCPtr, true);
         handleFault(NODE_STATE(ksCurThread));
-        return;
+        반환;
     }
 
     switch (cap_get_capType(lu_ret.cap)) {
     case cap_endpoint_cap:
-        if (unlikely(!cap_endpoint_cap_get_capCanReceive(lu_ret.cap))) {
+        만약 (unlikely(!cap_endpoint_cap_get_capCanReceive(lu_ret.cap))) {
             current_lookup_fault = lookup_fault_missing_capability_new(0);
             current_fault = seL4_Fault_CapFault_new(epCPtr, true);
             handleFault(NODE_STATE(ksCurThread));
@@ -476,18 +476,18 @@ static void handleRecv(bool_t isBlocking)
 #ifdef CONFIG_KERNEL_MCS
         cap_t ep_cap = lu_ret.cap;
         cap_t reply_cap = cap_null_cap_new();
-        if (canReply) {
+        만약 (canReply) {
             lu_ret = lookupReply();
-            if (lu_ret.status != EXCEPTION_NONE) {
+            만약 (lu_ret.status != EXCEPTION_NONE) {
                 /* lookup_fault has been set by lookupReply */
                 handleFault(NODE_STATE(ksCurThread));
-                return;
-            } else {
+                반환;
+            } 아니면 {
                 reply_cap = lu_ret.cap;
             }
         }
         receiveIPC(NODE_STATE(ksCurThread), ep_cap, isBlocking, reply_cap);
-#else
+#아니면
         deleteCallerCap(NODE_STATE(ksCurThread));
         receiveIPC(NODE_STATE(ksCurThread), lu_ret.cap, isBlocking);
 #endif
@@ -498,7 +498,7 @@ static void handleRecv(bool_t isBlocking)
         tcb_t *boundTCB;
         ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(lu_ret.cap));
         boundTCB = (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr);
-        if (unlikely(!cap_notification_cap_get_capNtfnCanReceive(lu_ret.cap)
+        만약 (unlikely(!cap_notification_cap_get_capNtfnCanReceive(lu_ret.cap)
                      || (boundTCB && boundTCB != NODE_STATE(ksCurThread)))) {
             current_lookup_fault = lookup_fault_missing_capability_new(0);
             current_fault = seL4_Fault_CapFault_new(epCPtr, true);
@@ -523,13 +523,13 @@ static inline void mcsPreemptionPoint(void)
     /* at this point we could be handling a timer interrupt which actually ends the current
      * threads timeslice. However, preemption is possible on revoke, which could have deleted
      * the current thread and/or the current scheduling context, rendering them invalid. */
-    if (isSchedulable(NODE_STATE(ksCurThread))) {
+    만약 (isSchedulable(NODE_STATE(ksCurThread))) {
         /* if the thread is schedulable, the tcb and scheduling context are still valid */
         checkBudget();
-    } else if (sc_active(NODE_STATE(ksCurSC))) {
+    } 아니면 만약 (sc_active(NODE_STATE(ksCurSC))) {
         /* otherwise, if the thread is not schedulable, the SC could be valid - charge it if so */
         chargeBudget(NODE_STATE(ksConsumed), false);
-    } else {
+    } 아니면 {
         /* If the current SC is no longer configured the time can no
          * longer be charged to it. Simply dropping the consumed time
          * here is equivalent to having charged the consumed time and
@@ -537,7 +537,7 @@ static inline void mcsPreemptionPoint(void)
         NODE_STATE(ksConsumed) = 0;
     }
 }
-#else
+#아니면
 #define handleRecv(isBlocking, canReply) handleRecv(isBlocking)
 #define mcsPreemptionPoint()
 #define handleInvocation(isCall, isBlocking, canDonate, firstPhase, cptr) handleInvocation(isCall, isBlocking)
@@ -552,7 +552,7 @@ static void handleYield(void)
     chargeBudget(head.rAmount, false);
     /* Manually updated the scConsumed so that the full timeslice isn't added, just what was consumed */
     NODE_STATE(ksCurSC)->scConsumed = consumed;
-#else
+#아니면
     tcbSchedDequeue(NODE_STATE(ksCurThread));
     SCHED_APPEND_CURRENT_TCB;
     rescheduleRequired();
@@ -567,7 +567,7 @@ exception_t handleSyscall(syscall_t syscall)
         {
         case SysSend:
             ret = handleInvocation(false, true, false, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
             }
@@ -576,7 +576,7 @@ exception_t handleSyscall(syscall_t syscall)
 
         case SysNBSend:
             ret = handleInvocation(false, false, false, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
             }
@@ -584,7 +584,7 @@ exception_t handleSyscall(syscall_t syscall)
 
         case SysCall:
             ret = handleInvocation(true, true, true, false, getRegister(NODE_STATE(ksCurThread), capRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
             }
@@ -603,7 +603,7 @@ exception_t handleSyscall(syscall_t syscall)
             handleRecv(true, true);
             break;
 
-#else /* CONFIG_KERNEL_MCS */
+#아니면 /* CONFIG_KERNEL_MCS */
         case SysWait:
             handleRecv(true, false);
             break;
@@ -615,7 +615,7 @@ exception_t handleSyscall(syscall_t syscall)
             cptr_t reply = getRegister(NODE_STATE(ksCurThread), replyRegister);
             ret = handleInvocation(false, false, true, true, reply);
             /* reply is not preemptible, but to ease verification we check explicitly */
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
                 break;
@@ -627,7 +627,7 @@ exception_t handleSyscall(syscall_t syscall)
         case SysNBSendRecv: {
             cptr_t dest = getNBSendRecvDest();
             ret = handleInvocation(false, false, true, true, dest);
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
                 break;
@@ -638,7 +638,7 @@ exception_t handleSyscall(syscall_t syscall)
 
         case SysNBSendWait:
             ret = handleInvocation(false, false, true, true, getRegister(NODE_STATE(ksCurThread), replyRegister));
-            if (unlikely(ret != EXCEPTION_NONE)) {
+            만약 (unlikely(ret != EXCEPTION_NONE)) {
                 mcsPreemptionPoint();
                 checkInterrupt(/* was_interrupt_entry */ false);
                 break;
@@ -663,5 +663,5 @@ exception_t handleSyscall(syscall_t syscall)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }

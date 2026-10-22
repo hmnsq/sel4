@@ -30,7 +30,7 @@ void VISIBLE NORETURN restore_user_context(void)
 
     NODE_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    만약 (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         asm volatile(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
@@ -53,7 +53,7 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
+    } 아니면 {
         asm volatile("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"

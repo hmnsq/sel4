@@ -15,7 +15,7 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
+    만약 (clh_is_ipi_pending(getCurrentCPUIndex())) {
         switch (call) {
         case IpiRemoteCall_Stall:
             ipiStallCoreCallback(irqPath);
@@ -49,7 +49,7 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
             break;
 #endif
 
-#if defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
+#만약 defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined ENABLE_SMP_SUPPORT
         case IpiRemoteCall_VCPUInjectInterrupt: {
             virq_t virq;
             virq.words[0] = arg2;

@@ -95,7 +95,7 @@ static inline bool_t vmxon(paddr_t vmxon_region)
         : "m"(vmxonreg)
         : "memory", "cc"
     );
-    return !!error;
+    반환 !!error;
 }
 
 static void vmclear(void *vmcs_ptr)
@@ -113,11 +113,11 @@ static void vmclear(void *vmcs_ptr)
 void clearCurrentVCPU(void)
 {
     vcpu_t *vcpu = ARCH_NODE_STATE(x86KSCurrentVCPU);
-    if (vcpu) {
+    만약 (vcpu) {
         vmclear(vcpu);
         vcpu->launched = false;
         ARCH_NODE_STATE(x86KSCurrentVCPU) = NULL;
-        if (vcpu->fpu_active && vcpu->vcpuTCB) {
+        만약 (vcpu->fpu_active && vcpu->vcpuTCB) {
             fpuRelease(vcpu->vcpuTCB);
             vcpu->fpu_active = false;
         }
@@ -159,7 +159,7 @@ void vcpu_restore_host_msrs(void)
 static void switchVCPU(vcpu_t *vcpu)
 {
 #ifdef ENABLE_SMP_SUPPORT
-    if (vcpu->last_cpu != getCurrentCPUIndex() && ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
+    만약 (vcpu->last_cpu != getCurrentCPUIndex() && ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
         /* vcpu is currently loaded on another core, need to do vmclear on that core */
         doRemoteClearCurrentVCPU(vcpu->last_cpu);
     }
@@ -167,7 +167,7 @@ static void switchVCPU(vcpu_t *vcpu)
     clearCurrentVCPU();
     vmptrld(vcpu);
 #ifdef ENABLE_SMP_SUPPORT
-    if (vcpu->last_cpu != getCurrentCPUIndex()) {
+    만약 (vcpu->last_cpu != getCurrentCPUIndex()) {
         /* migrate host state */
         vmwrite(VMX_HOST_TR_BASE, (word_t)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss);
         vmwrite(VMX_HOST_GDTR_BASE, (word_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSgdt);
@@ -183,12 +183,12 @@ static void switchVCPU(vcpu_t *vcpu)
 static void print_bits(word_t bits)
 {
     bool_t first = true;
-    while (bits) {
-        int index = seL4_WordBits - 1 - clzl(bits);
-        if (first) {
+    동안 (bits) {
+        정수 index = seL4_WordBits - 1 - clzl(bits);
+        만약 (first) {
             printf("%d", index);
             first = false;
-        } else {
+        } 아니면 {
             printf(",%d", index);
         }
         bits &= ~BIT(index);
@@ -208,33 +208,33 @@ static bool_t check_fixed_value(word_t val, word_t low, word_t high)
      * and if not each bit set indicates a bit we had
      * failed to set */
     not_high = high & ~(high & val);
-    if (not_high != 0) {
+    만약 (not_high != 0) {
         printf("Failed to set bits: ");
         print_bits(not_high);
-        return false;
+        반환 false;
     }
     /* we can do the same thing for finding things
      * that should be low by first inverting */
     not_low = ~low & ~(~low & ~val);
-    if (not_low != 0) {
+    만약 (not_low != 0) {
         printf("Incorrectly cleared bits: ");
         print_bits(not_low);
-        return false;
+        반환 false;
     }
-    return true;
+    반환 true;
 }
 
 static bool_t vtx_check_fixed_values(word_t cr0, word_t cr4)
 {
-    if (!check_fixed_value(cr0, cr0_low, cr0_high)) {
+    만약 (!check_fixed_value(cr0, cr0_low, cr0_high)) {
         printf(" of CR0\n");
-        return false;
+        반환 false;
     }
-    if (!check_fixed_value(cr4, cr4_low, cr4_high)) {
+    만약 (!check_fixed_value(cr4, cr4_low, cr4_high)) {
         printf(" of CR4\n");
-        return false;
+        반환 false;
     }
-    return true;
+    반환 true;
 }
 
 static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
@@ -263,12 +263,12 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     uint32_t procbased_ctls;
     uint32_t exit_ctls;
     uint32_t entry_ctls;
-    if (useTrueMsrs) {
+    만약 (useTrueMsrs) {
         pinbased_ctls = IA32_VMX_TRUE_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_TRUE_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_TRUE_EXIT_CTLS_MSR;
         entry_ctls = IA32_VMX_TRUE_ENTRY_CTLS_MSR;
-    } else {
+    } 아니면 {
         pinbased_ctls = IA32_VMX_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_EXIT_CTLS_MSR;
@@ -301,33 +301,33 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
      * > If this control is 1, CR0.PE and CR0.PG may be 0 in VMX non-root operation (even if the capability
      * > MSR IA32_VMX_CR0_FIXED0 reports otherwise). Such processors allow guest software to run in
      * > unpaged protected mode or in real-address mode. */
-    if (secondary_control_low & BIT(7)) {
+    만약 (secondary_control_low & BIT(7)) {
         cr0_high &= ~(CR0_PE | CR0_PG);
     }
 
     /* Check for VPID support */
-    if (!(secondary_control_low & BIT(5))) {
+    만약 (!(secondary_control_low & BIT(5))) {
         vmx_feature_vpid = 0;
         printf("vt-x: VPIDs are not supported. Expect performance degradation\n");
-    } else {
+    } 아니면 {
         vmx_feature_vpid = 1;
         secondary_control_mask |= BIT(5);
     }
 
     /* Check for load perf global control */
-    if (!(exit_control_low & BIT(12))) {
+    만약 (!(exit_control_low & BIT(12))) {
         vmx_feature_load_perf_global_ctrl = 0;
         printf("vt-x: Load IA32_PERF_GLOBAL_CONTROL not supported. Hardware debugging may not work\n");
-    } else {
+    } 아니면 {
         vmx_feature_load_perf_global_ctrl = 1;
         exit_control_mask |= BIT(12);
     }
 
     /* Check for external interrupt exiting */
-    if (!(exit_control_low & BIT(15))) {
+    만약 (!(exit_control_low & BIT(15))) {
         vmx_feature_ack_on_exit = 0;
         printf("vt-x: Interrupt ack on exit not supported. Expect performance degradation\n");
-    } else {
+    } 아니면 {
         vmx_feature_ack_on_exit = 1;
         exit_control_mask |= BIT(15);
     }
@@ -335,30 +335,30 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     /* See if the hardware requires bits that require to be high to be low */
     uint32_t missing;
     missing = (~pin_control_low) & pin_control_mask;
-    if (missing) {
+    만약 (missing) {
         printf("vt-x: Unsupported pin control features %lx\n", (long)missing);
-        return false;
+        반환 false;
     }
     missing = (~primary_control_low) & primary_control_mask;
-    if (missing) {
+    만약 (missing) {
         printf("vt-x: Unsupported primary control features %lx\n", (long)missing);
-        return false;
+        반환 false;
     }
     missing = (~secondary_control_low) & secondary_control_mask;
-    if (missing) {
+    만약 (missing) {
         printf("vt-x: Unsupported secondary control features %lx\n", (long)missing);
-        return false;
+        반환 false;
     }
     missing = (~exit_control_low) & exit_control_mask;
-    if (missing) {
+    만약 (missing) {
         printf("vt-x: Unsupported exit control features %lx\n", (long)missing);
-        return false;
+        반환 false;
     }
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
     missing = (~entry_control_low) & BIT(9);
-    if (missing) {
+    만약 (missing) {
         printf("vt-x: CPU does not support 64-bit guests\n");
-        return false;
+        반환 false;
     }
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
@@ -368,7 +368,7 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     secondary_control_high |= secondary_control_mask;
     exit_control_high |= exit_control_mask;
 
-    return true;
+    반환 true;
 }
 
 static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
@@ -377,12 +377,12 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
     uint32_t procbased_ctls;
     uint32_t exit_ctls;
     uint32_t entry_ctls;
-    if (useTrueMsrs) {
+    만약 (useTrueMsrs) {
         pinbased_ctls = IA32_VMX_TRUE_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_TRUE_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_TRUE_EXIT_CTLS_MSR;
         entry_ctls = IA32_VMX_TRUE_ENTRY_CTLS_MSR;
-    } else {
+    } 아니면 {
         pinbased_ctls = IA32_VMX_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_EXIT_CTLS_MSR;
@@ -405,7 +405,7 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
     uint32_t local_cr4_low = x86_rdmsr_low(IA32_VMX_CR4_FIXED1_MSR);
 
     /* See "init_vtx_fixed_values" */
-    if (local_secondary_control_low & BIT(7)) {
+    만약 (local_secondary_control_low & BIT(7)) {
         local_cr0_high &= ~(CR0_PE | CR0_PG);
     }
 
@@ -416,7 +416,7 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
      * be high that this core requires to be low. This can be checked with
      * '~local_low & high == 0'
      */
-    return
+    반환
         (local_pin_control_high & pin_control_high) == local_pin_control_high &&
         (~local_pin_control_low & pin_control_high) == 0 &&
         (local_primary_control_high & primary_control_high) == local_primary_control_high &&
@@ -437,7 +437,7 @@ static inline uint32_t applyFixedBits(uint32_t original, uint32_t high, uint32_t
 {
     original |= high;
     original &= low;
-    return original;
+    반환 original;
 }
 
 void vcpu_init(vcpu_t *vcpu)
@@ -465,7 +465,7 @@ void vcpu_init(vcpu_t *vcpu)
     // By default we will disable performance counters when we come out
     // of a VM. When performance counters are supported this host state
     // needs to be updated on VM entry
-    if (vmx_feature_load_perf_global_ctrl) {
+    만약 (vmx_feature_load_perf_global_ctrl) {
         vmwrite(VMX_HOST_PERF_GLOBAL_CTRL, 0);
     }
     vmwrite(VMX_HOST_CR0, read_cr0());
@@ -477,7 +477,7 @@ void vcpu_init(vcpu_t *vcpu)
     vmwrite(VMX_HOST_IDTR_BASE, (word_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt);
     vmwrite(VMX_HOST_SYSENTER_CS, (word_t)SEL_CS_0);
     vmwrite(VMX_HOST_SYSENTER_EIP, (word_t)&handle_syscall);
-    if (!config_set(CONFIG_HARDWARE_DEBUG_API)) {
+    만약 (!config_set(CONFIG_HARDWARE_DEBUG_API)) {
         vmwrite(VMX_HOST_SYSENTER_ESP, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0] +
                                                           4));
     }
@@ -536,30 +536,30 @@ static void dissociateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
 
 void vcpu_finalise(vcpu_t *vcpu)
 {
-    if (ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
+    만약 (ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
 #ifdef ENABLE_SMP_SUPPORT
-        if (vcpu->last_cpu != getCurrentCPUIndex()) {
+        만약 (vcpu->last_cpu != getCurrentCPUIndex()) {
             doRemoteClearCurrentVCPU(vcpu->last_cpu);
-        } else
+        } 아니면
 #endif /* ENABLE_SMP_SUPPORT */
         {
             clearCurrentVCPU();
         }
     }
-    if (vcpu->vcpuTCB) {
+    만약 (vcpu->vcpuTCB) {
         dissociateVcpuTcb(vcpu->vcpuTCB, vcpu);
     }
-    if (vcpu->vpid != VPID_INVALID) {
+    만약 (vcpu->vpid != VPID_INVALID) {
         releaseVPID(vcpu->vpid);
     }
 }
 
 static void associateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (tcb->tcbArch.tcbVCPU) {
+    만약 (tcb->tcbArch.tcbVCPU) {
         dissociateVcpuTcb(tcb, tcb->tcbArch.tcbVCPU);
     }
-    if (vcpu->vcpuTCB) {
+    만약 (vcpu->vcpuTCB) {
         dissociateVcpuTcb(vcpu->vcpuTCB, vcpu);
     }
     vcpu->vcpuTCB = tcb;
@@ -568,26 +568,26 @@ static void associateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
 
 static exception_t invokeVCPUWriteRegisters(vcpu_t *vcpu, word_t *buffer)
 {
-    int i;
-    for (i = 0; i < n_vcpu_gp_register; i++) {
+    정수 i;
+    위해 (i = 0; i < n_vcpu_gp_register; i++) {
         vcpu->gp_registers[i] = getSyscallArg(i, buffer);
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeVCPUWriteRegisters(cap_t cap, word_t length, word_t *buffer)
 {
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-    if (length < 15) {
-#else
-    if (length < 7) {
+    만약 (length < 15) {
+#아니면
+    만약 (length < 7) {
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         userError("VCPU WriteRegisters: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeVCPUWriteRegisters(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer);
+    반환 invokeVCPUWriteRegisters(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer);
 }
 
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
@@ -595,7 +595,7 @@ static exception_t invokeWriteMSR(vcpu_t *vcpu, word_t *buffer, word_t field, wo
 {
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
     switch (field) {
@@ -614,7 +614,7 @@ static exception_t invokeWriteMSR(vcpu_t *vcpu, word_t *buffer, word_t field, wo
     }
     setMR(thread, buffer, 0, value);
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeVCPUWriteMSR(cap_t cap, word_t length, word_t *buffer)
@@ -622,10 +622,10 @@ static exception_t decodeVCPUWriteMSR(cap_t cap, word_t length, word_t *buffer)
     word_t field;
     word_t value;
 
-    if (length < 2) {
+    만약 (length < 2) {
         userError("VCPU WriteMSR: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     field = getSyscallArg(0, buffer);
@@ -639,9 +639,9 @@ static exception_t decodeVCPUWriteMSR(cap_t cap, word_t length, word_t *buffer)
     default:
         userError("VCPU WriteMSR: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeWriteMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer, field, value);
+    반환 invokeWriteMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer, field, value);
 }
 
 static exception_t invokeReadMSR(vcpu_t *vcpu, word_t field, word_t *buffer)
@@ -673,15 +673,15 @@ static exception_t invokeReadMSR(vcpu_t *vcpu, word_t field, word_t *buffer)
     setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                     seL4_MessageInfo_new(0, 0, 0, 1)));
     setThreadState(thread, ThreadState_Restart);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeVCPUReadMSR(cap_t cap, word_t length, word_t *buffer)
 {
-    if (length < 1) {
+    만약 (length < 1) {
         userError("VCPU ReadMSR: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
     word_t field = getSyscallArg(0, buffer);
     switch (field) {
@@ -694,9 +694,9 @@ static exception_t decodeVCPUReadMSR(cap_t cap, word_t length, word_t *buffer)
     default:
         userError("VCPU ReadMSR: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeReadMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, buffer);
+    반환 invokeReadMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, buffer);
 }
 #endif  /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
@@ -712,7 +712,7 @@ static exception_t invokeEnableIOPort(vcpu_t *vcpu, cte_t *slot, cap_t cap, uint
     cap = cap_io_port_cap_set_capIOPortVPID(cap, vcpu->vpid);
     slot->cap = cap;
     setIOPortMask(vcpu->io, low, high, false);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeEnableIOPort(cap_t cap, word_t length, word_t *buffer)
@@ -722,46 +722,46 @@ static exception_t decodeEnableIOPort(cap_t cap, word_t length, word_t *buffer)
     cte_t *ioSlot;
     uint16_t low, high;
 
-    if (length < 2) {
+    만약 (length < 2) {
         userError("VCPU EnableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    만약 (current_extra_caps.excaprefs[0] == NULL) {
         userError("VCPU EnableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
     ioSlot = current_extra_caps.excaprefs[0];
     ioCap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(ioCap) != cap_io_port_cap) {
+    만약 (cap_get_capType(ioCap) != cap_io_port_cap) {
         userError("VCPU EnableIOPort: IOPort cap is not a IOPort cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     low = getSyscallArg(0, buffer);
     high = getSyscallArg(1, buffer);
 
-    if (low < cap_io_port_cap_get_capIOPortFirstPort(ioCap) || high > cap_io_port_cap_get_capIOPortLastPort(ioCap)) {
+    만약 (low < cap_io_port_cap_get_capIOPortFirstPort(ioCap) || high > cap_io_port_cap_get_capIOPortLastPort(ioCap)) {
         userError("VCPU EnableIOPort: Requested range not valid for given IOPort cap");
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeEnableIOPort(vcpu, ioSlot, ioCap, low, high);
+    반환 invokeEnableIOPort(vcpu, ioSlot, ioCap, low, high);
 }
 
 static exception_t invokeDisableIOPort(vcpu_t *vcpu, uint16_t low, uint16_t high)
 {
     setIOPortMask(vcpu->io, low, high, true);
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
@@ -769,10 +769,10 @@ static exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
     vcpu_t *vcpu;
     uint16_t low, high;
 
-    if (length < 2) {
+    만약 (length < 2) {
         userError("VCPU DisableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     low = getSyscallArg(0, buffer);
@@ -780,7 +780,7 @@ static exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
-    return invokeDisableIOPort(vcpu, low, high);
+    반환 invokeDisableIOPort(vcpu, low, high);
 }
 
 static exception_t invokeWriteVMCS(vcpu_t *vcpu, bool_t call, word_t *buffer, word_t field, word_t value)
@@ -788,7 +788,7 @@ static exception_t invokeWriteVMCS(vcpu_t *vcpu, bool_t call, word_t *buffer, wo
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
 
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
     switch (field) {
@@ -807,14 +807,14 @@ static exception_t invokeWriteVMCS(vcpu_t *vcpu, bool_t call, word_t *buffer, wo
     }
     vmwrite(field, value);
 
-    if (call) {
+    만약 (call) {
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
+        unsigned 정수 length = setMR(thread, buffer, 0, value);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeWriteVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
@@ -822,10 +822,10 @@ static exception_t decodeWriteVMCS(cap_t cap, word_t length, bool_t call, word_t
     word_t field;
     word_t value;
 
-    if (length < 2) {
+    만약 (length < 2) {
         userError("VCPU WriteVMCS: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
     field = getSyscallArg(0, buffer);
@@ -920,27 +920,27 @@ static exception_t decodeWriteVMCS(cap_t cap, word_t length, bool_t call, word_t
     default:
         userError("VCPU WriteVMCS: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeWriteVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), call, buffer, field, value);
+    반환 invokeWriteVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), call, buffer, field, value);
 }
 
 static word_t readVMCSField(vcpu_t *vcpu, word_t field)
 {
     switch (field) {
     case VMX_CONTROL_EXCEPTION_BITMAP:
-        return vcpu->exception_bitmap;
+        반환 vcpu->exception_bitmap;
     case VMX_GUEST_CR0:
-        return vcpu->cr0;
+        반환 vcpu->cr0;
     case VMX_CONTROL_CR0_MASK:
-        return vcpu->cr0_mask;
+        반환 vcpu->cr0_mask;
     case VMX_CONTROL_CR0_READ_SHADOW:
-        return vcpu->cr0_shadow;
+        반환 vcpu->cr0_shadow;
     }
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
-    return vmread(field);
+    반환 vmread(field);
 }
 
 static exception_t invokeReadVMCS(vcpu_t *vcpu, word_t field, bool_t call, word_t *buffer)
@@ -948,22 +948,22 @@ static exception_t invokeReadVMCS(vcpu_t *vcpu, word_t field, bool_t call, word_
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
     word_t value = readVMCSField(vcpu, field);
-    if (call) {
+    만약 (call) {
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
+        unsigned 정수 length = setMR(thread, buffer, 0, value);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeReadVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
 {
-    if (length < 1) {
+    만약 (length < 1) {
         userError("VCPU ReadVMCS: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
     word_t field = getSyscallArg(0, buffer);
     switch (field) {
@@ -1054,9 +1054,9 @@ static exception_t decodeReadVMCS(cap_t cap, word_t length, bool_t call, word_t 
     default:
         userError("VCPU ReadVMCS: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeReadVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call, buffer);
+    반환 invokeReadVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call, buffer);
 }
 
 static exception_t invokeSetTCB(vcpu_t *vcpu, tcb_t *tcb)
@@ -1064,38 +1064,38 @@ static exception_t invokeSetTCB(vcpu_t *vcpu, tcb_t *tcb)
     associateVcpuTcb(tcb, vcpu);
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static exception_t decodeSetTCB(cap_t cap, word_t length, word_t *buffer)
 {
     cap_t tcbCap;
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    만약 (current_extra_caps.excaprefs[0] == NULL) {
         userError("VCPU SetTCB: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
     tcbCap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(tcbCap) != cap_thread_cap) {
+    만약 (cap_get_capType(tcbCap) != cap_thread_cap) {
         userError("TCB cap is not a TCB cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
-    return invokeSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
+    반환 invokeSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
 }
 
 void vcpu_update_state_sysvmenter(vcpu_t *vcpu)
 {
     word_t *buffer;
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
     buffer = lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (!buffer) {
+    만약 (!buffer) {
         userError("No IPC buffer.");
-        return;
+        반환;
     }
     vmwrite(VMX_GUEST_RIP, getSyscallArg(0, buffer));
     vmwrite(VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, applyFixedBits(getSyscallArg(1, buffer), primary_control_high,
@@ -1113,7 +1113,7 @@ void vcpu_sysvmenter_reply_to_user(tcb_t *tcb)
 
     assert(vcpu);
 
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
 
@@ -1137,27 +1137,27 @@ exception_t decodeX86VCPUInvocation(
 {
     switch (invLabel) {
     case X86VCPUSetTCB:
-        return decodeSetTCB(cap, length, buffer);
+        반환 decodeSetTCB(cap, length, buffer);
     case X86VCPUReadVMCS:
-        return decodeReadVMCS(cap, length, call, buffer);
+        반환 decodeReadVMCS(cap, length, call, buffer);
     case X86VCPUWriteVMCS:
-        return decodeWriteVMCS(cap, length, call, buffer);
+        반환 decodeWriteVMCS(cap, length, call, buffer);
     case X86VCPUEnableIOPort:
-        return decodeEnableIOPort(cap, length, buffer);
+        반환 decodeEnableIOPort(cap, length, buffer);
     case X86VCPUDisableIOPort:
-        return decodeDisableIOPort(cap, length, buffer);
+        반환 decodeDisableIOPort(cap, length, buffer);
     case X86VCPUWriteRegisters:
-        return decodeVCPUWriteRegisters(cap, length, buffer);
+        반환 decodeVCPUWriteRegisters(cap, length, buffer);
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
     case X86VCPUWriteMSR:
-        return decodeVCPUWriteMSR(cap, length, buffer);
+        반환 decodeVCPUWriteMSR(cap, length, buffer);
     case X86VCPUReadMSR:
-        return decodeVCPUReadMSR(cap, length, buffer);
+        반환 decodeVCPUReadMSR(cap, length, buffer);
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
     default:
         userError("VCPU: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 }
 
@@ -1165,21 +1165,21 @@ static bool_t is_vtx_supported(void)
 {
     /* check for VMX support in CPUID
      * see section 23.7 of Volume 3 of the Intel manual */
-    return !!(x86_cpuid_ecx(0x1, 0) & BIT(5));
+    반환 !!(x86_cpuid_ecx(0x1, 0) & BIT(5));
 }
 
 static inline void clear_bit(word_t *bitmap, word_t bit)
 {
-    int index = bit / (sizeof(word_t) * 8);
-    int offset = bit % (sizeof(word_t) * 8);
+    정수 index = bit / (sizeof(word_t) * 8);
+    정수 offset = bit % (sizeof(word_t) * 8);
     bitmap[index] &= ~BIT(offset);
 }
 
 BOOT_CODE bool_t vtx_init(void)
 {
-    if (!is_vtx_supported()) {
+    만약 (!is_vtx_supported()) {
         printf("vt-x: not supported\n");
-        return false;
+        반환 false;
     }
     vmx_basic_msr_t vmx_basic;
     feature_control_msr_t feature_control;
@@ -1187,31 +1187,31 @@ BOOT_CODE bool_t vtx_init(void)
     vmx_basic.words[1] = x86_rdmsr_high(IA32_VMX_BASIC_MSR);
     vmcs_revision = vmx_basic_msr_get_vmcs_revision(vmx_basic);
     feature_control.words[0] = x86_rdmsr_low(IA32_FEATURE_CONTROL_MSR);
-    if (!feature_control_msr_get_vmx_outside_smx(feature_control)) {
+    만약 (!feature_control_msr_get_vmx_outside_smx(feature_control)) {
         /* enable if the MSR is not locked */
-        if (feature_control_msr_get_lock(feature_control)) {
+        만약 (feature_control_msr_get_lock(feature_control)) {
             printf("vt-x: feature locked\n");
-            return false;
+            반환 false;
         }
         feature_control = feature_control_msr_set_vmx_outside_smx(feature_control, 1);
         x86_wrmsr_parts(IA32_FEATURE_CONTROL_MSR, x86_rdmsr_high(IA32_FEATURE_CONTROL_MSR), feature_control.words[0]);
     }
     /* make sure the msr is locked */
-    if (!feature_control_msr_get_lock(feature_control)) {
+    만약 (!feature_control_msr_get_lock(feature_control)) {
         feature_control = feature_control_msr_set_lock(feature_control, 1);
         x86_wrmsr_parts(IA32_FEATURE_CONTROL_MSR, x86_rdmsr_high(IA32_FEATURE_CONTROL_MSR), feature_control.words[0]);
     }
     /* Initialize the fixed values only on the boot core. All other cores
      * will just check that the fixed values are valid */
-    if (CURRENT_CPU_INDEX() == 0) {
-        if (!init_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
+    만약 (CURRENT_CPU_INDEX() == 0) {
+        만약 (!init_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
             printf("vt-x: lack of required features\n");
-            return false;
+            반환 false;
         }
     }
-    if (!check_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
+    만약 (!check_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
         printf("vt-x: cores have inconsistent features\n");
-        return false;
+        반환 false;
     }
     write_cr4(read_cr4() | CR4_VMXE);
     /* we are required to set the VMCS region in the VMXON region */
@@ -1219,12 +1219,12 @@ BOOT_CODE bool_t vtx_init(void)
     vmxon_kptr->revision = vmcs_revision;
     /* Before calling vmxon, we must check that CR0 and CR4 are not set to values
      * that are unsupported by vt-x */
-    if (!vtx_check_fixed_values(read_cr0(), read_cr4())) {
-        return false;
+    만약 (!vtx_check_fixed_values(read_cr0(), read_cr4())) {
+        반환 false;
     }
-    if (vmxon(kpptr_to_paddr(vmxon_kptr))) {
+    만약 (vmxon(kpptr_to_paddr(vmxon_kptr))) {
         printf("vt-x: vmxon failure\n");
-        return false;
+        반환 false;
     }
     memset(&msr_bitmap_region, ~0, sizeof(msr_bitmap_region));
     /* Set sysenter MSRs to writeable and readable. These are all low msrs */
@@ -1250,22 +1250,22 @@ BOOT_CODE bool_t vtx_init(void)
     vpid_capability.words[1] = x86_rdmsr_high(IA32_VMX_EPT_VPID_CAP_MSR);
 
     /* check for supported EPT features */
-    if (!vmx_ept_vpid_cap_msr_get_ept_wb(vpid_capability)) {
+    만약 (!vmx_ept_vpid_cap_msr_get_ept_wb(vpid_capability)) {
         printf("vt-x: Expected wb attribute for EPT paging structure\n");
-        return false;
+        반환 false;
     }
-    if (!vmx_ept_vpid_cap_msr_get_ept_2m(vpid_capability)) {
+    만약 (!vmx_ept_vpid_cap_msr_get_ept_2m(vpid_capability)) {
         printf("vt-x: Expected supported for 2m pages\n");
-        return false;
+        반환 false;
     }
 
-    return true;
+    반환 true;
 }
 
 static void setMRs_vmexit(uint32_t reason, word_t qualification)
 {
     word_t *buffer;
-    int i;
+    정수 i;
 
     buffer = lookupIPCBuffer(true, NODE_STATE(ksCurThread));
 
@@ -1283,7 +1283,7 @@ static void setMRs_vmexit(uint32_t reason, word_t qualification)
     setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_GUEST_INT_MR, vmread(VMX_GUEST_INTERRUPTABILITY));
     setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_CR3_MR, vmread(VMX_GUEST_CR3));
 
-    for (i = 0; i < n_vcpu_gp_register; i++) {
+    위해 (i = 0; i < n_vcpu_gp_register; i++) {
         setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_EAX + i,
               NODE_STATE(ksCurThread)->tcbArch.tcbVCPU->gp_registers[i]);
     }
@@ -1327,13 +1327,13 @@ exception_t handleVmexit(void)
 #endif
     /* the basic exit reason is the bottom 16 bits of the exit reason field */
     reason = vmread(VMX_DATA_EXIT_REASON) & MASK(16);
-    if (reason == EXTERNAL_INTERRUPT) {
+    만약 (reason == EXTERNAL_INTERRUPT) {
         NODE_LOCK_IRQ;
-        if (vmx_feature_ack_on_exit) {
+        만약 (vmx_feature_ack_on_exit) {
             interrupt = vmread(VMX_DATA_EXIT_INTERRUPT_INFO) & 0xff;
             ARCH_NODE_STATE(x86KScurInterrupt) = interrupt;
             handleInterruptEntry();
-        } else {
+        } 아니면 {
             /* poll for the pending irq. We will then handle it once we return back
              * up to restore_user_context */
             receivePendingIRQ();
@@ -1341,7 +1341,7 @@ exception_t handleVmexit(void)
 #ifdef ENABLE_SMP_SUPPORT
         VMCheckBoundNotification(NODE_STATE(ksCurThread));
 #endif
-        return EXCEPTION_NONE;
+        반환 EXCEPTION_NONE;
     }
 
     NODE_LOCK_SYS;
@@ -1376,14 +1376,14 @@ exception_t handleVmexit(void)
 
     handleVmxFault(reason, qualification);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t handleVmEntryFail(void)
 {
     handleVmxFault(-1, -1);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 #ifdef ENABLE_SMP_SUPPORT
@@ -1397,7 +1397,7 @@ void VMCheckBoundNotification(tcb_t *tcb)
      */
     assert(tcb->tcbAffinity == getCurrentCPUIndex());
     notification_t *ntfnPtr = tcb->tcbBoundNotification;
-    if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM
+    만약 (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM
         && ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
 
         word_t badge = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
@@ -1409,7 +1409,7 @@ void VMCheckBoundNotification(tcb_t *tcb)
          * had to switch the active VMCS. As a result we might as well try and
          * run this tcb if it is permitted instead of switching VMCS contexts
          * back and forth */
-        if (tcb != NODE_STATE(ksCurThread)) {
+        만약 (tcb != NODE_STATE(ksCurThread)) {
             possibleSwitchTo(tcb);
         }
     }
@@ -1429,22 +1429,22 @@ static void invvpid_context(uint16_t vpid)
 static void setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
 {
     paddr_t ept_root;
-    if (cap_get_capType(vmxSpace) != cap_ept_pml4_cap ||
+    만약 (cap_get_capType(vmxSpace) != cap_ept_pml4_cap ||
         !cap_ept_pml4_cap_get_capPML4IsMapped(vmxSpace)) {
         ept_root = kpptr_to_paddr(null_ept_space);
-    } else {
+    } 아니면 {
         findEPTForASID_ret_t find_ret;
         ept_pml4e_t *pml4;
 
         pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(vmxSpace);
         find_ret = findEPTForASID(cap_ept_pml4_cap_get_capPML4MappedASID(vmxSpace));
-        if (find_ret.status != EXCEPTION_NONE || find_ret.ept != pml4) {
+        만약 (find_ret.status != EXCEPTION_NONE || find_ret.ept != pml4) {
             ept_root = kpptr_to_paddr(null_ept_space);
-        } else {
+        } 아니면 {
             ept_root = pptr_to_paddr(pml4);
         }
     }
-    if (ept_root != vcpu->last_ept_root) {
+    만약 (ept_root != vcpu->last_ept_root) {
         vcpu->last_ept_root = ept_root;
         vmx_eptp_t eptp = vmx_eptp_new(
                               ept_root,       /* paddr of ept */
@@ -1454,7 +1454,7 @@ static void setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
                           );
         vmwrite(VMX_CONTROL_EPT_POINTER, eptp.words[0]);
         assert(vcpu->vpid != VPID_INVALID);
-        if (vmx_feature_vpid) {
+        만약 (vmx_feature_vpid) {
             invvpid_context(vcpu->vpid);
         }
     }
@@ -1462,12 +1462,12 @@ static void setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
 
 void clearVPIDIOPortMappings(vpid_t vpid, uint16_t first, uint16_t last)
 {
-    if (vpid == VPID_INVALID) {
-        return;
+    만약 (vpid == VPID_INVALID) {
+        반환;
     }
     vcpu_t *vcpu = x86KSVPIDTable[vpid];
-    if (vcpu == NULL) {
-        return;
+    만약 (vcpu == NULL) {
+        반환;
     }
     assert(vcpu->vpid == vpid);
     setIOPortMask(vcpu->io, first, last, true);
@@ -1475,10 +1475,10 @@ void clearVPIDIOPortMappings(vpid_t vpid, uint16_t first, uint16_t last)
 
 static inline vpid_t nextVPID(vpid_t vpid)
 {
-    if (vpid == VPID_LAST) {
-        return VPID_FIRST;
-    } else {
-        return vpid + 1;
+    만약 (vpid == VPID_LAST) {
+        반환 VPID_FIRST;
+    } 아니면 {
+        반환 vpid + 1;
     }
 }
 
@@ -1489,7 +1489,7 @@ static void invalidateVPID(vpid_t vpid)
      * the ability for the references in IO port capabilities to invalidate */
     memset(vcpu->io, ~0, sizeof(vcpu->io));
     /* invalidate the VPID context */
-    if (vmx_feature_vpid) {
+    만약 (vmx_feature_vpid) {
         invvpid_context(vpid);
     }
 }
@@ -1510,18 +1510,18 @@ static vpid_t findFreeVPID(void)
 
     vpid = x86KSNextVPID;
     do {
-        if (x86KSVPIDTable[vpid] == NULL) {
-            return vpid;
+        만약 (x86KSVPIDTable[vpid] == NULL) {
+            반환 vpid;
         }
         vpid = nextVPID(vpid);
-    } while (vpid != x86KSNextVPID);
+    } 동안 (vpid != x86KSNextVPID);
 
     /* Forcibly take the next VPID */
     vpid = x86KSNextVPID;
     releaseVPID(vpid);
 
     x86KSNextVPID = nextVPID(x86KSNextVPID);
-    return vpid;
+    반환 vpid;
 }
 
 static void storeVPID(vcpu_t *vcpu, vpid_t vpid)
@@ -1542,16 +1542,16 @@ static void storeVPID(vcpu_t *vcpu, vpid_t vpid)
  */
 void vcpu_fpu_to_guest(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (nativeThreadUsingFPU(tcb)) {
+    만약 (nativeThreadUsingFPU(tcb)) {
         /* Make sure FPU is enabled */
         enableFpu();
-        if (!vcpu->fpu_active) {
+        만약 (!vcpu->fpu_active) {
             /* Host was using the FPU, switch to guest FPU state */
             saveFpuState(tcb);
             vcpu->fpu_active = true;
             loadFpuState(tcb);
         }
-    } else {
+    } 아니면 {
         /* Someone else used the FPU, load guest's FPU state */
         vcpu->fpu_active = true;
         switchLocalFpuOwner(tcb);
@@ -1560,15 +1560,15 @@ void vcpu_fpu_to_guest(tcb_t *tcb, vcpu_t *vcpu)
 
 void vcpu_fpu_to_host(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (tcb->tcbFlags & seL4_TCBFlag_fpuDisabled) {
+    만약 (tcb->tcbFlags & seL4_TCBFlag_fpuDisabled) {
         /* FPU may have been enabled for the guest, but host isn't allowed to use it */
         disableFpu();
-    } else if (nativeThreadUsingFPU(tcb) && vcpu->fpu_active) {
+    } 아니면 만약 (nativeThreadUsingFPU(tcb) && vcpu->fpu_active) {
         /* Guest was using the FPU, switch to host FPU state */
         saveFpuState(tcb);
         vcpu->fpu_active = false;
         loadFpuState(tcb);
-    } else if (!nativeThreadUsingFPU(tcb)) {
+    } 아니면 만약 (!nativeThreadUsingFPU(tcb)) {
         /* Handle corner cases like dissociated vcpu */
         switchLocalFpuOwner(tcb);
     }
@@ -1580,20 +1580,20 @@ void restoreVMCS(void)
     vcpu_t *expected_vmcs = cur_thread->tcbArch.tcbVCPU;
 
     /* Check that the right VMCS is active and current. */
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != expected_vmcs) {
+    만약 (ARCH_NODE_STATE(x86KSCurrentVCPU) != expected_vmcs) {
         switchVCPU(expected_vmcs);
     }
 
 #ifndef CONFIG_KERNEL_SKIM_WINDOW
-    if (getCurrentCR3().words[0] != expected_vmcs->last_host_cr3) {
+    만약 (getCurrentCR3().words[0] != expected_vmcs->last_host_cr3) {
         expected_vmcs->last_host_cr3 = getCurrentCR3().words[0];
         vmwrite(VMX_HOST_CR3, getCurrentCR3().words[0]);
     }
 #endif
-    if (expected_vmcs->vpid == VPID_INVALID) {
+    만약 (expected_vmcs->vpid == VPID_INVALID) {
         vpid_t vpid = findFreeVPID();
         storeVPID(expected_vmcs, vpid);
-        if (vmx_feature_vpid) {
+        만약 (vmx_feature_vpid) {
             vmwrite(VMX_CONTROL_VPID, vpid);
         }
     }
@@ -1602,21 +1602,21 @@ void restoreVMCS(void)
 
 void invept(ept_pml4e_t *ept_pml4)
 {
-    if (vmx_ept_vpid_cap_msr_get_invept(vpid_capability)) {
+    만약 (vmx_ept_vpid_cap_msr_get_invept(vpid_capability)) {
         struct {
             uint64_t parts[2];
         } address;
         word_t type;
-        if (vmx_ept_vpid_cap_msr_get_invept_single_context(vpid_capability)) {
+        만약 (vmx_ept_vpid_cap_msr_get_invept_single_context(vpid_capability)) {
             type = 1;
-        } else if (vmx_ept_vpid_cap_msr_get_invept_all_context(vpid_capability)) {
+        } 아니면 만약 (vmx_ept_vpid_cap_msr_get_invept_all_context(vpid_capability)) {
             type = 2;
-        } else {
+        } 아니면 {
             /* hardware claims to support invept yet provides us with no actual
              * invept mechanism. This is probably impossible, but just silently
              * ignore if it happens */
             userError("Hardware claimed to support invept, yet provided no mechanism");
-            return;
+            반환;
         }
 
         address.parts[0] = pptr_to_paddr((void *)ept_pml4);

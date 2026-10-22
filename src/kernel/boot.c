@@ -29,7 +29,7 @@ BOOT_BSS static region_t rootserver_mem;
 extern char ki_boot_end[1];
 BOOT_CODE p_region_t get_p_reg_kernel_img_boot(void)
 {
-    return (p_region_t) {
+    반환 (p_region_t) {
         .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
         .end   = kpptr_to_paddr(ki_boot_end)
     };
@@ -38,7 +38,7 @@ BOOT_CODE p_region_t get_p_reg_kernel_img_boot(void)
 /* Returns the physical region of the kernel image. */
 BOOT_CODE p_region_t get_p_reg_kernel_img(void)
 {
-    return (p_region_t) {
+    반환 (p_region_t) {
         .start = kpptr_to_paddr((const void *)KERNEL_ELF_BASE),
         .end   = kpptr_to_paddr((const void *)KERNEL_ELF_TOP)
     };
@@ -48,11 +48,11 @@ BOOT_CODE static void merge_regions(void)
 {
     /* Walk through reserved regions and see if any can be merged */
     word_t top = 0;
-    for (word_t i = 1; i < ndks_boot.resv_count; i++) {
-        if (ndks_boot.reserved[top].end == ndks_boot.reserved[i].start) {
+    위해 (word_t i = 1; i < ndks_boot.resv_count; i++) {
+        만약 (ndks_boot.reserved[top].end == ndks_boot.reserved[i].start) {
             /* extend earlier region */
             ndks_boot.reserved[top].end = ndks_boot.reserved[i].end;
-        } else {
+        } 아니면 {
             /* add region */
             top++;
             ndks_boot.reserved[top] = ndks_boot.reserved[i];
@@ -65,67 +65,67 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
 {
     word_t i;
     assert(reg.start <= reg.end);
-    if (reg.start == reg.end) {
-        return true;
+    만약 (reg.start == reg.end) {
+        반환 true;
     }
 
     /* keep the regions in order */
-    for (i = 0; i < ndks_boot.resv_count; i++) {
+    위해 (i = 0; i < ndks_boot.resv_count; i++) {
         /* Try and merge the region to an existing one, if possible */
-        if (ndks_boot.reserved[i].start == reg.end) {
+        만약 (ndks_boot.reserved[i].start == reg.end) {
             ndks_boot.reserved[i].start = reg.start;
             merge_regions();
-            return true;
+            반환 true;
         }
-        if (ndks_boot.reserved[i].end == reg.start) {
+        만약 (ndks_boot.reserved[i].end == reg.start) {
             ndks_boot.reserved[i].end = reg.end;
             merge_regions();
-            return true;
+            반환 true;
         }
         /* Otherwise figure out where it should go. */
-        if (ndks_boot.reserved[i].start > reg.end) {
+        만약 (ndks_boot.reserved[i].start > reg.end) {
             /* move regions down, making sure there's enough room */
-            if (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
+            만약 (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
                 printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
                        " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-                       reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-                return false;
+                       reg.start, reg.end, (정수)MAX_NUM_RESV_REG);
+                반환 false;
             }
-            for (word_t j = ndks_boot.resv_count; j > i; j--) {
+            위해 (word_t j = ndks_boot.resv_count; j > i; j--) {
                 ndks_boot.reserved[j] = ndks_boot.reserved[j - 1];
             }
             /* insert the new region */
             ndks_boot.reserved[i] = reg;
             ndks_boot.resv_count++;
-            return true;
+            반환 true;
         }
     }
 
-    if (i + 1 == MAX_NUM_RESV_REG) {
+    만약 (i + 1 == MAX_NUM_RESV_REG) {
         printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
                " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-               reg.start, reg.end, (int)MAX_NUM_RESV_REG);
-        return false;
+               reg.start, reg.end, (정수)MAX_NUM_RESV_REG);
+        반환 false;
     }
 
     ndks_boot.reserved[i] = reg;
     ndks_boot.resv_count++;
 
-    return true;
+    반환 true;
 }
 
 BOOT_CODE static bool_t insert_region(region_t reg)
 {
     assert(reg.start <= reg.end);
-    if (is_reg_empty(reg)) {
-        return true;
+    만약 (is_reg_empty(reg)) {
+        반환 true;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
-        if (is_reg_empty(ndks_boot.freemem[i])) {
+    위해 (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
+        만약 (is_reg_empty(ndks_boot.freemem[i])) {
             reserve_region(pptr_to_paddr_reg(reg));
             ndks_boot.freemem[i] = reg;
-            return true;
+            반환 true;
         }
     }
 
@@ -140,14 +140,14 @@ BOOT_CODE static bool_t insert_region(region_t reg)
      */
     printf("no free memory slot left for [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
            " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
-           reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
+           reg.start, reg.end, (unsigned 정수)MAX_NUM_FREEMEM_REG);
 
     /* For debug builds we consider this a fatal error. Rationale is, that the
      * caller does not check the error code at the moment, but just ignores any
      * failures silently. */
     assert(0);
 
-    return false;
+    반환 false;
 }
 
 BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
@@ -159,14 +159,14 @@ BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
     /* we must not have run out of memory */
     assert(rootserver_mem.start <= rootserver_mem.end);
     memzero((void *) allocated, n * BIT(size_bits));
-    return allocated;
+    반환 allocated;
 }
 
 BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
 {
     word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
     word_t max = MAX(cnode_size_bits, seL4_VSpaceBits);
-    return MAX(max, extra_bi_size_bits);
+    반환 MAX(max, extra_bi_size_bits);
 }
 
 BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits)
@@ -183,12 +183,12 @@ BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t ex
     size += BIT(seL4_MinSchedContextBits); // root sched context
 #endif
     /* for all archs, seL4_PageTable Bits is the size of all non top-level paging structures */
-    return size + arch_get_n_paging(it_v_reg) * BIT(seL4_PageTableBits);
+    반환 size + arch_get_n_paging(it_v_reg) * BIT(seL4_PageTableBits);
 }
 
 BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi_size_bits)
 {
-    if (extra_bi_size_bits >= cmp_size_bits && rootserver.extra_bi == 0) {
+    만약 (extra_bi_size_bits >= cmp_size_bits && rootserver.extra_bi == 0) {
         rootserver.extra_bi = alloc_rootserver_obj(extra_bi_size_bits, 1);
     }
 }
@@ -210,11 +210,11 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
     maybe_alloc_extra_bi(max, extra_bi_size_bits);
 
     /* the root cnode is at least 4k, so it could be larger or smaller than a pd. */
-#if (CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
+#만약 (CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits) > seL4_VSpaceBits
     rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
     maybe_alloc_extra_bi(seL4_VSpaceBits, extra_bi_size_bits);
     rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
-#else
+#아니면
     rootserver.vspace = alloc_rootserver_obj(seL4_VSpaceBits, 1);
     maybe_alloc_extra_bi(cnode_size_bits, extra_bi_size_bits);
     rootserver.cnode = alloc_rootserver_obj(cnode_size_bits, 1);
@@ -234,7 +234,7 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
     rootserver.boot_info = alloc_rootserver_obj(seL4_BootInfoFrameBits, 1);
 
     /* TCBs on aarch32 can be larger than page tables in certain configs */
-#if seL4_TCBBits >= seL4_PageTableBits
+#만약 seL4_TCBBits >= seL4_PageTableBits
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
 #endif
 
@@ -244,7 +244,7 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
     rootserver.paging.end = rootserver.paging.start + n * BIT(seL4_PageTableBits);
 
     /* for most archs, TCBs are smaller than page tables */
-#if seL4_TCBBits < seL4_PageTableBits
+#만약 seL4_TCBBits < seL4_PageTableBits
     rootserver.tcb = alloc_rootserver_obj(seL4_TCBBits, 1);
 #endif
 
@@ -284,7 +284,7 @@ create_root_cnode(void)
     /* write the root CNode cap into the root CNode */
     write_slot(SLOT_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
 
-    return cap;
+    반환 cap;
 }
 
 /* Check domain scheduler assumptions. */
@@ -308,7 +308,7 @@ BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr
     cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.ipc_buf, vptr, IT_ASID, false, false);
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), cap);
 
-    return cap;
+    반환 cap;
 }
 
 BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
@@ -329,8 +329,8 @@ BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vp
  */
 BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
 {
-    if (extra_size == 0) {
-        return 0;
+    만약 (extra_size == 0) {
+        반환 0;
     }
 
     word_t clzl_ret = clzl(ROUND_UP(extra_size, seL4_PageBits));
@@ -338,10 +338,10 @@ BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
     /* If region is bigger than a page, make sure we overallocate rather than
      * underallocate
      */
-    if (extra_size > BIT(msb)) {
+    만약 (extra_size > BIT(msb)) {
         msb++;
     }
-    return msb;
+    반환 msb;
 }
 
 BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
@@ -349,7 +349,7 @@ BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
 {
     /* clear boot info memory */
     clearMemory((void *)rootserver.boot_info, seL4_BootInfoFrameBits);
-    if (extra_bi_size) {
+    만약 (extra_bi_size) {
         clearMemory((void *)rootserver.extra_bi,
                     calculate_extra_bi_size_bits(extra_bi_size));
     }
@@ -370,15 +370,15 @@ BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
 
 BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap)
 {
-    if (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
+    만약 (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
         printf("ERROR: can't add another cap, all %"SEL4_PRIu_word
                " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
                BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
-        return false;
+        반환 false;
     }
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), ndks_boot.slot_pos_cur), cap);
     ndks_boot.slot_pos_cur++;
-    return true;
+    반환 true;
 }
 
 BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
@@ -396,14 +396,14 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
 
     slot_pos_before = ndks_boot.slot_pos_cur;
 
-    for (f = reg.start; f < reg.end; f += BIT(PAGE_BITS)) {
-        if (do_map) {
+    위해 (f = reg.start; f < reg.end; f += BIT(PAGE_BITS)) {
+        만약 (do_map) {
             frame_cap = create_mapped_it_frame_cap(pd_cap, f, pptr_to_paddr((void *)(f - pv_offset)), IT_ASID, false, true);
-        } else {
+        } 아니면 {
             frame_cap = create_unmapped_it_frame_cap(f, false);
         }
-        if (!provide_cap(root_cnode_cap, frame_cap)) {
-            return (create_frames_of_region_ret_t) {
+        만약 (!provide_cap(root_cnode_cap, frame_cap)) {
+            반환 (create_frames_of_region_ret_t) {
                 .region  = S_REG_EMPTY,
                 .success = false
             };
@@ -412,7 +412,7 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
 
     slot_pos_after = ndks_boot.slot_pos_cur;
 
-    return (create_frames_of_region_ret_t) {
+    반환 (create_frames_of_region_ret_t) {
         .region = (seL4_SlotRegion) {
             .start = slot_pos_before,
             .end   = slot_pos_after
@@ -432,7 +432,7 @@ BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
         cap_asid_control_cap_new()
     );
 
-    return ap_cap;
+    반환 ap_cap;
 }
 
 #ifdef CONFIG_KERNEL_MCS
@@ -448,10 +448,10 @@ BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
     seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
 
     /* create a sched control cap for each core */
-    for (unsigned int i = 0; i < num_nodes; i++) {
-        if (!provide_cap(root_cnode_cap, cap_sched_control_cap_new(i))) {
+    위해 (unsigned 정수 i = 0; i < num_nodes; i++) {
+        만약 (!provide_cap(root_cnode_cap, cap_sched_control_cap_new(i))) {
             printf("can't init sched_control for node %u, provide_cap() failed\n", i);
-            return false;
+            반환 false;
         }
     }
 
@@ -461,7 +461,7 @@ BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
         .end = ndks_boot.slot_pos_cur
     };
 
-    return true;
+    반환 true;
 }
 #endif
 
@@ -470,7 +470,7 @@ BOOT_CODE void create_idle_thread(void)
     pptr_t pptr;
 
 #ifdef ENABLE_SMP_SUPPORT
-    for (unsigned int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
+    위해 (unsigned 정수 i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
 #endif /* ENABLE_SMP_SUPPORT */
         pptr = (pptr_t) &ksIdleThreadTCB[SMP_TERNARY(i, 0)];
         NODE_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
@@ -502,9 +502,9 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
 
     /* derive a copy of the IPC buffer cap for inserting */
     deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
-    if (dc_ret.status != EXCEPTION_NONE) {
+    만약 (dc_ret.status != EXCEPTION_NONE) {
         printf("Failed to derive copy of IPC Buffer\n");
-        return NULL;
+        반환 NULL;
     }
 
     /* initialise TCB (corresponds directly to abstract specification) */
@@ -557,7 +557,7 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
     setThreadName(tcb, "rootserver");
 #endif
 
-    return tcb;
+    반환 tcb;
 }
 
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
@@ -568,12 +568,12 @@ BOOT_CODE static bool_t hypervisor_present(void)
     uint32_t ecx = x86_cpuid_ecx(KVM_CPUID_SIGNATURE, 0);
     uint32_t edx = x86_cpuid_edx(KVM_CPUID_SIGNATURE, 0);
 
-    if ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
+    만약 ((ebx == CPUID_KVM_EBX && ecx == CPUID_KVM_ECX && edx == CPUID_KVM_EDX)
         || (ebx == CPUID_TCG_EBX && ecx == CPUID_TCG_ECX && edx == CPUID_TCG_EDX)) {
-        return true;
+        반환 true;
     }
 #endif
-    return false;
+    반환 false;
 }
 
 BOOT_CODE void clock_sync_test(void)
@@ -587,18 +587,18 @@ BOOT_CODE void clock_sync_test(void)
         /* perform a memory acquire to get new values of ksCurTime */
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
         t0 = NODE_STATE_ON_CORE(ksCurTime, 0);
-    } while (t0 == t);
+    } 동안 (t0 == t);
     t = getCurrentTime();
     printf("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
-           (int)getCurrentCPUIndex(), t0, t, t - t0);
+           (정수)getCurrentCPUIndex(), t0, t, t - t0);
     /*
      * The test does not consistently work if we are in a virtual machine (e.g
      * within QEMU) because the measurement cannot distinguish between
      * interrupted clock reads and out-of-sync clocks.
      */
-    if (hypervisor_present()) {
-        printf("clock_sync_test[%d]: disabled, detected running as VM\n", (int)getCurrentCPUIndex());
-    } else {
+    만약 (hypervisor_present()) {
+        printf("clock_sync_test[%d]: disabled, detected running as VM\n", (정수)getCurrentCPUIndex());
+    } 아니면 {
         assert(t0 <= margin + t && t <= t0 + margin);
     }
 }
@@ -612,7 +612,7 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
 #ifdef CONFIG_DEBUG_BUILD
     /* add initial threads to the debug queue */
     NODE_STATE(ksDebugTCBs) = NULL;
-    if (scheduler_action != SchedulerAction_ResumeCurrentThread &&
+    만약 (scheduler_action != SchedulerAction_ResumeCurrentThread &&
         scheduler_action != SchedulerAction_ChooseNewThread) {
         tcbDebugAppend(scheduler_action);
     }
@@ -647,7 +647,7 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
  */
 BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
 {
-    return pptr >= PPTR_BASE && pptr < PPTR_TOP;
+    반환 pptr >= PPTR_BASE && pptr < PPTR_TOP;
 }
 
 /**
@@ -678,35 +678,35 @@ BOOT_CODE static bool_t provide_untyped_cap(
        return failure if anything unexpected happens. */
 
     /* Bounds check for size parameter */
-    if (size_bits > seL4_MaxUntypedBits || size_bits < seL4_MinUntypedBits) {
+    만약 (size_bits > seL4_MaxUntypedBits || size_bits < seL4_MinUntypedBits) {
         printf("Kernel init: Invalid untyped size %"SEL4_PRIu_word"\n", size_bits);
-        return false;
+        반환 false;
     }
 
     /* All cap ptrs must be aligned to object size */
-    if (!IS_ALIGNED(pptr, size_bits)) {
+    만약 (!IS_ALIGNED(pptr, size_bits)) {
         printf("Kernel init: Unaligned untyped pptr %p (alignment %"SEL4_PRIu_word")\n", (void *)pptr, size_bits);
-        return false;
+        반환 false;
     }
 
     /* All cap ptrs apart from device untypeds must be in the kernel window. */
-    if (!device_memory && !pptr_in_kernel_window(pptr)) {
+    만약 (!device_memory && !pptr_in_kernel_window(pptr)) {
         printf("Kernel init: Non-device untyped pptr %p outside kernel window\n",
                (void *)pptr);
-        return false;
+        반환 false;
     }
 
     /* Check that the end of the region is also in the kernel window, so we don't
        need to assume that the kernel window is aligned up to potentially
        seL4_MaxUntypedBits. */
-    if (!device_memory && !pptr_in_kernel_window(pptr + MASK(size_bits))) {
+    만약 (!device_memory && !pptr_in_kernel_window(pptr + MASK(size_bits))) {
         printf("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_word")\n",
                (void *)pptr, size_bits);
-        return false;
+        반환 false;
     }
 
     word_t i = ndks_boot.slot_pos_cur - first_untyped_slot;
-    if (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
+    만약 (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
         ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc) {
             .paddr    = pptr_to_paddr((void *)pptr),
             .sizeBits = size_bits,
@@ -716,11 +716,11 @@ BOOT_CODE static bool_t provide_untyped_cap(
         ut_cap = cap_untyped_cap_new(MAX_FREE_INDEX(size_bits),
                                      device_memory, size_bits, pptr);
         ret = provide_cap(root_cnode_cap, ut_cap);
-    } else {
+    } 아니면 {
         printf("Kernel init: Too many untyped regions for boot info\n");
         ret = true;
     }
-    return ret;
+    반환 ret;
 }
 
 /**
@@ -751,22 +751,22 @@ BOOT_CODE static bool_t create_untypeds_for_region(
        [0..end) is not necessarily part of the kernel window (depending on the value of PPTR_BASE).
        This is fine for device untypeds. For normal untypeds, the region is assumed to be fully in
        the kernel window. This is not checked here. */
-    while (!is_reg_empty(reg)) {
+    동안 (!is_reg_empty(reg)) {
 
         /* Calculate the bit size of the region. This is also correct for end < start: it will
            return the correct size of the set [start..-1] union [0..end). This will then be too
            large for alignment, so the code further down will reduce the size. */
-        unsigned int size_bits = seL4_WordBits - 1 - clzl(reg.end - reg.start);
+        unsigned 정수 size_bits = seL4_WordBits - 1 - clzl(reg.end - reg.start);
         /* The size can't exceed the largest possible untyped size. */
-        if (size_bits > seL4_MaxUntypedBits) {
+        만약 (size_bits > seL4_MaxUntypedBits) {
             size_bits = seL4_MaxUntypedBits;
         }
         /* The start address 0 satisfies any alignment needs, otherwise ensure
          * the region's bit size does not exceed the alignment of the region.
          */
-        if (0 != reg.start) {
-            unsigned int align_bits = ctzl(reg.start);
-            if (size_bits > align_bits) {
+        만약 (0 != reg.start) {
+            unsigned 정수 align_bits = ctzl(reg.start);
+            만약 (size_bits > align_bits) {
                 size_bits = align_bits;
             }
         }
@@ -774,14 +774,14 @@ BOOT_CODE static bool_t create_untypeds_for_region(
          * enough to be retyped into objects later. Otherwise the region can't
          * be used anyway.
          */
-        if (size_bits >= seL4_MinUntypedBits) {
-            if (!provide_untyped_cap(root_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
-                return false;
+        만약 (size_bits >= seL4_MinUntypedBits) {
+            만약 (!provide_untyped_cap(root_cnode_cap, device_memory, reg.start, size_bits, first_untyped_slot)) {
+                반환 false;
             }
         }
         reg.start += BIT(size_bits);
     }
-    return true;
+    반환 true;
 }
 
 BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
@@ -789,34 +789,34 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
     seL4_SlotPos first_untyped_slot = ndks_boot.slot_pos_cur;
 
     paddr_t start = 0;
-    for (word_t i = 0; i < ndks_boot.resv_count; i++) {
-        if (start < ndks_boot.reserved[i].start) {
+    위해 (word_t i = 0; i < ndks_boot.resv_count; i++) {
+        만약 (start < ndks_boot.reserved[i].start) {
             region_t reg = paddr_to_pptr_reg((p_region_t) {
                 start, ndks_boot.reserved[i].start
             });
-            if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
+            만약 (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
                 printf("ERROR: creation of untypeds for device region #%u at"
                        " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                       (unsigned int)i, reg.start, reg.end);
-                return false;
+                       (unsigned 정수)i, reg.start, reg.end);
+                반환 false;
             }
         }
 
         start = ndks_boot.reserved[i].end;
     }
 
-    if (start <= CONFIG_PADDR_USER_DEVICE_TOP - 1) {
+    만약 (start <= CONFIG_PADDR_USER_DEVICE_TOP - 1) {
         region_t reg = paddr_to_pptr_reg((p_region_t) {
             /* CONFIG_PADDR_USER_DEVICE_TOP cast to paddr_t can be 0.
              * create_untypeds_for_region() can deal with that correctly. */
             start, (paddr_t) CONFIG_PADDR_USER_DEVICE_TOP
         });
 
-        if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
+        만약 (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for top device region"
                    " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
                    reg.start, reg.end);
-            return false;
+            반환 false;
         }
     }
 
@@ -825,22 +825,22 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
      * can be reused.
      */
     region_t boot_mem_reuse_reg = paddr_to_pptr_reg(get_p_reg_kernel_img_boot());
-    if (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
+    만약 (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
         printf("ERROR: creation of untypeds for recycled boot memory"
                " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
                boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
-        return false;
+        반환 false;
     }
 
     /* convert remaining freemem into UT objects and provide the caps */
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
+    위해 (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
         region_t reg = ndks_boot.freemem[i];
         ndks_boot.freemem[i] = REG_EMPTY;
-        if (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
+        만약 (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for free memory region #%u at"
                    " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") failed\n",
-                   (unsigned int)i, reg.start, reg.end);
-            return false;
+                   (unsigned 정수)i, reg.start, reg.end);
+            반환 false;
         }
     }
 
@@ -849,13 +849,13 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap)
         .end   = ndks_boot.slot_pos_cur
     };
 
-    return true;
+    반환 true;
 }
 
 BOOT_CODE void bi_finalise(void)
 {
 
-    if (rootserver.paging.start != rootserver.paging.end) {
+    만약 (rootserver.paging.start != rootserver.paging.end) {
         printf("WARNING: internal book keeping error. Less pagetables allocated than predicted: "
                "%ld page tables allocated but not used.\n", (rootserver.paging.end - rootserver.paging.start) >> seL4_PageTableBits);
     }
@@ -870,39 +870,39 @@ BOOT_CODE static bool_t check_available_memory(word_t n_available,
                                                const p_region_t *available)
 {
     /* The system configuration is broken if no region is available. */
-    if (0 == n_available) {
+    만약 (0 == n_available) {
         printf("ERROR: no memory regions available\n");
-        return false;
+        반환 false;
     }
 
     printf("Available phys memory regions: %"SEL4_PRIu_word"\n", n_available);
     /* Force ordering and exclusivity of available regions. */
-    for (word_t i = 0; i < n_available; i++) {
+    위해 (word_t i = 0; i < n_available; i++) {
         const p_region_t *r = &available[i];
         printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
 
         /* Available regions must not wrap */
-        if (r->start > r->end) {
+        만약 (r->start > r->end) {
             printf("ERROR: memory region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+            반환 false;
         }
 
         /* Available regions must be non-empty. */
-        if (r->start == r->end) {
+        만약 (r->start == r->end) {
             printf("ERROR: memory region %"SEL4_PRIu_word" empty\n", i);
-            return false;
+            반환 false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
          * so the '==' case is fine. Directly adjacent regions are allowed.
          */
-        if ((i > 0) && (r->start < available[i - 1].end)) {
+        만약 ((i > 0) && (r->start < available[i - 1].end)) {
             printf("ERROR: memory region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+            반환 false;
         }
     }
 
-    return true;
+    반환 true;
 }
 
 /* We can't declare arrays on the stack, so this is space for init_avail_reg()
@@ -924,19 +924,19 @@ BOOT_CODE static word_t init_avail_reg(word_t n_available,
                                        const p_region_t *available)
 {
     word_t cnt = 0;
-    for (word_t i = 0; i < n_available; i++) {
+    위해 (word_t i = 0; i < n_available; i++) {
         const p_region_t *r = &available[i];
 
-        if ((r->start >= PADDR_TOP) || (r->end <= PADDR_BASE)) {
+        만약 ((r->start >= PADDR_TOP) || (r->end <= PADDR_BASE)) {
             printf("  region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") is outside the kernel"
                    " window, only potentially available as device untypeds\n", r->start, r->end);
-        } else {
+        } 아니면 {
             p_region_t usable_reg = {
                 .start = MAX(r->start, PADDR_BASE),
                 .end   = MIN(r->end, PADDR_TOP)
             };
 
-            if (cnt >= ARRAY_SIZE(avail_reg)) {
+            만약 (cnt >= ARRAY_SIZE(avail_reg)) {
                 /* No space left in the array, seems MAX_NUM_FREEMEM_REG should
                  * be increased. Debug builds raise an assert here because this
                  * is likely a porting issue that should be looked into. Release
@@ -946,13 +946,13 @@ BOOT_CODE static word_t init_avail_reg(word_t n_available,
                 printf("  WARNING: cannot use region [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"),"
                        " avail_reg[] is full\n", r->start, r->end);
                 assert(0);
-            } else {
+            } 아니면 {
                 avail_reg[cnt] = paddr_to_pptr_reg(usable_reg);
                 cnt++;
             }
         }
     }
-    return cnt;
+    반환 cnt;
 }
 
 
@@ -962,25 +962,25 @@ BOOT_CODE static bool_t check_reserved_memory(word_t n_reserved,
     printf("Reserved virt address space regions: %"SEL4_PRIu_word"\n",
            n_reserved);
     /* Force ordering and exclusivity of reserved regions. */
-    for (word_t i = 0; i < n_reserved; i++) {
+    위해 (word_t i = 0; i < n_reserved; i++) {
         const region_t *r = &reserved[i];
         printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")\n", r->start, r->end);
 
         /* Reserved regions must be sane, the size is allowed to be zero. */
-        if (r->start > r->end) {
+        만약 (r->start > r->end) {
             printf("ERROR: reserved region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+            반환 false;
         }
 
         /* Regions must be ordered and must not overlap. Regions are [start..end),
            so the == case is fine. Directly adjacent regions are allowed. */
-        if ((i > 0) && (r->start < reserved[i - 1].end)) {
+        만약 ((i > 0) && (r->start < reserved[i - 1].end)) {
             printf("ERROR: reserved region %"SEL4_PRIu_word" in wrong order\n", i);
-            return false;
+            반환 false;
         }
     }
 
-    return true;
+    반환 true;
 }
 
 /**
@@ -991,96 +991,96 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
                               word_t n_reserved, const region_t *reserved,
                               v_region_t it_v_reg, word_t extra_bi_size_bits)
 {
-    if (!check_available_memory(n_available, available)) {
-        return false;
+    만약 (!check_available_memory(n_available, available)) {
+        반환 false;
     }
 
     /* After here, avail_reg[0..n_available) are all regions within the kernel window. */
     n_available = init_avail_reg(n_available, available);
-    if (0 == n_available) {
+    만약 (0 == n_available) {
         printf("ERROR: no available memory within the kernel window\n");
-        return false;
+        반환 false;
     }
 
-    if (!check_reserved_memory(n_reserved, reserved)) {
-        return false;
+    만약 (!check_reserved_memory(n_reserved, reserved)) {
+        반환 false;
     }
 
-    for (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
+    위해 (word_t i = 0; i < ARRAY_SIZE(ndks_boot.freemem); i++) {
         ndks_boot.freemem[i] = REG_EMPTY;
     }
 
     word_t a = 0;
     word_t r = 0;
     /* Now iterate through the available regions, removing any reserved regions. */
-    while (a < n_available && r < n_reserved) {
-        if (reserved[r].start == reserved[r].end) {
+    동안 (a < n_available && r < n_reserved) {
+        만약 (reserved[r].start == reserved[r].end) {
             /* reserved region is empty - skip it */
             r++;
-        } else if (avail_reg[a].start >= avail_reg[a].end) {
+        } 아니면 만약 (avail_reg[a].start >= avail_reg[a].end) {
             /* skip the entire region - it's empty now after trimming */
             a++;
-        } else if (reserved[r].end <= avail_reg[a].start) {
+        } 아니면 만약 (reserved[r].end <= avail_reg[a].start) {
             /* the reserved region is below the available region - skip it */
             reserve_region(pptr_to_paddr_reg(reserved[r]));
             r++;
-        } else if (reserved[r].start >= avail_reg[a].end) {
+        } 아니면 만약 (reserved[r].start >= avail_reg[a].end) {
             /* the reserved region is above the available region - take the whole thing */
             insert_region(avail_reg[a]);
             a++;
-        } else {
+        } 아니면 {
             /* the reserved region overlaps with the available region */
-            if (reserved[r].start <= avail_reg[a].start) {
+            만약 (reserved[r].start <= avail_reg[a].start) {
                 /* the region overlaps with the start of the available region.
                  * trim start of the available region */
                 avail_reg[a].start = MIN(avail_reg[a].end, reserved[r].end);
                 /* do not increment reserved index here - there could be more overlapping regions */
-            } else {
+            } 아니면 {
                 assert(reserved[r].start < avail_reg[a].end);
                 /* take the first chunk of the available region and move
                  * the start to the end of the reserved region */
                 region_t m = avail_reg[a];
                 m.end = reserved[r].start;
                 insert_region(m);
-                if (avail_reg[a].end > reserved[r].end) {
+                만약 (avail_reg[a].end > reserved[r].end) {
                     avail_reg[a].start = reserved[r].end;
                     /* we could increment reserved index here, but it's more consistent with the
                      * other overlapping case if we don't */
-                } else {
+                } 아니면 {
                     a++;
                 }
             }
         }
     }
 
-    for (; r < n_reserved; r++) {
-        if (reserved[r].start < reserved[r].end) {
+    위해 (; r < n_reserved; r++) {
+        만약 (reserved[r].start < reserved[r].end) {
             reserve_region(pptr_to_paddr_reg(reserved[r]));
         }
     }
 
     /* no more reserved regions - add the rest */
-    for (; a < n_available; a++) {
-        if (avail_reg[a].start < avail_reg[a].end) {
+    위해 (; a < n_available; a++) {
+        만약 (avail_reg[a].start < avail_reg[a].end) {
             insert_region(avail_reg[a]);
         }
     }
 
     /* now try to fit the root server objects into a region */
-    int i = ARRAY_SIZE(ndks_boot.freemem) - 1;
-    if (!is_reg_empty(ndks_boot.freemem[i])) {
+    정수 i = ARRAY_SIZE(ndks_boot.freemem) - 1;
+    만약 (!is_reg_empty(ndks_boot.freemem[i])) {
         printf("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
-               (unsigned int)MAX_NUM_FREEMEM_REG);
-        return false;
+               (unsigned 정수)MAX_NUM_FREEMEM_REG);
+        반환 false;
     }
     /* skip any empty regions */
-    for (; i >= 0 && is_reg_empty(ndks_boot.freemem[i]); i--);
+    위해 (; i >= 0 && is_reg_empty(ndks_boot.freemem[i]); i--);
 
     /* try to grab the last available p region to create the root server objects
      * from. If possible, retain any left over memory as an extra p region */
     word_t size = calculate_rootserver_size(it_v_reg, extra_bi_size_bits);
     word_t max = rootserver_max_size_bits(extra_bi_size_bits);
-    for (; i >= 0; i--) {
+    위해 (; i >= 0; i--) {
         /* Invariant: both i and (i + 1) are valid indices in ndks_boot.freemem. */
         assert(i < ARRAY_SIZE(ndks_boot.freemem) - 1);
         /* Invariant; the region at index i is the current candidate.
@@ -1093,14 +1093,14 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
         /* We make a fresh variable to index the known-empty region, because the
          * SimplExportAndRefine verification test has poor support for array
          * indices that are sums of variables and small constants. */
-        int empty_index = i + 1;
+        정수 empty_index = i + 1;
 
         /* Try to take the top-most suitably sized and aligned chunk. */
         pptr_t unaligned_start = ndks_boot.freemem[i].end - size;
         pptr_t start = ROUND_DOWN(unaligned_start, max);
         /* if unaligned_start didn't underflow, and start fits in the region,
          * then we've found a region that fits the root server objects. */
-        if (unaligned_start <= ndks_boot.freemem[i].end
+        만약 (unaligned_start <= ndks_boot.freemem[i].end
             && start >= ndks_boot.freemem[i].start) {
             create_rootserver_objects(start, it_v_reg, extra_bi_size_bits);
             /* There may be leftovers before and after the memory we used. */
@@ -1113,7 +1113,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
             ndks_boot.freemem[i].end = start;
             /* Regions i and (i + 1) are now well defined, ordered, disjoint,
              * and unallocated, so we can return successfully. */
-            return true;
+            반환 true;
         }
         /* Region i isn't big enough, so shuffle it up to slot (i + 1),
          * which we know is unused. */
@@ -1126,5 +1126,5 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
     /* We didn't find a big enough region. */
     printf("ERROR: no free memory region is big enough for root server "
            "objects, need size/alignment of 2^%"SEL4_PRIu_word"\n", max);
-    return false;
+    반환 false;
 }

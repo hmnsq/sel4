@@ -35,7 +35,7 @@ static exception_t reduceZombie(cte_t *slot, bool_t exposed);
 
 #ifdef CONFIG_KERNEL_MCS
 #define CNODE_LAST_INVOCATION CNodeRotate
-#else
+#아니면
 #define CNODE_LAST_INVOCATION CNodeSaveCaller
 #endif
 
@@ -50,28 +50,28 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
     /* Haskell error: "decodeCNodeInvocation: invalid cap" */
     assert(cap_get_capType(cap) == cap_cnode_cap);
 
-    if (invLabel < CNodeRevoke || invLabel > CNODE_LAST_INVOCATION) {
+    만약 (invLabel < CNodeRevoke || invLabel > CNODE_LAST_INVOCATION) {
         userError("CNodeCap: Illegal Operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2) {
+    만약 (length < 2) {
         userError("CNode operation: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
     index = getSyscallArg(0, buffer);
     w_bits = getSyscallArg(1, buffer);
 
     lu_ret = lookupTargetSlot(cap, index, w_bits);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    만약 (lu_ret.status != EXCEPTION_NONE) {
         userError("CNode operation: Target slot invalid.");
-        return lu_ret.status;
+        반환 lu_ret.status;
     }
     destSlot = lu_ret.slot;
 
-    if (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
+    만약 (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
         cte_t *srcSlot;
         word_t srcIndex, srcDepth, capData;
         bool_t isMove;
@@ -80,10 +80,10 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         deriveCap_ret_t dc_ret;
         cap_t srcCap;
 
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        만약 (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
             userError("CNode Copy/Mint/Move/Mutate: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
         srcIndex = getSyscallArg(2, buffer);
         srcDepth = getSyscallArg(3, buffer);
@@ -91,42 +91,42 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         srcRoot = current_extra_caps.excaprefs[0]->cap;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        만약 (status != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Destination not empty.");
-            return status;
+            반환 status;
         }
 
         lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        만약 (lu_ret.status != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Invalid source slot.");
-            return lu_ret.status;
+            반환 lu_ret.status;
         }
         srcSlot = lu_ret.slot;
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        만약 (cap_get_capType(srcSlot->cap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Source slot invalid or empty.");
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = 1;
             current_lookup_fault =
                 lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         switch (invLabel) {
         case CNodeCopy:
 
-            if (length < 5) {
+            만약 (length < 5) {
                 userError("Truncated message for CNode Copy operation.");
                 current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                반환 EXCEPTION_SYSCALL_ERROR;
             }
 
             cap_rights = rightsFromWord(getSyscallArg(4, buffer));
             srcCap = maskCapRights(cap_rights, srcSlot->cap);
             dc_ret = deriveCap(srcSlot, srcCap);
-            if (dc_ret.status != EXCEPTION_NONE) {
+            만약 (dc_ret.status != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Copy operation.");
-                return dc_ret.status;
+                반환 dc_ret.status;
             }
             newCap = dc_ret.cap;
             isMove = false;
@@ -134,10 +134,10 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             break;
 
         case CNodeMint:
-            if (length < 6) {
+            만약 (length < 6) {
                 userError("CNode Mint: Truncated message.");
                 current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                반환 EXCEPTION_SYSCALL_ERROR;
             }
 
             cap_rights = rightsFromWord(getSyscallArg(4, buffer));
@@ -145,9 +145,9 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             srcCap = maskCapRights(cap_rights, srcSlot->cap);
             dc_ret = deriveCap(srcSlot,
                                updateCapData(false, capData, srcCap));
-            if (dc_ret.status != EXCEPTION_NONE) {
+            만약 (dc_ret.status != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Mint operation.");
-                return dc_ret.status;
+                반환 dc_ret.status;
             }
             newCap = dc_ret.cap;
             isMove = false;
@@ -161,10 +161,10 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
             break;
 
         case CNodeMutate:
-            if (length < 5) {
+            만약 (length < 5) {
                 userError("CNode Mutate: Truncated message.");
                 current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                반환 EXCEPTION_SYSCALL_ERROR;
             }
 
             capData = getSyscallArg(4, buffer);
@@ -175,70 +175,70 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
 
         default:
             assert(0);
-            return EXCEPTION_NONE;
+            반환 EXCEPTION_NONE;
         }
 
-        if (cap_get_capType(newCap) == cap_null_cap) {
+        만약 (cap_get_capType(newCap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Mutated cap would be invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        if (isMove) {
-            return invokeCNodeMove(newCap, srcSlot, destSlot);
-        } else {
-            return invokeCNodeInsert(newCap, srcSlot, destSlot);
+        만약 (isMove) {
+            반환 invokeCNodeMove(newCap, srcSlot, destSlot);
+        } 아니면 {
+            반환 invokeCNodeInsert(newCap, srcSlot, destSlot);
         }
     }
 
-    if (invLabel == CNodeRevoke) {
+    만약 (invLabel == CNodeRevoke) {
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRevoke(destSlot);
+        반환 invokeCNodeRevoke(destSlot);
     }
 
-    if (invLabel == CNodeDelete) {
+    만약 (invLabel == CNodeDelete) {
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeDelete(destSlot);
+        반환 invokeCNodeDelete(destSlot);
     }
 
 #ifndef CONFIG_KERNEL_MCS
-    if (invLabel == CNodeSaveCaller) {
+    만약 (invLabel == CNodeSaveCaller) {
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        만약 (status != EXCEPTION_NONE) {
             userError("CNode SaveCaller: Destination slot not empty.");
-            return status;
+            반환 status;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeSaveCaller(destSlot);
+        반환 invokeCNodeSaveCaller(destSlot);
     }
 #endif
 
-    if (invLabel == CNodeCancelBadgedSends) {
+    만약 (invLabel == CNodeCancelBadgedSends) {
         cap_t destCap;
 
         destCap = destSlot->cap;
 
-        if (!hasCancelSendRights(destCap)) {
+        만약 (!hasCancelSendRights(destCap)) {
             userError("CNode CancelBadgedSends: Target cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeCancelBadgedSends(destCap);
+        반환 invokeCNodeCancelBadgedSends(destCap);
     }
 
-    if (invLabel == CNodeRotate) {
+    만약 (invLabel == CNodeRotate) {
         word_t pivotNewData, pivotIndex, pivotDepth;
         word_t srcNewData, srcIndex, srcDepth;
         cte_t *pivotSlot, *srcSlot;
         cap_t pivotRoot, srcRoot, newSrcCap, newPivotCap;
 
-        if (length < 8 || current_extra_caps.excaprefs[0] == NULL
+        만약 (length < 8 || current_extra_caps.excaprefs[0] == NULL
             || current_extra_caps.excaprefs[1] == NULL) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
         pivotNewData = getSyscallArg(2, buffer);
         pivotIndex   = getSyscallArg(3, buffer);
@@ -251,113 +251,113 @@ exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
         srcRoot   = current_extra_caps.excaprefs[1]->cap;
 
         lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        만약 (lu_ret.status != EXCEPTION_NONE) {
+            반환 lu_ret.status;
         }
         srcSlot = lu_ret.slot;
 
         lu_ret = lookupPivotSlot(pivotRoot, pivotIndex, pivotDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        만약 (lu_ret.status != EXCEPTION_NONE) {
+            반환 lu_ret.status;
         }
         pivotSlot = lu_ret.slot;
 
-        if (pivotSlot == srcSlot || pivotSlot == destSlot) {
+        만약 (pivotSlot == srcSlot || pivotSlot == destSlot) {
             userError("CNode Rotate: Pivot slot the same as source or dest slot.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (srcSlot != destSlot) {
+        만약 (srcSlot != destSlot) {
             status = ensureEmptySlot(destSlot);
-            if (status != EXCEPTION_NONE) {
-                return status;
+            만약 (status != EXCEPTION_NONE) {
+                반환 status;
             }
         }
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        만약 (cap_get_capType(srcSlot->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = 1;
             current_lookup_fault = lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(pivotSlot->cap) == cap_null_cap) {
+        만약 (cap_get_capType(pivotSlot->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = 0;
             current_lookup_fault = lookup_fault_missing_capability_new(pivotDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         newSrcCap = updateCapData(true, srcNewData, srcSlot->cap);
         newPivotCap = updateCapData(true, pivotNewData, pivotSlot->cap);
 
-        if (cap_get_capType(newSrcCap) == cap_null_cap) {
+        만약 (cap_get_capType(newSrcCap) == cap_null_cap) {
             userError("CNode Rotate: Source cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(newPivotCap) == cap_null_cap) {
+        만약 (cap_get_capType(newPivotCap) == cap_null_cap) {
             userError("CNode Rotate: Pivot cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
 
         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRotate(newSrcCap, newPivotCap,
+        반환 invokeCNodeRotate(newSrcCap, newPivotCap,
                                  srcSlot, pivotSlot, destSlot);
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeRevoke(cte_t *destSlot)
 {
-    return cteRevoke(destSlot);
+    반환 cteRevoke(destSlot);
 }
 
 exception_t invokeCNodeDelete(cte_t *destSlot)
 {
-    return cteDelete(destSlot, true);
+    반환 cteDelete(destSlot, true);
 }
 
 exception_t invokeCNodeCancelBadgedSends(cap_t cap)
 {
     word_t badge = cap_endpoint_cap_get_capEPBadge(cap);
-    if (badge) {
+    만약 (badge) {
         endpoint_t *ep = (endpoint_t *)
                          cap_endpoint_cap_get_capEPPtr(cap);
         cancelBadgedSends(ep, badge);
     }
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeInsert(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
 {
     cteInsert(cap, srcSlot, destSlot);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeMove(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
 {
     cteMove(cap, srcSlot, destSlot);
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeRotate(cap_t cap1, cap_t cap2, cte_t *slot1,
                               cte_t *slot2, cte_t *slot3)
 {
-    if (slot1 == slot3) {
+    만약 (slot1 == slot3) {
         cteSwap(cap1, slot1, cap2, slot2);
-    } else {
+    } 아니면 {
         cteMove(cap2, slot2, slot3);
         cteMove(cap1, slot1, slot2);
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 #ifndef CONFIG_KERNEL_MCS
@@ -375,7 +375,7 @@ exception_t invokeCNodeSaveCaller(cte_t *destSlot)
         break;
 
     case cap_reply_cap:
-        if (!cap_reply_cap_get_capReplyMaster(cap)) {
+        만약 (!cap_reply_cap_get_capReplyMaster(cap)) {
             cteMove(cap, srcSlot, destSlot);
         }
         break;
@@ -385,7 +385,7 @@ exception_t invokeCNodeSaveCaller(cte_t *destSlot)
         break;
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 #endif
 
@@ -395,9 +395,9 @@ exception_t invokeCNodeSaveCaller(cte_t *destSlot)
  */
 static void setUntypedCapAsFull(cap_t srcCap, cap_t newCap, cte_t *srcSlot)
 {
-    if ((cap_get_capType(srcCap) == cap_untyped_cap)
+    만약 ((cap_get_capType(srcCap) == cap_untyped_cap)
         && (cap_get_capType(newCap) == cap_untyped_cap)) {
-        if ((cap_untyped_cap_get_capPtr(srcCap)
+        만약 ((cap_untyped_cap_get_capPtr(srcCap)
              == cap_untyped_cap_get_capPtr(newCap))
             && (cap_untyped_cap_get_capBlockSize(newCap)
                 == cap_untyped_cap_get_capBlockSize(srcCap))) {
@@ -435,7 +435,7 @@ void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
     destSlot->cap = newCap;
     destSlot->cteMDBNode = newMDB;
     mdb_node_ptr_set_mdbNext(&srcSlot->cteMDBNode, CTE_REF(destSlot));
-    if (mdb_node_get_mdbNext(newMDB)) {
+    만약 (mdb_node_get_mdbNext(newMDB)) {
         mdb_node_ptr_set_mdbPrev(
             &CTE_PTR(mdb_node_get_mdbNext(newMDB))->cteMDBNode,
             CTE_REF(destSlot));
@@ -460,13 +460,13 @@ void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
     srcSlot->cteMDBNode = nullMDBNode;
 
     prev_ptr = mdb_node_get_mdbPrev(mdb);
-    if (prev_ptr)
+    만약 (prev_ptr)
         mdb_node_ptr_set_mdbNext(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(destSlot));
 
     next_ptr = mdb_node_get_mdbNext(mdb);
-    if (next_ptr)
+    만약 (next_ptr)
         mdb_node_ptr_set_mdbPrev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(destSlot));
@@ -476,8 +476,8 @@ void capSwapForDelete(cte_t *slot1, cte_t *slot2)
 {
     cap_t cap1, cap2;
 
-    if (slot1 == slot2) {
-        return;
+    만약 (slot1 == slot2) {
+        반환;
     }
 
     cap1 = slot1->cap;
@@ -497,13 +497,13 @@ void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
     mdb1 = slot1->cteMDBNode;
 
     prev_ptr = mdb_node_get_mdbPrev(mdb1);
-    if (prev_ptr)
+    만약 (prev_ptr)
         mdb_node_ptr_set_mdbNext(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
     next_ptr = mdb_node_get_mdbNext(mdb1);
-    if (next_ptr)
+    만약 (next_ptr)
         mdb_node_ptr_set_mdbPrev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(slot2));
@@ -513,13 +513,13 @@ void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
     slot2->cteMDBNode = mdb1;
 
     prev_ptr = mdb_node_get_mdbPrev(mdb2);
-    if (prev_ptr)
+    만약 (prev_ptr)
         mdb_node_ptr_set_mdbNext(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot1));
 
     next_ptr = mdb_node_get_mdbNext(mdb2);
-    if (next_ptr)
+    만약 (next_ptr)
         mdb_node_ptr_set_mdbPrev(
             &CTE_PTR(next_ptr)->cteMDBNode,
             CTE_REF(slot1));
@@ -532,21 +532,21 @@ exception_t cteRevoke(cte_t *slot)
 
     /* there is no need to check for a NullCap as NullCaps are
        always accompanied by null mdb pointers */
-    for (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
+    위해 (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
          nextPtr && isMDBParentOf(slot, nextPtr);
          nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
         status = cteDelete(nextPtr, true);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        만약 (status != EXCEPTION_NONE) {
+            반환 status;
         }
 
         status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            return status;
+        만약 (status != EXCEPTION_NONE) {
+            반환 status;
         }
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t cteDelete(cte_t *slot, bool_t exposed)
@@ -554,19 +554,19 @@ exception_t cteDelete(cte_t *slot, bool_t exposed)
     finaliseSlot_ret_t fs_ret;
 
     fs_ret = finaliseSlot(slot, exposed);
-    if (fs_ret.status != EXCEPTION_NONE) {
-        return fs_ret.status;
+    만약 (fs_ret.status != EXCEPTION_NONE) {
+        반환 fs_ret.status;
     }
 
-    if (exposed || fs_ret.success) {
+    만약 (exposed || fs_ret.success) {
         emptySlot(slot, fs_ret.cleanupInfo);
     }
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 static void emptySlot(cte_t *slot, cap_t cleanupInfo)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
+    만약 (cap_get_capType(slot->cap) != cap_null_cap) {
         mdb_node_t mdbNode;
         cte_t *prev, *next;
 
@@ -574,13 +574,13 @@ static void emptySlot(cte_t *slot, cap_t cleanupInfo)
         prev = CTE_PTR(mdb_node_get_mdbPrev(mdbNode));
         next = CTE_PTR(mdb_node_get_mdbNext(mdbNode));
 
-        if (prev) {
+        만약 (prev) {
             mdb_node_ptr_set_mdbNext(&prev->cteMDBNode, CTE_REF(next));
         }
-        if (next) {
+        만약 (next) {
             mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(prev));
         }
-        if (next)
+        만약 (next)
             mdb_node_ptr_set_mdbFirstBadged(&next->cteMDBNode,
                                             mdb_node_get_mdbFirstBadged(next->cteMDBNode) ||
                                             mdb_node_get_mdbFirstBadged(mdbNode));
@@ -595,11 +595,11 @@ static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
 {
     switch (cap_get_capType(cap)) {
     case cap_null_cap:
-        return true;
+        반환 true;
     case cap_zombie_cap: {
         word_t n = cap_zombie_cap_get_capZombieNumber(cap);
         cte_t *z_slot = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
-        return (n == 0 || (n == 1 && slot == z_slot));
+        반환 (n == 0 || (n == 1 && slot == z_slot));
     }
     default:
         fail("finaliseCap should only return Zombie or NullCap");
@@ -608,7 +608,7 @@ static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
 
 static inline bool_t CONST capCyclicZombie(cap_t cap, cte_t *slot)
 {
-    return cap_get_capType(cap) == cap_zombie_cap &&
+    반환 cap_get_capType(cap) == cap_zombie_cap &&
            CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == slot;
 }
 
@@ -619,46 +619,46 @@ static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t immediate)
     exception_t status;
     finaliseSlot_ret_t ret;
 
-    while (cap_get_capType(slot->cap) != cap_null_cap) {
+    동안 (cap_get_capType(slot->cap) != cap_null_cap) {
         final = isFinalCapability(slot);
         fc_ret = finaliseCap(slot->cap, final, false);
 
-        if (capRemovable(fc_ret.remainder, slot)) {
+        만약 (capRemovable(fc_ret.remainder, slot)) {
             ret.status = EXCEPTION_NONE;
             ret.success = true;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            반환 ret;
         }
 
         slot->cap = fc_ret.remainder;
 
-        if (!immediate && capCyclicZombie(fc_ret.remainder, slot)) {
+        만약 (!immediate && capCyclicZombie(fc_ret.remainder, slot)) {
             ret.status = EXCEPTION_NONE;
             ret.success = false;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            반환 ret;
         }
 
         status = reduceZombie(slot, immediate);
-        if (status != EXCEPTION_NONE) {
+        만약 (status != EXCEPTION_NONE) {
             ret.status = status;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            반환 ret;
         }
 
         status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
+        만약 (status != EXCEPTION_NONE) {
             ret.status = status;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            반환 ret;
         }
     }
     ret.status = EXCEPTION_NONE;
     ret.success = true;
     ret.cleanupInfo = cap_null_cap_new();
-    return ret;
+    반환 ret;
 }
 
 static exception_t reduceZombie(cte_t *slot, bool_t immediate)
@@ -675,12 +675,12 @@ static exception_t reduceZombie(cte_t *slot, bool_t immediate)
     /* Haskell error: "reduceZombie: expected unremovable zombie" */
     assert(n > 0);
 
-    if (immediate) {
+    만약 (immediate) {
         cte_t *endSlot = &ptr[n - 1];
 
         status = cteDelete(endSlot, false);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        만약 (status != EXCEPTION_NONE) {
+            반환 status;
         }
 
         switch (cap_get_capType(slot->cap)) {
@@ -691,13 +691,13 @@ static exception_t reduceZombie(cte_t *slot, bool_t immediate)
             cte_t *ptr2 =
                 (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
 
-            if (ptr == ptr2 &&
+            만약 (ptr == ptr2 &&
                 cap_zombie_cap_get_capZombieNumber(slot->cap) == n &&
                 cap_zombie_cap_get_capZombieType(slot->cap) == type) {
                 assert(cap_get_capType(endSlot->cap) == cap_null_cap);
                 slot->cap =
                     cap_zombie_cap_set_capZombieNumber(slot->cap, n - 1);
-            } else {
+            } 아니면 {
                 /* Haskell error:
                  * "Expected new Zombie to be self-referential."
                  */
@@ -709,24 +709,24 @@ static exception_t reduceZombie(cte_t *slot, bool_t immediate)
         default:
             fail("Expected recursion to result in Zombie.");
         }
-    } else {
+    } 아니면 {
         /* Haskell error: "Cyclic zombie passed to unexposed reduceZombie" */
         assert(ptr != slot);
 
-        if (cap_get_capType(ptr->cap) == cap_zombie_cap) {
+        만약 (cap_get_capType(ptr->cap) == cap_zombie_cap) {
             /* Haskell error: "Moving self-referential Zombie aside." */
             assert(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
         }
 
         capSwapForDelete(ptr, slot);
     }
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 void cteDeleteOne(cte_t *slot)
 {
     word_t cap_type = cap_get_capType(slot->cap);
-    if (cap_type != cap_null_cap) {
+    만약 (cap_type != cap_null_cap) {
         bool_t final;
         finaliseCap_ret_t fc_ret UNUSED;
 
@@ -749,7 +749,7 @@ void insertNewCap(cte_t *parent, cte_t *slot, cap_t cap)
     next = CTE_PTR(mdb_node_get_mdbNext(parent->cteMDBNode));
     slot->cap = cap;
     slot->cteMDBNode = mdb_node_new(CTE_REF(next), true, true, CTE_REF(parent));
-    if (next) {
+    만약 (next) {
         mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(slot));
     }
     mdb_node_ptr_set_mdbNext(&parent->cteMDBNode, CTE_REF(slot));
@@ -761,7 +761,7 @@ void setupReplyMaster(tcb_t *thread)
     cte_t *slot;
 
     slot = TCB_PTR_CTE_PTR(thread, tcbReply);
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
+    만약 (cap_get_capType(slot->cap) == cap_null_cap) {
         /* Haskell asserts that no reply caps exist for this thread here. This
          * cannot be translated. */
         slot->cap = cap_reply_cap_new(true, true, TCB_REF(thread));
@@ -774,28 +774,28 @@ void setupReplyMaster(tcb_t *thread)
 
 bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
 {
-    if (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
-        return false;
+    만약 (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
+        반환 false;
     }
-    if (!sameRegionAs(cte_a->cap, cte_b->cap)) {
-        return false;
+    만약 (!sameRegionAs(cte_a->cap, cte_b->cap)) {
+        반환 false;
     }
     /* We want to take care of arch caps first, because that is easier in the proofs.
        We expect Arch_isMDBParentOf to return true if both caps are not architecture
        specific. */
-    if (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
+    만약 (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
                             mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode))) {
-        return false;
+        반환 false;
     }
     switch (cap_get_capType(cte_a->cap)) {
     case cap_endpoint_cap: {
         word_t badge;
 
         badge = cap_endpoint_cap_get_capEPBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        만약 (badge == 0) {
+            반환 true;
         }
-        return (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
+        반환 (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
                !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
         break;
     }
@@ -804,43 +804,43 @@ bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
         word_t badge;
 
         badge = cap_notification_cap_get_capNtfnBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        만약 (badge == 0) {
+            반환 true;
         }
-        return (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
+        반환 (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
                !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
         break;
     }
 
     default:
-        return true;
+        반환 true;
         break;
     }
 }
 
 exception_t ensureNoChildren(cte_t *slot)
 {
-    if (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
+    만약 (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
         cte_t *next;
 
         next = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (isMDBParentOf(slot, next)) {
+        만약 (isMDBParentOf(slot, next)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            반환 EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 exception_t ensureEmptySlot(cte_t *slot)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
+    만약 (cap_get_capType(slot->cap) != cap_null_cap) {
         current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        반환 EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 
 bool_t PURE isFinalCapability(cte_t *cte)
@@ -850,43 +850,43 @@ bool_t PURE isFinalCapability(cte_t *cte)
 
     mdb = cte->cteMDBNode;
 
-    if (mdb_node_get_mdbPrev(mdb) == 0) {
+    만약 (mdb_node_get_mdbPrev(mdb) == 0) {
         prevIsSameObject = false;
-    } else {
+    } 아니면 {
         cte_t *prev;
 
         prev = CTE_PTR(mdb_node_get_mdbPrev(mdb));
         prevIsSameObject = sameObjectAs(prev->cap, cte->cap);
     }
 
-    if (prevIsSameObject) {
-        return false;
-    } else {
-        if (mdb_node_get_mdbNext(mdb) == 0) {
-            return true;
-        } else {
+    만약 (prevIsSameObject) {
+        반환 false;
+    } 아니면 {
+        만약 (mdb_node_get_mdbNext(mdb) == 0) {
+            반환 true;
+        } 아니면 {
             cte_t *next;
 
             next = CTE_PTR(mdb_node_get_mdbNext(mdb));
-            return !sameObjectAs(cte->cap, next->cap);
+            반환 !sameObjectAs(cte->cap, next->cap);
         }
     }
 }
 
 bool_t PURE slotCapLongRunningDelete(cte_t *slot)
 {
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
-        return false;
-    } else if (! isFinalCapability(slot)) {
-        return false;
+    만약 (cap_get_capType(slot->cap) == cap_null_cap) {
+        반환 false;
+    } 아니면 만약 (! isFinalCapability(slot)) {
+        반환 false;
     }
     switch (cap_get_capType(slot->cap)) {
     case cap_thread_cap:
     case cap_zombie_cap:
     case cap_cnode_cap:
-        return true;
+        반환 true;
     default:
-        return false;
+        반환 false;
     }
 }
 
@@ -901,34 +901,34 @@ cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
     cte_t *slot;
     cap_t cnode;
 
-    if (!buffer) {
-        return NULL;
+    만약 (!buffer) {
+        반환 NULL;
     }
 
     ct = loadCapTransfer(buffer);
     cptr = ct.ctReceiveRoot;
 
     luc_ret = lookupCap(thread, cptr);
-    if (luc_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    만약 (luc_ret.status != EXCEPTION_NONE) {
+        반환 NULL;
     }
     cnode = luc_ret.cap;
 
     lus_ret = lookupTargetSlot(cnode, ct.ctReceiveIndex, ct.ctReceiveDepth);
-    if (lus_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    만약 (lus_ret.status != EXCEPTION_NONE) {
+        반환 NULL;
     }
     slot = lus_ret.slot;
 
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        return NULL;
+    만약 (cap_get_capType(slot->cap) != cap_null_cap) {
+        반환 NULL;
     }
 
-    return slot;
+    반환 slot;
 }
 
 cap_transfer_t PURE loadCapTransfer(word_t *buffer)
 {
-    const int offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
-    return capTransferFromWords(buffer + offset);
+    const 정수 offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
+    반환 capTransferFromWords(buffer + offset);
 }

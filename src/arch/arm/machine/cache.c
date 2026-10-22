@@ -17,7 +17,7 @@ static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
     vptr_t line;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         cleanByVA(line, pstart + (line - start));
     }
@@ -44,7 +44,7 @@ void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         cleanInvalByVA(line, pstart + (line - start));
     }
@@ -84,7 +84,7 @@ void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         cleanByVA_PoU(line, pstart + (line - start));
     }
@@ -100,10 +100,10 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
+    만약 (start != LINE_START(start)) {
         cleanCacheRange_RAM(start, start, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
+    만약 (end + 1 != LINE_START(end + 1)) {
         line = LINE_START(end);
         cleanCacheRange_RAM(line, line, pstart + (line - start));
     }
@@ -124,7 +124,7 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         invalidateByVA(line, pstart + (line - start));
     }
@@ -134,7 +134,7 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 
 void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
 {
-#if defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
+#만약 defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     /* In cases where the hypervisor is supported, the virtual address passed
      * to this function are kernel aliases for the underlying physical memory
      * rather than the virtual address in the actual vspace. This works fine
@@ -145,11 +145,11 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      * case
      */
     invalidate_I_PoU();
-#else
+#아니면
     vptr_t line;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         invalidateByVA_I(line, pstart + (line - start));
     }
@@ -161,7 +161,7 @@ void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
     vptr_t line;
     word_t index;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
+    위해 (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
         line = index << L1_CACHE_LINE_SIZE_BITS;
         branchFlush(line, pstart + (line - start));
     }
@@ -196,11 +196,11 @@ void arch_clean_invalidate_caches(void)
 void arch_clean_invalidate_L1_caches(word_t type)
 {
     dsb();
-    if (type & BIT(1)) {
+    만약 (type & BIT(1)) {
         cleanInvalidate_L1D();
         dsb();
     }
-    if (type & BIT(0)) {
+    만약 (type & BIT(0)) {
         invalidate_I_PoU();
         dsb();
         isb();

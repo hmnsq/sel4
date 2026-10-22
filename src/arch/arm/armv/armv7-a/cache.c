@@ -21,7 +21,7 @@ static inline word_t readCLID(void)
 {
     word_t CLID;
     asm volatile("mrc p15, 1, %0, c0, c0, 1" : "=r"(CLID));
-    return CLID;
+    반환 CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -38,7 +38,7 @@ enum arm_cache_type {
 };
 
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+static inline word_t readCacheSize(정수 level, bool_t instruction)
 {
     word_t size_unique_name, csselr_old;
     /* Save CSSELR */
@@ -49,7 +49,7 @@ static inline word_t readCacheSize(int level, bool_t instruction)
     asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r"(size_unique_name));
     /* Restore CSSELR */
     asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r"(csselr_old));
-    return size_unique_name;
+    반환 size_unique_name;
 }
 
 /* Number of bits to index within a cache line.  The field is log2(nwords) - 2
@@ -63,23 +63,23 @@ static inline word_t readCacheSize(int level, bool_t instruction)
 
 void clean_D_PoU(void)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
-    int l;
+    정수 clid = readCLID();
+    정수 lou = LOUU(clid);
+    정수 l;
 
-    for (l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    위해 (l = 0; l < lou; l++) {
+        만약 (CTYPE(clid, l) > ARMCacheI) {
             word_t s = readCacheSize(l, 0);
-            int lbits = LINEBITS(s);
-            int assoc = ASSOC(s);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(s);
-            int w;
+            정수 lbits = LINEBITS(s);
+            정수 assoc = ASSOC(s);
+            정수 assoc_bits = wordBits - clzl(assoc - 1);
+            정수 nsets = NSETS(s);
+            정수 w;
 
-            for (w = 0; w < assoc; w++) {
-                int v;
+            위해 (w = 0; w < assoc; w++) {
+                정수 v;
 
-                for (v = 0; v < nsets; v++) {
+                위해 (v = 0; v < nsets; v++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (v << lbits) | (l << 1));
                 }
@@ -88,19 +88,19 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+static inline void cleanInvalidate_D_by_level(정수 l)
 {
     word_t s = readCacheSize(l, 0);
-    int lbits = LINEBITS(s);
-    int assoc = ASSOC(s);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(s);
-    int w;
+    정수 lbits = LINEBITS(s);
+    정수 assoc = ASSOC(s);
+    정수 assoc_bits = wordBits - clzl(assoc - 1);
+    정수 nsets = NSETS(s);
+    정수 w;
 
-    for (w = 0; w < assoc; w++) {
-        int v;
+    위해 (w = 0; w < assoc; w++) {
+        정수 v;
 
-        for (v = 0; v < nsets; v++) {
+        위해 (v = 0; v < nsets; v++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (v << lbits) | (l << 1));
         }
@@ -109,12 +109,12 @@ static inline void cleanInvalidate_D_by_level(int l)
 
 void cleanInvalidate_D_PoC(void)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
-    int l;
+    정수 clid = readCLID();
+    정수 loc = LOC(clid);
+    정수 l;
 
-    for (l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    위해 (l = 0; l < loc; l++) {
+        만약 (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }

@@ -26,19 +26,19 @@ exception_t preemptionPoint(void)
      * We avoid checking for pending IRQs every call, as our callers tend to
      * call us in a tight loop and checking for pending IRQs can be quite slow.
      */
-    if (ksWorkUnitsCompleted >= CONFIG_MAX_NUM_WORK_UNITS_PER_PREEMPTION) {
+    만약 (ksWorkUnitsCompleted >= CONFIG_MAX_NUM_WORK_UNITS_PER_PREEMPTION) {
         ksWorkUnitsCompleted = 0;
 #ifdef CONFIG_KERNEL_MCS
         updateTimestamp();
-        if (isIRQPending() || isCurDomainExpired()
+        만약 (isIRQPending() || isCurDomainExpired()
             || !(sc_active(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), NODE_STATE(ksConsumed)))) {
-#else
-        if (isIRQPending()) {
+#아니면
+        만약 (isIRQPending()) {
 #endif
-            return EXCEPTION_PREEMPTED;
+            반환 EXCEPTION_PREEMPTED;
         }
     }
 
-    return EXCEPTION_NONE;
+    반환 EXCEPTION_NONE;
 }
 

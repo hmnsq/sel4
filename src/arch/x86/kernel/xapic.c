@@ -30,21 +30,21 @@ BOOT_CODE bool_t apic_enable(void)
     apic_base_msr_t apic_base_msr;
     apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
 
-    if (!apic_base_msr_get_enabled(apic_base_msr)) {
+    만약 (!apic_base_msr_get_enabled(apic_base_msr)) {
         printf("APIC: Enabled bit not set\n");
-        return false;
+        반환 false;
     }
 
-    if (x2apic_is_enabled()) {
+    만약 (x2apic_is_enabled()) {
         printf("x2APIC enabled in BIOS but kernel does not support that\n");
-        return false;
+        반환 false;
     }
 
 #ifdef CONFIG_USE_LOGICAL_IDS
     init_xapic_ldr();
 #endif /* CONFIG_USE_LOGICAL_IDS */
 
-    return true;
+    반환 true;
 }
 
 bool_t apic_is_interrupt_pending(void)
@@ -53,12 +53,12 @@ bool_t apic_is_interrupt_pending(void)
 
     /* read 256-bit register: each 32-bit word is 16 byte aligned */
     assert(int_irq_min % 32 == 0);
-    for (i = int_irq_min; i <= int_irq_max; i += 32) {
-        if (apic_read_reg(APIC_IRR_BASE + i / 2) != 0) {
-            return true;
+    위해 (i = int_irq_min; i <= int_irq_max; i += 32) {
+        만약 (apic_read_reg(APIC_IRR_BASE + i / 2) != 0) {
+            반환 true;
         }
     }
-    return false;
+    반환 false;
 }
 
 BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
@@ -123,7 +123,7 @@ void apic_send_ipi_core(irq_t vector, cpu_id_t cpu_id)
     /* wait till we can send an IPI */
     do {
         icr1.words[0] = apic_read_reg(APIC_ICR1);
-    } while (apic_icr1_get_delivery_status(icr1));
+    } 동안 (apic_icr1_get_delivery_status(icr1));
 
     apic_write_icr(
         apic_icr2_new(
@@ -147,7 +147,7 @@ void apic_send_ipi_cluster(irq_t vector, word_t mda)
     /* wait till we can send an IPI */
     do {
         icr1.words[0] = apic_read_reg(APIC_ICR1);
-    } while (apic_icr1_get_delivery_status(icr1));
+    } 동안 (apic_icr1_get_delivery_status(icr1));
 
     apic_write_icr(
         apic_icr2_new(

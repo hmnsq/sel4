@@ -33,14 +33,14 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out invalid bits */
     pending &= MASK(12);
     /* If pending == 0 spurious interrupt */
-    if (pending == 0) {
-        return irqInvalid;
+    만약 (pending == 0) {
+        반환 irqInvalid;
     }
 
     /* Get IRQ number */
     irq = (wordBits - 1 - clzl(pending));
-    if (irq != INTERRUPT_CORE_GPU) {
-        return irq;
+    만약 (irq != INTERRUPT_CORE_GPU) {
+        반환 irq;
     }
 
     /* GPU interrupt */
@@ -49,22 +49,22 @@ static inline irq_t getActiveIRQ(void)
     /* Mask out pending register 0 and 1 */
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER1 - BASIC_IRQ_OFFSET);
     pending &= ~BIT(INTERRUPT_BASIC_IRQ_PENDING_REGISTER2 - BASIC_IRQ_OFFSET);
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
+    만약 (pending) {
+        반환 (wordBits - 1 - clzl(pending)) + BASIC_IRQ_OFFSET;
     }
 
     pending = intc_regs->bfGPUIRQPending[1];
     pending &= intc_regs->bfEnableIRQs[1];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
+    만약 (pending) {
+        반환 (wordBits - 1 - clzl(pending)) + 32 + NORMAL_IRQ_OFFSET;
     }
     pending = intc_regs->bfGPUIRQPending[0];
     pending &= intc_regs->bfEnableIRQs[0];
-    if (pending) {
-        return (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
+    만약 (pending) {
+        반환 (wordBits - 1 - clzl(pending)) + 0 + NORMAL_IRQ_OFFSET;
     }
 
-    return irqInvalid;
+    반환 irqInvalid;
 }
 
 static inline void maskInterrupt(bool_t disable, irq_t irq)
@@ -74,56 +74,56 @@ static inline void maskInterrupt(bool_t disable, irq_t irq)
     case INTERRUPT_CORE_CNTPNSIRQ:
     case INTERRUPT_CORE_CNTHPIRQ :
     case INTERRUPT_CORE_CNTVIRQ  :
-        if (disable) {
+        만약 (disable) {
             core_regs->coreTimersIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } 아니면 {
             core_regs->coreTimersIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        반환;
     case INTERRUPT_CORE_MAILBOX_0:
     case INTERRUPT_CORE_MAILBOX_1:
     case INTERRUPT_CORE_MAILBOX_2:
     case INTERRUPT_CORE_MAILBOX_3:
-        if (disable) {
+        만약 (disable) {
             core_regs->coreMailboxesIrqCtrl[0] &= ~BIT(irq);
-        } else {
+        } 아니면 {
             core_regs->coreMailboxesIrqCtrl[0] |= BIT(irq);
         }
-        return;
+        반환;
     case INTERRUPT_CORE_LOCAL_TIMER:
-        if (disable) {
+        만약 (disable) {
             core_regs->localTimerCtl &= ~BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
-        } else {
+        } 아니면 {
             core_regs->localTimerCtl |= BIT(LOCAL_TIMER_CTRL_IRQ_BIT);
         }
-        return;
+        반환;
     case INTERRUPT_CORE_GPU:
     // Not maskable
     case INTERRUPT_CORE_PMU:
     // Not currently handled
     case INTERRUPT_CORE_AXI:
         // Not currently handled
-        return;
+        반환;
     default:
         break;
     }
-    if (irq < BASIC_IRQ_OFFSET) {
+    만약 (irq < BASIC_IRQ_OFFSET) {
         // Other invalid irq
-        return;
+        반환;
     }
 
-    if (irq < NORMAL_IRQ_OFFSET) {
-        if (disable) {
+    만약 (irq < NORMAL_IRQ_OFFSET) {
+        만약 (disable) {
             intc_regs->bfDisableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
-        } else {
+        } 아니면 {
             intc_regs->bfEnableBasicIRQs = BIT(irq - BASIC_IRQ_OFFSET);
         }
-    } else if (irq <= maxIRQ) {
-        int normal_irq = irq - NORMAL_IRQ_OFFSET;
-        int index = normal_irq / 32;
-        if (disable) {
+    } 아니면 만약 (irq <= maxIRQ) {
+        정수 normal_irq = irq - NORMAL_IRQ_OFFSET;
+        정수 index = normal_irq / 32;
+        만약 (disable) {
             intc_regs->bfDisableIRQs[index] = BIT(normal_irq % 32);
-        } else {
+        } 아니면 {
             intc_regs->bfEnableIRQs[index] = BIT(normal_irq % 32);
         }
     }
