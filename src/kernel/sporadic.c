@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <object/structures.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <object/structures.h>
 
 /* functions to manage the circular buffer of
  * sporadic budget replenishments (refills for short).
@@ -32,149 +32,149 @@
  */
 
 /* return the index of the next item in the refill queue */
-static inline word_t refill_next(sched_context_t *sc, word_t index)
+ساكن مضمن word_t refill_next(sched_context_t *sc, word_t index)
 {
-    return (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
+    أرجع (index == sc->scRefillMax - 1u) ? (0) : index + 1u;
 }
 
 #ifdef CONFIG_PRINTING
 /* for debugging */
-UNUSED static inline void print_index(sched_context_t *sc, word_t index)
+UNUSED ساكن مضمن فراغ بغ_index(sched_context_t *sc, word_t index)
 {
 
     printf("index %lu, Amount: %llx, time %llx\n", index, refill_index(sc, index)->rAmount,
            refill_index(sc, index)->rTime);
 }
 
-UNUSED static inline void refill_print(sched_context_t *sc)
+UNUSED ساكن مضمن فراغ refill_بغ(sched_context_t *sc)
 {
     printf("Head %lu tail %lu\n", sc->scRefillHead, sc->scRefillTail);
     word_t current = sc->scRefillHead;
     /* always print the head */
-    print_index(sc, current);
+    بغ_index(sc, current);
 
-    while (current != sc->scRefillTail) {
+    طالما (current != sc->scRefillTail) {
         current = refill_next(sc, current);
-        print_index(sc, current);
+        بغ_index(sc, current);
     }
 
 }
 #endif /* CONFIG_PRINTING */
 #ifdef CONFIG_DEBUG_BUILD
 /* check a refill queue is ordered correctly */
-static UNUSED bool_t refill_ordered(sched_context_t *sc)
+ساكن UNUSED bool_t refill_ordered(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
-        return true;
+    إذا (isRoundRobin(sc)) {
+        أرجع true;
     }
 
     word_t current = sc->scRefillHead;
     word_t next = refill_next(sc, sc->scRefillHead);
 
-    while (current != sc->scRefillTail) {
-        if (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
+    طالما (current != sc->scRefillTail) {
+        إذا (!(refill_index(sc, current)->rTime + refill_index(sc, current)->rAmount <= refill_index(sc, next)->rTime)) {
 #ifdef CONFIG_PRINTING
-            refill_print(sc);
+            refill_بغ(sc);
 #endif
-            return false;
+            أرجع false;
         }
         current = next;
         next = refill_next(sc, current);
     }
 
-    return true;
+    أرجع true;
 }
 
-#define REFILL_SANITY_START(sc) ticks_t _sum = refill_sum(sc); assert(isRoundRobin(sc) || refill_ordered(sc));
+#define REFILL_SANITY_START(sc) ticks_t _sum = refill_sum(sc); أكد(isRoundRobin(sc) || refill_ordered(sc));
 #define REFILL_SANITY_CHECK(sc, budget) \
-    do { \
-        assert(refill_sum(sc) == budget); assert(isRoundRobin(sc) || refill_ordered(sc)); \
-    } while (0)
+    افعل { \
+        أكد(refill_sum(sc) == budget); أكد(isRoundRobin(sc) || refill_ordered(sc)); \
+    } طالما (0)
 
 #define REFILL_SANITY_END(sc) \
-    do {\
+    افعل {\
         REFILL_SANITY_CHECK(sc, _sum);\
-    } while (0)
-#else
+    } طالما (0)
+#وإلا
 #define REFILL_SANITY_START(sc)
 #define REFILL_SANITY_CHECK(sc, budget)
 #define REFILL_SANITY_END(sc)
 #endif /* CONFIG_DEBUG_BUILD */
 
 /* compute the sum of a refill queue */
-static UNUSED ticks_t refill_sum(sched_context_t *sc)
+ساكن UNUSED ticks_t refill_sum(sched_context_t *sc)
 {
     ticks_t sum = refill_head(sc)->rAmount;
     word_t current = sc->scRefillHead;
 
-    while (current != sc->scRefillTail) {
+    طالما (current != sc->scRefillTail) {
         current = refill_next(sc, current);
         sum += refill_index(sc, current)->rAmount;
     }
 
-    return sum;
+    أرجع sum;
 }
 
 /* pop head of refill queue */
-static inline refill_t refill_pop_head(sched_context_t *sc)
+ساكن مضمن refill_t refill_چرو_head(sched_context_t *sc)
 {
     /* queues cannot be smaller than 1 */
-    assert(!refill_single(sc));
+    أكد(!refill_single(sc));
 
     UNUSED word_t prev_size = refill_size(sc);
     refill_t refill = *refill_head(sc);
     sc->scRefillHead = refill_next(sc, sc->scRefillHead);
 
     /* sanity */
-    assert(prev_size == (refill_size(sc) + 1));
-    assert(sc->scRefillHead < sc->scRefillMax);
-    return refill;
+    أكد(prev_size == (refill_size(sc) + 1));
+    أكد(sc->scRefillHead < sc->scRefillMax);
+    أرجع refill;
 }
 
 /* add item to tail of refill queue */
-static inline void refill_add_tail(sched_context_t *sc, refill_t refill)
+ساكن مضمن فراغ refill_add_tail(sched_context_t *sc, refill_t refill)
 {
     /* cannot add beyond queue size */
-    assert(refill_size(sc) < sc->scRefillMax);
+    أكد(refill_size(sc) < sc->scRefillMax);
 
     word_t new_tail = refill_next(sc, sc->scRefillTail);
     sc->scRefillTail = new_tail;
     *refill_tail(sc) = refill;
 
     /* sanity */
-    assert(new_tail < sc->scRefillMax);
+    أكد(new_tail < sc->scRefillMax);
 }
 
-static inline void maybe_add_empty_tail(sched_context_t *sc)
+ساكن مضمن فراغ maybe_add_empty_tail(sched_context_t *sc)
 {
-    if (isRoundRobin(sc)) {
+    إذا (isRoundRobin(sc)) {
         /* add an empty refill - we track the used up time here */
         refill_t empty_tail = { .rTime = refill_head(sc)->rTime };
         refill_add_tail(sc, empty_tail);
-        assert(refill_size(sc) == MIN_REFILLS);
+        أكد(refill_size(sc) == MIN_REFILLS);
     }
 }
 
-void refill_new(sched_context_t *sc, word_t max_refills, ticks_t budget, ticks_t period)
+فراغ refill_new(sched_context_t *sc, word_t max_refills, ticks_t budget, ticks_t period)
 {
     sc->scPeriod = period;
     sc->scRefillHead = 0;
     sc->scRefillTail = 0;
     sc->scRefillMax = max_refills;
-    assert(budget >= MIN_BUDGET);
+    أكد(budget >= MIN_BUDGET);
     /* full budget available */
     refill_head(sc)->rAmount = budget;
     /* budget can be used from now */
-    refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+    refill_head(sc)->rTime = كلي_STATE(ksCurTime);
     maybe_add_empty_tail(sc);
     REFILL_SANITY_CHECK(sc, budget);
 }
 
-void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, word_t new_max_refills)
+فراغ refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, word_t new_max_refills)
 {
 
     /* refill must be initialised in order to be updated - otherwise refill_new should be used */
-    assert(sc->scRefillMax > 0);
+    أكد(sc->scRefillMax > 0);
 
     /* this is called on an active thread. We want to preserve the sliding window constraint -
      * so over new_period, new_budget should not be exceeded even temporarily */
@@ -191,15 +191,15 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     /* update period */
     sc->scPeriod = new_period;
 
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
+    إذا (refill_ready(sc)) {
+        refill_head(sc)->rTime = كلي_STATE(ksCurTime);
     }
 
-    if (refill_head(sc)->rAmount >= new_budget) {
+    إذا (refill_head(sc)->rAmount >= new_budget) {
         /* if the heads budget exceeds the new budget just trim it */
         refill_head(sc)->rAmount = new_budget;
         maybe_add_empty_tail(sc);
-    } else {
+    } وإلا {
         /* otherwise schedule the rest for the next period */
         refill_t new = { .rAmount = (new_budget - refill_head(sc)->rAmount),
                          .rTime = refill_head(sc)->rTime + new_period
@@ -210,10 +210,10 @@ void refill_update(sched_context_t *sc, ticks_t new_period, ticks_t new_budget, 
     REFILL_SANITY_CHECK(sc, new_budget);
 }
 
-static inline void schedule_used(sched_context_t *sc, refill_t new)
+ساكن مضمن فراغ schedule_used(sched_context_t *sc, refill_t new)
 {
     refill_t tail = *refill_tail(sc);
-    if (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
+    إذا (unlikely(tail.rTime + tail.rAmount >= new.rTime)) {
         /* Merge overlapping or adjacent refill.
          *
          * refill_update can produce a tail refill that will overlap
@@ -227,49 +227,49 @@ static inline void schedule_used(sched_context_t *sc, refill_t new)
          * incrementally) a refill split is only caused by a thread
          * blocking. */
         refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
-    } else if (likely(!refill_full(sc))) {
+    } وإلا إذا (likely(!refill_full(sc))) {
         /* Add tail normally */
         refill_add_tail(sc, new);
-    } else {
+    } وإلا {
         /* Delay existing tail to merge */
         refill_tail(sc)->rTime = new.rTime - tail.rAmount;
         refill_tail(sc)->rAmount = tail.rAmount + new.rAmount;
     }
 }
 
-static bool_t refill_head_overlapping(sched_context_t *sc)
+ساكن bool_t refill_head_overlapping(sched_context_t *sc)
 {
-    if (!refill_single(sc)) {
+    إذا (!refill_single(sc)) {
         refill_t head = *refill_head(sc);
         ticks_t tail = head.rTime + head.rAmount;
-        return refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
-    } else {
-        return false;
+        أرجع refill_index(sc, refill_next(sc, sc->scRefillHead))->rTime <= tail;
+    } وإلا {
+        أرجع false;
     }
 }
 
-static inline bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
+ساكن مضمن bool_t head_refill_overrun(sched_context_t *sc, ticks_t usage)
 {
     refill_t head = *refill_head(sc);
-    return head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
+    أرجع head.rAmount <= usage && head.rTime < MAX_RELEASE_TIME;
 }
 
-static inline ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
+ساكن مضمن ticks_t charge_entire_head_refill(sched_context_t *sc, ticks_t usage)
 {
     refill_t head = *refill_head(sc);
 
-    if (refill_single(sc)) {
+    إذا (refill_single(sc)) {
         refill_head(sc)->rTime = head.rTime + sc->scPeriod;
-    } else {
-        refill_t old_head = refill_pop_head(sc);
+    } وإلا {
+        refill_t old_head = refill_چرو_head(sc);
         old_head.rTime += sc->scPeriod;
         schedule_used(sc, old_head);
     }
 
-    return usage - head.rAmount;
+    أرجع usage - head.rAmount;
 }
 
-static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
+ساكن مضمن ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
 {
     ticks_t current_usage = usage;
 
@@ -283,31 +283,31 @@ static inline ticks_t handle_overrun(sched_context_t *sc, ticks_t usage)
      * that assertion we ensure that we never delay a refill past this
      * point in the future.
      */
-    while (head_refill_overrun(sc, current_usage)) {
+    طالما (head_refill_overrun(sc, current_usage)) {
         current_usage = charge_entire_head_refill(sc, current_usage);
     }
 
-    return current_usage;
+    أرجع current_usage;
 }
 
-static inline bool_t head_refill_insufficient(sched_context_t *sc)
+ساكن مضمن bool_t head_refill_insufficient(sched_context_t *sc)
 {
-    return refill_head(sc)->rAmount < MIN_BUDGET;
+    أرجع refill_head(sc)->rAmount < MIN_BUDGET;
 }
 
-static inline void merge_nonoverlapping_head_refill(sched_context_t *sc)
+ساكن مضمن فراغ merge_nonoverlapping_head_refill(sched_context_t *sc)
 {
-    refill_t head = refill_pop_head(sc);
+    refill_t head = refill_چرو_head(sc);
     refill_head(sc)->rAmount += head.rAmount;
     /* Delay head to ensure the subsequent refill doesn't end any
      * later (rather than simply combining refills). */
     refill_head(sc)->rTime -= head.rAmount;
 }
 
-void refill_budget_check(ticks_t usage)
+فراغ refill_budget_check(ticks_t usage)
 {
-    sched_context_t *sc = NODE_STATE(ksCurSC);
-    assert(!isRoundRobin(sc));
+    sched_context_t *sc = كلي_STATE(ksCurSC);
+    أكد(!isRoundRobin(sc));
     REFILL_SANITY_START(sc);
 
     usage = handle_overrun(sc, usage);
@@ -317,8 +317,8 @@ void refill_budget_check(ticks_t usage)
      * integer overflow then the usage must be smaller than the head.
      */
     refill_t head = *refill_head(sc);
-    if (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
-        assert(head.rAmount > usage);
+    إذا (usage > 0 && head.rTime < MAX_RELEASE_TIME) {
+        أكد(head.rAmount > usage);
         refill_t used = (refill_t) {
             .rAmount = usage,
             .rTime = head.rTime + sc->scPeriod,
@@ -340,40 +340,40 @@ void refill_budget_check(ticks_t usage)
     }
 
     /* Ensure the head refill has the minimum budget */
-    while (head_refill_insufficient(sc)) {
+    طالما (head_refill_insufficient(sc)) {
         merge_nonoverlapping_head_refill(sc);
     }
 
     REFILL_SANITY_END(sc);
 }
 
-static inline void merge_overlapping_head_refill(sched_context_t *sc)
+ساكن مضمن فراغ merge_overlapping_head_refill(sched_context_t *sc)
 {
-    refill_t old_head = refill_pop_head(sc);
+    refill_t old_head = refill_چرو_head(sc);
     refill_head(sc)->rTime = old_head.rTime;
     refill_head(sc)->rAmount += old_head.rAmount;
 }
 
-void refill_unblock_check(sched_context_t *sc)
+فراغ refill_unblock_check(sched_context_t *sc)
 {
 
-    if (isRoundRobin(sc)) {
+    إذا (isRoundRobin(sc)) {
         /* nothing to do */
-        return;
+        أرجع;
     }
 
     /* advance earliest activation time to now */
     REFILL_SANITY_START(sc);
-    if (refill_ready(sc)) {
-        refill_head(sc)->rTime = NODE_STATE(ksCurTime);
-        NODE_STATE(ksReprogram) = true;
+    إذا (refill_ready(sc)) {
+        refill_head(sc)->rTime = كلي_STATE(ksCurTime);
+        كلي_STATE(ksReprogram) = true;
 
         /* merge available replenishments */
-        while (refill_head_overlapping(sc)) {
+        طالما (refill_head_overlapping(sc)) {
             merge_overlapping_head_refill(sc);
         }
 
-        assert(refill_sufficient(sc, 0));
+        أكد(refill_sufficient(sc, 0));
     }
     REFILL_SANITY_END(sc);
 }

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/machine.h>
-#include <api/debug.h>
+#ضمن <config.h>
+#ضمن <mode/machine.h>
+#ضمن <api/debug.h>
 
 /** DONT_TRANSLATE */
-void NORETURN NO_INLINE VISIBLE halt(void)
+فراغ NORETURN NO_INLINE VISIBLE halt(فراغ)
 {
     /* halt is actually, idle thread without the interrupts */
     MSR("daif", (DAIF_DEBUG | DAIF_SERROR | DAIF_IRQ | DAIF_FIRQ));
@@ -17,7 +17,7 @@ void NORETURN NO_INLINE VISIBLE halt(void)
 #ifdef CONFIG_PRINTING
     printf("halting...");
 #ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
+    debug_بغ_Kernel_Entry_Reason();
 #endif
 #endif
     idle_thread();
