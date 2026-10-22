@@ -18,25 +18,25 @@ exception_t handle_SysBenchmarkFlushCaches(void)
 {
 #ifdef CONFIG_ARCH_ARM
     tcb_t *thread = NODE_STATE(ksCurThread);
-    if (getRegister(thread, capRegister)) {
+    ᯀᯮᯝ (getRegister(thread, capRegister)) {
         arch_clean_invalidate_L1_caches(getRegister(thread, msgInfoRegister));
-    } else {
+    } ᯀᯮᯝᯂᯪ {
         arch_clean_invalidate_caches();
     }
-#else
+#ᯀᯮᯝᯂᯪ
     arch_clean_invalidate_caches();
 #endif
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 exception_t handle_SysBenchmarkResetLog(void)
 {
 #ifdef CONFIG_KERNEL_LOG_BUFFER
-    if (ksUserLogBuffer == 0) {
+    ᯀᯮᯝ (ksUserLogBuffer == 0) {
         userError("A user-level buffer has to be set before resetting benchmark.\
                 Use seL4_BenchmarkSetLogBuffer\n");
         setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+        ᯀᯮᯞ EXCEPTION_SYSCALL_ERROR;
     }
 
     ksLogIndex = 0;
@@ -55,7 +55,7 @@ exception_t handle_SysBenchmarkResetLog(void)
 #endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
     setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 exception_t handle_SysBenchmarkFinalizeLog(void)
@@ -69,20 +69,20 @@ exception_t handle_SysBenchmarkFinalizeLog(void)
     benchmark_utilisation_finalise();
 #endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_KERNEL_LOG_BUFFER
 exception_t handle_SysBenchmarkSetLogBuffer(void)
 {
     word_t cptr_userFrame = getRegister(NODE_STATE(ksCurThread), capRegister);
-    if (benchmark_arch_map_logBuffer(cptr_userFrame) != EXCEPTION_NONE) {
+    ᯀᯮᯝ (benchmark_arch_map_logBuffer(cptr_userFrame) != EXCEPTION_NONE) {
         setRegister(NODE_STATE(ksCurThread), capRegister, seL4_IllegalOperation);
-        return EXCEPTION_SYSCALL_ERROR;
+        ᯀᯮᯞ EXCEPTION_SYSCALL_ERROR;
     }
 
     setRegister(NODE_STATE(ksCurThread), capRegister, seL4_NoError);
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 #endif /* CONFIG_KERNEL_LOG_BUFFER */
 
@@ -91,7 +91,7 @@ exception_t handle_SysBenchmarkSetLogBuffer(void)
 exception_t handle_SysBenchmarkGetThreadUtilisation(void)
 {
     benchmark_track_utilisation_dump();
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 exception_t handle_SysBenchmarkResetThreadUtilisation(void)
@@ -103,15 +103,15 @@ exception_t handle_SysBenchmarkResetThreadUtilisation(void)
     lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    ᯀᯮᯝ (cap_type != cap_thread_cap) {
         userError("SysBenchmarkResetThreadUtilisation: cap is not a TCB, halting");
-        return EXCEPTION_NONE;
+        ᯀᯮᯞ EXCEPTION_NONE;
     }
 
     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
 
     benchmark_track_reset_utilisation(tcb);
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 #ifdef CONFIG_DEBUG_BUILD
@@ -133,14 +133,14 @@ exception_t handle_SysBenchmarkDumpAllThreadsUtilisation(void)
         printf("      \"KERNEL_UTILISATION\":%lu,\n", (word_t) curr->benchmark.kernel_utilisation);
         printf("      \"NUMBER_KERNEL_ENTRIES\":%lu\n", (word_t) curr->benchmark.number_kernel_entries);
         printf("    }");
-        if (TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext != NULL) {
+        ᯀᯮᯝ (TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext != NULL) {
             printf(",\n");
-        } else {
+        } ᯀᯮᯝᯂᯪ {
             printf("\n");
         }
     }
     printf("  ]\n}\n");
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 exception_t handle_SysBenchmarkResetAllThreadsUtilisation(void)
@@ -148,7 +148,7 @@ exception_t handle_SysBenchmarkResetAllThreadsUtilisation(void)
     for (tcb_t *curr = NODE_STATE(ksDebugTCBs); curr != NULL; curr = TCB_PTR_DEBUG_PTR(curr)->tcbDebugNext) {
         benchmark_track_reset_utilisation(curr);
     }
-    return EXCEPTION_NONE;
+    ᯀᯮᯞ EXCEPTION_NONE;
 }
 
 #endif /* CONFIG_DEBUG_BUILD */

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+#ᯀᯮᯝ CONFIG_MAX_NUM_TRACE_POINTS > 0
 
 #include <benchmark/benchmark.h>
 #include <arch/benchmark.h>

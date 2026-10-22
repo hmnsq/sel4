@@ -7,7 +7,7 @@
 #include <benchmark/benchmark.h>
 #include <arch/benchmark.h>
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+#ᯀᯮᯝ CONFIG_MAX_NUM_TRACE_POINTS > 0
 timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
 bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
 timestamp_t ksExit;

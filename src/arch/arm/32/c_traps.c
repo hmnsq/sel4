@@ -30,8 +30,8 @@ void VISIBLE NORETURN restore_user_context(void)
 
     NODE_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        asm volatile(
+    ᯀᯮᯝ (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        asm ca_ncala(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
             /* Pop user registers */
@@ -53,12 +53,12 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
-        asm volatile("mov sp, %[cur_thread] \n\
+    } ᯀᯮᯝᯂᯪ {
+        asm ca_ncala("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"
                      : /* no output */
-                     : [cur_thread] "r"(cur_thread_reg + NextIP * sizeof(word_t))
+                     : [cur_thread] "r"(cur_thread_reg + NextIP * parimaa_na(word_t))
                     );
     }
     UNREACHABLE();

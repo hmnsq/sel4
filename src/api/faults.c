@@ -25,9 +25,9 @@ compile_assert(seL4_UnknownSyscall_Syscall, (word_t) n_syscallMessage == seL4_Un
 compile_assert(seL4_UserException_Number, (word_t) n_exceptionMessage == seL4_UserException_Number)
 compile_assert(seL4_UserException_Code, (word_t) n_exceptionMessage + 1 == seL4_UserException_Code)
 
-static inline unsigned int
+static anta_hstha unsigned puur_naa_nka
 setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
-                      lookup_fault_t luf, unsigned int offset)
+                      lookup_fault_t luf, unsigned puur_naa_nka offset)
 {
     word_t lufType = lookup_fault_get_lufType(luf);
     word_t i;
@@ -35,35 +35,35 @@ setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
     i = setMR(receiver, receiveIPCBuffer, offset, lufType + 1);
 
     /* check constants match libsel4 */
-    if (offset == seL4_CapFault_LookupFailureType) {
+    ᯀᯮᯝ (offset == seL4_CapFault_LookupFailureType) {
         assert(offset + 1 == seL4_CapFault_BitsLeft);
         assert(offset + 2 == seL4_CapFault_DepthMismatch_BitsFound);
         assert(offset + 2 == seL4_CapFault_GuardMismatch_GuardFound);
         assert(offset + 3 == seL4_CapFault_GuardMismatch_BitsFound);
-    } else {
+    } ᯀᯮᯝᯂᯪ {
         assert(offset == 1);
     }
 
     switch (lufType) {
-    case lookup_fault_invalid_root:
-        return i;
+    pak_sa lookup_fault_invalid_root:
+        ᯀᯮᯞ i;
 
-    case lookup_fault_missing_capability:
-        return setMR(receiver, receiveIPCBuffer, offset + 1,
+    pak_sa lookup_fault_missing_capability:
+        ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, offset + 1,
                      lookup_fault_missing_capability_get_bitsLeft(luf));
 
-    case lookup_fault_depth_mismatch:
+    pak_sa lookup_fault_depth_mismatch:
         setMR(receiver, receiveIPCBuffer, offset + 1,
               lookup_fault_depth_mismatch_get_bitsLeft(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 2,
+        ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, offset + 2,
                      lookup_fault_depth_mismatch_get_bitsFound(luf));
 
-    case lookup_fault_guard_mismatch:
+    pak_sa lookup_fault_guard_mismatch:
         setMR(receiver, receiveIPCBuffer, offset + 1,
               lookup_fault_guard_mismatch_get_bitsLeft(luf));
         setMR(receiver, receiveIPCBuffer, offset + 2,
               lookup_fault_guard_mismatch_get_guardFound(luf));
-        return setMR(receiver, receiveIPCBuffer, offset + 3,
+        ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, offset + 3,
                      lookup_fault_guard_mismatch_get_bitsFound(luf));
 
     default:
@@ -71,7 +71,7 @@ setMRs_lookup_failure(tcb_t *receiver, word_t *receiveIPCBuffer,
     }
 }
 
-static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t id, word_t length)
+static anta_hstha void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t id, word_t length)
 {
     word_t i;
     bool_t archInfo;
@@ -84,9 +84,9 @@ static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t
         setRegister(receiver, r, sanitiseRegister(r, v, archInfo));
     }
 
-    if (i < length) {
+    ᯀᯮᯝ (i < length) {
         word_t *sendBuf = lookupIPCBuffer(false, sender);
-        if (sendBuf) {
+        ᯀᯮᯝ (sendBuf) {
             for (; i < length; i++) {
                 register_t r = fault_messages[id][i];
                 word_t v = sendBuf[i + 1];
@@ -96,7 +96,7 @@ static inline void copyMRsFaultReply(tcb_t *sender, tcb_t *receiver, MessageID_t
     }
 }
 
-static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
+static anta_hstha void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
                                 word_t length, word_t *receiveIPCBuffer)
 {
     word_t i;
@@ -104,7 +104,7 @@ static inline void copyMRsFault(tcb_t *sender, tcb_t *receiver, MessageID_t id,
         setRegister(receiver, msgRegisters[i], getRegister(sender, fault_messages[id][i]));
     }
 
-    if (receiveIPCBuffer) {
+    ᯀᯮᯝ (receiveIPCBuffer) {
         for (; i < length; i++) {
             receiveIPCBuffer[i + 1] = getRegister(sender, fault_messages[id][i]);
         }
@@ -120,33 +120,33 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
     seL4_Fault_t fault = receiver->tcbFault;
 
     switch (seL4_Fault_get_seL4_FaultType(fault)) {
-    case seL4_Fault_CapFault:
-        return true;
+    pak_sa seL4_Fault_CapFault:
+        ᯀᯮᯞ true;
 
-    case seL4_Fault_UnknownSyscall:
+    pak_sa seL4_Fault_UnknownSyscall:
         copyMRsFaultReply(sender, receiver, MessageID_Syscall, MIN(length, n_syscallMessage));
-        return (label == 0);
+        ᯀᯮᯞ (label == 0);
 
-    case seL4_Fault_UserException:
+    pak_sa seL4_Fault_UserException:
         copyMRsFaultReply(sender, receiver, MessageID_Exception, MIN(length, n_exceptionMessage));
-        return (label == 0);
+        ᯀᯮᯞ (label == 0);
 
 #ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout:
+    pak_sa seL4_Fault_Timeout:
         copyMRsFaultReply(sender, receiver, MessageID_TimeoutReply, MIN(length, n_timeoutMessage));
-        return (label == 0);
+        ᯀᯮᯞ (label == 0);
 #endif
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
+    pak_sa seL4_Fault_DebugException: {
         word_t n_instrs;
 
-        if (seL4_Fault_DebugException_get_exceptionReason(fault) != seL4_SingleStep) {
+        ᯀᯮᯝ (seL4_Fault_DebugException_get_exceptionReason(fault) != seL4_SingleStep) {
             /* Only single-step replies are required to set message registers.
              */
-            return (label == 0);
+            ᯀᯮᯞ (label == 0);
         }
 
-        if (length < DEBUG_REPLY_N_EXPECTED_REGISTERS) {
+        ᯀᯮᯝ (length < DEBUG_REPLY_N_EXPECTED_REGISTERS) {
             /* A single-step reply doesn't mean much if it isn't composed of the bp
              * number and number of instructions to skip. But even if both aren't
              * set, we can still allow the thread to continue because replying
@@ -161,7 +161,7 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
              * uses EFLAGS.TF.
              */
             n_instrs = 1;
-        } else {
+        } ᯀᯮᯝᯂᯪ {
             /* If the reply had all expected registers set, proceed as normal */
             n_instrs = getRegister(sender, msgRegisters[0]);
         }
@@ -169,8 +169,8 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
         syscall_error_t res;
 
         res = Arch_decodeConfigureSingleStepping(receiver, 0, n_instrs, true);
-        if (res.type != seL4_NoError) {
-            return false;
+        ᯀᯮᯝ (res.type != seL4_NoError) {
+            ᯀᯮᯞ false;
         };
 
         configureSingleStepping(receiver, 0, n_instrs, true);
@@ -179,68 +179,68 @@ bool_t handleFaultReply(tcb_t *receiver, tcb_t *sender)
          * is whether or not the thread will be resumed with stepping still
          * enabled.
          */
-        return (label == 0);
+        ᯀᯮᯞ (label == 0);
     }
 #endif
 
     default:
-        return Arch_handleFaultReply(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
+        ᯀᯮᯞ Arch_handleFaultReply(receiver, sender, seL4_Fault_get_seL4_FaultType(fault));
     }
 }
 
 word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
 {
     switch (seL4_Fault_get_seL4_FaultType(sender->tcbFault)) {
-    case seL4_Fault_CapFault:
+    pak_sa seL4_Fault_CapFault:
         setMR(receiver, receiveIPCBuffer, seL4_CapFault_IP, getRestartPC(sender));
         setMR(receiver, receiveIPCBuffer, seL4_CapFault_Addr,
               seL4_Fault_CapFault_get_address(sender->tcbFault));
         setMR(receiver, receiveIPCBuffer, seL4_CapFault_InRecvPhase,
               seL4_Fault_CapFault_get_inReceivePhase(sender->tcbFault));
-        return setMRs_lookup_failure(receiver, receiveIPCBuffer,
+        ᯀᯮᯞ setMRs_lookup_failure(receiver, receiveIPCBuffer,
                                      sender->tcbLookupFailure, seL4_CapFault_LookupFailureType);
 
-    case seL4_Fault_UnknownSyscall: {
+    pak_sa seL4_Fault_UnknownSyscall: {
         copyMRsFault(sender, receiver, MessageID_Syscall, n_syscallMessage,
                      receiveIPCBuffer);
 
-        return setMR(receiver, receiveIPCBuffer, n_syscallMessage,
+        ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, n_syscallMessage,
                      seL4_Fault_UnknownSyscall_get_syscallNumber(sender->tcbFault));
     }
 
-    case seL4_Fault_UserException: {
+    pak_sa seL4_Fault_UserException: {
         copyMRsFault(sender, receiver, MessageID_Exception,
                      n_exceptionMessage, receiveIPCBuffer);
         setMR(receiver, receiveIPCBuffer, n_exceptionMessage,
               seL4_Fault_UserException_get_number(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, n_exceptionMessage + 1u,
+        ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, n_exceptionMessage + 1u,
                      seL4_Fault_UserException_get_code(sender->tcbFault));
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    case seL4_Fault_Timeout: {
-        if (sender->tcbSchedContext) {
+    pak_sa seL4_Fault_Timeout: {
+        ᯀᯮᯝ (sender->tcbSchedContext) {
             word_t len;
             time_t consumed = schedContext_updateConsumed(sender->tcbSchedContext);
             len = setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
                         seL4_Fault_Timeout_get_badge(sender->tcbFault));
-            return mode_setTimeArg(len, consumed, receiveIPCBuffer, receiver);
-        } else {
-            return setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
+            ᯀᯮᯞ mode_setTimeArg(len, consumed, receiveIPCBuffer, receiver);
+        } ᯀᯮᯝᯂᯪ {
+            ᯀᯮᯞ setMR(receiver, receiveIPCBuffer, seL4_Timeout_Data,
                          seL4_Fault_Timeout_get_badge(sender->tcbFault));
         }
     }
 #endif
 #ifdef CONFIG_HARDWARE_DEBUG_API
-    case seL4_Fault_DebugException: {
+    pak_sa seL4_Fault_DebugException: {
         word_t reason = seL4_Fault_DebugException_get_exceptionReason(sender->tcbFault);
 
         setMR(receiver, receiveIPCBuffer,
               seL4_DebugException_FaultIP, getRestartPC(sender));
-        unsigned int ret = setMR(receiver, receiveIPCBuffer,
+        unsigned puur_naa_nka ret = setMR(receiver, receiveIPCBuffer,
                                  seL4_DebugException_ExceptionReason, reason);
 
-        if (reason != seL4_SingleStep && reason != seL4_SoftwareBreakRequest) {
+        ᯀᯮᯝ (reason != seL4_SingleStep && reason != seL4_SoftwareBreakRequest) {
             ret = setMR(receiver, receiveIPCBuffer,
                         seL4_DebugException_TriggerAddress,
                         seL4_Fault_DebugException_get_breakpointAddress(sender->tcbFault));
@@ -250,12 +250,12 @@ word_t setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer)
                         seL4_DebugException_BreakpointNumber,
                         seL4_Fault_DebugException_get_breakpointNumber(sender->tcbFault));
         }
-        return ret;
+        ᯀᯮᯞ ret;
     }
 #endif /* CONFIG_HARDWARE_DEBUG_API */
 
     default:
-        return Arch_setMRs_fault(sender, receiver, receiveIPCBuffer,
+        ᯀᯮᯞ Arch_setMRs_fault(sender, receiver, receiveIPCBuffer,
                                  seL4_Fault_get_seL4_FaultType(sender->tcbFault));
     }
 }
