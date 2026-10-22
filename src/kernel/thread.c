@@ -4,749 +4,749 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <util.h>
-#include <api/faults.h>
-#include <api/types.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <object/domain.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#endif
-#include <model/statedata.h>
-#include <arch/machine.h>
-#include <arch/kernel/thread.h>
-#include <machine/registerset.h>
-#include <machine/fpu.h>
-#include <linker.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <object.h>
+#ಅನ್ತರ್ಭಾವ <util.h>
+#ಅನ್ತರ್ಭಾವ <api/faults.h>
+#ಅನ್ತರ್ಭಾವ <api/types.h>
+#ಅನ್ತರ್ಭಾವ <kernel/cspace.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <object/domain.h>
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+#ಅನ್ತರ್ಭಾವ <object/schedcontext.h>
+#ಆದರೆ_ಅಂತ್ಯ
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
 
-static seL4_MessageInfo_t
-transferCaps(seL4_MessageInfo_t info,
+ಸ್ಥಿರ se_L4_ಸಂದೇಶ_Info_t
+transferCaps(se_L4_ಸಂದೇಶ_Info_t info,
              endpoint_t *endpoint, tcb_t *receiver,
-             word_t *receiveBuffer);
+             ಶಬ್ದ_t *receive_ಬಫರ್);
 
-BOOT_CODE void configureIdleThread(tcb_t *tcb)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ configureIdleThread(tcb_t *tcb)
 {
     tcb->tcbFlags = seL4_TCBFlag_fpuDisabled;
     Arch_configureIdleThread(tcb);
-    setThreadState(tcb, ThreadState_IdleThreadState);
+    ಗಣ_Thread_State(tcb, ThreadState_IdleThreadState);
 }
 
-void activateThread(void)
+ಶೂನ್ಯ activateThread(ಶೂನ್ಯ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (unlikely(NODE_STATE(ksCurThread)->tcbYieldTo)) {
-        schedContext_completeYieldTo(NODE_STATE(ksCurThread));
-        assert(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) == ThreadState_Running);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಆದರೆ (unlikely(ಗಂಟು_STATE(ksCurThread)->tcb_Yield_ಗಮ್ಯ)) {
+        sched_Context_complete_Yield_ಗಮ್ಯ(ಗಂಟು_STATE(ksCurThread));
+        ಪ್ರತಿಜ್ಞಾ(thread_state_get_tsType(ಗಂಟು_STATE(ksCurThread)->tcbState) == ThreadState_Running);
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-    switch (thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState)) {
-    case ThreadState_Running:
-#ifdef CONFIG_VTX
-    case ThreadState_RunningVM:
-#endif
-        break;
+    ಆಯ್ಕೆ (thread_state_get_tsType(ಗಂಟು_STATE(ksCurThread)->tcbState)) {
+    ಸ್ಥಿತಿ ThreadState_Running:
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_VTX
+    ಸ್ಥಿತಿ ThreadState_RunningVM:
+#ಆದರೆ_ಅಂತ್ಯ
+        ನಿಲ್ಲಿಸು;
 
-    case ThreadState_Restart: {
-        word_t pc;
+    ಸ್ಥಿತಿ ThreadState_Restart: {
+        ಶಬ್ದ_t pc;
 
-        pc = getRestartPC(NODE_STATE(ksCurThread));
-        setNextPC(NODE_STATE(ksCurThread), pc);
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-        break;
+        pc = getRestartPC(ಗಂಟು_STATE(ksCurThread));
+        ಗಣ_ಮುಂದಿನ_PC(ಗಂಟು_STATE(ksCurThread), pc);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Running);
+        ನಿಲ್ಲಿಸು;
     }
 
-    case ThreadState_IdleThreadState:
-        Arch_activateIdleThread(NODE_STATE(ksCurThread));
-        break;
+    ಸ್ಥಿತಿ ThreadState_IdleThreadState:
+        Arch_activateIdleThread(ಗಂಟು_STATE(ksCurThread));
+        ನಿಲ್ಲಿಸು;
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Current thread is blocked");
     }
 }
 
-void suspend(tcb_t *target)
+ಶೂನ್ಯ suspend(tcb_t *ಗುರಿ)
 {
-    cancelIPC(target);
-    if (thread_state_get_tsType(target->tcbState) == ThreadState_Running) {
+    cancelIPC(ಗುರಿ);
+    ಆದರೆ (thread_state_get_tsType(ಗುರಿ->tcbState) == ThreadState_Running) {
         /* whilst in the running state it is possible that restart pc of a thread is
          * incorrect. As we do not know what state this thread will transition to
          * after we make it inactive we update its restart pc so that the thread next
          * runs at the correct address whether it is restarted or moved directly to
          * running */
-        updateRestartPC(target);
+        updateRestartPC(ಗುರಿ);
     }
-    tcbSchedDequeue(target);
-#ifdef CONFIG_KERNEL_MCS
-    tcbReleaseRemove(target);
-    schedContext_cancelYieldTo(target);
-#endif
-    setThreadState(target, ThreadState_Inactive);
+    tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(ಗುರಿ);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    tcbReleaseRemove(ಗುರಿ);
+    sched_Context_cancel_Yield_ಗಮ್ಯ(ಗುರಿ);
+#ಆದರೆ_ಅಂತ್ಯ
+    ಗಣ_Thread_State(ಗುರಿ, ThreadState_Inactive);
 }
 
-void restart(tcb_t *target)
+ಶೂನ್ಯ restart(tcb_t *ಗುರಿ)
 {
-    if (isStopped(target)) {
-        cancelIPC(target);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(target, ThreadState_Restart);
-        sched_context_t *sc = target->tcbSchedContext;
-        if (sc_sporadic(sc) && sc != NODE_STATE(ksCurSC)) {
+    ಆದರೆ (isStopped(ಗುರಿ)) {
+        cancelIPC(ಗುರಿ);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಗಣ_Thread_State(ಗುರಿ, ThreadState_Restart);
+        sched_context_t *sc = ಗುರಿ->tcbSchedContext;
+        ಆದರೆ (sc_sporadic(sc) && sc != ಗಂಟು_STATE(ksCurSC)) {
             refill_unblock_check(sc);
         }
         schedContext_resume(sc);
-        if (isSchedulable(target)) {
-            possibleSwitchTo(target);
+        ಆದರೆ (isSchedulable(ಗುರಿ)) {
+            possible_Switch_ಗಮ್ಯ(ಗುರಿ);
         }
-#else
-        setupReplyMaster(target);
-        setThreadState(target, ThreadState_Restart);
-        SCHED_ENQUEUE(target);
-        possibleSwitchTo(target);
-#endif
+#ಇಲ್ಲದಿದ್ದರೆ
+        ಸಿದ್ಧತೆ_ಉತ್ತರ_Master(ಗುರಿ);
+        ಗಣ_Thread_State(ಗುರಿ, ThreadState_Restart);
+        SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(ಗುರಿ);
+        possible_Switch_ಗಮ್ಯ(ಗುರಿ);
+#ಆದರೆ_ಅಂತ್ಯ
     }
 }
 
-void doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, word_t badge,
+ಶೂನ್ಯ doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, ಶಬ್ದ_t badge,
                    bool_t grant, tcb_t *receiver)
 {
-    void *receiveBuffer, *sendBuffer;
+    ಶೂನ್ಯ *receive_ಬಫರ್, *send_ಬಫರ್;
 
-    receiveBuffer = lookupIPCBuffer(true, receiver);
+    receive_ಬಫರ್ = lookupIPCBuffer(true, receiver);
 
-    if (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
-        sendBuffer = lookupIPCBuffer(false, sender);
-        doNormalTransfer(sender, sendBuffer, endpoint, badge, grant,
-                         receiver, receiveBuffer);
-    } else {
-        doFaultTransfer(badge, sender, receiver, receiveBuffer);
+    ಆದರೆ (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
+        send_ಬಫರ್ = lookupIPCBuffer(false, sender);
+        do_ಸಾಮಾನ್ಯ_Transfer(sender, send_ಬಫರ್, endpoint, badge, grant,
+                         receiver, receive_ಬಫರ್);
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        doFaultTransfer(badge, sender, receiver, receive_ಬಫರ್);
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void doReplyTransfer(tcb_t *sender, reply_t *reply, bool_t grant)
-#else
-void doReplyTransfer(tcb_t *sender, tcb_t *receiver, cte_t *slot, bool_t grant)
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ do_ಉತ್ತರ_Transfer(tcb_t *sender, ಉತ್ತರ_t *ಉತ್ತರ, bool_t grant)
+#ಇಲ್ಲದಿದ್ದರೆ
+ಶೂನ್ಯ do_ಉತ್ತರ_Transfer(tcb_t *sender, tcb_t *receiver, cte_t *ಸ್ಥಾನ, bool_t grant)
+#ಆದರೆ_ಅಂತ್ಯ
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (reply->replyTCB == NULL ||
-        thread_state_get_tsType(reply->replyTCB->tcbState) != ThreadState_BlockedOnReply) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಆದರೆ (ಉತ್ತರ->ಉತ್ತರ_TCB == ಖಾಲಿ ||
+        thread_state_get_tsType(ಉತ್ತರ->ಉತ್ತರ_TCB->tcbState) != Thread_State_Blocked_On_ಉತ್ತರ) {
         /* nothing to do */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
 
-    tcb_t *receiver = reply->replyTCB;
-    reply_remove(reply, receiver);
-    assert(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
-    assert(reply->replyTCB == NULL);
+    tcb_t *receiver = ಉತ್ತರ->ಉತ್ತರ_TCB;
+    ಉತ್ತರ_remove(ಉತ್ತರ, receiver);
+    ಪ್ರತಿಜ್ಞಾ(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
+    ಪ್ರತಿಜ್ಞಾ(ಉತ್ತರ->ಉತ್ತರ_TCB == ಖಾಲಿ);
 
-    if (sc_sporadic(receiver->tcbSchedContext)
-        && receiver->tcbSchedContext != NODE_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
+    ಆದರೆ (sc_sporadic(receiver->tcbSchedContext)
+        && receiver->tcbSchedContext != ಗಂಟು_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
         refill_unblock_check(receiver->tcbSchedContext);
     }
-#else
-    assert(thread_state_get_tsType(receiver->tcbState) ==
-           ThreadState_BlockedOnReply);
-#endif
+#ಇಲ್ಲದಿದ್ದರೆ
+    ಪ್ರತಿಜ್ಞಾ(thread_state_get_tsType(receiver->tcbState) ==
+           Thread_State_Blocked_On_ಉತ್ತರ);
+#ಆದರೆ_ಅಂತ್ಯ
 
-    word_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
-    if (likely(fault_type == seL4_Fault_NullFault)) {
-        doIPCTransfer(sender, NULL, 0, grant, receiver);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(receiver, ThreadState_Running);
-#else
+    ಶಬ್ದ_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
+    ಆದರೆ (likely(fault_type == seL4_Fault_NullFault)) {
+        doIPCTransfer(sender, ಖಾಲಿ, 0, grant, receiver);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಗಣ_Thread_State(receiver, ThreadState_Running);
+#ಇಲ್ಲದಿದ್ದರೆ
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-        setThreadState(receiver, ThreadState_Running);
-        possibleSwitchTo(receiver);
-#endif
-    } else {
-#ifndef CONFIG_KERNEL_MCS
+        cteDeleteOne(ಸ್ಥಾನ);
+        ಗಣ_Thread_State(receiver, ThreadState_Running);
+        possible_Switch_ಗಮ್ಯ(receiver);
+#ಆದರೆ_ಅಂತ್ಯ
+    } ಇಲ್ಲದಿದ್ದರೆ {
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-#endif
-        bool_t restart = handleFaultReply(receiver, sender);
+        cteDeleteOne(ಸ್ಥಾನ);
+#ಆದರೆ_ಅಂತ್ಯ
+        bool_t restart = handle_Fault_ಉತ್ತರ(receiver, sender);
         receiver->tcbFault = seL4_Fault_NullFault_new();
-        if (restart) {
-            setThreadState(receiver, ThreadState_Restart);
-#ifndef CONFIG_KERNEL_MCS
-            possibleSwitchTo(receiver);
-#endif
-        } else {
-            setThreadState(receiver, ThreadState_Inactive);
+        ಆದರೆ (restart) {
+            ಗಣ_Thread_State(receiver, ThreadState_Restart);
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
+            possible_Switch_ಗಮ್ಯ(receiver);
+#ಆದರೆ_ಅಂತ್ಯ
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಗಣ_Thread_State(receiver, ThreadState_Inactive);
         }
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    if (receiver->tcbSchedContext && isRunnable(receiver)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಆದರೆ (receiver->tcbSchedContext && isRunnable(receiver)) {
         sched_context_t *sc = receiver->tcbSchedContext;
-        if ((refill_ready(sc) && refill_sufficient(sc, 0))) {
-            possibleSwitchTo(receiver);
-        } else {
-            if (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
+        ಆದರೆ ((refill_ready(sc) && refill_sufficient(sc, 0))) {
+            possible_Switch_ಗಮ್ಯ(receiver);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಆದರೆ (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
                 current_fault = seL4_Fault_Timeout_new(sc->scBadge);
                 handleTimeout(receiver);
-            } else {
+            } ಇಲ್ಲದಿದ್ದರೆ {
                 postpone(sc);
             }
         }
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
-void doNormalTransfer(tcb_t *sender, word_t *sendBuffer, endpoint_t *endpoint,
-                      word_t badge, bool_t canGrant, tcb_t *receiver,
-                      word_t *receiveBuffer)
+ಶೂನ್ಯ do_ಸಾಮಾನ್ಯ_Transfer(tcb_t *sender, ಶಬ್ದ_t *send_ಬಫರ್, endpoint_t *endpoint,
+                      ಶಬ್ದ_t badge, bool_t canGrant, tcb_t *receiver,
+                      ಶಬ್ದ_t *receive_ಬಫರ್)
 {
-    word_t msgTransferred;
-    seL4_MessageInfo_t tag;
-    exception_t status;
+    ಶಬ್ದ_t ಸಂದೇಶ_Transferred;
+    se_L4_ಸಂದೇಶ_Info_t ಟ್ಯಾಗ್;
+    exception_t ಸ್ಥಿತಿ_2;
 
-    tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
+    ಟ್ಯಾಗ್ = ಸಂದೇಶ_Info_From_ಶಬ್ದ(get_ರಿಜಿಸ್ಟರ್(sender, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್));
 
-    if (canGrant) {
-        status = lookupExtraCaps(sender, sendBuffer, tag);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            current_extra_caps.excaprefs[0] = NULL;
+    ಆದರೆ (canGrant) {
+        ಸ್ಥಿತಿ_2 = lookupExtraCaps(sender, send_ಬಫರ್, ಟ್ಯಾಗ್);
+        ಆದರೆ (unlikely(ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
+            current_extra_caps.excaprefs[0] = ಖಾಲಿ;
         }
-    } else {
-        current_extra_caps.excaprefs[0] = NULL;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        current_extra_caps.excaprefs[0] = ಖಾಲಿ;
     }
 
-    msgTransferred = copyMRs(sender, sendBuffer, receiver, receiveBuffer,
-                             seL4_MessageInfo_get_length(tag));
+    ಸಂದೇಶ_Transferred = copyMRs(sender, send_ಬಫರ್, receiver, receive_ಬಫರ್,
+                             se_L4_ಸಂದೇಶ_Info_get_ಉದ್ದಳತೆ(ಟ್ಯಾಗ್));
 
-    tag = transferCaps(tag, endpoint, receiver, receiveBuffer);
+    ಟ್ಯಾಗ್ = transferCaps(ಟ್ಯಾಗ್, endpoint, receiver, receive_ಬಫರ್);
 
-    tag = seL4_MessageInfo_set_length(tag, msgTransferred);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(tag));
-    setRegister(receiver, badgeRegister, badge);
+    ಟ್ಯಾಗ್ = se_L4_ಸಂದೇಶ_Info_ಗಣ_ಉದ್ದಳತೆ(ಟ್ಯಾಗ್, ಸಂದೇಶ_Transferred);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(receiver, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್, ಶಬ್ದ_From_ಸಂದೇಶ_Info(ಟ್ಯಾಗ್));
+    ಗಣ_ರಿಜಿಸ್ಟರ್(receiver, badge_ರಿಜಿಸ್ಟರ್, badge);
 }
 
-void doFaultTransfer(word_t badge, tcb_t *sender, tcb_t *receiver,
-                     word_t *receiverIPCBuffer)
+ಶೂನ್ಯ doFaultTransfer(ಶಬ್ದ_t badge, tcb_t *sender, tcb_t *receiver,
+                     ಶಬ್ದ_t *receiverIPCBuffer)
 {
-    word_t sent;
-    seL4_MessageInfo_t msgInfo;
+    ಶಬ್ದ_t ಕಳುಹಿಸಿದ;
+    se_L4_ಸಂದೇಶ_Info_t ಸಂದೇಶ_Info;
 
-    sent = setMRs_fault(sender, receiver, receiverIPCBuffer);
-    msgInfo = seL4_MessageInfo_new(
-                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, sent);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(msgInfo));
-    setRegister(receiver, badgeRegister, badge);
+    ಕಳುಹಿಸಿದ = ಗಣ_MRs_fault(sender, receiver, receiverIPCBuffer);
+    ಸಂದೇಶ_Info = se_L4_ಸಂದೇಶ_Info_new(
+                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, ಕಳುಹಿಸಿದ);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(receiver, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್, ಶಬ್ದ_From_ಸಂದೇಶ_Info(ಸಂದೇಶ_Info));
+    ಗಣ_ರಿಜಿಸ್ಟರ್(receiver, badge_ರಿಜಿಸ್ಟರ್, badge);
 }
 
 /* Like getReceiveSlots, this is specialised for single-cap transfer. */
-static seL4_MessageInfo_t transferCaps(seL4_MessageInfo_t info,
+ಸ್ಥಿರ se_L4_ಸಂದೇಶ_Info_t transferCaps(se_L4_ಸಂದೇಶ_Info_t info,
                                        endpoint_t *endpoint, tcb_t *receiver,
-                                       word_t *receiveBuffer)
+                                       ಶಬ್ದ_t *receive_ಬಫರ್)
 {
-    word_t i;
-    cte_t *destSlot;
+    ಶಬ್ದ_t i;
+    cte_t *dest_ಸ್ಥಾನ;
 
-    info = seL4_MessageInfo_set_extraCaps(info, 0);
-    info = seL4_MessageInfo_set_capsUnwrapped(info, 0);
+    info = se_L4_ಸಂದೇಶ_Info_ಗಣ_extra_Caps(info, 0);
+    info = se_L4_ಸಂದೇಶ_Info_ಗಣ_caps_Unwrapped(info, 0);
 
-    if (likely(!current_extra_caps.excaprefs[0] || !receiveBuffer)) {
-        return info;
+    ಆದರೆ (likely(!current_extra_caps.excaprefs[0] || !receive_ಬಫರ್)) {
+        ಹಿಂತಿರುಗಿ info;
     }
 
-    destSlot = getReceiveSlots(receiver, receiveBuffer);
+    dest_ಸ್ಥಾನ = getReceiveSlots(receiver, receive_ಬಫರ್);
 
-    for (i = 0; i < seL4_MsgMaxExtraCaps && current_extra_caps.excaprefs[i] != NULL; i++) {
-        cte_t *slot = current_extra_caps.excaprefs[i];
-        cap_t cap = slot->cap;
+    ಗಾಗಿ (i = 0; i < se_L4_ಸಂದೇಶ_Max_Extra_Caps && current_extra_caps.excaprefs[i] != ಖಾಲಿ; i++) {
+        cte_t *ಸ್ಥಾನ = current_extra_caps.excaprefs[i];
+        cap_t cap = ಸ್ಥಾನ->cap;
 
-        if (cap_get_capType(cap) == cap_endpoint_cap &&
+        ಆದರೆ (cap_get_capType(cap) == cap_endpoint_cap &&
             EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)) == endpoint) {
             /* If this is a cap to the endpoint on which the message was sent,
              * only transfer the badge, not the cap. */
-            setExtraBadge(receiveBuffer,
+            ಗಣ_Extra_Badge(receive_ಬಫರ್,
                           cap_endpoint_cap_get_capEPBadge(cap), i);
 
-            info = seL4_MessageInfo_set_capsUnwrapped(info,
-                                                      seL4_MessageInfo_get_capsUnwrapped(info) | (1 << i));
+            info = se_L4_ಸಂದೇಶ_Info_ಗಣ_caps_Unwrapped(info,
+                                                      se_L4_ಸಂದೇಶ_Info_get_caps_Unwrapped(info) | (1 << i));
 
-        } else {
+        } ಇಲ್ಲದಿದ್ದರೆ {
             deriveCap_ret_t dc_ret;
 
-            if (!destSlot) {
-                break;
+            ಆದರೆ (!dest_ಸ್ಥಾನ) {
+                ನಿಲ್ಲಿಸು;
             }
 
-            dc_ret = deriveCap(slot, cap);
+            dc_ret = deriveCap(ಸ್ಥಾನ, cap);
 
-            if (dc_ret.status != EXCEPTION_NONE) {
-                break;
+            ಆದರೆ (dc_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+                ನಿಲ್ಲಿಸು;
             }
-            if (cap_get_capType(dc_ret.cap) == cap_null_cap) {
-                break;
+            ಆದರೆ (cap_get_capType(dc_ret.cap) == cap_null_cap) {
+                ನಿಲ್ಲಿಸು;
             }
 
-            cteInsert(dc_ret.cap, slot, destSlot);
+            cte_ಸೇರಿಸು(dc_ret.cap, ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
 
-            destSlot = NULL;
+            dest_ಸ್ಥಾನ = ಖಾಲಿ;
         }
     }
 
-    return seL4_MessageInfo_set_extraCaps(info, i);
+    ಹಿಂತಿರುಗಿ se_L4_ಸಂದೇಶ_Info_ಗಣ_extra_Caps(info, i);
 }
 
-void doNBRecvFailedTransfer(tcb_t *thread)
+ಶೂನ್ಯ doNBRecvFailedTransfer(tcb_t *thread)
 {
     /* Set the badge register to 0 to indicate there was no message */
-    setRegister(thread, badgeRegister, 0);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, badge_ರಿಜಿಸ್ಟರ್, 0);
 }
 
-void prepareSetDomain(tcb_t *tptr, dom_t dom)
+ಶೂನ್ಯ prepare_ಗಣ_Domain(tcb_t *tptr, dom_t dom)
 {
-    if (ksCurDomain != dom) {
-        Arch_prepareSetDomain(tptr, dom);
-#ifdef CONFIG_HAVE_FPU
+    ಆದರೆ (ksCurDomain != dom) {
+        Arch_prepare_ಗಣ_Domain(tptr, dom);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
         /* Save FPU state now to avoid touching cross-domain state later */
         fpuRelease(tptr);
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
     }
 }
 
-static void prepareNextDomain(void)
+ಸ್ಥಿರ ಶೂನ್ಯ prepare_ಮುಂದಿನ_Domain(ಶೂನ್ಯ)
 {
-    Arch_prepareNextDomain();
-#ifdef CONFIG_HAVE_FPU
+    Arch_prepare_ಮುಂದಿನ_Domain();
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
     /* Save FPU state now to avoid touching cross-domain state later */
-    switchLocalFpuOwner(NULL);
-#endif
+    switchLocalFpuOwner(ಖಾಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
-static void nextDomain(void)
+ಸ್ಥಿರ ಶೂನ್ಯ ಮುಂದಿನ_Domain(ಶೂನ್ಯ)
 {
-    ksDomScheduleIdx++;
-    if (dschedule_is_end_marker(ksDomScheduleIdx)) {
-        ksDomScheduleIdx = ksDomScheduleStart;
+    ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx++;
+    ಆದರೆ (dschedule_is_ಕೊನೆ_marker(ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx)) {
+        ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx = ks_Dom_ವೇಳಾಪಟ್ಟಿ_ಆರಂಭ;
     }
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksReprogram) = true;
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಗಂಟು_STATE(ksReprogram) = true;
+#ಆದರೆ_ಅಂತ್ಯ
     ksWorkUnitsCompleted = 0;
-    ksCurDomain = dschedule_domain(ksDomSchedule[ksDomScheduleIdx]);
-    ksDomainTime = dschedule_duration(ksDomSchedule[ksDomScheduleIdx]);
+    ksCurDomain = dschedule_domain(ks_Dom_ವೇಳಾಪಟ್ಟಿ[ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx]);
+    ks_Domain_ಸಮಯ = dschedule_duration(ks_Dom_ವೇಳಾಪಟ್ಟಿ[ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx]);
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static void switchSchedContext(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಸ್ಥಿರ ಶೂನ್ಯ switchSchedContext(ಶೂನ್ಯ)
 {
-    if (unlikely(NODE_STATE(ksCurSC) != NODE_STATE(ksCurThread)->tcbSchedContext)) {
-        NODE_STATE(ksReprogram) = true;
-        if (sc_constant_bandwidth(NODE_STATE(ksCurThread)->tcbSchedContext)) {
-            refill_unblock_check(NODE_STATE(ksCurThread)->tcbSchedContext);
+    ಆದರೆ (unlikely(ಗಂಟು_STATE(ksCurSC) != ಗಂಟು_STATE(ksCurThread)->tcbSchedContext)) {
+        ಗಂಟು_STATE(ksReprogram) = true;
+        ಆದರೆ (sc_constant_bandwidth(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext)) {
+            refill_unblock_check(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext);
         }
 
-        assert(refill_ready(NODE_STATE(ksCurThread)->tcbSchedContext));
-        assert(refill_sufficient(NODE_STATE(ksCurThread)->tcbSchedContext, 0));
+        ಪ್ರತಿಜ್ಞಾ(refill_ready(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext));
+        ಪ್ರತಿಜ್ಞಾ(refill_sufficient(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext, 0));
     }
 
-    if (NODE_STATE(ksReprogram)) {
+    ಆದರೆ (ಗಂಟು_STATE(ksReprogram)) {
         /* if we are reprogamming, we have acted on the new kernel time and cannot
          * rollback -> charge the current thread */
-        commitTime();
+        commit_ಸಮಯ();
     }
 
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread)->tcbSchedContext;
+    ಗಂಟು_STATE(ksCurSC) = ಗಂಟು_STATE(ksCurThread)->tcbSchedContext;
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-static void scheduleChooseNewThread(void)
+ಸ್ಥಿರ ಶೂನ್ಯ ವೇಳಾಪಟ್ಟಿ_ಆರಿಸು_New_Thread(ಶೂನ್ಯ)
 {
-    if (ksDomainTime == 0) {
-        prepareNextDomain();
-        nextDomain();
+    ಆದರೆ (ks_Domain_ಸಮಯ == 0) {
+        prepare_ಮುಂದಿನ_Domain();
+        ಮುಂದಿನ_Domain();
     }
-    chooseThread();
+    ಆರಿಸು_Thread();
 }
 
-void schedule(void)
+ಶೂನ್ಯ ವೇಳಾಪಟ್ಟಿ(ಶೂನ್ಯ)
 {
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
     awaken();
-    checkDomainTime();
-#endif
+    check_Domain_ಸಮಯ();
+#ಆದರೆ_ಅಂತ್ಯ
 
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+    ಆದರೆ (ಗಂಟು_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
         bool_t was_runnable;
-        if (isSchedulable(NODE_STATE(ksCurThread))) {
+        ಆದರೆ (isSchedulable(ಗಂಟು_STATE(ksCurThread))) {
             was_runnable = true;
-            SCHED_ENQUEUE_CURRENT_TCB;
-        } else {
+            SCHED_ಸರತಿಗೆ_ಸೇರಿಸು_CURRENT_TCB;
+        } ಇಲ್ಲದಿದ್ದರೆ {
             was_runnable = false;
         }
 
-        if (NODE_STATE(ksSchedulerAction) == SchedulerAction_ChooseNewThread) {
-            scheduleChooseNewThread();
-        } else {
-            tcb_t *candidate = NODE_STATE(ksSchedulerAction);
-            assert(isSchedulable(candidate));
+        ಆದರೆ (ಗಂಟು_STATE(ksSchedulerAction) == Scheduler_Action_ಆರಿಸು_New_Thread) {
+            ವೇಳಾಪಟ್ಟಿ_ಆರಿಸು_New_Thread();
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            tcb_t *candidate = ಗಂಟು_STATE(ksSchedulerAction);
+            ಪ್ರತಿಜ್ಞಾ(isSchedulable(candidate));
             /* Avoid checking bitmap when ksCurThread is higher prio, to
              * match fast path.
              * Don't look at ksCurThread prio when it's idle, to respect
              * information flow in non-fastpath cases. */
             bool_t fastfail =
-                NODE_STATE(ksCurThread) == NODE_STATE(ksIdleThread)
-                || (candidate->tcbPriority < NODE_STATE(ksCurThread)->tcbPriority);
-            if (fastfail &&
-                !isHighestPrio(ksCurDomain, candidate->tcbPriority)) {
-                SCHED_ENQUEUE(candidate);
+                ಗಂಟು_STATE(ksCurThread) == ಗಂಟು_STATE(ksIdleThread)
+                || (candidate->tcb_ಆದ್ಯತೆ < ಗಂಟು_STATE(ksCurThread)->tcb_ಆದ್ಯತೆ);
+            ಆದರೆ (fastfail &&
+                !isHighestPrio(ksCurDomain, candidate->tcb_ಆದ್ಯತೆ)) {
+                SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(candidate);
                 /* we can't, need to reschedule */
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else if (was_runnable && candidate->tcbPriority == NODE_STATE(ksCurThread)->tcbPriority) {
+                ಗಂಟು_STATE(ksSchedulerAction) = Scheduler_Action_ಆರಿಸು_New_Thread;
+                ವೇಳಾಪಟ್ಟಿ_ಆರಿಸು_New_Thread();
+            } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (was_runnable && candidate->tcb_ಆದ್ಯತೆ == ಗಂಟು_STATE(ksCurThread)->tcb_ಆದ್ಯತೆ) {
                 /* We append the candidate at the end of the scheduling queue, that way the
                  * current thread, that was enqueued at the start of the scheduling queue
                  * will get picked during chooseNewThread */
                 SCHED_APPEND(candidate);
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else {
-                assert(candidate != NODE_STATE(ksCurThread));
-                switchToThread(candidate);
+                ಗಂಟು_STATE(ksSchedulerAction) = Scheduler_Action_ಆರಿಸು_New_Thread;
+                ವೇಳಾಪಟ್ಟಿ_ಆರಿಸು_New_Thread();
+            } ಇಲ್ಲದಿದ್ದರೆ {
+                ಪ್ರತಿಜ್ಞಾ(candidate != ಗಂಟು_STATE(ksCurThread));
+                switch_ಗಮ್ಯ_Thread(candidate);
             }
         }
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
-#ifdef ENABLE_SMP_SUPPORT
-    doMaskReschedule(ARCH_NODE_STATE(ipiReschedulePending));
-    ARCH_NODE_STATE(ipiReschedulePending) = 0;
-#endif /* ENABLE_SMP_SUPPORT */
+    ಗಂಟು_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
+    do_ಮುಖವಾಡ_Reschedule(ARCH_ಗಂಟು_STATE(ipiReschedulePending));
+    ARCH_ಗಂಟು_STATE(ipiReschedulePending) = 0;
+#ಆದರೆ_ಅಂತ್ಯ /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
     switchSchedContext();
 
-    if (NODE_STATE(ksReprogram)) {
-        setNextInterrupt();
-        NODE_STATE(ksReprogram) = false;
+    ಆದರೆ (ಗಂಟು_STATE(ksReprogram)) {
+        ಗಣ_ಮುಂದಿನ_ಅಡಚಣೆ();
+        ಗಂಟು_STATE(ksReprogram) = false;
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
-void chooseThread(void)
+ಶೂನ್ಯ ಆರಿಸು_Thread(ಶೂನ್ಯ)
 {
-    word_t prio;
-    word_t dom;
+    ಶಬ್ದ_t prio;
+    ಶಬ್ದ_t dom;
     tcb_t *thread;
 
-    if (numDomains > 1) {
+    ಆದರೆ (ಅಂಕೆ_Domains > 1) {
         dom = ksCurDomain;
-    } else {
+    } ಇಲ್ಲದಿದ್ದರೆ {
         dom = 0;
     }
 
-    if (likely(NODE_STATE(ksReadyQueuesL1Bitmap[dom]))) {
+    ಆದರೆ (likely(ಗಂಟು_STATE(ksReadyQueuesL1Bitmap[dom]))) {
         prio = getHighestPrio(dom);
-        thread = NODE_STATE(ksReadyQueues)[ready_queues_index(dom, prio)].head;
-        assert(thread);
-        assert(isSchedulable(thread));
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(thread->tcbSchedContext, 0));
-        assert(refill_ready(thread->tcbSchedContext));
-#endif
-        switchToThread(thread);
-    } else {
-        switchToIdleThread();
+        thread = ಗಂಟು_STATE(ksReadyQueues)[ready_queues_ಸೂಚ್ಯಂಕ(dom, prio)].ತಲೆ;
+        ಪ್ರತಿಜ್ಞಾ(thread);
+        ಪ್ರತಿಜ್ಞಾ(isSchedulable(thread));
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಪ್ರತಿಜ್ಞಾ(refill_sufficient(thread->tcbSchedContext, 0));
+        ಪ್ರತಿಜ್ಞಾ(refill_ready(thread->tcbSchedContext));
+#ಆದರೆ_ಅಂತ್ಯ
+        switch_ಗಮ್ಯ_Thread(thread);
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        switch_ಗಮ್ಯ_Idle_Thread();
     }
 }
 
-void switchToThread(tcb_t *thread)
+ಶೂನ್ಯ switch_ಗಮ್ಯ_Thread(tcb_t *thread)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(thread->tcbSchedContext != NULL);
-    assert(!thread_state_get_tcbInReleaseQueue(thread->tcbState));
-    assert(refill_sufficient(thread->tcbSchedContext, 0));
-    assert(refill_ready(thread->tcbSchedContext));
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಪ್ರತಿಜ್ಞಾ(thread->tcbSchedContext != ಖಾಲಿ);
+    ಪ್ರತಿಜ್ಞಾ(!thread_state_get_tcb_ಒಳ_Release_ಸರತಿ(thread->tcbState));
+    ಪ್ರತಿಜ್ಞಾ(refill_sufficient(thread->tcbSchedContext, 0));
+    ಪ್ರತಿಜ್ಞಾ(refill_ready(thread->tcbSchedContext));
+#ಆದರೆ_ಅಂತ್ಯ
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), thread);
-#endif
-    Arch_switchToThread(thread);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ಗಂಟು_STATE(ksCurThread), thread);
+#ಆದರೆ_ಅಂತ್ಯ
+    Arch_switch_ಗಮ್ಯ_Thread(thread);
 
-#ifdef CONFIG_HAVE_FPU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
     lazyFPURestore(thread);
-#endif /* CONFIG_HAVE_FPU */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_HAVE_FPU */
 
-    tcbSchedDequeue(thread);
-    NODE_STATE(ksCurThread) = thread;
+    tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(thread);
+    ಗಂಟು_STATE(ksCurThread) = thread;
 }
 
-void switchToIdleThread(void)
+ಶೂನ್ಯ switch_ಗಮ್ಯ_Idle_Thread(ಶೂನ್ಯ)
 {
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), NODE_STATE(ksIdleThread));
-#endif
-    Arch_switchToIdleThread();
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ಗಂಟು_STATE(ksCurThread), ಗಂಟು_STATE(ksIdleThread));
+#ಆದರೆ_ಅಂತ್ಯ
+    Arch_switch_ಗಮ್ಯ_Idle_Thread();
+    ಗಂಟು_STATE(ksCurThread) = ಗಂಟು_STATE(ksIdleThread);
 }
 
-void setDomain(tcb_t *tptr, dom_t dom)
+ಶೂನ್ಯ ಗಣ_Domain(tcb_t *tptr, dom_t dom)
 {
-    tcbSchedDequeue(tptr);
+    tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(tptr);
     tptr->tcbDomain = dom;
-    if (isSchedulable(tptr)) {
-        SCHED_ENQUEUE(tptr);
+    ಆದರೆ (isSchedulable(tptr)) {
+        SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(tptr);
     }
-    if (tptr == NODE_STATE(ksCurThread)) {
+    ಆದರೆ (tptr == ಗಂಟು_STATE(ksCurThread)) {
         rescheduleRequired();
     }
 }
 
-void setMCPriority(tcb_t *tptr, prio_t mcp)
+ಶೂನ್ಯ ಗಣ_MCPriority(tcb_t *tptr, prio_t mcp)
 {
     tptr->tcbMCP = mcp;
 }
-#ifdef CONFIG_KERNEL_MCS
-void setPriority(tcb_t *tptr, prio_t prio)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ ಗಣ_ಆದ್ಯತೆ(tcb_t *tptr, prio_t prio)
 {
-    switch (thread_state_get_tsType(tptr->tcbState)) {
-    case ThreadState_Running:
-    case ThreadState_Restart:
-        if (thread_state_get_tcbQueued(tptr->tcbState) || tptr == NODE_STATE(ksCurThread)) {
-            tcbSchedDequeue(tptr);
-            tptr->tcbPriority = prio;
-            SCHED_ENQUEUE(tptr);
+    ಆಯ್ಕೆ (thread_state_get_tsType(tptr->tcbState)) {
+    ಸ್ಥಿತಿ ThreadState_Running:
+    ಸ್ಥಿತಿ ThreadState_Restart:
+        ಆದರೆ (thread_state_get_tcbQueued(tptr->tcbState) || tptr == ಗಂಟು_STATE(ksCurThread)) {
+            tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(tptr);
+            tptr->tcb_ಆದ್ಯತೆ = prio;
+            SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(tptr);
             rescheduleRequired();
-        } else {
-            tptr->tcbPriority = prio;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            tptr->tcb_ಆದ್ಯತೆ = prio;
         }
-        break;
-    case ThreadState_BlockedOnReceive:
-    case ThreadState_BlockedOnSend:
-        tptr->tcbPriority = prio;
+        ನಿಲ್ಲಿಸು;
+    ಸ್ಥಿತಿ ThreadState_BlockedOnReceive:
+    ಸ್ಥಿತಿ ThreadState_BlockedOnSend:
+        tptr->tcb_ಆದ್ಯತೆ = prio;
         reorderEP(EP_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    case ThreadState_BlockedOnNotification:
-        tptr->tcbPriority = prio;
+        ನಿಲ್ಲಿಸು;
+    ಸ್ಥಿತಿ ThreadState_BlockedOnNotification:
+        tptr->tcb_ಆದ್ಯತೆ = prio;
         reorderNTFN(NTFN_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    default:
-        tptr->tcbPriority = prio;
-        break;
+        ನಿಲ್ಲಿಸು;
+    ಪೂರ್ವನಿಯೋಜಿತ:
+        tptr->tcb_ಆದ್ಯತೆ = prio;
+        ನಿಲ್ಲಿಸು;
     }
 }
-#else
-void setPriority(tcb_t *tptr, prio_t prio)
+#ಇಲ್ಲದಿದ್ದರೆ
+ಶೂನ್ಯ ಗಣ_ಆದ್ಯತೆ(tcb_t *tptr, prio_t prio)
 {
-    tcbSchedDequeue(tptr);
-    tptr->tcbPriority = prio;
-    if (isRunnable(tptr)) {
-        if (tptr == NODE_STATE(ksCurThread)) {
+    tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(tptr);
+    tptr->tcb_ಆದ್ಯತೆ = prio;
+    ಆದರೆ (isRunnable(tptr)) {
+        ಆದರೆ (tptr == ಗಂಟು_STATE(ksCurThread)) {
             rescheduleRequired();
-        } else {
-            possibleSwitchTo(tptr);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            possible_Switch_ಗಮ್ಯ(tptr);
         }
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
 /* Note that this thread will possibly continue at the end of this kernel
  * entry. Do not queue it yet, since a queue+unqueue operation is wasteful
  * if it will be picked. Instead, it waits in the 'ksSchedulerAction' site
  * on which the scheduler will take action. */
-void possibleSwitchTo(tcb_t *target)
+ಶೂನ್ಯ possible_Switch_ಗಮ್ಯ(tcb_t *ಗುರಿ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (target->tcbSchedContext != NULL && !thread_state_get_tcbInReleaseQueue(target->tcbState)) {
-#endif
-        if (ksCurDomain != target->tcbDomain
-            SMP_COND_STATEMENT( || target->tcbAffinity != getCurrentCPUIndex())) {
-            SCHED_ENQUEUE(target);
-        } else if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಆದರೆ (ಗುರಿ->tcbSchedContext != ಖಾಲಿ && !thread_state_get_tcb_ಒಳ_Release_ಸರತಿ(ಗುರಿ->tcbState)) {
+#ಆದರೆ_ಅಂತ್ಯ
+        ಆದರೆ (ksCurDomain != ಗುರಿ->tcbDomain
+            SMP_COND_STATEMENT( || ಗುರಿ->tcbAffinity != getCurrentCPUIndex())) {
+            SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(ಗುರಿ);
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (ಗಂಟು_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
             /* Too many threads want special treatment, use regular queues. */
             rescheduleRequired();
-            SCHED_ENQUEUE(target);
-        } else {
-            NODE_STATE(ksSchedulerAction) = target;
+            SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(ಗುರಿ);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಗಂಟು_STATE(ksSchedulerAction) = ಗುರಿ;
         }
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
 }
 
-void setThreadState(tcb_t *tptr, _thread_state_t ts)
+ಶೂನ್ಯ ಗಣ_Thread_State(tcb_t *tptr, _thread_state_t ts)
 {
-    thread_state_ptr_set_tsType(&tptr->tcbState, ts);
-    scheduleTCB(tptr);
+    thread_state_ptr_ಗಣ_ts_Type(&tptr->tcbState, ts);
+    ವೇಳಾಪಟ್ಟಿ_TCB(tptr);
 }
 
-void scheduleTCB(tcb_t *tptr)
+ಶೂನ್ಯ ವೇಳಾಪಟ್ಟಿ_TCB(tcb_t *tptr)
 {
-    if (tptr == NODE_STATE(ksCurThread) &&
-        NODE_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
+    ಆದರೆ (tptr == ಗಂಟು_STATE(ksCurThread) &&
+        ಗಂಟು_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
         !isSchedulable(tptr)) {
         /* short-cut rescheduleRequired(), because we know what the scheduler action is. */
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+        ಗಂಟು_STATE(ksSchedulerAction) = Scheduler_Action_ಆರಿಸು_New_Thread;
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void postpone(sched_context_t *sc)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ postpone(sched_context_t *sc)
 {
     tcb_t *tcb = sc->scTcb;
-    assert(tcb != NULL);
+    ಪ್ರತಿಜ್ಞಾ(tcb != ಖಾಲಿ);
 
-    tcbSchedDequeue(tcb);
-    tcbReleaseEnqueue(tcb);
-    NODE_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
+    tcb_Sched_ಸರತಿಯಿಂದ_ತೆಗೆ(tcb);
+    tcb_Release_ಸರತಿಗೆ_ಸೇರಿಸು(tcb);
+    ಗಂಟು_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
 }
 
-void setNextInterrupt(void)
+ಶೂನ್ಯ ಗಣ_ಮುಂದಿನ_ಅಡಚಣೆ(ಶೂನ್ಯ)
 {
     /* fetch the head refill separately to ease verification */
-    refill_t ct_head_refill = *refill_head(NODE_STATE(ksCurThread)->tcbSchedContext);
-    ticks_t next_interrupt = NODE_STATE(ksCurTime) + ct_head_refill.rAmount;
+    refill_t ct_ತಲೆ_refill = *refill_ತಲೆ(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext);
+    ticks_t ಮುಂದಿನ_ಅಡಚಣೆ = ಗಂಟು_STATE(ks_Cur_ಸಮಯ) + ct_ತಲೆ_refill.rAmount;
 
-    if (numDomains > 1) {
-        next_interrupt = MIN(next_interrupt, NODE_STATE(ksCurTime) + ksDomainTime);
+    ಆದರೆ (ಅಂಕೆ_Domains > 1) {
+        ಮುಂದಿನ_ಅಡಚಣೆ = MIN(ಮುಂದಿನ_ಅಡಚಣೆ, ಗಂಟು_STATE(ks_Cur_ಸಮಯ) + ks_Domain_ಸಮಯ);
     }
 
-    tcb_t *rlq_head = NODE_STATE(ksReleaseQueue.head);
-    if (rlq_head != NULL) {
+    tcb_t *rlq_ತಲೆ = ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ);
+    ಆದರೆ (rlq_ತಲೆ != ಖಾಲಿ) {
         /* fetch the head refill separately to ease verification */
-        refill_t rlq_head_refill = *refill_head(rlq_head->tcbSchedContext);
-        next_interrupt = MIN(rlq_head_refill.rTime, next_interrupt);
+        refill_t rlq_ತಲೆ_refill = *refill_ತಲೆ(rlq_ತಲೆ->tcbSchedContext);
+        ಮುಂದಿನ_ಅಡಚಣೆ = MIN(rlq_ತಲೆ_refill.r_ಸಮಯ, ಮುಂದಿನ_ಅಡಚಣೆ);
     }
 
     /* We should never be attempting to schedule anything earlier than ksCurTime */
-    assert(next_interrupt >= NODE_STATE(ksCurTime));
+    ಪ್ರತಿಜ್ಞಾ(ಮುಂದಿನ_ಅಡಚಣೆ >= ಗಂಟು_STATE(ks_Cur_ಸಮಯ));
 
     /* Our lower bound ksCurTime is slightly in the past (at kernel entry) and
        we are further subtracting getTimerPrecision(), so we may be setting a
        deadline in the past. If that is the case, we assume the IRQ will be
        raised immediately after we leave the kernel. */
-    setDeadline(next_interrupt - getTimerPrecision());
+    ಗಣ_Deadline(ಮುಂದಿನ_ಅಡಚಣೆ - getTimerPrecision());
 }
 
-void chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
+ಶೂನ್ಯ chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
 {
-    if (likely(NODE_STATE(ksCurSC) != NODE_STATE(ksIdleSC))) {
-        if (isRoundRobin(NODE_STATE(ksCurSC))) {
-            assert(refill_size(NODE_STATE(ksCurSC)) == MIN_REFILLS);
-            refill_t head = *refill_head(NODE_STATE(ksCurSC));
-            refill_t tail = *refill_tail(NODE_STATE(ksCurSC));
-            refill_head(NODE_STATE(ksCurSC))->rAmount = head.rAmount + tail.rAmount;
-            refill_tail(NODE_STATE(ksCurSC))->rAmount = 0;
-        } else {
+    ಆದರೆ (likely(ಗಂಟು_STATE(ksCurSC) != ಗಂಟು_STATE(ksIdleSC))) {
+        ಆದರೆ (is_ಸುತ್ತು_Robin(ಗಂಟು_STATE(ksCurSC))) {
+            ಪ್ರತಿಜ್ಞಾ(refill_ಗಾತ್ರ(ಗಂಟು_STATE(ksCurSC)) == MIN_REFILLS);
+            refill_t ತಲೆ = *refill_ತಲೆ(ಗಂಟು_STATE(ksCurSC));
+            refill_t ಬಾಲ = *refill_ಬಾಲ(ಗಂಟು_STATE(ksCurSC));
+            refill_ತಲೆ(ಗಂಟು_STATE(ksCurSC))->rAmount = ತಲೆ.rAmount + ಬಾಲ.rAmount;
+            refill_ಬಾಲ(ಗಂಟು_STATE(ksCurSC))->rAmount = 0;
+        } ಇಲ್ಲದಿದ್ದರೆ {
             refill_budget_check(consumed);
         }
 
-        assert(refill_head(NODE_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
-        NODE_STATE(ksCurSC)->scConsumed += consumed;
+        ಪ್ರತಿಜ್ಞಾ(refill_ತಲೆ(ಗಂಟು_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
+        ಗಂಟು_STATE(ksCurSC)->scConsumed += consumed;
     }
-    NODE_STATE(ksConsumed) = 0;
-    if (likely(isSchedulable(NODE_STATE(ksCurThread)))) {
-        assert(NODE_STATE(ksCurThread)->tcbSchedContext == NODE_STATE(ksCurSC));
-        endTimeslice(canTimeoutFault);
+    ಗಂಟು_STATE(ksConsumed) = 0;
+    ಆದರೆ (likely(isSchedulable(ಗಂಟು_STATE(ksCurThread)))) {
+        ಪ್ರತಿಜ್ಞಾ(ಗಂಟು_STATE(ksCurThread)->tcbSchedContext == ಗಂಟು_STATE(ksCurSC));
+        ಕೊನೆ_Timeslice(canTimeoutFault);
         rescheduleRequired();
-        NODE_STATE(ksReprogram) = true;
+        ಗಂಟು_STATE(ksReprogram) = true;
     }
 }
 
-void endTimeslice(bool_t can_timeout_fault)
+ಶೂನ್ಯ ಕೊನೆ_Timeslice(bool_t can_timeout_fault)
 {
-    bool_t round_robin = isRoundRobin(NODE_STATE(ksCurSC));
-    bool_t valid = validTimeoutHandler(NODE_STATE(ksCurThread));
+    bool_t ಸುತ್ತು_robin = is_ಸುತ್ತು_Robin(ಗಂಟು_STATE(ksCurSC));
+    bool_t valid = validTimeoutHandler(ಗಂಟು_STATE(ksCurThread));
 
-    if (can_timeout_fault && !round_robin && valid) {
-        current_fault = seL4_Fault_Timeout_new(NODE_STATE(ksCurSC)->scBadge);
-        handleTimeout(NODE_STATE(ksCurThread));
-    } else if (refill_ready(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), 0)) {
+    ಆದರೆ (can_timeout_fault && !ಸುತ್ತು_robin && valid) {
+        current_fault = seL4_Fault_Timeout_new(ಗಂಟು_STATE(ksCurSC)->scBadge);
+        handleTimeout(ಗಂಟು_STATE(ksCurThread));
+    } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (refill_ready(ಗಂಟು_STATE(ksCurSC)) && refill_sufficient(ಗಂಟು_STATE(ksCurSC), 0)) {
         /* apply round robin */
-        assert(!thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState));
+        ಪ್ರತಿಜ್ಞಾ(!thread_state_get_tcbQueued(ಗಂಟು_STATE(ksCurThread)->tcbState));
         SCHED_APPEND_CURRENT_TCB;
-    } else {
+    } ಇಲ್ಲದಿದ್ದರೆ {
         /* postpone until ready */
-        postpone(NODE_STATE(ksCurSC));
+        postpone(ಗಂಟು_STATE(ksCurSC));
     }
 }
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
 
-void timerTick(void)
+ಶೂನ್ಯ timerTick(ಶೂನ್ಯ)
 {
-    if (likely(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+    ಆದರೆ (likely(thread_state_get_tsType(ಗಂಟು_STATE(ksCurThread)->tcbState) ==
                ThreadState_Running)
-#ifdef CONFIG_VTX
-        || thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_VTX
+        || thread_state_get_tsType(ಗಂಟು_STATE(ksCurThread)->tcbState) ==
         ThreadState_RunningVM
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
        ) {
-        if (NODE_STATE(ksCurThread)->tcbTimeSlice > 1) {
-            NODE_STATE(ksCurThread)->tcbTimeSlice--;
-        } else {
-            NODE_STATE(ksCurThread)->tcbTimeSlice = CONFIG_TIME_SLICE;
+        ಆದರೆ (ಗಂಟು_STATE(ksCurThread)->tcb_ಸಮಯ_ತುಂಡು > 1) {
+            ಗಂಟು_STATE(ksCurThread)->tcb_ಸಮಯ_ತುಂಡು--;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಗಂಟು_STATE(ksCurThread)->tcb_ಸಮಯ_ತುಂಡು = CONFIG_ಸಮಯ_ತುಂಡು;
             SCHED_APPEND_CURRENT_TCB;
             rescheduleRequired();
         }
     }
 
-    if (numDomains > 1) {
-        ksDomainTime--;
-        if (ksDomainTime == 0) {
+    ಆದರೆ (ಅಂಕೆ_Domains > 1) {
+        ks_Domain_ಸಮಯ--;
+        ಆದರೆ (ks_Domain_ಸಮಯ == 0) {
             rescheduleRequired();
         }
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-void rescheduleRequired(void)
+ಶೂನ್ಯ rescheduleRequired(ಶೂನ್ಯ)
 {
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
-        && NODE_STATE(ksSchedulerAction) != SchedulerAction_ChooseNewThread
-#ifdef CONFIG_KERNEL_MCS
-        && isSchedulable(NODE_STATE(ksSchedulerAction))
-#endif
+    ಆದರೆ (ಗಂಟು_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
+        && ಗಂಟು_STATE(ksSchedulerAction) != Scheduler_Action_ಆರಿಸು_New_Thread
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        && isSchedulable(ಗಂಟು_STATE(ksSchedulerAction))
+#ಆದರೆ_ಅಂತ್ಯ
        ) {
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(NODE_STATE(ksSchedulerAction)->tcbSchedContext, 0));
-        assert(refill_ready(NODE_STATE(ksSchedulerAction)->tcbSchedContext));
-#endif
-        SCHED_ENQUEUE(NODE_STATE(ksSchedulerAction));
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಪ್ರತಿಜ್ಞಾ(refill_sufficient(ಗಂಟು_STATE(ksSchedulerAction)->tcbSchedContext, 0));
+        ಪ್ರತಿಜ್ಞಾ(refill_ready(ಗಂಟು_STATE(ksSchedulerAction)->tcbSchedContext));
+#ಆದರೆ_ಅಂತ್ಯ
+        SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(ಗಂಟು_STATE(ksSchedulerAction));
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+    ಗಂಟು_STATE(ksSchedulerAction) = Scheduler_Action_ಆರಿಸು_New_Thread;
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
 
-static inline bool_t PURE release_q_non_empty_and_ready(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool_t ಶುದ್ಧ release_q_non_ಖಾಲಿಗಳು_and_ready(ಶೂನ್ಯ)
 {
-    return NODE_STATE(ksReleaseQueue.head) != NULL
-           && refill_ready(NODE_STATE(ksReleaseQueue.head)->tcbSchedContext);
+    ಹಿಂತಿರುಗಿ ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ) != ಖಾಲಿ
+           && refill_ready(ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ)->tcbSchedContext);
 }
 
-static void tcbReleaseDequeue(void)
+ಸ್ಥಿರ ಶೂನ್ಯ tcb_Release_ಸರತಿಯಿಂದ_ತೆಗೆ(ಶೂನ್ಯ)
 {
-    assert(NODE_STATE(ksReleaseQueue.head) != NULL);
-    assert(NODE_STATE(ksReleaseQueue.head)->tcbSchedPrev == NULL);
-    SMP_COND_STATEMENT(assert(NODE_STATE(ksReleaseQueue.head)->tcbAffinity == getCurrentCPUIndex()));
+    ಪ್ರತಿಜ್ಞಾ(ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ) != ಖಾಲಿ);
+    ಪ್ರತಿಜ್ಞಾ(ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ)->tcbSchedPrev == ಖಾಲಿ);
+    SMP_COND_STATEMENT(ಪ್ರತಿಜ್ಞಾ(ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ)->tcbAffinity == getCurrentCPUIndex()));
 
-    tcb_t *awakened = NODE_STATE(ksReleaseQueue.head);
-    assert(awakened != NODE_STATE(ksCurThread));
+    tcb_t *awakened = ಗಂಟು_STATE(ks_Release_ಸರತಿ.ತಲೆ);
+    ಪ್ರತಿಜ್ಞಾ(awakened != ಗಂಟು_STATE(ksCurThread));
     tcbReleaseRemove(awakened);
     /* round robin threads should not be in the release queue */
-    assert(!isRoundRobin(awakened->tcbSchedContext));
+    ಪ್ರತಿಜ್ಞಾ(!is_ಸುತ್ತು_Robin(awakened->tcbSchedContext));
     /* threads should wake up on the correct core */
-    SMP_COND_STATEMENT(assert(awakened->tcbAffinity == getCurrentCPUIndex()));
+    SMP_COND_STATEMENT(ಪ್ರತಿಜ್ಞಾ(awakened->tcbAffinity == getCurrentCPUIndex()));
     /* threads HEAD refill should always be >= MIN_BUDGET */
-    assert(refill_sufficient(awakened->tcbSchedContext, 0));
-    possibleSwitchTo(awakened);
+    ಪ್ರತಿಜ್ಞಾ(refill_sufficient(awakened->tcbSchedContext, 0));
+    possible_Switch_ಗಮ್ಯ(awakened);
 }
 
-void awaken(void)
+ಶೂನ್ಯ awaken(ಶೂನ್ಯ)
 {
-    while (unlikely(release_q_non_empty_and_ready())) {
-        tcbReleaseDequeue();
+    ಆಗ (unlikely(release_q_non_ಖಾಲಿಗಳು_and_ready())) {
+        tcb_Release_ಸರತಿಯಿಂದ_ತೆಗೆ();
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

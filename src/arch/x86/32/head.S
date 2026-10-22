@@ -33,9 +33,9 @@ BEGIN_FUNC(enable_paging)
     orl  $0x80000000, %eax
     movl %eax,        %cr0
 
-    # Now that paging is enabled we can enable global pages
+    # Now that paging is enabled we can enable ವೈಶ್ವಿಕ pages
     # Must be done in this sequence as per the intel manual
-    # Set PGE (bit 7) to enable global pages
+    # Set PGE (bit 7) to enable ವೈಶ್ವಿಕ pages
     movl %cr4,  %eax
     orl  $0x80, %eax
     movl %eax,  %cr4
@@ -64,8 +64,8 @@ BEGIN_FUNC(_start)
     pushl %edi /* 1st parameter: multiboot_magic    */
 
     /* Initialise boot PD and enable paging */
-    call init_boot_pd
-    call enable_paging
+    ಕರೆ init_boot_pd
+    ಕರೆ enable_paging
 
     popl %edi
     popl %esi
@@ -115,7 +115,7 @@ BEGIN_FUNC(boot_cpu_start)
     popf
 
     /* Enable paging */
-    call enable_paging
+    ಕರೆ enable_paging
 
     /* Get index of this cpu, BSP always gets index of zero */
     movl smp_aps_index, %ecx
@@ -142,7 +142,7 @@ _boot_gdt:
     .quad 0x00cf9b000000ffff /* 4GB kernel code segment */
     .quad 0x00cf93000000ffff /* 4GB kernel data segment */
 
-.global boot_cpu_end
+.ವೈಶ್ವಿಕ boot_cpu_end
 boot_cpu_end:
 
 #endif /* ENABLE_SMP_SUPPORT */

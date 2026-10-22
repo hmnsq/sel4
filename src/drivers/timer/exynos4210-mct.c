@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
-#include <drivers/timer/arm_generic.h>
-#include <drivers/timer/mct.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/devices_gen.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <drivers/timer/arm_generic.h>
+#ಅನ್ತರ್ಭಾವ <drivers/timer/mct.h>
 
 timer_t *mct = (timer_t *) EXYNOS_MCT_PPTR;
 
-BOOT_CODE void initTimer(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ initTimer(ಶೂನ್ಯ)
 {
-    mct_clear_write_status();
+    mct_clear_write_ಸ್ಥಿತಿ();
 
     /* use the arm generic timer, backed by the mct */
     /* enable the timer */
     mct->global.tcon = GTCON_EN;
-    while (mct->global.wstat != GWSTAT_TCON);
+    ಆಗ (mct->global.wstat != GWSTAT_TCON);
     mct->global.wstat = GWSTAT_TCON;
 
     initGenericTimer();

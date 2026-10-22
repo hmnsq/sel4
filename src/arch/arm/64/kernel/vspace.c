@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <benchmark/benchmark.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <kernel/boot.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/stack.h>
-#include <machine/io.h>
-#include <machine/debug.h>
-#include <model/statedata.h>
-#include <object/cnode.h>
-#include <object/untyped.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/vspace.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <armv/context_switch.h>
-#include <arch/object/iospace.h>
-#include <arch/object/vcpu.h>
-#include <arch/machine/tlb.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <api/syscall.h>
+#ಅನ್ತರ್ಭಾವ <kernel/boot.h>
+#ಅನ್ತರ್ಭಾವ <kernel/cspace.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <kernel/stack.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <machine/debug.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <object/cnode.h>
+#ಅನ್ತರ್ಭಾವ <object/untyped.h>
+#ಅನ್ತರ್ಭಾವ <arch/api/invocation.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <armv/context_switch.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/iospace.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/vcpu.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/tlb.h>
 
 /*
  * Memory types are defined in Memory Attribute Indirection Register.
@@ -37,35 +37,35 @@
  *  - NORMAL_WT Normal Memory, Inner/Outer Write-through non-transient, No-Write-allocate, Read-allocate
  * Note: These should match with contents of MAIR_EL1 register!
  */
-enum mair_types {
+ಎಣಿಕೆ mair_types {
     DEVICE_nGnRnE = 0,
     DEVICE_nGnRE = 1,
     DEVICE_GRE = 2,
-    NORMAL_NC = 3,
-    NORMAL = 4,
-    NORMAL_WT = 5
+    ಸಾಮಾನ್ಯ_NC = 3,
+    ಸಾಮಾನ್ಯ = 4,
+    ಸಾಮಾನ್ಯ_WT = 5
 };
 
 /* Stage-2 translation memory attributes */
-enum mair_s2_types {
+ಎಣಿಕೆ mair_s2_types {
     S2_DEVICE_nGnRnE = 0,
     S2_DEVICE_nGnRE = 1,
     S2_DEVICE_nGRE  = 2,
     S2_DEVICE_GRE = 3,
 
-    S2_NORMAL_INNER_NC_OUTER_NC = 5,
-    S2_NORMAL_INNER_WTC_OUTER_NC = 6,
-    S2_NORMAL_INNER_WBC_OUTER_NC = 7,
+    S2_ಸಾಮಾನ್ಯ_INNER_NC_OUTER_NC = 5,
+    S2_ಸಾಮಾನ್ಯ_INNER_WTC_OUTER_NC = 6,
+    S2_ಸಾಮಾನ್ಯ_INNER_WBC_OUTER_NC = 7,
 
-    S2_NORMAL_INNER_NC_OUTER_WTC = 9,
-    S2_NORMAL_INNER_WTC_OUTER_WTC = 10,
-    S2_NORMAL_INNER_WBC_OUTER_WTC = 11,
+    S2_ಸಾಮಾನ್ಯ_INNER_NC_OUTER_WTC = 9,
+    S2_ಸಾಮಾನ್ಯ_INNER_WTC_OUTER_WTC = 10,
+    S2_ಸಾಮಾನ್ಯ_INNER_WBC_OUTER_WTC = 11,
 
-    S2_NORMAL_INNER_NC_OUTER_WBC = 13,
-    S2_NORMAL_INNER_WTC_OUTER_WBC = 14,
-    S2_NORMAL_INNER_WBC_OUTER_WBC = 15,
+    S2_ಸಾಮಾನ್ಯ_INNER_NC_OUTER_WBC = 13,
+    S2_ಸಾಮಾನ್ಯ_INNER_WTC_OUTER_WBC = 14,
+    S2_ಸಾಮಾನ್ಯ_INNER_WBC_OUTER_WBC = 15,
 
-    S2_NORMAL = S2_NORMAL_INNER_WBC_OUTER_WBC
+    S2_ಸಾಮಾನ್ಯ = S2_ಸಾಮಾನ್ಯ_INNER_WBC_OUTER_WBC
 };
 
 /* Leif from Linaro said the big.LITTLE clusters should be treated as
@@ -73,19 +73,19 @@ enum mair_s2_types {
  * ARM ARM DDI 0487B.b (ID092517) says otherwise.
  */
 
-#define SMP_SHARE   3
+#ವ್ಯಾಖ್ಯಾನಿಸು SMP_SHARE   3
 
-struct lookupPTSlot_ret {
-    pte_t *ptSlot;
-    word_t ptBitsLeft;
+ರಚನೆ lookupPTSlot_ret {
+    pte_t *pt_ಸ್ಥಾನ;
+    ಶಬ್ದ_t pt_ಬಿಟ್ಟುಗಳು_ಎಡ;
 };
-typedef struct lookupPTSlot_ret lookupPTSlot_ret_t;
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ lookupPTSlot_ret lookupPTSlot_ret_t;
 
-struct findVSpaceForASID_ret {
-    exception_t status;
-    vspace_root_t *vspace_root;
+ರಚನೆ ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret {
+    exception_t ಸ್ಥಿತಿ_2;
+    vspace_ಬೇರು_t *vspace_ಬೇರು;
 };
-typedef struct findVSpaceForASID_ret findVSpaceForASID_ret_t;
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t;
 
 /* Stage-1 access permissions:
  * AP[2:1]  higher EL        EL0
@@ -106,88 +106,88 @@ typedef struct findVSpaceForASID_ret findVSpaceForASID_ret_t;
  *  EL2 still uses the Stage-1 AP format.
  */
 
-static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+ಸ್ಥಿರ ಶಬ್ದ_t CONST APFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 0;
-        } else {
-            return 0;
+    ಆಯ್ಕೆ (vm_rights) {
+    ಸ್ಥಿತಿ VMKernelOnly:
+        ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            ಹಿಂತಿರುಗಿ 0;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಹಿಂತಿರುಗಿ 0;
         }
 
-    case VMReadWrite:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 3;
-        } else {
-            return 1;
+    ಸ್ಥಿತಿ VMReadWrite:
+        ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            ಹಿಂತಿರುಗಿ 3;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಹಿಂತಿರುಗಿ 1;
         }
 
-    case VMReadOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            return 1;
-        } else {
-            return 3;
+    ಸ್ಥಿತಿ VMReadOnly:
+        ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            ಹಿಂತಿರುಗಿ 1;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಹಿಂತಿರುಗಿ 3;
         }
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid VM rights");
     }
 }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-static inline CONST word_t pte_get_AP(pte_t pte)
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ CONST ಶಬ್ದ_t pte_get_AP(pte_t pte)
 {
-    assert(pte_is_page_type(pte));
-    switch (pte_get_pte_type(pte)) {
-    case pte_pte_4k_page:
-        return pte_pte_4k_page_get_AP(pte);
+    ಪ್ರತಿಜ್ಞಾ(pte_is_ಪುಟ_type(pte));
+    ಆಯ್ಕೆ (pte_get_pte_type(pte)) {
+    ಸ್ಥಿತಿ pte_pte_4k_ಪುಟ:
+        ಹಿಂತಿರುಗಿ pte_pte_4k_ಪುಟ_get_AP(pte);
 
-    case pte_pte_page:
-        return pte_pte_page_get_AP(pte);
+    ಸ್ಥಿತಿ pte_pte_ಪುಟ:
+        ಹಿಂತಿರುಗಿ pte_pte_ಪುಟ_get_AP(pte);
 
-    default:
-        return 0;
+    ಪೂರ್ವನಿಯೋಜಿತ:
+        ಹಿಂತಿರುಗಿ 0;
     }
 }
 
-static vm_rights_t CONST vmRightsFromPTE(pte_t pte)
+ಸ್ಥಿರ vm_rights_t CONST vmRightsFromPTE(pte_t pte)
 {
-    word_t access_perms = pte_get_AP(pte);
-    switch (access_perms) {
-    case 0:
-    case 2:
-        return VMKernelOnly;
-    case 1:
-        return VMReadWrite;
-    case 3:
-        return VMReadOnly;
-    default:
+    ಶಬ್ದ_t access_perms = pte_get_AP(pte);
+    ಆಯ್ಕೆ (access_perms) {
+    ಸ್ಥಿತಿ 0:
+    ಸ್ಥಿತಿ 2:
+        ಹಿಂತಿರುಗಿ VMKernelOnly;
+    ಸ್ಥಿತಿ 1:
+        ಹಿಂತಿರುಗಿ VMReadWrite;
+    ಸ್ಥಿತಿ 3:
+        ಹಿಂತಿರುಗಿ VMReadOnly;
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid AP bit");
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
+vm_rights_t CONST ಮುಖವಾಡ_VMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_ಮುಖವಾಡ)
 {
-    if (vm_rights == VMReadOnly &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    ಆದರೆ (vm_rights == VMReadOnly &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ಮುಖವಾಡ)) {
+        ಹಿಂತಿರುಗಿ VMReadOnly;
     }
-    if (vm_rights == VMReadWrite &&
-        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    ಆದರೆ (vm_rights == VMReadWrite &&
+        seL4_CapRights_get_capAllowRead(cap_rights_ಮುಖವಾಡ)) {
+        ಆದರೆ (!seL4_CapRights_get_capAllowWrite(cap_rights_ಮುಖವಾಡ)) {
+            ಹಿಂತಿರುಗಿ VMReadOnly;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಹಿಂತಿರುಗಿ VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
-        !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
-        seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+    ಆದರೆ (vm_rights == VMReadWrite &&
+        !seL4_CapRights_get_capAllowRead(cap_rights_ಮುಖವಾಡ) &&
+        seL4_CapRights_get_capAllowWrite(cap_rights_ಮುಖವಾಡ)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    ಹಿಂತಿರುಗಿ VMKernelOnly;
 }
 
 /* ==================== BOOT CODE STARTS HERE ==================== */
@@ -207,42 +207,42 @@ vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_right
  * VA range so that the 54th bit is XN. Setting the bit to 0 allows execution.
  *
  */
-BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_kernel_ಚೌಕಟ್ಟು(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_ಗುಣಲಕ್ಷಣಗಳು_t ಗುಣಲಕ್ಷಣಗಳು)
 {
-    assert(vaddr >= PPTR_TOP);
+    ಪ್ರತಿಜ್ಞಾ(vaddr >= PPTR_ತುದಿ);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t uxn = vm_attributes_get_armExecuteNever(attributes);
-#else
-    word_t uxn = 1; /* unprivileged execute never */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-    word_t attr_index;
-    word_t shareable;
-    if (vm_attributes_get_armPageCacheable(attributes)) {
-        attr_index = NORMAL;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ಶಬ್ದ_t uxn = vm_ಗುಣಲಕ್ಷಣಗಳು_get_arm_Execute_Never(ಗುಣಲಕ್ಷಣಗಳು);
+#ಇಲ್ಲದಿದ್ದರೆ
+    ಶಬ್ದ_t uxn = 1; /* unprivileged execute never */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+    ಶಬ್ದ_t attr_ಸೂಚ್ಯಂಕ;
+    ಶಬ್ದ_t shareable;
+    ಆದರೆ (vm_ಗುಣಲಕ್ಷಣಗಳು_get_arm_ಪುಟ_Cacheable(ಗುಣಲಕ್ಷಣಗಳು)) {
+        attr_ಸೂಚ್ಯಂಕ = ಸಾಮಾನ್ಯ;
         shareable = SMP_TERNARY(SMP_SHARE, 0);
-    } else {
-        attr_index = DEVICE_nGnRnE;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        attr_ಸೂಚ್ಯಂಕ = DEVICE_nGnRnE;
         shareable = 0;
     }
-    armKSGlobalKernelPT[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(3))] = pte_pte_4k_page_new(uxn, paddr,
+    armKSGlobalKernelPT[GET_KPT_ಸೂಚ್ಯಂಕ(vaddr, KLVL_FRM_ARM_PT_LVL(3))] = pte_pte_4k_ಪುಟ_new(uxn, paddr,
                                                                                             0, /* global */
                                                                                             1, /* access flag */
                                                                                             shareable,
                                                                                             APFromVMRights(vm_rights),
-                                                                                            attr_index);
+                                                                                            attr_ಸೂಚ್ಯಂಕ);
 }
 
 /* Essentially, assert that the ELF, kernel devices, and log buffer are all in the same PUD.
    In the current code this is the top index. This is arbitrary, the important part
    is that they are all the same.
  */
-compile_assert(elf_in_kernel_mappings, GET_KPT_INDEX(KERNEL_ELF_BASE,
-                                                     KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
-compile_assert(kdev_in_kernel_mappings, GET_KPT_INDEX(KDEV_BASE,
-                                                      KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
-compile_assert(log_buf_in_kernel_mappings, GET_KPT_INDEX(KS_LOG_BASE,
-                                                         KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+compile_assert(elf_ಒಳ_kernel_mappings, GET_KPT_ಸೂಚ್ಯಂಕ(KERNEL_ELF_ತಳ,
+                                                     KLVL_FRM_ARM_PT_LVL(1)) == ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1);
+compile_assert(kdev_ಒಳ_kernel_mappings, GET_KPT_ಸೂಚ್ಯಂಕ(KDEV_ತಳ,
+                                                      KLVL_FRM_ARM_PT_LVL(1)) == ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1);
+compile_assert(log_buf_ಒಳ_kernel_mappings, GET_KPT_ಸೂಚ್ಯಂಕ(KS_LOG_ತಳ,
+                                                         KLVL_FRM_ARM_PT_LVL(1)) == ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1);
 
 /**
  *  Per ARM ARM DDI 0487 (version L.b), in B2.11 "Mismatched memory attributes",
@@ -270,121 +270,121 @@ compile_assert(log_buf_in_kernel_mappings, GET_KPT_INDEX(KS_LOG_BASE,
  *  the current ARMv8 A-Profile specifications no longer contain this wording,
  *  and instead specify the loss of coherency and other behaviours in B2.11.
  */
-BOOT_CODE void map_kernel_elf_image(pte_t kernel_mapping_pds[])
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_kernel_elf_image(pte_t kernel_mapping_pds[])
 {
     /** This is not strictly necessary, but to handle a non-aligned KERNEL_ELF_PADDR_BASE
      *  we'd need to do a bit more logic and probably do what riscv64 does
      *  where the *actual* KERNEL_ELF_BASE is rounded up to the alignment.
      *  This is simpler and memory is cheap.
      **/
-    compile_assert(elf_paddr_aligned, IS_ALIGNED(KERNEL_ELF_PADDR_BASE_RAW, seL4_LargePageBits));
-    compile_assert(elf_base_aligned, IS_ALIGNED(KERNEL_ELF_BASE, seL4_LargePageBits));
+    compile_assert(elf_paddr_aligned, IS_ALIGNED(KERNEL_ELF_PADDR_ತಳ_RAW, se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು));
+    compile_assert(elf_ತಳ_aligned, IS_ALIGNED(KERNEL_ELF_ತಳ, se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು));
 
     /* Please don't overlap with KDEV_BASE */
-    assert(KERNEL_ELF_TOP <= KDEV_BASE);
+    ಪ್ರತಿಜ್ಞಾ(KERNEL_ELF_ತುದಿ <= KDEV_ತಳ);
     /* Please don't overlap with KS_LOG_PPTR */
-    assert(KERNEL_ELF_TOP <= KS_LOG_PPTR);
+    ಪ್ರತಿಜ್ಞಾ(KERNEL_ELF_ತುದಿ <= KS_LOG_PPTR);
 
-    const word_t pd_start = GET_KPT_INDEX(KERNEL_ELF_BASE, KLVL_FRM_ARM_PT_LVL(2));
+    ಸ್ಥಿರಾಂಕ ಶಬ್ದ_t pd_ಆರಂಭ = GET_KPT_ಸೂಚ್ಯಂಕ(KERNEL_ELF_ತಳ, KLVL_FRM_ARM_PT_LVL(2));
     /* pd_end and ELF_TOP are both exclusive, so handle that correctly */
-    const word_t pd_end   = GET_KPT_INDEX(KERNEL_ELF_TOP - 1, KLVL_FRM_ARM_PT_LVL(2)) + 1;
+    ಸ್ಥಿರಾಂಕ ಶಬ್ದ_t pd_ಕೊನೆ   = GET_KPT_ಸೂಚ್ಯಂಕ(KERNEL_ELF_ತುದಿ - 1, KLVL_FRM_ARM_PT_LVL(2)) + 1;
 
-    paddr_t paddr = KERNEL_ELF_PADDR_BASE;
-    UNUSED pptr_t vaddr = KERNEL_ELF_BASE;
+    paddr_t paddr = KERNEL_ELF_PADDR_ತಳ;
+    ಬಳಸದ pptr_t vaddr = KERNEL_ELF_ತಳ;
 
-    for (word_t pd = pd_start; pd < pd_end; pd++) {
-        assert(pd == GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2)));
+    ಗಾಗಿ (ಶಬ್ದ_t pd = pd_ಆರಂಭ; pd < pd_ಕೊನೆ; pd++) {
+        ಪ್ರತಿಜ್ಞಾ(pd == GET_KPT_ಸೂಚ್ಯಂಕ(vaddr, KLVL_FRM_ARM_PT_LVL(2)));
 
-        kernel_mapping_pds[pd] = pte_pte_page_new(
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        kernel_mapping_pds[pd] = pte_pte_ಪುಟ_new(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
                                      /* XN */ 0,
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
                                      /* UXN */ 1,
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                                      /* page_base_address */ paddr,
                                      /* global (nG) */ 0,
                                      /* access flag (AF) */ 1,
                                      /* shareability (SH) */ SMP_TERNARY(SMP_SHARE, 0),
                                      /* AP */ APFromVMRights(VMKernelOnly),
-                                     /* AttrIndx */ NORMAL
+                                     /* AttrIndx */ ಸಾಮಾನ್ಯ
                                  );
 
-        paddr += BIT(seL4_LargePageBits);
-        vaddr += BIT(seL4_LargePageBits);
+        paddr += ಬಿಟ್(se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು);
+        vaddr += ಬಿಟ್(se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು);
     }
 }
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
 /* verify that the physical memory window as at the second entry of the PGD */
-compile_assert(physical_window_pgd_location,
-               GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == 1);
-#else
+compile_assert(physical_ಕಿಟಕಿ_pgd_location,
+               GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತಳ, KLVL_FRM_ARM_PT_LVL(0)) == 1);
+#ಇಲ್ಲದಿದ್ದರೆ
 /* verify that the physical memory window as at the last entry of the PGD */
-compile_assert(physical_window_pgd_location,
-               GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == BIT(PT_INDEX_BITS) - 1);
-#endif
+compile_assert(physical_ಕಿಟಕಿ_pgd_location,
+               GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತಳ, KLVL_FRM_ARM_PT_LVL(0)) == ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1);
+#ಆದರೆ_ಅಂತ್ಯ
 /* make sure that the PPTR_BASE and PPTR_TOP are huge paged aligned */
-compile_assert(physical_window_base_aligned, IS_ALIGNED(PPTR_BASE, seL4_HugePageBits));
-compile_assert(physical_window_top_aligned, IS_ALIGNED(PPTR_TOP, seL4_HugePageBits));
+compile_assert(physical_ಕಿಟಕಿ_ತಳ_aligned, IS_ALIGNED(PPTR_ತಳ, se_L4_Huge_ಪುಟ_ಬಿಟ್ಟುಗಳು));
+compile_assert(physical_ಕಿಟಕಿ_ತುದಿ_aligned, IS_ALIGNED(PPTR_ತುದಿ, se_L4_Huge_ಪುಟ_ಬಿಟ್ಟುಗಳು));
 
 /* the PPTR_BASE starts from the bottom of the kernel PUD */
-compile_assert(physical_window_bottom_kernel_region,
-               GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)) == 0);
+compile_assert(physical_ಕಿಟಕಿ_bottom_kernel_region,
+               GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತಳ, KLVL_FRM_ARM_PT_LVL(1)) == 0);
 /* the PPTR_TOP then ends at the second-to-last entry of the PUD
     note: because this is the exclusive value the assert is one higher than
           you would expect.
 */
-compile_assert(physical_window_top_kernel_region,
-               GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+compile_assert(physical_ಕಿಟಕಿ_ತುದಿ_kernel_region,
+               GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತುದಿ, KLVL_FRM_ARM_PT_LVL(1)) == ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1);
 
-BOOT_CODE void map_kernel_physical_window(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_kernel_physical_ಕಿಟಕಿ(ಶೂನ್ಯ)
 {
     paddr_t paddr;
     pptr_t vaddr;
-    word_t idx;
+    ಶಬ್ದ_t idx;
 
     /* place all PDs except the last one in PUD */
-    for (idx = GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1));
+    ಗಾಗಿ (idx = GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತಳ, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತುದಿ, KLVL_FRM_ARM_PT_LVL(1));
          idx++) {
-        armKSGlobalKernelPUD[idx] = pte_pte_table_new(
+        armKSGlobalKernelPUD[idx] = pte_pte_ಕೋಷ್ಟಕ_new(
                                         addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
                                     );
     }
 
     /* map the kernel window using large pages */
-    vaddr = PPTR_BASE;
-    for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
-        armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr,
-                                                                                         KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_page_new(
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    vaddr = PPTR_ತಳ;
+    ಗಾಗಿ (paddr = PADDR_ತಳ; paddr < PADDR_ತುದಿ; paddr += ಬಿಟ್(se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು)) {
+        armKSGlobalKernelPDs[GET_KPT_ಸೂಚ್ಯಂಕ(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_ಸೂಚ್ಯಂಕ(vaddr,
+                                                                                         KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_ಪುಟ_new(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
                                                                                                                         1, // XN
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
                                                                                                                         1, // UXN
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                                                                                                                         paddr,
                                                                                                                         0,                        /* global */
                                                                                                                         1,                        /* access flag */
                                                                                                                         SMP_TERNARY(SMP_SHARE, 0),        /* Inner-shareable if SMP enabled, otherwise unshared */
                                                                                                                         0,                        /* VMKernelOnly */
-                                                                                                                        NORMAL
+                                                                                                                        ಸಾಮಾನ್ಯ
                                                                                                                     );
-        vaddr += BIT(seL4_LargePageBits);
+        vaddr += ಬಿಟ್(se_L4_Large_ಪುಟ_ಬಿಟ್ಟುಗಳು);
     }
 }
 
-BOOT_CODE void map_kernel_window(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_kernel_ಕಿಟಕಿ(ಶೂನ್ಯ)
 {
     /* place the PUD into the PGD */
-    armKSGlobalKernelPGD[GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0))] =
-        pte_pte_table_new(addrFromKPPtr(armKSGlobalKernelPUD));
+    armKSGlobalKernelPGD[GET_KPT_ಸೂಚ್ಯಂಕ(PPTR_ತಳ, KLVL_FRM_ARM_PT_LVL(0))] =
+        pte_pte_ಕೋಷ್ಟಕ_new(addrFromKPPtr(armKSGlobalKernelPUD));
 
-    map_kernel_physical_window();
+    map_kernel_physical_ಕಿಟಕಿ();
 
-    const word_t elf_pud_idx = GET_KPT_INDEX(KERNEL_ELF_BASE, KLVL_FRM_ARM_PT_LVL(1));
+    ಸ್ಥಿರಾಂಕ ಶಬ್ದ_t elf_pud_idx = GET_KPT_ಸೂಚ್ಯಂಕ(KERNEL_ELF_ತಳ, KLVL_FRM_ARM_PT_LVL(1));
     pte_t *kernel_mapping_pds = armKSGlobalKernelPDs[elf_pud_idx];
 
     /* place the kernel mapping PDs in the kernel mapping PUD */
-    armKSGlobalKernelPUD[elf_pud_idx] = pte_pte_table_new(addrFromKPPtr(kernel_mapping_pds));
+    armKSGlobalKernelPUD[elf_pud_idx] = pte_pte_ಕೋಷ್ಟಕ_new(addrFromKPPtr(kernel_mapping_pds));
 
     /* map the kernel ELF */
     map_kernel_elf_image(kernel_mapping_pds);
@@ -392,8 +392,8 @@ BOOT_CODE void map_kernel_window(void)
     /* put the PT into the PD for device window. It would be nice if
        we could pass kernel_mapping_pds[511] to map_kernel_devices(), but it is
        shared between AArch64 and AArch32, so... */
-    kernel_mapping_pds[BIT(PT_INDEX_BITS) - 1]
-        = pte_pte_table_new(addrFromKPPtr(armKSGlobalKernelPT));
+    kernel_mapping_pds[ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1]
+        = pte_pte_ಕೋಷ್ಟಕ_new(addrFromKPPtr(armKSGlobalKernelPT));
 
     map_kernel_devices();
 }
@@ -403,366 +403,366 @@ BOOT_CODE void map_kernel_window(void)
  * The global bit is always 0.
  * The memory attributes use the S2 translation values.
  */
-static BOOT_CODE void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t executable)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_it_ಚೌಕಟ್ಟು_cap(cap_t vspace_cap, cap_t ಚೌಕಟ್ಟು_cap, bool_t executable)
 {
-    vspace_root_t *vspaceRoot = VSPACE_PTR(pptr_of_cap(vspace_cap));
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2 = VSPACE_PTR(pptr_ದ_cap(vspace_cap));
     pte_t *pud;
     pte_t *pd;
     pte_t *pt;
 
-    vptr_t vptr = cap_frame_cap_get_capFMappedAddress(frame_cap);
-    void *pptr = (void *)cap_frame_cap_get_capFBasePtr(frame_cap);
+    vptr_t vptr = cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(ಚೌಕಟ್ಟು_cap);
+    ಶೂನ್ಯ *pptr = (ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(ಚೌಕಟ್ಟು_cap);
 
-    assert(cap_frame_cap_get_capFMappedASID(frame_cap) != 0);
+    ಪ್ರತಿಜ್ಞಾ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(ಚೌಕಟ್ಟು_cap) != 0);
 
-#ifdef AARCH64_VSPACE_S2_START_L1
-    pud = vspaceRoot;
-#else
-    vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
-    assert(pte_pte_table_ptr_get_present(vspaceRoot));
-    pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
-#endif
-    pud += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1));
-    assert(pte_pte_table_ptr_get_present(pud));
-    pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pud));
-    pd += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2));
-    assert(pte_pte_table_ptr_get_present(pd));
-    pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pd));
-    *(pt + GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(3))) = pte_pte_4k_page_new(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
+    pud = vspace_ಬೇರು_2;
+#ಇಲ್ಲದಿದ್ದರೆ
+    vspace_ಬೇರು_2 += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(0));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(vspace_ಬೇರು_2));
+    pud = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(vspace_ಬೇರು_2));
+#ಆದರೆ_ಅಂತ್ಯ
+    pud += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(1));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(pud));
+    pd = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(pud));
+    pd += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(2));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(pd));
+    pt = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(pd));
+    *(pt + GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(3))) = pte_pte_4k_ಪುಟ_new(
                                                               !executable,                    /* unprivileged execute never */
-                                                              pptr_to_paddr(pptr),            /* page_base_address    */
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+                                                              pptr_ಗಮ್ಯ_paddr(pptr),            /* page_base_address    */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
                                                               0,
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
                                                               1,                              /* not global */
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                                                               1,                              /* access flag */
                                                               SMP_TERNARY(SMP_SHARE, 0),              /* Inner-shareable if SMP enabled, otherwise unshared */
                                                               APFromVMRights(VMReadWrite),
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-                                                              S2_NORMAL
-#else
-                                                              NORMAL
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+                                                              S2_ಸಾಮಾನ್ಯ
+#ಇಲ್ಲದಿದ್ದರೆ
+                                                              ಸಾಮಾನ್ಯ
+#ಆದರೆ_ಅಂತ್ಯ
                                                           );
 }
 
-static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ cap_t create_it_ಚೌಕಟ್ಟು_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
 {
-    vm_page_size_t frame_size;
-    if (use_large) {
-        frame_size = ARMLargePage;
-    } else {
-        frame_size = ARMSmallPage;
+    vm_ಪುಟ_ಗಾತ್ರ_t ಚೌಕಟ್ಟು_ಗಾತ್ರ_2;
+    ಆದರೆ (use_large) {
+        ಚೌಕಟ್ಟು_ಗಾತ್ರ_2 = ARMLarge_ಪುಟ;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಚೌಕಟ್ಟು_ಗಾತ್ರ_2 = ARMSmall_ಪುಟ;
     }
-    return
-        cap_frame_cap_new(
+    ಹಿಂತಿರುಗಿ
+        cap_ಚೌಕಟ್ಟು_cap_new(
             asid,                          /* capFMappedASID */
             pptr,                          /* capFBasePtr */
-            frame_size,                    /* capFSize */
+            ಚೌಕಟ್ಟು_ಗಾತ್ರ_2,                    /* capFSize */
             vptr,                          /* capFMappedAddress */
-            wordFromVMRights(VMReadWrite), /* capFVMRights */
+            ಶಬ್ದ_From_VMRights(VMReadWrite), /* capFVMRights */
             false                          /* capFIsDevice */
         );
 }
 
-static BOOT_CODE void map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
 {
-    vspace_root_t *vspaceRoot = VSPACE_PTR(pptr_of_cap(vspace_cap));
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2 = VSPACE_PTR(pptr_ದ_cap(vspace_cap));
     pte_t *pud;
     pte_t *pd;
-    pte_t *pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(pt_cap));
-    vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(pt_cap);
+    pte_t *pt = PT_PTR(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTBase_Ptr(pt_cap));
+    vptr_t vptr = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ವಿಳಾಸ(pt_cap);
 
-    assert(cap_page_table_cap_get_capPTIsMapped(pt_cap));
+    ಪ್ರತಿಜ್ಞಾ(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTIs_Mapped(pt_cap));
 
-#ifdef AARCH64_VSPACE_S2_START_L1
-    pud = vspaceRoot;
-#else
-    vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
-    assert(pte_pte_table_ptr_get_present(vspaceRoot));
-    pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
-#endif
-    pud += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1));
-    assert(pte_pte_table_ptr_get_present(pud));
-    pd = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(pud));
-    *(pd + GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2))) = pte_pte_table_new(
-                                                              pptr_to_paddr(pt)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
+    pud = vspace_ಬೇರು_2;
+#ಇಲ್ಲದಿದ್ದರೆ
+    vspace_ಬೇರು_2 += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(0));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(vspace_ಬೇರು_2));
+    pud = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(vspace_ಬೇರು_2));
+#ಆದರೆ_ಅಂತ್ಯ
+    pud += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(1));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(pud));
+    pd = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(pud));
+    *(pd + GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(2))) = pte_pte_ಕೋಷ್ಟಕ_new(
+                                                              pptr_ಗಮ್ಯ_paddr(pt)
                                                           );
 }
 
-static BOOT_CODE cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ cap_t create_it_pt_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
-    cap = cap_page_table_cap_new(
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_new(
               asid,                   /* capPTMappedASID */
               pptr,                   /* capPTBasePtr */
               1,                      /* capPTIsMapped */
               vptr                    /* capPTMappedAddress */
           );
     map_it_pt_cap(vspace_cap, cap);
-    return cap;
+    ಹಿಂತಿರುಗಿ cap;
 }
 
-static BOOT_CODE void map_it_pd_cap(cap_t vspace_cap, cap_t pd_cap)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_it_pd_cap(cap_t vspace_cap, cap_t pd_cap)
 {
-    vspace_root_t *vspaceRoot = VSPACE_PTR(pptr_of_cap(vspace_cap));
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2 = VSPACE_PTR(pptr_ದ_cap(vspace_cap));
     pte_t *pud;
-    pte_t *pd = PT_PTR(cap_page_table_cap_get_capPTBasePtr(pd_cap));
-    vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(pd_cap);
+    pte_t *pd = PT_PTR(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTBase_Ptr(pd_cap));
+    vptr_t vptr = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ವಿಳಾಸ(pd_cap);
 
-    assert(cap_page_table_cap_get_capPTIsMapped(pd_cap));
+    ಪ್ರತಿಜ್ಞಾ(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTIs_Mapped(pd_cap));
 
-#ifdef AARCH64_VSPACE_S2_START_L1
-    pud = vspaceRoot;
-#else
-    vspaceRoot += GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0));
-    assert(pte_pte_table_ptr_get_present(vspaceRoot));
-    pud = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(vspaceRoot));
-#endif
-    *(pud + GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1))) = pte_pte_table_new(
-                                                               pptr_to_paddr(pd)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
+    pud = vspace_ಬೇರು_2;
+#ಇಲ್ಲದಿದ್ದರೆ
+    vspace_ಬೇರು_2 += GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(0));
+    ಪ್ರತಿಜ್ಞಾ(pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(vspace_ಬೇರು_2));
+    pud = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(vspace_ಬೇರು_2));
+#ಆದರೆ_ಅಂತ್ಯ
+    *(pud + GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(1))) = pte_pte_ಕೋಷ್ಟಕ_new(
+                                                               pptr_ಗಮ್ಯ_paddr(pd)
                                                            );
 }
 
-static BOOT_CODE cap_t create_it_pd_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ cap_t create_it_pd_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
-    cap = cap_page_table_cap_new(
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_new(
               asid,                   /* capPTMappedASID */
               pptr,                   /* capPTBasePtr */
               1,                      /* capPTIsMapped */
               vptr                    /* capPTMappedAddress */
           );
     map_it_pd_cap(vspace_cap, cap);
-    return cap;
+    ಹಿಂತಿರುಗಿ cap;
 }
 
-#ifndef AARCH64_VSPACE_S2_START_L1
-static BOOT_CODE void map_it_pud_cap(cap_t vspace_cap, cap_t pud_cap)
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_it_pud_cap(cap_t vspace_cap, cap_t pud_cap)
 {
-    pte_t *pgd = PT_PTR(pptr_of_cap(vspace_cap));
-    pte_t *pud = PT_PTR(cap_page_table_cap_get_capPTBasePtr(pud_cap));
-    vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(pud_cap);
+    pte_t *pgd = PT_PTR(pptr_ದ_cap(vspace_cap));
+    pte_t *pud = PT_PTR(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTBase_Ptr(pud_cap));
+    vptr_t vptr = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ವಿಳಾಸ(pud_cap);
 
-    assert(cap_page_table_cap_get_capPTIsMapped(pud_cap));
+    ಪ್ರತಿಜ್ಞಾ(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTIs_Mapped(pud_cap));
 
-    *(pgd + GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(0))) = pte_pte_table_new(
-                                                               pptr_to_paddr(pud));
+    *(pgd + GET_UPT_ಸೂಚ್ಯಂಕ(vptr, ULVL_FRM_ARM_PT_LVL(0))) = pte_pte_ಕೋಷ್ಟಕ_new(
+                                                               pptr_ಗಮ್ಯ_paddr(pud));
 }
 
-static BOOT_CODE cap_t create_it_pud_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ cap_t create_it_pud_cap(cap_t vspace_cap, pptr_t pptr, vptr_t vptr, asid_t asid)
 {
     cap_t cap;
-    cap = cap_page_table_cap_new(
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_new(
               asid,               /* capPTMappedASID */
               pptr,               /* capPTBasePtr */
               1,                  /* capPTIsMapped */
               vptr                /* capPTMappedAddress */
           );
     map_it_pud_cap(vspace_cap, cap);
-    return cap;
+    ಹಿಂತಿರುಗಿ cap;
 }
-#endif /* AARCH64_VSPACE_S2_START_L1 */
-BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
+#ಆದರೆ_ಅಂತ್ಯ /* AARCH64_VSPACE_S2_START_L1 */
+BOOT_ಸಂಕೇತ ಶಬ್ದ_t arch_get_n_paging(v_region_t it_v_reg)
 {
-    return
-#ifndef AARCH64_VSPACE_S2_START_L1
-        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0))) +
-#endif
-        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1))) +
-        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
+    ಹಿಂತಿರುಗಿ
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(0))) +
+#ಆದರೆ_ಅಂತ್ಯ
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(1))) +
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(2)));
 }
 
-BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
+BOOT_ಸಂಕೇತ cap_t create_it_ವಿಳಾಸ_space(cap_t ಬೇರು_cnode_cap, v_region_t it_v_reg)
 {
     cap_t      vspace_cap;
     vptr_t     vptr;
-    seL4_SlotPos slot_pos_before;
-    seL4_SlotPos slot_pos_after;
+    se_L4_ಸ್ಥಾನ_Pos ಸ್ಥಾನ_pos_before;
+    se_L4_ಸ್ಥಾನ_Pos ಸ್ಥಾನ_pos_after;
 
     /* create the PGD */
     vspace_cap = cap_vspace_cap_new(
                      IT_ASID,           /* capVSMappedASID */
                      rootserver.vspace, /* capVSBasePtr    */
                      1                  /* capVSIsMapped   */
-#ifdef CONFIG_ARM_SMMU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_SMMU
                      , CB_INVALID       /* capVSMappedCB   */
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                  );
-    slot_pos_before = ndks_boot.slot_pos_cur;
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace), vspace_cap);
+    ಸ್ಥಾನ_pos_before = ndks_boot.ಸ್ಥಾನ_pos_cur;
+    write_ಸ್ಥಾನ(ಸ್ಥಾನ_PTR(pptr_ದ_cap(ಬೇರು_cnode_cap), seL4_CapInitThreadVSpace), vspace_cap);
 
-#ifndef AARCH64_VSPACE_S2_START_L1
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ AARCH64_VSPACE_S2_ಆರಂಭ_L1
     /* Create any PUDs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0)));
-         vptr < it_v_reg.end;
+    ಗಾಗಿ (vptr = ಸುತ್ತು_ಕೆಳಕ್ಕೆ(it_v_reg.ಆರಂಭ, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(0)));
+         vptr < it_v_reg.ಕೊನೆ;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(0))) {
-        if (!provide_cap(root_cnode_cap, create_it_pud_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ಆದರೆ (!provide_cap(ಬೇರು_cnode_cap, create_it_pud_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            ಹಿಂತಿರುಗಿ cap_null_cap_new();
         }
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
     /* Create any PDs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1)));
-         vptr < it_v_reg.end;
+    ಗಾಗಿ (vptr = ಸುತ್ತು_ಕೆಳಕ್ಕೆ(it_v_reg.ಆರಂಭ, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(1)));
+         vptr < it_v_reg.ಕೊನೆ;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(1))) {
-        if (!provide_cap(root_cnode_cap, create_it_pd_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ಆದರೆ (!provide_cap(ಬೇರು_cnode_cap, create_it_pd_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            ಹಿಂತಿರುಗಿ cap_null_cap_new();
         }
     }
 
     /* Create any PTs needed for the user land image */
-    for (vptr = ROUND_DOWN(it_v_reg.start, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
-         vptr < it_v_reg.end;
+    ಗಾಗಿ (vptr = ಸುತ್ತು_ಕೆಳಕ್ಕೆ(it_v_reg.ಆರಂಭ, GET_ULVL_PGSIZE_ಬಿಟ್ಟುಗಳು(ULVL_FRM_ARM_PT_LVL(2)));
+         vptr < it_v_reg.ಕೊನೆ;
          vptr += GET_ULVL_PGSIZE(ULVL_FRM_ARM_PT_LVL(2))) {
-        if (!provide_cap(root_cnode_cap, create_it_pt_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
-            return cap_null_cap_new();
+        ಆದರೆ (!provide_cap(ಬೇರು_cnode_cap, create_it_pt_cap(vspace_cap, it_alloc_paging(), vptr, IT_ASID))) {
+            ಹಿಂತಿರುಗಿ cap_null_cap_new();
         }
     }
 
-    slot_pos_after = ndks_boot.slot_pos_cur;
-    ndks_boot.bi_frame->userImagePaging = (seL4_SlotRegion) {
-        slot_pos_before, slot_pos_after
+    ಸ್ಥಾನ_pos_after = ndks_boot.ಸ್ಥಾನ_pos_cur;
+    ndks_boot.bi_ಚೌಕಟ್ಟು->userImagePaging = (se_L4_ಸ್ಥಾನ_Region) {
+        ಸ್ಥಾನ_pos_before, ಸ್ಥಾನ_pos_after
     };
-    return vspace_cap;
+    ಹಿಂತಿರುಗಿ vspace_cap;
 }
 
-BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
+BOOT_ಸಂಕೇತ cap_t create_unmapped_it_ಚೌಕಟ್ಟು_cap(pptr_t pptr, bool_t use_large)
 {
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+    ಹಿಂತಿರುಗಿ create_it_ಚೌಕಟ್ಟು_cap(pptr, 0, asidInvalid, use_large);
 }
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
+BOOT_ಸಂಕೇತ cap_t create_mapped_it_ಚೌಕಟ್ಟು_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
                                            bool_t executable)
 {
-    cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
-    map_it_frame_cap(pd_cap, cap, executable);
-    return cap;
+    cap_t cap = create_it_ಚೌಕಟ್ಟು_cap(pptr, vptr, asid, use_large);
+    map_it_ಚೌಕಟ್ಟು_cap(pd_cap, cap, executable);
+    ಹಿಂತಿರುಗಿ cap;
 }
 
-BOOT_CODE void activate_kernel_vspace(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ activate_kernel_vspace(ಶೂನ್ಯ)
 {
     cleanInvalidateL1Caches();
-    setCurrentKernelVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalKernelPGD)));
+    ಗಣ_Current_Kernel_VSpace_ಬೇರು(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalKernelPGD)));
 
     /* Prevent elf-loader address translation to fill up TLB */
-    setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+    ಗಣ_Current_User_VSpace_ಬೇರು(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
 
     invalidateLocalTLB();
-    lockTLBEntry(KERNEL_ELF_BASE);
+    ಬೀಗ_TLBEntry(KERNEL_ELF_ತಳ);
 }
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
 {
-    asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
+    asid_pool_t *ap = ASID_POOL_PTR(pptr_ದ_cap(it_ap_cap));
     asid_map_t asid_map = asid_map_asid_map_vspace_new(
-#ifdef CONFIG_ARM_SMMU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_SMMU
                               /* bind_cb: Number of bound context banks */
                               0,
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                               /* vspace_root: reference to vspace root page table object */
-                              (word_t)cap_vspace_cap_get_capVSBasePtr(it_vspace_cap)
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+                              (ಶಬ್ದ_t)cap_vspace_cap_get_capVSBasePtr(it_vspace_cap)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
                               /* stored_hw_vmid, stored_vmid_valid: Assigned hardware VMID for TLB. */
                               , 0, false
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
                           );
-    ap->array[ASID_LOW(IT_ASID)] = asid_map;
-    armKSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    ap->array[ASID_ಕೆಳಗಿನ(IT_ASID)] = asid_map;
+    armKSASIDTable[ASID_ಮೇಲಿನ(IT_ASID)] = ap;
 }
 
 /* ==================== BOOT CODE FINISHES HERE ==================== */
 
-asid_map_t findMapForASID(asid_t asid)
+asid_map_t ಕಂಡುಹಿಡಿ_Map_For_ASID(asid_t asid)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
-    if (!poolPtr) {
-        return asid_map_asid_map_none_new();
+    poolPtr = armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
+    ಆದರೆ (!poolPtr) {
+        ಹಿಂತಿರುಗಿ asid_map_asid_map_none_new();
     }
 
-    return poolPtr->array[ASID_LOW(asid)];
+    ಹಿಂತಿರುಗಿ poolPtr->array[ASID_ಕೆಳಗಿನ(asid)];
 }
 
-static findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
+ಸ್ಥಿರ ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid_t asid)
 {
-    findVSpaceForASID_ret_t ret;
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ret;
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    asid_map = ಕಂಡುಹಿಡಿ_Map_For_ASID(asid);
+    ಆದರೆ (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
+        current_lookup_fault = lookup_fault_invalid_ಬೇರು_new();
 
-        ret.vspace_root = NULL;
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        ret.vspace_ಬೇರು = ಖಾಲಿ;
+        ret.ಸ್ಥಿತಿ_2 = EXCEPTION_LOOKUP_FAULT;
+        ಹಿಂತಿರುಗಿ ret;
     }
 
-    ret.vspace_root = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
-    ret.status = EXCEPTION_NONE;
-    return ret;
+    ret.vspace_ಬೇರು = (vspace_ಬೇರು_t *)asid_map_asid_map_vspace_get_vspace_ಬೇರು(asid_map);
+    ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ ret;
 }
 
-word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
+ಶಬ್ದ_t *ಶುದ್ಧ lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
 {
-    word_t w_bufferPtr;
-    cap_t bufferCap;
+    ಶಬ್ದ_t w_ಬಫರ್_Ptr;
+    cap_t ಬಫರ್_Cap;
     vm_rights_t vm_rights;
 
-    w_bufferPtr = thread->tcbIPCBuffer;
-    bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
+    w_ಬಫರ್_Ptr = thread->tcbIPCBuffer;
+    ಬಫರ್_Cap = TCB_PTR_CTE_PTR(thread, tcb_ಬಫರ್)->cap;
 
-    if (unlikely(cap_get_capType(bufferCap) != cap_frame_cap)) {
-        return NULL;
+    ಆದರೆ (unlikely(cap_get_capType(ಬಫರ್_Cap) != cap_ಚೌಕಟ್ಟು_cap)) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    ಆದರೆ (unlikely(cap_ಚೌಕಟ್ಟು_cap_get_cap_FIs_Device(ಬಫರ್_Cap))) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
 
-    vm_rights = cap_frame_cap_get_capFVMRights(bufferCap);
-    if (likely(vm_rights == VMReadWrite ||
+    vm_rights = cap_ಚೌಕಟ್ಟು_cap_get_cap_FVMRights(ಬಫರ್_Cap);
+    ಆದರೆ (likely(vm_rights == VMReadWrite ||
                (!isReceiver && vm_rights == VMReadOnly))) {
-        word_t basePtr;
-        unsigned int pageBits;
+        ಶಬ್ದ_t ತಳ_Ptr;
+        ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಪುಟ_ಬಿಟ್ಟುಗಳು_2;
 
-        basePtr = cap_frame_cap_get_capFBasePtr(bufferCap);
-        pageBits = pageBitsForSize(cap_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        ತಳ_Ptr = cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(ಬಫರ್_Cap);
+        ಪುಟ_ಬಿಟ್ಟುಗಳು_2 = ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(ಬಫರ್_Cap));
+        ಹಿಂತಿರುಗಿ (ಶಬ್ದ_t *)(ತಳ_Ptr + (w_ಬಫರ್_Ptr & ಮುಖವಾಡ(ಪುಟ_ಬಿಟ್ಟುಗಳು_2)));
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (cap_get_capType(cap) != cap_frame_cap) {
+    ಆದರೆ (cap_get_capType(cap) != cap_ಚೌಕಟ್ಟು_cap) {
         userError("IPC Buffer is an invalid cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
+    ಆದರೆ (unlikely(cap_ಚೌಕಟ್ಟು_cap_get_cap_FIs_Device(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
-        userError("IPC Buffer vaddr 0x%x is not aligned.", (int)vptr);
+    ಆದರೆ (!IS_ALIGNED(vptr, se_L4_IPCBuffer_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು)) {
+        userError("IPC Buffer vaddr 0x%x is not aligned.", (ಪೂರ್ಣಾಂಕ)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
+ಸ್ಥಿರ lookupPTSlot_ret_t lookupPTSlot(vspace_ಬೇರು_t *vspace, vptr_t vptr)
 {
     lookupPTSlot_ret_t ret;
 
-    word_t level = UPT_LEVELS - 1;
+    ಶಬ್ದ_t level = UPT_ಮಟ್ಟಗಳು - 1;
     pte_t *pt = vspace;
 
     /* this is how many bits we potentially have left to decode. Initially we have the
@@ -770,210 +770,210 @@ static lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
      * final value of this after the walk is the size of the frame that can be inserted,
      * or already exists, in ret.ptSlot. The following formulation is an invariant of
      * the loop: */
-    ret.ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
-    ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(seL4_VSpaceIndexBits));
+    ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ = PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು * level + se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು;
+    ret.pt_ಸ್ಥಾನ = pt + ((vptr >> ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(se_L4_VSpace_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
 
-    while (pte_pte_table_ptr_get_present(ret.ptSlot) && likely(level > 0)) {
+    ಆಗ (pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(ret.pt_ಸ್ಥಾನ) && likely(level > 0)) {
         level--;
-        ret.ptBitsLeft -= PT_INDEX_BITS;
-        pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ret.ptSlot));
-        ret.ptSlot = pt + ((vptr >> ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
+        ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ -= PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು;
+        pt = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(ret.pt_ಸ್ಥಾನ));
+        ret.pt_ಸ್ಥಾನ = pt + ((vptr >> ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
     }
 
-    return ret;
+    ಹಿಂತಿರುಗಿ ret;
 }
 
 /* Note that if the hypervisor support is enabled, the user page tables use
  * stage-2 translation format. Otherwise, they follow the stage-1 translation format.
  */
-static pte_t makeUserPagePTE(paddr_t paddr, vm_rights_t vm_rights, bool_t cap_read, vm_attributes_t attributes,
-                             vm_page_size_t page_size)
+ಸ್ಥಿರ pte_t make_User_ಪುಟ_PTE(paddr_t paddr, vm_rights_t vm_rights, bool_t cap_read, vm_ಗುಣಲಕ್ಷಣಗಳು_t ಗುಣಲಕ್ಷಣಗಳು,
+                             vm_ಪುಟ_ಗಾತ್ರ_t ಪುಟ_ಗಾತ್ರ)
 {
-    bool_t nonexecutable = vm_attributes_get_armExecuteNever(attributes) || !cap_read;
-    word_t cacheable = vm_attributes_get_armPageCacheable(attributes);
+    bool_t nonexecutable = vm_ಗುಣಲಕ್ಷಣಗಳು_get_arm_Execute_Never(ಗುಣಲಕ್ಷಣಗಳು) || !cap_read;
+    ಶಬ್ದ_t cacheable = vm_ಗುಣಲಕ್ಷಣಗಳು_get_arm_ಪುಟ_Cacheable(ಗುಣಲಕ್ಷಣಗಳು);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t nG = 0; /* not global */
-    word_t attridx = cacheable ? S2_NORMAL : S2_DEVICE_nGnRnE;
-#else
-    word_t nG = 1; /* not global */
-    word_t attridx = cacheable ? NORMAL : DEVICE_nGnRnE;
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+    ಶಬ್ದ_t nG = 0; /* not global */
+    ಶಬ್ದ_t attridx = cacheable ? S2_ಸಾಮಾನ್ಯ : S2_DEVICE_nGnRnE;
+#ಇಲ್ಲದಿದ್ದರೆ
+    ಶಬ್ದ_t nG = 1; /* not global */
+    ಶಬ್ದ_t attridx = cacheable ? ಸಾಮಾನ್ಯ : DEVICE_nGnRnE;
+#ಆದರೆ_ಅಂತ್ಯ
 
     /* Inner-shareable if SMP enabled, otherwise unshared (ignored for devices) */
-    word_t shareable = cacheable ? SMP_TERNARY(SMP_SHARE, 0) : 0;
+    ಶಬ್ದ_t shareable = cacheable ? SMP_TERNARY(SMP_SHARE, 0) : 0;
 
-    if (page_size == ARMSmallPage) {
-        return pte_pte_4k_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
+    ಆದರೆ (ಪುಟ_ಗಾತ್ರ == ARMSmall_ಪುಟ) {
+        ಹಿಂತಿರುಗಿ pte_pte_4k_ಪುಟ_new(nonexecutable, paddr, nG, 1 /* access flag */,
                                    shareable, APFromVMRights(vm_rights), attridx);
-    } else {
-        return pte_pte_page_new(nonexecutable, paddr, nG, 1 /* access flag */,
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಹಿಂತಿರುಗಿ pte_pte_ಪುಟ_new(nonexecutable, paddr, nG, 1 /* access flag */,
                                 shareable, APFromVMRights(vm_rights), attridx);
     }
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
 {
-    switch (vm_faultType) {
-    case ARMDataAbort: {
-        word_t addr, fault;
+    ಆಯ್ಕೆ (vm_faultType) {
+    ಸ್ಥಿತಿ ARMDataAbort: {
+        ಶಬ್ದ_t addr, fault;
 
         addr = getFAR();
         fault = getDFSR();
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
         /* use the IPA */
-        if (ARCH_NODE_STATE(armHSVCPUActive)) {
-            addr = GET_PAR_ADDR(addressTranslateS1(addr)) | (addr & MASK(PAGE_BITS));
+        ಆದರೆ (ARCH_ಗಂಟು_STATE(armHSVCPUActive)) {
+            addr = GET_PAR_ADDR(ವಿಳಾಸ_Translate_S1(addr)) | (addr & ಮುಖವಾಡ(ಪುಟ_ಬಿಟ್ಟುಗಳು));
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        ಹಿಂತಿರುಗಿ EXCEPTION_FAULT;
     }
 
-    case ARMPrefetchAbort: {
-        word_t pc, fault;
+    ಸ್ಥಿತಿ ARMPrefetchAbort: {
+        ಶಬ್ದ_t pc, fault;
 
         pc = getRestartPC(thread);
         fault = getIFSR();
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-        if (ARCH_NODE_STATE(armHSVCPUActive)) {
-            pc = GET_PAR_ADDR(addressTranslateS1(pc)) | (pc & MASK(PAGE_BITS));
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+        ಆದರೆ (ARCH_ಗಂಟು_STATE(armHSVCPUActive)) {
+            pc = GET_PAR_ADDR(ವಿಳಾಸ_Translate_S1(pc)) | (pc & ಮುಖವಾಡ(ಪುಟ_ಬಿಟ್ಟುಗಳು));
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
         current_fault = seL4_Fault_VMFault_new(pc, fault, true);
-        return EXCEPTION_FAULT;
+        ಹಿಂತಿರುಗಿ EXCEPTION_FAULT;
     }
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid VM fault type");
     }
 }
 
-bool_t CONST isVTableRoot(cap_t cap)
+bool_t CONST is_VTable_ಬೇರು(cap_t cap)
 {
-    return cap_get_capType(cap) == cap_vspace_cap;
+    ಹಿಂತಿರುಗಿ cap_get_capType(cap) == cap_vspace_cap;
 }
 
-bool_t CONST isValidNativeRoot(cap_t cap)
+bool_t CONST is_Valid_Native_ಬೇರು(cap_t cap)
 {
-    return isVTableRoot(cap) &&
+    ಹಿಂತಿರುಗಿ is_VTable_ಬೇರು(cap) &&
            cap_vspace_cap_get_capVSIsMapped(cap);
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_ಬೇರು(cap_t cap)
 {
-    return isValidNativeRoot(cap);
+    ಹಿಂತಿರುಗಿ is_Valid_Native_ಬೇರು(cap);
 }
 
-void setVMRoot(tcb_t *tcb)
+ಶೂನ್ಯ ಗಣ_VMRoot(tcb_t *tcb)
 {
-    cap_t threadRoot;
+    cap_t thread_ಬೇರು;
     asid_t asid;
-    vspace_root_t *vspaceRoot;
-    findVSpaceForASID_ret_t find_ret;
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2;
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
 
-    threadRoot = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
+    thread_ಬೇರು = TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap;
 
     /* ASID/VMID 0 is never allocated to a real VSpace (see findFreeHWASID()
      * for the hypervisor case), so the empty global VSpace can be installed
      * under it without flushing the TLB. */
-    if (!isValidNativeRoot(threadRoot)) {
-        setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
-        return;
+    ಆದರೆ (!is_Valid_Native_ಬೇರು(thread_ಬೇರು)) {
+        ಗಣ_Current_User_VSpace_ಬೇರು(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+        ಹಿಂತಿರುಗಿ;
     }
 
-    vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot));
-    asid = cap_vspace_cap_get_capVSMappedASID(threadRoot);
-    find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE || find_ret.vspace_root != vspaceRoot)) {
-        setCurrentUserVSpaceRoot(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
-        return;
+    vspace_ಬೇರು_2 = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(thread_ಬೇರು));
+    asid = cap_vspace_cap_get_capVSMappedASID(thread_ಬೇರು);
+    ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+    ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE || ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು != vspace_ಬೇರು_2)) {
+        ಗಣ_Current_User_VSpace_ಬೇರು(ttbr_new(hwASIDReserved, addrFromKPPtr(armKSGlobalUserVSpace)));
+        ಹಿಂತಿರುಗಿ;
     }
 
-    armv_contextSwitch(vspaceRoot, asid);
+    armv_contextSwitch(vspace_ಬೇರು_2, asid);
 }
 
-static bool_t setVMRootForFlush(vspace_root_t *vspace, asid_t asid)
+ಸ್ಥಿರ bool_t ಗಣ_VMRoot_For_Flush(vspace_ಬೇರು_t *vspace, asid_t asid)
 {
-    cap_t threadRoot;
+    cap_t thread_ಬೇರು;
 
-    threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
+    thread_ಬೇರು = TCB_PTR_CTE_PTR(ಗಂಟು_STATE(ksCurThread), tcbVTable)->cap;
 
-    if (cap_get_capType(threadRoot) == cap_vspace_cap &&
-        cap_vspace_cap_get_capVSIsMapped(threadRoot) &&
-        VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot)) == vspace) {
-        return false;
+    ಆದರೆ (cap_get_capType(thread_ಬೇರು) == cap_vspace_cap &&
+        cap_vspace_cap_get_capVSIsMapped(thread_ಬೇರು) &&
+        VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(thread_ಬೇರು)) == vspace) {
+        ಹಿಂತಿರುಗಿ false;
     }
 
     armv_contextSwitch(vspace, asid);
-    return true;
+    ಹಿಂತಿರುಗಿ true;
 }
 
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
 
-static inline asid_pool_t *getPoolPtr(asid_t asid)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ asid_pool_t *getPoolPtr(asid_t asid)
 {
-    return armKSASIDTable[ASID_HIGH(asid)];
+    ಹಿಂತಿರುಗಿ armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
 }
 
-static inline asid_map_t getASIDMap(asid_pool_t *poolPtr, asid_t asid)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ asid_map_t getASIDMap(asid_pool_t *poolPtr, asid_t asid)
 {
-    assert(poolPtr != NULL);
-    return poolPtr->array[ASID_LOW(asid)];
+    ಪ್ರತಿಜ್ಞಾ(poolPtr != ಖಾಲಿ);
+    ಹಿಂತಿರುಗಿ poolPtr->array[ASID_ಕೆಳಗಿನ(asid)];
 }
 
-static inline void setASIDMap(asid_pool_t *poolPtr, asid_t asid, asid_map_t asid_map)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ ಗಣ_ASIDMap(asid_pool_t *poolPtr, asid_t asid, asid_map_t asid_map)
 {
-    assert(poolPtr != NULL);
-    poolPtr->array[ASID_LOW(asid)] = asid_map;
+    ಪ್ರತಿಜ್ಞಾ(poolPtr != ಖಾಲಿ);
+    poolPtr->array[ASID_ಕೆಳಗಿನ(asid)] = asid_map;
 }
 
-static void invalidateASID(asid_t asid)
-{
-    asid_pool_t *poolPtr;
-    asid_map_t asid_map;
-
-    poolPtr = getPoolPtr(asid);
-    asid_map = getASIDMap(poolPtr, asid);
-    assert(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
-
-    asid_map = asid_map_asid_map_vspace_set_stored_hw_vmid(asid_map, 0);
-    asid_map = asid_map_asid_map_vspace_set_stored_vmid_valid(asid_map, false);
-
-    setASIDMap(poolPtr, asid, asid_map);
-}
-
-static void storeHWASID(asid_t asid, hw_asid_t hw_asid)
+ಸ್ಥಿರ ಶೂನ್ಯ invalidateASID(asid_t asid)
 {
     asid_pool_t *poolPtr;
     asid_map_t asid_map;
 
     poolPtr = getPoolPtr(asid);
     asid_map = getASIDMap(poolPtr, asid);
-    assert(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
+    ಪ್ರತಿಜ್ಞಾ(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
 
-    asid_map = asid_map_asid_map_vspace_set_stored_hw_vmid(asid_map, hw_asid);
-    asid_map = asid_map_asid_map_vspace_set_stored_vmid_valid(asid_map, true);
+    asid_map = asid_map_asid_map_vspace_ಗಣ_stored_hw_vmid(asid_map, 0);
+    asid_map = asid_map_asid_map_vspace_ಗಣ_stored_vmid_valid(asid_map, false);
 
-    setASIDMap(poolPtr, asid, asid_map);
+    ಗಣ_ASIDMap(poolPtr, asid, asid_map);
+}
+
+ಸ್ಥಿರ ಶೂನ್ಯ storeHWASID(asid_t asid, hw_asid_t hw_asid)
+{
+    asid_pool_t *poolPtr;
+    asid_map_t asid_map;
+
+    poolPtr = getPoolPtr(asid);
+    asid_map = getASIDMap(poolPtr, asid);
+    ಪ್ರತಿಜ್ಞಾ(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
+
+    asid_map = asid_map_asid_map_vspace_ಗಣ_stored_hw_vmid(asid_map, hw_asid);
+    asid_map = asid_map_asid_map_vspace_ಗಣ_stored_vmid_valid(asid_map, true);
+
+    ಗಣ_ASIDMap(poolPtr, asid, asid_map);
     armKSHWASIDTable[hw_asid] = asid;
 }
 
-static hw_asid_t findFreeHWASID(void)
+ಸ್ಥಿರ hw_asid_t ಕಂಡುಹಿಡಿ_Free_HWASID(ಶೂನ್ಯ)
 {
-    word_t hw_asid_offset;
+    ಶಬ್ದ_t hw_asid_ಸ್ಥಾನಾಂತರ;
     hw_asid_t hw_asid;
 
     /* Find a free hardware ASID */
-    for (hw_asid_offset = 0;
-         hw_asid_offset <= (word_t)((hw_asid_t) - 1);
-         hw_asid_offset++) {
-        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_offset);
-        if (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
-            return hw_asid;
+    ಗಾಗಿ (hw_asid_ಸ್ಥಾನಾಂತರ = 0;
+         hw_asid_ಸ್ಥಾನಾಂತರ <= (ಶಬ್ದ_t)((hw_asid_t) - 1);
+         hw_asid_ಸ್ಥಾನಾಂತರ++) {
+        hw_asid = armKSNextASID + ((hw_asid_t)hw_asid_ಸ್ಥಾನಾಂತರ);
+        ಆದರೆ (hw_asid != hwASIDReserved && armKSHWASIDTable[hw_asid] == asidInvalid) {
+            ಹಿಂತಿರುಗಿ hw_asid;
         }
     }
     /* If we've scanned the table without finding a free ASID */
@@ -986,1136 +986,1136 @@ static hw_asid_t findFreeHWASID(void)
 
     /* Increment the NextASID index, skipping the reserved VMID 0 on wrap */
     armKSNextASID++;
-    if (armKSNextASID == hwASIDReserved) {
+    ಆದರೆ (armKSNextASID == hwASIDReserved) {
         armKSNextASID = hwASIDMin;
     }
-    return hw_asid;
+    ಹಿಂತಿರುಗಿ hw_asid;
 }
 
 hw_asid_t getHWASID(asid_t asid)
 {
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-    } else {
+    asid_map = ಕಂಡುಹಿಡಿ_Map_For_ASID(asid);
+    ಆದರೆ (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        ಹಿಂತಿರುಗಿ asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
+    } ಇಲ್ಲದಿದ್ದರೆ {
         hw_asid_t new_hw_asid;
 
-        new_hw_asid = findFreeHWASID();
+        new_hw_asid = ಕಂಡುಹಿಡಿ_Free_HWASID();
         storeHWASID(asid, new_hw_asid);
-        return new_hw_asid;
+        ಹಿಂತಿರುಗಿ new_hw_asid;
     }
 }
 
-static void invalidateASIDEntry(asid_t asid)
+ಸ್ಥಿರ ಶೂನ್ಯ invalidateASIDEntry(asid_t asid)
 {
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+    asid_map = ಕಂಡುಹಿಡಿ_Map_For_ASID(asid);
+    ಆದರೆ (asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
         armKSHWASIDTable[asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map)] =
             asidInvalid;
     }
     invalidateASID(asid);
 }
 
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-#ifdef CONFIG_ARM_SMMU
-static word_t getASIDBindCB(asid_t asid)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_SMMU
+ಸ್ಥಿರ ಶಬ್ದ_t getASIDBindCB(asid_t asid)
 {
     asid_pool_t *asidPool;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asidPool);
 
-    asid_map_t asid_map = asidPool->array[ASID_LOW(asid)];
-    assert(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
+    asid_map_t asid_map = asidPool->array[ASID_ಕೆಳಗಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asid_map_get_type(asid_map) == asid_map_asid_map_vspace);
 
-    return asid_map_asid_map_vspace_get_bind_cb(asid_map);
+    ಹಿಂತಿರುಗಿ asid_map_asid_map_vspace_get_bind_cb(asid_map);
 }
 
-void increaseASIDBindCB(asid_t asid)
+ಶೂನ್ಯ increaseASIDBindCB(asid_t asid)
 {
     asid_pool_t *asidPool;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asidPool);
 
-    asid_map_t *asid_map = &asidPool->array[ASID_LOW(asid)];
-    assert(asid_map_ptr_get_type(asid_map) == asid_map_asid_map_vspace);
+    asid_map_t *asid_map = &asidPool->array[ASID_ಕೆಳಗಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asid_map_ptr_get_type(asid_map) == asid_map_asid_map_vspace);
 
-    asid_map_asid_map_vspace_ptr_set_bind_cb(asid_map, asid_map_asid_map_vspace_ptr_get_bind_cb(asid_map) + 1);
+    asid_map_asid_map_vspace_ptr_ಗಣ_bind_cb(asid_map, asid_map_asid_map_vspace_ptr_get_bind_cb(asid_map) + 1);
 }
 
-void decreaseASIDBindCB(asid_t asid)
+ಶೂನ್ಯ decreaseASIDBindCB(asid_t asid)
 {
     asid_pool_t *asidPool;
 
-    asidPool = armKSASIDTable[ASID_HIGH(asid)];
-    assert(asidPool);
+    asidPool = armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asidPool);
 
-    asid_map_t *asid_map = &asidPool->array[ASID_LOW(asid)];
-    assert(asid_map_ptr_get_type(asid_map) == asid_map_asid_map_vspace);
+    asid_map_t *asid_map = &asidPool->array[ASID_ಕೆಳಗಿನ(asid)];
+    ಪ್ರತಿಜ್ಞಾ(asid_map_ptr_get_type(asid_map) == asid_map_asid_map_vspace);
 
-    asid_map_asid_map_vspace_ptr_set_bind_cb(asid_map, asid_map_asid_map_vspace_ptr_get_bind_cb(asid_map) - 1);
+    asid_map_asid_map_vspace_ptr_ಗಣ_bind_cb(asid_map, asid_map_asid_map_vspace_ptr_get_bind_cb(asid_map) - 1);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-static inline void invalidateTLBByASID(asid_t asid)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ invalidateTLBByASID(asid_t asid)
 {
-#ifdef CONFIG_ARM_SMMU
-    word_t bind_cb = getASIDBindCB(asid);
-    if (unlikely(bind_cb)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_SMMU
+    ಶಬ್ದ_t bind_cb = getASIDBindCB(asid);
+    ಆದರೆ (unlikely(bind_cb)) {
         invalidateSMMUTLBByASID(asid, bind_cb);
     }
-#endif
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ಆದರೆ_ಅಂತ್ಯ
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return;
+    asid_map = ಕಂಡುಹಿಡಿ_Map_For_ASID(asid);
+    ಆದರೆ (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        ಹಿಂತಿರುಗಿ;
     }
     invalidateTranslationASID(asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map));
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
     invalidateTranslationASID(asid);
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
-static inline void invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
 {
-#ifdef CONFIG_ARM_SMMU
-    word_t bind_cb = getASIDBindCB(asid);
-    if (unlikely(bind_cb)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_SMMU
+    ಶಬ್ದ_t bind_cb = getASIDBindCB(asid);
+    ಆದರೆ (unlikely(bind_cb)) {
         invalidateSMMUTLBByASIDVA(asid, vaddr, bind_cb);
     }
-#endif
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ಆದರೆ_ಅಂತ್ಯ
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
     asid_map_t asid_map;
 
-    asid_map = findMapForASID(asid);
-    if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-        return;
+    asid_map = ಕಂಡುಹಿಡಿ_Map_For_ASID(asid);
+    ಆದರೆ (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        ಹಿಂತಿರುಗಿ;
     }
     uint64_t hw_asid = asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map);
-    invalidateTranslationSingle((hw_asid << 48) | vaddr >> seL4_PageBits);
-#else
-    invalidateTranslationSingle((asid << 48) | vaddr >> seL4_PageBits);
-#endif
+    invalidateTranslationSingle((hw_asid << 48) | vaddr >> se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು);
+#ಇಲ್ಲದಿದ್ದರೆ
+    invalidateTranslationSingle((asid << 48) | vaddr >> se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು);
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
 
-void unmapPageTable(asid_t asid, vptr_t vptr, pte_t *target_pt)
+ಶೂನ್ಯ unmap_ಪುಟ_ಕೋಷ್ಟಕ(asid_t asid, vptr_t vptr, pte_t *ಗುರಿ_pt)
 {
-    findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+    ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
         /* nothing to do */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
-    pte_t *ptSlot = NULL;
-    pte_t *pt = (pte_t *)find_ret.vspace_root;
+    pte_t *pt_ಸ್ಥಾನ = ಖಾಲಿ;
+    pte_t *pt = (pte_t *)ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು;
 
-    for (word_t i = 0; i < UPT_LEVELS - 1 && pt != target_pt; i++) {
-        ptSlot = pt + GET_UPT_INDEX(vptr, i);
-        if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
+    ಗಾಗಿ (ಶಬ್ದ_t i = 0; i < UPT_ಮಟ್ಟಗಳು - 1 && pt != ಗುರಿ_pt; i++) {
+        pt_ಸ್ಥಾನ = pt + GET_UPT_ಸೂಚ್ಯಂಕ(vptr, i);
+        ಆದರೆ (unlikely(!pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(pt_ಸ್ಥಾನ))) {
             /* couldn't find it */
-            return;
+            ಹಿಂತಿರುಗಿ;
         }
-        pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
+        pt = paddr_ಗಮ್ಯ_pptr(pte_pte_ಕೋಷ್ಟಕ_ptr_get_pt_ತಳ_ವಿಳಾಸ(pt_ಸ್ಥಾನ));
     }
 
-    if (pt != target_pt) {
+    ಆದರೆ (pt != ಗುರಿ_pt) {
         /* didn't find it */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
     /* If we found a pt then ptSlot won't be null */
-    assert(ptSlot != NULL);
-    *ptSlot = pte_pte_invalid_new();
-    cleanByVA_PoU((vptr_t)ptSlot, pptr_to_paddr(ptSlot));
+    ಪ್ರತಿಜ್ಞಾ(pt_ಸ್ಥಾನ != ಖಾಲಿ);
+    *pt_ಸ್ಥಾನ = pte_pte_invalid_new();
+    cleanByVA_PoU((vptr_t)pt_ಸ್ಥಾನ, pptr_ಗಮ್ಯ_paddr(pt_ಸ್ಥಾನ));
     invalidateTLBByASID(asid);
 }
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
+ಶೂನ್ಯ unmap_ಪುಟ(vm_ಪುಟ_ಗಾತ್ರ_t ಪುಟ_ಗಾತ್ರ, asid_t asid, vptr_t vptr, pptr_t pptr)
 {
-    findVSpaceForASID_ret_t find_ret;
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
     lookupPTSlot_ret_t  lu_ret;
     pte_t pte;
 
-    find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+    ಆದರೆ (ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ;
     }
 
-    lu_ret = lookupPTSlot(find_ret.vspace_root, vptr);
-    if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(page_size))) {
+    lu_ret = lookupPTSlot(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು, vptr);
+    ಆದರೆ (unlikely(lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ != ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(ಪುಟ_ಗಾತ್ರ))) {
         /* Do nothing if the wrong size object was returned */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
 
-    pte = *(lu_ret.ptSlot);
-    if (!pte_is_page_type(pte)) {
+    pte = *(lu_ret.pt_ಸ್ಥಾನ);
+    ಆದರೆ (!pte_is_ಪುಟ_type(pte)) {
         /* Do nothing if no page is present */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
 
-    if (pte_get_page_base_address(pte) != pptr_to_paddr((void *)pptr)) {
+    ಆದರೆ (pte_get_ಪುಟ_ತಳ_ವಿಳಾಸ(pte) != pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)pptr)) {
         /* Do nothing if the mapped page is not the same physical frame */
-        return;
+        ಹಿಂತಿರುಗಿ;
     }
 
-    *(lu_ret.ptSlot) = pte_pte_invalid_new();
-    cleanByVA_PoU((vptr_t)lu_ret.ptSlot, pptr_to_paddr(lu_ret.ptSlot));
-    assert(asid < BIT(16));
+    *(lu_ret.pt_ಸ್ಥಾನ) = pte_pte_invalid_new();
+    cleanByVA_PoU((vptr_t)lu_ret.pt_ಸ್ಥಾನ, pptr_ಗಮ್ಯ_paddr(lu_ret.pt_ಸ್ಥಾನ));
+    ಪ್ರತಿಜ್ಞಾ(asid < ಬಿಟ್(16));
     invalidateTLBByASIDVA(asid, vptr);
 }
 
-void deleteASID(asid_t asid, vspace_root_t *vspace)
+ಶೂನ್ಯ deleteASID(asid_t asid, vspace_ಬೇರು_t *vspace)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = armKSASIDTable[ASID_HIGH(asid)];
+    poolPtr = armKSASIDTable[ASID_ಮೇಲಿನ(asid)];
 
-    if (poolPtr != NULL) {
-        asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
-        if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
-            (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) == vspace) {
+    ಆದರೆ (poolPtr != ಖಾಲಿ) {
+        asid_map_t asid_map = poolPtr->array[ASID_ಕೆಳಗಿನ(asid)];
+        ಆದರೆ (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
+            (vspace_ಬೇರು_t *)asid_map_asid_map_vspace_get_vspace_ಬೇರು(asid_map) == vspace) {
             invalidateTLBByASID(asid);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
             invalidateASIDEntry(asid);
-#endif
-            poolPtr->array[ASID_LOW(asid)] = asid_map_asid_map_none_new();
-            setVMRoot(NODE_STATE(ksCurThread));
+#ಆದರೆ_ಅಂತ್ಯ
+            poolPtr->array[ASID_ಕೆಳಗಿನ(asid)] = asid_map_asid_map_none_new();
+            ಗಣ_VMRoot(ಗಂಟು_STATE(ksCurThread));
         }
     }
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+ಶೂನ್ಯ deleteASIDPool(asid_t asid_ತಳ, asid_pool_t *pool)
 {
-    word_t offset;
+    ಶಬ್ದ_t ಸ್ಥಾನಾಂತರ;
 
-    assert((asid_base & MASK(asidLowBits)) == 0);
+    ಪ್ರತಿಜ್ಞಾ((asid_ತಳ & ಮುಖವಾಡ(asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು)) == 0);
 
-    if (armKSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (offset = 0; offset < BIT(asidLowBits); offset++) {
-            asid_map_t asid_map = pool->array[offset];
-            if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
-                invalidateTLBByASID(asid_base + offset);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-                invalidateASIDEntry(asid_base + offset);
-#endif
+    ಆದರೆ (armKSASIDTable[ASID_ಮೇಲಿನ(asid_ತಳ)] == pool) {
+        ಗಾಗಿ (ಸ್ಥಾನಾಂತರ = 0; ಸ್ಥಾನಾಂತರ < ಬಿಟ್(asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು); ಸ್ಥಾನಾಂತರ++) {
+            asid_map_t asid_map = pool->array[ಸ್ಥಾನಾಂತರ];
+            ಆದರೆ (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
+                invalidateTLBByASID(asid_ತಳ + ಸ್ಥಾನಾಂತರ);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
+                invalidateASIDEntry(asid_ತಳ + ಸ್ಥಾನಾಂತರ);
+#ಆದರೆ_ಅಂತ್ಯ
             }
         }
-        armKSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        armKSASIDTable[ASID_ಮೇಲಿನ(asid_ತಳ)] = ಖಾಲಿ;
+        ಗಣ_VMRoot(ಗಂಟು_STATE(ksCurThread));
     }
 }
 
-static void doFlush(word_t invLabel, vptr_t start, vptr_t end, paddr_t pstart)
+ಸ್ಥಿರ ಶೂನ್ಯ doFlush(ಶಬ್ದ_t invLabel, vptr_t ಆರಂಭ, vptr_t ಕೊನೆ, paddr_t pstart)
 {
-    switch (invLabel) {
-    case ARMVSpaceClean_Data:
-    case ARMPageClean_Data:
-        cleanCacheRange_RAM(start, end, pstart);
-        break;
+    ಆಯ್ಕೆ (invLabel) {
+    ಸ್ಥಿತಿ ARMVSpace_Clean_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPage_Clean_ದತ್ತಾಂಶ:
+        cleanCacheRange_RAM(ಆರಂಭ, ಕೊನೆ, pstart);
+        ನಿಲ್ಲಿಸು;
 
-    case ARMVSpaceInvalidate_Data:
-    case ARMPageInvalidate_Data:
-        invalidateCacheRange_RAM(start, end, pstart);
-        break;
+    ಸ್ಥಿತಿ ARMVSpace_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPage_Invalidate_ದತ್ತಾಂಶ:
+        invalidateCacheRange_RAM(ಆರಂಭ, ಕೊನೆ, pstart);
+        ನಿಲ್ಲಿಸು;
 
-    case ARMVSpaceCleanInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-        cleanInvalidateCacheRange_RAM(start, end, pstart);
-        break;
+    ಸ್ಥಿತಿ ARMVSpace_Clean_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPage_Clean_Invalidate_ದತ್ತಾಂಶ:
+        cleanInvalidateCacheRange_RAM(ಆರಂಭ, ಕೊನೆ, pstart);
+        ನಿಲ್ಲಿಸು;
 
-    case ARMVSpaceUnify_Instruction:
-    case ARMPageUnify_Instruction:
+    ಸ್ಥಿತಿ ARMVSpaceUnify_Instruction:
+    ಸ್ಥಿತಿ ARMPageUnify_Instruction:
         /* First clean data lines to point of unification... */
-        cleanCacheRange_PoU(start, end, pstart);
+        cleanCacheRange_PoU(ಆರಂಭ, ಕೊನೆ, pstart);
         /* Ensure it's been written. */
         dsb();
         /* ...then invalidate the corresponding instruction lines
            to point of unification... */
-        invalidateCacheRange_I(start, end, pstart);
+        invalidateCacheRange_I(ಆರಂಭ, ಕೊನೆ, pstart);
         /* ... then wait for the completion of invalidations... */
         dsb();
         /* ... and ensure new instructions come from fresh cache lines. */
         isb();
-        break;
-    default:
+        ನಿಲ್ಲಿಸು;
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid operation, shouldn't get here.\n");
     }
 }
 
 /* ================= INVOCATION HANDLING STARTS HERE ================== */
 
-static exception_t performVSpaceFlush(word_t invLabel, vspace_root_t *vspaceRoot, asid_t asid,
-                                      vptr_t start, vptr_t end, paddr_t pstart)
+ಸ್ಥಿರ exception_t performVSpaceFlush(ಶಬ್ದ_t invLabel, vspace_ಬೇರು_t *vspace_ಬೇರು_2, asid_t asid,
+                                      vptr_t ಆರಂಭ, vptr_t ಕೊನೆ, paddr_t pstart)
 {
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        word_t size = end - start;
-        start = (vptr_t)paddr_to_pptr(pstart);
-        end = start + size;
-        if (start < end) {
-            doFlush(invLabel, start, end, pstart);
+    ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        ಶಬ್ದ_t ಗಾತ್ರ_2 = ಕೊನೆ - ಆರಂಭ;
+        ಆರಂಭ = (vptr_t)paddr_ಗಮ್ಯ_pptr(pstart);
+        ಕೊನೆ = ಆರಂಭ + ಗಾತ್ರ_2;
+        ಆದರೆ (ಆರಂಭ < ಕೊನೆ) {
+            doFlush(invLabel, ಆರಂಭ, ಕೊನೆ, pstart);
         }
-    } else {
-        bool_t root_switched;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        bool_t ಬೇರು_switched;
 
         /* Flush if given a non zero range */
-        if (start < end) {
-            root_switched = setVMRootForFlush(vspaceRoot, asid);
-            doFlush(invLabel, start, end, pstart);
-            if (root_switched) {
-                setVMRoot(NODE_STATE(ksCurThread));
+        ಆದರೆ (ಆರಂಭ < ಕೊನೆ) {
+            ಬೇರು_switched = ಗಣ_VMRoot_For_Flush(vspace_ಬೇರು_2, asid);
+            doFlush(invLabel, ಆರಂಭ, ಕೊನೆ, pstart);
+            ಆದರೆ (ಬೇರು_switched) {
+                ಗಣ_VMRoot(ಗಂಟು_STATE(ksCurThread));
             }
         }
     }
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
 
-static exception_t performPageTableInvocationMap(cap_t cap, cte_t *ctSlot, pte_t pte, pte_t *ptSlot)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_ಕೋಷ್ಟಕ_Invocation_Map(cap_t cap, cte_t *ct_ಸ್ಥಾನ, pte_t pte, pte_t *pt_ಸ್ಥಾನ)
 {
-    ctSlot->cap = cap;
-    *ptSlot = pte;
-    cleanByVA_PoU((vptr_t)ptSlot, pptr_to_paddr(ptSlot));
+    ct_ಸ್ಥಾನ->cap = cap;
+    *pt_ಸ್ಥಾನ = pte;
+    cleanByVA_PoU((vptr_t)pt_ಸ್ಥಾನ, pptr_ಗಮ್ಯ_paddr(pt_ಸ್ಥಾನ));
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performPageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_ಕೋಷ್ಟಕ_Invocation_Unmap(cap_t cap, cte_t *ct_ಸ್ಥಾನ)
 {
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
-        pte_t *pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
-        unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
-                       cap_page_table_cap_get_capPTMappedAddress(cap), pt);
-        clearMemory_PT((void *)pt, cap_get_capSizeBits(cap));
+    ಆದರೆ (cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTIs_Mapped(cap)) {
+        pte_t *pt = PT_PTR(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTBase_Ptr(cap));
+        unmap_ಪುಟ_ಕೋಷ್ಟಕ(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ASID(cap),
+                       cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ವಿಳಾಸ(cap), pt);
+        clear_ಸ್ಮರಣೆ_PT((ಶೂನ್ಯ *)pt, cap_get_cap_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು(cap));
     }
 
-    cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
-    return EXCEPTION_NONE;
+    cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_ptr_ಗಣ_cap_PTIs_Mapped(&(ct_ಸ್ಥಾನ->cap), 0);
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationMap(asid_t asid, cap_t cap, cte_t *ctSlot,
-                                            pte_t pte, pte_t *ptSlot)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_Invocation_Map(asid_t asid, cap_t cap, cte_t *ct_ಸ್ಥಾನ,
+                                            pte_t pte, pte_t *pt_ಸ್ಥಾನ)
 {
-    bool_t tlbflush_required = pte_ptr_get_valid(ptSlot);
+    bool_t tlbflush_required = pte_ptr_get_valid(pt_ಸ್ಥಾನ);
 
-    ctSlot->cap = cap;
-    *ptSlot = pte;
+    ct_ಸ್ಥಾನ->cap = cap;
+    *pt_ಸ್ಥಾನ = pte;
 
-    cleanByVA_PoU((vptr_t)ptSlot, pptr_to_paddr(ptSlot));
-    if (unlikely(tlbflush_required)) {
-        assert(asid < BIT(16));
-        invalidateTLBByASIDVA(asid, cap_frame_cap_get_capFMappedAddress(cap));
+    cleanByVA_PoU((vptr_t)pt_ಸ್ಥಾನ, pptr_ಗಮ್ಯ_paddr(pt_ಸ್ಥಾನ));
+    ಆದರೆ (unlikely(tlbflush_required)) {
+        ಪ್ರತಿಜ್ಞಾ(asid < ಬಿಟ್(16));
+        invalidateTLBByASIDVA(asid, cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap));
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performPageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_Invocation_Unmap(cap_t cap, cte_t *ct_ಸ್ಥಾನ)
 {
-    if (cap_frame_cap_get_capFMappedASID(cap) != 0) {
+    ಆದರೆ (cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap) != 0) {
 
-        unmapPage(cap_frame_cap_get_capFSize(cap),
-                  cap_frame_cap_get_capFMappedASID(cap),
-                  cap_frame_cap_get_capFMappedAddress(cap),
-                  cap_frame_cap_get_capFBasePtr(cap));
+        unmap_ಪುಟ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap),
+                  cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap),
+                  cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap),
+                  cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap));
     }
 
-    cap_t slotCap = ctSlot->cap;
-    slotCap = cap_frame_cap_set_capFMappedAddress(slotCap, 0);
-    slotCap = cap_frame_cap_set_capFMappedASID(slotCap, asidInvalid);
-    ctSlot->cap = slotCap;
+    cap_t ಸ್ಥಾನ_Cap = ct_ಸ್ಥಾನ->cap;
+    ಸ್ಥಾನ_Cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ವಿಳಾಸ(ಸ್ಥಾನ_Cap, 0);
+    ಸ್ಥಾನ_Cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ASID(ಸ್ಥಾನ_Cap, asidInvalid);
+    ct_ಸ್ಥಾನ->cap = ಸ್ಥಾನ_Cap;
 
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performPageFlush(word_t invLabel, vspace_root_t *vspaceRoot, asid_t asid,
-                                    vptr_t start, vptr_t end, paddr_t pstart)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_Flush(ಶಬ್ದ_t invLabel, vspace_ಬೇರು_t *vspace_ಬೇರು_2, asid_t asid,
+                                    vptr_t ಆರಂಭ, vptr_t ಕೊನೆ, paddr_t pstart)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* We flush the cache with kernel virtual addresses since
          * the user virtual addresses are not valid in EL2.
          * Switching VMRoot is not required.
          */
-        word_t size = end - start;
-        start = (vptr_t)paddr_to_pptr(pstart);
-        end = start + size;
+        ಶಬ್ದ_t ಗಾತ್ರ_2 = ಕೊನೆ - ಆರಂಭ;
+        ಆರಂಭ = (vptr_t)paddr_ಗಮ್ಯ_pptr(pstart);
+        ಕೊನೆ = ಆರಂಭ + ಗಾತ್ರ_2;
 
-        if (start < end) {
-            doFlush(invLabel, start, end, pstart);
+        ಆದರೆ (ಆರಂಭ < ಕೊನೆ) {
+            doFlush(invLabel, ಆರಂಭ, ಕೊನೆ, pstart);
         }
-    } else {
-        bool_t root_switched;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        bool_t ಬೇರು_switched;
 
-        if (start < end) {
-            root_switched = setVMRootForFlush(vspaceRoot, asid);
-            doFlush(invLabel, start, end, pstart);
-            if (root_switched) {
-                setVMRoot(NODE_STATE(ksCurThread));
+        ಆದರೆ (ಆರಂಭ < ಕೊನೆ) {
+            ಬೇರು_switched = ಗಣ_VMRoot_For_Flush(vspace_ಬೇರು_2, asid);
+            doFlush(invLabel, ಆರಂಭ, ಕೊನೆ, pstart);
+            ಆದರೆ (ಬೇರು_switched) {
+                ಗಣ_VMRoot(ಗಂಟು_STATE(ksCurThread));
             }
         }
     }
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performPageGetAddress(pptr_t base_ptr, bool_t call)
+ಸ್ಥಿರ exception_t perform_ಪುಟ_Get_ವಿಳಾಸ(pptr_t ತಳ_ptr, bool_t call)
 {
-    paddr_t base = pptr_to_paddr((void *)base_ptr);
+    paddr_t ತಳ = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)ತಳ_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, base);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    thread = ಗಂಟು_STATE(ksCurThread);
+    ಆದರೆ (call) {
+        ಶಬ್ದ_t *ipc_ಬಫರ್ = lookupIPCBuffer(true, thread);
+        ಗಣ_ರಿಜಿಸ್ಟರ್(thread, badge_ರಿಜಿಸ್ಟರ್, 0);
+        ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಉದ್ದಳತೆ = ಗಣ_MR(thread, ipc_ಬಫರ್, 0, ತಳ);
+        ಗಣ_ರಿಜಿಸ್ಟರ್(thread, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್, ಶಬ್ದ_From_ಸಂದೇಶ_Info(
+                        se_L4_ಸಂದೇಶ_Info_new(0, 0, 0, ಉದ್ದಳತೆ)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Running);
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t performASIDControlInvocation(void *frame, cte_t *slot,
-                                                cte_t *parent, asid_t asid_base)
+ಸ್ಥಿರ exception_t performASIDControlInvocation(ಶೂನ್ಯ *ಚೌಕಟ್ಟು, cte_t *ಸ್ಥಾನ,
+                                                cte_t *ಪೋಷಕ, asid_t asid_ತಳ)
 {
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
-    cap_untyped_cap_ptr_set_capFreeIndex(&(parent->cap),
-                                         MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(parent->cap)));
+    cap_untyped_cap_ptr_ಗಣ_cap_Free_ಸೂಚ್ಯಂಕ(&(ಪೋಷಕ->cap),
+                                         MAX_FREE_ಸೂಚ್ಯಂಕ(cap_untyped_cap_get_cap_ಖಂಡ_ಗಾತ್ರ(ಪೋಷಕ->cap)));
 
-    memzero(frame, BIT(seL4_ASIDPoolBits));
+    memzero(ಚೌಕಟ್ಟು, ಬಿಟ್(se_L4_ASIDPool_ಬಿಟ್ಟುಗಳು));
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(
+    cte_ಸೇರಿಸು(
         cap_asid_pool_cap_new(
-            asid_base,         /* capASIDBase  */
-            WORD_REF(frame)    /* capASIDPool  */
-        ), parent, slot);
+            asid_ತಳ,         /* capASIDBase  */
+            ಶಬ್ದ_REF(ಚೌಕಟ್ಟು)    /* capASIDPool  */
+        ), ಪೋಷಕ, ಸ್ಥಾನ);
 
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    armKSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    ಪ್ರತಿಜ್ಞಾ((asid_ತಳ & ಮುಖವಾಡ(asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು)) == 0);
+    armKSASIDTable[ASID_ಮೇಲಿನ(asid_ತಳ)] = (asid_pool_t *)ಚೌಕಟ್ಟು;
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static exception_t decodeARMVSpaceRootInvocation(word_t invLabel, word_t length,
-                                                 cte_t *cte, cap_t cap, word_t *buffer)
+ಸ್ಥಿರ exception_t decode_ARMVSpace_ಬೇರು_Invocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ,
+                                                 cte_t *cte, cap_t cap, ಶಬ್ದ_t *ಬಫರ್)
 {
-    vptr_t start, end;
+    vptr_t ಆರಂಭ, ಕೊನೆ;
     paddr_t pstart;
     asid_t asid;
-    vspace_root_t *vspaceRoot;
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2;
     lookupPTSlot_ret_t resolve_ret;
-    findVSpaceForASID_ret_t find_ret;
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
     pte_t pte;
 
-    switch (invLabel) {
-    case ARMVSpaceClean_Data:
-    case ARMVSpaceInvalidate_Data:
-    case ARMVSpaceCleanInvalidate_Data:
-    case ARMVSpaceUnify_Instruction:
+    ಆಯ್ಕೆ (invLabel) {
+    ಸ್ಥಿತಿ ARMVSpace_Clean_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMVSpace_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMVSpace_Clean_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMVSpaceUnify_Instruction:
 
-        if (length < 2) {
+        ಆದರೆ (ಉದ್ದಳತೆ < 2) {
             userError("VSpaceRoot Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        ಆರಂಭ = getSyscallArg(0, ಬಫರ್);
+        ಕೊನೆ =   getSyscallArg(1, ಬಫರ್);
 
         /* Check sanity of arguments */
-        if (end <= start) {
+        ಆದರೆ (ಕೊನೆ <= ಆರಂಭ) {
             userError("VSpaceRoot Flush: Invalid range.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ವಾದ;
+            current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 1;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Don't let applications flush kernel regions. */
-        if (end > USER_TOP) {
+        ಆದರೆ (ಕೊನೆ > USER_ತುದಿ) {
             userError("VSpaceRoot Flush: Exceed the user addressable region.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(!isValidNativeRoot(cap))) {
+        ಆದರೆ (unlikely(!is_Valid_Native_ಬೇರು(cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Make sure that the supplied pgd is ok */
-        vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(cap));
+        vspace_ಬೇರು_2 = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(cap));
         asid = cap_vspace_cap_get_capVSMappedASID(cap);
 
-        find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+        ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
             userError("VSpaceRoot Flush: No VSpace for ASID");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+        ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು != vspace_ಬೇರು_2)) {
             userError("VSpaceRoot Flush: Invalid VSpace Cap");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Look up the frame containing 'start'. */
-        resolve_ret = lookupPTSlot(vspaceRoot, start);
-        pte = *resolve_ret.ptSlot;
+        resolve_ret = lookupPTSlot(vspace_ಬೇರು_2, ಆರಂಭ);
+        pte = *resolve_ret.pt_ಸ್ಥಾನ;
 
         /* Check that the returned slot is a page. */
-        if (!pte_is_page_type(pte)) {
+        ಆದರೆ (!pte_is_ಪುಟ_type(pte)) {
 
             /* Fail silently, as there can't be any stale cached data (for the
              * given address space), and getting a syscall error because the
              * relevant page is non-resident would be 'astonishing'. */
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return EXCEPTION_NONE;
+            ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+            ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
         }
 
         /* Refuse to cross a page boundary. */
-        if (ROUND_DOWN(start, resolve_ret.ptBitsLeft) != ROUND_DOWN(end - 1, resolve_ret.ptBitsLeft)) {
+        ಆದರೆ (ಸುತ್ತು_ಕೆಳಕ್ಕೆ(ಆರಂಭ, resolve_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ) != ಸುತ್ತು_ಕೆಳಕ್ಕೆ(ಕೊನೆ - 1, resolve_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ)) {
             current_syscall_error.type = seL4_RangeError;
-            current_syscall_error.rangeErrorMin = start;
-            current_syscall_error.rangeErrorMax = ROUND_DOWN(start, resolve_ret.ptBitsLeft) +
-                                                  MASK(resolve_ret.ptBitsLeft);
+            current_syscall_error.rangeErrorMin = ಆರಂಭ;
+            current_syscall_error.rangeErrorMax = ಸುತ್ತು_ಕೆಳಕ್ಕೆ(ಆರಂಭ, resolve_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ) +
+                                                  ಮುಖವಾಡ(resolve_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ);
             userError("VSpaceRoot Flush: cannot cross page boundary, valid range is [0x%lx..0x%lx)",
                       current_syscall_error.rangeErrorMin, current_syscall_error.rangeErrorMax);
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
         /* When in EL1, the mapping must be write-able for ARMVSpaceInvalidate_Data */
-        if (invLabel == ARMVSpaceInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
+        ಆದರೆ (invLabel == ARMVSpace_Invalidate_ದತ್ತಾಂಶ && vmRightsFromPTE(pte) != VMReadWrite) {
             userError("ARMVSpaceInvalidate_Data: Cannot call on mapping without write rights.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
         /* Calculate the physical start address. */
-        paddr_t frame_base = pte_get_page_base_address(pte);
+        paddr_t ಚೌಕಟ್ಟು_ತಳ_2 = pte_get_ಪುಟ_ತಳ_ವಿಳಾಸ(pte);
 
-        pstart = frame_base + (start & MASK(resolve_ret.ptBitsLeft));
+        pstart = ಚೌಕಟ್ಟು_ತಳ_2 + (ಆರಂಭ & ಮುಖವಾಡ(resolve_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ));
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window */
-        if (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
+        ಆದರೆ (pstart < PADDR_ತಳ || ((ಕೊನೆ - ಆರಂಭ) + pstart) > PADDR_ತುದಿ) {
             userError("VSpaceRoot Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performVSpaceFlush(invLabel, vspaceRoot, asid, start, end - 1, pstart);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ performVSpaceFlush(invLabel, vspace_ಬೇರು_2, asid, ಆರಂಭ, ಕೊನೆ - 1, pstart);
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
 
-static exception_t decodeARMPageTableInvocation(word_t invLabel, word_t length,
-                                                cte_t *cte, cap_t cap, word_t *buffer)
+ಸ್ಥಿರ exception_t decode_ARMPage_ಕೋಷ್ಟಕ_Invocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ,
+                                                cte_t *cte, cap_t cap, ಶಬ್ದ_t *ಬಫರ್)
 {
-    cap_t vspaceRootCap;
-    vspace_root_t *vspaceRoot;
+    cap_t vspace_ಬೇರು_Cap;
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2;
     pte_t pte;
     asid_t asid;
     vptr_t vaddr;
-    lookupPTSlot_ret_t ptSlot;
-    findVSpaceForASID_ret_t find_ret;
+    lookupPTSlot_ret_t pt_ಸ್ಥಾನ;
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
 
-    if (invLabel == ARMPageTableUnmap) {
-        if (unlikely(!isFinalCapability(cte))) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (invLabel == ARMPage_ಕೋಷ್ಟಕ_Unmap) {
+        ಆದರೆ (unlikely(!isFinalCapability(cte))) {
+            current_syscall_error.type = se_L4_Revoke_ಮೊದಲ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageTableInvocationUnmap(cap, cte);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ perform_ಪುಟ_ಕೋಷ್ಟಕ_Invocation_Unmap(cap, cte);
     }
 
-    if (unlikely(invLabel != ARMPageTableMap)) {
+    ಆದರೆ (unlikely(invLabel != ARMPage_ಕೋಷ್ಟಕ_Map)) {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(length < 2 || current_extra_caps.excaprefs[0] == NULL)) {
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (unlikely(ಉದ್ದಳತೆ < 2 || current_extra_caps.excaprefs[0] == ಖಾಲಿ)) {
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(cap_page_table_cap_get_capPTIsMapped(cap))) {
+    ಆದರೆ (unlikely(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTIs_Mapped(cap))) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    vaddr = getSyscallArg(0, buffer);
-    vspaceRootCap = current_extra_caps.excaprefs[0]->cap;
+    vaddr = getSyscallArg(0, ಬಫರ್);
+    vspace_ಬೇರು_Cap = current_extra_caps.excaprefs[0]->cap;
 
-    if (unlikely(!isValidNativeRoot(vspaceRootCap))) {
+    ಆದರೆ (unlikely(!is_Valid_Native_ಬೇರು(vspace_ಬೇರು_Cap))) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceRootCap));
-    asid = cap_vspace_cap_get_capVSMappedASID(vspaceRootCap);
+    vspace_ಬೇರು_2 = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspace_ಬೇರು_Cap));
+    asid = cap_vspace_cap_get_capVSMappedASID(vspace_ಬೇರು_Cap);
 
-    if (unlikely(vaddr > USER_TOP)) {
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (unlikely(vaddr > USER_ತುದಿ)) {
+        current_syscall_error.type = se_L4_Invalid_ವಾದ;
+        current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    find_ret = findVSpaceForASID(asid);
-    if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+    ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+    ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+    ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು != vspace_ಬೇರು_2)) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    ptSlot = lookupPTSlot(vspaceRoot, vaddr);
+    pt_ಸ್ಥಾನ = lookupPTSlot(vspace_ಬೇರು_2, vaddr);
 
-    if (unlikely(ptSlot.ptBitsLeft == seL4_PageBits || pte_ptr_get_valid(ptSlot.ptSlot))) {
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (unlikely(pt_ಸ್ಥಾನ.pt_ಬಿಟ್ಟುಗಳು_ಎಡ == se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು || pte_ptr_get_valid(pt_ಸ್ಥಾನ.pt_ಸ್ಥಾನ))) {
+        current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    pte = pte_pte_table_new(pptr_to_paddr(PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap))));
+    pte = pte_pte_ಕೋಷ್ಟಕ_new(pptr_ಗಮ್ಯ_paddr(PTE_PTR(cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTBase_Ptr(cap))));
 
-    cap = cap_page_table_cap_set_capPTIsMapped(cap, 1);
-    cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
-    cap = cap_page_table_cap_set_capPTMappedAddress(cap, (vaddr & ~MASK(ptSlot.ptBitsLeft)));
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_PTIs_Mapped(cap, 1);
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_PTMapped_ASID(cap, asid);
+    cap = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_PTMapped_ವಿಳಾಸ(cap, (vaddr & ~ಮುಖವಾಡ(pt_ಸ್ಥಾನ.pt_ಬಿಟ್ಟುಗಳು_ಎಡ)));
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performPageTableInvocationMap(cap, cte, pte, ptSlot.ptSlot);
+    ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+    ಹಿಂತಿರುಗಿ perform_ಪುಟ_ಕೋಷ್ಟಕ_Invocation_Map(cap, cte, pte, pt_ಸ್ಥಾನ.pt_ಸ್ಥಾನ);
 }
 
-static inline bool_t CONST checkVPAlignment(vm_page_size_t sz, word_t w)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool_t CONST checkVPAlignment(vm_ಪುಟ_ಗಾತ್ರ_t sz, ಶಬ್ದ_t w)
 {
-    return (w & MASK(pageBitsForSize(sz))) == 0;
+    ಹಿಂತಿರುಗಿ (w & ಮುಖವಾಡ(ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(sz))) == 0;
 }
 
-static exception_t decodeARMFrameInvocation(word_t invLabel, word_t length,
-                                            cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+ಸ್ಥಿರ exception_t decodeARMFrameInvocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ,
+                                            cte_t *cte, cap_t cap, bool_t call, ಶಬ್ದ_t *ಬಫರ್)
 {
-    switch (invLabel) {
-    case ARMPageMap: {
+    ಆಯ್ಕೆ (invLabel) {
+    ಸ್ಥಿತಿ ARMPageMap: {
         vptr_t vaddr;
-        paddr_t base;
-        cap_t vspaceRootCap;
-        vspace_root_t *vspaceRoot;
-        asid_t asid, frame_asid;
+        paddr_t ತಳ;
+        cap_t vspace_ಬೇರು_Cap;
+        vspace_ಬೇರು_t *vspace_ಬೇರು_2;
+        asid_t asid, ಚೌಕಟ್ಟು_asid;
         vm_rights_t vmRights, capRights;
-        vm_page_size_t frameSize;
-        vm_attributes_t attributes;
-        findVSpaceForASID_ret_t find_ret;
+        vm_ಪುಟ_ಗಾತ್ರ_t ಚೌಕಟ್ಟು_ಗಾತ್ರ;
+        vm_ಗುಣಲಕ್ಷಣಗಳು_t ಗುಣಲಕ್ಷಣಗಳು;
+        ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
 
-        if (unlikely(length < 3 || current_extra_caps.excaprefs[0] == NULL)) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+        ಆದರೆ (unlikely(ಉದ್ದಳತೆ < 3 || current_extra_caps.excaprefs[0] == ಖಾಲಿ)) {
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        vaddr = getSyscallArg(0, buffer);
-        attributes = vmAttributesFromWord(getSyscallArg(2, buffer));
-        vspaceRootCap = current_extra_caps.excaprefs[0]->cap;
+        vaddr = getSyscallArg(0, ಬಫರ್);
+        ಗುಣಲಕ್ಷಣಗಳು = vm_ಗುಣಲಕ್ಷಣಗಳು_From_ಶಬ್ದ(getSyscallArg(2, ಬಫರ್));
+        vspace_ಬೇರು_Cap = current_extra_caps.excaprefs[0]->cap;
 
-        frameSize = cap_frame_cap_get_capFSize(cap);
-        capRights = cap_frame_cap_get_capFVMRights(cap);
-        vmRights = maskVMRights(capRights, rightsFromWord(getSyscallArg(1, buffer)));
+        ಚೌಕಟ್ಟು_ಗಾತ್ರ = cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap);
+        capRights = cap_ಚೌಕಟ್ಟು_cap_get_cap_FVMRights(cap);
+        vmRights = ಮುಖವಾಡ_VMRights(capRights, rights_From_ಶಬ್ದ(getSyscallArg(1, ಬಫರ್)));
 
-        if (unlikely(!isValidNativeRoot(vspaceRootCap))) {
+        ಆದರೆ (unlikely(!is_Valid_Native_ಬೇರು(vspace_ಬೇರು_Cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspaceRootCap));
-        asid = cap_vspace_cap_get_capVSMappedASID(vspaceRootCap);
+        vspace_ಬೇರು_2 = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vspace_ಬೇರು_Cap));
+        asid = cap_vspace_cap_get_capVSMappedASID(vspace_ಬೇರು_Cap);
 
-        find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+        ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(find_ret.vspace_root != vspaceRoot)) {
+        ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು != vspace_ಬೇರು_2)) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(!checkVPAlignment(frameSize, vaddr))) {
+        ಆದರೆ (unlikely(!checkVPAlignment(ಚೌಕಟ್ಟು_ಗಾತ್ರ, vaddr))) {
             current_syscall_error.type = seL4_AlignmentError;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* In the case of remap, the cap should have a valid asid */
-        frame_asid = cap_frame_cap_get_capFMappedASID(cap);
+        ಚೌಕಟ್ಟು_asid = cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap);
 
-        if (frame_asid != asidInvalid) {
-            if (frame_asid != asid) {
+        ಆದರೆ (ಚೌಕಟ್ಟು_asid != asidInvalid) {
+            ಆದರೆ (ಚೌಕಟ್ಟು_asid != asid) {
                 userError("ARMPageMap: Attempting to remap a frame that does not belong to the passed address space");
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
 
-            } else if (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap) != vaddr) {
                 userError("ARMPageMap: Attempting to map frame into multiple addresses");
-                current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Invalid_ವಾದ;
+                current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
-            if (unlikely(vaddr + BIT(pageBitsForSize(frameSize)) - 1 > USER_TOP)) {
-                current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
-                return EXCEPTION_SYSCALL_ERROR;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಆದರೆ (unlikely(vaddr + ಬಿಟ್(ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(ಚೌಕಟ್ಟು_ಗಾತ್ರ)) - 1 > USER_ತುದಿ)) {
+                current_syscall_error.type = se_L4_Invalid_ವಾದ;
+                current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
             }
         }
 
-        cap = cap_frame_cap_set_capFMappedASID(cap, asid);
-        cap = cap_frame_cap_set_capFMappedAddress(cap, vaddr);
+        cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ASID(cap, asid);
+        cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ವಿಳಾಸ(cap, vaddr);
 
-        base = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
+        ತಳ = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap));
 
-        lookupPTSlot_ret_t lu_ret = lookupPTSlot(vspaceRoot, vaddr);
-        if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(frameSize))) {
-            current_lookup_fault = lookup_fault_missing_capability_new(lu_ret.ptBitsLeft);
+        lookupPTSlot_ret_t lu_ret = lookupPTSlot(vspace_ಬೇರು_2, vaddr);
+        ಆದರೆ (unlikely(lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ != ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(ಚೌಕಟ್ಟು_ಗಾತ್ರ))) {
+            current_lookup_fault = lookup_fault_missing_capability_new(lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ);
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         bool_t cap_read = (capRights == VMReadOnly || capRights == VMReadWrite);
-        pte_t pte = makeUserPagePTE(base, vmRights, cap_read, attributes, frameSize);
+        pte_t pte = make_User_ಪುಟ_PTE(ತಳ, vmRights, cap_read, ಗುಣಲಕ್ಷಣಗಳು, ಚೌಕಟ್ಟು_ಗಾತ್ರ);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationMap(asid, cap, cte, pte, lu_ret.ptSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ perform_ಪುಟ_Invocation_Map(asid, cap, cte, pte, lu_ret.pt_ಸ್ಥಾನ);
     }
 
-    case ARMPageUnmap:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageInvocationUnmap(cap, cte);
+    ಸ್ಥಿತಿ ARMPageUnmap:
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ perform_ಪುಟ_Invocation_Unmap(cap, cte);
 
-    case ARMPageClean_Data:
-    case ARMPageInvalidate_Data:
-    case ARMPageCleanInvalidate_Data:
-    case ARMPageUnify_Instruction: {
-        vptr_t start, end;
+    ಸ್ಥಿತಿ ARMPage_Clean_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPage_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPage_Clean_Invalidate_ದತ್ತಾಂಶ:
+    ಸ್ಥಿತಿ ARMPageUnify_Instruction: {
+        vptr_t ಆರಂಭ, ಕೊನೆ;
         vptr_t vaddr;
         asid_t asid;
-        word_t page_size;
-        findVSpaceForASID_ret_t find_ret;
+        ಶಬ್ದ_t ಪುಟ_ಗಾತ್ರ;
+        ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret;
 
-        if (length < 2) {
+        ಆದರೆ (ಉದ್ದಳತೆ < 2) {
             userError("Page Flush: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(cap_frame_cap_get_capFMappedASID(cap) == 0)) {
+        ಆದರೆ (unlikely(cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap) == 0)) {
             userError("Page Flush: Frame is not mapped.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        vaddr = cap_frame_cap_get_capFMappedAddress(cap);
-        asid = cap_frame_cap_get_capFMappedASID(cap);
+        vaddr = cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap);
+        asid = cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap);
 
-        find_ret = findVSpaceForASID(asid);
-        if (unlikely(find_ret.status != EXCEPTION_NONE)) {
+        ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+        ಆದರೆ (unlikely(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
             userError("Page Flush: No PGD for ASID");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        start = getSyscallArg(0, buffer);
-        end =   getSyscallArg(1, buffer);
+        ಆರಂಭ = getSyscallArg(0, ಬಫರ್);
+        ಕೊನೆ =   getSyscallArg(1, ಬಫರ್);
 
         /* check that the range is sane */
-        if (end <= start) {
+        ಆದರೆ (ಕೊನೆ <= ಆರಂಭ) {
             userError("PageFlush: Invalid range");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ವಾದ;
+            current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 1;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* start and end are currently relative inside this page */
-        page_size = BIT(pageBitsForSize(cap_frame_cap_get_capFSize(cap)));
-        if (start >= page_size || end > page_size) {
+        ಪುಟ_ಗಾತ್ರ = ಬಿಟ್(ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap)));
+        ಆದರೆ (ಆರಂಭ >= ಪುಟ_ಗಾತ್ರ || ಕೊನೆ > ಪುಟ_ಗಾತ್ರ) {
             userError("Page Flush: Requested range not inside page");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ವಾದ;
+            current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t pstart = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) + start;
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+        ಶಬ್ದ_t pstart = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap)) + ಆರಂಭ;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
         /* Don't let applications flush outside of the kernel window */
-        if (pstart < PADDR_BASE || ((end - start) + pstart) > PADDR_TOP) {
+        ಆದರೆ (pstart < PADDR_ತಳ || ((ಕೊನೆ - ಆರಂಭ) + pstart) > PADDR_ತುದಿ) {
             userError("Page Flush: Outside of kernel physical memory window");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
         /* When in EL1, we are using the user page table for flushing and need to make sure
            the mapping info in the cap is not stale. */
-        lookupPTSlot_ret_t lu_ret = lookupPTSlot(find_ret.vspace_root, vaddr);
-        pte_t pte = *lu_ret.ptSlot;
-        void *base_ptr = (void *) cap_frame_cap_get_capFBasePtr(cap);
-        if (unlikely(lu_ret.ptBitsLeft != pageBitsForSize(cap_frame_cap_get_capFSize(cap)) ||
-                     !pte_is_page_type(pte) ||
-                     pte_get_page_base_address(pte) != pptr_to_paddr(base_ptr))) {
+        lookupPTSlot_ret_t lu_ret = lookupPTSlot(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು, vaddr);
+        pte_t pte = *lu_ret.pt_ಸ್ಥಾನ;
+        ಶೂನ್ಯ *ತಳ_ptr = (ಶೂನ್ಯ *) cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap);
+        ಆದರೆ (unlikely(lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ != ಪುಟ_ಬಿಟ್ಟುಗಳು_For_ಗಾತ್ರ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap)) ||
+                     !pte_is_ಪುಟ_type(pte) ||
+                     pte_get_ಪುಟ_ತಳ_ವಿಳಾಸ(pte) != pptr_ಗಮ್ಯ_paddr(ತಳ_ptr))) {
             userError("Page Flush: Attempting to use cap with stale mapping information.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* When in EL1, the mapping must be writeable for DC IVAC */
-        if (invLabel == ARMPageInvalidate_Data && vmRightsFromPTE(pte) != VMReadWrite) {
+        ಆದರೆ (invLabel == ARMPage_Invalidate_ದತ್ತಾಂಶ && vmRightsFromPTE(pte) != VMReadWrite) {
             userError("ARMPageInvalidate_Data: Cannot call on mapping without write rights.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageFlush(invLabel, find_ret.vspace_root, asid, vaddr + start, vaddr + end - 1,
+#ಆದರೆ_ಅಂತ್ಯ
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ perform_ಪುಟ_Flush(invLabel, ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು, asid, vaddr + ಆರಂಭ, vaddr + ಕೊನೆ - 1,
                                 pstart);
     }
 
-    case ARMPageGetAddress:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress(cap_frame_cap_get_capFBasePtr(cap), call);
+    ಸ್ಥಿತಿ ARMPage_Get_ವಿಳಾಸ:
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ perform_ಪುಟ_Get_ವಿಳಾಸ(cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap), call);
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
-                                   cte_t *cte, cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeARMMMUInvocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ, cptr_t cptr,
+                                   cte_t *cte, cap_t cap, bool_t call, ಶಬ್ದ_t *ಬಫರ್)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_vspace_cap:
-        return decodeARMVSpaceRootInvocation(invLabel, length, cte, cap, buffer);
-    case cap_page_table_cap:
-        return decodeARMPageTableInvocation(invLabel, length, cte, cap, buffer);
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_vspace_cap:
+        ಹಿಂತಿರುಗಿ decode_ARMVSpace_ಬೇರು_Invocation(invLabel, ಉದ್ದಳತೆ, cte, cap, ಬಫರ್);
+    ಸ್ಥಿತಿ cap_ಪುಟ_ಕೋಷ್ಟಕ_cap:
+        ಹಿಂತಿರುಗಿ decode_ARMPage_ಕೋಷ್ಟಕ_Invocation(invLabel, ಉದ್ದಳತೆ, cte, cap, ಬಫರ್);
 
-    case cap_frame_cap:
-        return decodeARMFrameInvocation(invLabel, length, cte, cap, call, buffer);
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap:
+        ಹಿಂತಿರುಗಿ decodeARMFrameInvocation(invLabel, ಉದ್ದಳತೆ, cte, cap, call, ಬಫರ್);
 
-    case cap_asid_control_cap: {
-        word_t i;
-        asid_t asid_base;
-        word_t index, depth;
-        cap_t untyped, root;
-        cte_t *parentSlot, *destSlot;
-        lookupSlot_ret_t lu_ret;
-        void *frame;
-        exception_t status;
+    ಸ್ಥಿತಿ cap_asid_control_cap: {
+        ಶಬ್ದ_t i;
+        asid_t asid_ತಳ;
+        ಶಬ್ದ_t ಸೂಚ್ಯಂಕ, ಆಳ;
+        cap_t untyped, ಬೇರು;
+        cte_t *ಪೋಷಕ_ಸ್ಥಾನ, *dest_ಸ್ಥಾನ;
+        lookup_ಸ್ಥಾನ_ret_t lu_ret;
+        ಶೂನ್ಯ *ಚೌಕಟ್ಟು;
+        exception_t ಸ್ಥಿತಿ_2;
 
-        if (unlikely(invLabel != ARMASIDControlMakePool)) {
+        ಆದರೆ (unlikely(invLabel != ARMASIDControlMakePool)) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(length < 2 ||
-                     current_extra_caps.excaprefs[0] == NULL ||
-                     current_extra_caps.excaprefs[1] == NULL)) {
-            current_syscall_error.type = seL4_TruncatedMessage;
+        ಆದರೆ (unlikely(ಉದ್ದಳತೆ < 2 ||
+                     current_extra_caps.excaprefs[0] == ಖಾಲಿ ||
+                     current_extra_caps.excaprefs[1] == ಖಾಲಿ)) {
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        index = getSyscallArg(0, buffer);
-        depth = getSyscallArg(1, buffer);
-        parentSlot = current_extra_caps.excaprefs[0];
-        untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        ಸೂಚ್ಯಂಕ = getSyscallArg(0, ಬಫರ್);
+        ಆಳ = getSyscallArg(1, ಬಫರ್);
+        ಪೋಷಕ_ಸ್ಥಾನ = current_extra_caps.excaprefs[0];
+        untyped = ಪೋಷಕ_ಸ್ಥಾನ->cap;
+        ಬೇರು = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
+        ಗಾಗಿ (i = 0; i < nASIDPools && armKSASIDTable[i]; i++);
 
-        if (unlikely(i == nASIDPools)) {
+        ಆದರೆ (unlikely(i == nASIDPools)) {
             userError("ASIDControlMakePool: No unallocated pools found.");
-            current_syscall_error.type = seL4_DeleteFirst;
+            current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_ತಳ = i << asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು;
 
-        if (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
-                     cap_untyped_cap_get_capBlockSize(untyped) != seL4_ASIDPoolBits ||
+        ಆದರೆ (unlikely(cap_get_capType(untyped) != cap_untyped_cap ||
+                     cap_untyped_cap_get_cap_ಖಂಡ_ಗಾತ್ರ(untyped) != se_L4_ASIDPool_ಬಿಟ್ಟುಗಳು ||
                      cap_untyped_cap_get_capIsDevice(untyped))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        status = ensureNoChildren(parentSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            return status;
+        ಸ್ಥಿತಿ_2 = ensureNoChildren(ಪೋಷಕ_ಸ್ಥಾನ);
+        ಆದರೆ (unlikely(ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
+        ಚೌಕಟ್ಟು = ಶಬ್ದ_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
-        if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-            return lu_ret.status;
+        lu_ret = lookup_ಗುರಿ_ಸ್ಥಾನ(ಬೇರು, ಸೂಚ್ಯಂಕ, ಆಳ);
+        ಆದರೆ (unlikely(lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
+            ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
         }
-        destSlot = lu_ret.slot;
+        dest_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-        status = ensureEmptySlot(destSlot);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            return status;
+        ಸ್ಥಿತಿ_2 = ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(dest_ಸ್ಥಾನ);
+        ಆದರೆ (unlikely(ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ performASIDControlInvocation(ಚೌಕಟ್ಟು, dest_ಸ್ಥಾನ, ಪೋಷಕ_ಸ್ಥಾನ, asid_ತಳ);
     }
 
-    case cap_asid_pool_cap: {
+    ಸ್ಥಿತಿ cap_asid_pool_cap: {
         cap_t vspaceCap;
-        cte_t *vspaceCapSlot;
+        cte_t *vspace_Cap_ಸ್ಥಾನ;
         asid_pool_t *pool;
-        word_t i;
+        ಶಬ್ದ_t i;
         asid_t asid;
 
-        if (unlikely(invLabel != ARMASIDPoolAssign)) {
+        ಆದರೆ (unlikely(invLabel != ARMASIDPool_ನಿಯೋಜಿಸು)) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
-            current_syscall_error.type = seL4_TruncatedMessage;
+        ಆದರೆ (unlikely(current_extra_caps.excaprefs[0] == ಖಾಲಿ)) {
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        vspaceCapSlot = current_extra_caps.excaprefs[0];
-        vspaceCap = vspaceCapSlot->cap;
+        vspace_Cap_ಸ್ಥಾನ = current_extra_caps.excaprefs[0];
+        vspaceCap = vspace_Cap_ಸ್ಥಾನ->cap;
 
-        if (unlikely(!isVTableRoot(vspaceCap) || cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
+        ಆದರೆ (unlikely(!is_VTable_ಬೇರು(vspaceCap) || cap_vspace_cap_get_capVSIsMapped(vspaceCap))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = armKSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
+        pool = armKSASIDTable[ASID_ಮೇಲಿನ(cap_asid_pool_cap_get_capASIDBase(cap))];
 
-        if (unlikely(!pool)) {
+        ಆದರೆ (unlikely(!pool)) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+            current_lookup_fault = lookup_fault_invalid_ಬೇರು_new();
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
+        ಆದರೆ (unlikely(pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
+            current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < (1 << asidLowBits) && (asid + i == 0
+        ಗಾಗಿ (i = 0; i < (1 << asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು) && (asid + i == 0
                                                || (asid_map_get_type(pool->array[i]) != asid_map_asid_map_none)); i++);
 
-        if (unlikely(i == 1 << asidLowBits)) {
-            current_syscall_error.type = seL4_DeleteFirst;
+        ಆದರೆ (unlikely(i == 1 << asid_ಕೆಳಗಿನ_ಬಿಟ್ಟುಗಳು)) {
+            current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, vspaceCapSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ performASIDPoolInvocation(asid, pool, vspace_Cap_ಸ್ಥಾನ);
     }
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid ARM arch cap type");
     }
 }
 
-#ifdef CONFIG_DEBUG_BUILD
-void kernelPrefetchAbort(word_t pc) VISIBLE;
-void kernelDataAbort(word_t pc) VISIBLE;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_BUILD
+ಶೂನ್ಯ kernelPrefetchAbort(ಶಬ್ದ_t pc) VISIBLE;
+ಶೂನ್ಯ kernel_ದತ್ತಾಂಶ_Abort(ಶಬ್ದ_t pc) VISIBLE;
 
-void kernelPrefetchAbort(word_t pc)
+ಶೂನ್ಯ kernelPrefetchAbort(ಶಬ್ದ_t pc)
 {
-    printf("\n\nKERNEL PREFETCH ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("ESR (IFSR): 0x%"SEL4_PRIx_word"\n", getIFSR());
+    ಬರೆ("\n\nKERNEL PREFETCH ABORT!\n");
+    ಬರೆ("Faulting instruction: 0x%"SEL4_PRIx_ಶಬ್ದ"\n", pc);
+    ಬರೆ("ESR (IFSR): 0x%"SEL4_PRIx_ಶಬ್ದ"\n", getIFSR());
     halt();
 }
 
-void kernelDataAbort(word_t pc)
+ಶೂನ್ಯ kernel_ದತ್ತಾಂಶ_Abort(ಶಬ್ದ_t pc)
 {
-    printf("\n\nKERNEL DATA ABORT!\n");
-    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("FAR: 0x%"SEL4_PRIx_word" ESR (DFSR): 0x%"SEL4_PRIx_word"\n",
+    ಬರೆ("\n\nKERNEL DATA ABORT!\n");
+    ಬರೆ("Faulting instruction: 0x%"SEL4_PRIx_ಶಬ್ದ"\n", pc);
+    ಬರೆ("FAR: 0x%"SEL4_PRIx_ಶಬ್ದ" ESR (DFSR): 0x%"SEL4_PRIx_ಶಬ್ದ"\n",
            getFAR(), getDFSR());
     halt();
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_BUILD */
 
-#ifdef CONFIG_PRINTING
-typedef struct readWordFromVSpace_ret {
-    exception_t status;
-    word_t value;
-} readWordFromVSpace_ret_t;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ read_ಶಬ್ದ_From_VSpace_ret {
+    exception_t ಸ್ಥಿತಿ_2;
+    ಶಬ್ದ_t ಮೌಲ್ಯ;
+} read_ಶಬ್ದ_From_VSpace_ret_t;
 
-static readWordFromVSpace_ret_t readWordFromVSpace(vspace_root_t *pd, word_t vaddr)
+ಸ್ಥಿರ read_ಶಬ್ದ_From_VSpace_ret_t read_ಶಬ್ದ_From_VSpace(vspace_ಬೇರು_t *pd, ಶಬ್ದ_t vaddr)
 {
-    readWordFromVSpace_ret_t ret;
-    word_t offset;
+    read_ಶಬ್ದ_From_VSpace_ret_t ret;
+    ಶಬ್ದ_t ಸ್ಥಾನಾಂತರ;
     pptr_t kernel_vaddr;
-    word_t *value;
+    ಶಬ್ದ_t *ಮೌಲ್ಯ;
 
     lookupPTSlot_ret_t lookup_ret = lookupPTSlot(pd, vaddr);
 
     /* Check that the returned slot is a page. */
-    if (!pte_ptr_get_valid(lookup_ret.ptSlot) ||
-        (pte_pte_table_ptr_get_present(lookup_ret.ptSlot) && lookup_ret.ptBitsLeft > PAGE_BITS)) {
-        ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+    ಆದರೆ (!pte_ptr_get_valid(lookup_ret.pt_ಸ್ಥಾನ) ||
+        (pte_pte_ಕೋಷ್ಟಕ_ptr_get_present(lookup_ret.pt_ಸ್ಥಾನ) && lookup_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ > ಪುಟ_ಬಿಟ್ಟುಗಳು)) {
+        ret.ಸ್ಥಿತಿ_2 = EXCEPTION_LOOKUP_FAULT;
+        ಹಿಂತಿರುಗಿ ret;
     }
 
-    offset = vaddr & MASK(lookup_ret.ptBitsLeft);
-    kernel_vaddr = (word_t)paddr_to_pptr(pte_page_ptr_get_page_base_address(lookup_ret.ptSlot));
-    value = (word_t *)(kernel_vaddr + offset);
+    ಸ್ಥಾನಾಂತರ = vaddr & ಮುಖವಾಡ(lookup_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ);
+    kernel_vaddr = (ಶಬ್ದ_t)paddr_ಗಮ್ಯ_pptr(pte_ಪುಟ_ptr_get_ಪುಟ_ತಳ_ವಿಳಾಸ(lookup_ret.pt_ಸ್ಥಾನ));
+    ಮೌಲ್ಯ = (ಶಬ್ದ_t *)(kernel_vaddr + ಸ್ಥಾನಾಂತರ);
 
-    ret.status = EXCEPTION_NONE;
-    ret.value = *value;
-    return ret;
+    ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
+    ret.ಮೌಲ್ಯ = *ಮೌಲ್ಯ;
+    ಹಿಂತಿರುಗಿ ret;
 }
 
-void Arch_userStackTrace(tcb_t *tptr)
+ಶೂನ್ಯ Arch_user_ರಾಶಿ_Trace(tcb_t *tptr)
 {
-    cap_t threadRoot;
-    vspace_root_t *vspaceRoot;
-    word_t sp;
+    cap_t thread_ಬೇರು;
+    vspace_ಬೇರು_t *vspace_ಬೇರು_2;
+    ಶಬ್ದ_t sp;
 
-    threadRoot = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
+    thread_ಬೇರು = TCB_PTR_CTE_PTR(tptr, tcbVTable)->cap;
 
     /* lookup the vspace root */
-    if (cap_get_capType(threadRoot) != cap_vspace_cap) {
-        printf("Invalid vspace\n");
-        return;
+    ಆದರೆ (cap_get_capType(thread_ಬೇರು) != cap_vspace_cap) {
+        ಬರೆ("Invalid vspace\n");
+        ಹಿಂತಿರುಗಿ;
     }
 
-    vspaceRoot = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(threadRoot));
-    sp = getRegister(tptr, SP_EL0);
+    vspace_ಬೇರು_2 = VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(thread_ಬೇರು));
+    sp = get_ರಿಜಿಸ್ಟರ್(tptr, SP_EL0);
 
     /* check for alignment so we don't have to worry about accessing
      * words that might be on two different pages */
-    if (!IS_ALIGNED(sp, seL4_WordSizeBits)) {
-        printf("SP not aligned\n");
-        return;
+    ಆದರೆ (!IS_ALIGNED(sp, se_L4_ಶಬ್ದ_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು)) {
+        ಬರೆ("SP not aligned\n");
+        ಹಿಂತಿರುಗಿ;
     }
 
-    for (unsigned int i = 0; i < CONFIG_USER_STACK_TRACE_LENGTH; i++) {
-        word_t address = sp + (i * sizeof(word_t));
-        readWordFromVSpace_ret_t result = readWordFromVSpace(vspaceRoot,
-                                                             address);
-        if (result.status == EXCEPTION_NONE) {
-            printf("0x%"SEL4_PRIx_word": 0x%"SEL4_PRIx_word"\n",
-                   address, result.value);
-        } else {
-            printf("0x%"SEL4_PRIx_word": INVALID\n", address);
+    ಗಾಗಿ (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ i = 0; i < CONFIG_USER_ರಾಶಿ_TRACE_ಉದ್ದಳತೆ; i++) {
+        ಶಬ್ದ_t ವಿಳಾಸ = sp + (i * ಗಾತ್ರ(ಶಬ್ದ_t));
+        read_ಶಬ್ದ_From_VSpace_ret_t ಫಲಿತಾಂಶ = read_ಶಬ್ದ_From_VSpace(vspace_ಬೇರು_2,
+                                                             ವಿಳಾಸ);
+        ಆದರೆ (ಫಲಿತಾಂಶ.ಸ್ಥಿತಿ_2 == EXCEPTION_NONE) {
+            ಬರೆ("0x%"SEL4_PRIx_ಶಬ್ದ": 0x%"SEL4_PRIx_ಶಬ್ದ"\n",
+                   ವಿಳಾಸ, ಫಲಿತಾಂಶ.ಮೌಲ್ಯ);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಬರೆ("0x%"SEL4_PRIx_ಶಬ್ದ": INVALID\n", ವಿಳಾಸ);
         }
     }
 }
-#endif /* CONFIG_PRINTING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_PRINTING */
 
-#if defined(CONFIG_KERNEL_LOG_BUFFER)
-exception_t benchmark_arch_map_logBuffer(word_t frame_cptr)
+#ಆದರೆ defined(CONFIG_KERNEL_LOG_ಬಫರ್)
+exception_t benchmark_arch_map_log_ಬಫರ್(ಶಬ್ದ_t ಚೌಕಟ್ಟು_cptr)
 {
-    lookupCapAndSlot_ret_t lu_ret;
-    vm_page_size_t frameSize;
-    pptr_t  frame_pptr;
+    lookup_Cap_And_ಸ್ಥಾನ_ret_t lu_ret;
+    vm_ಪುಟ_ಗಾತ್ರ_t ಚೌಕಟ್ಟು_ಗಾತ್ರ;
+    pptr_t  ಚೌಕಟ್ಟು_pptr;
 
     /* faulting section */
-    lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), frame_cptr);
+    lu_ret = lookup_Cap_And_ಸ್ಥಾನ(ಗಂಟು_STATE(ksCurThread), ಚೌಕಟ್ಟು_cptr);
 
-    if (unlikely(lu_ret.status != EXCEPTION_NONE)) {
-        userError("Invalid cap #%lu.", frame_cptr);
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+    ಆದರೆ (unlikely(lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE)) {
+        userError("Invalid cap #%lu.", ಚೌಕಟ್ಟು_cptr);
+        current_fault = seL4_Fault_CapFault_new(ಚೌಕಟ್ಟು_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(lu_ret.cap) != cap_frame_cap) {
+    ಆದರೆ (cap_get_capType(lu_ret.cap) != cap_ಚೌಕಟ್ಟು_cap) {
         userError("Invalid cap. Log buffer should be of a frame cap");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(ಚೌಕಟ್ಟು_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    frameSize = cap_frame_cap_get_capFSize(lu_ret.cap);
+    ಚೌಕಟ್ಟು_ಗಾತ್ರ = cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(lu_ret.cap);
 
-    if (frameSize != ARMLargePage) {
+    ಆದರೆ (ಚೌಕಟ್ಟು_ಗಾತ್ರ != ARMLarge_ಪುಟ) {
         userError("Invalid frame size. The kernel expects 2M log buffer");
-        current_fault = seL4_Fault_CapFault_new(frame_cptr, false);
+        current_fault = seL4_Fault_CapFault_new(ಚೌಕಟ್ಟು_cptr, false);
 
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    frame_pptr = cap_frame_cap_get_capFBasePtr(lu_ret.cap);
+    ಚೌಕಟ್ಟು_pptr = cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(lu_ret.cap);
 
-    ksUserLogBuffer = pptr_to_paddr((void *) frame_pptr);
+    ks_User_Log_ಬಫರ್ = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *) ಚೌಕಟ್ಟು_pptr);
 
-    *armKSGlobalLogPTE = pte_pte_page_new(
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    *armKSGlobalLogPTE = pte_pte_ಪುಟ_new(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_HYPERVISOR_SUPPORT
                              0, // XN
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
                              1, // UXN
-#endif
-                             ksUserLogBuffer,
+#ಆದರೆ_ಅಂತ್ಯ
+                             ks_User_Log_ಬಫರ್,
                              0,                         /* global */
                              1,                         /* access flag */
                              SMP_TERNARY(SMP_SHARE, 0), /* Inner-shareable if SMP enabled, otherwise unshared */
                              0,                         /* VMKernelOnly */
-                             NORMAL_WT);
+                             ಸಾಮಾನ್ಯ_WT);
 
     cleanByVA_PoU((vptr_t)armKSGlobalLogPTE, addrFromKPPtr(armKSGlobalLogPTE));
     invalidateTranslationSingle(KS_LOG_PPTR);
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_LOG_BUFFER */

@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/fastpath/fastpath.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/traps.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/debug.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/debug_conf.h>
+#ಅನ್ತರ್ಭಾವ <api/syscall.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark_track.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+ಶೂನ್ಯ VISIBLE NORETURN restore_user_context(ಶೂನ್ಯ)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread);
+    ಶಬ್ದ_t cur_thread_reg = (ಶಬ್ದ_t) ಗಂಟು_STATE(ksCurThread);
 
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ARM_CP14_SAVE_AND_RESTORE_NATIVE_ಎಳೆಗಳು
+    restore_user_debug_context(ಗಂಟು_STATE(ksCurThread));
+#ಆದರೆ_ಅಂತ್ಯ
 
-    NODE_UNLOCK_IF_HELD;
+    ಗಂಟು_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        asm volatile(
+    ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        asm ಅಸ್ಥಿರ(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
             /* Pop user registers */
@@ -53,12 +53,12 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
-        asm volatile("mov sp, %[cur_thread] \n\
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        asm ಅಸ್ಥಿರ("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"
                      : /* no output */
-                     : [cur_thread] "r"(cur_thread_reg + NextIP * sizeof(word_t))
+                     : [cur_thread] "r"(cur_thread_reg + ಮುಂದಿನ_IP * ಗಾತ್ರ(ಶಬ್ದ_t))
                     );
     }
     UNREACHABLE();

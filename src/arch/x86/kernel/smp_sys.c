@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine.h>
-#include <arch/machine/timer.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/kernel/smp_sys.h>
-#include <smp/lock.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/timer.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/boot_sys.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/smp_sys.h>
+#ಅನ್ತರ್ಭಾವ <smp/lock.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
 
 /* Index of next AP to boot, BSP has index zero */
-BOOT_DATA VISIBLE
-volatile word_t smp_aps_index = 1;
+BOOT_ದತ್ತಾಂಶ VISIBLE
+ಅಸ್ಥಿರ ಶಬ್ದ_t smp_aps_ಸೂಚ್ಯಂಕ = 1;
 
-#ifdef CONFIG_USE_LOGICAL_IDS
-BOOT_CODE static void update_logical_id_mappings(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USE_LOGICAL_IDS
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ update_logical_id_mappings(ಶೂನ್ಯ)
 {
-    cpu_mapping.index_to_logical_id[getCurrentCPUIndex()] = apic_get_logical_id();
+    cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_logical_id[getCurrentCPUIndex()] = apic_get_logical_id();
 
-    for (int i = 0; i < smp_aps_index; i++) {
-        if (apic_get_cluster(cpu_mapping.index_to_logical_id[getCurrentCPUIndex()]) ==
-            apic_get_cluster(cpu_mapping.index_to_logical_id[i])) {
+    ಗಾಗಿ (ಪೂರ್ಣಾಂಕ i = 0; i < smp_aps_ಸೂಚ್ಯಂಕ; i++) {
+        ಆದರೆ (apic_get_cluster(cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_logical_id[getCurrentCPUIndex()]) ==
+            apic_get_cluster(cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_logical_id[i])) {
 
-            cpu_mapping.other_indexes_in_cluster[getCurrentCPUIndex()] |= BIT(i);
-            cpu_mapping.other_indexes_in_cluster[i] |= BIT(getCurrentCPUIndex());
+            cpu_mapping.other_indexes_ಒಳ_cluster[getCurrentCPUIndex()] |= ಬಿಟ್(i);
+            cpu_mapping.other_indexes_ಒಳ_cluster[i] |= ಬಿಟ್(getCurrentCPUIndex());
         }
     }
 }
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USE_LOGICAL_IDS */
 
-BOOT_CODE static void start_cpu(cpu_id_t cpu_id, paddr_t boot_fun_paddr)
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ ಆರಂಭ_cpu(cpu_id_t cpu_id, paddr_t boot_fun_paddr)
 {
     /* memory fence needed before starting the other CPU */
     x86_mfence();
@@ -43,107 +43,107 @@ BOOT_CODE static void start_cpu(cpu_id_t cpu_id, paddr_t boot_fun_paddr)
     apic_send_startup_ipi(cpu_id, boot_fun_paddr);
 }
 
-BOOT_CODE void start_boot_aps(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ ಆರಂಭ_boot_aps(ಶೂನ್ಯ)
 {
     /* update cpu mapping for BSP, cpus[0] is always assumed to be BSP */
-    cpu_mapping.index_to_cpu_id[getCurrentCPUIndex()] = boot_state.cpus[0];
-#ifdef CONFIG_USE_LOGICAL_IDS
-    cpu_mapping.index_to_logical_id[getCurrentCPUIndex()] = apic_get_logical_id();
-#endif /* CONFIG_USE_LOGICAL_IDS */
+    cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_cpu_id[getCurrentCPUIndex()] = boot_state.cpus[0];
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USE_LOGICAL_IDS
+    cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_logical_id[getCurrentCPUIndex()] = apic_get_logical_id();
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USE_LOGICAL_IDS */
 
     /* startup APs one at a time as we use shared kernel boot stack */
-    while (smp_aps_index < boot_state.num_cpus) {
-        word_t current_ap_index = smp_aps_index;
+    ಆಗ (smp_aps_ಸೂಚ್ಯಂಕ < boot_state.ಅಂಕೆ_cpus) {
+        ಶಬ್ದ_t current_ap_ಸೂಚ್ಯಂಕ = smp_aps_ಸೂಚ್ಯಂಕ;
 
-        printf("Starting node #%lu with APIC ID %lu \n",
-               current_ap_index, boot_state.cpus[current_ap_index]);
+        ಬರೆ("Starting node #%lu with APIC ID %lu \n",
+               current_ap_ಸೂಚ್ಯಂಕ, boot_state.cpus[current_ap_ಸೂಚ್ಯಂಕ]);
 
         /* update cpu mapping for APs, store APIC ID of the next booting AP
          * as APIC ID are not continoius e.g. 0,2,1,3 for 4 cores with hyperthreading
          * we need to store a mapping to translate the index to real APIC ID */
-        cpu_mapping.index_to_cpu_id[current_ap_index] = boot_state.cpus[current_ap_index];
-        start_cpu(boot_state.cpus[current_ap_index], BOOT_NODE_PADDR);
+        cpu_mapping.ಸೂಚ್ಯಂಕ_ಗಮ್ಯ_cpu_id[current_ap_ಸೂಚ್ಯಂಕ] = boot_state.cpus[current_ap_ಸೂಚ್ಯಂಕ];
+        ಆರಂಭ_cpu(boot_state.cpus[current_ap_ಸೂಚ್ಯಂಕ], BOOT_ಗಂಟು_PADDR);
 
         /* wait for current AP to boot up */
-        while (smp_aps_index == current_ap_index) {
-#ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-            NODE_STATE(ksCurTime) = getCurrentTime();
+        ಆಗ (smp_aps_ಸೂಚ್ಯಂಕ == current_ap_ಸೂಚ್ಯಂಕ) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
+            ಗಂಟು_STATE(ks_Cur_ಸಮಯ) = get_Current_ಸಮಯ();
             __atomic_thread_fence(__ATOMIC_ACQ_REL);
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
         }
     }
 }
 
-BOOT_CODE bool_t copy_boot_code_aps(uint32_t mem_lower)
+BOOT_ಸಂಕೇತ bool_t copy_boot_ಸಂಕೇತ_aps(uint32_t mem_ಅಧೋ)
 {
-    assert(boot_cpu_end - boot_cpu_start < 0x400);
+    ಪ್ರತಿಜ್ಞಾ(boot_cpu_ಕೊನೆ - boot_cpu_ಆರಂಭ < 0x400);
 
     /* Ensure that our boot code fits in the memory hole we want to use, and check this region
      * is free according to multiboot. As boot_cpu_end and boot_cpu_start are link time
      * symbols (and not compile time) this cannot be a compile time check */
-    word_t boot_size = (word_t)(boot_cpu_end - boot_cpu_start);
-    word_t boot_node_top = BOOT_NODE_PADDR + boot_size;
-    word_t mem_lower_bytes = mem_lower << 10;
-    if (boot_node_top > BOOT_NODE_MAX_PADDR) {
-        printf("AP boot code does not fit in chosen memory hole. Can be at most %lu, is %lu\n",
-               (word_t)(BOOT_NODE_MAX_PADDR - BOOT_NODE_PADDR), boot_size);
-        return false;
+    ಶಬ್ದ_t boot_ಗಾತ್ರ = (ಶಬ್ದ_t)(boot_cpu_ಕೊನೆ - boot_cpu_ಆರಂಭ);
+    ಶಬ್ದ_t boot_ಗಂಟು_ತುದಿ = BOOT_ಗಂಟು_PADDR + boot_ಗಾತ್ರ;
+    ಶಬ್ದ_t mem_ಅಧೋ_ಬೈಟುಗಳು = mem_ಅಧೋ << 10;
+    ಆದರೆ (boot_ಗಂಟು_ತುದಿ > BOOT_ಗಂಟು_MAX_PADDR) {
+        ಬರೆ("AP boot code does not fit in chosen memory hole. Can be at most %lu, is %lu\n",
+               (ಶಬ್ದ_t)(BOOT_ಗಂಟು_MAX_PADDR - BOOT_ಗಂಟು_PADDR), boot_ಗಾತ್ರ);
+        ಹಿಂತಿರುಗಿ false;
     }
-    if (mem_lower_bytes < boot_node_top) {
-        printf("Need lower physical memory up to %lu to be free. Multiboot reports only up to %lu\n",
-               boot_node_top, mem_lower_bytes);
-        return false;
+    ಆದರೆ (mem_ಅಧೋ_ಬೈಟುಗಳು < boot_ಗಂಟು_ತುದಿ) {
+        ಬರೆ("Need lower physical memory up to %lu to be free. Multiboot reports only up to %lu\n",
+               boot_ಗಂಟು_ತುದಿ, mem_ಅಧೋ_ಬೈಟುಗಳು);
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* copy CPU bootup code to lower memory */
-    memcpy((void *)BOOT_NODE_PADDR, boot_cpu_start, boot_size);
-    return true;
+    ಸ್ಮರಣೆ_ನಕಲು((ಶೂನ್ಯ *)BOOT_ಗಂಟು_PADDR, boot_cpu_ಆರಂಭ, boot_ಗಾತ್ರ);
+    ಹಿಂತಿರುಗಿ true;
 }
 
-static BOOT_CODE bool_t try_boot_node(void)
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ bool_t try_boot_ಗಂಟು(ಶೂನ್ಯ)
 {
-    setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
+    ಗಣ_Current_VSpace_ಬೇರು(kpptr_ಗಮ್ಯ_paddr(X86_KERNEL_VSPACE_ಬೇರು), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
      * be set *right now* instead of delayed */
-    asm volatile("" ::: "memory");
+    asm ಅಸ್ಥಿರ("" ::: "memory");
 
     /* initialise the CPU, make sure legacy interrupts are disabled */
-    if (!init_cpu(1)) {
-        return false;
+    ಆದರೆ (!init_cpu(1)) {
+        ಹಿಂತಿರುಗಿ false;
     }
 
-#ifdef CONFIG_USE_LOGICAL_IDS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USE_LOGICAL_IDS
     update_logical_id_mappings();
-#endif /* CONFIG_USE_LOGICAL_IDS */
-    return true;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USE_LOGICAL_IDS */
+    ಹಿಂತಿರುಗಿ true;
 }
 
 /* This is the entry function for APs. However, it is not a BOOT_CODE as
  * there is a race between exiting this function and root task running on
  * node #0 to possibly reallocate this memory */
-VISIBLE void boot_node(void)
+VISIBLE ಶೂನ್ಯ boot_ಗಂಟು(ಶೂನ್ಯ)
 {
-    bool_t result;
+    bool_t ಫಲಿತಾಂಶ;
 
-    mode_init_tls(smp_aps_index);
-    result = try_boot_node();
+    ಬಹುಲಕ_init_tls(smp_aps_ಸೂಚ್ಯಂಕ);
+    ಫಲಿತಾಂಶ = try_boot_ಗಂಟು();
 
-    if (!result) {
+    ಆದರೆ (!ಫಲಿತಾಂಶ) {
         fail("boot_node failed for some reason :(\n");
     }
 
     clock_sync_test();
-    smp_aps_index++;
+    smp_aps_ಸೂಚ್ಯಂಕ++;
 
     /* grab BKL before leaving the kernel */
-    NODE_LOCK_SYS;
+    ಗಂಟು_ಬೀಗ_SYS;
 
-    init_core_state(SchedulerAction_ChooseNewThread);
-    ARCH_NODE_STATE(x86KScurInterrupt) = int_invalid;
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = int_invalid;
+    init_core_state(Scheduler_Action_ಆರಿಸು_New_Thread);
+    ARCH_ಗಂಟು_STATE(x86_KScur_ಅಡಚಣೆ) = int_invalid;
+    ARCH_ಗಂಟು_STATE(x86_KSPending_ಅಡಚಣೆ) = int_invalid;
 
-    schedule();
+    ವೇಳಾಪಟ್ಟಿ();
     activateThread();
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#ಆದರೆ_ಅಂತ್ಯ /* ENABLE_SMP_SUPPORT */

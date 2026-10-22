@@ -4,79 +4,79 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <machine/registerset.h>
-#include <object/structures.h>
-#include <arch/object/tcb.h>
-#include <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/tcb.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
 
-word_t CONST Arch_decodeTransfer(word_t flags)
+ಶಬ್ದ_t CONST Arch_decodeTransfer(ಶಬ್ದ_t flags)
 {
-    return 0;
+    ಹಿಂತಿರುಗಿ 0;
 }
 
-exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
+exception_t CONST Arch_performTransfer(ಶಬ್ದ_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_VTX
-void Arch_leaveVMAsyncTransfer(tcb_t *tcb)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_VTX
+ಶೂನ್ಯ Arch_leaveVMAsyncTransfer(tcb_t *tcb)
 {
-    vcpu_sysvmenter_reply_to_user(tcb);
+    vcpu_sysvmenter_ಉತ್ತರ_ಗಮ್ಯ_user(tcb);
 }
 
-static exception_t performSetEPTRoot(tcb_t *tcb, cap_t cap, cte_t *slot)
+ಸ್ಥಿರ exception_t perform_ಗಣ_EPTRoot(tcb_t *tcb, cap_t cap, cte_t *ಸ್ಥಾನ)
 {
-    cte_t *rootSlot;
+    cte_t *ಬೇರು_ಸ್ಥಾನ;
     exception_t e;
 
-    rootSlot = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
-    e = cteDelete(rootSlot, true);
-    if (e != EXCEPTION_NONE) {
-        return e;
+    ಬೇರು_ಸ್ಥಾನ = TCB_PTR_CTE_PTR(tcb, tcbArchEPTRoot);
+    e = cteDelete(ಬೇರು_ಸ್ಥಾನ, true);
+    ಆದರೆ (e != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ e;
     }
 
-    cteInsert(cap, slot, rootSlot);
+    cte_ಸೇರಿಸು(cap, ಸ್ಥಾನ, ಬೇರು_ಸ್ಥಾನ);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t decodeSetEPTRoot(cap_t cap)
+exception_t decode_ಗಣ_EPTRoot(cap_t cap)
 {
-    cap_t rootCap;
-    cte_t *rootSlot;
+    cap_t ಬೇರು_Cap;
+    cte_t *ಬೇರು_ಸ್ಥಾನ;
     deriveCap_ret_t dc_ret;
 
-    rootSlot = current_extra_caps.excaprefs[0];
+    ಬೇರು_ಸ್ಥಾನ = current_extra_caps.excaprefs[0];
 
-    if (rootSlot == NULL) {
+    ಆದರೆ (ಬೇರು_ಸ್ಥಾನ == ಖಾಲಿ) {
         userError("TCB SetEPTRoot: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    rootCap = rootSlot->cap;
+    ಬೇರು_Cap = ಬೇರು_ಸ್ಥಾನ->cap;
 
-    if (cap_get_capType(rootCap) != cap_ept_pml4_cap) {
+    ಆದರೆ (cap_get_capType(ಬೇರು_Cap) != cap_ept_pml4_cap) {
         userError("TCB SetEPTRoot: EPT PDPT is invalid.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    dc_ret = deriveCap(rootSlot, rootCap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        return dc_ret.status;
+    dc_ret = deriveCap(ಬೇರು_ಸ್ಥಾನ, ಬೇರು_Cap);
+    ಆದರೆ (dc_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ dc_ret.ಸ್ಥಿತಿ_2;
     }
 
-    if (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
+    ಆದರೆ (!cap_ept_pml4_cap_get_capPML4IsMapped(dc_ret.cap)) {
         userError("decodeSetEPTRoot: Invalid EPT cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return performSetEPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, rootSlot);
+    ಹಿಂತಿರುಗಿ perform_ಗಣ_EPTRoot(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), dc_ret.cap, ಬೇರು_ಸ್ಥಾನ);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

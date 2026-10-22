@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/failures.h>
-#include <model/preemption.h>
-#include <model/statedata.h>
-#include <plat/machine/hardware.h>
-#include <config.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <model/preemption.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
 
 /*
  * Possibly preempt the current thread to allow an interrupt to be handled.
  */
-exception_t preemptionPoint(void)
+exception_t preemption_ಬಿಂದು(ಶೂನ್ಯ)
 {
     /* Record that we have performed some work. */
     ksWorkUnitsCompleted++;
@@ -26,19 +26,19 @@ exception_t preemptionPoint(void)
      * We avoid checking for pending IRQs every call, as our callers tend to
      * call us in a tight loop and checking for pending IRQs can be quite slow.
      */
-    if (ksWorkUnitsCompleted >= CONFIG_MAX_NUM_WORK_UNITS_PER_PREEMPTION) {
+    ಆದರೆ (ksWorkUnitsCompleted >= CONFIG_MAX_ಅಂಕೆ_WORK_UNITS_ಪ್ರತಿ_PREEMPTION) {
         ksWorkUnitsCompleted = 0;
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
         updateTimestamp();
-        if (isIRQPending() || isCurDomainExpired()
-            || !(sc_active(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), NODE_STATE(ksConsumed)))) {
-#else
-        if (isIRQPending()) {
-#endif
-            return EXCEPTION_PREEMPTED;
+        ಆದರೆ (isIRQPending() || isCurDomainExpired()
+            || !(sc_ಸಕ್ರಿಯ(ಗಂಟು_STATE(ksCurSC)) && refill_sufficient(ಗಂಟು_STATE(ksCurSC), ಗಂಟು_STATE(ksConsumed)))) {
+#ಇಲ್ಲದಿದ್ದರೆ
+        ಆದರೆ (isIRQPending()) {
+#ಆದರೆ_ಅಂತ್ಯ
+            ಹಿಂತಿರುಗಿ EXCEPTION_PREEMPTED;
         }
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 

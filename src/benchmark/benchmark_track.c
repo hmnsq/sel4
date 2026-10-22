@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <benchmark/benchmark_track.h>
-#include <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark_track.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
 
 timestamp_t ksEnter;
-seL4_Word ksLogIndex;
-seL4_Word ksLogIndexFinalized;
+se_L4_ಶಬ್ದ ks_Log_ಸೂಚ್ಯಂಕ;
+se_L4_ಶಬ್ದ ks_Log_ಸೂಚ್ಯಂಕ_Finalized;
 
-void benchmark_track_exit(void)
+ಶೂನ್ಯ benchmark_track_exit(ಶೂನ್ಯ)
 {
     timestamp_t duration = 0;
     timestamp_t ksExit = timestamp();
-    benchmark_track_kernel_entry_t *ksLog = (benchmark_track_kernel_entry_t *) KS_LOG_PPTR;
+    benchmark_track_kernel_ನಮೂದು_t *ksLog = (benchmark_track_kernel_ನಮೂದು_t *) KS_LOG_PPTR;
 
-    if (likely(ksUserLogBuffer != 0)) {
+    ಆದರೆ (likely(ks_User_Log_ಬಫರ್ != 0)) {
         /* If Log buffer is filled, do nothing */
-        if (likely(ksLogIndex < MAX_LOG_SIZE)) {
+        ಆದರೆ (likely(ks_Log_ಸೂಚ್ಯಂಕ < MAX_LOG_ಗಾತ್ರ)) {
             duration = ksExit - ksEnter;
-            ksLog[ksLogIndex].entry = ksKernelEntry;
-            ksLog[ksLogIndex].start_time = ksEnter;
-            ksLog[ksLogIndex].duration = duration;
-            ksLogIndex++;
+            ksLog[ks_Log_ಸೂಚ್ಯಂಕ].ನಮೂದು = ks_Kernel_ನಮೂದು;
+            ksLog[ks_Log_ಸೂಚ್ಯಂಕ].ಆರಂಭ_ಸಮಯ = ksEnter;
+            ksLog[ks_Log_ಸೂಚ್ಯಂಕ].duration = duration;
+            ks_Log_ಸೂಚ್ಯಂಕ++;
         }
     }
 }
-#endif /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */

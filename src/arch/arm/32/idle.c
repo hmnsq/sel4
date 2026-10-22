@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/machine.h>
-#include <api/debug.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <mode/machine.h>
+#ಅನ್ತರ್ಭಾವ <api/debug.h>
 
 /** DONT_TRANSLATE */
-void NORETURN NO_INLINE VISIBLE halt(void)
+ಶೂನ್ಯ NORETURN NO_INLINE VISIBLE halt(ಶೂನ್ಯ)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cpsid iaf");
+    asm ಅಸ್ಥಿರ("cpsid iaf");
 
-#ifdef CONFIG_PRINTING
-    printf("halting...");
-#ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
-#endif
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
+    ಬರೆ("halting...");
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_BUILD
+    debug_print_Kernel_ನಮೂದು_Reason();
+#ಆದರೆ_ಅಂತ್ಯ
+#ಆದರೆ_ಅಂತ್ಯ
     idle_thread();
     UNREACHABLE();
 }

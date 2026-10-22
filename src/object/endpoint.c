@@ -4,245 +4,245 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <string.h>
-#include <sel4/constants.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <machine/registerset.h>
-#include <model/statedata.h>
-#include <object/notification.h>
-#include <object/cnode.h>
-#include <object/endpoint.h>
-#include <object/tcb.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <string.h>
+#ಅನ್ತರ್ಭಾವ <sel4/constants.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <object/notification.h>
+#ಅನ್ತರ್ಭಾವ <object/cnode.h>
+#ಅನ್ತರ್ಭಾವ <object/endpoint.h>
+#ಅನ್ತರ್ಭಾವ <object/tcb.h>
 
-#ifdef CONFIG_KERNEL_MCS
-void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
-             bool_t canGrant, bool_t canGrantReply, bool_t canDonate, tcb_t *thread, endpoint_t *epptr)
-#else
-void sendIPC(bool_t blocking, bool_t do_call, word_t badge,
-             bool_t canGrant, bool_t canGrantReply, tcb_t *thread, endpoint_t *epptr)
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ sendIPC(bool_t blocking, bool_t do_call, ಶಬ್ದ_t badge,
+             bool_t canGrant, bool_t can_Grant_ಉತ್ತರ, bool_t canDonate, tcb_t *thread, endpoint_t *epptr)
+#ಇಲ್ಲದಿದ್ದರೆ
+ಶೂನ್ಯ sendIPC(bool_t blocking, bool_t do_call, ಶಬ್ದ_t badge,
+             bool_t canGrant, bool_t can_Grant_ಉತ್ತರ, tcb_t *thread, endpoint_t *epptr)
+#ಆದರೆ_ಅಂತ್ಯ
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Send:
-        if (blocking) {
+    ಆಯ್ಕೆ (endpoint_ptr_get_state(epptr)) {
+    ಸ್ಥಿತಿ EPState_Idle:
+    ಸ್ಥಿತಿ EPState_Send:
+        ಆದರೆ (blocking) {
 
             /* Set thread state to BlockedOnSend */
-            thread_state_ptr_set_tsType(&thread->tcbState,
+            thread_state_ptr_ಗಣ_ts_Type(&thread->tcbState,
                                         ThreadState_BlockedOnSend);
-            thread_state_ptr_set_blockingObject(
+            thread_state_ptr_ಗಣ_blocking_Object(
                 &thread->tcbState, EP_REF(epptr));
-            thread_state_ptr_set_blockingIPCBadge(
+            thread_state_ptr_ಗಣ_blocking_IPCBadge(
                 &thread->tcbState, badge);
-            thread_state_ptr_set_blockingIPCCanGrant(
+            thread_state_ptr_ಗಣ_blocking_IPCCan_Grant(
                 &thread->tcbState, canGrant);
-            thread_state_ptr_set_blockingIPCCanGrantReply(
-                &thread->tcbState, canGrantReply);
-            thread_state_ptr_set_blockingIPCIsCall(
+            thread_state_ptr_ಗಣ_blocking_IPCCan_Grant_ಉತ್ತರ(
+                &thread->tcbState, can_Grant_ಉತ್ತರ);
+            thread_state_ptr_ಗಣ_blocking_IPCIs_Call(
                 &thread->tcbState, do_call);
 
-            scheduleTCB(thread);
+            ವೇಳಾಪಟ್ಟಿ_TCB(thread);
 
             /* Place calling thread in endpoint queue */
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
             tcbEPAppend(thread, epptr, EPState_Send);
-#else
-            tcb_queue_t queue;
-            queue = ep_ptr_get_queue(epptr);
-            queue = tcbEPAppend(thread, queue);
-            endpoint_ptr_set_state(epptr, EPState_Send);
-            ep_ptr_set_queue(epptr, queue);
-#endif /* CONFIG_KERNEL_MCS */
+#ಇಲ್ಲದಿದ್ದರೆ
+            tcb_ಸರತಿ_t ಸರತಿ;
+            ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+            ಸರತಿ = tcbEPAppend(thread, ಸರತಿ);
+            endpoint_ptr_ಗಣ_state(epptr, EPState_Send);
+            ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
 
         }
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    case EPState_Recv: {
-        tcb_queue_t queue;
+    ಸ್ಥಿತಿ EPState_Recv: {
+        tcb_ಸರತಿ_t ಸರತಿ;
         tcb_t *dest;
 
         /* Get the head of the endpoint queue. */
-        queue = ep_ptr_get_queue(epptr);
-        dest = queue.head;
+        ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+        dest = ಸರತಿ.ತಲೆ;
 
         /* Haskell error "Receive endpoint queue must not be empty" */
-        assert(dest);
+        ಪ್ರತಿಜ್ಞಾ(dest);
 
         /* Dequeue the first TCB */
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
         tcbEPDequeue(dest, epptr);
-#else
-        queue = tcbEPDequeue(dest, queue);
-        ep_ptr_set_queue(epptr, queue);
+#ಇಲ್ಲದಿದ್ದರೆ
+        ಸರತಿ = tcbEPDequeue(dest, ಸರತಿ);
+        ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
 
-        if (!queue.head) {
-            endpoint_ptr_set_state(epptr, EPState_Idle);
+        ಆದರೆ (!ಸರತಿ.ತಲೆ) {
+            endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
         }
-#endif /* CONFIG_KERNEL_MCS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
 
         /* Do the transfer */
         doIPCTransfer(thread, epptr, badge, canGrant, dest);
 
-#ifdef CONFIG_KERNEL_MCS
-        reply_t *reply = REPLY_PTR(thread_state_get_replyObject(dest->tcbState));
-        if (reply) {
-            reply_unlink(reply, dest);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಉತ್ತರ_t *ಉತ್ತರ = ಉತ್ತರ_PTR(thread_state_get_ಉತ್ತರ_Object(dest->tcbState));
+        ಆದರೆ (ಉತ್ತರ) {
+            ಉತ್ತರ_unlink(ಉತ್ತರ, dest);
         }
 
-        if (do_call ||
+        ಆದರೆ (do_call ||
             seL4_Fault_ptr_get_seL4_FaultType(&thread->tcbFault) != seL4_Fault_NullFault) {
-            if (reply != NULL && (canGrant || canGrantReply)) {
-                reply_push(thread, dest, reply, canDonate);
-            } else {
-                setThreadState(thread, ThreadState_Inactive);
+            ಆದರೆ (ಉತ್ತರ != ಖಾಲಿ && (canGrant || can_Grant_ಉತ್ತರ)) {
+                ಉತ್ತರ_ತಳ್ಳು(thread, dest, ಉತ್ತರ, canDonate);
+            } ಇಲ್ಲದಿದ್ದರೆ {
+                ಗಣ_Thread_State(thread, ThreadState_Inactive);
             }
-        } else if (canDonate && dest->tcbSchedContext == NULL) {
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (canDonate && dest->tcbSchedContext == ಖಾಲಿ) {
             schedContext_donate(thread->tcbSchedContext, dest);
         }
 
-        setThreadState(dest, ThreadState_Running);
+        ಗಣ_Thread_State(dest, ThreadState_Running);
         sched_context_t *dest_sc = dest->tcbSchedContext;
         /* blocked threads should have enough budget to get out of the kernel */
-        assert(dest_sc == NULL || refill_sufficient(dest_sc, 0));
-        assert(dest_sc == NULL || refill_ready(dest_sc));
-        if (sc_sporadic(dest_sc) && dest_sc != NODE_STATE(ksCurSC)) {
+        ಪ್ರತಿಜ್ಞಾ(dest_sc == ಖಾಲಿ || refill_sufficient(dest_sc, 0));
+        ಪ್ರತಿಜ್ಞಾ(dest_sc == ಖಾಲಿ || refill_ready(dest_sc));
+        ಆದರೆ (sc_sporadic(dest_sc) && dest_sc != ಗಂಟು_STATE(ksCurSC)) {
             refill_unblock_check(dest_sc);
         }
-        possibleSwitchTo(dest);
-#else
-        bool_t replyCanGrant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
+        possible_Switch_ಗಮ್ಯ(dest);
+#ಇಲ್ಲದಿದ್ದರೆ
+        bool_t ಉತ್ತರ_Can_Grant = thread_state_ptr_get_blockingIPCCanGrant(&dest->tcbState);;
 
-        setThreadState(dest, ThreadState_Running);
-        possibleSwitchTo(dest);
+        ಗಣ_Thread_State(dest, ThreadState_Running);
+        possible_Switch_ಗಮ್ಯ(dest);
 
-        if (do_call) {
-            if (canGrant || canGrantReply) {
-                setupCallerCap(thread, dest, replyCanGrant);
-            } else {
-                setThreadState(thread, ThreadState_Inactive);
+        ಆದರೆ (do_call) {
+            ಆದರೆ (canGrant || can_Grant_ಉತ್ತರ) {
+                ಸಿದ್ಧತೆ_Caller_Cap(thread, dest, ಉತ್ತರ_Can_Grant);
+            } ಇಲ್ಲದಿದ್ದರೆ {
+                ಗಣ_Thread_State(thread, ThreadState_Inactive);
             }
         }
-#endif
-        break;
+#ಆದರೆ_ಅಂತ್ಯ
+        ನಿಲ್ಲಿಸು;
     }
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking, cap_t replyCap)
-#else
-void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking, cap_t ಉತ್ತರ_Cap)
+#ಇಲ್ಲದಿದ್ದರೆ
+ಶೂನ್ಯ receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
+#ಆದರೆ_ಅಂತ್ಯ
 {
     endpoint_t *epptr;
     notification_t *ntfnPtr;
 
     /* Haskell error "receiveIPC: invalid cap" */
-    assert(cap_get_capType(cap) == cap_endpoint_cap);
+    ಪ್ರತಿಜ್ಞಾ(cap_get_capType(cap) == cap_endpoint_cap);
 
     epptr = EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
 
-#ifdef CONFIG_KERNEL_MCS
-    reply_t *replyPtr = NULL;
-    if (cap_get_capType(replyCap) == cap_reply_cap) {
-        replyPtr = REPLY_PTR(cap_reply_cap_get_capReplyPtr(replyCap));
-        tcb_t *reply_tcb = replyPtr->replyTCB;
-        if (unlikely(reply_tcb != NULL && reply_tcb != thread)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಉತ್ತರ_t *ಉತ್ತರ_Ptr = ಖಾಲಿ;
+    ಆದರೆ (cap_get_capType(ಉತ್ತರ_Cap) == cap_ಉತ್ತರ_cap) {
+        ಉತ್ತರ_Ptr = ಉತ್ತರ_PTR(cap_ಉತ್ತರ_cap_get_cap_ಉತ್ತರ_Ptr(ಉತ್ತರ_Cap));
+        tcb_t *ಉತ್ತರ_tcb = ಉತ್ತರ_Ptr->ಉತ್ತರ_TCB;
+        ಆದರೆ (unlikely(ಉತ್ತರ_tcb != ಖಾಲಿ && ಉತ್ತರ_tcb != thread)) {
             userError("Reply object already has unexecuted reply!");
-            cancelIPC(reply_tcb);
+            cancelIPC(ಉತ್ತರ_tcb);
         }
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
     /* Check for anything waiting in the notification */
     ntfnPtr = thread->tcbBoundNotification;
-    if (ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
+    ಆದರೆ (ntfnPtr && notification_ptr_get_state(ntfnPtr) == Ntfn_State_ಸಕ್ರಿಯ) {
         completeSignal(ntfnPtr, thread);
-    } else {
-#ifdef CONFIG_KERNEL_MCS
+    } ಇಲ್ಲದಿದ್ದರೆ {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
         /* If this is a blocking recv and we didn't have a pending notification,
          * then if we are running on an SC from a bound notification, then we
          * need to return it so that we can passively wait on the EP for potentially
          * SC donations from client threads.
          */
-        if (ntfnPtr && isBlocking) {
+        ಆದರೆ (ntfnPtr && isBlocking) {
             maybeReturnSchedContext(ntfnPtr, thread);
         }
-#endif
-        switch (endpoint_ptr_get_state(epptr)) {
-        case EPState_Idle:
-        case EPState_Recv: {
+#ಆದರೆ_ಅಂತ್ಯ
+        ಆಯ್ಕೆ (endpoint_ptr_get_state(epptr)) {
+        ಸ್ಥಿತಿ EPState_Idle:
+        ಸ್ಥಿತಿ EPState_Recv: {
 
-            if (isBlocking) {
+            ಆದರೆ (isBlocking) {
                 /* Set thread state to BlockedOnReceive */
-                thread_state_ptr_set_tsType(&thread->tcbState,
+                thread_state_ptr_ಗಣ_ts_Type(&thread->tcbState,
                                             ThreadState_BlockedOnReceive);
-                thread_state_ptr_set_blockingObject(
+                thread_state_ptr_ಗಣ_blocking_Object(
                     &thread->tcbState, EP_REF(epptr));
-#ifdef CONFIG_KERNEL_MCS
-                thread_state_ptr_set_replyObject(&thread->tcbState, REPLY_REF(replyPtr));
-#else
-                thread_state_ptr_set_blockingIPCCanGrant(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+                thread_state_ptr_ಗಣ_ಉತ್ತರ_Object(&thread->tcbState, ಉತ್ತರ_REF(ಉತ್ತರ_Ptr));
+#ಇಲ್ಲದಿದ್ದರೆ
+                thread_state_ptr_ಗಣ_blocking_IPCCan_Grant(
                     &thread->tcbState, cap_endpoint_cap_get_capCanGrant(cap));
-#endif
-                scheduleTCB(thread);
-#ifdef CONFIG_KERNEL_MCS
-                if (replyPtr) {
-                    replyPtr->replyTCB = thread;
+#ಆದರೆ_ಅಂತ್ಯ
+                ವೇಳಾಪಟ್ಟಿ_TCB(thread);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+                ಆದರೆ (ಉತ್ತರ_Ptr) {
+                    ಉತ್ತರ_Ptr->ಉತ್ತರ_TCB = thread;
                 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
                 /* Place calling thread in endpoint queue */
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
                 tcbEPAppend(thread, epptr, EPState_Recv);
-#else
-                tcb_queue_t queue;
-                queue = ep_ptr_get_queue(epptr);
-                queue = tcbEPAppend(thread, queue);
-                endpoint_ptr_set_state(epptr, EPState_Recv);
-                ep_ptr_set_queue(epptr, queue);
-#endif /* CONFIG_KERNEL_MCS */
-            } else {
+#ಇಲ್ಲದಿದ್ದರೆ
+                tcb_ಸರತಿ_t ಸರತಿ;
+                ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+                ಸರತಿ = tcbEPAppend(thread, ಸರತಿ);
+                endpoint_ptr_ಗಣ_state(epptr, EPState_Recv);
+                ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
+            } ಇಲ್ಲದಿದ್ದರೆ {
                 doNBRecvFailedTransfer(thread);
             }
-            break;
+            ನಿಲ್ಲಿಸು;
         }
 
-        case EPState_Send: {
-            tcb_queue_t queue;
+        ಸ್ಥಿತಿ EPState_Send: {
+            tcb_ಸರತಿ_t ಸರತಿ;
             tcb_t *sender;
-            word_t badge;
+            ಶಬ್ದ_t badge;
             bool_t canGrant;
-            bool_t canGrantReply;
+            bool_t can_Grant_ಉತ್ತರ;
             bool_t do_call;
 
             /* Get the head of the endpoint queue. */
-            queue = ep_ptr_get_queue(epptr);
-            sender = queue.head;
+            ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+            sender = ಸರತಿ.ತಲೆ;
 
             /* Haskell error "Send endpoint queue must not be empty" */
-            assert(sender);
+            ಪ್ರತಿಜ್ಞಾ(sender);
 
             /* Dequeue the first TCB */
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
             tcbEPDequeue(sender, epptr);
-#else
-            queue = tcbEPDequeue(sender, queue);
-            ep_ptr_set_queue(epptr, queue);
+#ಇಲ್ಲದಿದ್ದರೆ
+            ಸರತಿ = tcbEPDequeue(sender, ಸರತಿ);
+            ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
 
-            if (!queue.head) {
-                endpoint_ptr_set_state(epptr, EPState_Idle);
+            ಆದರೆ (!ಸರತಿ.ತಲೆ) {
+                endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
             }
-#endif /* CONFIG_KERNEL_MCS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
 
             /* Get sender IPC details */
             badge = thread_state_ptr_get_blockingIPCBadge(&sender->tcbState);
             canGrant =
                 thread_state_ptr_get_blockingIPCCanGrant(&sender->tcbState);
-            canGrantReply =
-                thread_state_ptr_get_blockingIPCCanGrantReply(&sender->tcbState);
+            can_Grant_ಉತ್ತರ =
+                thread_state_ptr_get_blocking_IPCCan_Grant_ಉತ್ತರ(&sender->tcbState);
 
             /* Do the transfer */
             doIPCTransfer(sender, epptr, badge,
@@ -250,328 +250,328 @@ void receiveIPC(tcb_t *thread, cap_t cap, bool_t isBlocking)
 
             do_call = thread_state_ptr_get_blockingIPCIsCall(&sender->tcbState);
 
-#ifdef CONFIG_KERNEL_MCS
-            if (sc_sporadic(sender->tcbSchedContext)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+            ಆದರೆ (sc_sporadic(sender->tcbSchedContext)) {
                 /* We know that the sender can't have the current SC as
                  * its own SC as this point as it should still be
                  * associated with the current thread, no thread, or a
                  * thread that isn't blocked. This check is added here
                  * to reduce the cost of proving this to be true as a
                  * short-term stop-gap. */
-                assert(sender->tcbSchedContext != NODE_STATE(ksCurSC));
-                if (sender->tcbSchedContext != NODE_STATE(ksCurSC)) {
+                ಪ್ರತಿಜ್ಞಾ(sender->tcbSchedContext != ಗಂಟು_STATE(ksCurSC));
+                ಆದರೆ (sender->tcbSchedContext != ಗಂಟು_STATE(ksCurSC)) {
                     refill_unblock_check(sender->tcbSchedContext);
                 }
             }
 
-            if (do_call ||
+            ಆದರೆ (do_call ||
                 seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_NullFault) {
-                if ((canGrant || canGrantReply) && replyPtr != NULL) {
-                    bool_t canDonate = sender->tcbSchedContext != NULL
+                ಆದರೆ ((canGrant || can_Grant_ಉತ್ತರ) && ಉತ್ತರ_Ptr != ಖಾಲಿ) {
+                    bool_t canDonate = sender->tcbSchedContext != ಖಾಲಿ
                                        && seL4_Fault_get_seL4_FaultType(sender->tcbFault) != seL4_Fault_Timeout;
-                    reply_push(sender, thread, replyPtr, canDonate);
-                } else {
-                    setThreadState(sender, ThreadState_Inactive);
+                    ಉತ್ತರ_ತಳ್ಳು(sender, thread, ಉತ್ತರ_Ptr, canDonate);
+                } ಇಲ್ಲದಿದ್ದರೆ {
+                    ಗಣ_Thread_State(sender, ThreadState_Inactive);
                 }
-            } else {
-                setThreadState(sender, ThreadState_Running);
-                possibleSwitchTo(sender);
-                assert(sender->tcbSchedContext == NULL || refill_sufficient(sender->tcbSchedContext, 0));
+            } ಇಲ್ಲದಿದ್ದರೆ {
+                ಗಣ_Thread_State(sender, ThreadState_Running);
+                possible_Switch_ಗಮ್ಯ(sender);
+                ಪ್ರತಿಜ್ಞಾ(sender->tcbSchedContext == ಖಾಲಿ || refill_sufficient(sender->tcbSchedContext, 0));
             }
-#else
-            if (do_call) {
-                if (canGrant || canGrantReply) {
-                    setupCallerCap(sender, thread, cap_endpoint_cap_get_capCanGrant(cap));
-                } else {
-                    setThreadState(sender, ThreadState_Inactive);
+#ಇಲ್ಲದಿದ್ದರೆ
+            ಆದರೆ (do_call) {
+                ಆದರೆ (canGrant || can_Grant_ಉತ್ತರ) {
+                    ಸಿದ್ಧತೆ_Caller_Cap(sender, thread, cap_endpoint_cap_get_capCanGrant(cap));
+                } ಇಲ್ಲದಿದ್ದರೆ {
+                    ಗಣ_Thread_State(sender, ThreadState_Inactive);
                 }
-            } else {
-                setThreadState(sender, ThreadState_Running);
-                possibleSwitchTo(sender);
+            } ಇಲ್ಲದಿದ್ದರೆ {
+                ಗಣ_Thread_State(sender, ThreadState_Running);
+                possible_Switch_ಗಮ್ಯ(sender);
             }
-#endif
-            break;
+#ಆದರೆ_ಅಂತ್ಯ
+            ನಿಲ್ಲಿಸು;
         }
         }
     }
 }
 
-void replyFromKernel_error(tcb_t *thread)
+ಶೂನ್ಯ ಉತ್ತರ_From_Kernel_error(tcb_t *thread)
 {
-    word_t len;
-    word_t *ipcBuffer;
+    ಶಬ್ದ_t len;
+    ಶಬ್ದ_t *ipc_ಬಫರ್;
 
-    ipcBuffer = lookupIPCBuffer(true, thread);
-    setRegister(thread, badgeRegister, 0);
-    len = setMRs_syscall_error(thread, ipcBuffer);
+    ipc_ಬಫರ್ = lookupIPCBuffer(true, thread);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, badge_ರಿಜಿಸ್ಟರ್, 0);
+    len = ಗಣ_MRs_syscall_error(thread, ipc_ಬಫರ್);
 
-#ifdef CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
-    char *debugBuffer = (char *)(ipcBuffer + DEBUG_MESSAGE_START + 1);
-    word_t add = strlcpy(debugBuffer, (char *)current_debug_error.errorMessage,
-                         DEBUG_MESSAGE_MAXLEN * sizeof(word_t));
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
+    ಅಕ್ಷರ *debug_ಬಫರ್ = (ಅಕ್ಷರ *)(ipc_ಬಫರ್ + DEBUG_ಸಂದೇಶ_ಆರಂಭ + 1);
+    ಶಬ್ದ_t ಕೂಡಿಸು = strlcpy(debug_ಬಫರ್, (ಅಕ್ಷರ *)current_debug_error.error_ಸಂದೇಶ,
+                         DEBUG_ಸಂದೇಶ_MAXLEN * ಗಾತ್ರ(ಶಬ್ದ_t));
 
-    len += (add / sizeof(word_t)) + 1;
-#endif
+    len += (ಕೂಡಿಸು / ಗಾತ್ರ(ಶಬ್ದ_t)) + 1;
+#ಆದರೆ_ಅಂತ್ಯ
 
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                    seL4_MessageInfo_new(current_syscall_error.type, 0, 0, len)));
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್, ಶಬ್ದ_From_ಸಂದೇಶ_Info(
+                    se_L4_ಸಂದೇಶ_Info_new(current_syscall_error.type, 0, 0, len)));
 }
 
-void replyFromKernel_success_empty(tcb_t *thread)
+ಶೂನ್ಯ ಉತ್ತರ_From_Kernel_success_ಖಾಲಿಗಳು(tcb_t *thread)
 {
-    setRegister(thread, badgeRegister, 0);
-    setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                    seL4_MessageInfo_new(0, 0, 0, 0)));
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, badge_ರಿಜಿಸ್ಟರ್, 0);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, ಸಂದೇಶ_Info_ರಿಜಿಸ್ಟರ್, ಶಬ್ದ_From_ಸಂದೇಶ_Info(
+                    se_L4_ಸಂದೇಶ_Info_new(0, 0, 0, 0)));
 }
 
-void cancelIPC(tcb_t *tptr)
+ಶೂನ್ಯ cancelIPC(tcb_t *tptr)
 {
     thread_state_t *state = &tptr->tcbState;
 
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
     /* cancel ipc cancels all faults */
     tptr->tcbFault = seL4_Fault_NullFault_new();
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-    switch (thread_state_ptr_get_tsType(state)) {
-    case ThreadState_BlockedOnSend:
-    case ThreadState_BlockedOnReceive: {
+    ಆಯ್ಕೆ (thread_state_ptr_get_tsType(state)) {
+    ಸ್ಥಿತಿ ThreadState_BlockedOnSend:
+    ಸ್ಥಿತಿ ThreadState_BlockedOnReceive: {
         /* blockedIPCCancel state */
         endpoint_t *epptr;
 
         epptr = EP_PTR(thread_state_ptr_get_blockingObject(state));
 
         /* Haskell error "blockedIPCCancel: endpoint must not be idle" */
-        assert(endpoint_ptr_get_state(epptr) != EPState_Idle);
+        ಪ್ರತಿಜ್ಞಾ(endpoint_ptr_get_state(epptr) != EPState_Idle);
 
         /* Dequeue TCB */
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
         tcbEPDequeue(tptr, epptr);
-#else
-        tcb_queue_t queue;
-        queue = ep_ptr_get_queue(epptr);
-        queue = tcbEPDequeue(tptr, queue);
-        ep_ptr_set_queue(epptr, queue);
+#ಇಲ್ಲದಿದ್ದರೆ
+        tcb_ಸರತಿ_t ಸರತಿ;
+        ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+        ಸರತಿ = tcbEPDequeue(tptr, ಸರತಿ);
+        ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
 
-        if (!queue.head) {
-            endpoint_ptr_set_state(epptr, EPState_Idle);
+        ಆದರೆ (!ಸರತಿ.ತಲೆ) {
+            endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
         }
-#endif /* CONFIG_KERNEL_MCS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
 
-#ifdef CONFIG_KERNEL_MCS
-        if (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
-            reply_t *reply = REPLY_PTR(thread_state_ptr_get_replyObject(state));
-            if (reply != NULL) {
-                reply_unlink(reply, tptr);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಆದರೆ (thread_state_ptr_get_tsType(state) == ThreadState_BlockedOnReceive) {
+            ಉತ್ತರ_t *ಉತ್ತರ = ಉತ್ತರ_PTR(thread_state_ptr_get_ಉತ್ತರ_Object(state));
+            ಆದರೆ (ಉತ್ತರ != ಖಾಲಿ) {
+                ಉತ್ತರ_unlink(ಉತ್ತರ, tptr);
             }
         }
-#endif
-        setThreadState(tptr, ThreadState_Inactive);
-        break;
+#ಆದರೆ_ಅಂತ್ಯ
+        ಗಣ_Thread_State(tptr, ThreadState_Inactive);
+        ನಿಲ್ಲಿಸು;
     }
 
-    case ThreadState_BlockedOnNotification:
+    ಸ್ಥಿತಿ ThreadState_BlockedOnNotification:
         cancelSignal(tptr,
                      NTFN_PTR(thread_state_ptr_get_blockingObject(state)));
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    case ThreadState_BlockedOnReply: {
-#ifdef CONFIG_KERNEL_MCS
-        reply_remove_tcb(tptr);
-#else
-        cte_t *slot, *callerCap;
+    ಸ್ಥಿತಿ Thread_State_Blocked_On_ಉತ್ತರ: {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಉತ್ತರ_remove_tcb(tptr);
+#ಇಲ್ಲದಿದ್ದರೆ
+        cte_t *ಸ್ಥಾನ, *callerCap;
 
         tptr->tcbFault = seL4_Fault_NullFault_new();
 
         /* Get the reply cap slot */
-        slot = TCB_PTR_CTE_PTR(tptr, tcbReply);
+        ಸ್ಥಾನ = TCB_PTR_CTE_PTR(tptr, tcb_ಉತ್ತರ);
 
-        callerCap = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (callerCap) {
+        callerCap = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಸ್ಥಾನ->cteMDBNode));
+        ಆದರೆ (callerCap) {
             /** GHOSTUPD: "(True,
                 gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
             cteDeleteOne(callerCap);
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-        break;
+        ನಿಲ್ಲಿಸು;
     }
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline void restart_thread_if_no_fault(tcb_t *thread)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ restart_thread_if_no_fault(tcb_t *thread)
 {
-    if (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
-        setThreadState(thread, ThreadState_Restart);
-        if (sc_sporadic(thread->tcbSchedContext)) {
+    ಆದರೆ (seL4_Fault_get_seL4_FaultType(thread->tcbFault) == seL4_Fault_NullFault) {
+        ಗಣ_Thread_State(thread, ThreadState_Restart);
+        ಆದರೆ (sc_sporadic(thread->tcbSchedContext)) {
             /* We know that the thread can't have the current SC
              * as its own SC as this point as it should still be
              * associated with the current thread, or no thread.
              * This check is added here to reduce the cost of
              * proving this to be true as a short-term stop-gap. */
-            assert(thread->tcbSchedContext != NODE_STATE(ksCurSC));
-            if (thread->tcbSchedContext != NODE_STATE(ksCurSC)) {
+            ಪ್ರತಿಜ್ಞಾ(thread->tcbSchedContext != ಗಂಟು_STATE(ksCurSC));
+            ಆದರೆ (thread->tcbSchedContext != ಗಂಟು_STATE(ksCurSC)) {
                 refill_unblock_check(thread->tcbSchedContext);
             }
         }
-        possibleSwitchTo(thread);
-    } else {
-        setThreadState(thread, ThreadState_Inactive);
+        possible_Switch_ಗಮ್ಯ(thread);
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಗಣ_Thread_State(thread, ThreadState_Inactive);
     }
 }
 
-static inline void removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ removeAndRestartEPQueuedThread(tcb_t *thread, endpoint_t *epptr)
 {
     tcbEPDequeue(thread, epptr);
-    if (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
-        reply_t *reply = REPLY_PTR(thread_state_get_replyObject(thread->tcbState));
-        if (reply != NULL) {
-            reply_unlink(reply, thread);
+    ಆದರೆ (thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnReceive) {
+        ಉತ್ತರ_t *ಉತ್ತರ = ಉತ್ತರ_PTR(thread_state_get_ಉತ್ತರ_Object(thread->tcbState));
+        ಆದರೆ (ಉತ್ತರ != ಖಾಲಿ) {
+            ಉತ್ತರ_unlink(ಉತ್ತರ, thread);
         }
     }
     restart_thread_if_no_fault(thread);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-void cancelAllIPC(endpoint_t *epptr)
+ಶೂನ್ಯ cancelAllIPC(endpoint_t *epptr)
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-        break;
+    ಆಯ್ಕೆ (endpoint_ptr_get_state(epptr)) {
+    ಸ್ಥಿತಿ EPState_Idle:
+        ನಿಲ್ಲಿಸು;
 
-    default: {
+    ಪೂರ್ವನಿಯೋಜಿತ: {
         /* Clear the queue and set all blocked threads to restart */
-#ifdef CONFIG_KERNEL_MCS
-        tcb_queue_t queue;
-        tcb_t *thread, *next;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        tcb_ಸರತಿ_t ಸರತಿ;
+        tcb_t *thread, *ಮುಂದಿನ;
 
-        queue = ep_ptr_get_queue(epptr);
+        ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
 
-        for (thread = queue.head; thread; thread = next) {
-            next = thread->tcbSchedNext;
+        ಗಾಗಿ (thread = ಸರತಿ.ತಲೆ; thread; thread = ಮುಂದಿನ) {
+            ಮುಂದಿನ = thread->tcb_Sched_ಮುಂದಿನ;
             removeAndRestartEPQueuedThread(thread, epptr);
         }
-#else
-        tcb_t *thread = TCB_PTR(endpoint_ptr_get_epQueue_head(epptr));
+#ಇಲ್ಲದಿದ್ದರೆ
+        tcb_t *thread = TCB_PTR(endpoint_ptr_get_ep_ಸರತಿ_ತಲೆ(epptr));
 
         /* Make endpoint idle */
-        endpoint_ptr_set_state(epptr, EPState_Idle);
-        endpoint_ptr_set_epQueue_head(epptr, 0);
-        endpoint_ptr_set_epQueue_tail(epptr, 0);
+        endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
+        endpoint_ptr_ಗಣ_ep_ಸರತಿ_ತಲೆ(epptr, 0);
+        endpoint_ptr_ಗಣ_ep_ಸರತಿ_ಬಾಲ(epptr, 0);
 
-        for (; thread; thread = thread->tcbEPNext) {
-            setThreadState(thread, ThreadState_Restart);
-            SCHED_ENQUEUE(thread);
+        ಗಾಗಿ (; thread; thread = thread->tcbEPNext) {
+            ಗಣ_Thread_State(thread, ThreadState_Restart);
+            SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(thread);
         }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
         rescheduleRequired();
-        break;
+        ನಿಲ್ಲಿಸು;
     }
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static inline void removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, word_t badge)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ removeAndRestartBadgedThread(tcb_t *thread, endpoint_t *epptr, ಶಬ್ದ_t badge)
 {
-    word_t b = thread_state_ptr_get_blockingIPCBadge(&thread->tcbState);
+    ಶಬ್ದ_t b = thread_state_ptr_get_blockingIPCBadge(&thread->tcbState);
 
     /* senders do not have reply objects in their state, and we are only cancelling sends */
-    assert(thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnSend);
-    if (b == badge) {
+    ಪ್ರತಿಜ್ಞಾ(thread_state_get_tsType(thread->tcbState) == ThreadState_BlockedOnSend);
+    ಆದರೆ (b == badge) {
         tcbEPDequeue(thread, epptr);
         restart_thread_if_no_fault(thread);
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-void cancelBadgedSends(endpoint_t *epptr, word_t badge)
+ಶೂನ್ಯ cancelBadgedSends(endpoint_t *epptr, ಶಬ್ದ_t badge)
 {
-    switch (endpoint_ptr_get_state(epptr)) {
-    case EPState_Idle:
-    case EPState_Recv:
-        break;
+    ಆಯ್ಕೆ (endpoint_ptr_get_state(epptr)) {
+    ಸ್ಥಿತಿ EPState_Idle:
+    ಸ್ಥಿತಿ EPState_Recv:
+        ನಿಲ್ಲಿಸು;
 
-    case EPState_Send: {
-        tcb_t *thread, *next;
-        tcb_queue_t queue = ep_ptr_get_queue(epptr);
+    ಸ್ಥಿತಿ EPState_Send: {
+        tcb_t *thread, *ಮುಂದಿನ;
+        tcb_ಸರತಿ_t ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
 
-#ifdef CONFIG_KERNEL_MCS
-        for (thread = queue.head; thread; thread = next) {
-            next = thread->tcbSchedNext;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+        ಗಾಗಿ (thread = ಸರತಿ.ತಲೆ; thread; thread = ಮುಂದಿನ) {
+            ಮುಂದಿನ = thread->tcb_Sched_ಮುಂದಿನ;
             removeAndRestartBadgedThread(thread, epptr, badge);
         }
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
         /* this is a de-optimisation for verification
          * reasons. it allows the contents of the endpoint
          * queue to be ignored during the for loop. */
-        endpoint_ptr_set_state(epptr, EPState_Idle);
-        endpoint_ptr_set_epQueue_head(epptr, 0);
-        endpoint_ptr_set_epQueue_tail(epptr, 0);
+        endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
+        endpoint_ptr_ಗಣ_ep_ಸರತಿ_ತಲೆ(epptr, 0);
+        endpoint_ptr_ಗಣ_ep_ಸರತಿ_ಬಾಲ(epptr, 0);
 
-        for (thread = queue.head; thread; thread = next) {
-            word_t b = thread_state_ptr_get_blockingIPCBadge(
+        ಗಾಗಿ (thread = ಸರತಿ.ತಲೆ; thread; thread = ಮುಂದಿನ) {
+            ಶಬ್ದ_t b = thread_state_ptr_get_blockingIPCBadge(
                            &thread->tcbState);
-            next = thread->tcbEPNext;
+            ಮುಂದಿನ = thread->tcbEPNext;
 
-            if (b == badge) {
-                setThreadState(thread, ThreadState_Restart);
-                SCHED_ENQUEUE(thread);
-                queue = tcbEPDequeue(thread, queue);
+            ಆದರೆ (b == badge) {
+                ಗಣ_Thread_State(thread, ThreadState_Restart);
+                SCHED_ಸರತಿಗೆ_ಸೇರಿಸು(thread);
+                ಸರತಿ = tcbEPDequeue(thread, ಸರತಿ);
             }
 
         }
-        ep_ptr_set_queue(epptr, queue);
+        ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
 
-        if (queue.head) {
-            endpoint_ptr_set_state(epptr, EPState_Send);
+        ಆದರೆ (ಸರತಿ.ತಲೆ) {
+            endpoint_ptr_ಗಣ_state(epptr, EPState_Send);
         }
-#endif /* CONFIG_KERNEL_MCS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_MCS */
         rescheduleRequired();
 
-        break;
+        ನಿಲ್ಲಿಸು;
     }
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("invalid EP state");
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void tcbEPAppend(tcb_t *thread, endpoint_t *epptr, endpoint_state_t ep_state)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ tcbEPAppend(tcb_t *thread, endpoint_t *epptr, endpoint_state_t ep_state)
 {
-    tcb_queue_t queue;
-    tcb_queue_t new_queue;
+    tcb_ಸರತಿ_t ಸರತಿ;
+    tcb_ಸರತಿ_t new_ಸರತಿ;
 
-    queue = ep_ptr_get_queue(epptr);
-    new_queue = tcbAppend(thread, queue);
-    ep_ptr_set_queue(epptr, new_queue);
+    ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+    new_ಸರತಿ = tcbAppend(thread, ಸರತಿ);
+    ep_ptr_ಗಣ_ಸರತಿ(epptr, new_ಸರತಿ);
 
     /* Update the state of the endpoint with the state that was passed in. If the queue
      * was previously non-empty this must be the same state the endpoint is currently in. */
-    endpoint_ptr_set_state(epptr, ep_state);
+    endpoint_ptr_ಗಣ_state(epptr, ep_state);
 }
 
-void tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
+ಶೂನ್ಯ tcbEPDequeue(tcb_t *thread, endpoint_t *epptr)
 {
-    tcb_queue_t queue;
-    tcb_queue_t new_queue;
+    tcb_ಸರತಿ_t ಸರತಿ;
+    tcb_ಸರತಿ_t new_ಸರತಿ;
 
-    queue = ep_ptr_get_queue(epptr);
-    new_queue = tcb_queue_remove(queue, thread);
-    ep_ptr_set_queue(epptr, new_queue);
+    ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+    new_ಸರತಿ = tcb_ಸರತಿ_remove(ಸರತಿ, thread);
+    ep_ptr_ಗಣ_ಸರತಿ(epptr, new_ಸರತಿ);
 
-    if (tcb_queue_empty(new_queue)) {
-        endpoint_ptr_set_state(epptr, EPState_Idle);
+    ಆದರೆ (tcb_ಸರತಿ_ಖಾಲಿಗಳು(new_ಸರತಿ)) {
+        endpoint_ptr_ಗಣ_state(epptr, EPState_Idle);
     }
 }
 
-void reorderEP(endpoint_t *epptr, tcb_t *thread)
+ಶೂನ್ಯ reorderEP(endpoint_t *epptr, tcb_t *thread)
 {
-    tcb_queue_t queue = ep_ptr_get_queue(epptr);
-    queue = tcb_queue_remove(queue, thread);
-    queue = tcbAppend(thread, queue);
-    ep_ptr_set_queue(epptr, queue);
+    tcb_ಸರತಿ_t ಸರತಿ = ep_ptr_get_ಸರತಿ(epptr);
+    ಸರತಿ = tcb_ಸರತಿ_remove(ಸರತಿ, thread);
+    ಸರತಿ = tcbAppend(thread, ಸರತಿ);
+    ep_ptr_ಗಣ_ಸರತಿ(epptr, ಸರತಿ);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

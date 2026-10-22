@@ -4,107 +4,107 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/debug.h>
-#include <types.h>
-#include <plat/machine.h>
-#include <model/statedata.h>
-#include <model/smp.h>
-#include <object/structures.h>
-#include <object/tcb.h>
-#include <benchmark/benchmark_track.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <api/debug.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <model/smp.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <object/tcb.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark_track.h>
 
 /* Collective cpu states, including both pre core architecture dependant and independent data */
-SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES]);
+SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_ಅಂಕೆ_NODES]);
 
 /* Global count of how many cpus there are */
-word_t ksNumCPUs;
+ಶಬ್ದ_t ks_ಅಂಕೆ_CPUs;
 
 /* Pointer to the head of the scheduler queue for each priority */
-UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
-UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
-UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
-compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_SIZE - 1) <= wordBits)
-#ifdef CONFIG_KERNEL_MCS
+ಮೇಲೆ_STATE_DEFINE(tcb_ಸರತಿ_t, ksReadyQueues[ಅಂಕೆ_READY_QUEUES]);
+ಮೇಲೆ_STATE_DEFINE(ಶಬ್ದ_t, ksReadyQueuesL1Bitmap[CONFIG_ಅಂಕೆ_DOMAINS]);
+ಮೇಲೆ_STATE_DEFINE(ಶಬ್ದ_t, ksReadyQueuesL2Bitmap[CONFIG_ಅಂಕೆ_DOMAINS][L2_BITMAP_ಗಾತ್ರ]);
+compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_ಗಾತ್ರ - 1) <= ಶಬ್ದ_ಬಿಟ್ಟುಗಳು)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
 /* Head of the queue of threads waiting for their budget to be replenished */
-UP_STATE_DEFINE(tcb_queue_t, ksReleaseQueue);
-#endif
+ಮೇಲೆ_STATE_DEFINE(tcb_ಸರತಿ_t, ks_Release_ಸರತಿ);
+#ಆದರೆ_ಅಂತ್ಯ
 
 /* Current thread TCB pointer */
-UP_STATE_DEFINE(tcb_t *, ksCurThread);
+ಮೇಲೆ_STATE_DEFINE(tcb_t *, ksCurThread);
 
 /* Idle thread TCB pointer */
-UP_STATE_DEFINE(tcb_t *, ksIdleThread);
+ಮೇಲೆ_STATE_DEFINE(tcb_t *, ksIdleThread);
 
 /* Values of 0 and ~0 encode ResumeCurrentThread and ChooseNewThread
  * respectively; other values encode SwitchToThread and must be valid
  * tcb pointers */
-UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
+ಮೇಲೆ_STATE_DEFINE(tcb_t *, ksSchedulerAction);
 
-#ifdef CONFIG_HAVE_FPU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
 /* The thread using the FPU, or NULL if FPU state is invalid */
-UP_STATE_DEFINE(tcb_t *, ksCurFPUOwner);
-#endif /* CONFIG_HAVE_FPU */
+ಮೇಲೆ_STATE_DEFINE(tcb_t *, ksCurFPUOwner);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_HAVE_FPU */
 
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
 /* the amount of time passed since the kernel time was last updated */
-UP_STATE_DEFINE(ticks_t, ksConsumed);
+ಮೇಲೆ_STATE_DEFINE(ticks_t, ksConsumed);
 /* whether we need to reprogram the timer before exiting the kernel */
-UP_STATE_DEFINE(bool_t, ksReprogram);
+ಮೇಲೆ_STATE_DEFINE(bool_t, ksReprogram);
 /* the current kernel time (recorded on kernel entry) */
-UP_STATE_DEFINE(ticks_t, ksCurTime);
+ಮೇಲೆ_STATE_DEFINE(ticks_t, ks_Cur_ಸಮಯ);
 /* current scheduling context pointer */
-UP_STATE_DEFINE(sched_context_t *, ksCurSC);
-UP_STATE_DEFINE(sched_context_t *, ksIdleSC);
-#endif
+ಮೇಲೆ_STATE_DEFINE(sched_context_t *, ksCurSC);
+ಮೇಲೆ_STATE_DEFINE(sched_context_t *, ksIdleSC);
+#ಆದರೆ_ಅಂತ್ಯ
 
-#ifdef CONFIG_DEBUG_BUILD
-UP_STATE_DEFINE(tcb_t *, ksDebugTCBs);
-#endif /* CONFIG_DEBUG_BUILD */
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-UP_STATE_DEFINE(bool_t, benchmark_log_utilisation_enabled);
-UP_STATE_DEFINE(timestamp_t, benchmark_start_time);
-UP_STATE_DEFINE(timestamp_t, benchmark_end_time);
-UP_STATE_DEFINE(timestamp_t, benchmark_kernel_time);
-UP_STATE_DEFINE(timestamp_t, benchmark_kernel_number_entries);
-UP_STATE_DEFINE(timestamp_t, benchmark_kernel_number_schedules);
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_BUILD
+ಮೇಲೆ_STATE_DEFINE(tcb_t *, ksDebugTCBs);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_BUILD */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_BENCHMARK_TRACK_UTILISATION
+ಮೇಲೆ_STATE_DEFINE(bool_t, benchmark_log_utilisation_enabled);
+ಮೇಲೆ_STATE_DEFINE(timestamp_t, benchmark_ಆರಂಭ_ಸಮಯ);
+ಮೇಲೆ_STATE_DEFINE(timestamp_t, benchmark_ಕೊನೆ_ಸಮಯ);
+ಮೇಲೆ_STATE_DEFINE(timestamp_t, benchmark_kernel_ಸಮಯ);
+ಮೇಲೆ_STATE_DEFINE(timestamp_t, benchmark_kernel_ಸಂಖ್ಯೆ_entries);
+ಮೇಲೆ_STATE_DEFINE(timestamp_t, benchmark_kernel_ಸಂಖ್ಯೆ_schedules);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_BENCHMARK_TRACK_UTILISATION */
 
 /* Units of work we have completed since the last time we checked for
  * pending interrupts */
-word_t ksWorkUnitsCompleted;
+ಶಬ್ದ_t ksWorkUnitsCompleted;
 
-irq_state_t intStateIRQTable[INT_STATE_ARRAY_SIZE];
+irq_state_t intStateIRQTable[INT_STATE_ARRAY_ಗಾತ್ರ];
 /* CNode containing interrupt handler endpoints - like all seL4 objects, this CNode needs to be
  * of a size that is a power of 2 and aligned to its size. */
-cte_t intStateIRQNode[BIT(IRQ_CNODE_SLOT_BITS)] ALIGN(BIT(IRQ_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(irqCNodeSize, sizeof(intStateIRQNode) >= ((INT_STATE_ARRAY_SIZE) *sizeof(cte_t)));
+cte_t intStateIRQNode[ಬಿಟ್(IRQ_CNODE_ಸ್ಥಾನ_ಬಿಟ್ಟುಗಳು)] ALIGN(ಬಿಟ್(IRQ_CNODE_ಸ್ಥಾನ_ಬಿಟ್ಟುಗಳು + se_L4_ಸ್ಥಾನ_ಬಿಟ್ಟುಗಳು));
+compile_assert(irq_CNode_ಗಾತ್ರ, ಗಾತ್ರ(intStateIRQNode) >= ((INT_STATE_ARRAY_ಗಾತ್ರ) *ಗಾತ್ರ(cte_t)));
 
 /* Currently active domain */
 dom_t ksCurDomain;
 
 /* Domain timeslice remaining */
-ticks_t ksDomainTime;
+ticks_t ks_Domain_ಸಮಯ;
 
 /* An index into ksDomSchedule for active domain and duration. */
-word_t ksDomScheduleIdx;
+ಶಬ್ದ_t ks_Dom_ವೇಳಾಪಟ್ಟಿ_Idx;
 
 /* The value ksDomScheduleIdx will be set to when reaching either the end of
  * ksDomSchedule, or an end marker (entry with zero domain and duration). */
-word_t ksDomScheduleStart;
+ಶಬ್ದ_t ks_Dom_ವೇಳಾಪಟ್ಟಿ_ಆರಂಭ;
 
 /* Idle thread. */
-SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(seL4_TCBBits));
+SECTION("._idle_thread") ಅಕ್ಷರ ksIdleThreadTCB[CONFIG_MAX_ಅಂಕೆ_NODES][ಬಿಟ್(seL4_TCBBits)] ALIGN(ಬಿಟ್(seL4_TCBBits));
 
-#ifdef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */
-char ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
-#endif
+ಅಕ್ಷರ ksIdleThreadSC[CONFIG_MAX_ಅಂಕೆ_NODES][ಬಿಟ್(se_L4_Min_Sched_Context_ಬಿಟ್ಟುಗಳು)] ALIGN(ಬಿಟ್(se_L4_Min_Sched_Context_ಬಿಟ್ಟುಗಳು));
+#ಆದರೆ_ಅಂತ್ಯ
 
-#if (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)
-kernel_entry_t ksKernelEntry;
-#endif /* DEBUG */
+#ಆದರೆ (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)
+kernel_ನಮೂದು_t ks_Kernel_ನಮೂದು;
+#ಆದರೆ_ಅಂತ್ಯ /* DEBUG */
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-paddr_t ksUserLogBuffer;
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_LOG_ಬಫರ್
+paddr_t ks_User_Log_ಬಫರ್;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_LOG_BUFFER */

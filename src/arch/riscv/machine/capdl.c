@@ -4,247 +4,247 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_BUILD
 
-#include <machine/capdl.h>
-#include <arch/machine/capdl.h>
+#ಅನ್ತರ್ಭಾವ <machine/capdl.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/capdl.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+ಶಬ್ದ_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    ಹಿಂತಿರುಗಿ tcb->tcbArch.tcbContext.registers[SP];
 }
 
-#ifdef CONFIG_PRINTING
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
 
-static void obj_asidpool_print_attrs(cap_t asid_cap);
-static void obj_frame_print_attrs(paddr_t paddr);
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level);
-static void cap_frame_print_attrs_vptr(word_t vptr, pte_t *lvl1pt);
-static void cap_frame_print_attrs_pt(pte_t *ptSlot);
+ಸ್ಥಿರ ಶೂನ್ಯ obj_asidpool_print_attrs(cap_t asid_cap);
+ಸ್ಥಿರ ಶೂನ್ಯ obj_ಚೌಕಟ್ಟು_print_attrs(paddr_t paddr);
+ಸ್ಥಿರ ಶೂನ್ಯ riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, ಪೂರ್ಣಾಂಕ level);
+ಸ್ಥಿರ ಶೂನ್ಯ cap_ಚೌಕಟ್ಟು_print_attrs_vptr(ಶಬ್ದ_t vptr, pte_t *lvl1pt);
+ಸ್ಥಿರ ಶೂನ್ಯ cap_ಚೌಕಟ್ಟು_print_attrs_pt(pte_t *pt_ಸ್ಥಾನ);
 
-static void obj_asidpool_print_attrs(cap_t asid_cap)
+ಸ್ಥಿರ ಶೂನ್ಯ obj_asidpool_print_attrs(cap_t asid_cap)
 {
     asid_t asid = cap_asid_pool_cap_get_capASIDBase(asid_cap);
-    printf("(asid_high: 0x%lx)\n", ASID_HIGH(asid));
+    ಬರೆ("(asid_high: 0x%lx)\n", ASID_ಮೇಲಿನ(asid));
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+ಶೂನ್ಯ print_ipc_ಬಫರ್_ಸ್ಥಾನ(tcb_t *tcb)
 {
-    word_t vptr = tcb->tcbIPCBuffer;
-    asid_t asid = cap_page_table_cap_get_capPTMappedASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-    findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
+    ಶಬ್ದ_t vptr = tcb->tcbIPCBuffer;
+    asid_t asid = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
 
-    printf("ipc_buffer_slot: ");
-    cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
+    ಬರೆ("ipc_buffer_slot: ");
+    cap_ಚೌಕಟ್ಟು_print_attrs_vptr(vptr, ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು);
 }
 
-static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int level)
+ಸ್ಥಿರ ಶೂನ್ಯ riscv_cap_pt_print_slots(pte_t *ಊರ್ಧ್ವ_Pt_ಸ್ಥಾನ, ಶಬ್ದ_t pt_ಸೂಚ್ಯಂಕ, ಪೂರ್ಣಾಂಕ level)
 {
     pte_t *pt;
-    if (level == CONFIG_PT_LEVELS) {
-        printf("%p_pd {\n", upperPtSlot);
-        pt = upperPtSlot;
-    } else {
-        printf("pt_%p_%04lu {\n", upperPtSlot, ptIndex);
-        pt = getPPtrFromHWPTE(upperPtSlot);
+    ಆದರೆ (level == CONFIG_PT_ಮಟ್ಟಗಳು) {
+        ಬರೆ("%p_pd {\n", ಊರ್ಧ್ವ_Pt_ಸ್ಥಾನ);
+        pt = ಊರ್ಧ್ವ_Pt_ಸ್ಥಾನ;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಬರೆ("pt_%p_%04lu {\n", ಊರ್ಧ್ವ_Pt_ಸ್ಥಾನ, pt_ಸೂಚ್ಯಂಕ);
+        pt = getPPtrFromHWPTE(ಊರ್ಧ್ವ_Pt_ಸ್ಥಾನ);
     }
     level -= 1;
 
-    word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
+    ಶಬ್ದ_t pt_ಬಿಟ್ಟುಗಳು_ಎಡ = PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು * level + se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು;
 
     /* - 1 to avoid overflowing */
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
-        word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                printf("0x%lx: pt_%p_%04lu\n", ptSlotIndex, ptSlot, ptSlotIndex);
-            } else { /* frame */
-                printf("0x%lx: frame_%p_%04lu", ptSlotIndex, ptSlot, ptSlotIndex);
-                cap_frame_print_attrs_pt(ptSlot);
+    ಗಾಗಿ (ಶಬ್ದ_t i = 0; i < ಬಿಟ್(pt_ಬಿಟ್ಟುಗಳು_ಎಡ + PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1; i += (1 << (pt_ಬಿಟ್ಟುಗಳು_ಎಡ))) {
+        ಶಬ್ದ_t pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ = ((i >> pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
+        pte_t *pt_ಸ್ಥಾನ = pt + pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ;
+        ಆದರೆ (pte_ptr_get_valid(pt_ಸ್ಥಾನ)) {
+            ಆದರೆ (level) { /* pt */
+                ಬರೆ("0x%lx: pt_%p_%04lu\n", pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ, pt_ಸ್ಥಾನ, pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ);
+            } ಇಲ್ಲದಿದ್ದರೆ { /*ಚೌಕಟ್ಟು*/
+                ಬರೆ("0x%lx: frame_%p_%04lu", pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ, pt_ಸ್ಥಾನ, pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ);
+                cap_ಚೌಕಟ್ಟು_print_attrs_pt(pt_ಸ್ಥಾನ);
             }
         }
     }
-    printf("}\n"); /* lvl1pt/pt */
+    ಬರೆ("}\n"); /* lvl1pt/pt */
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS) - 1; i += (1 << (ptBitsLeft))) {
-        word_t ptSlotIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptSlotIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                riscv_cap_pt_print_slots(ptSlot, ptSlotIndex, level);
+    ಗಾಗಿ (ಶಬ್ದ_t i = 0; i < ಬಿಟ್(pt_ಬಿಟ್ಟುಗಳು_ಎಡ + PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು) - 1; i += (1 << (pt_ಬಿಟ್ಟುಗಳು_ಎಡ))) {
+        ಶಬ್ದ_t pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ = ((i >> pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
+        pte_t *pt_ಸ್ಥಾನ = pt + pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ;
+        ಆದರೆ (pte_ptr_get_valid(pt_ಸ್ಥಾನ)) {
+            ಆದರೆ (level) { /* pt */
+                riscv_cap_pt_print_slots(pt_ಸ್ಥಾನ, pt_ಸ್ಥಾನ_ಸೂಚ್ಯಂಕ, level);
             }
         }
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+ಶೂನ್ಯ obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_LEVELS);
+    ಆದರೆ (is_Valid_VTable_ಬೇರು(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !ನೋಡಿದ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        pte_t *lvl1pt = PTE_PTR(pptr_ದ_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        ಕೂಡಿಸು_ಗಮ್ಯ_ನೋಡಿದ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_ಮಟ್ಟಗಳು);
     }
 }
 
-static void cap_frame_print_attrs_pt(pte_t *ptSlot)
+ಸ್ಥಿರ ಶೂನ್ಯ cap_ಚೌಕಟ್ಟು_print_attrs_pt(pte_t *pt_ಸ್ಥಾನ)
 {
-    printf("(");
+    ಬರೆ("(");
 
     /* rights */
-    if (pte_ptr_get_read(ptSlot)) {
-        printf("R");
+    ಆದರೆ (pte_ptr_get_read(pt_ಸ್ಥಾನ)) {
+        ಬರೆ("R");
     }
 
-    if (pte_ptr_get_write(ptSlot)) {
-        printf("W");
+    ಆದರೆ (pte_ptr_get_write(pt_ಸ್ಥಾನ)) {
+        ಬರೆ("W");
     }
 
-    if (pte_ptr_get_execute(ptSlot)) {
-        printf("X");
+    ಆದರೆ (pte_ptr_get_execute(pt_ಸ್ಥಾನ)) {
+        ಬರೆ("X");
     }
 
     /* cacheable not supported yet */
 
-    printf(")\n");
+    ಬರೆ(")\n");
 }
 
-static void cap_frame_print_attrs_vptr(word_t vptr, pte_t *lvl1pt)
+ಸ್ಥಿರ ಶೂನ್ಯ cap_ಚೌಕಟ್ಟು_print_attrs_vptr(ಶಬ್ದ_t vptr, pte_t *lvl1pt)
 {
     lookupPTSlot_ret_t lu_ret = lookupPTSlot(lvl1pt, vptr);
-    assert(lu_ret.ptBitsLeft == seL4_PageBits);
-    word_t slot = ((vptr >> lu_ret.ptBitsLeft) & MASK(PT_INDEX_BITS));
+    ಪ್ರತಿಜ್ಞಾ(lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ == se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು);
+    ಶಬ್ದ_t ಸ್ಥಾನ = ((vptr >> lu_ret.pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
 
-    printf("frame_%p_%04lu ", lu_ret.ptSlot, slot);
-    cap_frame_print_attrs_pt(lu_ret.ptSlot);
+    ಬರೆ("frame_%p_%04lu ", lu_ret.pt_ಸ್ಥಾನ, ಸ್ಥಾನ);
+    cap_ಚೌಕಟ್ಟು_print_attrs_pt(lu_ret.pt_ಸ್ಥಾನ);
 }
 
-void print_cap_arch(cap_t cap)
+ಶೂನ್ಯ print_cap_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_ಪುಟ_ಕೋಷ್ಟಕ_cap: {
+        asid_t asid = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ASID(cap);
+        ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(asid);
+        vptr_t vptr = cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_PTMapped_ವಿಳಾಸ(cap);
 
-        word_t ptBitsLeft = PT_INDEX_BITS * CONFIG_PT_LEVELS + seL4_PageBits;
-        word_t slot = ((vptr >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot, (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", lookupPTSlot(find_ret.vspace_root, vptr).ptSlot, slot);
+        ಶಬ್ದ_t pt_ಬಿಟ್ಟುಗಳು_ಎಡ = PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು * CONFIG_PT_ಮಟ್ಟಗಳು + se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು;
+        ಶಬ್ದ_t ಸ್ಥಾನ = ((vptr >> pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
+        ಆದರೆ (asid) {
+            ಬರೆ("pt_%p_%04lu (asid: %lu)\n",
+                   lookupPTSlot(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು, vptr).pt_ಸ್ಥಾನ, ಸ್ಥಾನ, (ದೀರ್ಘ ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)asid);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಬರೆ("pt_%p_%04lu\n", lookupPTSlot(ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು, vptr).pt_ಸ್ಥಾನ, ಸ್ಥಾನ);
         }
-        break;
+        ನಿಲ್ಲಿಸು;
     }
-    case cap_asid_control_cap: {
+    ಸ್ಥಿತಿ cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        ಬರೆ("asid_control\n");
+        ನಿಲ್ಲಿಸು;
     }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap: {
+        vptr_t vptr = cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap);
+        ಕಂಡುಹಿಡಿ_VSpace_For_ASID_ret_t ಕಂಡುಹಿಡಿ_ret = ಕಂಡುಹಿಡಿ_VSpace_For_ASID(cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap));
 
-        assert(find_ret.status == EXCEPTION_NONE);
-        cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
-        break;
+        ಪ್ರತಿಜ್ಞಾ(ಕಂಡುಹಿಡಿ_ret.ಸ್ಥಿತಿ_2 == EXCEPTION_NONE);
+        cap_ಚೌಕಟ್ಟು_print_attrs_vptr(vptr, ಕಂಡುಹಿಡಿ_ret.vspace_ಬೇರು);
+        ನಿಲ್ಲಿಸು;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    ಸ್ಥಿತಿ cap_asid_pool_cap: {
+        ಬರೆ("%p_asid_pool\n", (ಶೂನ್ಯ *)cap_asid_pool_cap_get_capASIDPool(cap));
+        ನಿಲ್ಲಿಸು;
     }
     /* riscv specific caps */
     /* nothing */
-    default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+    ಪೂರ್ವನಿಯೋಜಿತ: {
+        ಬರೆ("[unknown cap %lu]\n", (ದೀರ್ಘ ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)cap_get_capType(cap));
+        ನಿಲ್ಲಿಸು;
     }
     }
 }
 
-static void obj_frame_print_attrs(paddr_t paddr)
+ಸ್ಥಿರ ಶೂನ್ಯ obj_ಚೌಕಟ್ಟು_print_attrs(paddr_t paddr)
 {
-    printf("(4k, paddr: 0x%p)\n", (void *)paddr);
+    ಬರೆ("(4k, paddr: 0x%p)\n", (ಶೂನ್ಯ *)paddr);
 }
 
-void print_object_arch(cap_t cap)
+ಶೂನ್ಯ print_object_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-    case cap_page_table_cap:
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap:
+    ಸ್ಥಿತಿ cap_ಪುಟ_ಕೋಷ್ಟಕ_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    ಸ್ಥಿತಿ cap_asid_pool_cap: {
+        ಬರೆ("%p_asid_pool = asid_pool ",
+               (ಶೂನ್ಯ *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        ನಿಲ್ಲಿಸು;
     }
     /* riscv specific caps */
     /* nothing */
-    default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+    ಪೂರ್ವನಿಯೋಜಿತ: {
+        ಬರೆ("[unknown object %lu]\n", (ದೀರ್ಘ ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)cap_get_capType(cap));
+        ನಿಲ್ಲಿಸು;
     }
     }
 }
 
-static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level)
+ಸ್ಥಿರ ಶೂನ್ಯ riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, ಪೂರ್ಣಾಂಕ level)
 {
-    word_t ptBitsLeft = PT_INDEX_BITS * level + seL4_PageBits;
+    ಶಬ್ದ_t pt_ಬಿಟ್ಟುಗಳು_ಎಡ = PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು * level + se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು;
 
-    for (word_t i = 0; i < BIT(ptBitsLeft + PT_INDEX_BITS); i += (1 << (ptBitsLeft))) {
-        word_t ptIndex = ((i >> ptBitsLeft) & MASK(PT_INDEX_BITS));
-        pte_t *ptSlot = pt + ptIndex;
-        if (pte_ptr_get_valid(ptSlot)) {
-            if (level) { /* pt */
-                printf("pt_%p_%04lu = pt\n", ptSlot, ptIndex);
-                riscv_obj_pt_print_slots(lvl1pt, getPPtrFromHWPTE(ptSlot), level - 1);
-            } else { /* frame */
-                paddr_t paddr = pte_ptr_get_ppn(ptSlot);
-                printf("frame_%p_%04lu = frame ", ptSlot, ptIndex);
-                obj_frame_print_attrs(paddr);
+    ಗಾಗಿ (ಶಬ್ದ_t i = 0; i < ಬಿಟ್(pt_ಬಿಟ್ಟುಗಳು_ಎಡ + PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು); i += (1 << (pt_ಬಿಟ್ಟುಗಳು_ಎಡ))) {
+        ಶಬ್ದ_t pt_ಸೂಚ್ಯಂಕ = ((i >> pt_ಬಿಟ್ಟುಗಳು_ಎಡ) & ಮುಖವಾಡ(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
+        pte_t *pt_ಸ್ಥಾನ = pt + pt_ಸೂಚ್ಯಂಕ;
+        ಆದರೆ (pte_ptr_get_valid(pt_ಸ್ಥಾನ)) {
+            ಆದರೆ (level) { /* pt */
+                ಬರೆ("pt_%p_%04lu = pt\n", pt_ಸ್ಥಾನ, pt_ಸೂಚ್ಯಂಕ);
+                riscv_obj_pt_print_slots(lvl1pt, getPPtrFromHWPTE(pt_ಸ್ಥಾನ), level - 1);
+            } ಇಲ್ಲದಿದ್ದರೆ { /*ಚೌಕಟ್ಟು*/
+                paddr_t paddr = pte_ptr_get_ppn(pt_ಸ್ಥಾನ);
+                ಬರೆ("frame_%p_%04lu = frame ", pt_ಸ್ಥಾನ, pt_ಸೂಚ್ಯಂಕ);
+                obj_ಚೌಕಟ್ಟು_print_attrs(paddr);
             }
         }
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+ಶೂನ್ಯ obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        printf("%p_pd = pt\n", lvl1pt);
-        riscv_obj_pt_print_slots(lvl1pt, lvl1pt, CONFIG_PT_LEVELS - 1);
+    ಆದರೆ (is_Valid_VTable_ಬೇರು(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !ನೋಡಿದ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        ಕೂಡಿಸು_ಗಮ್ಯ_ನೋಡಿದ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        pte_t *lvl1pt = PTE_PTR(pptr_ದ_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        ಬರೆ("%p_pd = pt\n", lvl1pt);
+        riscv_obj_pt_print_slots(lvl1pt, lvl1pt, CONFIG_PT_ಮಟ್ಟಗಳು - 1);
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+ಶೂನ್ಯ debug_capDL(ಶೂನ್ಯ)
 {
-    printf("arch riscv\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    ಬರೆ("arch riscv\n");
+    ಬರೆ("objects {\n");
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#ಆದರೆ_ಅಂತ್ಯ
+    ಬರೆ("}\n");
 
-    printf("caps {\n");
+    ಬರೆ("caps {\n");
 
     /* reset the seen list */
-    reset_seen_list();
+    reset_ನೋಡಿದ_list();
 
-#ifdef CONFIG_PRINTING
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    ಬರೆ("}\n");
 
     obj_irq_print_maps();
-#endif /* CONFIG_PRINTING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_PRINTING */
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_BUILD */

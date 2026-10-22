@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <stdint.h>
+#ಅನ್ತರ್ಭಾವ <util.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/devices_gen.h>
 
-#define UART_WFIFO  0x0
-#define UART_RFIFO  0x4
-#define UART_STATUS 0xC
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_WFIFO  0x0
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_RFIFO  0x4
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_ಸ್ಥಿತಿ 0xC
 
-#define UART_TX_FULL        BIT(21)
-#define UART_RX_EMPTY       BIT(20)
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_TX_ತುಂಬಿದ        ಬಿಟ್(21)
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_RX_ಖಾಲಿಗಳು       ಬಿಟ್(20)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#ವ್ಯಾಖ್ಯಾನಿಸು UART_REG(x) ((ಅಸ್ಥಿರ uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PRINTING
+ಶೂನ್ಯ uart_drv_putchar(ಚಿಹ್ನೆರಹಿತ ಅಕ್ಷರ c)
 {
-    while ((*UART_REG(UART_STATUS) & UART_TX_FULL));
+    ಆಗ ((*UART_REG(UART_ಸ್ಥಿತಿ) & UART_TX_ತುಂಬಿದ));
 
     /* Add character to the buffer. */
     *UART_REG(UART_WFIFO) = c;
 }
-#endif /* CONFIG_PRINTING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_BUILD
+ಚಿಹ್ನೆರಹಿತ ಅಕ್ಷರ uart_drv_getchar(ಶೂನ್ಯ)
 {
-    while ((*UART_REG(UART_STATUS) & UART_RX_EMPTY));
-    return *UART_REG(UART_RFIFO);
+    ಆಗ ((*UART_REG(UART_ಸ್ಥಿತಿ) & UART_RX_ಖಾಲಿಗಳು));
+    ಹಿಂತಿರುಗಿ *UART_REG(UART_RFIFO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_BUILD */

@@ -4,931 +4,931 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <api/types.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#include <object/interrupt.h>
-#include <object/untyped.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <model/preemption.h>
-#include <model/statedata.h>
-#include <util.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <api/invocation.h>
+#ಅನ್ತರ್ಭಾವ <api/syscall.h>
+#ಅನ್ತರ್ಭಾವ <api/types.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <object/objecttype.h>
+#ಅನ್ತರ್ಭಾವ <object/cnode.h>
+#ಅನ್ತರ್ಭಾವ <object/interrupt.h>
+#ಅನ್ತರ್ಭಾವ <object/untyped.h>
+#ಅನ್ತರ್ಭಾವ <kernel/cspace.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <model/preemption.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <util.h>
 
-struct finaliseSlot_ret {
-    exception_t status;
+ರಚನೆ finalise_ಸ್ಥಾನ_ret {
+    exception_t ಸ್ಥಿತಿ_2;
     bool_t success;
     cap_t cleanupInfo;
 };
-typedef struct finaliseSlot_ret finaliseSlot_ret_t;
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ finalise_ಸ್ಥಾನ_ret finalise_ಸ್ಥಾನ_ret_t;
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t exposed);
-static void emptySlot(cte_t *slot, cap_t cleanupInfo);
-static exception_t reduceZombie(cte_t *slot, bool_t exposed);
+ಸ್ಥಿರ finalise_ಸ್ಥಾನ_ret_t finalise_ಸ್ಥಾನ(cte_t *ಸ್ಥಾನ, bool_t exposed);
+ಸ್ಥಿರ ಶೂನ್ಯ ಖಾಲಿಗಳು_ಸ್ಥಾನ(cte_t *ಸ್ಥಾನ, cap_t cleanupInfo);
+ಸ್ಥಿರ exception_t reduceZombie(cte_t *ಸ್ಥಾನ, bool_t exposed);
 
-#ifdef CONFIG_KERNEL_MCS
-#define CNODE_LAST_INVOCATION CNodeRotate
-#else
-#define CNODE_LAST_INVOCATION CNodeSaveCaller
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿಸು CNODE_ಕೊನೆಯ_INVOCATION CNodeRotate
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು CNODE_ಕೊನೆಯ_INVOCATION CNodeSaveCaller
+#ಆದರೆ_ಅಂತ್ಯ
 
-exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
-                                  word_t *buffer)
+exception_t decodeCNodeInvocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ, cap_t cap,
+                                  ಶಬ್ದ_t *ಬಫರ್)
 {
-    lookupSlot_ret_t lu_ret;
-    cte_t *destSlot;
-    word_t index, w_bits;
-    exception_t status;
+    lookup_ಸ್ಥಾನ_ret_t lu_ret;
+    cte_t *dest_ಸ್ಥಾನ;
+    ಶಬ್ದ_t ಸೂಚ್ಯಂಕ, w_ಬಿಟ್ಟುಗಳು;
+    exception_t ಸ್ಥಿತಿ_2;
 
     /* Haskell error: "decodeCNodeInvocation: invalid cap" */
-    assert(cap_get_capType(cap) == cap_cnode_cap);
+    ಪ್ರತಿಜ್ಞಾ(cap_get_capType(cap) == cap_cnode_cap);
 
-    if (invLabel < CNodeRevoke || invLabel > CNODE_LAST_INVOCATION) {
+    ಆದರೆ (invLabel < CNodeRevoke || invLabel > CNODE_ಕೊನೆಯ_INVOCATION) {
         userError("CNodeCap: Illegal Operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2) {
+    ಆದರೆ (ಉದ್ದಳತೆ < 2) {
         userError("CNode operation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
-    w_bits = getSyscallArg(1, buffer);
+    ಸೂಚ್ಯಂಕ = getSyscallArg(0, ಬಫರ್);
+    w_ಬಿಟ್ಟುಗಳು = getSyscallArg(1, ಬಫರ್);
 
-    lu_ret = lookupTargetSlot(cap, index, w_bits);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookup_ಗುರಿ_ಸ್ಥಾನ(cap, ಸೂಚ್ಯಂಕ, w_ಬಿಟ್ಟುಗಳು);
+    ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
         userError("CNode operation: Target slot invalid.");
-        return lu_ret.status;
+        ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
     }
-    destSlot = lu_ret.slot;
+    dest_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-    if (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
-        cte_t *srcSlot;
-        word_t srcIndex, srcDepth, capData;
+    ಆದರೆ (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
+        cte_t *src_ಸ್ಥಾನ;
+        ಶಬ್ದ_t src_ಸೂಚ್ಯಂಕ, src_ಆಳ, cap_ದತ್ತಾಂಶ;
         bool_t isMove;
         seL4_CapRights_t cap_rights;
-        cap_t srcRoot, newCap;
+        cap_t src_ಬೇರು, newCap;
         deriveCap_ret_t dc_ret;
         cap_t srcCap;
 
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        ಆದರೆ (ಉದ್ದಳತೆ < 4 || current_extra_caps.excaprefs[0] == ಖಾಲಿ) {
             userError("CNode Copy/Mint/Move/Mutate: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-        srcIndex = getSyscallArg(2, buffer);
-        srcDepth = getSyscallArg(3, buffer);
+        src_ಸೂಚ್ಯಂಕ = getSyscallArg(2, ಬಫರ್);
+        src_ಆಳ = getSyscallArg(3, ಬಫರ್);
 
-        srcRoot = current_extra_caps.excaprefs[0]->cap;
+        src_ಬೇರು = current_extra_caps.excaprefs[0]->cap;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        ಸ್ಥಿತಿ_2 = ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(dest_ಸ್ಥಾನ);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Destination not empty.");
-            return status;
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lu_ret = lookup_ಮೂಲ_ಸ್ಥಾನ(src_ಬೇರು, src_ಸೂಚ್ಯಂಕ, src_ಆಳ);
+        ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Invalid source slot.");
-            return lu_ret.status;
+            ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
         }
-        srcSlot = lu_ret.slot;
+        src_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(src_ಸ್ಥಾನ->cap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Source slot invalid or empty.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = 1;
             current_lookup_fault =
-                lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+                lookup_fault_missing_capability_new(src_ಆಳ);
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        switch (invLabel) {
-        case CNodeCopy:
+        ಆಯ್ಕೆ (invLabel) {
+        ಸ್ಥಿತಿ CNodeCopy:
 
-            if (length < 5) {
+            ಆದರೆ (ಉದ್ದಳತೆ < 5) {
                 userError("Truncated message for CNode Copy operation.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot, srcCap);
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_ಶಬ್ದ(getSyscallArg(4, ಬಫರ್));
+            srcCap = ಮುಖವಾಡ_Cap_Rights(cap_rights, src_ಸ್ಥಾನ->cap);
+            dc_ret = deriveCap(src_ಸ್ಥಾನ, srcCap);
+            ಆದರೆ (dc_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Copy operation.");
-                return dc_ret.status;
+                ಹಿಂತಿರುಗಿ dc_ret.ಸ್ಥಿತಿ_2;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            ನಿಲ್ಲಿಸು;
 
-        case CNodeMint:
-            if (length < 6) {
+        ಸ್ಥಿತಿ CNodeMint:
+            ಆದರೆ (ಉದ್ದಳತೆ < 6) {
                 userError("CNode Mint: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            capData = getSyscallArg(5, buffer);
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot,
-                               updateCapData(false, capData, srcCap));
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_ಶಬ್ದ(getSyscallArg(4, ಬಫರ್));
+            cap_ದತ್ತಾಂಶ = getSyscallArg(5, ಬಫರ್);
+            srcCap = ಮುಖವಾಡ_Cap_Rights(cap_rights, src_ಸ್ಥಾನ->cap);
+            dc_ret = deriveCap(src_ಸ್ಥಾನ,
+                               update_Cap_ದತ್ತಾಂಶ(false, cap_ದತ್ತಾಂಶ, srcCap));
+            ಆದರೆ (dc_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Mint operation.");
-                return dc_ret.status;
+                ಹಿಂತಿರುಗಿ dc_ret.ಸ್ಥಿತಿ_2;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            ನಿಲ್ಲಿಸು;
 
-        case CNodeMove:
-            newCap = srcSlot->cap;
+        ಸ್ಥಿತಿ CNodeMove:
+            newCap = src_ಸ್ಥಾನ->cap;
             isMove = true;
 
-            break;
+            ನಿಲ್ಲಿಸು;
 
-        case CNodeMutate:
-            if (length < 5) {
+        ಸ್ಥಿತಿ CNodeMutate:
+            ಆದರೆ (ಉದ್ದಳತೆ < 5) {
                 userError("CNode Mutate: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+                ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
             }
 
-            capData = getSyscallArg(4, buffer);
-            newCap = updateCapData(true, capData, srcSlot->cap);
+            cap_ದತ್ತಾಂಶ = getSyscallArg(4, ಬಫರ್);
+            newCap = update_Cap_ದತ್ತಾಂಶ(true, cap_ದತ್ತಾಂಶ, src_ಸ್ಥಾನ->cap);
             isMove = true;
 
-            break;
+            ನಿಲ್ಲಿಸು;
 
-        default:
-            assert(0);
-            return EXCEPTION_NONE;
+        ಪೂರ್ವನಿಯೋಜಿತ:
+            ಪ್ರತಿಜ್ಞಾ(0);
+            ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
         }
 
-        if (cap_get_capType(newCap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(newCap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Mutated cap would be invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        if (isMove) {
-            return invokeCNodeMove(newCap, srcSlot, destSlot);
-        } else {
-            return invokeCNodeInsert(newCap, srcSlot, destSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಆದರೆ (isMove) {
+            ಹಿಂತಿರುಗಿ invokeCNodeMove(newCap, src_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            ಹಿಂತಿರುಗಿ invoke_CNode_ಸೇರಿಸು(newCap, src_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
         }
     }
 
-    if (invLabel == CNodeRevoke) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRevoke(destSlot);
+    ಆದರೆ (invLabel == CNodeRevoke) {
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeCNodeRevoke(dest_ಸ್ಥಾನ);
     }
 
-    if (invLabel == CNodeDelete) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeDelete(destSlot);
+    ಆದರೆ (invLabel == CNodeDelete) {
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeCNodeDelete(dest_ಸ್ಥಾನ);
     }
 
-#ifndef CONFIG_KERNEL_MCS
-    if (invLabel == CNodeSaveCaller) {
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
+    ಆದರೆ (invLabel == CNodeSaveCaller) {
+        ಸ್ಥಿತಿ_2 = ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(dest_ಸ್ಥಾನ);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
             userError("CNode SaveCaller: Destination slot not empty.");
-            return status;
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeSaveCaller(destSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeCNodeSaveCaller(dest_ಸ್ಥಾನ);
     }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-    if (invLabel == CNodeCancelBadgedSends) {
+    ಆದರೆ (invLabel == CNodeCancelBadgedSends) {
         cap_t destCap;
 
-        destCap = destSlot->cap;
+        destCap = dest_ಸ್ಥಾನ->cap;
 
-        if (!hasCancelSendRights(destCap)) {
+        ಆದರೆ (!hasCancelSendRights(destCap)) {
             userError("CNode CancelBadgedSends: Target cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeCancelBadgedSends(destCap);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeCNodeCancelBadgedSends(destCap);
     }
 
-    if (invLabel == CNodeRotate) {
-        word_t pivotNewData, pivotIndex, pivotDepth;
-        word_t srcNewData, srcIndex, srcDepth;
-        cte_t *pivotSlot, *srcSlot;
-        cap_t pivotRoot, srcRoot, newSrcCap, newPivotCap;
+    ಆದರೆ (invLabel == CNodeRotate) {
+        ಶಬ್ದ_t ಅಚ್ಚು_New_ದತ್ತಾಂಶ, ಅಚ್ಚು_ಸೂಚ್ಯಂಕ, ಅಚ್ಚು_ಆಳ;
+        ಶಬ್ದ_t src_New_ದತ್ತಾಂಶ, src_ಸೂಚ್ಯಂಕ, src_ಆಳ;
+        cte_t *ಅಚ್ಚು_ಸ್ಥಾನ, *src_ಸ್ಥಾನ;
+        cap_t ಅಚ್ಚು_ಬೇರು, src_ಬೇರು, newSrcCap, new_ಅಚ್ಚು_Cap;
 
-        if (length < 8 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+        ಆದರೆ (ಉದ್ದಳತೆ < 8 || current_extra_caps.excaprefs[0] == ಖಾಲಿ
+            || current_extra_caps.excaprefs[1] == ಖಾಲಿ) {
+            current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-        pivotNewData = getSyscallArg(2, buffer);
-        pivotIndex   = getSyscallArg(3, buffer);
-        pivotDepth   = getSyscallArg(4, buffer);
-        srcNewData   = getSyscallArg(5, buffer);
-        srcIndex     = getSyscallArg(6, buffer);
-        srcDepth     = getSyscallArg(7, buffer);
+        ಅಚ್ಚು_New_ದತ್ತಾಂಶ = getSyscallArg(2, ಬಫರ್);
+        ಅಚ್ಚು_ಸೂಚ್ಯಂಕ   = getSyscallArg(3, ಬಫರ್);
+        ಅಚ್ಚು_ಆಳ   = getSyscallArg(4, ಬಫರ್);
+        src_New_ದತ್ತಾಂಶ   = getSyscallArg(5, ಬಫರ್);
+        src_ಸೂಚ್ಯಂಕ     = getSyscallArg(6, ಬಫರ್);
+        src_ಆಳ     = getSyscallArg(7, ಬಫರ್);
 
-        pivotRoot = current_extra_caps.excaprefs[0]->cap;
-        srcRoot   = current_extra_caps.excaprefs[1]->cap;
+        ಅಚ್ಚು_ಬೇರು = current_extra_caps.excaprefs[0]->cap;
+        src_ಬೇರು   = current_extra_caps.excaprefs[1]->cap;
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_ಮೂಲ_ಸ್ಥಾನ(src_ಬೇರು, src_ಸೂಚ್ಯಂಕ, src_ಆಳ);
+        ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
         }
-        srcSlot = lu_ret.slot;
+        src_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-        lu_ret = lookupPivotSlot(pivotRoot, pivotIndex, pivotDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_ಅಚ್ಚು_ಸ್ಥಾನ(ಅಚ್ಚು_ಬೇರು, ಅಚ್ಚು_ಸೂಚ್ಯಂಕ, ಅಚ್ಚು_ಆಳ);
+        ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
         }
-        pivotSlot = lu_ret.slot;
+        ಅಚ್ಚು_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-        if (pivotSlot == srcSlot || pivotSlot == destSlot) {
+        ಆದರೆ (ಅಚ್ಚು_ಸ್ಥಾನ == src_ಸ್ಥಾನ || ಅಚ್ಚು_ಸ್ಥಾನ == dest_ಸ್ಥಾನ) {
             userError("CNode Rotate: Pivot slot the same as source or dest slot.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (srcSlot != destSlot) {
-            status = ensureEmptySlot(destSlot);
-            if (status != EXCEPTION_NONE) {
-                return status;
+        ಆದರೆ (src_ಸ್ಥಾನ != dest_ಸ್ಥಾನ) {
+            ಸ್ಥಿತಿ_2 = ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(dest_ಸ್ಥಾನ);
+            ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+                ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
             }
         }
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(src_ಸ್ಥಾನ->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
-            current_lookup_fault = lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = 1;
+            current_lookup_fault = lookup_fault_missing_capability_new(src_ಆಳ);
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(pivotSlot->cap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(ಅಚ್ಚು_ಸ್ಥಾನ->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 0;
-            current_lookup_fault = lookup_fault_missing_capability_new(pivotDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ಮೂಲ = 0;
+            current_lookup_fault = lookup_fault_missing_capability_new(ಅಚ್ಚು_ಆಳ);
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        newSrcCap = updateCapData(true, srcNewData, srcSlot->cap);
-        newPivotCap = updateCapData(true, pivotNewData, pivotSlot->cap);
+        newSrcCap = update_Cap_ದತ್ತಾಂಶ(true, src_New_ದತ್ತಾಂಶ, src_ಸ್ಥಾನ->cap);
+        new_ಅಚ್ಚು_Cap = update_Cap_ದತ್ತಾಂಶ(true, ಅಚ್ಚು_New_ದತ್ತಾಂಶ, ಅಚ್ಚು_ಸ್ಥಾನ->cap);
 
-        if (cap_get_capType(newSrcCap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(newSrcCap) == cap_null_cap) {
             userError("CNode Rotate: Source cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(newPivotCap) == cap_null_cap) {
+        ಆದರೆ (cap_get_capType(new_ಅಚ್ಚು_Cap) == cap_null_cap) {
             userError("CNode Rotate: Pivot cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRotate(newSrcCap, newPivotCap,
-                                 srcSlot, pivotSlot, destSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeCNodeRotate(newSrcCap, new_ಅಚ್ಚು_Cap,
+                                 src_ಸ್ಥಾನ, ಅಚ್ಚು_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeRevoke(cte_t *destSlot)
+exception_t invokeCNodeRevoke(cte_t *dest_ಸ್ಥಾನ)
 {
-    return cteRevoke(destSlot);
+    ಹಿಂತಿರುಗಿ cteRevoke(dest_ಸ್ಥಾನ);
 }
 
-exception_t invokeCNodeDelete(cte_t *destSlot)
+exception_t invokeCNodeDelete(cte_t *dest_ಸ್ಥಾನ)
 {
-    return cteDelete(destSlot, true);
+    ಹಿಂತಿರುಗಿ cteDelete(dest_ಸ್ಥಾನ, true);
 }
 
 exception_t invokeCNodeCancelBadgedSends(cap_t cap)
 {
-    word_t badge = cap_endpoint_cap_get_capEPBadge(cap);
-    if (badge) {
+    ಶಬ್ದ_t badge = cap_endpoint_cap_get_capEPBadge(cap);
+    ಆದರೆ (badge) {
         endpoint_t *ep = (endpoint_t *)
                          cap_endpoint_cap_get_capEPPtr(cap);
         cancelBadgedSends(ep, badge);
     }
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeInsert(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invoke_CNode_ಸೇರಿಸು(cap_t cap, cte_t *src_ಸ್ಥಾನ, cte_t *dest_ಸ್ಥಾನ)
 {
-    cteInsert(cap, srcSlot, destSlot);
+    cte_ಸೇರಿಸು(cap, src_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeMove(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invokeCNodeMove(cap_t cap, cte_t *src_ಸ್ಥಾನ, cte_t *dest_ಸ್ಥಾನ)
 {
-    cteMove(cap, srcSlot, destSlot);
+    cteMove(cap, src_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeRotate(cap_t cap1, cap_t cap2, cte_t *slot1,
                               cte_t *slot2, cte_t *slot3)
 {
-    if (slot1 == slot3) {
-        cteSwap(cap1, slot1, cap2, slot2);
-    } else {
+    ಆದರೆ (slot1 == slot3) {
+        cte_ಅದಲುಬದಲು(cap1, slot1, cap2, slot2);
+    } ಇಲ್ಲದಿದ್ದರೆ {
         cteMove(cap2, slot2, slot3);
         cteMove(cap1, slot1, slot2);
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-#ifndef CONFIG_KERNEL_MCS
-exception_t invokeCNodeSaveCaller(cte_t *destSlot)
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
+exception_t invokeCNodeSaveCaller(cte_t *dest_ಸ್ಥಾನ)
 {
     cap_t cap;
-    cte_t *srcSlot;
+    cte_t *src_ಸ್ಥಾನ;
 
-    srcSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
-    cap = srcSlot->cap;
+    src_ಸ್ಥಾನ = TCB_PTR_CTE_PTR(ಗಂಟು_STATE(ksCurThread), tcbCaller);
+    cap = src_ಸ್ಥಾನ->cap;
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_null_cap:
         userError("CNode SaveCaller: Reply cap not present.");
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    case cap_reply_cap:
-        if (!cap_reply_cap_get_capReplyMaster(cap)) {
-            cteMove(cap, srcSlot, destSlot);
+    ಸ್ಥಿತಿ cap_ಉತ್ತರ_cap:
+        ಆದರೆ (!cap_ಉತ್ತರ_cap_get_cap_ಉತ್ತರ_Master(cap)) {
+            cteMove(cap, src_ಸ್ಥಾನ, dest_ಸ್ಥಾನ);
         }
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("caller capability must be null or reply");
-        break;
+        ನಿಲ್ಲಿಸು;
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
 /*
  * If creating a child UntypedCap, don't allow new objects to be created in the
  * parent.
  */
-static void setUntypedCapAsFull(cap_t srcCap, cap_t newCap, cte_t *srcSlot)
+ಸ್ಥಿರ ಶೂನ್ಯ ಗಣ_Untyped_Cap_As_ತುಂಬಿದ(cap_t srcCap, cap_t newCap, cte_t *src_ಸ್ಥಾನ)
 {
-    if ((cap_get_capType(srcCap) == cap_untyped_cap)
+    ಆದರೆ ((cap_get_capType(srcCap) == cap_untyped_cap)
         && (cap_get_capType(newCap) == cap_untyped_cap)) {
-        if ((cap_untyped_cap_get_capPtr(srcCap)
+        ಆದರೆ ((cap_untyped_cap_get_capPtr(srcCap)
              == cap_untyped_cap_get_capPtr(newCap))
-            && (cap_untyped_cap_get_capBlockSize(newCap)
-                == cap_untyped_cap_get_capBlockSize(srcCap))) {
-            cap_untyped_cap_ptr_set_capFreeIndex(&(srcSlot->cap),
-                                                 MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(srcCap)));
+            && (cap_untyped_cap_get_cap_ಖಂಡ_ಗಾತ್ರ(newCap)
+                == cap_untyped_cap_get_cap_ಖಂಡ_ಗಾತ್ರ(srcCap))) {
+            cap_untyped_cap_ptr_ಗಣ_cap_Free_ಸೂಚ್ಯಂಕ(&(src_ಸ್ಥಾನ->cap),
+                                                 MAX_FREE_ಸೂಚ್ಯಂಕ(cap_untyped_cap_get_cap_ಖಂಡ_ಗಾತ್ರ(srcCap)));
         }
     }
 }
 
-void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+ಶೂನ್ಯ cte_ಸೇರಿಸು(cap_t newCap, cte_t *src_ಸ್ಥಾನ, cte_t *dest_ಸ್ಥಾನ)
 {
-    mdb_node_t srcMDB, newMDB;
+    mdb_ಗಂಟು_t srcMDB, newMDB;
     cap_t srcCap;
     bool_t newCapIsRevocable;
 
-    srcMDB = srcSlot->cteMDBNode;
-    srcCap = srcSlot->cap;
+    srcMDB = src_ಸ್ಥಾನ->cteMDBNode;
+    srcCap = src_ಸ್ಥಾನ->cap;
 
     newCapIsRevocable = isCapRevocable(newCap, srcCap);
 
-    newMDB = mdb_node_set_mdbPrev(srcMDB, CTE_REF(srcSlot));
-    newMDB = mdb_node_set_mdbRevocable(newMDB, newCapIsRevocable);
-    newMDB = mdb_node_set_mdbFirstBadged(newMDB, newCapIsRevocable);
+    newMDB = mdb_ಗಂಟು_ಗಣ_mdb_Prev(srcMDB, CTE_REF(src_ಸ್ಥಾನ));
+    newMDB = mdb_ಗಂಟು_ಗಣ_mdb_Revocable(newMDB, newCapIsRevocable);
+    newMDB = mdb_ಗಂಟು_ಗಣ_mdb_ಮೊದಲ_Badged(newMDB, newCapIsRevocable);
 
     /* Haskell error: "cteInsert to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    ಪ್ರತಿಜ್ಞಾ(cap_get_capType(dest_ಸ್ಥಾನ->cap) == cap_null_cap);
     /* Haskell error: "cteInsert: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    ಪ್ರತಿಜ್ಞಾ((cte_t *)mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(dest_ಸ್ಥಾನ->cteMDBNode) == ಖಾಲಿ &&
+           (cte_t *)mdb_ಗಂಟು_get_mdb_Prev(dest_ಸ್ಥಾನ->cteMDBNode) == ಖಾಲಿ);
 
     /* Prevent parent untyped cap from being used again if creating a child
      * untyped from it. */
-    setUntypedCapAsFull(srcCap, newCap, srcSlot);
+    ಗಣ_Untyped_Cap_As_ತುಂಬಿದ(srcCap, newCap, src_ಸ್ಥಾನ);
 
-    destSlot->cap = newCap;
-    destSlot->cteMDBNode = newMDB;
-    mdb_node_ptr_set_mdbNext(&srcSlot->cteMDBNode, CTE_REF(destSlot));
-    if (mdb_node_get_mdbNext(newMDB)) {
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(mdb_node_get_mdbNext(newMDB))->cteMDBNode,
-            CTE_REF(destSlot));
+    dest_ಸ್ಥಾನ->cap = newCap;
+    dest_ಸ್ಥಾನ->cteMDBNode = newMDB;
+    mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(&src_ಸ್ಥಾನ->cteMDBNode, CTE_REF(dest_ಸ್ಥಾನ));
+    ಆದರೆ (mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(newMDB)) {
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(
+            &CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(newMDB))->cteMDBNode,
+            CTE_REF(dest_ಸ್ಥಾನ));
     }
 }
 
-void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+ಶೂನ್ಯ cteMove(cap_t newCap, cte_t *src_ಸ್ಥಾನ, cte_t *dest_ಸ್ಥಾನ)
 {
-    mdb_node_t mdb;
-    word_t prev_ptr, next_ptr;
+    mdb_ಗಂಟು_t mdb;
+    ಶಬ್ದ_t prev_ptr, ಮುಂದಿನ_ptr;
 
     /* Haskell error: "cteMove to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    ಪ್ರತಿಜ್ಞಾ(cap_get_capType(dest_ಸ್ಥಾನ->cap) == cap_null_cap);
     /* Haskell error: "cteMove: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    ಪ್ರತಿಜ್ಞಾ((cte_t *)mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(dest_ಸ್ಥಾನ->cteMDBNode) == ಖಾಲಿ &&
+           (cte_t *)mdb_ಗಂಟು_get_mdb_Prev(dest_ಸ್ಥಾನ->cteMDBNode) == ಖಾಲಿ);
 
-    mdb = srcSlot->cteMDBNode;
-    destSlot->cap = newCap;
-    srcSlot->cap = cap_null_cap_new();
-    destSlot->cteMDBNode = mdb;
-    srcSlot->cteMDBNode = nullMDBNode;
+    mdb = src_ಸ್ಥಾನ->cteMDBNode;
+    dest_ಸ್ಥಾನ->cap = newCap;
+    src_ಸ್ಥಾನ->cap = cap_null_cap_new();
+    dest_ಸ್ಥಾನ->cteMDBNode = mdb;
+    src_ಸ್ಥಾನ->cteMDBNode = nullMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ಗಂಟು_get_mdb_Prev(mdb);
+    ಆದರೆ (prev_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+            CTE_REF(dest_ಸ್ಥಾನ));
 
-    next_ptr = mdb_node_get_mdbNext(mdb);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+    ಮುಂದಿನ_ptr = mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb);
+    ಆದರೆ (ಮುಂದಿನ_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(
+            &CTE_PTR(ಮುಂದಿನ_ptr)->cteMDBNode,
+            CTE_REF(dest_ಸ್ಥಾನ));
 }
 
-void capSwapForDelete(cte_t *slot1, cte_t *slot2)
+ಶೂನ್ಯ cap_ಅದಲುಬದಲು_For_Delete(cte_t *slot1, cte_t *slot2)
 {
     cap_t cap1, cap2;
 
-    if (slot1 == slot2) {
-        return;
+    ಆದರೆ (slot1 == slot2) {
+        ಹಿಂತಿರುಗಿ;
     }
 
     cap1 = slot1->cap;
     cap2 = slot2->cap;
 
-    cteSwap(cap1, slot1, cap2, slot2);
+    cte_ಅದಲುಬದಲು(cap1, slot1, cap2, slot2);
 }
 
-void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
+ಶೂನ್ಯ cte_ಅದಲುಬದಲು(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
 {
-    mdb_node_t mdb1, mdb2;
-    word_t next_ptr, prev_ptr;
+    mdb_ಗಂಟು_t mdb1, mdb2;
+    ಶಬ್ದ_t ಮುಂದಿನ_ptr, prev_ptr;
 
     slot1->cap = cap2;
     slot2->cap = cap1;
 
     mdb1 = slot1->cteMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb1);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ಗಂಟು_get_mdb_Prev(mdb1);
+    ಆದರೆ (prev_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
-    next_ptr = mdb_node_get_mdbNext(mdb1);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    ಮುಂದಿನ_ptr = mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb1);
+    ಆದರೆ (ಮುಂದಿನ_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(
+            &CTE_PTR(ಮುಂದಿನ_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
     mdb2 = slot2->cteMDBNode;
     slot1->cteMDBNode = mdb2;
     slot2->cteMDBNode = mdb1;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb2);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ಗಂಟು_get_mdb_Prev(mdb2);
+    ಆದರೆ (prev_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot1));
 
-    next_ptr = mdb_node_get_mdbNext(mdb2);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    ಮುಂದಿನ_ptr = mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb2);
+    ಆದರೆ (ಮುಂದಿನ_ptr)
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(
+            &CTE_PTR(ಮುಂದಿನ_ptr)->cteMDBNode,
             CTE_REF(slot1));
 }
 
-exception_t cteRevoke(cte_t *slot)
+exception_t cteRevoke(cte_t *ಸ್ಥಾನ)
 {
-    cte_t *nextPtr;
-    exception_t status;
+    cte_t *ಮುಂದಿನ_Ptr;
+    exception_t ಸ್ಥಿತಿ_2;
 
     /* there is no need to check for a NullCap as NullCaps are
        always accompanied by null mdb pointers */
-    for (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-         nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
-        status = cteDelete(nextPtr, true);
-        if (status != EXCEPTION_NONE) {
-            return status;
+    ಗಾಗಿ (ಮುಂದಿನ_Ptr = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಸ್ಥಾನ->cteMDBNode));
+         ಮುಂದಿನ_Ptr && is_MDBParent_ದ(ಸ್ಥಾನ, ಮುಂದಿನ_Ptr);
+         ಮುಂದಿನ_Ptr = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಸ್ಥಾನ->cteMDBNode))) {
+        ಸ್ಥಿತಿ_2 = cteDelete(ಮುಂದಿನ_Ptr, true);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ಸ್ಥಿತಿ_2 = preemption_ಬಿಂದು();
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t cteDelete(cte_t *slot, bool_t exposed)
+exception_t cteDelete(cte_t *ಸ್ಥಾನ, bool_t exposed)
 {
-    finaliseSlot_ret_t fs_ret;
+    finalise_ಸ್ಥಾನ_ret_t fs_ret;
 
-    fs_ret = finaliseSlot(slot, exposed);
-    if (fs_ret.status != EXCEPTION_NONE) {
-        return fs_ret.status;
+    fs_ret = finalise_ಸ್ಥಾನ(ಸ್ಥಾನ, exposed);
+    ಆದರೆ (fs_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ fs_ret.ಸ್ಥಿತಿ_2;
     }
 
-    if (exposed || fs_ret.success) {
-        emptySlot(slot, fs_ret.cleanupInfo);
+    ಆದರೆ (exposed || fs_ret.success) {
+        ಖಾಲಿಗಳು_ಸ್ಥಾನ(ಸ್ಥಾನ, fs_ret.cleanupInfo);
     }
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-static void emptySlot(cte_t *slot, cap_t cleanupInfo)
+ಸ್ಥಿರ ಶೂನ್ಯ ಖಾಲಿಗಳು_ಸ್ಥಾನ(cte_t *ಸ್ಥಾನ, cap_t cleanupInfo)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        mdb_node_t mdbNode;
-        cte_t *prev, *next;
+    ಆದರೆ (cap_get_capType(ಸ್ಥಾನ->cap) != cap_null_cap) {
+        mdb_ಗಂಟು_t mdb_ಗಂಟು;
+        cte_t *prev, *ಮುಂದಿನ;
 
-        mdbNode = slot->cteMDBNode;
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdbNode));
-        next = CTE_PTR(mdb_node_get_mdbNext(mdbNode));
+        mdb_ಗಂಟು = ಸ್ಥಾನ->cteMDBNode;
+        prev = CTE_PTR(mdb_ಗಂಟು_get_mdb_Prev(mdb_ಗಂಟು));
+        ಮುಂದಿನ = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb_ಗಂಟು));
 
-        if (prev) {
-            mdb_node_ptr_set_mdbNext(&prev->cteMDBNode, CTE_REF(next));
+        ಆದರೆ (prev) {
+            mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(&prev->cteMDBNode, CTE_REF(ಮುಂದಿನ));
         }
-        if (next) {
-            mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(prev));
+        ಆದರೆ (ಮುಂದಿನ) {
+            mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(&ಮುಂದಿನ->cteMDBNode, CTE_REF(prev));
         }
-        if (next)
-            mdb_node_ptr_set_mdbFirstBadged(&next->cteMDBNode,
-                                            mdb_node_get_mdbFirstBadged(next->cteMDBNode) ||
-                                            mdb_node_get_mdbFirstBadged(mdbNode));
-        slot->cap = cap_null_cap_new();
-        slot->cteMDBNode = nullMDBNode;
+        ಆದರೆ (ಮುಂದಿನ)
+            mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮೊದಲ_Badged(&ಮುಂದಿನ->cteMDBNode,
+                                            mdb_ಗಂಟು_get_mdb_ಮೊದಲ_Badged(ಮುಂದಿನ->cteMDBNode) ||
+                                            mdb_ಗಂಟು_get_mdb_ಮೊದಲ_Badged(mdb_ಗಂಟು));
+        ಸ್ಥಾನ->cap = cap_null_cap_new();
+        ಸ್ಥಾನ->cteMDBNode = nullMDBNode;
 
         postCapDeletion(cleanupInfo);
     }
 }
 
-static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool_t CONST capRemovable(cap_t cap, cte_t *ಸ್ಥಾನ)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-        return true;
-    case cap_zombie_cap: {
-        word_t n = cap_zombie_cap_get_capZombieNumber(cap);
-        cte_t *z_slot = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
-        return (n == 0 || (n == 1 && slot == z_slot));
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_null_cap:
+        ಹಿಂತಿರುಗಿ true;
+    ಸ್ಥಿತಿ cap_zombie_cap: {
+        ಶಬ್ದ_t n = cap_zombie_cap_get_cap_Zombie_ಸಂಖ್ಯೆ(cap);
+        cte_t *z_ಸ್ಥಾನ = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
+        ಹಿಂತಿರುಗಿ (n == 0 || (n == 1 && ಸ್ಥಾನ == z_ಸ್ಥಾನ));
     }
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("finaliseCap should only return Zombie or NullCap");
     }
 }
 
-static inline bool_t CONST capCyclicZombie(cap_t cap, cte_t *slot)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool_t CONST capCyclicZombie(cap_t cap, cte_t *ಸ್ಥಾನ)
 {
-    return cap_get_capType(cap) == cap_zombie_cap &&
-           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == slot;
+    ಹಿಂತಿರುಗಿ cap_get_capType(cap) == cap_zombie_cap &&
+           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == ಸ್ಥಾನ;
 }
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t immediate)
+ಸ್ಥಿರ finalise_ಸ್ಥಾನ_ret_t finalise_ಸ್ಥಾನ(cte_t *ಸ್ಥಾನ, bool_t ತಕ್ಷಣ)
 {
     bool_t final;
     finaliseCap_ret_t fc_ret;
-    exception_t status;
-    finaliseSlot_ret_t ret;
+    exception_t ಸ್ಥಿತಿ_2;
+    finalise_ಸ್ಥಾನ_ret_t ret;
 
-    while (cap_get_capType(slot->cap) != cap_null_cap) {
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, false);
+    ಆಗ (cap_get_capType(ಸ್ಥಾನ->cap) != cap_null_cap) {
+        final = isFinalCapability(ಸ್ಥಾನ);
+        fc_ret = finaliseCap(ಸ್ಥಾನ->cap, final, false);
 
-        if (capRemovable(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        ಆದರೆ (capRemovable(fc_ret.remainder, ಸ್ಥಾನ)) {
+            ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
             ret.success = true;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            ಹಿಂತಿರುಗಿ ret;
         }
 
-        slot->cap = fc_ret.remainder;
+        ಸ್ಥಾನ->cap = fc_ret.remainder;
 
-        if (!immediate && capCyclicZombie(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        ಆದರೆ (!ತಕ್ಷಣ && capCyclicZombie(fc_ret.remainder, ಸ್ಥಾನ)) {
+            ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
             ret.success = false;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            ಹಿಂತಿರುಗಿ ret;
         }
 
-        status = reduceZombie(slot, immediate);
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        ಸ್ಥಿತಿ_2 = reduceZombie(ಸ್ಥಾನ, ತಕ್ಷಣ);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ret.ಸ್ಥಿತಿ_2 = ಸ್ಥಿತಿ_2;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            ಹಿಂತಿರುಗಿ ret;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        ಸ್ಥಿತಿ_2 = preemption_ಬಿಂದು();
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ret.ಸ್ಥಿತಿ_2 = ಸ್ಥಿತಿ_2;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            ಹಿಂತಿರುಗಿ ret;
         }
     }
-    ret.status = EXCEPTION_NONE;
+    ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
     ret.success = true;
     ret.cleanupInfo = cap_null_cap_new();
-    return ret;
+    ಹಿಂತಿರುಗಿ ret;
 }
 
-static exception_t reduceZombie(cte_t *slot, bool_t immediate)
+ಸ್ಥಿರ exception_t reduceZombie(cte_t *ಸ್ಥಾನ, bool_t ತಕ್ಷಣ)
 {
     cte_t *ptr;
-    word_t n, type;
-    exception_t status;
+    ಶಬ್ದ_t n, type;
+    exception_t ಸ್ಥಿತಿ_2;
 
-    assert(cap_get_capType(slot->cap) == cap_zombie_cap);
-    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
-    n = cap_zombie_cap_get_capZombieNumber(slot->cap);
-    type = cap_zombie_cap_get_capZombieType(slot->cap);
+    ಪ್ರತಿಜ್ಞಾ(cap_get_capType(ಸ್ಥಾನ->cap) == cap_zombie_cap);
+    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(ಸ್ಥಾನ->cap);
+    n = cap_zombie_cap_get_cap_Zombie_ಸಂಖ್ಯೆ(ಸ್ಥಾನ->cap);
+    type = cap_zombie_cap_get_capZombieType(ಸ್ಥಾನ->cap);
 
     /* Haskell error: "reduceZombie: expected unremovable zombie" */
-    assert(n > 0);
+    ಪ್ರತಿಜ್ಞಾ(n > 0);
 
-    if (immediate) {
-        cte_t *endSlot = &ptr[n - 1];
+    ಆದರೆ (ತಕ್ಷಣ) {
+        cte_t *ಕೊನೆ_ಸ್ಥಾನ = &ptr[n - 1];
 
-        status = cteDelete(endSlot, false);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ಸ್ಥಿತಿ_2 = cteDelete(ಕೊನೆ_ಸ್ಥಾನ, false);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        switch (cap_get_capType(slot->cap)) {
-        case cap_null_cap:
-            break;
+        ಆಯ್ಕೆ (cap_get_capType(ಸ್ಥಾನ->cap)) {
+        ಸ್ಥಿತಿ cap_null_cap:
+            ನಿಲ್ಲಿಸು;
 
-        case cap_zombie_cap: {
+        ಸ್ಥಿತಿ cap_zombie_cap: {
             cte_t *ptr2 =
-                (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
+                (cte_t *)cap_zombie_cap_get_capZombiePtr(ಸ್ಥಾನ->cap);
 
-            if (ptr == ptr2 &&
-                cap_zombie_cap_get_capZombieNumber(slot->cap) == n &&
-                cap_zombie_cap_get_capZombieType(slot->cap) == type) {
-                assert(cap_get_capType(endSlot->cap) == cap_null_cap);
-                slot->cap =
-                    cap_zombie_cap_set_capZombieNumber(slot->cap, n - 1);
-            } else {
+            ಆದರೆ (ptr == ptr2 &&
+                cap_zombie_cap_get_cap_Zombie_ಸಂಖ್ಯೆ(ಸ್ಥಾನ->cap) == n &&
+                cap_zombie_cap_get_capZombieType(ಸ್ಥಾನ->cap) == type) {
+                ಪ್ರತಿಜ್ಞಾ(cap_get_capType(ಕೊನೆ_ಸ್ಥಾನ->cap) == cap_null_cap);
+                ಸ್ಥಾನ->cap =
+                    cap_zombie_cap_ಗಣ_cap_Zombie_ಸಂಖ್ಯೆ(ಸ್ಥಾನ->cap, n - 1);
+            } ಇಲ್ಲದಿದ್ದರೆ {
                 /* Haskell error:
                  * "Expected new Zombie to be self-referential."
                  */
-                assert(ptr2 == slot && ptr != slot);
+                ಪ್ರತಿಜ್ಞಾ(ptr2 == ಸ್ಥಾನ && ptr != ಸ್ಥಾನ);
             }
-            break;
+            ನಿಲ್ಲಿಸು;
         }
 
-        default:
+        ಪೂರ್ವನಿಯೋಜಿತ:
             fail("Expected recursion to result in Zombie.");
         }
-    } else {
+    } ಇಲ್ಲದಿದ್ದರೆ {
         /* Haskell error: "Cyclic zombie passed to unexposed reduceZombie" */
-        assert(ptr != slot);
+        ಪ್ರತಿಜ್ಞಾ(ptr != ಸ್ಥಾನ);
 
-        if (cap_get_capType(ptr->cap) == cap_zombie_cap) {
+        ಆದರೆ (cap_get_capType(ptr->cap) == cap_zombie_cap) {
             /* Haskell error: "Moving self-referential Zombie aside." */
-            assert(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
+            ಪ್ರತಿಜ್ಞಾ(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
         }
 
-        capSwapForDelete(ptr, slot);
+        cap_ಅದಲುಬದಲು_For_Delete(ptr, ಸ್ಥಾನ);
     }
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-void cteDeleteOne(cte_t *slot)
+ಶೂನ್ಯ cteDeleteOne(cte_t *ಸ್ಥಾನ)
 {
-    word_t cap_type = cap_get_capType(slot->cap);
-    if (cap_type != cap_null_cap) {
+    ಶಬ್ದ_t cap_type = cap_get_capType(ಸ್ಥಾನ->cap);
+    ಆದರೆ (cap_type != cap_null_cap) {
         bool_t final;
-        finaliseCap_ret_t fc_ret UNUSED;
+        finaliseCap_ret_t fc_ret ಬಳಸದ;
 
         /** GHOSTUPD: "(gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = (-1)
             \<or> gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = \<acute>cap_type, id)" */
 
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, true);
+        final = isFinalCapability(ಸ್ಥಾನ);
+        fc_ret = finaliseCap(ಸ್ಥಾನ->cap, final, true);
         /* Haskell error: "cteDeleteOne: cap should be removable" */
-        assert(capRemovable(fc_ret.remainder, slot) &&
+        ಪ್ರತಿಜ್ಞಾ(capRemovable(fc_ret.remainder, ಸ್ಥಾನ) &&
                cap_get_capType(fc_ret.cleanupInfo) == cap_null_cap);
-        emptySlot(slot, cap_null_cap_new());
+        ಖಾಲಿಗಳು_ಸ್ಥಾನ(ಸ್ಥಾನ, cap_null_cap_new());
     }
 }
 
-void insertNewCap(cte_t *parent, cte_t *slot, cap_t cap)
+ಶೂನ್ಯ ಸೇರಿಸು_New_Cap(cte_t *ಪೋಷಕ, cte_t *ಸ್ಥಾನ, cap_t cap)
 {
-    cte_t *next;
+    cte_t *ಮುಂದಿನ;
 
-    next = CTE_PTR(mdb_node_get_mdbNext(parent->cteMDBNode));
-    slot->cap = cap;
-    slot->cteMDBNode = mdb_node_new(CTE_REF(next), true, true, CTE_REF(parent));
-    if (next) {
-        mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(slot));
+    ಮುಂದಿನ = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಪೋಷಕ->cteMDBNode));
+    ಸ್ಥಾನ->cap = cap;
+    ಸ್ಥಾನ->cteMDBNode = mdb_ಗಂಟು_new(CTE_REF(ಮುಂದಿನ), true, true, CTE_REF(ಪೋಷಕ));
+    ಆದರೆ (ಮುಂದಿನ) {
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Prev(&ಮುಂದಿನ->cteMDBNode, CTE_REF(ಸ್ಥಾನ));
     }
-    mdb_node_ptr_set_mdbNext(&parent->cteMDBNode, CTE_REF(slot));
+    mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮುಂದಿನ(&ಪೋಷಕ->cteMDBNode, CTE_REF(ಸ್ಥಾನ));
 }
 
-#ifndef CONFIG_KERNEL_MCS
-void setupReplyMaster(tcb_t *thread)
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
+ಶೂನ್ಯ ಸಿದ್ಧತೆ_ಉತ್ತರ_Master(tcb_t *thread)
 {
-    cte_t *slot;
+    cte_t *ಸ್ಥಾನ;
 
-    slot = TCB_PTR_CTE_PTR(thread, tcbReply);
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
+    ಸ್ಥಾನ = TCB_PTR_CTE_PTR(thread, tcb_ಉತ್ತರ);
+    ಆದರೆ (cap_get_capType(ಸ್ಥಾನ->cap) == cap_null_cap) {
         /* Haskell asserts that no reply caps exist for this thread here. This
          * cannot be translated. */
-        slot->cap = cap_reply_cap_new(true, true, TCB_REF(thread));
-        slot->cteMDBNode = nullMDBNode;
-        mdb_node_ptr_set_mdbRevocable(&slot->cteMDBNode, true);
-        mdb_node_ptr_set_mdbFirstBadged(&slot->cteMDBNode, true);
+        ಸ್ಥಾನ->cap = cap_ಉತ್ತರ_cap_new(true, true, TCB_REF(thread));
+        ಸ್ಥಾನ->cteMDBNode = nullMDBNode;
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_Revocable(&ಸ್ಥಾನ->cteMDBNode, true);
+        mdb_ಗಂಟು_ptr_ಗಣ_mdb_ಮೊದಲ_Badged(&ಸ್ಥಾನ->cteMDBNode, true);
     }
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
+bool_t ಶುದ್ಧ is_MDBParent_ದ(cte_t *cte_a, cte_t *cte_b)
 {
-    if (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
-        return false;
+    ಆದರೆ (!mdb_ಗಂಟು_get_mdb_Revocable(cte_a->cteMDBNode)) {
+        ಹಿಂತಿರುಗಿ false;
     }
-    if (!sameRegionAs(cte_a->cap, cte_b->cap)) {
-        return false;
+    ಆದರೆ (!sameRegionAs(cte_a->cap, cte_b->cap)) {
+        ಹಿಂತಿರುಗಿ false;
     }
     /* We want to take care of arch caps first, because that is easier in the proofs.
        We expect Arch_isMDBParentOf to return true if both caps are not architecture
        specific. */
-    if (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
-                            mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode))) {
-        return false;
+    ಆದರೆ (!Arch_is_MDBParent_ದ(cte_a->cap, cte_b->cap,
+                            mdb_ಗಂಟು_get_mdb_ಮೊದಲ_Badged(cte_b->cteMDBNode))) {
+        ಹಿಂತಿರುಗಿ false;
     }
-    switch (cap_get_capType(cte_a->cap)) {
-    case cap_endpoint_cap: {
-        word_t badge;
+    ಆಯ್ಕೆ (cap_get_capType(cte_a->cap)) {
+    ಸ್ಥಿತಿ cap_endpoint_cap: {
+        ಶಬ್ದ_t badge;
 
         badge = cap_endpoint_cap_get_capEPBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        ಆದರೆ (badge == 0) {
+            ಹಿಂತಿರುಗಿ true;
         }
-        return (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        ಹಿಂತಿರುಗಿ (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
+               !mdb_ಗಂಟು_get_mdb_ಮೊದಲ_Badged(cte_b->cteMDBNode);
+        ನಿಲ್ಲಿಸು;
     }
 
-    case cap_notification_cap: {
-        word_t badge;
+    ಸ್ಥಿತಿ cap_notification_cap: {
+        ಶಬ್ದ_t badge;
 
         badge = cap_notification_cap_get_capNtfnBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        ಆದರೆ (badge == 0) {
+            ಹಿಂತಿರುಗಿ true;
         }
-        return (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        ಹಿಂತಿರುಗಿ (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
+               !mdb_ಗಂಟು_get_mdb_ಮೊದಲ_Badged(cte_b->cteMDBNode);
+        ನಿಲ್ಲಿಸು;
     }
 
-    default:
-        return true;
-        break;
+    ಪೂರ್ವನಿಯೋಜಿತ:
+        ಹಿಂತಿರುಗಿ true;
+        ನಿಲ್ಲಿಸು;
     }
 }
 
-exception_t ensureNoChildren(cte_t *slot)
+exception_t ensureNoChildren(cte_t *ಸ್ಥಾನ)
 {
-    if (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
-        cte_t *next;
+    ಆದರೆ (mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಸ್ಥಾನ->cteMDBNode) != 0) {
+        cte_t *ಮುಂದಿನ;
 
-        next = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (isMDBParentOf(slot, next)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+        ಮುಂದಿನ = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(ಸ್ಥಾನ->cteMDBNode));
+        ಆದರೆ (is_MDBParent_ದ(ಸ್ಥಾನ, ಮುಂದಿನ)) {
+            current_syscall_error.type = se_L4_Revoke_ಮೊದಲ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t ensureEmptySlot(cte_t *slot)
+exception_t ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(cte_t *ಸ್ಥಾನ)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (cap_get_capType(ಸ್ಥಾನ->cap) != cap_null_cap) {
+        current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-bool_t PURE isFinalCapability(cte_t *cte)
+bool_t ಶುದ್ಧ isFinalCapability(cte_t *cte)
 {
-    mdb_node_t mdb;
+    mdb_ಗಂಟು_t mdb;
     bool_t prevIsSameObject;
 
     mdb = cte->cteMDBNode;
 
-    if (mdb_node_get_mdbPrev(mdb) == 0) {
+    ಆದರೆ (mdb_ಗಂಟು_get_mdb_Prev(mdb) == 0) {
         prevIsSameObject = false;
-    } else {
+    } ಇಲ್ಲದಿದ್ದರೆ {
         cte_t *prev;
 
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdb));
+        prev = CTE_PTR(mdb_ಗಂಟು_get_mdb_Prev(mdb));
         prevIsSameObject = sameObjectAs(prev->cap, cte->cap);
     }
 
-    if (prevIsSameObject) {
-        return false;
-    } else {
-        if (mdb_node_get_mdbNext(mdb) == 0) {
-            return true;
-        } else {
-            cte_t *next;
+    ಆದರೆ (prevIsSameObject) {
+        ಹಿಂತಿರುಗಿ false;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಆದರೆ (mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb) == 0) {
+            ಹಿಂತಿರುಗಿ true;
+        } ಇಲ್ಲದಿದ್ದರೆ {
+            cte_t *ಮುಂದಿನ;
 
-            next = CTE_PTR(mdb_node_get_mdbNext(mdb));
-            return !sameObjectAs(cte->cap, next->cap);
+            ಮುಂದಿನ = CTE_PTR(mdb_ಗಂಟು_get_mdb_ಮುಂದಿನ(mdb));
+            ಹಿಂತಿರುಗಿ !sameObjectAs(cte->cap, ಮುಂದಿನ->cap);
         }
     }
 }
 
-bool_t PURE slotCapLongRunningDelete(cte_t *slot)
+bool_t ಶುದ್ಧ ಸ್ಥಾನ_Cap_Long_Running_Delete(cte_t *ಸ್ಥಾನ)
 {
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
-        return false;
-    } else if (! isFinalCapability(slot)) {
-        return false;
+    ಆದರೆ (cap_get_capType(ಸ್ಥಾನ->cap) == cap_null_cap) {
+        ಹಿಂತಿರುಗಿ false;
+    } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (! isFinalCapability(ಸ್ಥಾನ)) {
+        ಹಿಂತಿರುಗಿ false;
     }
-    switch (cap_get_capType(slot->cap)) {
-    case cap_thread_cap:
-    case cap_zombie_cap:
-    case cap_cnode_cap:
-        return true;
-    default:
-        return false;
+    ಆಯ್ಕೆ (cap_get_capType(ಸ್ಥಾನ->cap)) {
+    ಸ್ಥಿತಿ cap_thread_cap:
+    ಸ್ಥಿತಿ cap_zombie_cap:
+    ಸ್ಥಿತಿ cap_cnode_cap:
+        ಹಿಂತಿರುಗಿ true;
+    ಪೂರ್ವನಿಯೋಜಿತ:
+        ಹಿಂತಿರುಗಿ false;
     }
 }
 
 /* This implementation is specialised to the (current) limit
  * of one cap receive slot. */
-cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
+cte_t *getReceiveSlots(tcb_t *thread, ಶಬ್ದ_t *ಬಫರ್)
 {
     cap_transfer_t ct;
     cptr_t cptr;
     lookupCap_ret_t luc_ret;
-    lookupSlot_ret_t lus_ret;
-    cte_t *slot;
+    lookup_ಸ್ಥಾನ_ret_t lus_ret;
+    cte_t *ಸ್ಥಾನ;
     cap_t cnode;
 
-    if (!buffer) {
-        return NULL;
+    ಆದರೆ (!ಬಫರ್) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
 
-    ct = loadCapTransfer(buffer);
-    cptr = ct.ctReceiveRoot;
+    ct = ತುಂಬು_Cap_Transfer(ಬಫರ್);
+    cptr = ct.ct_Receive_ಬೇರು;
 
     luc_ret = lookupCap(thread, cptr);
-    if (luc_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    ಆದರೆ (luc_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
     cnode = luc_ret.cap;
 
-    lus_ret = lookupTargetSlot(cnode, ct.ctReceiveIndex, ct.ctReceiveDepth);
-    if (lus_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    lus_ret = lookup_ಗುರಿ_ಸ್ಥಾನ(cnode, ct.ct_Receive_ಸೂಚ್ಯಂಕ, ct.ct_Receive_ಆಳ);
+    ಆದರೆ (lus_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
-    slot = lus_ret.slot;
+    ಸ್ಥಾನ = lus_ret.ಸ್ಥಾನ;
 
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        return NULL;
+    ಆದರೆ (cap_get_capType(ಸ್ಥಾನ->cap) != cap_null_cap) {
+        ಹಿಂತಿರುಗಿ ಖಾಲಿ;
     }
 
-    return slot;
+    ಹಿಂತಿರುಗಿ ಸ್ಥಾನ;
 }
 
-cap_transfer_t PURE loadCapTransfer(word_t *buffer)
+cap_transfer_t ಶುದ್ಧ ತುಂಬು_Cap_Transfer(ಶಬ್ದ_t *ಬಫರ್)
 {
-    const int offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
-    return capTransferFromWords(buffer + offset);
+    ಸ್ಥಿರಾಂಕ ಪೂರ್ಣಾಂಕ ಸ್ಥಾನಾಂತರ = se_L4_ಸಂದೇಶ_Max_ಉದ್ದಳತೆ + se_L4_ಸಂದೇಶ_Max_Extra_Caps + 2;
+    ಹಿಂತಿರುಗಿ cap_Transfer_From_ಪದಗಳು(ಬಫರ್ + ಸ್ಥಾನಾಂತರ);
 }

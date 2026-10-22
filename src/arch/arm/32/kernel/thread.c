@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <object.h>
+#ಅನ್ತರ್ಭಾವ <machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+ಶೂನ್ಯ Arch_switch_ಗಮ್ಯ_Thread(tcb_t *tcb)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         vcpu_switch(tcb->tcbArch.tcbVCPU);
     }
 
-    setVMRoot(tcb);
+    ಗಣ_VMRoot(tcb);
     clearExMonitor();
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, CPSR, CPSR_IDLETHREAD);
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(tcb, CPSR, CPSR_IDLETHREAD);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(tcb, ಮುಂದಿನ_IP, (ಶಬ್ದ_t)&idle_thread);
 }
 
-void Arch_switchToIdleThread(void)
+ಶೂನ್ಯ Arch_switch_ಗಮ್ಯ_Idle_Thread(ಶೂನ್ಯ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
+    ಆದರೆ (config_ಗಣ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        vcpu_switch(ಖಾಲಿ);
     }
 
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    ಗಣ_VMRoot(ಗಂಟು_STATE(ksIdleThread));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+ಶೂನ್ಯ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }

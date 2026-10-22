@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/boot.h>
-#include <model/statedata.h>
-#include <arch/object/interrupt.h>
-#include <arch/api/invocation.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <plat/machine/pci.h>
+#ಅನ್ತರ್ಭಾವ <kernel/boot.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/interrupt.h>
+#ಅನ್ತರ್ಭಾವ <arch/api/invocation.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/pci.h>
 
-void Arch_irqStateInit(void)
+ಶೂನ್ಯ Arch_irqStateInit(ಶೂನ್ಯ)
 {
-    int i = 0;
-    for (i = 0; i <= maxIRQ; i++) {
-        if (i == irq_timer
-#ifdef CONFIG_IOMMU
+    ಪೂರ್ಣಾಂಕ i = 0;
+    ಗಾಗಿ (i = 0; i <= maxIRQ; i++) {
+        ಆದರೆ (i == irq_timer
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_IOMMU
             || i == irq_iommu
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
            ) {
             x86KSIRQState[i] = x86_irq_state_irq_reserved_new();
-        } else {
+        } ಇಲ್ಲದಿದ್ದರೆ {
             x86KSIRQState[i] = x86_irq_state_irq_free_new();
         }
     }
@@ -34,154 +34,154 @@ void Arch_irqStateInit(void)
  * the IRQs >= 16. Additionally these IRQs only exist
  * if using the legacy PIC interrupt
  */
-exception_t Arch_checkIRQ(word_t irq_w)
+exception_t Arch_checkIRQ(ಶಬ್ದ_t irq_w)
 {
-    if (config_set(CONFIG_IRQ_PIC) && irq_w >= irq_isa_min && irq_w <= irq_isa_max) {
-        return EXCEPTION_NONE;
+    ಆದರೆ (config_ಗಣ(CONFIG_IRQ_PIC) && irq_w >= irq_isa_min && irq_w <= irq_isa_max) {
+        ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
     }
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
+    ಆದರೆ (config_ಗಣ(CONFIG_IRQ_IOAPIC)) {
         userError("IRQControl: Illegal operation");
         current_syscall_error.type = seL4_IllegalOperation;
-    } else {
-        userError("IRQControl: IRQ %ld should be in range %ld - %ld", irq_w, (long)irq_isa_min, (long)irq_isa_max);
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        userError("IRQControl: IRQ %ld should be in range %ld - %ld", irq_w, (ದೀರ್ಘ)irq_isa_min, (ದೀರ್ಘ)irq_isa_max);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = irq_isa_min;
         current_syscall_error.rangeErrorMax = irq_isa_max;
     }
-    return EXCEPTION_SYSCALL_ERROR;
+    ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
 }
 
-static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, x86_irq_state_t irqState)
+ಸ್ಥಿರ exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handler_ಸ್ಥಾನ, cte_t *control_ಸ್ಥಾನ, x86_irq_state_t irqState)
 {
     updateIRQState(irq, irqState);
-    return invokeIRQControl(irq, handlerSlot, controlSlot);
+    ಹಿಂತಿರುಗಿ invokeIRQControl(irq, handler_ಸ್ಥಾನ, control_ಸ್ಥಾನ);
 }
 
-static exception_t invokeIssueIRQHandlerIOAPIC(irq_t irq, word_t ioapic, word_t pin, word_t level, word_t polarity,
-                                               word_t vector,
-                                               cte_t *handlerSlot, cte_t *controlSlot)
+ಸ್ಥಿರ exception_t invokeIssueIRQHandlerIOAPIC(irq_t irq, ಶಬ್ದ_t ioapic, ಶಬ್ದ_t pin, ಶಬ್ದ_t level, ಶಬ್ದ_t polarity,
+                                               ಶಬ್ದ_t ಸದಿಶ,
+                                               cte_t *handler_ಸ್ಥಾನ, cte_t *control_ಸ್ಥಾನ)
 {
     x86_irq_state_t irqState = x86_irq_state_irq_ioapic_new(ioapic, pin, level, polarity, 1);
-    ioapic_map_pin_to_vector(ioapic, pin, level, polarity, vector);
-    return Arch_invokeIRQControl(irq, handlerSlot, controlSlot, irqState);
+    ioapic_map_pin_ಗಮ್ಯ_ಸದಿಶ(ioapic, pin, level, polarity, ಸದಿಶ);
+    ಹಿಂತಿರುಗಿ Arch_invokeIRQControl(irq, handler_ಸ್ಥಾನ, control_ಸ್ಥಾನ, irqState);
 }
 
-exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length, cte_t *srcSlot, word_t *buffer)
+exception_t Arch_decodeIRQControlInvocation(ಶಬ್ದ_t invLabel, ಶಬ್ದ_t ಉದ್ದಳತೆ, cte_t *src_ಸ್ಥಾನ, ಶಬ್ದ_t *ಬಫರ್)
 {
-    word_t index, depth;
-    cte_t *destSlot;
+    ಶಬ್ದ_t ಸೂಚ್ಯಂಕ, ಆಳ;
+    cte_t *dest_ಸ್ಥಾನ;
     cap_t cnodeCap;
-    lookupSlot_ret_t lu_ret;
-    exception_t status;
+    lookup_ಸ್ಥಾನ_ret_t lu_ret;
+    exception_t ಸ್ಥಿತಿ_2;
     irq_t irq;
-    word_t vector;
+    ಶಬ್ದ_t ಸದಿಶ;
 
-    if (!config_set(CONFIG_IRQ_IOAPIC)) {
+    ಆದರೆ (!config_ಗಣ(CONFIG_IRQ_IOAPIC)) {
         userError("IRQControl: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     /* ensure we have a valid invocation before continuing any decoding */
-    if (invLabel != X86IRQIssueIRQHandlerIOAPIC && invLabel != X86IRQIssueIRQHandlerMSI) {
+    ಆದರೆ (invLabel != X86IRQIssueIRQHandlerIOAPIC && invLabel != X86IRQIssueIRQHandlerMSI) {
         userError("IRQControl: Illegal operation");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     /* check the common parameters */
 
-    if (length < 7 || current_extra_caps.excaprefs[0] == NULL) {
+    ಆದರೆ (ಉದ್ದಳತೆ < 7 || current_extra_caps.excaprefs[0] == ಖಾಲಿ) {
         userError("IRQControl: Truncated message");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
-    depth = getSyscallArg(1, buffer);
+    ಸೂಚ್ಯಂಕ = getSyscallArg(0, ಬಫರ್);
+    ಆಳ = getSyscallArg(1, ಬಫರ್);
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
-    irq = getSyscallArg(6, buffer);
-    if (irq > irq_user_max - irq_user_min) {
-        userError("IRQControl: Invalid irq %ld should be between 0-%ld", (long)irq, (long)(irq_user_max - irq_user_min));
+    irq = getSyscallArg(6, ಬಫರ್);
+    ಆದರೆ (irq > irq_user_max - irq_user_min) {
+        userError("IRQControl: Invalid irq %ld should be between 0-%ld", (ದೀರ್ಘ)irq, (ದೀರ್ಘ)(irq_user_max - irq_user_min));
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
         current_syscall_error.rangeErrorMax = irq_user_max - irq_user_min;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
     irq += irq_user_min;
 
-    if (isIRQActive(irq)) {
-        userError("IRQControl: IRQ %d is already active.", (int)irq);
-        current_syscall_error.type = seL4_RevokeFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    ಆದರೆ (isIRQActive(irq)) {
+        userError("IRQControl: IRQ %d is already active.", (ಪೂರ್ಣಾಂಕ)irq);
+        current_syscall_error.type = se_L4_Revoke_ಮೊದಲ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    vector = (word_t)irq + IRQ_INT_OFFSET;
+    ಸದಿಶ = (ಶಬ್ದ_t)irq + IRQ_INT_ಸ್ಥಾನಾಂತರ;
 
-    lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return lu_ret.status;
+    lu_ret = lookup_ಗುರಿ_ಸ್ಥಾನ(cnodeCap, ಸೂಚ್ಯಂಕ, ಆಳ);
+    ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ lu_ret.ಸ್ಥಿತಿ_2;
     }
 
-    destSlot = lu_ret.slot;
+    dest_ಸ್ಥಾನ = lu_ret.ಸ್ಥಾನ;
 
-    status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
-        return status;
+    ಸ್ಥಿತಿ_2 = ensure_ಖಾಲಿಗಳು_ಸ್ಥಾನ(dest_ಸ್ಥಾನ);
+    ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
     }
 
-    switch (invLabel) {
-    case X86IRQIssueIRQHandlerIOAPIC: {
-        word_t ioapic = getSyscallArg(2, buffer);
-        word_t pin = getSyscallArg(3, buffer);
-        word_t level = getSyscallArg(4, buffer);
-        word_t polarity = getSyscallArg(5, buffer);
+    ಆಯ್ಕೆ (invLabel) {
+    ಸ್ಥಿತಿ X86IRQIssueIRQHandlerIOAPIC: {
+        ಶಬ್ದ_t ioapic = getSyscallArg(2, ಬಫರ್);
+        ಶಬ್ದ_t pin = getSyscallArg(3, ಬಫರ್);
+        ಶಬ್ದ_t level = getSyscallArg(4, ಬಫರ್);
+        ಶಬ್ದ_t polarity = getSyscallArg(5, ಬಫರ್);
 
-        status = ioapic_decode_map_pin_to_vector(ioapic, pin, level, polarity, vector);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        ಸ್ಥಿತಿ_2 = ioapic_decode_map_pin_ಗಮ್ಯ_ಸದಿಶ(ioapic, pin, level, polarity, ಸದಿಶ);
+        ಆದರೆ (ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeIssueIRQHandlerIOAPIC(irq, ioapic, pin, level, polarity, vector, destSlot, srcSlot);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ invokeIssueIRQHandlerIOAPIC(irq, ioapic, pin, level, polarity, ಸದಿಶ, dest_ಸ್ಥಾನ, src_ಸ್ಥಾನ);
     }
-    break;
-    case X86IRQIssueIRQHandlerMSI: {
-        word_t pci_bus = getSyscallArg(2, buffer);
-        word_t pci_dev = getSyscallArg(3, buffer);
-        word_t pci_func = getSyscallArg(4, buffer);
-        word_t handle = getSyscallArg(5, buffer);
+    ನಿಲ್ಲಿಸು;
+    ಸ್ಥಿತಿ X86IRQIssueIRQHandlerMSI: {
+        ಶಬ್ದ_t pci_bus = getSyscallArg(2, ಬಫರ್);
+        ಶಬ್ದ_t pci_dev = getSyscallArg(3, ಬಫರ್);
+        ಶಬ್ದ_t pci_func = getSyscallArg(4, ಬಫರ್);
+        ಶಬ್ದ_t handle = getSyscallArg(5, ಬಫರ್);
         x86_irq_state_t irqState;
         /* until we support msi interrupt remapping through vt-d we ignore the
          * vector and trust the user */
 
-        if (pci_bus > PCI_BUS_MAX) {
+        ಆದರೆ (pci_bus > PCI_BUS_MAX) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
             current_syscall_error.rangeErrorMax = PCI_BUS_MAX;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (pci_dev > PCI_DEV_MAX) {
+        ಆದರೆ (pci_dev > PCI_DEV_MAX) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
             current_syscall_error.rangeErrorMax = PCI_DEV_MAX;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (pci_func > PCI_FUNC_MAX) {
+        ಆದರೆ (pci_func > PCI_FUNC_MAX) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
             current_syscall_error.rangeErrorMax = PCI_FUNC_MAX;
-            return EXCEPTION_SYSCALL_ERROR;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
         irqState = x86_irq_state_irq_msi_new(pci_bus, pci_dev, pci_func, handle);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, irqState);
+        ಗಣ_Thread_State(ಗಂಟು_STATE(ksCurThread), ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ Arch_invokeIRQControl(irq, dest_ಸ್ಥಾನ, src_ಸ್ಥಾನ, irqState);
     }
-    break;
-    default:
+    ನಿಲ್ಲಿಸು;
+    ಪೂರ್ವನಿಯೋಜಿತ:
         /* the check at the start of this function should guarantee we do not get here */
         fail("IRQControl: Illegal operation");
     }

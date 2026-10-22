@@ -4,210 +4,210 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <kernel/vspace.h>
-#include <object/structures.h>
-#include <arch/machine.h>
-#include <arch/model/statedata.h>
-#include <arch/machine/fpu.h>
-#include <arch/object/objecttype.h>
-#include <arch/object/ioport.h>
-#include <arch/kernel/ept.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <api/failures.h>
+#ಅನ್ತರ್ಭಾವ <kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/objecttype.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/ioport.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/ept.h>
 
-#include <arch/object/iospace.h>
-#include <plat/machine/intel-vtd.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/iospace.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/intel-vtd.h>
 
 
-bool_t Arch_isFrameType(word_t type)
+bool_t Arch_is_ಚೌಕಟ್ಟು_Type(ಶಬ್ದ_t type)
 {
-    switch (type) {
-    case seL4_X86_4K:
-        return true;
-    case seL4_X86_LargePageObject:
-        return true;
-    default:
-        return false;
+    ಆಯ್ಕೆ (type) {
+    ಸ್ಥಿತಿ seL4_X86_4K:
+        ಹಿಂತಿರುಗಿ true;
+    ಸ್ಥಿತಿ se_L4_X86_Large_ಪುಟ_Object:
+        ಹಿಂತಿರುಗಿ true;
+    ಪೂರ್ವನಿಯೋಜಿತ:
+        ಹಿಂತಿರುಗಿ false;
     }
 }
 
-deriveCap_ret_t Mode_deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t ಬಹುಲಕ_derive_Cap(cte_t *ಸ್ಥಾನ, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-        cap = cap_frame_cap_set_capFMapType(cap, X86_MappingNone);
-        ret.cap = cap_frame_cap_set_capFMappedASID(cap, asidInvalid);
-        ret.status = EXCEPTION_NONE;
-        return ret;
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap:
+        cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMap_Type(cap, X86_MappingNone);
+        ret.cap = cap_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ASID(cap, asidInvalid);
+        ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
+        ಹಿಂತಿರುಗಿ ret;
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         /* This assert has no equivalent in haskell,
          * as the options are restricted by type */
         fail("Invalid arch cap type");
     }
 }
 
-finaliseCap_ret_t Mode_finaliseCap(cap_t cap, bool_t final)
+finaliseCap_ret_t ಬಹುಲಕ_finalise_Cap(cap_t cap, bool_t final)
 {
     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            switch (cap_frame_cap_get_capFMapType(cap)) {
-#ifdef CONFIG_VTX
-            case X86_MappingEPT:
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap:
+        ಆದರೆ (cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap)) {
+            ಆಯ್ಕೆ (cap_ಚೌಕಟ್ಟು_cap_get_cap_FMap_Type(cap)) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_VTX
+            ಸ್ಥಿತಿ X86_MappingEPT:
                 unmapEPTPage(
-                    cap_frame_cap_get_capFSize(cap),
-                    cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap),
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap),
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap),
+                    (ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap)
                 );
-                break;
-#endif
-            case X86_MappingVSpace:
+                ನಿಲ್ಲಿಸು;
+#ಆದರೆ_ಅಂತ್ಯ
+            ಸ್ಥಿತಿ X86_MappingVSpace:
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_LOG_ಬಫರ್
                 /* If the last cap to the user-level log buffer frame is being revoked,
                  * reset the ksLog so that the kernel doesn't log anymore
                  */
-                if (unlikely(cap_frame_cap_get_capFSize(cap) == X86_LargePage)) {
-                    if (pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap)) == ksUserLogBuffer) {
-                        ksUserLogBuffer = 0;
+                ಆದರೆ (unlikely(cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap) == X86_Large_ಪುಟ)) {
+                    ಆದರೆ (pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap)) == ks_User_Log_ಬಫರ್) {
+                        ks_User_Log_ಬಫರ್ = 0;
 
                         /* Invalidate log page table entries */
-                        clearMemory(ia32KSGlobalLogPT, seL4_PageTableBits);
+                        clear_ಸ್ಮರಣೆ(ia32KSGlobalLogPT, se_L4_ಪುಟ_ಕೋಷ್ಟಕ_ಬಿಟ್ಟುಗಳು);
 
-                        for (int idx = 0; idx < BIT(PT_INDEX_BITS); idx++) {
-                            invalidateTLBEntry(KS_LOG_PPTR + (idx << seL4_PageBits), MASK(ksNumCPUs));
+                        ಗಾಗಿ (ಪೂರ್ಣಾಂಕ idx = 0; idx < ಬಿಟ್(PT_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು); idx++) {
+                            invalidateTLBEntry(KS_LOG_PPTR + (idx << se_L4_ಪುಟ_ಬಿಟ್ಟುಗಳು), ಮುಖವಾಡ(ks_ಅಂಕೆ_CPUs));
                         }
 
                         userError("Log buffer frame is invalidated, kernel can't benchmark anymore\n");
                     }
                 }
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_KERNEL_LOG_BUFFER */
 
-                unmapPage(
-                    cap_frame_cap_get_capFSize(cap),
-                    cap_frame_cap_get_capFMappedASID(cap),
-                    cap_frame_cap_get_capFMappedAddress(cap),
-                    (void *)cap_frame_cap_get_capFBasePtr(cap)
+                unmap_ಪುಟ(
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap),
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap),
+                    cap_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap),
+                    (ಶೂನ್ಯ *)cap_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap)
                 );
-                break;
-#ifdef CONFIG_IOMMU
-            case X86_MappingIOSpace:
+                ನಿಲ್ಲಿಸು;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_IOMMU
+            ಸ್ಥಿತಿ X86_MappingIOSpace:
                 unmapIOPage(cap);
-                break;
-#endif
-            default:
+                ನಿಲ್ಲಿಸು;
+#ಆದರೆ_ಅಂತ್ಯ
+            ಪೂರ್ವನಿಯೋಜಿತ:
                 fail("No mapping type for mapped cap");
-                break;
+                ನಿಲ್ಲಿಸು;
             }
         }
-        break;
+        ನಿಲ್ಲಿಸು;
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Invalid arch cap type");
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    ಹಿಂತಿರುಗಿ fc_ret;
 }
 
-bool_t CONST Mode_sameRegionAs(cap_t cap_a, cap_t cap_b)
+bool_t CONST ಬಹುಲಕ_same_Region_As(cap_t cap_a, cap_t cap_b)
 {
-    return false;
+    ಹಿಂತಿರುಗಿ false;
 }
 
-word_t Mode_getObjectSize(word_t t)
+ಶಬ್ದ_t ಬಹುಲಕ_get_Object_ಗಾತ್ರ(ಶಬ್ದ_t t)
 {
     fail("Invalid object type");
-    return 0;
+    ಹಿಂತಿರುಗಿ 0;
 }
 
-cap_t Mode_createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t ಬಹುಲಕ_create_Object(object_t t, ಶೂನ್ಯ *region_ತಳ, ಶಬ್ದ_t user_ಗಾತ್ರ, bool_t device_ಸ್ಮರಣೆ)
 {
-    switch (t) {
-    case seL4_X86_4K:
-        return cap_frame_cap_new(
-                   X86_SmallPage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+    ಆಯ್ಕೆ (t) {
+    ಸ್ಥಿತಿ seL4_X86_4K:
+        ಹಿಂತಿರುಗಿ cap_ಚೌಕಟ್ಟು_cap_new(
+                   X86_Small_ಪುಟ,          /* capFSize             */
+                   ASID_ಕೆಳಗಿನ(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
-                   deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   device_ಸ್ಮರಣೆ,           /* capFIsDevice         */
+                   ASID_ಮೇಲಿನ(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
-                   (word_t)regionBase      /* capFBasePtr          */
+                   (ಶಬ್ದ_t)region_ತಳ      /* capFBasePtr          */
                );
 
-    case seL4_X86_LargePageObject:
-        return cap_frame_cap_new(
-                   X86_LargePage,          /* capFSize             */
-                   ASID_LOW(asidInvalid),  /* capFMappedASIDLow    */
+    ಸ್ಥಿತಿ se_L4_X86_Large_ಪುಟ_Object:
+        ಹಿಂತಿರುಗಿ cap_ಚೌಕಟ್ಟು_cap_new(
+                   X86_Large_ಪುಟ,          /* capFSize             */
+                   ASID_ಕೆಳಗಿನ(asidInvalid),  /* capFMappedASIDLow    */
                    false,                  /* capFMappedAddress    */
                    X86_MappingNone,        /* capFMapType          */
-                   deviceMemory,           /* capFIsDevice         */
-                   ASID_HIGH(asidInvalid), /* capFMappedASIDHigh   */
+                   device_ಸ್ಮರಣೆ,           /* capFIsDevice         */
+                   ASID_ಮೇಲಿನ(asidInvalid), /* capFMappedASIDHigh   */
                    VMReadWrite,            /* capFVMRights         */
-                   (word_t)regionBase      /* capFBasePtr          */
+                   (ಶಬ್ದ_t)region_ತಳ      /* capFBasePtr          */
                );
 
-    case seL4_X86_PageTableObject:
-        return cap_page_table_cap_new(
+    ಸ್ಥಿತಿ se_L4_X86_ಪುಟ_ಕೋಷ್ಟಕ_Object:
+        ಹಿಂತಿರುಗಿ cap_ಪುಟ_ಕೋಷ್ಟಕ_cap_new(
                    0,                  /* capPTIsMapped        */
                    asidInvalid,        /* capPTMappedASID      */
                    0,                  /* capPTMappedAddress   */
-                   (word_t)regionBase  /* capPTBasePtr         */
+                   (ಶಬ್ದ_t)region_ತಳ  /* capPTBasePtr         */
                );
 
-    case seL4_X86_PageDirectoryObject:
-        copyGlobalMappings(regionBase);
-        return cap_page_directory_cap_new(
+    ಸ್ಥಿತಿ se_L4_X86_ಪುಟ_Directory_Object:
+        copyGlobalMappings(region_ತಳ);
+        ಹಿಂತಿರುಗಿ cap_ಪುಟ_directory_cap_new(
                    0,                  /* capPDIsMapped      */
                    asidInvalid,        /* capPDMappedASID    */
                    0,                  /* capPDMappedAddress */
-                   (word_t)regionBase  /* capPDBasePtr       */
+                   (ಶಬ್ದ_t)region_ತಳ  /* capPDBasePtr       */
                );
 
-#ifdef CONFIG_IOMMU
-    case seL4_X86_IOPageTableObject:
-        return cap_io_page_table_cap_new(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_IOMMU
+    ಸ್ಥಿತಿ se_L4_X86_IOPage_ಕೋಷ್ಟಕ_Object:
+        ಹಿಂತಿರುಗಿ cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_new(
                    0,  /* capIOPTIsMapped      */
                    0,  /* capIOPTLevel         */
                    0,  /* capIOPTMappedAddress */
                    0,  /* capIOPTIOASID        */
-                   (word_t)regionBase  /* capIOPTBasePtr */
+                   (ಶಬ್ದ_t)region_ತಳ  /* capIOPTBasePtr */
                );
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-    default:
+    ಪೂರ್ವನಿಯೋಜಿತ:
         fail("Mode_createObject got an API type or invalid object type");
     }
 }
 
-exception_t Mode_decodeInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t ಬಹುಲಕ_decode_Invocation(
+    ಶಬ್ದ_t invLabel,
+    ಶಬ್ದ_t ಉದ್ದಳತೆ,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *ಸ್ಥಾನ,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    ಶಬ್ದ_t *ಬಫರ್
 )
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_directory_cap:
-    case cap_page_table_cap:
-    case cap_frame_cap:
-        return decodeX86MMUInvocation(invLabel, length, cptr, slot, cap, call, buffer);
-    default:
+    ಆಯ್ಕೆ (cap_get_capType(cap)) {
+    ಸ್ಥಿತಿ cap_ಪುಟ_directory_cap:
+    ಸ್ಥಿತಿ cap_ಪುಟ_ಕೋಷ್ಟಕ_cap:
+    ಸ್ಥಿತಿ cap_ಚೌಕಟ್ಟು_cap:
+        ಹಿಂತಿರುಗಿ decodeX86MMUInvocation(invLabel, ಉದ್ದಳತೆ, cptr, ಸ್ಥಾನ, cap, call, ಬಫರ್);
+    ಪೂರ್ವನಿಯೋಜಿತ:
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 }

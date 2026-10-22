@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <model/statedata.h>
-#include <arch/machine/fpu.h>
-#include <arch/machine/cpu_registers.h>
-#include <arch/object/structures.h>
-#include <arch/machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/cpu_registers.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/structures.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/fpu.h>
 
 /*
  * Setup the FPU register state for a new thread.
  */
-void Arch_initFpuContext(user_context_t *context)
+ಶೂನ್ಯ Arch_initFpuContext(user_context_t *context)
 {
     context->fpuState = x86KSnullFpuState;
 }
@@ -21,7 +21,7 @@ void Arch_initFpuContext(user_context_t *context)
 /*
  * Initialise the FPU for this machine.
  */
-BOOT_CODE bool_t Arch_initFpu(void)
+BOOT_ಸಂಕೇತ bool_t Arch_initFpu(ಶೂನ್ಯ)
 {
     /* Enable FPU / SSE / SSE2 / SSE3 / SSSE3 / SSE4 Extensions. */
     write_cr4(read_cr4() | CR4_OSFXSR);
@@ -33,57 +33,57 @@ BOOT_CODE bool_t Arch_initFpu(void)
     /* Initialize the fpu state */
     finit();
 
-    if (config_set(CONFIG_XSAVE)) {
+    ಆದರೆ (config_ಗಣ(CONFIG_XSAVE)) {
         uint64_t xsave_features;
         uint32_t xsave_instruction;
-        uint64_t desired_features = config_ternary(CONFIG_XSAVE, CONFIG_XSAVE_FEATURE_SET, 1);
+        uint64_t desired_features = config_ternary(CONFIG_XSAVE, CONFIG_XSAVE_FEATURE_ಗಣ, 1);
 
         /* check for XSAVE support */
-        if (!(x86_cpuid_ecx(1, 0) & BIT(26))) {
-            printf("XSAVE not supported\n");
-            return false;
+        ಆದರೆ (!(x86_cpuid_ecx(1, 0) & ಬಿಟ್(26))) {
+            ಬರೆ("XSAVE not supported\n");
+            ಹಿಂತಿರುಗಿ false;
         }
         /* enable XSAVE support */
         write_cr4(read_cr4() | CR4_OSXSAVE);
         /* check feature mask */
         xsave_features = ((uint64_t)x86_cpuid_edx(0x0d, 0x0) << 32) | x86_cpuid_eax(0x0d, 0x0);
-        if ((xsave_features & desired_features) != desired_features) {
-            printf("Requested feature mask is 0x%llx, but only 0x%llx supported\n", desired_features, (long long)xsave_features);
-            return false;
+        ಆದರೆ ((xsave_features & desired_features) != desired_features) {
+            ಬರೆ("Requested feature mask is 0x%llx, but only 0x%llx supported\n", desired_features, (ದೀರ್ಘ ದೀರ್ಘ)xsave_features);
+            ಹಿಂತಿರುಗಿ false;
         }
         /* enable feature mask */
         write_xcr0(desired_features);
         /* validate the xsave buffer size and instruction */
-        if (x86_cpuid_ebx(0x0d, 0x0) > CONFIG_XSAVE_SIZE) {
-            printf("XSAVE buffer set set to %d, but needs to be at least %d\n", CONFIG_XSAVE_SIZE, x86_cpuid_ebx(0x0d, 0x0));
-            return false;
+        ಆದರೆ (x86_cpuid_ebx(0x0d, 0x0) > CONFIG_XSAVE_ಗಾತ್ರ) {
+            ಬರೆ("XSAVE buffer set set to %d, but needs to be at least %d\n", CONFIG_XSAVE_ಗಾತ್ರ, x86_cpuid_ebx(0x0d, 0x0));
+            ಹಿಂತಿರುಗಿ false;
         }
-        if (x86_cpuid_ebx(0x0d, 0x0) < CONFIG_XSAVE_SIZE) {
-            printf("XSAVE buffer set set to %d, but only needs to be %d.\n"
+        ಆದರೆ (x86_cpuid_ebx(0x0d, 0x0) < CONFIG_XSAVE_ಗಾತ್ರ) {
+            ಬರೆ("XSAVE buffer set set to %d, but only needs to be %d.\n"
                    "Warning: Memory may be wasted with larger than needed TCBs.\n",
-                   CONFIG_XSAVE_SIZE, x86_cpuid_ebx(0x0d, 0x0));
+                   CONFIG_XSAVE_ಗಾತ್ರ, x86_cpuid_ebx(0x0d, 0x0));
         }
         /* check if a specialized XSAVE instruction was requested */
         xsave_instruction = x86_cpuid_eax(0x0d, 0x1);
-        if (config_set(CONFIG_XSAVE_XSAVEOPT)) {
-            if (!(xsave_instruction & BIT(0))) {
-                printf("XSAVEOPT requested, but not supported\n");
-                return false;
+        ಆದರೆ (config_ಗಣ(CONFIG_XSAVE_XSAVEOPT)) {
+            ಆದರೆ (!(xsave_instruction & ಬಿಟ್(0))) {
+                ಬರೆ("XSAVEOPT requested, but not supported\n");
+                ಹಿಂತಿರುಗಿ false;
             }
-        } else if (config_set(CONFIG_XSAVE_XSAVEC)) {
-            if (!(xsave_instruction & BIT(1))) {
-                printf("XSAVEC requested, but not supported\n");
-                return false;
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (config_ಗಣ(CONFIG_XSAVE_XSAVEC)) {
+            ಆದರೆ (!(xsave_instruction & ಬಿಟ್(1))) {
+                ಬರೆ("XSAVEC requested, but not supported\n");
+                ಹಿಂತಿರುಗಿ false;
             }
-        } else if (config_set(CONFIG_XSAVE_XSAVES)) {
-            if (!(xsave_instruction & BIT(3))) {
-                printf("XSAVES requested, but not supported\n");
-                return false;
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (config_ಗಣ(CONFIG_XSAVE_XSAVES)) {
+            ಆದರೆ (!(xsave_instruction & ಬಿಟ್(3))) {
+                ಬರೆ("XSAVES requested, but not supported\n");
+                ಹಿಂತಿರುಗಿ false;
             }
         }
         /* Init MXCSR */
-        unsigned int mxcsr = MXCSR_INIT_VALUE;
-        asm volatile("ldmxcsr %0" :: "m"(mxcsr));
+        ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ mxcsr = MXCSR_INIT_ಮೌಲ್ಯ;
+        asm ಅಸ್ಥಿರ("ldmxcsr %0" :: "m"(mxcsr));
     }
-    return true;
+    ಹಿಂತಿರುಗಿ true;
 }

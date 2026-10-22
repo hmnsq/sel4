@@ -4,39 +4,39 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t ಸಂದೇಶ_Registers[] = {
     X2, X3, X4, X5
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_ಸಂದೇಶ_registers,
+    ಗಾತ್ರ(ಸಂದೇಶ_Registers) / ಗಾತ್ರ(ಸಂದೇಶ_Registers[0]) == n_ಸಂದೇಶ_Registers
 );
 
-const register_t frameRegisters[] = {
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t ಚೌಕಟ್ಟು_Registers[] = {
     FaultIP, SP_EL0, SPSR_EL1,
     X0, X1, X2, X3, X4, X5, X6, X7, X8, X16, X17, X18, X29, X30
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_ಚೌಕಟ್ಟು_registers,
+    ಗಾತ್ರ(ಚೌಕಟ್ಟು_Registers) / ಗಾತ್ರ(ಚೌಕಟ್ಟು_Registers[0]) == n_ಚೌಕಟ್ಟು_Registers
 );
 
-const register_t gpRegisters[] = {
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t gpRegisters[] = {
     X9, X10, X11, X12, X13, X14, X15,
     X19, X20, X21, X22, X23, X24, X25, X26, X27, X28,
     TPIDR_EL0, TPIDRRO_EL0,
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    ಗಾತ್ರ(gpRegisters) / ಗಾತ್ರ(gpRegisters[0]) == n_gpRegisters
 );
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶಬ್ದ_t getNBSendRecvDest(ಶೂನ್ಯ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ಹಿಂತಿರುಗಿ get_ರಿಜಿಸ್ಟರ್(ಗಂಟು_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

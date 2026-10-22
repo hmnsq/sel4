@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/registerset.h>
-#include <arch/machine.h>
-#include <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <types.h>
+#ಅನ್ತರ್ಭಾವ <machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
 
-word_t PURE getRestartPC(tcb_t *thread)
+ಶಬ್ದ_t ಶುದ್ಧ getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    ಹಿಂತಿರುಗಿ get_ರಿಜಿಸ್ಟರ್(thread, FaultIP);
 }
 
-void setNextPC(tcb_t *thread, word_t v)
+ಶೂನ್ಯ ಗಣ_ಮುಂದಿನ_PC(tcb_t *thread, ಶಬ್ದ_t v)
 {
-    setRegister(thread, NEXT_PC_REG, v);
+    ಗಣ_ರಿಜಿಸ್ಟರ್(thread, ಮುಂದಿನ_PC_REG, v);
 }
 
-BOOT_CODE void map_kernel_devices(void)
+BOOT_ಸಂಕೇತ ಶೂನ್ಯ map_kernel_devices(ಶೂನ್ಯ)
 {
     /* If there are no kernel device frames at all, then kernel_device_frames is
      * NULL. Thus we can't use ARRAY_SIZE(kernel_device_frames) here directly,
      * but have to use NUM_KERNEL_DEVICE_FRAMES that is defined accordingly.
      */
-    for (int i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
-        const kernel_frame_t *frame = &kernel_device_frames[i];
+    ಗಾಗಿ (ಪೂರ್ಣಾಂಕ i = 0; i < ಅಂಕೆ_KERNEL_DEVICE_ಚೌಕಟ್ಟುಗಳು; i++) {
+        ಸ್ಥಿರಾಂಕ kernel_ಚೌಕಟ್ಟು_t *ಚೌಕಟ್ಟು = &kernel_device_ಚೌಕಟ್ಟುಗಳು[i];
         /* all frames are supposed to describe device memory, so they should
          * never be marked as executable.
          */
-        assert(frame->armExecuteNever);
-        map_kernel_frame(frame->paddr, frame->pptr, VMKernelOnly,
-                         vm_attributes_new(frame->armExecuteNever, false,
+        ಪ್ರತಿಜ್ಞಾ(ಚೌಕಟ್ಟು->armExecuteNever);
+        map_kernel_ಚೌಕಟ್ಟು(ಚೌಕಟ್ಟು->paddr, ಚೌಕಟ್ಟು->pptr, VMKernelOnly,
+                         vm_ಗುಣಲಕ್ಷಣಗಳು_new(ಚೌಕಟ್ಟು->armExecuteNever, false,
                                            false));
-        if (!frame->userAvailable) {
+        ಆದರೆ (!ಚೌಕಟ್ಟು->user_ಲಭ್ಯ) {
             reserve_region((p_region_t) {
-                .start = frame->paddr,
-                .end   = frame->paddr + BIT(PAGE_BITS)
+                .ಆರಂಭ = ಚೌಕಟ್ಟು->paddr,
+                .ಕೊನೆ   = ಚೌಕಟ್ಟು->paddr + ಬಿಟ್(ಪುಟ_ಬಿಟ್ಟುಗಳು)
             });
         }
     }

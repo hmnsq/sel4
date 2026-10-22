@@ -6,171 +6,171 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <kernel/boot.h>
-#include <machine/io.h>
-#include <model/statedata.h>
-#include <object/interrupt.h>
-#include <arch/machine.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/traps.h>
-#include <arch/kernel/vspace.h>
-#include <arch/benchmark.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <machine.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <kernel/boot.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <object/interrupt.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/boot.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/traps.h>
+#ಅನ್ತರ್ಭಾವ <arch/kernel/vspace.h>
+#ಅನ್ತರ್ಭಾವ <arch/benchmark.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/hardware.h>
+#ಅನ್ತರ್ಭಾವ <machine.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
 /* SMP boot synchronization works based on a global variable with the initial
  * value 0, as the loader must zero all BSS variables. Secondary cores keep
  * spinning until the primary core has initialized all kernel structures and
  * then set it to 1.
  */
-BOOT_BSS static volatile _Atomic word_t node_boot_lock;
-#endif
+BOOT_BSS ಸ್ಥಿರ ಅಸ್ಥಿರ _Atomic ಶಬ್ದ_t ಗಂಟು_boot_ಬೀಗ;
+#ಆದರೆ_ಅಂತ್ಯ
 
-BOOT_BSS static region_t res_reg[NUM_RESERVED_REGIONS];
+BOOT_BSS ಸ್ಥಿರ region_t res_reg[ಅಂಕೆ_RESERVED_REGIONS];
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t
+BOOT_ಸಂಕೇತ cap_t create_mapped_it_ಚೌಕಟ್ಟು_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t
                                            use_large, bool_t executable)
 {
     cap_t cap;
-    vm_page_size_t frame_size;
+    vm_ಪುಟ_ಗಾತ್ರ_t ಚೌಕಟ್ಟು_ಗಾತ್ರ_2;
 
-    if (use_large) {
-        frame_size = RISCV_Mega_Page;
-    } else {
-        frame_size = RISCV_4K_Page;
+    ಆದರೆ (use_large) {
+        ಚೌಕಟ್ಟು_ಗಾತ್ರ_2 = RISCV_Mega_ಪುಟ;
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಚೌಕಟ್ಟು_ಗಾತ್ರ_2 = RISCV_4_K_ಪುಟ;
     }
 
-    cap = cap_frame_cap_new(
+    cap = cap_ಚೌಕಟ್ಟು_cap_new(
               asid,                            /* capFMappedASID       */
               pptr,                            /* capFBasePtr          */
-              frame_size,                      /* capFSize             */
-              wordFromVMRights(VMReadWrite),   /* capFVMRights         */
+              ಚೌಕಟ್ಟು_ಗಾತ್ರ_2,                      /* capFSize             */
+              ಶಬ್ದ_From_VMRights(VMReadWrite),   /* capFVMRights         */
               0,                               /* capFIsDevice         */
               vptr                             /* capFMappedAddress    */
           );
 
-    map_it_frame_cap(pd_cap, cap);
-    return cap;
+    map_it_ಚೌಕಟ್ಟು_cap(pd_cap, cap);
+    ಹಿಂತಿರುಗಿ cap;
 }
 
-BOOT_CODE static bool_t arch_init_freemem(region_t ui_reg,
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ bool_t arch_init_freemem(region_t ui_reg,
                                           p_region_t dtb_p_reg,
                                           v_region_t it_v_reg,
-                                          word_t extra_bi_size_bits)
+                                          ಶಬ್ದ_t extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು)
 {
     /* Reserve the kernel image region. This may look a bit awkward, as the
      * symbols are a reference in the kernel image window, but all allocations
      * are done in terms of the main kernel window, so we do some translation.
      */
-    res_reg[0] = paddr_to_pptr_reg(get_p_reg_kernel_img());
-    int index = 1;
+    res_reg[0] = paddr_ಗಮ್ಯ_pptr_reg(get_p_reg_kernel_img());
+    ಪೂರ್ಣಾಂಕ ಸೂಚ್ಯಂಕ = 1;
 
     /* add the dtb region, if it is not empty */
-    if (dtb_p_reg.start) {
-        if (index >= ARRAY_SIZE(res_reg)) {
-            printf("ERROR: no slot to add DTB to reserved regions\n");
-            return false;
+    ಆದರೆ (dtb_p_reg.ಆರಂಭ) {
+        ಆದರೆ (ಸೂಚ್ಯಂಕ >= ARRAY_ಗಾತ್ರ(res_reg)) {
+            ಬರೆ("ERROR: no slot to add DTB to reserved regions\n");
+            ಹಿಂತಿರುಗಿ false;
         }
-        res_reg[index] = paddr_to_pptr_reg(dtb_p_reg);
-        index += 1;
+        res_reg[ಸೂಚ್ಯಂಕ] = paddr_ಗಮ್ಯ_pptr_reg(dtb_p_reg);
+        ಸೂಚ್ಯಂಕ += 1;
     }
 
     /* reserve the user image region */
-    if (index >= ARRAY_SIZE(res_reg)) {
-        printf("ERROR: no slot to add user image to reserved regions\n");
-        return false;
+    ಆದರೆ (ಸೂಚ್ಯಂಕ >= ARRAY_ಗಾತ್ರ(res_reg)) {
+        ಬರೆ("ERROR: no slot to add user image to reserved regions\n");
+        ಹಿಂತಿರುಗಿ false;
     }
-    res_reg[index] = ui_reg;
-    index += 1;
+    res_reg[ಸೂಚ್ಯಂಕ] = ui_reg;
+    ಸೂಚ್ಯಂಕ += 1;
 
     /* avail_p_regs comes from the auto-generated code */
-    return init_freemem(ARRAY_SIZE(avail_p_regs), avail_p_regs,
-                        index, res_reg,
-                        it_v_reg, extra_bi_size_bits);
+    ಹಿಂತಿರುಗಿ init_freemem(ARRAY_ಗಾತ್ರ(avail_p_regs), avail_p_regs,
+                        ಸೂಚ್ಯಂಕ, res_reg,
+                        it_v_reg, extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು);
 }
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ init_irqs(cap_t ಬೇರು_cnode_cap)
 {
     irq_t i;
 
-    for (i = 0; i <= maxIRQ; i++) {
-        if (i != irqInvalid) {
+    ಗಾಗಿ (i = 0; i <= maxIRQ; i++) {
+        ಆದರೆ (i != irqInvalid) {
             /* IRQ 0 is irqInvalid */
-            setIRQState(IRQInactive, i);
+            ಗಣ_IRQState(IRQInactive, i);
         }
     }
-    setIRQState(IRQTimer, KERNEL_TIMER_IRQ);
-#ifdef ENABLE_SMP_SUPPORT
-    setIRQState(IRQIPI, irq_remote_call_ipi);
-    setIRQState(IRQIPI, irq_reschedule_ipi);
-#endif
+    ಗಣ_IRQState(IRQTimer, KERNEL_TIMER_IRQ);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
+    ಗಣ_IRQState(IRQIPI, irq_remote_call_ipi);
+    ಗಣ_IRQState(IRQIPI, irq_reschedule_ipi);
+#ಆದರೆ_ಅಂತ್ಯ
     /* provide the IRQ control cap */
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
+    write_ಸ್ಥಾನ(ಸ್ಥಾನ_PTR(pptr_ದ_cap(ಬೇರು_cnode_cap), seL4_CapIRQControl), cap_irq_control_cap_new());
 }
 
 /* This and only this function initialises the CPU. It does NOT initialise any kernel state. */
 
-#ifdef CONFIG_HAVE_FPU
-BOOT_CODE static void init_fpu(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ init_fpu(ಶೂನ್ಯ)
 {
-    set_fs_clean();
+    ಗಣ_fs_clean();
     write_fcsr(0);
     disableFpu();
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-BOOT_CODE static void init_cpu(void)
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ init_cpu(ಶೂನ್ಯ)
 {
 
     activate_kernel_vspace();
     /* Write trap entry address to stvec */
-    write_stvec((word_t)trap_entry);
+    write_stvec((ಶಬ್ದ_t)trap_ನಮೂದು);
     initLocalIRQController();
-#ifndef CONFIG_KERNEL_MCS
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_KERNEL_MCS
     initTimer();
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
     /* disable FPU access */
-    set_fs_off();
+    ಗಣ_fs_off();
 
-#ifdef CONFIG_HAVE_FPU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_HAVE_FPU
     init_fpu();
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
 /* This and only this function initialises the platform. It does NOT initialise any kernel state. */
 
-BOOT_CODE static void init_plat(void)
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ init_plat(ಶೂನ್ಯ)
 {
     initIRQController();
 }
 
 
-#ifdef ENABLE_SMP_SUPPORT
-BOOT_CODE static bool_t try_init_kernel_secondary_core(word_t hart_id, word_t core_id)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ bool_t try_init_kernel_secondary_core(ಶಬ್ದ_t hart_id, ಶಬ್ದ_t core_id)
 {
-    while (!node_boot_lock);
+    ಆಗ (!ಗಂಟು_boot_ಬೀಗ);
 
     fence_r_rw();
 
     init_cpu();
-    NODE_LOCK_SYS;
+    ಗಂಟು_ಬೀಗ_SYS;
 
     clock_sync_test();
-    ksNumCPUs++;
+    ks_ಅಂಕೆ_CPUs++;
     init_core_state(SchedulerAction_ResumeCurrentThread);
     ifence_local();
-    return true;
+    ಹಿಂತಿರುಗಿ true;
 }
 
-BOOT_CODE static void release_secondary_cores(void)
+BOOT_ಸಂಕೇತ ಸ್ಥಿರ ಶೂನ್ಯ release_secondary_cores(ಶೂನ್ಯ)
 {
-    assert(0 == node_boot_lock); /* Sanity check for a proper lock state. */
-    node_boot_lock = 1;
+    ಪ್ರತಿಜ್ಞಾ(0 == ಗಂಟು_boot_ಬೀಗ); /* Sanity check for a proper lock state. */
+    ಗಂಟು_boot_ಬೀಗ = 1;
     /* At this point in time the primary core (executing this code) already uses
      * the seL4 MMU/cache setup. However, the secondary cores are still using
      * the elfloader's MMU/cache setup, and thus the update of node_boot_lock
@@ -179,262 +179,262 @@ BOOT_CODE static void release_secondary_cores(void)
      */
     fence_rw_rw();
 
-    while (ksNumCPUs != CONFIG_MAX_NUM_NODES) {
-#ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-        NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+    ಆಗ (ks_ಅಂಕೆ_CPUs != CONFIG_MAX_ಅಂಕೆ_NODES) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
+        ಗಂಟು_STATE(ks_Cur_ಸಮಯ) = get_Current_ಸಮಯ();
+#ಆದರೆ_ಅಂತ್ಯ
         __atomic_thread_fence(__ATOMIC_ACQ_REL);
     }
 }
-#endif /* ENABLE_SMP_SUPPORT */
+#ಆದರೆ_ಅಂತ್ಯ /* ENABLE_SMP_SUPPORT */
 
 /* Main kernel initialisation function. */
 
-static BOOT_CODE bool_t try_init_kernel(
-    paddr_t ui_p_reg_start,
-    paddr_t ui_p_reg_end,
-    sword_t pv_offset,
-    vptr_t  v_entry,
+ಸ್ಥಿರ BOOT_ಸಂಕೇತ bool_t try_init_kernel(
+    paddr_t ui_p_reg_ಆರಂಭ,
+    paddr_t ui_p_reg_ಕೊನೆ,
+    sword_t pv_ಸ್ಥಾನಾಂತರ,
+    vptr_t  v_ನಮೂದು,
     paddr_t dtb_phys_addr,
-    word_t  dtb_size
+    ಶಬ್ದ_t  dtb_ಗಾತ್ರ
 )
 {
-    cap_t root_cnode_cap;
+    cap_t ಬೇರು_cnode_cap;
     cap_t it_pd_cap;
     cap_t it_ap_cap;
     cap_t ipcbuf_cap;
-    region_t ui_reg = paddr_to_pptr_reg((p_region_t) {
-        ui_p_reg_start, ui_p_reg_end
+    region_t ui_reg = paddr_ಗಮ್ಯ_pptr_reg((p_region_t) {
+        ui_p_reg_ಆರಂಭ, ui_p_reg_ಕೊನೆ
     });
-    word_t extra_bi_size = 0;
-    pptr_t extra_bi_offset = 0;
-    vptr_t extra_bi_frame_vptr;
-    vptr_t bi_frame_vptr;
+    ಶಬ್ದ_t extra_bi_ಗಾತ್ರ = 0;
+    pptr_t extra_bi_ಸ್ಥಾನಾಂತರ = 0;
+    vptr_t extra_bi_ಚೌಕಟ್ಟು_vptr;
+    vptr_t bi_ಚೌಕಟ್ಟು_vptr;
     vptr_t ipcbuf_vptr;
-    create_frames_of_region_ret_t create_frames_ret;
-    create_frames_of_region_ret_t extra_bi_ret;
+    create_ಚೌಕಟ್ಟುಗಳು_ದ_region_ret_t create_ಚೌಕಟ್ಟುಗಳು_ret;
+    create_ಚೌಕಟ್ಟುಗಳು_ದ_region_ret_t extra_bi_ret;
 
     /* convert from physical addresses to userland vptrs */
     v_region_t ui_v_reg = {
-        .start = ui_p_reg_start - pv_offset,
-        .end   = ui_p_reg_end   - pv_offset
+        .ಆರಂಭ = ui_p_reg_ಆರಂಭ - pv_ಸ್ಥಾನಾಂತರ,
+        .ಕೊನೆ   = ui_p_reg_ಕೊನೆ   - pv_ಸ್ಥಾನಾಂತರ
     };
 
-    ipcbuf_vptr = ui_v_reg.end;
-    bi_frame_vptr = ipcbuf_vptr + BIT(PAGE_BITS);
-    extra_bi_frame_vptr = bi_frame_vptr + BIT(seL4_BootInfoFrameBits);
+    ipcbuf_vptr = ui_v_reg.ಕೊನೆ;
+    bi_ಚೌಕಟ್ಟು_vptr = ipcbuf_vptr + ಬಿಟ್(ಪುಟ_ಬಿಟ್ಟುಗಳು);
+    extra_bi_ಚೌಕಟ್ಟು_vptr = bi_ಚೌಕಟ್ಟು_vptr + ಬಿಟ್(se_L4_Boot_Info_ಚೌಕಟ್ಟು_ಬಿಟ್ಟುಗಳು);
 
-    map_kernel_window();
+    map_kernel_ಕಿಟಕಿ();
 
     /* initialise the CPU */
     init_cpu();
 
-    printf("Bootstrapping kernel\n");
+    ಬರೆ("Bootstrapping kernel\n");
 
     /* initialize the platform */
     init_plat();
 
     /* If a DTB was provided, pass the data on as extra bootinfo */
-    p_region_t dtb_p_reg = P_REG_EMPTY;
-    if (dtb_size > 0) {
-#ifdef CONFIG_PLAT_ROCKETCHIP_ZCU102
+    p_region_t dtb_p_reg = P_REG_ಖಾಲಿಗಳು;
+    ಆದರೆ (dtb_ಗಾತ್ರ > 0) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PLAT_ROCKETCHIP_ZCU102
         /* The softcore rocketchip instantiation doesn't work well when this
          * page isn't reserved. Round up so the whole page is reserved to
          * avoid the problem
          */
-        dtb_size = ROUND_UP(dtb_size, PAGE_BITS);
-#endif
-        paddr_t dtb_phys_end = dtb_phys_addr + dtb_size;
-        if (dtb_phys_end < dtb_phys_addr) {
+        dtb_ಗಾತ್ರ = ಸುತ್ತು_ಮೇಲೆ(dtb_ಗಾತ್ರ, ಪುಟ_ಬಿಟ್ಟುಗಳು);
+#ಆದರೆ_ಅಂತ್ಯ
+        paddr_t dtb_phys_ಕೊನೆ = dtb_phys_addr + dtb_ಗಾತ್ರ;
+        ಆದರೆ (dtb_phys_ಕೊನೆ < dtb_phys_addr) {
             /* An integer overflow happened in DTB end address calculation, the
              * location or size passed seems invalid.
              */
-            printf("ERROR: DTB location at %"SEL4_PRIx_word
-                   " len %"SEL4_PRIu_word" invalid\n",
-                   dtb_phys_addr, dtb_size);
-            return false;
+            ಬರೆ("ERROR: DTB location at %"SEL4_PRIx_ಶಬ್ದ
+                   " len %"SEL4_PRIu_ಶಬ್ದ" invalid\n",
+                   dtb_phys_addr, dtb_ಗಾತ್ರ);
+            ಹಿಂತಿರುಗಿ false;
         }
         /* If the DTB is located in physical memory that is not mapped in the
          * kernel window we cannot access it.
          */
-        if (dtb_phys_end >= PADDR_TOP) {
-            printf("ERROR: DTB at [%"SEL4_PRIx_word"..%"SEL4_PRIx_word") "
-                   "exceeds PADDR_TOP (%"SEL4_PRIx_word")\n",
-                   dtb_phys_addr, dtb_phys_end, PADDR_TOP);
-            return false;
+        ಆದರೆ (dtb_phys_ಕೊನೆ >= PADDR_ತುದಿ) {
+            ಬರೆ("ERROR: DTB at [%"SEL4_PRIx_ಶಬ್ದ"..%"SEL4_PRIx_ಶಬ್ದ") "
+                   "exceeds PADDR_TOP (%"SEL4_PRIx_ಶಬ್ದ")\n",
+                   dtb_phys_addr, dtb_phys_ಕೊನೆ, PADDR_ತುದಿ);
+            ಹಿಂತಿರುಗಿ false;
         }
         /* DTB seems valid and accessible, pass it on in bootinfo. */
-        extra_bi_size += sizeof(seL4_BootInfoHeader) + dtb_size;
+        extra_bi_ಗಾತ್ರ += ಗಾತ್ರ(se_L4_Boot_Info_ಶೀರ್ಷಿಕೆ) + dtb_ಗಾತ್ರ;
         /* Remember the memory region it uses. */
         dtb_p_reg = (p_region_t) {
-            .start = dtb_phys_addr,
-            .end   = dtb_phys_end
+            .ಆರಂಭ = dtb_phys_addr,
+            .ಕೊನೆ   = dtb_phys_ಕೊನೆ
         };
     }
 
     /* The region of the initial thread is the user image + ipcbuf + boot info + extra */
-    word_t extra_bi_size_bits = calculate_extra_bi_size_bits(extra_bi_size);
+    ಶಬ್ದ_t extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು = calculate_extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು(extra_bi_ಗಾತ್ರ);
     v_region_t it_v_reg = {
-        .start = ui_v_reg.start,
-        .end   = extra_bi_frame_vptr + (extra_bi_size_bits > 0 ? BIT(extra_bi_size_bits) : 0)
+        .ಆರಂಭ = ui_v_reg.ಆರಂಭ,
+        .ಕೊನೆ   = extra_bi_ಚೌಕಟ್ಟು_vptr + (extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು > 0 ? ಬಿಟ್(extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು) : 0)
     };
-    if (it_v_reg.end >= USER_TOP) {
+    ಆದರೆ (it_v_reg.ಕೊನೆ >= USER_ತುದಿ) {
         /* Variable arguments for printf() require well defined integer types
          * to work properly. Unfortunately, the definition of USER_TOP differs
          * between platforms (int, long), so we have to cast here to play safe.
          */
-        printf("ERROR: userland image virt [%"SEL4_PRIx_word"..%"SEL4_PRIx_word")"
-               "exceeds USER_TOP (%"SEL4_PRIx_word")\n",
-               it_v_reg.start, it_v_reg.end, (word_t)USER_TOP);
-        return false;
+        ಬರೆ("ERROR: userland image virt [%"SEL4_PRIx_ಶಬ್ದ"..%"SEL4_PRIx_ಶಬ್ದ")"
+               "exceeds USER_TOP (%"SEL4_PRIx_ಶಬ್ದ")\n",
+               it_v_reg.ಆರಂಭ, it_v_reg.ಕೊನೆ, (ಶಬ್ದ_t)USER_ತುದಿ);
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* make the free memory available to alloc_region() */
-    if (!arch_init_freemem(ui_reg, dtb_p_reg, it_v_reg, extra_bi_size_bits)) {
-        printf("ERROR: free memory management initialization failed\n");
-        return false;
+    ಆದರೆ (!arch_init_freemem(ui_reg, dtb_p_reg, it_v_reg, extra_bi_ಗಾತ್ರ_ಬಿಟ್ಟುಗಳು)) {
+        ಬರೆ("ERROR: free memory management initialization failed\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* create the root cnode */
-    root_cnode_cap = create_root_cnode();
-    if (cap_get_capType(root_cnode_cap) == cap_null_cap) {
-        printf("ERROR: root c-node creation failed\n");
-        return false;
+    ಬೇರು_cnode_cap = create_ಬೇರು_cnode();
+    ಆದರೆ (cap_get_capType(ಬೇರು_cnode_cap) == cap_null_cap) {
+        ಬರೆ("ERROR: root c-node creation failed\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* create the cap for managing thread domains */
-    create_domain_cap(root_cnode_cap);
+    create_domain_cap(ಬೇರು_cnode_cap);
 
     /* initialise the IRQ states and provide the IRQ control cap */
-    init_irqs(root_cnode_cap);
+    init_irqs(ಬೇರು_cnode_cap);
 
     /* create the bootinfo frame */
-    populate_bi_frame(0, CONFIG_MAX_NUM_NODES, ipcbuf_vptr, extra_bi_size);
+    populate_bi_ಚೌಕಟ್ಟು(0, CONFIG_MAX_ಅಂಕೆ_NODES, ipcbuf_vptr, extra_bi_ಗಾತ್ರ);
 
     /* put DTB in the bootinfo block, if present. */
-    seL4_BootInfoHeader header;
-    if (dtb_size > 0) {
-        header.id = SEL4_BOOTINFO_HEADER_FDT;
-        header.len = sizeof(header) + dtb_size;
-        *(seL4_BootInfoHeader *)(rootserver.extra_bi + extra_bi_offset) = header;
-        extra_bi_offset += sizeof(header);
-        memcpy((void *)(rootserver.extra_bi + extra_bi_offset),
-               paddr_to_pptr(dtb_phys_addr),
-               dtb_size);
-        extra_bi_offset += dtb_size;
+    se_L4_Boot_Info_ಶೀರ್ಷಿಕೆ ಶೀರ್ಷಿಕೆ;
+    ಆದರೆ (dtb_ಗಾತ್ರ > 0) {
+        ಶೀರ್ಷಿಕೆ.id = SEL4_BOOTINFO_ಶೀರ್ಷಿಕೆ_FDT;
+        ಶೀರ್ಷಿಕೆ.len = ಗಾತ್ರ(ಶೀರ್ಷಿಕೆ) + dtb_ಗಾತ್ರ;
+        *(se_L4_Boot_Info_ಶೀರ್ಷಿಕೆ *)(rootserver.extra_bi + extra_bi_ಸ್ಥಾನಾಂತರ) = ಶೀರ್ಷಿಕೆ;
+        extra_bi_ಸ್ಥಾನಾಂತರ += ಗಾತ್ರ(ಶೀರ್ಷಿಕೆ);
+        ಸ್ಮರಣೆ_ನಕಲು((ಶೂನ್ಯ *)(rootserver.extra_bi + extra_bi_ಸ್ಥಾನಾಂತರ),
+               paddr_ಗಮ್ಯ_pptr(dtb_phys_addr),
+               dtb_ಗಾತ್ರ);
+        extra_bi_ಸ್ಥಾನಾಂತರ += dtb_ಗಾತ್ರ;
     }
 
-    assert(extra_bi_size == extra_bi_offset);
+    ಪ್ರತಿಜ್ಞಾ(extra_bi_ಗಾತ್ರ == extra_bi_ಸ್ಥಾನಾಂತರ);
 
     /* Construct an initial address space with enough virtual addresses
      * to cover the user image + ipc buffer and bootinfo frames */
-    it_pd_cap = create_it_address_space(root_cnode_cap, it_v_reg);
-    if (cap_get_capType(it_pd_cap) == cap_null_cap) {
-        printf("ERROR: address space creation for initial thread failed\n");
-        return false;
+    it_pd_cap = create_it_ವಿಳಾಸ_space(ಬೇರು_cnode_cap, it_v_reg);
+    ಆದರೆ (cap_get_capType(it_pd_cap) == cap_null_cap) {
+        ಬರೆ("ERROR: address space creation for initial thread failed\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* Create and map bootinfo frame cap */
-    create_bi_frame_cap(
-        root_cnode_cap,
+    create_bi_ಚೌಕಟ್ಟು_cap(
+        ಬೇರು_cnode_cap,
         it_pd_cap,
-        bi_frame_vptr
+        bi_ಚೌಕಟ್ಟು_vptr
     );
 
     /* create and map extra bootinfo region */
-    if (extra_bi_size > 0) {
+    ಆದರೆ (extra_bi_ಗಾತ್ರ > 0) {
         region_t extra_bi_region = {
-            .start = rootserver.extra_bi,
-            .end = rootserver.extra_bi + extra_bi_size
+            .ಆರಂಭ = rootserver.extra_bi,
+            .ಕೊನೆ = rootserver.extra_bi + extra_bi_ಗಾತ್ರ
         };
         extra_bi_ret =
-            create_frames_of_region(
-                root_cnode_cap,
+            create_ಚೌಕಟ್ಟುಗಳು_ದ_region(
+                ಬೇರು_cnode_cap,
                 it_pd_cap,
                 extra_bi_region,
                 true,
-                pptr_to_paddr((void *)extra_bi_region.start) - extra_bi_frame_vptr
+                pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)extra_bi_region.ಆರಂಭ) - extra_bi_ಚೌಕಟ್ಟು_vptr
             );
-        if (!extra_bi_ret.success) {
-            printf("ERROR: mapping extra boot info to initial thread failed\n");
-            return false;
+        ಆದರೆ (!extra_bi_ret.success) {
+            ಬರೆ("ERROR: mapping extra boot info to initial thread failed\n");
+            ಹಿಂತಿರುಗಿ false;
         }
-        ndks_boot.bi_frame->extraBIPages = extra_bi_ret.region;
+        ndks_boot.bi_ಚೌಕಟ್ಟು->extraBIPages = extra_bi_ret.region;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    init_sched_control(root_cnode_cap, CONFIG_MAX_NUM_NODES);
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    init_sched_control(ಬೇರು_cnode_cap, CONFIG_MAX_ಅಂಕೆ_NODES);
+#ಆದರೆ_ಅಂತ್ಯ
 
     /* create the initial thread's IPC buffer */
-    ipcbuf_cap = create_ipcbuf_frame_cap(root_cnode_cap, it_pd_cap, ipcbuf_vptr);
-    if (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
-        printf("ERROR: could not create IPC buffer for initial thread\n");
-        return false;
+    ipcbuf_cap = create_ipcbuf_ಚೌಕಟ್ಟು_cap(ಬೇರು_cnode_cap, it_pd_cap, ipcbuf_vptr);
+    ಆದರೆ (cap_get_capType(ipcbuf_cap) == cap_null_cap) {
+        ಬರೆ("ERROR: could not create IPC buffer for initial thread\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* create all userland image frames */
-    create_frames_ret =
-        create_frames_of_region(
-            root_cnode_cap,
+    create_ಚೌಕಟ್ಟುಗಳು_ret =
+        create_ಚೌಕಟ್ಟುಗಳು_ದ_region(
+            ಬೇರು_cnode_cap,
             it_pd_cap,
             ui_reg,
             true,
-            pv_offset
+            pv_ಸ್ಥಾನಾಂತರ
         );
-    if (!create_frames_ret.success) {
-        printf("ERROR: could not create all userland image frames\n");
-        return false;
+    ಆದರೆ (!create_ಚೌಕಟ್ಟುಗಳು_ret.success) {
+        ಬರೆ("ERROR: could not create all userland image frames\n");
+        ಹಿಂತಿರುಗಿ false;
     }
-    ndks_boot.bi_frame->userImageFrames = create_frames_ret.region;
+    ndks_boot.bi_ಚೌಕಟ್ಟು->user_Image_ಚೌಕಟ್ಟುಗಳು = create_ಚೌಕಟ್ಟುಗಳು_ret.region;
 
     /* create the initial thread's ASID pool */
-    it_ap_cap = create_it_asid_pool(root_cnode_cap);
-    if (cap_get_capType(it_ap_cap) == cap_null_cap) {
-        printf("ERROR: could not create ASID pool for initial thread\n");
-        return false;
+    it_ap_cap = create_it_asid_pool(ಬೇರು_cnode_cap);
+    ಆದರೆ (cap_get_capType(it_ap_cap) == cap_null_cap) {
+        ಬರೆ("ERROR: could not create ASID pool for initial thread\n");
+        ಹಿಂತಿರುಗಿ false;
     }
     write_it_asid_pool(it_ap_cap, it_pd_cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಗಂಟು_STATE(ks_Cur_ಸಮಯ) = get_Current_ಸಮಯ();
+#ಆದರೆ_ಅಂತ್ಯ
 
     /* create the idle thread */
     create_idle_thread();
 
     /* create the initial thread */
     tcb_t *initial = create_initial_thread(
-                         root_cnode_cap,
+                         ಬೇರು_cnode_cap,
                          it_pd_cap,
-                         v_entry,
-                         bi_frame_vptr,
+                         v_ನಮೂದು,
+                         bi_ಚೌಕಟ್ಟು_vptr,
                          ipcbuf_vptr,
                          ipcbuf_cap
                      );
 
-    if (initial == NULL) {
-        printf("ERROR: could not create initial thread\n");
-        return false;
+    ಆದರೆ (initial == ಖಾಲಿ) {
+        ಬರೆ("ERROR: could not create initial thread\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     init_core_state(initial);
 
     /* convert the remaining free memory into UT objects and provide the caps */
-    if (!create_untypeds(root_cnode_cap)) {
-        printf("ERROR: could not create untypteds for kernel image boot memory\n");
-        return false;
+    ಆದರೆ (!create_untypeds(ಬೇರು_cnode_cap)) {
+        ಬರೆ("ERROR: could not create untypteds for kernel image boot memory\n");
+        ಹಿಂತಿರುಗಿ false;
     }
 
     /* no shared-frame caps (RISC-V has no multikernel support) */
-    ndks_boot.bi_frame->sharedFrames = S_REG_EMPTY;
+    ndks_boot.bi_ಚೌಕಟ್ಟು->shared_ಚೌಕಟ್ಟುಗಳು = S_REG_ಖಾಲಿಗಳು;
 
     /* finalise the bootinfo frame */
     bi_finalise();
 
-    ksNumCPUs = 1;
+    ks_ಅಂಕೆ_CPUs = 1;
 
-    SMP_COND_STATEMENT(clh_lock_init());
+    SMP_COND_STATEMENT(clh_ಬೀಗ_init());
     SMP_COND_STATEMENT(release_secondary_cores());
 
     /* All cores are up now, so there can be concurrency. The kernel booting is
@@ -442,58 +442,58 @@ static BOOT_CODE bool_t try_init_kernel(
      * primary has to do now is schedule the initial thread. Currently there is
      * nothing that touches any global data structures, nevertheless we grab the
      * BKL here to play safe. It is released when the kernel is left. */
-    NODE_LOCK_SYS;
+    ಗಂಟು_ಬೀಗ_SYS;
 
-    printf("Booting all finished, dropped to user space\n");
-    return true;
+    ಬರೆ("Booting all finished, dropped to user space\n");
+    ಹಿಂತಿರುಗಿ true;
 }
 
-BOOT_CODE VISIBLE void init_kernel(
-    paddr_t ui_p_reg_start,
-    paddr_t ui_p_reg_end,
-    sword_t pv_offset,
-    vptr_t  v_entry,
+BOOT_ಸಂಕೇತ VISIBLE ಶೂನ್ಯ init_kernel(
+    paddr_t ui_p_reg_ಆರಂಭ,
+    paddr_t ui_p_reg_ಕೊನೆ,
+    sword_t pv_ಸ್ಥಾನಾಂತರ,
+    vptr_t  v_ನಮೂದು,
     paddr_t dtb_addr_p,
-    uint32_t dtb_size
-#ifdef ENABLE_SMP_SUPPORT
+    uint32_t dtb_ಗಾತ್ರ
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
     ,
-    word_t hart_id,
-    word_t core_id
-#endif
+    ಶಬ್ದ_t hart_id,
+    ಶಬ್ದ_t core_id
+#ಆದರೆ_ಅಂತ್ಯ
 )
 {
-    bool_t result;
+    bool_t ಫಲಿತಾಂಶ;
 
-#ifdef ENABLE_SMP_SUPPORT
-    add_hart_to_core_map(hart_id, core_id);
-    if (core_id == 0) {
-        result = try_init_kernel(ui_p_reg_start,
-                                 ui_p_reg_end,
-                                 pv_offset,
-                                 v_entry,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ ENABLE_SMP_SUPPORT
+    ಕೂಡಿಸು_hart_ಗಮ್ಯ_core_map(hart_id, core_id);
+    ಆದರೆ (core_id == 0) {
+        ಫಲಿತಾಂಶ = try_init_kernel(ui_p_reg_ಆರಂಭ,
+                                 ui_p_reg_ಕೊನೆ,
+                                 pv_ಸ್ಥಾನಾಂತರ,
+                                 v_ನಮೂದು,
                                  dtb_addr_p,
-                                 dtb_size);
-    } else {
-        result = try_init_kernel_secondary_core(hart_id, core_id);
+                                 dtb_ಗಾತ್ರ);
+    } ಇಲ್ಲದಿದ್ದರೆ {
+        ಫಲಿತಾಂಶ = try_init_kernel_secondary_core(hart_id, core_id);
     }
-#else
-    result = try_init_kernel(ui_p_reg_start,
-                             ui_p_reg_end,
-                             pv_offset,
-                             v_entry,
+#ಇಲ್ಲದಿದ್ದರೆ
+    ಫಲಿತಾಂಶ = try_init_kernel(ui_p_reg_ಆರಂಭ,
+                             ui_p_reg_ಕೊನೆ,
+                             pv_ಸ್ಥಾನಾಂತರ,
+                             v_ನಮೂದು,
                              dtb_addr_p,
-                             dtb_size);
-#endif
-    if (!result) {
+                             dtb_ಗಾತ್ರ);
+#ಆದರೆ_ಅಂತ್ಯ
+    ಆದರೆ (!ಫಲಿತಾಂಶ) {
         fail("ERROR: kernel init failed");
         UNREACHABLE();
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-    NODE_STATE(ksConsumed) = 0;
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+    ಗಂಟು_STATE(ks_Cur_ಸಮಯ) = get_Current_ಸಮಯ();
+    ಗಂಟು_STATE(ksConsumed) = 0;
+#ಆದರೆ_ಅಂತ್ಯ
 
-    schedule();
+    ವೇಳಾಪಟ್ಟಿ();
     activateThread();
 }

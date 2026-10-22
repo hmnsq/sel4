@@ -4,213 +4,213 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ಅನ್ತರ್ಭಾವ <config.h>
 
-#ifdef CONFIG_TK1_SMMU
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_TK1_SMMU
 
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <kernel/thread.h>
-#include <arch/api/invocation.h>
-#include <arch/object/iospace.h>
-#include <arch/model/statedata.h>
-#include <object/structures.h>
-#include <linker.h>
-#include <plat/machine/smmu.h>
+#ಅನ್ತರ್ಭಾವ <api/syscall.h>
+#ಅನ್ತರ್ಭಾವ <machine/io.h>
+#ಅನ್ತರ್ಭಾವ <kernel/thread.h>
+#ಅನ್ತರ್ಭಾವ <arch/api/invocation.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/iospace.h>
+#ಅನ್ತರ್ಭಾವ <arch/model/statedata.h>
+#ಅನ್ತರ್ಭಾವ <object/structures.h>
+#ಅನ್ತರ್ಭಾವ <linker.h>
+#ಅನ್ತರ್ಭಾವ <plat/machine/smmu.h>
 
 
-typedef struct lookupIOPDSlot_ret {
-    exception_t status;
-    iopde_t     *iopdSlot;
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ lookupIOPDSlot_ret {
+    exception_t ಸ್ಥಿತಿ_2;
+    iopde_t     *iopd_ಸ್ಥಾನ;
 } lookupIOPDSlot_ret_t;
 
-typedef struct lookupIOPTSlot_ret {
-    exception_t status;
-    iopte_t     *ioptSlot;
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ರಚನೆ lookupIOPTSlot_ret {
+    exception_t ಸ್ಥಿತಿ_2;
+    iopte_t     *iopt_ಸ್ಥಾನ;
 } lookupIOPTSlot_ret_t;
 
 
-#define IOPDE_VALID_MASK    0xe0000000
-#define IOPTE_EMPTY_MASK    0xe0000000
+#ವ್ಯಾಖ್ಯಾನಿಸು IOPDE_VALID_ಮುಖವಾಡ    0xe0000000
+#ವ್ಯಾಖ್ಯಾನಿಸು IOPTE_ಖಾಲಿಗಳು_ಮುಖವಾಡ    0xe0000000
 
-static bool_t isIOPDEValid(iopde_t *iopde)
+ಸ್ಥಿರ bool_t isIOPDEValid(iopde_t *iopde)
 {
-    assert(iopde != 0);
-    return (iopde->words[0] & IOPDE_VALID_MASK) != 0;
+    ಪ್ರತಿಜ್ಞಾ(iopde != 0);
+    ಹಿಂತಿರುಗಿ (iopde->ಪದಗಳು[0] & IOPDE_VALID_ಮುಖವಾಡ) != 0;
 }
 
-static bool_t isIOPTEEmpty(iopte_t *iopte)
+ಸ್ಥಿರ bool_t isIOPTEEmpty(iopte_t *iopte)
 {
-    assert(iopte != 0);
-    return (iopte->words[0] & IOPTE_EMPTY_MASK) == 0;
+    ಪ್ರತಿಜ್ಞಾ(iopte != 0);
+    ಹಿಂತಿರುಗಿ (iopte->ಪದಗಳು[0] & IOPTE_ಖಾಲಿಗಳು_ಮುಖವಾಡ) == 0;
 }
 
 
-static lookupIOPDSlot_ret_t lookupIOPDSlot(iopde_t *iopd, word_t io_address)
+ಸ್ಥಿರ lookupIOPDSlot_ret_t lookupIOPDSlot(iopde_t *iopd, ಶಬ್ದ_t io_ವಿಳಾಸ)
 {
     lookupIOPDSlot_ret_t ret;
-    uint32_t index = plat_smmu_iopd_index(io_address);
-    ret.status = EXCEPTION_NONE;
-    ret.iopdSlot = iopd + index;
-    return ret;
+    uint32_t ಸೂಚ್ಯಂಕ = plat_smmu_iopd_ಸೂಚ್ಯಂಕ(io_ವಿಳಾಸ);
+    ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
+    ret.iopd_ಸ್ಥಾನ = iopd + ಸೂಚ್ಯಂಕ;
+    ಹಿಂತಿರುಗಿ ret;
 }
 
-static lookupIOPTSlot_ret_t lookupIOPTSlot(iopde_t *iopd, word_t io_address)
+ಸ್ಥಿರ lookupIOPTSlot_ret_t lookupIOPTSlot(iopde_t *iopd, ಶಬ್ದ_t io_ವಿಳಾಸ)
 {
     lookupIOPTSlot_ret_t pt_ret;
-    uint32_t index;
+    uint32_t ಸೂಚ್ಯಂಕ;
     iopte_t *pt;
 
-    lookupIOPDSlot_ret_t pd_ret = lookupIOPDSlot(iopd, io_address);
-    if (pd_ret.status != EXCEPTION_NONE) {
-        pt_ret.status = EXCEPTION_LOOKUP_FAULT;
-        pt_ret.ioptSlot = 0;
-        return pt_ret;
+    lookupIOPDSlot_ret_t pd_ret = lookupIOPDSlot(iopd, io_ವಿಳಾಸ);
+    ಆದರೆ (pd_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        pt_ret.ಸ್ಥಿತಿ_2 = EXCEPTION_LOOKUP_FAULT;
+        pt_ret.iopt_ಸ್ಥಾನ = 0;
+        ಹಿಂತಿರುಗಿ pt_ret;
     }
 
-    if (!isIOPDEValid(pd_ret.iopdSlot) ||
-        iopde_ptr_get_page_size(pd_ret.iopdSlot) != iopde_iopde_pt) {
-        pt_ret.status = EXCEPTION_LOOKUP_FAULT;
-        pt_ret.ioptSlot = 0;
-        return pt_ret;
+    ಆದರೆ (!isIOPDEValid(pd_ret.iopd_ಸ್ಥಾನ) ||
+        iopde_ptr_get_ಪುಟ_ಗಾತ್ರ(pd_ret.iopd_ಸ್ಥಾನ) != iopde_iopde_pt) {
+        pt_ret.ಸ್ಥಿತಿ_2 = EXCEPTION_LOOKUP_FAULT;
+        pt_ret.iopt_ಸ್ಥಾನ = 0;
+        ಹಿಂತಿರುಗಿ pt_ret;
     }
 
-    index = plat_smmu_iopt_index(io_address);
-    pt = (iopte_t *)paddr_to_pptr(iopde_iopde_pt_ptr_get_address(pd_ret.iopdSlot));
+    ಸೂಚ್ಯಂಕ = plat_smmu_iopt_ಸೂಚ್ಯಂಕ(io_ವಿಳಾಸ);
+    pt = (iopte_t *)paddr_ಗಮ್ಯ_pptr(iopde_iopde_pt_ptr_get_ವಿಳಾಸ(pd_ret.iopd_ಸ್ಥಾನ));
 
-    if (pt == 0) {
-        pt_ret.status = EXCEPTION_LOOKUP_FAULT;
-        pt_ret.ioptSlot = 0;
-        return pt_ret;
+    ಆದರೆ (pt == 0) {
+        pt_ret.ಸ್ಥಿತಿ_2 = EXCEPTION_LOOKUP_FAULT;
+        pt_ret.iopt_ಸ್ಥಾನ = 0;
+        ಹಿಂತಿರುಗಿ pt_ret;
     }
 
-    pt_ret.status = EXCEPTION_NONE;
-    pt_ret.ioptSlot = pt + index;
-    return pt_ret;
+    pt_ret.ಸ್ಥಿತಿ_2 = EXCEPTION_NONE;
+    pt_ret.iopt_ಸ್ಥಾನ = pt + ಸೂಚ್ಯಂಕ;
+    ಹಿಂತಿರುಗಿ pt_ret;
 }
 
-BOOT_CODE seL4_SlotRegion create_iospace_caps(cap_t root_cnode_cap)
+BOOT_ಸಂಕೇತ se_L4_ಸ್ಥಾನ_Region create_iospace_caps(cap_t ಬೇರು_cnode_cap)
 {
-    seL4_SlotPos start = ndks_boot.slot_pos_cur;
-    seL4_SlotPos end = 0;
+    se_L4_ಸ್ಥಾನ_Pos ಆರಂಭ = ndks_boot.ಸ್ಥಾನ_pos_cur;
+    se_L4_ಸ್ಥಾನ_Pos ಕೊನೆ = 0;
     cap_t        io_space_cap;
-    int i = 0;
-    int num_smmu = plat_smmu_init();
+    ಪೂರ್ಣಾಂಕ i = 0;
+    ಪೂರ್ಣಾಂಕ ಅಂಕೆ_smmu = plat_smmu_init();
 
-    if (num_smmu == 0) {
-        printf("SMMU init failure\n");
-        return S_REG_EMPTY;
+    ಆದರೆ (ಅಂಕೆ_smmu == 0) {
+        ಬರೆ("SMMU init failure\n");
+        ಹಿಂತಿರುಗಿ S_REG_ಖಾಲಿಗಳು;
     }
 
     /* the 0 is reserved as an invalidASID,
      * assuming each module is assigned an unique ASID
      * and the ASIDs are contiguous
      * */
-    for (i = 1; i <= num_smmu; i++) {
+    ಗಾಗಿ (i = 1; i <= ಅಂಕೆ_smmu; i++) {
         io_space_cap = cap_io_space_cap_new(i, i);
-        if (!provide_cap(root_cnode_cap, io_space_cap)) {
-            return S_REG_EMPTY;
+        ಆದರೆ (!provide_cap(ಬೇರು_cnode_cap, io_space_cap)) {
+            ಹಿಂತಿರುಗಿ S_REG_ಖಾಲಿಗಳು;
         }
     }
-    end = ndks_boot.slot_pos_cur;
-    printf("Region [%x to %x) for SMMU caps\n", (unsigned int)start, (unsigned int)end);
-    return (seL4_SlotRegion) {
-        start, end
+    ಕೊನೆ = ndks_boot.ಸ್ಥಾನ_pos_cur;
+    ಬರೆ("Region [%x to %x) for SMMU caps\n", (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)ಆರಂಭ, (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)ಕೊನೆ);
+    ಹಿಂತಿರುಗಿ (se_L4_ಸ್ಥಾನ_Region) {
+        ಆರಂಭ, ಕೊನೆ
     };
 }
 
-static exception_t performARMIOPTInvocationMap(cap_t cap, cte_t *slot, iopde_t *iopdSlot,
+ಸ್ಥಿರ exception_t performARMIOPTInvocationMap(cap_t cap, cte_t *ಸ್ಥಾನ, iopde_t *iopd_ಸ್ಥಾನ,
                                                iopde_t iopde)
 {
 
 
-    *iopdSlot = iopde;
-    cleanCacheRange_RAM((word_t)iopdSlot,
-                        ((word_t)iopdSlot) + sizeof(iopde_t),
-                        addrFromPPtr(iopdSlot));
+    *iopd_ಸ್ಥಾನ = iopde;
+    cleanCacheRange_RAM((ಶಬ್ದ_t)iopd_ಸ್ಥಾನ,
+                        ((ಶಬ್ದ_t)iopd_ಸ್ಥಾನ) + ಗಾತ್ರ(iopde_t),
+                        addrFromPPtr(iopd_ಸ್ಥಾನ));
 
     plat_smmu_tlb_flush_all();
     plat_smmu_ptc_flush_all();
 
-    slot->cap = cap;
-    setThreadState(ksCurThread, ThreadState_Restart);
-    return EXCEPTION_NONE;
+    ಸ್ಥಾನ->cap = cap;
+    ಗಣ_Thread_State(ksCurThread, ThreadState_Restart);
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
 
 exception_t decodeARMIOPTInvocation(
-    word_t       invLabel,
-    uint32_t     length,
-    cte_t       *slot,
+    ಶಬ್ದ_t       invLabel,
+    uint32_t     ಉದ್ದಳತೆ,
+    cte_t       *ಸ್ಥಾನ,
     cap_t        cap,
-    word_t      *buffer
+    ಶಬ್ದ_t      *ಬಫರ್
 )
 {
     cap_t      io_space;
-    word_t     io_address;
-    word_t     paddr;
+    ಶಬ್ದ_t     io_ವಿಳಾಸ;
+    ಶಬ್ದ_t     paddr;
     uint16_t   module_id;
     uint32_t   asid;
     iopde_t    *pd;
     iopde_t    iopde;
     lookupIOPDSlot_ret_t    lu_ret;
 
-    if (invLabel == ARMIOPageTableUnmap) {
-        if (!isFinalCapability(slot)) {
+    ಆದರೆ (invLabel == ARMIOPage_ಕೋಷ್ಟಕ_Unmap) {
+        ಆದರೆ (!isFinalCapability(ಸ್ಥಾನ)) {
             userError("IOPTUnmap: Cannot unmap if more than one cap exists.");
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Revoke_ಮೊದಲ;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
-        deleteIOPageTable(slot->cap);
-        slot->cap = cap_io_page_table_cap_set_capIOPTIsMapped(slot->cap, 0);
+        delete_IOPage_ಕೋಷ್ಟಕ(ಸ್ಥಾನ->cap);
+        ಸ್ಥಾನ->cap = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_IOPTIs_Mapped(ಸ್ಥಾನ->cap, 0);
 
-        setThreadState(ksCurThread, ThreadState_Restart);
-        return EXCEPTION_NONE;
+        ಗಣ_Thread_State(ksCurThread, ThreadState_Restart);
+        ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
     }
 
-    if (current_extra_caps.excaprefs[0] == NULL || length < 1) {
+    ಆದರೆ (current_extra_caps.excaprefs[0] == ಖಾಲಿ || ಉದ್ದಳತೆ < 1) {
         userError("IOPTInvocation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (invLabel != ARMIOPageTableMap) {
+    ಆದರೆ (invLabel != ARMIOPage_ಕೋಷ್ಟಕ_Map) {
         userError("IOPTInvocation: Invalid operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     io_space     = current_extra_caps.excaprefs[0]->cap;
-    io_address   = getSyscallArg(0, buffer) & ~MASK(SMMU_IOPD_INDEX_SHIFT);
+    io_ವಿಳಾಸ   = getSyscallArg(0, ಬಫರ್) & ~ಮುಖವಾಡ(SMMU_IOPD_ಸೂಚ್ಯಂಕ_ಸರಿಸು);
 
-    if (cap_io_page_table_cap_get_capIOPTIsMapped(cap)) {
+    ಆದರೆ (cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTIs_Mapped(cap)) {
         userError("IOPTMap: Cap already mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_get_capType(io_space) != cap_io_space_cap) {
+    ಆದರೆ (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("IOPTMap: Invalid IOSpace cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     module_id = cap_io_space_cap_get_capModuleID(io_space);
     asid = plat_smmu_get_asid_by_module_id(module_id);
-    assert(asid != asidInvalid);
+    ಪ್ರತಿಜ್ಞಾ(asid != asidInvalid);
 
-    paddr = pptr_to_paddr((void *)cap_io_page_table_cap_get_capIOPTBasePtr(cap));
+    paddr = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTBase_Ptr(cap));
 
     pd = plat_smmu_lookup_iopd_by_asid(asid);
 
-    lu_ret = lookupIOPDSlot(pd, io_address);
+    lu_ret = lookupIOPDSlot(pd, io_ವಿಳಾಸ);
 
-    if (isIOPDEValid(lu_ret.iopdSlot)) {
+    ಆದರೆ (isIOPDEValid(lu_ret.iopd_ಸ್ಥಾನ)) {
         userError("IOPTMap: Delete first.");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     iopde = iopde_iopde_pt_new(
@@ -220,102 +220,102 @@ exception_t decodeARMIOPTInvocation(
                 paddr
             );
 
-    cap = cap_io_page_table_cap_set_capIOPTIsMapped(cap, 1);
-    cap = cap_io_page_table_cap_set_capIOPTASID(cap, asid);
-    cap = cap_io_page_table_cap_set_capIOPTMappedAddress(cap, io_address);
+    cap = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_IOPTIs_Mapped(cap, 1);
+    cap = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_IOPTASID(cap, asid);
+    cap = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_IOPTMapped_ವಿಳಾಸ(cap, io_ವಿಳಾಸ);
 
-    return performARMIOPTInvocationMap(cap, slot, lu_ret.iopdSlot, iopde);
+    ಹಿಂತಿರುಗಿ performARMIOPTInvocationMap(cap, ಸ್ಥಾನ, lu_ret.iopd_ಸ್ಥಾನ, iopde);
 }
 
-static exception_t performARMIOMapInvocation(cap_t cap, cte_t *slot, iopte_t *ioptSlot,
+ಸ್ಥಿರ exception_t performARMIOMapInvocation(cap_t cap, cte_t *ಸ್ಥಾನ, iopte_t *iopt_ಸ್ಥಾನ,
                                              iopte_t iopte)
 {
-    *ioptSlot = iopte;
-    cleanCacheRange_RAM((word_t)ioptSlot,
-                        ((word_t)ioptSlot) + sizeof(iopte_t),
-                        addrFromPPtr(ioptSlot));
+    *iopt_ಸ್ಥಾನ = iopte;
+    cleanCacheRange_RAM((ಶಬ್ದ_t)iopt_ಸ್ಥಾನ,
+                        ((ಶಬ್ದ_t)iopt_ಸ್ಥಾನ) + ಗಾತ್ರ(iopte_t),
+                        addrFromPPtr(iopt_ಸ್ಥಾನ));
 
     plat_smmu_tlb_flush_all();
     plat_smmu_ptc_flush_all();
 
-    slot->cap = cap;
+    ಸ್ಥಾನ->cap = cap;
 
-    setThreadState(ksCurThread, ThreadState_Restart);
-    return EXCEPTION_NONE;
+    ಗಣ_Thread_State(ksCurThread, ThreadState_Restart);
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
 exception_t decodeARMIOMapInvocation(
-    word_t       invLabel,
-    uint32_t     length,
-    cte_t       *slot,
+    ಶಬ್ದ_t       invLabel,
+    uint32_t     ಉದ್ದಳತೆ,
+    cte_t       *ಸ್ಥಾನ,
     cap_t        cap,
-    word_t      *buffer
+    ಶಬ್ದ_t      *ಬಫರ್
 )
 {
     cap_t      io_space;
-    paddr_t    io_address;
+    paddr_t    io_ವಿಳಾಸ;
     paddr_t    paddr;
     uint32_t   module_id;
     uint32_t   asid;
     iopde_t    *pd;
     iopte_t    iopte;
-    vm_rights_t     frame_cap_rights;
-    seL4_CapRights_t    dma_cap_rights_mask;
+    vm_rights_t     ಚೌಕಟ್ಟು_cap_rights;
+    seL4_CapRights_t    dma_cap_rights_ಮುಖವಾಡ;
     lookupIOPTSlot_ret_t lu_ret;
 
-    if (current_extra_caps.excaprefs[0] == NULL || length < 2) {
+    ಆದರೆ (current_extra_caps.excaprefs[0] == ಖಾಲಿ || ಉದ್ದಳತೆ < 2) {
         userError("IOMap: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_ಸಂದೇಶ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (generic_frame_cap_get_capFSize(cap) != ARMSmallPage) {
+    ಆದರೆ (generic_ಚೌಕಟ್ಟು_cap_get_cap_FSize(cap) != ARMSmall_ಪುಟ) {
         userError("IOMap: Invalid cap type.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_small_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+    ಆದರೆ (cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap) != asidInvalid) {
         userError("IOMap: Frame all ready mapped.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     io_space    = current_extra_caps.excaprefs[0]->cap;
-    io_address  = getSyscallArg(1, buffer) & ~MASK(PAGE_BITS);
-    paddr       = pptr_to_paddr((void *)cap_small_frame_cap_get_capFBasePtr(cap));
+    io_ವಿಳಾಸ  = getSyscallArg(1, ಬಫರ್) & ~ಮುಖವಾಡ(ಪುಟ_ಬಿಟ್ಟುಗಳು);
+    paddr       = pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap));
 
-    if (cap_get_capType(io_space) != cap_io_space_cap) {
+    ಆದರೆ (cap_get_capType(io_space) != cap_io_space_cap) {
         userError("IOMap: Invalid IOSpace cap.");
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_ಸಂಖ್ಯೆ = 1;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
     module_id = cap_io_space_cap_get_capModuleID(io_space);
     asid = plat_smmu_get_asid_by_module_id(module_id);
-    assert(asid != asidInvalid);
+    ಪ್ರತಿಜ್ಞಾ(asid != asidInvalid);
 
     pd = plat_smmu_lookup_iopd_by_asid(asid);
 
-    lu_ret = lookupIOPTSlot(pd, io_address);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookupIOPTSlot(pd, io_ವಿಳಾಸ);
+    ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = false;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ಮೂಲ = false;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!isIOPTEEmpty(lu_ret.ioptSlot)) {
+    ಆದರೆ (!isIOPTEEmpty(lu_ret.iopt_ಸ್ಥಾನ)) {
         userError("IOMap: Delete first.");
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Delete_ಮೊದಲ;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
-    frame_cap_rights = cap_small_frame_cap_get_capFVMRights(cap);
-    dma_cap_rights_mask = rightsFromWord(getSyscallArg(0, buffer));
+    ಚೌಕಟ್ಟು_cap_rights = cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FVMRights(cap);
+    dma_cap_rights_ಮುಖವಾಡ = rights_From_ಶಬ್ದ(getSyscallArg(0, ಬಫರ್));
 
-    if ((frame_cap_rights == VMReadOnly) && seL4_CapRights_get_capAllowRead(dma_cap_rights_mask)) {
+    ಆದರೆ ((ಚೌಕಟ್ಟು_cap_rights == VMReadOnly) && seL4_CapRights_get_capAllowRead(dma_cap_rights_ಮುಖವಾಡ)) {
         /* read only */
         iopte = iopte_new(
                     1,      /* read         */
@@ -323,9 +323,9 @@ exception_t decodeARMIOMapInvocation(
                     1,      /* nonsecure    */
                     paddr
                 );
-    } else if (frame_cap_rights == VMReadWrite) {
-        if (seL4_CapRights_get_capAllowRead(dma_cap_rights_mask) &&
-            !seL4_CapRights_get_capAllowWrite(dma_cap_rights_mask)) {
+    } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (ಚೌಕಟ್ಟು_cap_rights == VMReadWrite) {
+        ಆದರೆ (seL4_CapRights_get_capAllowRead(dma_cap_rights_ಮುಖವಾಡ) &&
+            !seL4_CapRights_get_capAllowWrite(dma_cap_rights_ಮುಖವಾಡ)) {
             /* read only */
             iopte = iopte_new(
                         1,      /* read         */
@@ -333,8 +333,8 @@ exception_t decodeARMIOMapInvocation(
                         1,      /* nonsecure    */
                         paddr
                     );
-        } else if (!seL4_CapRights_get_capAllowRead(dma_cap_rights_mask) &&
-                   seL4_CapRights_get_capAllowWrite(dma_cap_rights_mask)) {
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (!seL4_CapRights_get_capAllowRead(dma_cap_rights_ಮುಖವಾಡ) &&
+                   seL4_CapRights_get_capAllowWrite(dma_cap_rights_ಮುಖವಾಡ)) {
             /* write only */
             iopte = iopte_new(
                         0,      /* read         */
@@ -342,8 +342,8 @@ exception_t decodeARMIOMapInvocation(
                         1,      /* nonsecure    */
                         paddr
                     );
-        } else if (seL4_CapRights_get_capAllowRead(dma_cap_rights_mask) &&
-                   seL4_CapRights_get_capAllowWrite(dma_cap_rights_mask)) {
+        } ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (seL4_CapRights_get_capAllowRead(dma_cap_rights_ಮುಖವಾಡ) &&
+                   seL4_CapRights_get_capAllowWrite(dma_cap_rights_ಮುಖವಾಡ)) {
             /* read write */
             iopte = iopte_new(
                         1,      /* read         */
@@ -351,59 +351,59 @@ exception_t decodeARMIOMapInvocation(
                         1,      /* nonsecure    */
                         paddr
                     );
-        } else {
+        } ಇಲ್ಲದಿದ್ದರೆ {
             userError("IOMap: Invalid argument.");
-            current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Invalid_ವಾದ;
+            current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+            ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
         }
 
-    } else {
+    } ಇಲ್ಲದಿದ್ದರೆ {
         /* VMKernelOnly */
         userError("IOMap: Invalid argument.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_ವಾದ;
+        current_syscall_error.invalid_ವಾದ_ಸಂಖ್ಯೆ = 0;
+        ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
     }
 
-    cap = cap_small_frame_cap_set_capFIsIOSpace(cap, 1);
-    cap = cap_small_frame_cap_set_capFMappedASID(cap, asid);
-    cap = cap_small_frame_cap_set_capFMappedAddress(cap, io_address);
+    cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FIs_IOSpace(cap, 1);
+    cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ASID(cap, asid);
+    cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ವಿಳಾಸ(cap, io_ವಿಳಾಸ);
 
-    return performARMIOMapInvocation(cap, slot, lu_ret.ioptSlot, iopte);
+    ಹಿಂತಿರುಗಿ performARMIOMapInvocation(cap, ಸ್ಥಾನ, lu_ret.iopt_ಸ್ಥಾನ, iopte);
 }
 
 
-void deleteIOPageTable(cap_t io_pt_cap)
+ಶೂನ್ಯ delete_IOPage_ಕೋಷ್ಟಕ(cap_t io_pt_cap)
 {
 
     uint32_t asid;
     iopde_t *pd;
     lookupIOPDSlot_ret_t lu_ret;
-    word_t io_address;
-    if (cap_io_page_table_cap_get_capIOPTIsMapped(io_pt_cap)) {
-        io_pt_cap = cap_io_page_table_cap_set_capIOPTIsMapped(io_pt_cap, 0);
-        asid = cap_io_page_table_cap_get_capIOPTASID(io_pt_cap);
-        assert(asid != asidInvalid);
+    ಶಬ್ದ_t io_ವಿಳಾಸ;
+    ಆದರೆ (cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTIs_Mapped(io_pt_cap)) {
+        io_pt_cap = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_ಗಣ_cap_IOPTIs_Mapped(io_pt_cap, 0);
+        asid = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTASID(io_pt_cap);
+        ಪ್ರತಿಜ್ಞಾ(asid != asidInvalid);
         pd = plat_smmu_lookup_iopd_by_asid(asid);
-        io_address = cap_io_page_table_cap_get_capIOPTMappedAddress(io_pt_cap);
+        io_ವಿಳಾಸ = cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTMapped_ವಿಳಾಸ(io_pt_cap);
 
-        lu_ret = lookupIOPDSlot(pd, io_address);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return;
+        lu_ret = lookupIOPDSlot(pd, io_ವಿಳಾಸ);
+        ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+            ಹಿಂತಿರುಗಿ;
         }
 
-        if (!isIOPDEValid(lu_ret.iopdSlot) ||
-            iopde_ptr_get_page_size(lu_ret.iopdSlot) != iopde_iopde_pt ||
-            iopde_iopde_pt_ptr_get_address(lu_ret.iopdSlot) != (pptr_to_paddr((void *)cap_io_page_table_cap_get_capIOPTBasePtr(
+        ಆದರೆ (!isIOPDEValid(lu_ret.iopd_ಸ್ಥಾನ) ||
+            iopde_ptr_get_ಪುಟ_ಗಾತ್ರ(lu_ret.iopd_ಸ್ಥಾನ) != iopde_iopde_pt ||
+            iopde_iopde_pt_ptr_get_ವಿಳಾಸ(lu_ret.iopd_ಸ್ಥಾನ) != (pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_io_ಪುಟ_ಕೋಷ್ಟಕ_cap_get_cap_IOPTBase_Ptr(
                                                                                   io_pt_cap)))) {
-            return;
+            ಹಿಂತಿರುಗಿ;
         }
 
-        *lu_ret.iopdSlot = iopde_iopde_pt_new(0, 0, 0, 0);
-        cleanCacheRange_RAM((word_t)lu_ret.iopdSlot,
-                            ((word_t)lu_ret.iopdSlot) + sizeof(iopde_t),
-                            addrFromPPtr(lu_ret.iopdSlot));
+        *lu_ret.iopd_ಸ್ಥಾನ = iopde_iopde_pt_new(0, 0, 0, 0);
+        cleanCacheRange_RAM((ಶಬ್ದ_t)lu_ret.iopd_ಸ್ಥಾನ,
+                            ((ಶಬ್ದ_t)lu_ret.iopd_ಸ್ಥಾನ) + ಗಾತ್ರ(iopde_t),
+                            addrFromPPtr(lu_ret.iopd_ಸ್ಥಾನ));
 
 
         /* nice to have: flush by address and asid */
@@ -412,70 +412,70 @@ void deleteIOPageTable(cap_t io_pt_cap)
     }
 }
 
-void unmapIOPage(cap_t cap)
+ಶೂನ್ಯ unmapIOPage(cap_t cap)
 {
     lookupIOPTSlot_ret_t lu_ret;
     iopde_t *pd;
-    word_t  io_address;
+    ಶಬ್ದ_t  io_ವಿಳಾಸ;
     uint32_t asid;
 
-    io_address = cap_small_frame_cap_get_capFMappedAddress(cap);
-    asid = cap_small_frame_cap_get_capFMappedASID(cap);
-    assert(asid != asidInvalid);
+    io_ವಿಳಾಸ = cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ವಿಳಾಸ(cap);
+    asid = cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FMapped_ASID(cap);
+    ಪ್ರತಿಜ್ಞಾ(asid != asidInvalid);
     pd = plat_smmu_lookup_iopd_by_asid(asid);
 
-    lu_ret = lookupIOPTSlot(pd, io_address);
+    lu_ret = lookupIOPTSlot(pd, io_ವಿಳಾಸ);
 
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return;
+    ಆದರೆ (lu_ret.ಸ್ಥಿತಿ_2 != EXCEPTION_NONE) {
+        ಹಿಂತಿರುಗಿ;
     }
-    if (iopte_ptr_get_address(lu_ret.ioptSlot) != pptr_to_paddr((void *)cap_small_frame_cap_get_capFBasePtr(cap))) {
-        return;
+    ಆದರೆ (iopte_ptr_get_ವಿಳಾಸ(lu_ret.iopt_ಸ್ಥಾನ) != pptr_ಗಮ್ಯ_paddr((ಶೂನ್ಯ *)cap_small_ಚೌಕಟ್ಟು_cap_get_cap_FBase_Ptr(cap))) {
+        ಹಿಂತಿರುಗಿ;
     }
 
-    *lu_ret.ioptSlot = iopte_new(0, 0, 0, 0);
-    cleanCacheRange_RAM((word_t)lu_ret.ioptSlot,
-                        ((word_t)lu_ret.ioptSlot) + sizeof(iopte_t),
-                        addrFromPPtr(lu_ret.ioptSlot));
+    *lu_ret.iopt_ಸ್ಥಾನ = iopte_new(0, 0, 0, 0);
+    cleanCacheRange_RAM((ಶಬ್ದ_t)lu_ret.iopt_ಸ್ಥಾನ,
+                        ((ಶಬ್ದ_t)lu_ret.iopt_ಸ್ಥಾನ) + ಗಾತ್ರ(iopte_t),
+                        addrFromPPtr(lu_ret.iopt_ಸ್ಥಾನ));
 
     plat_smmu_tlb_flush_all();
     plat_smmu_ptc_flush_all();
-    return;
+    ಹಿಂತಿರುಗಿ;
 }
 
-void clearIOPageDirectory(cap_t cap)
+ಶೂನ್ಯ clearIOPageDirectory(cap_t cap)
 {
     iopde_t  *pd;
     uint32_t asid = cap_io_space_cap_get_capModuleID(cap);
-    word_t   size = BIT((SMMU_PD_INDEX_BITS));
-    assert(asid != asidInvalid);
+    ಶಬ್ದ_t   ಗಾತ್ರ_2 = ಬಿಟ್((SMMU_PD_ಸೂಚ್ಯಂಕ_ಬಿಟ್ಟುಗಳು));
+    ಪ್ರತಿಜ್ಞಾ(asid != asidInvalid);
     pd = plat_smmu_lookup_iopd_by_asid(asid);
 
-    memset((void *)pd, 0, size);
-    cleanCacheRange_RAM((word_t)pd, (word_t)pd + size, addrFromPPtr(pd));
+    memset((ಶೂನ್ಯ *)pd, 0, ಗಾತ್ರ_2);
+    cleanCacheRange_RAM((ಶಬ್ದ_t)pd, (ಶಬ್ದ_t)pd + ಗಾತ್ರ_2, addrFromPPtr(pd));
 
     plat_smmu_tlb_flush_all();
     plat_smmu_ptc_flush_all();
-    return;
+    ಹಿಂತಿರುಗಿ;
 }
 
-exception_t performPageInvocationUnmapIO(
+exception_t perform_ಪುಟ_Invocation_Unmap_IO(
     cap_t        cap,
-    cte_t       *slot
+    cte_t       *ಸ್ಥಾನ
 )
 {
-    unmapIOPage(slot->cap);
-    slot->cap = cap_small_frame_cap_set_capFMappedAddress(slot->cap, 0);
-    slot->cap = cap_small_frame_cap_set_capFIsIOSpace(slot->cap, 0);
-    slot->cap = cap_small_frame_cap_set_capFMappedASID(slot->cap, asidInvalid);
+    unmapIOPage(ಸ್ಥಾನ->cap);
+    ಸ್ಥಾನ->cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ವಿಳಾಸ(ಸ್ಥಾನ->cap, 0);
+    ಸ್ಥಾನ->cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FIs_IOSpace(ಸ್ಥಾನ->cap, 0);
+    ಸ್ಥಾನ->cap = cap_small_ಚೌಕಟ್ಟು_cap_ಗಣ_cap_FMapped_ASID(ಸ್ಥಾನ->cap, asidInvalid);
 
-    return EXCEPTION_NONE;
+    ಹಿಂತಿರುಗಿ EXCEPTION_NONE;
 }
 
-exception_t decodeARMIOSpaceInvocation(word_t invLabel, cap_t cap)
+exception_t decodeARMIOSpaceInvocation(ಶಬ್ದ_t invLabel, cap_t cap)
 {
     userError("IOSpace capability has no invocations");
     current_syscall_error.type = seL4_IllegalOperation;
-    return EXCEPTION_SYSCALL_ERROR;
+    ಹಿಂತಿರುಗಿ EXCEPTION_SYSCALL_ERROR;
 }
-#endif /* end of CONFIG_TK1_SMMU */
+#ಆದರೆ_ಅಂತ್ಯ /* end of CONFIG_TK1_SMMU */

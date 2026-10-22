@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <benchmark/benchmark.h>
-#include <arch/benchmark.h>
+#ಅನ್ತರ್ಭಾವ <benchmark/benchmark.h>
+#ಅನ್ತರ್ಭಾವ <arch/benchmark.h>
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
-bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
+#ಆದರೆ CONFIG_MAX_ಅಂಕೆ_TRACE_POINTS > 0
+timestamp_t ksEntries[CONFIG_MAX_ಅಂಕೆ_TRACE_POINTS];
+bool_t ksStarted[CONFIG_MAX_ಅಂಕೆ_TRACE_POINTS];
 timestamp_t ksExit;
-seL4_Word ksLogIndex = 0;
-seL4_Word ksLogIndexFinalized = 0;
-#endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
+se_L4_ಶಬ್ದ ks_Log_ಸೂಚ್ಯಂಕ = 0;
+se_L4_ಶಬ್ದ ks_Log_ಸೂಚ್ಯಂಕ_Finalized = 0;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-UP_STATE_DEFINE(uint64_t, ccnt_num_overflows);
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_ENABLE_PMU_ಅತಿಪ್ರವಾಹ_ಅಡಚಣೆ
+ಮೇಲೆ_STATE_DEFINE(uint64_t, ccnt_ಅಂಕೆ_overflows);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
-void arm_init_ccnt(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ENABLE_BENCHMARKS
+ಶೂನ್ಯ arm_init_ccnt(ಶೂನ್ಯ)
 {
 
-    uint32_t val = (BIT(PMCR_ENABLE) | BIT(PMCR_CCNT_RESET) | BIT(PMCR_ECNT_RESET));
-    SYSTEM_WRITE_WORD(PMCR, val);
+    uint32_t val = (ಬಿಟ್(PMCR_ENABLE) | ಬಿಟ್(PMCR_CCNT_RESET) | ಬಿಟ್(PMCR_ECNT_RESET));
+    SYSTEM_WRITE_ಶಬ್ದ(PMCR, val);
 
-#ifdef PMCNTENSET
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ PMCNTENSET
     /* turn on the cycle counter */
-    SYSTEM_WRITE_WORD(PMCNTENSET, BIT(CCNT_INDEX));
-#endif
+    SYSTEM_WRITE_ಶಬ್ದ(PMCNTENSET, ಬಿಟ್(CCNT_ಸೂಚ್ಯಂಕ));
+#ಆದರೆ_ಅಂತ್ಯ
 
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-    armv_enableOverflowIRQ();
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARM_ENABLE_PMU_ಅತಿಪ್ರವಾಹ_ಅಡಚಣೆ
+    armv_enable_ಅತಿಪ್ರವಾಹ_IRQ();
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

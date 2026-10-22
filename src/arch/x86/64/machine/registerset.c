@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
+#ಅನ್ತರ್ಭಾವ <assert.h>
+#ಅನ್ತರ್ಭಾವ <arch/machine/registerset.h>
+#ಅನ್ತರ್ಭಾವ <machine/fpu.h>
+#ಅನ್ತರ್ಭಾವ <arch/object/structures.h>
 
-const register_t msgRegisters[] = {
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t ಸಂದೇಶ_Registers[] = {
     R10, R8, R9, R15
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_ಸಂದೇಶ_registers,
+    ಗಾತ್ರ(ಸಂದೇಶ_Registers) / ಗಾತ್ರ(ಸಂದೇಶ_Registers[0]) == n_ಸಂದೇಶ_Registers
 );
 
-const register_t frameRegisters[] = {
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t ಚೌಕಟ್ಟು_Registers[] = {
     FaultIP, RSP, FLAGS, RAX, RBX, RCX, RDX, RSI, RDI, RBP,
     R8, R9, R10, R11, R12, R13, R14, R15
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_ಚೌಕಟ್ಟು_registers,
+    ಗಾತ್ರ(ಚೌಕಟ್ಟು_Registers) / ಗಾತ್ರ(ಚೌಕಟ್ಟು_Registers[0]) == n_ಚೌಕಟ್ಟು_Registers
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+ಸ್ಥಿರಾಂಕ ರಿಜಿಸ್ಟರ್_t gpRegisters[] = {
+    FS_ತಳ, GS_ತಳ
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    ಗಾತ್ರ(gpRegisters) / ಗಾತ್ರ(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+ಶೂನ್ಯ ಬಹುಲಕ_init_Context(user_context_t *context)
 {
     context->registers[RAX] = 0;
     context->registers[RBX] = 0;
@@ -54,21 +54,21 @@ void Mode_initContext(user_context_t *context)
     context->registers[RSP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+ಶಬ್ದ_t ಬಹುಲಕ_sanitise_ರಿಜಿಸ್ಟರ್(ರಿಜಿಸ್ಟರ್_t reg, ಶಬ್ದ_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    ಆದರೆ (reg == FaultIP || reg == ಮುಂದಿನ_IP || reg == FS_ತಳ || reg == GS_ತಳ) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        ಆದರೆ (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    ಹಿಂತಿರುಗಿ v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_KERNEL_MCS
+ಶಬ್ದ_t getNBSendRecvDest(ಶೂನ್ಯ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    ಹಿಂತಿರುಗಿ get_ರಿಜಿಸ್ಟರ್(ಗಂಟು_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ

@@ -98,15 +98,15 @@ BEGIN_FUNC(trap_entry)
   csrr x1,  sepc
   STORE   x1, (33*REGBYTES)(t0)
 
-  /* Check if it's an interrupt */
-  bltz s0, interrupt
+  /* Check if it's an ಅಡಚಣೆ */
+  bltz s0, ಅಡಚಣೆ
 
   /* ratified priv has value 8 for ecall from U-mode exception */
   li   s4, 8
   bne  s0, s4, exception
 
 handle_syscall:
-  /* Set the return address to sepc + 4 in the case of a system/environment call */
+  /* Set the return address to sepc + 4 in the case of a system/environment ಕರೆ */
   addi x1, x1, 4
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
@@ -133,13 +133,13 @@ handle_syscall:
 
   j c_handle_syscall
 
-/* Not an interrupt or a syscall */
+/* Not an ಅಡಚಣೆ or a syscall */
 exception:
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
   j c_handle_exception
 
-interrupt:
+ಅಡಚಣೆ:
   /* Save NextIP */
   STORE   x1, (34*REGBYTES)(t0)
   j c_handle_interrupt
