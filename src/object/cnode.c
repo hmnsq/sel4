@@ -4,931 +4,931 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/invocation.h>
-#include <api/syscall.h>
-#include <api/types.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#include <object/interrupt.h>
-#include <object/untyped.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <model/preemption.h>
-#include <model/statedata.h>
-#include <util.h>
+#ضمن <assert.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <api/invocation.h>
+#ضمن <api/syscall.h>
+#ضمن <api/types.h>
+#ضمن <machine/io.h>
+#ضمن <object/structures.h>
+#ضمن <object/objecttype.h>
+#ضمن <object/cnode.h>
+#ضمن <object/interrupt.h>
+#ضمن <object/untyped.h>
+#ضمن <kernel/cspace.h>
+#ضمن <kernel/thread.h>
+#ضمن <model/preemption.h>
+#ضمن <model/statedata.h>
+#ضمن <util.h>
 
-struct finaliseSlot_ret {
-    exception_t status;
+بنية finalise_جڳهه_ret {
+    exception_t حالت;
     bool_t success;
     cap_t cleanupInfo;
 };
-typedef struct finaliseSlot_ret finaliseSlot_ret_t;
+تعريفنوع بنية finalise_جڳهه_ret finalise_جڳهه_ret_t;
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t exposed);
-static void emptySlot(cte_t *slot, cap_t cleanupInfo);
-static exception_t reduceZombie(cte_t *slot, bool_t exposed);
+ساكن finalise_جڳهه_ret_t finalise_جڳهه(cte_t *جڳهه, bool_t exposed);
+ساكن فراغ خالي_جايون_جڳهه(cte_t *جڳهه, cap_t cleanupInfo);
+ساكن exception_t reduceZombie(cte_t *جڳهه, bool_t exposed);
 
-#ifdef CONFIG_KERNEL_MCS
-#define CNODE_LAST_INVOCATION CNodeRotate
-#else
-#define CNODE_LAST_INVOCATION CNodeSaveCaller
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+#وصف_ڪريو CNODE_آخري_INVOCATION CNodeRotate
+#وإلا
+#وصف_ڪريو CNODE_آخري_INVOCATION CNodeSaveCaller
+#جيڪڏهن_پورو
 
-exception_t decodeCNodeInvocation(word_t invLabel, word_t length, cap_t cap,
-                                  word_t *buffer)
+exception_t decodeCNodeInvocation(لفظ_t invLabel, لفظ_t ڊيگهائي, cap_t cap,
+                                  لفظ_t *بفر)
 {
-    lookupSlot_ret_t lu_ret;
-    cte_t *destSlot;
-    word_t index, w_bits;
-    exception_t status;
+    lookup_جڳهه_ret_t lu_ret;
+    cte_t *dest_جڳهه;
+    لفظ_t اشاريو, w_بٽ;
+    exception_t حالت;
 
     /* Haskell error: "decodeCNodeInvocation: invalid cap" */
-    assert(cap_get_capType(cap) == cap_cnode_cap);
+    أكد(cap_get_capType(cap) == cap_cnode_cap);
 
-    if (invLabel < CNodeRevoke || invLabel > CNODE_LAST_INVOCATION) {
+    إذا (invLabel < CNodeRevoke || invLabel > CNODE_آخري_INVOCATION) {
         userError("CNodeCap: Illegal Operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2) {
+    إذا (ڊيگهائي < 2) {
         userError("CNode operation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پيغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-    index = getSyscallArg(0, buffer);
-    w_bits = getSyscallArg(1, buffer);
+    اشاريو = getSyscallArg(0, بفر);
+    w_بٽ = getSyscallArg(1, بفر);
 
-    lu_ret = lookupTargetSlot(cap, index, w_bits);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    lu_ret = lookup_هدف_جڳهه(cap, اشاريو, w_بٽ);
+    إذا (lu_ret.حالت != EXCEPTION_NONE) {
         userError("CNode operation: Target slot invalid.");
-        return lu_ret.status;
+        أرجع lu_ret.حالت;
     }
-    destSlot = lu_ret.slot;
+    dest_جڳهه = lu_ret.جڳهه;
 
-    if (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
-        cte_t *srcSlot;
-        word_t srcIndex, srcDepth, capData;
+    إذا (invLabel >= CNodeCopy && invLabel <= CNodeMutate) {
+        cte_t *src_جڳهه;
+        لفظ_t src_اشاريو, src_اونهائي, cap_معلومات;
         bool_t isMove;
         seL4_CapRights_t cap_rights;
-        cap_t srcRoot, newCap;
+        cap_t src_پاڙ, newCap;
         deriveCap_ret_t dc_ret;
         cap_t srcCap;
 
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        إذا (ڊيگهائي < 4 || current_extra_caps.excaprefs[0] == عدم) {
             userError("CNode Copy/Mint/Move/Mutate: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_پيغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        srcIndex = getSyscallArg(2, buffer);
-        srcDepth = getSyscallArg(3, buffer);
+        src_اشاريو = getSyscallArg(2, بفر);
+        src_اونهائي = getSyscallArg(3, بفر);
 
-        srcRoot = current_extra_caps.excaprefs[0]->cap;
+        src_پاڙ = current_extra_caps.excaprefs[0]->cap;
 
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        حالت = ensure_خالي_جايون_جڳهه(dest_جڳهه);
+        إذا (حالت != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Destination not empty.");
-            return status;
+            أرجع حالت;
         }
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lu_ret = lookup_ذريعو_جڳهه(src_پاڙ, src_اشاريو, src_اونهائي);
+        إذا (lu_ret.حالت != EXCEPTION_NONE) {
             userError("CNode Copy/Mint/Move/Mutate: Invalid source slot.");
-            return lu_ret.status;
+            أرجع lu_ret.حالت;
         }
-        srcSlot = lu_ret.slot;
+        src_جڳهه = lu_ret.جڳهه;
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        إذا (cap_get_capType(src_جڳهه->cap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Source slot invalid or empty.");
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
+            current_syscall_error.failed_Lookup_Was_ذريعو = 1;
             current_lookup_fault =
-                lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+                lookup_fault_missing_capability_new(src_اونهائي);
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        switch (invLabel) {
-        case CNodeCopy:
+        بدل (invLabel) {
+        حالة CNodeCopy:
 
-            if (length < 5) {
+            إذا (ڊيگهائي < 5) {
                 userError("Truncated message for CNode Copy operation.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_پيغام;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot, srcCap);
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_لفظ(getSyscallArg(4, بفر));
+            srcCap = نقاب_Cap_Rights(cap_rights, src_جڳهه->cap);
+            dc_ret = deriveCap(src_جڳهه, srcCap);
+            إذا (dc_ret.حالت != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Copy operation.");
-                return dc_ret.status;
+                أرجع dc_ret.حالت;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            اكسر;
 
-        case CNodeMint:
-            if (length < 6) {
+        حالة CNodeMint:
+            إذا (ڊيگهائي < 6) {
                 userError("CNode Mint: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_پيغام;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
 
-            cap_rights = rightsFromWord(getSyscallArg(4, buffer));
-            capData = getSyscallArg(5, buffer);
-            srcCap = maskCapRights(cap_rights, srcSlot->cap);
-            dc_ret = deriveCap(srcSlot,
-                               updateCapData(false, capData, srcCap));
-            if (dc_ret.status != EXCEPTION_NONE) {
+            cap_rights = rights_From_لفظ(getSyscallArg(4, بفر));
+            cap_معلومات = getSyscallArg(5, بفر);
+            srcCap = نقاب_Cap_Rights(cap_rights, src_جڳهه->cap);
+            dc_ret = deriveCap(src_جڳهه,
+                               update_Cap_معلومات(false, cap_معلومات, srcCap));
+            إذا (dc_ret.حالت != EXCEPTION_NONE) {
                 userError("Error deriving cap for CNode Mint operation.");
-                return dc_ret.status;
+                أرجع dc_ret.حالت;
             }
             newCap = dc_ret.cap;
             isMove = false;
 
-            break;
+            اكسر;
 
-        case CNodeMove:
-            newCap = srcSlot->cap;
+        حالة CNodeMove:
+            newCap = src_جڳهه->cap;
             isMove = true;
 
-            break;
+            اكسر;
 
-        case CNodeMutate:
-            if (length < 5) {
+        حالة CNodeMutate:
+            إذا (ڊيگهائي < 5) {
                 userError("CNode Mutate: Truncated message.");
-                current_syscall_error.type = seL4_TruncatedMessage;
-                return EXCEPTION_SYSCALL_ERROR;
+                current_syscall_error.type = se_L4_Truncated_پيغام;
+                أرجع EXCEPTION_SYSCALL_ERROR;
             }
 
-            capData = getSyscallArg(4, buffer);
-            newCap = updateCapData(true, capData, srcSlot->cap);
+            cap_معلومات = getSyscallArg(4, بفر);
+            newCap = update_Cap_معلومات(true, cap_معلومات, src_جڳهه->cap);
             isMove = true;
 
-            break;
+            اكسر;
 
-        default:
-            assert(0);
-            return EXCEPTION_NONE;
+        افتراضي:
+            أكد(0);
+            أرجع EXCEPTION_NONE;
         }
 
-        if (cap_get_capType(newCap) == cap_null_cap) {
+        إذا (cap_get_capType(newCap) == cap_null_cap) {
             userError("CNode Copy/Mint/Move/Mutate: Mutated cap would be invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        if (isMove) {
-            return invokeCNodeMove(newCap, srcSlot, destSlot);
-        } else {
-            return invokeCNodeInsert(newCap, srcSlot, destSlot);
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        إذا (isMove) {
+            أرجع invokeCNodeMove(newCap, src_جڳهه, dest_جڳهه);
+        } وإلا {
+            أرجع invoke_CNode_وجهو(newCap, src_جڳهه, dest_جڳهه);
         }
     }
 
-    if (invLabel == CNodeRevoke) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRevoke(destSlot);
+    إذا (invLabel == CNodeRevoke) {
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invokeCNodeRevoke(dest_جڳهه);
     }
 
-    if (invLabel == CNodeDelete) {
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeDelete(destSlot);
+    إذا (invLabel == CNodeDelete) {
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invokeCNodeDelete(dest_جڳهه);
     }
 
-#ifndef CONFIG_KERNEL_MCS
-    if (invLabel == CNodeSaveCaller) {
-        status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+    إذا (invLabel == CNodeSaveCaller) {
+        حالت = ensure_خالي_جايون_جڳهه(dest_جڳهه);
+        إذا (حالت != EXCEPTION_NONE) {
             userError("CNode SaveCaller: Destination slot not empty.");
-            return status;
+            أرجع حالت;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeSaveCaller(destSlot);
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invokeCNodeSaveCaller(dest_جڳهه);
     }
-#endif
+#جيڪڏهن_پورو
 
-    if (invLabel == CNodeCancelBadgedSends) {
+    إذا (invLabel == CNodeCancelBadgedSends) {
         cap_t destCap;
 
-        destCap = destSlot->cap;
+        destCap = dest_جڳهه->cap;
 
-        if (!hasCancelSendRights(destCap)) {
+        إذا (!hasCancelSendRights(destCap)) {
             userError("CNode CancelBadgedSends: Target cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeCancelBadgedSends(destCap);
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invokeCNodeCancelBadgedSends(destCap);
     }
 
-    if (invLabel == CNodeRotate) {
-        word_t pivotNewData, pivotIndex, pivotDepth;
-        word_t srcNewData, srcIndex, srcDepth;
-        cte_t *pivotSlot, *srcSlot;
-        cap_t pivotRoot, srcRoot, newSrcCap, newPivotCap;
+    إذا (invLabel == CNodeRotate) {
+        لفظ_t محور_New_معلومات, محور_اشاريو, محور_اونهائي;
+        لفظ_t src_New_معلومات, src_اشاريو, src_اونهائي;
+        cte_t *محور_جڳهه, *src_جڳهه;
+        cap_t محور_پاڙ, src_پاڙ, newSrcCap, new_محور_Cap;
 
-        if (length < 8 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+        إذا (ڊيگهائي < 8 || current_extra_caps.excaprefs[0] == عدم
+            || current_extra_caps.excaprefs[1] == عدم) {
+            current_syscall_error.type = se_L4_Truncated_پيغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        pivotNewData = getSyscallArg(2, buffer);
-        pivotIndex   = getSyscallArg(3, buffer);
-        pivotDepth   = getSyscallArg(4, buffer);
-        srcNewData   = getSyscallArg(5, buffer);
-        srcIndex     = getSyscallArg(6, buffer);
-        srcDepth     = getSyscallArg(7, buffer);
+        محور_New_معلومات = getSyscallArg(2, بفر);
+        محور_اشاريو   = getSyscallArg(3, بفر);
+        محور_اونهائي   = getSyscallArg(4, بفر);
+        src_New_معلومات   = getSyscallArg(5, بفر);
+        src_اشاريو     = getSyscallArg(6, بفر);
+        src_اونهائي     = getSyscallArg(7, بفر);
 
-        pivotRoot = current_extra_caps.excaprefs[0]->cap;
-        srcRoot   = current_extra_caps.excaprefs[1]->cap;
+        محور_پاڙ = current_extra_caps.excaprefs[0]->cap;
+        src_پاڙ   = current_extra_caps.excaprefs[1]->cap;
 
-        lu_ret = lookupSourceSlot(srcRoot, srcIndex, srcDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_ذريعو_جڳهه(src_پاڙ, src_اشاريو, src_اونهائي);
+        إذا (lu_ret.حالت != EXCEPTION_NONE) {
+            أرجع lu_ret.حالت;
         }
-        srcSlot = lu_ret.slot;
+        src_جڳهه = lu_ret.جڳهه;
 
-        lu_ret = lookupPivotSlot(pivotRoot, pivotIndex, pivotDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookup_محور_جڳهه(محور_پاڙ, محور_اشاريو, محور_اونهائي);
+        إذا (lu_ret.حالت != EXCEPTION_NONE) {
+            أرجع lu_ret.حالت;
         }
-        pivotSlot = lu_ret.slot;
+        محور_جڳهه = lu_ret.جڳهه;
 
-        if (pivotSlot == srcSlot || pivotSlot == destSlot) {
+        إذا (محور_جڳهه == src_جڳهه || محور_جڳهه == dest_جڳهه) {
             userError("CNode Rotate: Pivot slot the same as source or dest slot.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (srcSlot != destSlot) {
-            status = ensureEmptySlot(destSlot);
-            if (status != EXCEPTION_NONE) {
-                return status;
+        إذا (src_جڳهه != dest_جڳهه) {
+            حالت = ensure_خالي_جايون_جڳهه(dest_جڳهه);
+            إذا (حالت != EXCEPTION_NONE) {
+                أرجع حالت;
             }
         }
 
-        if (cap_get_capType(srcSlot->cap) == cap_null_cap) {
+        إذا (cap_get_capType(src_جڳهه->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 1;
-            current_lookup_fault = lookup_fault_missing_capability_new(srcDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ذريعو = 1;
+            current_lookup_fault = lookup_fault_missing_capability_new(src_اونهائي);
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(pivotSlot->cap) == cap_null_cap) {
+        إذا (cap_get_capType(محور_جڳهه->cap) == cap_null_cap) {
             current_syscall_error.type = seL4_FailedLookup;
-            current_syscall_error.failedLookupWasSource = 0;
-            current_lookup_fault = lookup_fault_missing_capability_new(pivotDepth);
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.failed_Lookup_Was_ذريعو = 0;
+            current_lookup_fault = lookup_fault_missing_capability_new(محور_اونهائي);
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        newSrcCap = updateCapData(true, srcNewData, srcSlot->cap);
-        newPivotCap = updateCapData(true, pivotNewData, pivotSlot->cap);
+        newSrcCap = update_Cap_معلومات(true, src_New_معلومات, src_جڳهه->cap);
+        new_محور_Cap = update_Cap_معلومات(true, محور_New_معلومات, محور_جڳهه->cap);
 
-        if (cap_get_capType(newSrcCap) == cap_null_cap) {
+        إذا (cap_get_capType(newSrcCap) == cap_null_cap) {
             userError("CNode Rotate: Source cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (cap_get_capType(newPivotCap) == cap_null_cap) {
+        إذا (cap_get_capType(new_محور_Cap) == cap_null_cap) {
             userError("CNode Rotate: Pivot cap invalid.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeCNodeRotate(newSrcCap, newPivotCap,
-                                 srcSlot, pivotSlot, destSlot);
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invokeCNodeRotate(newSrcCap, new_محور_Cap,
+                                 src_جڳهه, محور_جڳهه, dest_جڳهه);
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeRevoke(cte_t *destSlot)
+exception_t invokeCNodeRevoke(cte_t *dest_جڳهه)
 {
-    return cteRevoke(destSlot);
+    أرجع cteRevoke(dest_جڳهه);
 }
 
-exception_t invokeCNodeDelete(cte_t *destSlot)
+exception_t invokeCNodeDelete(cte_t *dest_جڳهه)
 {
-    return cteDelete(destSlot, true);
+    أرجع cteDelete(dest_جڳهه, true);
 }
 
 exception_t invokeCNodeCancelBadgedSends(cap_t cap)
 {
-    word_t badge = cap_endpoint_cap_get_capEPBadge(cap);
-    if (badge) {
+    لفظ_t badge = cap_endpoint_cap_get_capEPBadge(cap);
+    إذا (badge) {
         endpoint_t *ep = (endpoint_t *)
                          cap_endpoint_cap_get_capEPPtr(cap);
         cancelBadgedSends(ep, badge);
     }
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeInsert(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invoke_CNode_وجهو(cap_t cap, cte_t *src_جڳهه, cte_t *dest_جڳهه)
 {
-    cteInsert(cap, srcSlot, destSlot);
+    cte_وجهو(cap, src_جڳهه, dest_جڳهه);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t invokeCNodeMove(cap_t cap, cte_t *srcSlot, cte_t *destSlot)
+exception_t invokeCNodeMove(cap_t cap, cte_t *src_جڳهه, cte_t *dest_جڳهه)
 {
-    cteMove(cap, srcSlot, destSlot);
+    cteMove(cap, src_جڳهه, dest_جڳهه);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
 exception_t invokeCNodeRotate(cap_t cap1, cap_t cap2, cte_t *slot1,
                               cte_t *slot2, cte_t *slot3)
 {
-    if (slot1 == slot3) {
-        cteSwap(cap1, slot1, cap2, slot2);
-    } else {
+    إذا (slot1 == slot3) {
+        cte_مٽا_سٽا(cap1, slot1, cap2, slot2);
+    } وإلا {
         cteMove(cap2, slot2, slot3);
         cteMove(cap1, slot1, slot2);
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-#ifndef CONFIG_KERNEL_MCS
-exception_t invokeCNodeSaveCaller(cte_t *destSlot)
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+exception_t invokeCNodeSaveCaller(cte_t *dest_جڳهه)
 {
     cap_t cap;
-    cte_t *srcSlot;
+    cte_t *src_جڳهه;
 
-    srcSlot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbCaller);
-    cap = srcSlot->cap;
+    src_جڳهه = TCB_PTR_CTE_PTR(ڳنڍ_STATE(ksCurThread), tcbCaller);
+    cap = src_جڳهه->cap;
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
+    بدل (cap_get_capType(cap)) {
+    حالة cap_null_cap:
         userError("CNode SaveCaller: Reply cap not present.");
-        break;
+        اكسر;
 
-    case cap_reply_cap:
-        if (!cap_reply_cap_get_capReplyMaster(cap)) {
-            cteMove(cap, srcSlot, destSlot);
+    حالة cap_جواب_cap:
+        إذا (!cap_جواب_cap_get_cap_جواب_Master(cap)) {
+            cteMove(cap, src_جڳهه, dest_جڳهه);
         }
-        break;
+        اكسر;
 
-    default:
+    افتراضي:
         fail("caller capability must be null or reply");
-        break;
+        اكسر;
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
-#endif
+#جيڪڏهن_پورو
 
 /*
  * If creating a child UntypedCap, don't allow new objects to be created in the
  * parent.
  */
-static void setUntypedCapAsFull(cap_t srcCap, cap_t newCap, cte_t *srcSlot)
+ساكن فراغ سيٽ_Untyped_Cap_As_ڀريل(cap_t srcCap, cap_t newCap, cte_t *src_جڳهه)
 {
-    if ((cap_get_capType(srcCap) == cap_untyped_cap)
+    إذا ((cap_get_capType(srcCap) == cap_untyped_cap)
         && (cap_get_capType(newCap) == cap_untyped_cap)) {
-        if ((cap_untyped_cap_get_capPtr(srcCap)
+        إذا ((cap_untyped_cap_get_capPtr(srcCap)
              == cap_untyped_cap_get_capPtr(newCap))
-            && (cap_untyped_cap_get_capBlockSize(newCap)
-                == cap_untyped_cap_get_capBlockSize(srcCap))) {
-            cap_untyped_cap_ptr_set_capFreeIndex(&(srcSlot->cap),
-                                                 MAX_FREE_INDEX(cap_untyped_cap_get_capBlockSize(srcCap)));
+            && (cap_untyped_cap_get_cap_بلاڪ_سائيز(newCap)
+                == cap_untyped_cap_get_cap_بلاڪ_سائيز(srcCap))) {
+            cap_untyped_cap_ptr_سيٽ_cap_Free_اشاريو(&(src_جڳهه->cap),
+                                                 MAX_FREE_اشاريو(cap_untyped_cap_get_cap_بلاڪ_سائيز(srcCap)));
         }
     }
 }
 
-void cteInsert(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+فراغ cte_وجهو(cap_t newCap, cte_t *src_جڳهه, cte_t *dest_جڳهه)
 {
-    mdb_node_t srcMDB, newMDB;
+    mdb_ڳنڍ_t srcMDB, newMDB;
     cap_t srcCap;
     bool_t newCapIsRevocable;
 
-    srcMDB = srcSlot->cteMDBNode;
-    srcCap = srcSlot->cap;
+    srcMDB = src_جڳهه->cteMDBNode;
+    srcCap = src_جڳهه->cap;
 
     newCapIsRevocable = isCapRevocable(newCap, srcCap);
 
-    newMDB = mdb_node_set_mdbPrev(srcMDB, CTE_REF(srcSlot));
-    newMDB = mdb_node_set_mdbRevocable(newMDB, newCapIsRevocable);
-    newMDB = mdb_node_set_mdbFirstBadged(newMDB, newCapIsRevocable);
+    newMDB = mdb_ڳنڍ_سيٽ_mdb_Prev(srcMDB, CTE_REF(src_جڳهه));
+    newMDB = mdb_ڳنڍ_سيٽ_mdb_Revocable(newMDB, newCapIsRevocable);
+    newMDB = mdb_ڳنڍ_سيٽ_mdb_پهريون_Badged(newMDB, newCapIsRevocable);
 
     /* Haskell error: "cteInsert to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    أكد(cap_get_capType(dest_جڳهه->cap) == cap_null_cap);
     /* Haskell error: "cteInsert: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    أكد((cte_t *)mdb_ڳنڍ_get_mdb_ايندڙ(dest_جڳهه->cteMDBNode) == عدم &&
+           (cte_t *)mdb_ڳنڍ_get_mdb_Prev(dest_جڳهه->cteMDBNode) == عدم);
 
     /* Prevent parent untyped cap from being used again if creating a child
      * untyped from it. */
-    setUntypedCapAsFull(srcCap, newCap, srcSlot);
+    سيٽ_Untyped_Cap_As_ڀريل(srcCap, newCap, src_جڳهه);
 
-    destSlot->cap = newCap;
-    destSlot->cteMDBNode = newMDB;
-    mdb_node_ptr_set_mdbNext(&srcSlot->cteMDBNode, CTE_REF(destSlot));
-    if (mdb_node_get_mdbNext(newMDB)) {
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(mdb_node_get_mdbNext(newMDB))->cteMDBNode,
-            CTE_REF(destSlot));
+    dest_جڳهه->cap = newCap;
+    dest_جڳهه->cteMDBNode = newMDB;
+    mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(&src_جڳهه->cteMDBNode, CTE_REF(dest_جڳهه));
+    إذا (mdb_ڳنڍ_get_mdb_ايندڙ(newMDB)) {
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(
+            &CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(newMDB))->cteMDBNode,
+            CTE_REF(dest_جڳهه));
     }
 }
 
-void cteMove(cap_t newCap, cte_t *srcSlot, cte_t *destSlot)
+فراغ cteMove(cap_t newCap, cte_t *src_جڳهه, cte_t *dest_جڳهه)
 {
-    mdb_node_t mdb;
-    word_t prev_ptr, next_ptr;
+    mdb_ڳنڍ_t mdb;
+    لفظ_t prev_ptr, ايندڙ_ptr;
 
     /* Haskell error: "cteMove to non-empty destination" */
-    assert(cap_get_capType(destSlot->cap) == cap_null_cap);
+    أكد(cap_get_capType(dest_جڳهه->cap) == cap_null_cap);
     /* Haskell error: "cteMove: mdb entry must be empty" */
-    assert((cte_t *)mdb_node_get_mdbNext(destSlot->cteMDBNode) == NULL &&
-           (cte_t *)mdb_node_get_mdbPrev(destSlot->cteMDBNode) == NULL);
+    أكد((cte_t *)mdb_ڳنڍ_get_mdb_ايندڙ(dest_جڳهه->cteMDBNode) == عدم &&
+           (cte_t *)mdb_ڳنڍ_get_mdb_Prev(dest_جڳهه->cteMDBNode) == عدم);
 
-    mdb = srcSlot->cteMDBNode;
-    destSlot->cap = newCap;
-    srcSlot->cap = cap_null_cap_new();
-    destSlot->cteMDBNode = mdb;
-    srcSlot->cteMDBNode = nullMDBNode;
+    mdb = src_جڳهه->cteMDBNode;
+    dest_جڳهه->cap = newCap;
+    src_جڳهه->cap = cap_null_cap_new();
+    dest_جڳهه->cteMDBNode = mdb;
+    src_جڳهه->cteMDBNode = nullMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ڳنڍ_get_mdb_Prev(mdb);
+    إذا (prev_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+            CTE_REF(dest_جڳهه));
 
-    next_ptr = mdb_node_get_mdbNext(mdb);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
-            CTE_REF(destSlot));
+    ايندڙ_ptr = mdb_ڳنڍ_get_mdb_ايندڙ(mdb);
+    إذا (ايندڙ_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(
+            &CTE_PTR(ايندڙ_ptr)->cteMDBNode,
+            CTE_REF(dest_جڳهه));
 }
 
-void capSwapForDelete(cte_t *slot1, cte_t *slot2)
+فراغ cap_مٽا_سٽا_For_Delete(cte_t *slot1, cte_t *slot2)
 {
     cap_t cap1, cap2;
 
-    if (slot1 == slot2) {
-        return;
+    إذا (slot1 == slot2) {
+        أرجع;
     }
 
     cap1 = slot1->cap;
     cap2 = slot2->cap;
 
-    cteSwap(cap1, slot1, cap2, slot2);
+    cte_مٽا_سٽا(cap1, slot1, cap2, slot2);
 }
 
-void cteSwap(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
+فراغ cte_مٽا_سٽا(cap_t cap1, cte_t *slot1, cap_t cap2, cte_t *slot2)
 {
-    mdb_node_t mdb1, mdb2;
-    word_t next_ptr, prev_ptr;
+    mdb_ڳنڍ_t mdb1, mdb2;
+    لفظ_t ايندڙ_ptr, prev_ptr;
 
     slot1->cap = cap2;
     slot2->cap = cap1;
 
     mdb1 = slot1->cteMDBNode;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb1);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ڳنڍ_get_mdb_Prev(mdb1);
+    إذا (prev_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
-    next_ptr = mdb_node_get_mdbNext(mdb1);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    ايندڙ_ptr = mdb_ڳنڍ_get_mdb_ايندڙ(mdb1);
+    إذا (ايندڙ_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(
+            &CTE_PTR(ايندڙ_ptr)->cteMDBNode,
             CTE_REF(slot2));
 
     mdb2 = slot2->cteMDBNode;
     slot1->cteMDBNode = mdb2;
     slot2->cteMDBNode = mdb1;
 
-    prev_ptr = mdb_node_get_mdbPrev(mdb2);
-    if (prev_ptr)
-        mdb_node_ptr_set_mdbNext(
+    prev_ptr = mdb_ڳنڍ_get_mdb_Prev(mdb2);
+    إذا (prev_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(
             &CTE_PTR(prev_ptr)->cteMDBNode,
             CTE_REF(slot1));
 
-    next_ptr = mdb_node_get_mdbNext(mdb2);
-    if (next_ptr)
-        mdb_node_ptr_set_mdbPrev(
-            &CTE_PTR(next_ptr)->cteMDBNode,
+    ايندڙ_ptr = mdb_ڳنڍ_get_mdb_ايندڙ(mdb2);
+    إذا (ايندڙ_ptr)
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(
+            &CTE_PTR(ايندڙ_ptr)->cteMDBNode,
             CTE_REF(slot1));
 }
 
-exception_t cteRevoke(cte_t *slot)
+exception_t cteRevoke(cte_t *جڳهه)
 {
-    cte_t *nextPtr;
-    exception_t status;
+    cte_t *ايندڙ_Ptr;
+    exception_t حالت;
 
     /* there is no need to check for a NullCap as NullCaps are
        always accompanied by null mdb pointers */
-    for (nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-         nextPtr && isMDBParentOf(slot, nextPtr);
-         nextPtr = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode))) {
-        status = cteDelete(nextPtr, true);
-        if (status != EXCEPTION_NONE) {
-            return status;
+    لكل (ايندڙ_Ptr = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(جڳهه->cteMDBNode));
+         ايندڙ_Ptr && is_MDBParent_جو(جڳهه, ايندڙ_Ptr);
+         ايندڙ_Ptr = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(جڳهه->cteMDBNode))) {
+        حالت = cteDelete(ايندڙ_Ptr, true);
+        إذا (حالت != EXCEPTION_NONE) {
+            أرجع حالت;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            return status;
+        حالت = preemption_نقطو();
+        إذا (حالت != EXCEPTION_NONE) {
+            أرجع حالت;
         }
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t cteDelete(cte_t *slot, bool_t exposed)
+exception_t cteDelete(cte_t *جڳهه, bool_t exposed)
 {
-    finaliseSlot_ret_t fs_ret;
+    finalise_جڳهه_ret_t fs_ret;
 
-    fs_ret = finaliseSlot(slot, exposed);
-    if (fs_ret.status != EXCEPTION_NONE) {
-        return fs_ret.status;
+    fs_ret = finalise_جڳهه(جڳهه, exposed);
+    إذا (fs_ret.حالت != EXCEPTION_NONE) {
+        أرجع fs_ret.حالت;
     }
 
-    if (exposed || fs_ret.success) {
-        emptySlot(slot, fs_ret.cleanupInfo);
+    إذا (exposed || fs_ret.success) {
+        خالي_جايون_جڳهه(جڳهه, fs_ret.cleanupInfo);
     }
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-static void emptySlot(cte_t *slot, cap_t cleanupInfo)
+ساكن فراغ خالي_جايون_جڳهه(cte_t *جڳهه, cap_t cleanupInfo)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        mdb_node_t mdbNode;
-        cte_t *prev, *next;
+    إذا (cap_get_capType(جڳهه->cap) != cap_null_cap) {
+        mdb_ڳنڍ_t mdb_ڳنڍ;
+        cte_t *prev, *ايندڙ;
 
-        mdbNode = slot->cteMDBNode;
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdbNode));
-        next = CTE_PTR(mdb_node_get_mdbNext(mdbNode));
+        mdb_ڳنڍ = جڳهه->cteMDBNode;
+        prev = CTE_PTR(mdb_ڳنڍ_get_mdb_Prev(mdb_ڳنڍ));
+        ايندڙ = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(mdb_ڳنڍ));
 
-        if (prev) {
-            mdb_node_ptr_set_mdbNext(&prev->cteMDBNode, CTE_REF(next));
+        إذا (prev) {
+            mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(&prev->cteMDBNode, CTE_REF(ايندڙ));
         }
-        if (next) {
-            mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(prev));
+        إذا (ايندڙ) {
+            mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(&ايندڙ->cteMDBNode, CTE_REF(prev));
         }
-        if (next)
-            mdb_node_ptr_set_mdbFirstBadged(&next->cteMDBNode,
-                                            mdb_node_get_mdbFirstBadged(next->cteMDBNode) ||
-                                            mdb_node_get_mdbFirstBadged(mdbNode));
-        slot->cap = cap_null_cap_new();
-        slot->cteMDBNode = nullMDBNode;
+        إذا (ايندڙ)
+            mdb_ڳنڍ_ptr_سيٽ_mdb_پهريون_Badged(&ايندڙ->cteMDBNode,
+                                            mdb_ڳنڍ_get_mdb_پهريون_Badged(ايندڙ->cteMDBNode) ||
+                                            mdb_ڳنڍ_get_mdb_پهريون_Badged(mdb_ڳنڍ));
+        جڳهه->cap = cap_null_cap_new();
+        جڳهه->cteMDBNode = nullMDBNode;
 
         postCapDeletion(cleanupInfo);
     }
 }
 
-static inline bool_t CONST capRemovable(cap_t cap, cte_t *slot)
+ساكن مضمن bool_t CONST capRemovable(cap_t cap, cte_t *جڳهه)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-        return true;
-    case cap_zombie_cap: {
-        word_t n = cap_zombie_cap_get_capZombieNumber(cap);
-        cte_t *z_slot = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
-        return (n == 0 || (n == 1 && slot == z_slot));
+    بدل (cap_get_capType(cap)) {
+    حالة cap_null_cap:
+        أرجع true;
+    حالة cap_zombie_cap: {
+        لفظ_t n = cap_zombie_cap_get_cap_Zombie_عدد(cap);
+        cte_t *z_جڳهه = (cte_t *)cap_zombie_cap_get_capZombiePtr(cap);
+        أرجع (n == 0 || (n == 1 && جڳهه == z_جڳهه));
     }
-    default:
+    افتراضي:
         fail("finaliseCap should only return Zombie or NullCap");
     }
 }
 
-static inline bool_t CONST capCyclicZombie(cap_t cap, cte_t *slot)
+ساكن مضمن bool_t CONST capCyclicZombie(cap_t cap, cte_t *جڳهه)
 {
-    return cap_get_capType(cap) == cap_zombie_cap &&
-           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == slot;
+    أرجع cap_get_capType(cap) == cap_zombie_cap &&
+           CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap)) == جڳهه;
 }
 
-static finaliseSlot_ret_t finaliseSlot(cte_t *slot, bool_t immediate)
+ساكن finalise_جڳهه_ret_t finalise_جڳهه(cte_t *جڳهه, bool_t فوري)
 {
     bool_t final;
     finaliseCap_ret_t fc_ret;
-    exception_t status;
-    finaliseSlot_ret_t ret;
+    exception_t حالت;
+    finalise_جڳهه_ret_t ret;
 
-    while (cap_get_capType(slot->cap) != cap_null_cap) {
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, false);
+    طالما (cap_get_capType(جڳهه->cap) != cap_null_cap) {
+        final = isFinalCapability(جڳهه);
+        fc_ret = finaliseCap(جڳهه->cap, final, false);
 
-        if (capRemovable(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        إذا (capRemovable(fc_ret.remainder, جڳهه)) {
+            ret.حالت = EXCEPTION_NONE;
             ret.success = true;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            أرجع ret;
         }
 
-        slot->cap = fc_ret.remainder;
+        جڳهه->cap = fc_ret.remainder;
 
-        if (!immediate && capCyclicZombie(fc_ret.remainder, slot)) {
-            ret.status = EXCEPTION_NONE;
+        إذا (!فوري && capCyclicZombie(fc_ret.remainder, جڳهه)) {
+            ret.حالت = EXCEPTION_NONE;
             ret.success = false;
             ret.cleanupInfo = fc_ret.cleanupInfo;
-            return ret;
+            أرجع ret;
         }
 
-        status = reduceZombie(slot, immediate);
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        حالت = reduceZombie(جڳهه, فوري);
+        إذا (حالت != EXCEPTION_NONE) {
+            ret.حالت = حالت;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            أرجع ret;
         }
 
-        status = preemptionPoint();
-        if (status != EXCEPTION_NONE) {
-            ret.status = status;
+        حالت = preemption_نقطو();
+        إذا (حالت != EXCEPTION_NONE) {
+            ret.حالت = حالت;
             ret.success = false;
             ret.cleanupInfo = cap_null_cap_new();
-            return ret;
+            أرجع ret;
         }
     }
-    ret.status = EXCEPTION_NONE;
+    ret.حالت = EXCEPTION_NONE;
     ret.success = true;
     ret.cleanupInfo = cap_null_cap_new();
-    return ret;
+    أرجع ret;
 }
 
-static exception_t reduceZombie(cte_t *slot, bool_t immediate)
+ساكن exception_t reduceZombie(cte_t *جڳهه, bool_t فوري)
 {
     cte_t *ptr;
-    word_t n, type;
-    exception_t status;
+    لفظ_t n, type;
+    exception_t حالت;
 
-    assert(cap_get_capType(slot->cap) == cap_zombie_cap);
-    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
-    n = cap_zombie_cap_get_capZombieNumber(slot->cap);
-    type = cap_zombie_cap_get_capZombieType(slot->cap);
+    أكد(cap_get_capType(جڳهه->cap) == cap_zombie_cap);
+    ptr = (cte_t *)cap_zombie_cap_get_capZombiePtr(جڳهه->cap);
+    n = cap_zombie_cap_get_cap_Zombie_عدد(جڳهه->cap);
+    type = cap_zombie_cap_get_capZombieType(جڳهه->cap);
 
     /* Haskell error: "reduceZombie: expected unremovable zombie" */
-    assert(n > 0);
+    أكد(n > 0);
 
-    if (immediate) {
-        cte_t *endSlot = &ptr[n - 1];
+    إذا (فوري) {
+        cte_t *پڇاڙي_جڳهه = &ptr[n - 1];
 
-        status = cteDelete(endSlot, false);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        حالت = cteDelete(پڇاڙي_جڳهه, false);
+        إذا (حالت != EXCEPTION_NONE) {
+            أرجع حالت;
         }
 
-        switch (cap_get_capType(slot->cap)) {
-        case cap_null_cap:
-            break;
+        بدل (cap_get_capType(جڳهه->cap)) {
+        حالة cap_null_cap:
+            اكسر;
 
-        case cap_zombie_cap: {
+        حالة cap_zombie_cap: {
             cte_t *ptr2 =
-                (cte_t *)cap_zombie_cap_get_capZombiePtr(slot->cap);
+                (cte_t *)cap_zombie_cap_get_capZombiePtr(جڳهه->cap);
 
-            if (ptr == ptr2 &&
-                cap_zombie_cap_get_capZombieNumber(slot->cap) == n &&
-                cap_zombie_cap_get_capZombieType(slot->cap) == type) {
-                assert(cap_get_capType(endSlot->cap) == cap_null_cap);
-                slot->cap =
-                    cap_zombie_cap_set_capZombieNumber(slot->cap, n - 1);
-            } else {
+            إذا (ptr == ptr2 &&
+                cap_zombie_cap_get_cap_Zombie_عدد(جڳهه->cap) == n &&
+                cap_zombie_cap_get_capZombieType(جڳهه->cap) == type) {
+                أكد(cap_get_capType(پڇاڙي_جڳهه->cap) == cap_null_cap);
+                جڳهه->cap =
+                    cap_zombie_cap_سيٽ_cap_Zombie_عدد(جڳهه->cap, n - 1);
+            } وإلا {
                 /* Haskell error:
                  * "Expected new Zombie to be self-referential."
                  */
-                assert(ptr2 == slot && ptr != slot);
+                أكد(ptr2 == جڳهه && ptr != جڳهه);
             }
-            break;
+            اكسر;
         }
 
-        default:
+        افتراضي:
             fail("Expected recursion to result in Zombie.");
         }
-    } else {
+    } وإلا {
         /* Haskell error: "Cyclic zombie passed to unexposed reduceZombie" */
-        assert(ptr != slot);
+        أكد(ptr != جڳهه);
 
-        if (cap_get_capType(ptr->cap) == cap_zombie_cap) {
+        إذا (cap_get_capType(ptr->cap) == cap_zombie_cap) {
             /* Haskell error: "Moving self-referential Zombie aside." */
-            assert(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
+            أكد(ptr != CTE_PTR(cap_zombie_cap_get_capZombiePtr(ptr->cap)));
         }
 
-        capSwapForDelete(ptr, slot);
+        cap_مٽا_سٽا_For_Delete(ptr, جڳهه);
     }
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-void cteDeleteOne(cte_t *slot)
+فراغ cteDeleteOne(cte_t *جڳهه)
 {
-    word_t cap_type = cap_get_capType(slot->cap);
-    if (cap_type != cap_null_cap) {
+    لفظ_t cap_type = cap_get_capType(جڳهه->cap);
+    إذا (cap_type != cap_null_cap) {
         bool_t final;
-        finaliseCap_ret_t fc_ret UNUSED;
+        finaliseCap_ret_t fc_ret اڻ_استعمال_ٿيل;
 
         /** GHOSTUPD: "(gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = (-1)
             \<or> gs_get_assn cteDeleteOne_'proc \<acute>ghost'state = \<acute>cap_type, id)" */
 
-        final = isFinalCapability(slot);
-        fc_ret = finaliseCap(slot->cap, final, true);
+        final = isFinalCapability(جڳهه);
+        fc_ret = finaliseCap(جڳهه->cap, final, true);
         /* Haskell error: "cteDeleteOne: cap should be removable" */
-        assert(capRemovable(fc_ret.remainder, slot) &&
+        أكد(capRemovable(fc_ret.remainder, جڳهه) &&
                cap_get_capType(fc_ret.cleanupInfo) == cap_null_cap);
-        emptySlot(slot, cap_null_cap_new());
+        خالي_جايون_جڳهه(جڳهه, cap_null_cap_new());
     }
 }
 
-void insertNewCap(cte_t *parent, cte_t *slot, cap_t cap)
+فراغ وجهو_New_Cap(cte_t *والد, cte_t *جڳهه, cap_t cap)
 {
-    cte_t *next;
+    cte_t *ايندڙ;
 
-    next = CTE_PTR(mdb_node_get_mdbNext(parent->cteMDBNode));
-    slot->cap = cap;
-    slot->cteMDBNode = mdb_node_new(CTE_REF(next), true, true, CTE_REF(parent));
-    if (next) {
-        mdb_node_ptr_set_mdbPrev(&next->cteMDBNode, CTE_REF(slot));
+    ايندڙ = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(والد->cteMDBNode));
+    جڳهه->cap = cap;
+    جڳهه->cteMDBNode = mdb_ڳنڍ_new(CTE_REF(ايندڙ), true, true, CTE_REF(والد));
+    إذا (ايندڙ) {
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Prev(&ايندڙ->cteMDBNode, CTE_REF(جڳهه));
     }
-    mdb_node_ptr_set_mdbNext(&parent->cteMDBNode, CTE_REF(slot));
+    mdb_ڳنڍ_ptr_سيٽ_mdb_ايندڙ(&والد->cteMDBNode, CTE_REF(جڳهه));
 }
 
-#ifndef CONFIG_KERNEL_MCS
-void setupReplyMaster(tcb_t *thread)
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+فراغ تياري_جواب_Master(tcb_t *thread)
 {
-    cte_t *slot;
+    cte_t *جڳهه;
 
-    slot = TCB_PTR_CTE_PTR(thread, tcbReply);
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
+    جڳهه = TCB_PTR_CTE_PTR(thread, tcb_جواب);
+    إذا (cap_get_capType(جڳهه->cap) == cap_null_cap) {
         /* Haskell asserts that no reply caps exist for this thread here. This
          * cannot be translated. */
-        slot->cap = cap_reply_cap_new(true, true, TCB_REF(thread));
-        slot->cteMDBNode = nullMDBNode;
-        mdb_node_ptr_set_mdbRevocable(&slot->cteMDBNode, true);
-        mdb_node_ptr_set_mdbFirstBadged(&slot->cteMDBNode, true);
+        جڳهه->cap = cap_جواب_cap_new(true, true, TCB_REF(thread));
+        جڳهه->cteMDBNode = nullMDBNode;
+        mdb_ڳنڍ_ptr_سيٽ_mdb_Revocable(&جڳهه->cteMDBNode, true);
+        mdb_ڳنڍ_ptr_سيٽ_mdb_پهريون_Badged(&جڳهه->cteMDBNode, true);
     }
 }
-#endif
+#جيڪڏهن_پورو
 
-bool_t PURE isMDBParentOf(cte_t *cte_a, cte_t *cte_b)
+bool_t خالص is_MDBParent_جو(cte_t *cte_a, cte_t *cte_b)
 {
-    if (!mdb_node_get_mdbRevocable(cte_a->cteMDBNode)) {
-        return false;
+    إذا (!mdb_ڳنڍ_get_mdb_Revocable(cte_a->cteMDBNode)) {
+        أرجع false;
     }
-    if (!sameRegionAs(cte_a->cap, cte_b->cap)) {
-        return false;
+    إذا (!sameRegionAs(cte_a->cap, cte_b->cap)) {
+        أرجع false;
     }
     /* We want to take care of arch caps first, because that is easier in the proofs.
        We expect Arch_isMDBParentOf to return true if both caps are not architecture
        specific. */
-    if (!Arch_isMDBParentOf(cte_a->cap, cte_b->cap,
-                            mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode))) {
-        return false;
+    إذا (!Arch_is_MDBParent_جو(cte_a->cap, cte_b->cap,
+                            mdb_ڳنڍ_get_mdb_پهريون_Badged(cte_b->cteMDBNode))) {
+        أرجع false;
     }
-    switch (cap_get_capType(cte_a->cap)) {
-    case cap_endpoint_cap: {
-        word_t badge;
+    بدل (cap_get_capType(cte_a->cap)) {
+    حالة cap_endpoint_cap: {
+        لفظ_t badge;
 
         badge = cap_endpoint_cap_get_capEPBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        إذا (badge == 0) {
+            أرجع true;
         }
-        return (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        أرجع (badge == cap_endpoint_cap_get_capEPBadge(cte_b->cap)) &&
+               !mdb_ڳنڍ_get_mdb_پهريون_Badged(cte_b->cteMDBNode);
+        اكسر;
     }
 
-    case cap_notification_cap: {
-        word_t badge;
+    حالة cap_notification_cap: {
+        لفظ_t badge;
 
         badge = cap_notification_cap_get_capNtfnBadge(cte_a->cap);
-        if (badge == 0) {
-            return true;
+        إذا (badge == 0) {
+            أرجع true;
         }
-        return (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
-               !mdb_node_get_mdbFirstBadged(cte_b->cteMDBNode);
-        break;
+        أرجع (badge == cap_notification_cap_get_capNtfnBadge(cte_b->cap)) &&
+               !mdb_ڳنڍ_get_mdb_پهريون_Badged(cte_b->cteMDBNode);
+        اكسر;
     }
 
-    default:
-        return true;
-        break;
+    افتراضي:
+        أرجع true;
+        اكسر;
     }
 }
 
-exception_t ensureNoChildren(cte_t *slot)
+exception_t ensureNoChildren(cte_t *جڳهه)
 {
-    if (mdb_node_get_mdbNext(slot->cteMDBNode) != 0) {
-        cte_t *next;
+    إذا (mdb_ڳنڍ_get_mdb_ايندڙ(جڳهه->cteMDBNode) != 0) {
+        cte_t *ايندڙ;
 
-        next = CTE_PTR(mdb_node_get_mdbNext(slot->cteMDBNode));
-        if (isMDBParentOf(slot, next)) {
-            current_syscall_error.type = seL4_RevokeFirst;
-            return EXCEPTION_SYSCALL_ERROR;
+        ايندڙ = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(جڳهه->cteMDBNode));
+        إذا (is_MDBParent_جو(جڳهه, ايندڙ)) {
+            current_syscall_error.type = se_L4_Revoke_پهريون;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t ensureEmptySlot(cte_t *slot)
+exception_t ensure_خالي_جايون_جڳهه(cte_t *جڳهه)
 {
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        current_syscall_error.type = seL4_DeleteFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+    إذا (cap_get_capType(جڳهه->cap) != cap_null_cap) {
+        current_syscall_error.type = se_L4_Delete_پهريون;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-bool_t PURE isFinalCapability(cte_t *cte)
+bool_t خالص isFinalCapability(cte_t *cte)
 {
-    mdb_node_t mdb;
+    mdb_ڳنڍ_t mdb;
     bool_t prevIsSameObject;
 
     mdb = cte->cteMDBNode;
 
-    if (mdb_node_get_mdbPrev(mdb) == 0) {
+    إذا (mdb_ڳنڍ_get_mdb_Prev(mdb) == 0) {
         prevIsSameObject = false;
-    } else {
+    } وإلا {
         cte_t *prev;
 
-        prev = CTE_PTR(mdb_node_get_mdbPrev(mdb));
+        prev = CTE_PTR(mdb_ڳنڍ_get_mdb_Prev(mdb));
         prevIsSameObject = sameObjectAs(prev->cap, cte->cap);
     }
 
-    if (prevIsSameObject) {
-        return false;
-    } else {
-        if (mdb_node_get_mdbNext(mdb) == 0) {
-            return true;
-        } else {
-            cte_t *next;
+    إذا (prevIsSameObject) {
+        أرجع false;
+    } وإلا {
+        إذا (mdb_ڳنڍ_get_mdb_ايندڙ(mdb) == 0) {
+            أرجع true;
+        } وإلا {
+            cte_t *ايندڙ;
 
-            next = CTE_PTR(mdb_node_get_mdbNext(mdb));
-            return !sameObjectAs(cte->cap, next->cap);
+            ايندڙ = CTE_PTR(mdb_ڳنڍ_get_mdb_ايندڙ(mdb));
+            أرجع !sameObjectAs(cte->cap, ايندڙ->cap);
         }
     }
 }
 
-bool_t PURE slotCapLongRunningDelete(cte_t *slot)
+bool_t خالص جڳهه_Cap_Long_Running_Delete(cte_t *جڳهه)
 {
-    if (cap_get_capType(slot->cap) == cap_null_cap) {
-        return false;
-    } else if (! isFinalCapability(slot)) {
-        return false;
+    إذا (cap_get_capType(جڳهه->cap) == cap_null_cap) {
+        أرجع false;
+    } وإلا إذا (! isFinalCapability(جڳهه)) {
+        أرجع false;
     }
-    switch (cap_get_capType(slot->cap)) {
-    case cap_thread_cap:
-    case cap_zombie_cap:
-    case cap_cnode_cap:
-        return true;
-    default:
-        return false;
+    بدل (cap_get_capType(جڳهه->cap)) {
+    حالة cap_thread_cap:
+    حالة cap_zombie_cap:
+    حالة cap_cnode_cap:
+        أرجع true;
+    افتراضي:
+        أرجع false;
     }
 }
 
 /* This implementation is specialised to the (current) limit
  * of one cap receive slot. */
-cte_t *getReceiveSlots(tcb_t *thread, word_t *buffer)
+cte_t *getReceiveSlots(tcb_t *thread, لفظ_t *بفر)
 {
     cap_transfer_t ct;
     cptr_t cptr;
     lookupCap_ret_t luc_ret;
-    lookupSlot_ret_t lus_ret;
-    cte_t *slot;
+    lookup_جڳهه_ret_t lus_ret;
+    cte_t *جڳهه;
     cap_t cnode;
 
-    if (!buffer) {
-        return NULL;
+    إذا (!بفر) {
+        أرجع عدم;
     }
 
-    ct = loadCapTransfer(buffer);
-    cptr = ct.ctReceiveRoot;
+    ct = ڀريو_Cap_Transfer(بفر);
+    cptr = ct.ct_Receive_پاڙ;
 
     luc_ret = lookupCap(thread, cptr);
-    if (luc_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    إذا (luc_ret.حالت != EXCEPTION_NONE) {
+        أرجع عدم;
     }
     cnode = luc_ret.cap;
 
-    lus_ret = lookupTargetSlot(cnode, ct.ctReceiveIndex, ct.ctReceiveDepth);
-    if (lus_ret.status != EXCEPTION_NONE) {
-        return NULL;
+    lus_ret = lookup_هدف_جڳهه(cnode, ct.ct_Receive_اشاريو, ct.ct_Receive_اونهائي);
+    إذا (lus_ret.حالت != EXCEPTION_NONE) {
+        أرجع عدم;
     }
-    slot = lus_ret.slot;
+    جڳهه = lus_ret.جڳهه;
 
-    if (cap_get_capType(slot->cap) != cap_null_cap) {
-        return NULL;
+    إذا (cap_get_capType(جڳهه->cap) != cap_null_cap) {
+        أرجع عدم;
     }
 
-    return slot;
+    أرجع جڳهه;
 }
 
-cap_transfer_t PURE loadCapTransfer(word_t *buffer)
+cap_transfer_t خالص ڀريو_Cap_Transfer(لفظ_t *بفر)
 {
-    const int offset = seL4_MsgMaxLength + seL4_MsgMaxExtraCaps + 2;
-    return capTransferFromWords(buffer + offset);
+    ثابت صحيح وٿي = se_L4_نياپو_Max_ڊيگهائي + se_L4_نياپو_Max_Extra_Caps + 2;
+    أرجع cap_Transfer_From_لفظ(بفر + وٿي);
 }

@@ -4,38 +4,38 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
+#ضمن <assert.h>
+#ضمن <arch/machine/registerset.h>
 
-const register_t msgRegisters[] = {
+ثابت رجسٽر_t نياپو_Registers[] = {
     R2, R3, R4, R5
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_پيغام_registers,
+    حجم(نياپو_Registers) / حجم(نياپو_Registers[0]) == n_نياپو_Registers
 );
 
-const register_t frameRegisters[] = {
+ثابت رجسٽر_t چوکٺو_Registers[] = {
     FaultIP, SP, CPSR,
     R0, R1, R8, R9, R10, R11, R12
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_چوکٺو_registers,
+    حجم(چوکٺو_Registers) / حجم(چوکٺو_Registers[0]) == n_چوکٺو_Registers
 );
 
-const register_t gpRegisters[] = {
+ثابت رجسٽر_t gpRegisters[] = {
     R2, R3, R4, R5, R6, R7, R14,
     TPIDRURW, TPIDRURO
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    حجم(gpRegisters) / حجم(gpRegisters[0]) == n_gpRegisters
 );
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+لفظ_t getNBSendRecvDest(فراغ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    أرجع get_رجسٽر(ڳنڍ_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#جيڪڏهن_پورو

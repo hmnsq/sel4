@@ -4,170 +4,170 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <arch/object/objecttype.h>
-#include <machine/io.h>
-#include <object/objecttype.h>
-#include <object/structures.h>
-#include <object/notification.h>
-#include <object/endpoint.h>
-#include <object/cnode.h>
-#include <object/interrupt.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#include <object/schedcontrol.h>
-#endif
-#include <object/tcb.h>
-#include <object/untyped.h>
-#include <model/statedata.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <machine.h>
-#include <util.h>
-#include <string.h>
+#ضمن <assert.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <api/syscall.h>
+#ضمن <arch/object/objecttype.h>
+#ضمن <machine/io.h>
+#ضمن <object/objecttype.h>
+#ضمن <object/structures.h>
+#ضمن <object/notification.h>
+#ضمن <object/endpoint.h>
+#ضمن <object/cnode.h>
+#ضمن <object/interrupt.h>
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+#ضمن <object/schedcontext.h>
+#ضمن <object/schedcontrol.h>
+#جيڪڏهن_پورو
+#ضمن <object/tcb.h>
+#ضمن <object/untyped.h>
+#ضمن <model/statedata.h>
+#ضمن <kernel/thread.h>
+#ضمن <kernel/vspace.h>
+#ضمن <machine.h>
+#ضمن <util.h>
+#ضمن <string.h>
 
-word_t getObjectSize(word_t t, word_t userObjSize)
+لفظ_t get_Object_سائيز(لفظ_t t, لفظ_t user_Obj_سائيز)
 {
-    if (t >= seL4_NonArchObjectTypeCount) {
-        return Arch_getObjectSize(t);
-    } else {
-        switch (t) {
-        case seL4_TCBObject:
-            return seL4_TCBBits;
-        case seL4_EndpointObject:
-            return seL4_EndpointBits;
-        case seL4_NotificationObject:
-            return seL4_NotificationBits;
-        case seL4_CapTableObject:
-            return seL4_SlotBits + userObjSize;
-        case seL4_UntypedObject:
-            return userObjSize;
-#ifdef CONFIG_KERNEL_MCS
-        case seL4_SchedContextObject:
-            return userObjSize;
-        case seL4_ReplyObject:
-            return seL4_ReplyBits;
-#endif
-        default:
+    إذا (t >= se_L4_Non_Arch_Object_Type_ڳڻپ) {
+        أرجع Arch_get_Object_سائيز(t);
+    } وإلا {
+        بدل (t) {
+        حالة seL4_TCBObject:
+            أرجع seL4_TCBBits;
+        حالة seL4_EndpointObject:
+            أرجع se_L4_Endpoint_بٽ;
+        حالة seL4_NotificationObject:
+            أرجع se_L4_Notification_بٽ;
+        حالة se_L4_Cap_جدول_Object:
+            أرجع se_L4_جڳهه_بٽ + user_Obj_سائيز;
+        حالة seL4_UntypedObject:
+            أرجع user_Obj_سائيز;
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        حالة seL4_SchedContextObject:
+            أرجع user_Obj_سائيز;
+        حالة se_L4_جواب_Object:
+            أرجع se_L4_جواب_بٽ;
+#جيڪڏهن_پورو
+        افتراضي:
             fail("Invalid object type");
-            return 0;
+            أرجع 0;
         }
     }
 }
 
-deriveCap_ret_t deriveCap(cte_t *slot, cap_t cap)
+deriveCap_ret_t deriveCap(cte_t *جڳهه, cap_t cap)
 {
     deriveCap_ret_t ret;
 
-    if (isArchCap(cap)) {
-        return Arch_deriveCap(slot, cap);
+    إذا (isArchCap(cap)) {
+        أرجع Arch_deriveCap(جڳهه, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_zombie_cap:
-        ret.status = EXCEPTION_NONE;
+    بدل (cap_get_capType(cap)) {
+    حالة cap_zombie_cap:
+        ret.حالت = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
+        اكسر;
 
-    case cap_irq_control_cap:
-        ret.status = EXCEPTION_NONE;
+    حالة cap_irq_control_cap:
+        ret.حالت = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
+        اكسر;
 
-    case cap_untyped_cap:
-        ret.status = ensureNoChildren(slot);
-        if (ret.status != EXCEPTION_NONE) {
+    حالة cap_untyped_cap:
+        ret.حالت = ensureNoChildren(جڳهه);
+        إذا (ret.حالت != EXCEPTION_NONE) {
             ret.cap = cap_null_cap_new();
-        } else {
+        } وإلا {
             ret.cap = cap;
         }
-        break;
+        اكسر;
 
-#ifndef CONFIG_KERNEL_MCS
-    case cap_reply_cap:
-        ret.status = EXCEPTION_NONE;
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_جواب_cap:
+        ret.حالت = EXCEPTION_NONE;
         ret.cap = cap_null_cap_new();
-        break;
-#endif
-    default:
-        ret.status = EXCEPTION_NONE;
+        اكسر;
+#جيڪڏهن_پورو
+    افتراضي:
+        ret.حالت = EXCEPTION_NONE;
         ret.cap = cap;
     }
 
-    return ret;
+    أرجع ret;
 }
 
 finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
 {
     finaliseCap_ret_t fc_ret;
 
-    if (isArchCap(cap)) {
-        return Arch_finaliseCap(cap, final);
+    إذا (isArchCap(cap)) {
+        أرجع Arch_finaliseCap(cap, final);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        if (final) {
+    بدل (cap_get_capType(cap)) {
+    حالة cap_endpoint_cap:
+        إذا (final) {
             cancelAllIPC(EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)));
         }
 
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        أرجع fc_ret;
 
-    case cap_notification_cap:
-        if (final) {
+    حالة cap_notification_cap:
+        إذا (final) {
             notification_t *ntfn = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
             schedContextMaybeUnbindNtfn(ntfn);
-#endif
+#جيڪڏهن_پورو
             unbindMaybeNotification(ntfn);
-            cancelAllSignals(ntfn);
+            cancel_All_سگنل(ntfn);
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        أرجع fc_ret;
 
-    case cap_reply_cap:
-#ifdef CONFIG_KERNEL_MCS
-        if (final) {
-            reply_t *reply = REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-            if (reply && reply->replyTCB) {
-                tcb_t *tcb = reply->replyTCB;
-                switch (thread_state_get_tsType(tcb->tcbState)) {
-                case ThreadState_BlockedOnReply:
-                    reply_remove(reply, tcb);
-                    break;
-                case ThreadState_BlockedOnReceive:
+    حالة cap_جواب_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        إذا (final) {
+            جواب_t *جواب = جواب_PTR(cap_جواب_cap_get_cap_جواب_Ptr(cap));
+            إذا (جواب && جواب->جواب_TCB) {
+                tcb_t *tcb = جواب->جواب_TCB;
+                بدل (thread_state_get_tsType(tcb->tcbState)) {
+                حالة Thread_State_Blocked_On_جواب:
+                    جواب_remove(جواب, tcb);
+                    اكسر;
+                حالة ThreadState_BlockedOnReceive:
                     cancelIPC(tcb);
-                    break;
-                default:
+                    اكسر;
+                افتراضي:
                     fail("Invalid tcb state");
                 }
             }
         }
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
-#endif
-    case cap_null_cap:
-    case cap_domain_cap:
+        أرجع fc_ret;
+#جيڪڏهن_پورو
+    حالة cap_null_cap:
+    حالة cap_domain_cap:
         fc_ret.remainder = cap_null_cap_new();
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        أرجع fc_ret;
     }
 
-    if (exposed) {
+    إذا (exposed) {
         fail("finaliseCap: failed to finalise immediately.");
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_cnode_cap: {
-        if (final) {
+    بدل (cap_get_capType(cap)) {
+    حالة cap_cnode_cap: {
+        إذا (final) {
             fc_ret.remainder =
                 Zombie_new(
                     1ul << cap_cnode_cap_get_capCNodeRadix(cap),
@@ -175,13 +175,13 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     cap_cnode_cap_get_capCNodePtr(cap)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            أرجع fc_ret;
         }
-        break;
+        اكسر;
     }
 
-    case cap_thread_cap: {
-        if (final) {
+    حالة cap_thread_cap: {
+        إذا (final) {
             tcb_t *tcb;
             cte_t *cte_ptr;
 
@@ -189,19 +189,19 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
             SMP_COND_STATEMENT(remoteTCBStall(tcb);)
             cte_ptr = TCB_PTR_CTE_PTR(tcb, tcbCTable);
             unbindNotification(tcb);
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
             sched_context_t *sc = SC_PTR(tcb->tcbSchedContext);
-            if (sc) {
+            إذا (sc) {
                 schedContext_unbindTCB(sc);
-                if (sc->scYieldFrom) {
-                    schedContext_completeYieldTo(sc->scYieldFrom);
+                إذا (sc->scYieldFrom) {
+                    sched_Context_complete_Yield_منزل(sc->scYieldFrom);
                 }
             }
-#endif
+#جيڪڏهن_پورو
             suspend(tcb);
-#ifdef CONFIG_DEBUG_BUILD
+#جيڪڏهن_وصف_ٿيل CONFIG_DEBUG_BUILD
             tcbDebugRemove(tcb);
-#endif
+#جيڪڏهن_پورو
             Arch_prepareThreadDelete(tcb);
             fc_ret.remainder =
                 Zombie_new(
@@ -210,313 +210,313 @@ finaliseCap_ret_t finaliseCap(cap_t cap, bool_t final, bool_t exposed)
                     CTE_REF(cte_ptr)
                 );
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            أرجع fc_ret;
         }
-        break;
+        اكسر;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        if (final) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+        إذا (final) {
             sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
             schedContext_unbindAllTCBs(sc);
             schedContext_unbindNtfn(sc);
-            schedContext_unbindReply(sc);
-            if (sc->scYieldFrom) {
-                schedContext_completeYieldTo(sc->scYieldFrom);
+            sched_Context_unbind_جواب(sc);
+            إذا (sc->scYieldFrom) {
+                sched_Context_complete_Yield_منزل(sc->scYieldFrom);
             }
             /* mark the sc as no longer valid */
             sc->scRefillMax = 0;
             sc->scSporadic = false;
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap_null_cap_new();
-            return fc_ret;
+            أرجع fc_ret;
         }
-        break;
-#endif
+        اكسر;
+#جيڪڏهن_پورو
 
-    case cap_zombie_cap:
+    حالة cap_zombie_cap:
         fc_ret.remainder = cap;
         fc_ret.cleanupInfo = cap_null_cap_new();
-        return fc_ret;
+        أرجع fc_ret;
 
-    case cap_irq_handler_cap:
-        if (final) {
-            irq_t irq = IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap));
+    حالة cap_irq_handler_cap:
+        إذا (final) {
+            irq_t irq = IDX_منزل_IRQT(cap_irq_handler_cap_get_capIRQ(cap));
 
             deletingIRQHandler(irq);
 
             fc_ret.remainder = cap_null_cap_new();
             fc_ret.cleanupInfo = cap;
-            return fc_ret;
+            أرجع fc_ret;
         }
-        break;
+        اكسر;
     }
 
     fc_ret.remainder = cap_null_cap_new();
     fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
+    أرجع fc_ret;
 }
 
 bool_t CONST hasCancelSendRights(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        return cap_endpoint_cap_get_capCanSend(cap) &&
+    بدل (cap_get_capType(cap)) {
+    حالة cap_endpoint_cap:
+        أرجع cap_endpoint_cap_get_capCanSend(cap) &&
                cap_endpoint_cap_get_capCanReceive(cap) &&
-               cap_endpoint_cap_get_capCanGrantReply(cap) &&
+               cap_endpoint_cap_get_cap_Can_Grant_جواب(cap) &&
                cap_endpoint_cap_get_capCanGrant(cap);
 
-    default:
-        return false;
+    افتراضي:
+        أرجع false;
     }
 }
 
 bool_t CONST sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
-    switch (cap_get_capType(cap_a)) {
-    case cap_untyped_cap:
-        if (cap_get_capIsPhysical(cap_b)) {
-            word_t aBase, bBase, aTop, bTop;
+    بدل (cap_get_capType(cap_a)) {
+    حالة cap_untyped_cap:
+        إذا (cap_get_capIsPhysical(cap_b)) {
+            لفظ_t a_بنياد, b_بنياد, a_چوٽي, b_چوٽي;
 
-            aBase = (word_t)WORD_PTR(cap_untyped_cap_get_capPtr(cap_a));
-            bBase = (word_t)cap_get_capPtr(cap_b);
+            a_بنياد = (لفظ_t)لفظ_PTR(cap_untyped_cap_get_capPtr(cap_a));
+            b_بنياد = (لفظ_t)cap_get_capPtr(cap_b);
 
-            aTop = aBase + MASK(cap_untyped_cap_get_capBlockSize(cap_a));
-            bTop = bBase + MASK(cap_get_capSizeBits(cap_b));
+            a_چوٽي = a_بنياد + نقاب(cap_untyped_cap_get_cap_بلاڪ_سائيز(cap_a));
+            b_چوٽي = b_بنياد + نقاب(cap_get_cap_سائيز_بٽ(cap_b));
 
-            return (aBase <= bBase) && (bTop <= aTop) && (bBase <= bTop);
+            أرجع (a_بنياد <= b_بنياد) && (b_چوٽي <= a_چوٽي) && (b_بنياد <= b_چوٽي);
         }
-        break;
+        اكسر;
 
-    case cap_endpoint_cap:
-        if (cap_get_capType(cap_b) == cap_endpoint_cap) {
-            return cap_endpoint_cap_get_capEPPtr(cap_a) ==
+    حالة cap_endpoint_cap:
+        إذا (cap_get_capType(cap_b) == cap_endpoint_cap) {
+            أرجع cap_endpoint_cap_get_capEPPtr(cap_a) ==
                    cap_endpoint_cap_get_capEPPtr(cap_b);
         }
-        break;
+        اكسر;
 
-    case cap_notification_cap:
-        if (cap_get_capType(cap_b) == cap_notification_cap) {
-            return cap_notification_cap_get_capNtfnPtr(cap_a) ==
+    حالة cap_notification_cap:
+        إذا (cap_get_capType(cap_b) == cap_notification_cap) {
+            أرجع cap_notification_cap_get_capNtfnPtr(cap_a) ==
                    cap_notification_cap_get_capNtfnPtr(cap_b);
         }
-        break;
+        اكسر;
 
-    case cap_cnode_cap:
-        if (cap_get_capType(cap_b) == cap_cnode_cap) {
-            return (cap_cnode_cap_get_capCNodePtr(cap_a) ==
+    حالة cap_cnode_cap:
+        إذا (cap_get_capType(cap_b) == cap_cnode_cap) {
+            أرجع (cap_cnode_cap_get_capCNodePtr(cap_a) ==
                     cap_cnode_cap_get_capCNodePtr(cap_b)) &&
                    (cap_cnode_cap_get_capCNodeRadix(cap_a) ==
                     cap_cnode_cap_get_capCNodeRadix(cap_b));
         }
-        break;
+        اكسر;
 
-    case cap_thread_cap:
-        if (cap_get_capType(cap_b) == cap_thread_cap) {
-            return cap_thread_cap_get_capTCBPtr(cap_a) ==
+    حالة cap_thread_cap:
+        إذا (cap_get_capType(cap_b) == cap_thread_cap) {
+            أرجع cap_thread_cap_get_capTCBPtr(cap_a) ==
                    cap_thread_cap_get_capTCBPtr(cap_b);
         }
-        break;
+        اكسر;
 
-    case cap_reply_cap:
-        if (cap_get_capType(cap_b) == cap_reply_cap) {
-#ifdef CONFIG_KERNEL_MCS
-            return cap_reply_cap_get_capReplyPtr(cap_a) ==
-                   cap_reply_cap_get_capReplyPtr(cap_b);
-#else
-            return cap_reply_cap_get_capTCBPtr(cap_a) ==
-                   cap_reply_cap_get_capTCBPtr(cap_b);
-#endif
+    حالة cap_جواب_cap:
+        إذا (cap_get_capType(cap_b) == cap_جواب_cap) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+            أرجع cap_جواب_cap_get_cap_جواب_Ptr(cap_a) ==
+                   cap_جواب_cap_get_cap_جواب_Ptr(cap_b);
+#وإلا
+            أرجع cap_جواب_cap_get_cap_TCBPtr(cap_a) ==
+                   cap_جواب_cap_get_cap_TCBPtr(cap_b);
+#جيڪڏهن_پورو
         }
-        break;
+        اكسر;
 
-    case cap_domain_cap:
-        if (cap_get_capType(cap_b) == cap_domain_cap) {
-            return true;
+    حالة cap_domain_cap:
+        إذا (cap_get_capType(cap_b) == cap_domain_cap) {
+            أرجع true;
         }
-        break;
+        اكسر;
 
-    case cap_irq_control_cap:
-        if (cap_get_capType(cap_b) == cap_irq_control_cap ||
+    حالة cap_irq_control_cap:
+        إذا (cap_get_capType(cap_b) == cap_irq_control_cap ||
             cap_get_capType(cap_b) == cap_irq_handler_cap ||
             Arch_isIRQControlDescendant(cap_b)) {
-            return true;
+            أرجع true;
         }
-        break;
+        اكسر;
 
-    case cap_irq_handler_cap:
-        if (cap_get_capType(cap_b) == cap_irq_handler_cap) {
-            return (word_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
-                   (word_t)cap_irq_handler_cap_get_capIRQ(cap_b);
+    حالة cap_irq_handler_cap:
+        إذا (cap_get_capType(cap_b) == cap_irq_handler_cap) {
+            أرجع (لفظ_t)cap_irq_handler_cap_get_capIRQ(cap_a) ==
+                   (لفظ_t)cap_irq_handler_cap_get_capIRQ(cap_b);
         }
-        break;
+        اكسر;
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        if (cap_get_capType(cap_b) == cap_sched_context_cap) {
-            return (cap_sched_context_cap_get_capSCPtr(cap_a) ==
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+        إذا (cap_get_capType(cap_b) == cap_sched_context_cap) {
+            أرجع (cap_sched_context_cap_get_capSCPtr(cap_a) ==
                     cap_sched_context_cap_get_capSCPtr(cap_b)) &&
-                   (cap_sched_context_cap_get_capSCSizeBits(cap_a) ==
-                    cap_sched_context_cap_get_capSCSizeBits(cap_b));
+                   (cap_sched_context_cap_get_cap_SCSize_بٽ(cap_a) ==
+                    cap_sched_context_cap_get_cap_SCSize_بٽ(cap_b));
         }
-        break;
-    case cap_sched_control_cap:
-        if (cap_get_capType(cap_b) == cap_sched_control_cap) {
-            return true;
+        اكسر;
+    حالة cap_sched_control_cap:
+        إذا (cap_get_capType(cap_b) == cap_sched_control_cap) {
+            أرجع true;
         }
-        break;
-#endif
-    default:
-        if (isArchCap(cap_a) &&
+        اكسر;
+#جيڪڏهن_پورو
+    افتراضي:
+        إذا (isArchCap(cap_a) &&
             isArchCap(cap_b)) {
-            return Arch_sameRegionAs(cap_a, cap_b);
+            أرجع Arch_sameRegionAs(cap_a, cap_b);
         }
-        break;
+        اكسر;
     }
 
-    return false;
+    أرجع false;
 }
 
 bool_t CONST sameObjectAs(cap_t cap_a, cap_t cap_b)
 {
-    if (cap_get_capType(cap_a) == cap_untyped_cap) {
-        return false;
+    إذا (cap_get_capType(cap_a) == cap_untyped_cap) {
+        أرجع false;
     }
-    if (cap_get_capType(cap_a) == cap_irq_control_cap) {
-        return false;
+    إذا (cap_get_capType(cap_a) == cap_irq_control_cap) {
+        أرجع false;
     }
-    if (isArchCap(cap_a) && isArchCap(cap_b)) {
-        return Arch_sameObjectAs(cap_a, cap_b);
+    إذا (isArchCap(cap_a) && isArchCap(cap_b)) {
+        أرجع Arch_sameObjectAs(cap_a, cap_b);
     }
-    return sameRegionAs(cap_a, cap_b);
+    أرجع sameRegionAs(cap_a, cap_b);
 }
 
-cap_t CONST updateCapData(bool_t preserve, word_t newData, cap_t cap)
+cap_t CONST update_Cap_معلومات(bool_t preserve, لفظ_t new_معلومات, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_updateCapData(preserve, newData, cap);
+    إذا (isArchCap(cap)) {
+        أرجع Arch_update_Cap_معلومات(preserve, new_معلومات, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_endpoint_cap:
-        if (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
-            return cap_endpoint_cap_set_capEPBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+    بدل (cap_get_capType(cap)) {
+    حالة cap_endpoint_cap:
+        إذا (!preserve && cap_endpoint_cap_get_capEPBadge(cap) == 0) {
+            أرجع cap_endpoint_cap_سيٽ_cap_EPBadge(cap, new_معلومات);
+        } وإلا {
+            أرجع cap_null_cap_new();
         }
 
-    case cap_notification_cap:
-        if (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
-            return cap_notification_cap_set_capNtfnBadge(cap, newData);
-        } else {
-            return cap_null_cap_new();
+    حالة cap_notification_cap:
+        إذا (!preserve && cap_notification_cap_get_capNtfnBadge(cap) == 0) {
+            أرجع cap_notification_cap_سيٽ_cap_Ntfn_Badge(cap, new_معلومات);
+        } وإلا {
+            أرجع cap_null_cap_new();
         }
 
-    case cap_cnode_cap: {
-        word_t guard, guardSize;
-        seL4_CNode_CapData_t w = { .words = { newData } };
+    حالة cap_cnode_cap: {
+        لفظ_t guard, guard_سائيز;
+        se_L4_CNode_Cap_معلومات_t w = { .لفظ = { new_معلومات } };
 
-        guardSize = seL4_CNode_CapData_get_guardSize(w);
+        guard_سائيز = se_L4_CNode_Cap_معلومات_get_guard_سائيز(w);
 
-        if (guardSize + cap_cnode_cap_get_capCNodeRadix(cap) > wordBits) {
-            return cap_null_cap_new();
-        } else {
+        إذا (guard_سائيز + cap_cnode_cap_get_capCNodeRadix(cap) > لفظ_بٽ) {
+            أرجع cap_null_cap_new();
+        } وإلا {
             cap_t new_cap;
 
-            guard = seL4_CNode_CapData_get_guard(w) & MASK(guardSize);
-            new_cap = cap_cnode_cap_set_capCNodeGuard(cap, guard);
-            new_cap = cap_cnode_cap_set_capCNodeGuardSize(new_cap,
-                                                          guardSize);
+            guard = se_L4_CNode_Cap_معلومات_get_guard(w) & نقاب(guard_سائيز);
+            new_cap = cap_cnode_cap_سيٽ_cap_CNode_Guard(cap, guard);
+            new_cap = cap_cnode_cap_سيٽ_cap_CNode_Guard_سائيز(new_cap,
+                                                          guard_سائيز);
 
-            return new_cap;
+            أرجع new_cap;
         }
     }
 
-    default:
-        return cap;
+    افتراضي:
+        أرجع cap;
     }
 }
 
-cap_t CONST maskCapRights(seL4_CapRights_t cap_rights, cap_t cap)
+cap_t CONST نقاب_Cap_Rights(seL4_CapRights_t cap_rights, cap_t cap)
 {
-    if (isArchCap(cap)) {
-        return Arch_maskCapRights(cap_rights, cap);
+    إذا (isArchCap(cap)) {
+        أرجع Arch_نقاب_Cap_Rights(cap_rights, cap);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-    case cap_domain_cap:
-    case cap_cnode_cap:
-    case cap_untyped_cap:
-    case cap_irq_control_cap:
-    case cap_irq_handler_cap:
-    case cap_zombie_cap:
-    case cap_thread_cap:
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-    case cap_sched_control_cap:
-#endif
-        return cap;
+    بدل (cap_get_capType(cap)) {
+    حالة cap_null_cap:
+    حالة cap_domain_cap:
+    حالة cap_cnode_cap:
+    حالة cap_untyped_cap:
+    حالة cap_irq_control_cap:
+    حالة cap_irq_handler_cap:
+    حالة cap_zombie_cap:
+    حالة cap_thread_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+    حالة cap_sched_control_cap:
+#جيڪڏهن_پورو
+        أرجع cap;
 
-    case cap_endpoint_cap: {
+    حالة cap_endpoint_cap: {
         cap_t new_cap;
 
-        new_cap = cap_endpoint_cap_set_capCanSend(
+        new_cap = cap_endpoint_cap_سيٽ_cap_Can_Send(
                       cap, cap_endpoint_cap_get_capCanSend(cap) &
                       seL4_CapRights_get_capAllowWrite(cap_rights));
-        new_cap = cap_endpoint_cap_set_capCanReceive(
+        new_cap = cap_endpoint_cap_سيٽ_cap_Can_Receive(
                       new_cap, cap_endpoint_cap_get_capCanReceive(cap) &
                       seL4_CapRights_get_capAllowRead(cap_rights));
-        new_cap = cap_endpoint_cap_set_capCanGrant(
+        new_cap = cap_endpoint_cap_سيٽ_cap_Can_Grant(
                       new_cap, cap_endpoint_cap_get_capCanGrant(cap) &
                       seL4_CapRights_get_capAllowGrant(cap_rights));
-        new_cap = cap_endpoint_cap_set_capCanGrantReply(
-                      new_cap, cap_endpoint_cap_get_capCanGrantReply(cap) &
-                      seL4_CapRights_get_capAllowGrantReply(cap_rights));
+        new_cap = cap_endpoint_cap_سيٽ_cap_Can_Grant_جواب(
+                      new_cap, cap_endpoint_cap_get_cap_Can_Grant_جواب(cap) &
+                      se_L4_Cap_Rights_get_cap_Allow_Grant_جواب(cap_rights));
 
-        return new_cap;
+        أرجع new_cap;
     }
 
-    case cap_notification_cap: {
+    حالة cap_notification_cap: {
         cap_t new_cap;
 
-        new_cap = cap_notification_cap_set_capNtfnCanSend(
+        new_cap = cap_notification_cap_سيٽ_cap_Ntfn_Can_Send(
                       cap, cap_notification_cap_get_capNtfnCanSend(cap) &
                       seL4_CapRights_get_capAllowWrite(cap_rights));
-        new_cap = cap_notification_cap_set_capNtfnCanReceive(new_cap,
+        new_cap = cap_notification_cap_سيٽ_cap_Ntfn_Can_Receive(new_cap,
                                                              cap_notification_cap_get_capNtfnCanReceive(cap) &
                                                              seL4_CapRights_get_capAllowRead(cap_rights));
 
-        return new_cap;
+        أرجع new_cap;
     }
-    case cap_reply_cap: {
+    حالة cap_جواب_cap: {
         cap_t new_cap;
 
-        new_cap = cap_reply_cap_set_capReplyCanGrant(
-                      cap, cap_reply_cap_get_capReplyCanGrant(cap) &
+        new_cap = cap_جواب_cap_سيٽ_cap_جواب_Can_Grant(
+                      cap, cap_جواب_cap_get_cap_جواب_Can_Grant(cap) &
                       seL4_CapRights_get_capAllowGrant(cap_rights));
-        return new_cap;
+        أرجع new_cap;
     }
 
 
-    default:
+    افتراضي:
         fail("Invalid cap type"); /* Sentinel for invalid enums */
     }
 }
 
-cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceMemory)
+cap_t createObject(object_t t, فراغ *region_بنياد, لفظ_t user_سائيز, bool_t device_يادگيري)
 {
     /* Handle architecture-specific objects. */
-    if (t >= (object_t) seL4_NonArchObjectTypeCount) {
-        return Arch_createObject(t, regionBase, userSize, deviceMemory);
+    إذا (t >= (object_t) se_L4_Non_Arch_Object_Type_ڳڻپ) {
+        أرجع Arch_createObject(t, region_بنياد, user_سائيز, device_يادگيري);
     }
 
     /* Create objects. */
-    switch ((api_object_t)t) {
-    case seL4_TCBObject: {
+    بدل ((api_object_t)t) {
+    حالة seL4_TCBObject: {
         tcb_t *tcb;
-        tcb = TCB_PTR((word_t)regionBase + TCB_OFFSET);
+        tcb = TCB_PTR((لفظ_t)region_بنياد + TCB_وٿي);
         /** AUXUPD: "(True, ptr_retyps 1
           (Ptr ((ptr_val \<acute>tcb) - ctcb_offset) :: (cte_C[5]) ptr)
             o (ptr_retyp \<acute>tcb))" */
@@ -524,53 +524,53 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
         /* Setup non-zero parts of the TCB. */
 
         Arch_initContext(&tcb->tcbArch.tcbContext);
-#ifndef CONFIG_KERNEL_MCS
-        tcb->tcbTimeSlice = CONFIG_TIME_SLICE;
-#endif
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+        tcb->tcb_وقت_ٽڪرو = CONFIG_وقت_ٽڪرو;
+#جيڪڏهن_پورو
         tcb->tcbDomain = ksCurDomain;
-#ifndef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
         /* Initialize the new TCB to the current core */
         SMP_COND_STATEMENT(tcb->tcbAffinity = getCurrentCPUIndex());
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-        strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "child of: '", TCB_NAME_LENGTH);
-        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(NODE_STATE(ksCurThread))->tcbName, TCB_NAME_LENGTH);
-        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "'", TCB_NAME_LENGTH);
+#جيڪڏهن_پورو
+#جيڪڏهن_وصف_ٿيل CONFIG_DEBUG_BUILD
+        strlcpy(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "child of: '", TCB_NAME_ڊيگهائي);
+        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, TCB_PTR_DEBUG_PTR(ڳنڍ_STATE(ksCurThread))->tcbName, TCB_NAME_ڊيگهائي);
+        strlcat(TCB_PTR_DEBUG_PTR(tcb)->tcbName, "'", TCB_NAME_ڊيگهائي);
         tcbDebugAppend(tcb);
-#endif /* CONFIG_DEBUG_BUILD */
+#جيڪڏهن_پورو /* CONFIG_DEBUG_BUILD */
 
-        return cap_thread_cap_new(TCB_REF(tcb));
+        أرجع cap_thread_cap_new(TCB_REF(tcb));
     }
 
-    case seL4_EndpointObject:
+    حالة seL4_EndpointObject:
         /** AUXUPD: "(True, ptr_retyp
           (Ptr (ptr_val \<acute>regionBase) :: endpoint_C ptr))" */
-        return cap_endpoint_cap_new(0, true, true, true, true,
-                                    EP_REF(regionBase));
+        أرجع cap_endpoint_cap_new(0, true, true, true, true,
+                                    EP_REF(region_بنياد));
 
-    case seL4_NotificationObject:
+    حالة seL4_NotificationObject:
         /** AUXUPD: "(True, ptr_retyp
               (Ptr (ptr_val \<acute>regionBase) :: notification_C ptr))" */
-        return cap_notification_cap_new(0, true, true,
-                                        NTFN_REF(regionBase));
+        أرجع cap_notification_cap_new(0, true, true,
+                                        NTFN_REF(region_بنياد));
 
-    case seL4_CapTableObject:
+    حالة se_L4_Cap_جدول_Object:
         /** AUXUPD: "(True, ptr_arr_retyps (2 ^ (unat \<acute>userSize))
           (Ptr (ptr_val \<acute>regionBase) :: cte_C ptr))" */
         /** GHOSTUPD: "(True, gs_new_cnodes (unat \<acute>userSize)
                                 (ptr_val \<acute>regionBase)
                                 (4 + unat \<acute>userSize))" */
-        return cap_cnode_cap_new(userSize, 0, 0, CTE_REF(regionBase));
+        أرجع cap_cnode_cap_new(user_سائيز, 0, 0, CTE_REF(region_بنياد));
 
-    case seL4_UntypedObject:
+    حالة seL4_UntypedObject:
         /*
          * No objects need to be created; instead, just insert caps into
          * the destination slots.
          */
-        return cap_untyped_cap_new(0, !!deviceMemory, userSize, WORD_REF(regionBase));
+        أرجع cap_untyped_cap_new(0, !!device_يادگيري, user_سائيز, لفظ_REF(region_بنياد));
 
-#ifdef CONFIG_KERNEL_MCS
-    case seL4_SchedContextObject:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة seL4_SchedContextObject:
         /** AUXUPD:
             "(True,
               ptr_arr_retyps (refills_len (unat \<acute>userSize)
@@ -580,309 +580,309 @@ cap_t createObject(object_t t, void *regionBase, word_t userSize, bool_t deviceM
                                    word_of_nat (size_of TYPE(sched_context_C))) :: refill_C ptr)
               \<circ> ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: sched_context_C ptr))" */
         /** GHOSTUPD: "(True, gs_new_sc_size (ptr_val \<acute>regionBase) (unat \<acute>userSize))" */
-        return cap_sched_context_cap_new(SC_REF(regionBase), userSize);
+        أرجع cap_sched_context_cap_new(SC_REF(region_بنياد), user_سائيز);
 
-    case seL4_ReplyObject:
+    حالة se_L4_جواب_Object:
         /** AUXUPD: "(True, ptr_retyp (Ptr (ptr_val \<acute>regionBase) :: reply_C ptr))" */
-        return cap_reply_cap_new(REPLY_REF(regionBase), true);
-#endif
+        أرجع cap_جواب_cap_new(جواب_REF(region_بنياد), true);
+#جيڪڏهن_پورو
 
-    default:
+    افتراضي:
         fail("Invalid object type");
     }
 }
 
-void createNewObjects(object_t t, cte_t *parent,
-                      cte_t *destCNode, word_t destOffset, word_t destLength,
-                      void *regionBase, word_t userSize, bool_t deviceMemory)
+فراغ createNewObjects(object_t t, cte_t *والد,
+                      cte_t *destCNode, لفظ_t dest_وٿي, لفظ_t dest_ڊيگهائي,
+                      فراغ *region_بنياد, لفظ_t user_سائيز, bool_t device_يادگيري)
 {
-    word_t objectSize;
-    void *nextFreeArea;
-    word_t i;
-    word_t totalObjectSize UNUSED;
+    لفظ_t object_سائيز;
+    فراغ *ايندڙ_Free_Area;
+    لفظ_t i;
+    لفظ_t ڪل_Object_سائيز اڻ_استعمال_ٿيل;
 
     /* ghost check that we're visiting less bytes than the max object size */
-    objectSize = getObjectSize(t, userSize);
-    totalObjectSize = destLength << objectSize;
+    object_سائيز = get_Object_سائيز(t, user_سائيز);
+    ڪل_Object_سائيز = dest_ڊيگهائي << object_سائيز;
     /** GHOSTUPD: "(gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
         \<or> \<acute>totalObjectSize <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state, id)" */
 
     /* Create the objects. */
-    nextFreeArea = regionBase;
-    for (i = 0; i < destLength; i++) {
+    ايندڙ_Free_Area = region_بنياد;
+    لكل (i = 0; i < dest_ڊيگهائي; i++) {
         /* Create the object. */
         /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute> nextFreeArea + ((\<acute> i) << unat (\<acute> objectSize))) (unat (\<acute> objectSize)))" */
-        cap_t cap = createObject(t, (void *)((word_t)nextFreeArea + (i << objectSize)), userSize, deviceMemory);
+        cap_t cap = createObject(t, (فراغ *)((لفظ_t)ايندڙ_Free_Area + (i << object_سائيز)), user_سائيز, device_يادگيري);
 
         /* Insert the cap into the user's cspace. */
-        insertNewCap(parent, &destCNode[destOffset + i], cap);
+        وجهو_New_Cap(والد, &destCNode[dest_وٿي + i], cap);
 
         /* Move along to the next region of memory. been merged into a formula of i */
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t decodeInvocation(word_t invLabel, word_t length,
-                             cptr_t capIndex, cte_t *slot, cap_t cap,
-                             bool_t block, bool_t call,
-                             bool_t canDonate, bool_t firstPhase, word_t *buffer)
-#else
-exception_t decodeInvocation(word_t invLabel, word_t length,
-                             cptr_t capIndex, cte_t *slot, cap_t cap,
-                             bool_t block, bool_t call,
-                             word_t *buffer)
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+exception_t decodeInvocation(لفظ_t invLabel, لفظ_t ڊيگهائي,
+                             cptr_t cap_اشاريو, cte_t *جڳهه, cap_t cap,
+                             bool_t بلاڪ_2, bool_t call,
+                             bool_t canDonate, bool_t پهريون_Phase, لفظ_t *بفر)
+#وإلا
+exception_t decodeInvocation(لفظ_t invLabel, لفظ_t ڊيگهائي,
+                             cptr_t cap_اشاريو, cte_t *جڳهه, cap_t cap,
+                             bool_t بلاڪ_2, bool_t call,
+                             لفظ_t *بفر)
+#جيڪڏهن_پورو
 {
-    if (isArchCap(cap)) {
-        return Arch_decodeInvocation(invLabel, length, capIndex,
-                                     slot, cap, call, buffer);
+    إذا (isArchCap(cap)) {
+        أرجع Arch_decodeInvocation(invLabel, ڊيگهائي, cap_اشاريو,
+                                     جڳهه, cap, call, بفر);
     }
 
-    switch (cap_get_capType(cap)) {
-    case cap_null_cap:
-        userError("Attempted to invoke a null cap #%lu.", capIndex);
+    بدل (cap_get_capType(cap)) {
+    حالة cap_null_cap:
+        userError("Attempted to invoke a null cap #%lu.", cap_اشاريو);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_عدد = 0;
+        أرجع EXCEPTION_SYSCALL_ERROR;
 
-    case cap_zombie_cap:
-        userError("Attempted to invoke a zombie cap #%lu.", capIndex);
+    حالة cap_zombie_cap:
+        userError("Attempted to invoke a zombie cap #%lu.", cap_اشاريو);
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.invalid_Cap_عدد = 0;
+        أرجع EXCEPTION_SYSCALL_ERROR;
 
-    case cap_endpoint_cap:
-        if (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
+    حالة cap_endpoint_cap:
+        إذا (unlikely(!cap_endpoint_cap_get_capCanSend(cap))) {
             userError("Attempted to invoke a read-only endpoint cap #%lu.",
-                      capIndex);
+                      cap_اشاريو);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-#ifdef CONFIG_KERNEL_MCS
-        return performInvocation_Endpoint(
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أرجع performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
-                   cap_endpoint_cap_get_capCanGrantReply(cap), block, call, canDonate);
-#else
-        return performInvocation_Endpoint(
+                   cap_endpoint_cap_get_cap_Can_Grant_جواب(cap), بلاڪ_2, call, canDonate);
+#وإلا
+        أرجع performInvocation_Endpoint(
                    EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)),
                    cap_endpoint_cap_get_capEPBadge(cap),
                    cap_endpoint_cap_get_capCanGrant(cap),
-                   cap_endpoint_cap_get_capCanGrantReply(cap), block, call);
-#endif
+                   cap_endpoint_cap_get_cap_Can_Grant_جواب(cap), بلاڪ_2, call);
+#جيڪڏهن_پورو
 
-    case cap_notification_cap: {
-        if (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
+    حالة cap_notification_cap: {
+        إذا (unlikely(!cap_notification_cap_get_capNtfnCanSend(cap))) {
             userError("Attempted to invoke a read-only notification cap #%lu.",
-                      capIndex);
+                      cap_اشاريو);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Notification(
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع performInvocation_Notification(
                    NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap)),
                    cap_notification_cap_get_capNtfnBadge(cap));
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_reply_cap:
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
-                   NODE_STATE(ksCurThread),
-                   REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap)),
-                   cap_reply_cap_get_capReplyCanGrant(cap));
-#else
-    case cap_reply_cap:
-        if (unlikely(cap_reply_cap_get_capReplyMaster(cap))) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_جواب_cap:
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع perform_Invocation_جواب(
+                   ڳنڍ_STATE(ksCurThread),
+                   جواب_PTR(cap_جواب_cap_get_cap_جواب_Ptr(cap)),
+                   cap_جواب_cap_get_cap_جواب_Can_Grant(cap));
+#وإلا
+    حالة cap_جواب_cap:
+        إذا (unlikely(cap_جواب_cap_get_cap_جواب_Master(cap))) {
             userError("Attempted to invoke an invalid reply cap #%lu.",
-                      capIndex);
+                      cap_اشاريو);
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performInvocation_Reply(
-                   TCB_PTR(cap_reply_cap_get_capTCBPtr(cap)), slot,
-                   cap_reply_cap_get_capReplyCanGrant(cap));
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع perform_Invocation_جواب(
+                   TCB_PTR(cap_جواب_cap_get_cap_TCBPtr(cap)), جڳهه,
+                   cap_جواب_cap_get_cap_جواب_Can_Grant(cap));
 
-#endif
+#جيڪڏهن_پورو
 
-    case cap_thread_cap:
-#ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+    حالة cap_thread_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        إذا (unlikely(پهريون_Phase)) {
             userError("Cannot invoke thread capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        return decodeTCBInvocation(invLabel, length, cap, slot, call, buffer);
+#جيڪڏهن_پورو
+        أرجع decodeTCBInvocation(invLabel, ڊيگهائي, cap, جڳهه, call, بفر);
 
-    case cap_domain_cap:
-#ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+    حالة cap_domain_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        إذا (unlikely(پهريون_Phase)) {
             userError("Cannot invoke domain capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        return decodeDomainInvocation(invLabel, length, buffer);
+#جيڪڏهن_پورو
+        أرجع decodeDomainInvocation(invLabel, ڊيگهائي, بفر);
 
-    case cap_cnode_cap:
-#ifdef CONFIG_KERNEL_MCS
-        if (unlikely(firstPhase)) {
+    حالة cap_cnode_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        إذا (unlikely(پهريون_Phase)) {
             userError("Cannot invoke cnode capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        return decodeCNodeInvocation(invLabel, length, cap, buffer);
+#جيڪڏهن_پورو
+        أرجع decodeCNodeInvocation(invLabel, ڊيگهائي, cap, بفر);
 
-    case cap_untyped_cap:
-        return decodeUntypedInvocation(invLabel, length, slot, cap, call, buffer);
+    حالة cap_untyped_cap:
+        أرجع decodeUntypedInvocation(invLabel, ڊيگهائي, جڳهه, cap, call, بفر);
 
-    case cap_irq_control_cap:
-        return decodeIRQControlInvocation(invLabel, length, slot, buffer);
+    حالة cap_irq_control_cap:
+        أرجع decodeIRQControlInvocation(invLabel, ڊيگهائي, جڳهه, بفر);
 
-    case cap_irq_handler_cap:
-        return decodeIRQHandlerInvocation(invLabel,
-                                          IDX_TO_IRQT(cap_irq_handler_cap_get_capIRQ(cap)));
+    حالة cap_irq_handler_cap:
+        أرجع decodeIRQHandlerInvocation(invLabel,
+                                          IDX_منزل_IRQT(cap_irq_handler_cap_get_capIRQ(cap)));
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
-        if (unlikely(firstPhase)) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_control_cap:
+        إذا (unlikely(پهريون_Phase)) {
             userError("Cannot invoke sched control capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
-        return decodeSchedControlInvocation(invLabel, cap, length, buffer);
+        أرجع decodeSchedControlInvocation(invLabel, cap, ڊيگهائي, بفر);
 
-    case cap_sched_context_cap:
-        if (unlikely(firstPhase)) {
+    حالة cap_sched_context_cap:
+        إذا (unlikely(پهريون_Phase)) {
             userError("Cannot invoke sched context capabilities in the first phase of an invocation");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_عدد = 0;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
         sched_context_t *sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
-        return decodeSchedContextInvocation(invLabel, sc, call);
-#endif
-    default:
+        أرجع decodeSchedContextInvocation(invLabel, sc, call);
+#جيڪڏهن_پورو
+    افتراضي:
         fail("Invalid cap type");
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
-                                       bool_t canGrant, bool_t canGrantReply,
-                                       bool_t block, bool_t call, bool_t canDonate)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+exception_t performInvocation_Endpoint(endpoint_t *ep, لفظ_t badge,
+                                       bool_t canGrant, bool_t can_Grant_جواب,
+                                       bool_t بلاڪ_2, bool_t call, bool_t canDonate)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, canDonate, NODE_STATE(ksCurThread), ep);
+    sendIPC(بلاڪ_2, call, badge, canGrant, can_Grant_جواب, canDonate, ڳنڍ_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
-#else
-exception_t performInvocation_Endpoint(endpoint_t *ep, word_t badge,
-                                       bool_t canGrant, bool_t canGrantReply,
-                                       bool_t block, bool_t call)
+#وإلا
+exception_t performInvocation_Endpoint(endpoint_t *ep, لفظ_t badge,
+                                       bool_t canGrant, bool_t can_Grant_جواب,
+                                       bool_t بلاڪ_2, bool_t call)
 {
-    sendIPC(block, call, badge, canGrant, canGrantReply, NODE_STATE(ksCurThread), ep);
+    sendIPC(بلاڪ_2, call, badge, canGrant, can_Grant_جواب, ڳنڍ_STATE(ksCurThread), ep);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
-#endif
+#جيڪڏهن_پورو
 
-exception_t performInvocation_Notification(notification_t *ntfn, word_t badge)
+exception_t performInvocation_Notification(notification_t *ntfn, لفظ_t badge)
 {
     sendSignal(ntfn, badge);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-exception_t performInvocation_Reply(tcb_t *thread, reply_t *reply, bool_t canGrant)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+exception_t perform_Invocation_جواب(tcb_t *thread, جواب_t *جواب, bool_t canGrant)
 {
-    doReplyTransfer(thread, reply, canGrant);
-    return EXCEPTION_NONE;
+    do_جواب_Transfer(thread, جواب, canGrant);
+    أرجع EXCEPTION_NONE;
 }
-#else
-exception_t performInvocation_Reply(tcb_t *thread, cte_t *slot, bool_t canGrant)
+#وإلا
+exception_t perform_Invocation_جواب(tcb_t *thread, cte_t *جڳهه, bool_t canGrant)
 {
-    doReplyTransfer(NODE_STATE(ksCurThread), thread, slot, canGrant);
-    return EXCEPTION_NONE;
+    do_جواب_Transfer(ڳنڍ_STATE(ksCurThread), thread, جڳهه, canGrant);
+    أرجع EXCEPTION_NONE;
 }
-#endif
+#جيڪڏهن_پورو
 
-word_t CONST cap_get_capSizeBits(cap_t cap)
+لفظ_t CONST cap_get_cap_سائيز_بٽ(cap_t cap)
 {
 
-    cap_tag_t ctag;
+    cap_ٽيگ_t ctag;
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return cap_untyped_cap_get_capBlockSize(cap);
+    بدل (ctag) {
+    حالة cap_untyped_cap:
+        أرجع cap_untyped_cap_get_cap_بلاڪ_سائيز(cap);
 
-    case cap_endpoint_cap:
-        return seL4_EndpointBits;
+    حالة cap_endpoint_cap:
+        أرجع se_L4_Endpoint_بٽ;
 
-    case cap_notification_cap:
-        return seL4_NotificationBits;
+    حالة cap_notification_cap:
+        أرجع se_L4_Notification_بٽ;
 
-    case cap_cnode_cap:
-        return cap_cnode_cap_get_capCNodeRadix(cap) + seL4_SlotBits;
+    حالة cap_cnode_cap:
+        أرجع cap_cnode_cap_get_capCNodeRadix(cap) + se_L4_جڳهه_بٽ;
 
-    case cap_thread_cap:
-        return seL4_TCBBits;
+    حالة cap_thread_cap:
+        أرجع seL4_TCBBits;
 
-    case cap_zombie_cap: {
-        word_t type = cap_zombie_cap_get_capZombieType(cap);
-        if (type == ZombieType_ZombieTCB) {
-            return seL4_TCBBits;
+    حالة cap_zombie_cap: {
+        لفظ_t type = cap_zombie_cap_get_capZombieType(cap);
+        إذا (type == ZombieType_ZombieTCB) {
+            أرجع seL4_TCBBits;
         }
-        return ZombieType_ZombieCNode(type) + seL4_SlotBits;
+        أرجع ZombieType_ZombieCNode(type) + se_L4_جڳهه_بٽ;
     }
 
-    case cap_null_cap:
-        return 0;
+    حالة cap_null_cap:
+        أرجع 0;
 
-    case cap_domain_cap:
-        return 0;
+    حالة cap_domain_cap:
+        أرجع 0;
 
-    case cap_reply_cap:
-#ifdef CONFIG_KERNEL_MCS
-        return seL4_ReplyBits;
-#else
-        return 0;
-#endif
+    حالة cap_جواب_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أرجع se_L4_جواب_بٽ;
+#وإلا
+        أرجع 0;
+#جيڪڏهن_پورو
 
-    case cap_irq_control_cap:
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
-#endif
-        return 0;
+    حالة cap_irq_control_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_control_cap:
+#جيڪڏهن_پورو
+        أرجع 0;
 
-    case cap_irq_handler_cap:
-        return 0;
+    حالة cap_irq_handler_cap:
+        أرجع 0;
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        return cap_sched_context_cap_get_capSCSizeBits(cap);
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+        أرجع cap_sched_context_cap_get_cap_SCSize_بٽ(cap);
+#جيڪڏهن_پورو
 
-    default:
-        return cap_get_archCapSizeBits(cap);
+    افتراضي:
+        أرجع cap_get_arch_Cap_سائيز_بٽ(cap);
     }
 
 }
@@ -892,133 +892,133 @@ word_t CONST cap_get_capSizeBits(cap_t cap)
  * match up with the Haskell and abstract specifications */
 bool_t CONST cap_get_capIsPhysical(cap_t cap)
 {
-    cap_tag_t ctag;
+    cap_ٽيگ_t ctag;
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return true;
+    بدل (ctag) {
+    حالة cap_untyped_cap:
+        أرجع true;
 
-    case cap_endpoint_cap:
-        return true;
+    حالة cap_endpoint_cap:
+        أرجع true;
 
-    case cap_notification_cap:
-        return true;
+    حالة cap_notification_cap:
+        أرجع true;
 
-    case cap_cnode_cap:
-        return true;
+    حالة cap_cnode_cap:
+        أرجع true;
 
-    case cap_thread_cap:
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-#endif
-        return true;
+    حالة cap_thread_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+#جيڪڏهن_پورو
+        أرجع true;
 
-    case cap_zombie_cap:
-        return true;
+    حالة cap_zombie_cap:
+        أرجع true;
 
-    case cap_domain_cap:
-        return false;
+    حالة cap_domain_cap:
+        أرجع false;
 
-    case cap_reply_cap:
-#ifdef CONFIG_KERNEL_MCS
-        return true;
-#else
-        return false;
-#endif
+    حالة cap_جواب_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أرجع true;
+#وإلا
+        أرجع false;
+#جيڪڏهن_پورو
 
-    case cap_irq_control_cap:
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
-#endif
-        return false;
+    حالة cap_irq_control_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_control_cap:
+#جيڪڏهن_پورو
+        أرجع false;
 
-    case cap_irq_handler_cap:
-        return false;
+    حالة cap_irq_handler_cap:
+        أرجع false;
 
-    default:
-        return cap_get_archCapIsPhysical(cap);
+    افتراضي:
+        أرجع cap_get_archCapIsPhysical(cap);
     }
 }
 
-void *CONST cap_get_capPtr(cap_t cap)
+فراغ *CONST cap_get_capPtr(cap_t cap)
 {
-    cap_tag_t ctag;
+    cap_ٽيگ_t ctag;
 
     ctag = cap_get_capType(cap);
 
-    switch (ctag) {
-    case cap_untyped_cap:
-        return WORD_PTR(cap_untyped_cap_get_capPtr(cap));
+    بدل (ctag) {
+    حالة cap_untyped_cap:
+        أرجع لفظ_PTR(cap_untyped_cap_get_capPtr(cap));
 
-    case cap_endpoint_cap:
-        return EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
+    حالة cap_endpoint_cap:
+        أرجع EP_PTR(cap_endpoint_cap_get_capEPPtr(cap));
 
-    case cap_notification_cap:
-        return NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
+    حالة cap_notification_cap:
+        أرجع NTFN_PTR(cap_notification_cap_get_capNtfnPtr(cap));
 
-    case cap_cnode_cap:
-        return CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
+    حالة cap_cnode_cap:
+        أرجع CTE_PTR(cap_cnode_cap_get_capCNodePtr(cap));
 
-    case cap_thread_cap:
-        return TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
+    حالة cap_thread_cap:
+        أرجع TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), 0);
 
-    case cap_zombie_cap:
-        return CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
+    حالة cap_zombie_cap:
+        أرجع CTE_PTR(cap_zombie_cap_get_capZombiePtr(cap));
 
-    case cap_domain_cap:
-        return NULL;
+    حالة cap_domain_cap:
+        أرجع عدم;
 
-    case cap_reply_cap:
-#ifdef CONFIG_KERNEL_MCS
-        return REPLY_PTR(cap_reply_cap_get_capReplyPtr(cap));
-#else
-        return NULL;
-#endif
+    حالة cap_جواب_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أرجع جواب_PTR(cap_جواب_cap_get_cap_جواب_Ptr(cap));
+#وإلا
+        أرجع عدم;
+#جيڪڏهن_پورو
 
-    case cap_irq_control_cap:
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_control_cap:
-#endif
-        return NULL;
+    حالة cap_irq_control_cap:
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_control_cap:
+#جيڪڏهن_پورو
+        أرجع عدم;
 
-    case cap_irq_handler_cap:
-        return NULL;
+    حالة cap_irq_handler_cap:
+        أرجع عدم;
 
-#ifdef CONFIG_KERNEL_MCS
-    case cap_sched_context_cap:
-        return SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    حالة cap_sched_context_cap:
+        أرجع SC_PTR(cap_sched_context_cap_get_capSCPtr(cap));
+#جيڪڏهن_پورو
 
-    default:
-        return cap_get_archCapPtr(cap);
+    افتراضي:
+        أرجع cap_get_archCapPtr(cap);
 
     }
 }
 
 bool_t CONST isCapRevocable(cap_t derivedCap, cap_t srcCap)
 {
-    if (isArchCap(derivedCap)) {
-        return Arch_isCapRevocable(derivedCap, srcCap);
+    إذا (isArchCap(derivedCap)) {
+        أرجع Arch_isCapRevocable(derivedCap, srcCap);
     }
-    switch (cap_get_capType(derivedCap)) {
-    case cap_endpoint_cap:
-        return (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
+    بدل (cap_get_capType(derivedCap)) {
+    حالة cap_endpoint_cap:
+        أرجع (cap_endpoint_cap_get_capEPBadge(derivedCap) !=
                 cap_endpoint_cap_get_capEPBadge(srcCap));
 
-    case cap_notification_cap:
-        return (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
+    حالة cap_notification_cap:
+        أرجع (cap_notification_cap_get_capNtfnBadge(derivedCap) !=
                 cap_notification_cap_get_capNtfnBadge(srcCap));
 
-    case cap_irq_handler_cap:
-        return (cap_get_capType(srcCap) ==
+    حالة cap_irq_handler_cap:
+        أرجع (cap_get_capType(srcCap) ==
                 cap_irq_control_cap);
 
-    case cap_untyped_cap:
-        return true;
+    حالة cap_untyped_cap:
+        أرجع true;
 
-    default:
-        return false;
+    افتراضي:
+        أرجع false;
     }
 }

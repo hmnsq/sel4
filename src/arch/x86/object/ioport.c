@@ -4,317 +4,317 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <arch/object/ioport.h>
-#include <arch/api/invocation.h>
-#include <plat/machine/io.h>
+#ضمن <kernel/thread.h>
+#ضمن <api/failures.h>
+#ضمن <api/syscall.h>
+#ضمن <machine/io.h>
+#ضمن <arch/object/ioport.h>
+#ضمن <arch/api/invocation.h>
+#ضمن <plat/machine/io.h>
 
-static inline void apply_pattern(word_t_may_alias *w, word_t pattern, bool_t set)
+ساكن مضمن فراغ apply_نمونو(لفظ_t_may_alias *w, لفظ_t نمونو, bool_t سيٽ)
 {
-    if (set) {
-        *w |= pattern;
-    } else {
-        *w &= ~pattern;
+    إذا (سيٽ) {
+        *w |= نمونو;
+    } وإلا {
+        *w &= ~نمونو;
     }
 }
 
-static inline word_t make_pattern(int start, int end)
+ساكن مضمن لفظ_t make_نمونو(صحيح شروعات, صحيح پڇاڙي)
 {
     // number of bits we want to have set
-    int num_bits = end - start;
+    صحيح انگ_بٽ = پڇاڙي - شروعات;
     // shift down to cut off the bits we don't want, then shift up to put the
     // bits into position
-    return (~(word_t)0) >> (CONFIG_WORD_SIZE - num_bits) << start;
+    أرجع (~(لفظ_t)0) >> (CONFIG_لفظ_سائيز - انگ_بٽ) << شروعات;
 }
 
-static exception_t ensurePortOperationAllowed(cap_t cap, uint32_t start_port, uint32_t size)
+ساكن exception_t ensure_پورٽ_Operation_Allowed(cap_t cap, uint32_t شروعات_پورٽ, uint32_t سائيز)
 {
-    uint32_t first_allowed = cap_io_port_cap_get_capIOPortFirstPort(cap);
-    uint32_t last_allowed = cap_io_port_cap_get_capIOPortLastPort(cap);
-    uint32_t end_port = start_port + size - 1;
-    assert(first_allowed <= last_allowed);
-    assert(start_port <= end_port);
+    uint32_t پهريون_allowed = cap_io_پورٽ_cap_get_cap_IOPort_پهريون_پورٽ(cap);
+    uint32_t آخري_allowed = cap_io_پورٽ_cap_get_cap_IOPort_آخري_پورٽ(cap);
+    uint32_t پڇاڙي_پورٽ = شروعات_پورٽ + سائيز - 1;
+    أكد(پهريون_allowed <= آخري_allowed);
+    أكد(شروعات_پورٽ <= پڇاڙي_پورٽ);
 
-    if ((start_port < first_allowed) || (end_port > last_allowed)) {
+    إذا ((شروعات_پورٽ < پهريون_allowed) || (پڇاڙي_پورٽ > آخري_allowed)) {
         userError("IOPort: Ports %d--%d fall outside permitted range %d--%d.",
-                  (int)start_port, (int)end_port,
-                  (int)first_allowed, (int)last_allowed);
+                  (صحيح)شروعات_پورٽ, (صحيح)پڇاڙي_پورٽ,
+                  (صحيح)پهريون_allowed, (صحيح)آخري_allowed);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-void freeIOPortRange(uint16_t first_port, uint16_t last_port)
+فراغ freeIOPortRange(uint16_t پهريون_پورٽ, uint16_t آخري_پورٽ)
 {
-    setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, false);
+    سيٽ_IOPort_نقاب(x86KSAllocatedIOPorts, پهريون_پورٽ, آخري_پورٽ, false);
 }
 
-static bool_t isIOPortRangeFree(uint16_t first_port, uint16_t last_port)
+ساكن bool_t isIOPortRangeFree(uint16_t پهريون_پورٽ, uint16_t آخري_پورٽ)
 {
-    int low_word = first_port >> wordRadix;
-    int high_word = last_port >> wordRadix;
-    int low_index = first_port & MASK(wordRadix);
-    int high_index = last_port & MASK(wordRadix);
+    صحيح هيٺيون_لفظ = پهريون_پورٽ >> لفظ_Radix;
+    صحيح مٿاهون_لفظ = آخري_پورٽ >> لفظ_Radix;
+    صحيح هيٺيون_اشاريو = پهريون_پورٽ & نقاب(لفظ_Radix);
+    صحيح مٿاهون_اشاريو = آخري_پورٽ & نقاب(لفظ_Radix);
 
     // check if we are operating on a partial word
-    if (low_word == high_word) {
-        if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, high_index + 1)) != 0) {
-            return false;
+    إذا (هيٺيون_لفظ == مٿاهون_لفظ) {
+        إذا ((x86KSAllocatedIOPorts[هيٺيون_لفظ] & make_نمونو(هيٺيون_اشاريو, مٿاهون_اشاريو + 1)) != 0) {
+            أرجع false;
         }
-        return true;
+        أرجع true;
     }
     // check the starting word
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(low_index, CONFIG_WORD_SIZE)) != 0) {
-        return false;
+    إذا ((x86KSAllocatedIOPorts[هيٺيون_لفظ] & make_نمونو(هيٺيون_اشاريو, CONFIG_لفظ_سائيز)) != 0) {
+        أرجع false;
     }
-    low_word++;
+    هيٺيون_لفظ++;
     // check the rest of the whole words
-    while (low_word < high_word) {
-        if (x86KSAllocatedIOPorts[low_word] != 0) {
-            return false;
+    طالما (هيٺيون_لفظ < مٿاهون_لفظ) {
+        إذا (x86KSAllocatedIOPorts[هيٺيون_لفظ] != 0) {
+            أرجع false;
         }
-        low_word++;
+        هيٺيون_لفظ++;
     }
     // check any trailing bits
-    if ((x86KSAllocatedIOPorts[low_word] & make_pattern(0, high_index + 1)) != 0) {
-        return false;
+    إذا ((x86KSAllocatedIOPorts[هيٺيون_لفظ] & make_نمونو(0, مٿاهون_اشاريو + 1)) != 0) {
+        أرجع false;
     }
-    return true;
+    أرجع true;
 }
 
-static exception_t invokeX86PortControl(uint16_t first_port, uint16_t last_port, cte_t *ioportSlot, cte_t *controlSlot)
+ساكن exception_t invoke_X86_پورٽ_Control(uint16_t پهريون_پورٽ, uint16_t آخري_پورٽ, cte_t *ioport_جڳهه, cte_t *control_جڳهه)
 {
-    setIOPortMask(x86KSAllocatedIOPorts, first_port, last_port, true);
-    cteInsert(cap_io_port_cap_new(first_port, last_port
-#ifdef CONFIG_VTX
+    سيٽ_IOPort_نقاب(x86KSAllocatedIOPorts, پهريون_پورٽ, آخري_پورٽ, true);
+    cte_وجهو(cap_io_پورٽ_cap_new(پهريون_پورٽ, آخري_پورٽ
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
                                   , VPID_INVALID
-#endif
+#جيڪڏهن_پورو
                                  ),
-              controlSlot, ioportSlot);
+              control_جڳهه, ioport_جڳهه);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t decodeX86PortControlInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t decode_X86_پورٽ_Control_Invocation(
+    لفظ_t invLabel,
+    لفظ_t ڊيگهائي,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *جڳهه,
     cap_t cap,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
-    uint16_t first_port;
-    uint16_t last_port;
-    word_t index, depth;
+    uint16_t پهريون_پورٽ;
+    uint16_t آخري_پورٽ;
+    لفظ_t اشاريو, اونهائي;
     cap_t cnodeCap;
-    cte_t *destSlot;
-    lookupSlot_ret_t lu_ret;
-    exception_t status;
+    cte_t *dest_جڳهه;
+    lookup_جڳهه_ret_t lu_ret;
+    exception_t حالت;
 
-    if (invLabel != X86IOPortControlIssue) {
+    إذا (invLabel != X86IOPortControlIssue) {
         userError("IOPortControl: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    إذا (ڊيگهائي < 4 || current_extra_caps.excaprefs[0] == عدم) {
         userError("IOPortControl: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پيغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    first_port = getSyscallArg(0, buffer) & 0xffff;
-    last_port = getSyscallArg(1, buffer) & 0xffff;
-    index = getSyscallArg(2, buffer);
-    depth = getSyscallArg(3, buffer);
+    پهريون_پورٽ = getSyscallArg(0, بفر) & 0xffff;
+    آخري_پورٽ = getSyscallArg(1, بفر) & 0xffff;
+    اشاريو = getSyscallArg(2, بفر);
+    اونهائي = getSyscallArg(3, بفر);
 
     cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (last_port < first_port) {
+    إذا (آخري_پورٽ < پهريون_پورٽ) {
         userError("IOPortControl: Last port must be > first port.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!isIOPortRangeFree(first_port, last_port)) {
+    إذا (!isIOPortRangeFree(پهريون_پورٽ, آخري_پورٽ)) {
         userError("IOPortControl: Some ports in range already in use.");
-        current_syscall_error.type = seL4_RevokeFirst;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Revoke_پهريون;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(buffer, 0));
-        return lu_ret.status;
+    lu_ret = lookup_هدف_جڳهه(cnodeCap, اشاريو, اونهائي);
+    إذا (lu_ret.حالت != EXCEPTION_NONE) {
+        userError("Target slot for new IO Port cap invalid: cap %lu.", getExtraCPtr(بفر, 0));
+        أرجع lu_ret.حالت;
     }
-    destSlot = lu_ret.slot;
+    dest_جڳهه = lu_ret.جڳهه;
 
-    status = ensureEmptySlot(destSlot);
-    if (status != EXCEPTION_NONE) {
-        userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(buffer, 0));
-        return status;
+    حالت = ensure_خالي_جايون_جڳهه(dest_جڳهه);
+    إذا (حالت != EXCEPTION_NONE) {
+        userError("Target slot for new IO Port cap not empty: cap %lu.", getExtraCPtr(بفر, 0));
+        أرجع حالت;
     }
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeX86PortControl(first_port, last_port, destSlot, slot);
+    سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+    أرجع invoke_X86_پورٽ_Control(پهريون_پورٽ, آخري_پورٽ, dest_جڳهه, جڳهه);
 }
 
-static exception_t invokeX86PortIn(word_t invLabel, uint16_t port, bool_t call)
+ساكن exception_t invoke_X86_پورٽ_اندريون(لفظ_t invLabel, uint16_t پورٽ, bool_t call)
 {
     uint32_t res;
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
+    thread = ڳنڍ_STATE(ksCurThread);
 
-    switch (invLabel) {
-    case X86IOPortIn8:
-        res = in8(port);
-        break;
-    case X86IOPortIn16:
-        res = in16(port);
-        break;
-    case X86IOPortIn32:
-        res = in32(port);
-        break;
+    بدل (invLabel) {
+    حالة X86IOPortIn8:
+        res = in8(پورٽ);
+        اكسر;
+    حالة X86IOPortIn16:
+        res = in16(پورٽ);
+        اكسر;
+    حالة X86IOPortIn32:
+        res = in32(پورٽ);
+        اكسر;
     }
 
-    if (call) {
-        word_t *ipcBuffer = lookupIPCBuffer(true, thread);
-        setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, res);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-                        seL4_MessageInfo_new(0, 0, 0, length)));
+    إذا (call) {
+        لفظ_t *ipc_بفر = lookupIPCBuffer(true, thread);
+        سيٽ_رجسٽر(thread, badge_رجسٽر, 0);
+        بنانشان صحيح ڊيگهائي = سيٽ_MR(thread, ipc_بفر, 0, res);
+        سيٽ_رجسٽر(thread, نياپو_Info_رجسٽر, لفظ_From_پيغام_Info(
+                        se_L4_پيغام_Info_new(0, 0, 0, ڊيگهائي)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Running);
+    أرجع EXCEPTION_NONE;
 }
 
-static exception_t invokeX86PortOut(word_t invLabel, uint16_t port, uint32_t data)
+ساكن exception_t invoke_X86_پورٽ_ٻاهريون(لفظ_t invLabel, uint16_t پورٽ, uint32_t معلومات)
 {
-    switch (invLabel) {
-    case X86IOPortOut8:
-        out8(port, data);
-        break;
-    case X86IOPortOut16:
-        out16(port, data);
-        break;
-    case X86IOPortOut32:
-        out32(port, data);
-        break;
+    بدل (invLabel) {
+    حالة X86IOPortOut8:
+        out8(پورٽ, معلومات);
+        اكسر;
+    حالة X86IOPortOut16:
+        out16(پورٽ, معلومات);
+        اكسر;
+    حالة X86IOPortOut32:
+        out32(پورٽ, معلومات);
+        اكسر;
     }
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t decodeX86PortInvocation(
-    word_t invLabel,
-    word_t length,
+exception_t decode_X86_پورٽ_Invocation(
+    لفظ_t invLabel,
+    لفظ_t ڊيگهائي,
     cptr_t cptr,
-    cte_t *slot,
+    cte_t *جڳهه,
     cap_t cap,
     bool_t call,
-    word_t *buffer
+    لفظ_t *بفر
 )
 {
     exception_t ret = EXCEPTION_NONE;
 
-    if (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
-        if (length < 1) {
+    إذا (invLabel == X86IOPortIn8 || invLabel == X86IOPortIn16 || invLabel == X86IOPortIn32) {
+        إذا (ڊيگهائي < 1) {
             userError("IOPort: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_پيغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to read from. */
-        uint16_t port = getSyscallArg(0, buffer) & 0xffff;
-        switch (invLabel) {
-        case X86IOPortIn8:
-            ret = ensurePortOperationAllowed(cap, port, 1);
-            break;
-        case X86IOPortIn16:
-            ret = ensurePortOperationAllowed(cap, port, 2);
-            break;
-        case X86IOPortIn32:
-            ret = ensurePortOperationAllowed(cap, port, 4);
-            break;
+        uint16_t پورٽ = getSyscallArg(0, بفر) & 0xffff;
+        بدل (invLabel) {
+        حالة X86IOPortIn8:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 1);
+            اكسر;
+        حالة X86IOPortIn16:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 2);
+            اكسر;
+        حالة X86IOPortIn32:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 4);
+            اكسر;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        إذا (ret != EXCEPTION_NONE) {
+            أرجع ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortIn(invLabel, port, call);
-    } else if (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invoke_X86_پورٽ_اندريون(invLabel, پورٽ, call);
+    } وإلا إذا (invLabel == X86IOPortOut8 || invLabel == X86IOPortOut16 || invLabel == X86IOPortOut32) {
         /* Ensure the incoming message is long enough for the write. */
-        if (length < 2) {
+        إذا (ڊيگهائي < 2) {
             userError("IOPort Out: Truncated message.");
-            current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.type = se_L4_Truncated_پيغام;
+            أرجع EXCEPTION_SYSCALL_ERROR;
         }
         /* Get the port the user is trying to write to. */
-        uint16_t port = getSyscallArg(0, buffer) & 0xffff;
-        seL4_Word raw_data = getSyscallArg(1, buffer);
+        uint16_t پورٽ = getSyscallArg(0, بفر) & 0xffff;
+        se_L4_لفظ raw_معلومات = getSyscallArg(1, بفر);
         /* We construct the value for data from raw_data based on the actual size of the port
            operation. This ensures that there is no 'random' user data left over in the value
            passed to invokeX86PortOut. Whilst invokeX86PortOut will ignore any extra data and
            cast down to the correct word size removing the extra here is currently relied upon
            for verification */
-        uint32_t data = 0;
+        uint32_t معلومات = 0;
 
-        switch (invLabel) {
-        case X86IOPortOut8:
-            ret = ensurePortOperationAllowed(cap, port, 1);
-            data = raw_data & 0xff;
-            break;
-        case X86IOPortOut16:
-            ret = ensurePortOperationAllowed(cap, port, 2);
-            data = raw_data & 0xffff;
-            break;
-        case X86IOPortOut32:
-            ret = ensurePortOperationAllowed(cap, port, 4);
-            data = raw_data & 0xffffffff;
-            break;
+        بدل (invLabel) {
+        حالة X86IOPortOut8:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 1);
+            معلومات = raw_معلومات & 0xff;
+            اكسر;
+        حالة X86IOPortOut16:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 2);
+            معلومات = raw_معلومات & 0xffff;
+            اكسر;
+        حالة X86IOPortOut32:
+            ret = ensure_پورٽ_Operation_Allowed(cap, پورٽ, 4);
+            معلومات = raw_معلومات & 0xffffffff;
+            اكسر;
         }
-        if (ret != EXCEPTION_NONE) {
-            return ret;
+        إذا (ret != EXCEPTION_NONE) {
+            أرجع ret;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return invokeX86PortOut(invLabel, port, data);
-    } else {
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+        أرجع invoke_X86_پورٽ_ٻاهريون(invLabel, پورٽ, معلومات);
+    } وإلا {
         userError("IOPort: Unknown operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-void setIOPortMask(void *ioport_bitmap, uint16_t low, uint16_t high, bool_t set)
+فراغ سيٽ_IOPort_نقاب(فراغ *ioport_bitmap, uint16_t هيٺيون, uint16_t مٿاهون, bool_t سيٽ)
 {
     //get an aliasing pointer
-    word_t_may_alias *bitmap = ioport_bitmap;
+    لفظ_t_may_alias *bitmap = ioport_bitmap;
 
-    int low_word = low >> wordRadix;
-    int high_word = high >> wordRadix;
-    int low_index = low & MASK(wordRadix);
-    int high_index = high & MASK(wordRadix);
+    صحيح هيٺيون_لفظ = هيٺيون >> لفظ_Radix;
+    صحيح مٿاهون_لفظ = مٿاهون >> لفظ_Radix;
+    صحيح هيٺيون_اشاريو = هيٺيون & نقاب(لفظ_Radix);
+    صحيح مٿاهون_اشاريو = مٿاهون & نقاب(لفظ_Radix);
 
     // see if we are just manipulating bits inside a single word. handling this
     // specially makes reasoning easier
-    if (low_word == high_word) {
-        apply_pattern(bitmap + low_word, make_pattern(low_index, high_index + 1), set);
-    } else {
+    إذا (هيٺيون_لفظ == مٿاهون_لفظ) {
+        apply_نمونو(bitmap + هيٺيون_لفظ, make_نمونو(هيٺيون_اشاريو, مٿاهون_اشاريو + 1), سيٽ);
+    } وإلا {
         // operate on the potentially partial first word
-        apply_pattern(bitmap + low_word, make_pattern(low_index, CONFIG_WORD_SIZE), set);
-        low_word++;
+        apply_نمونو(bitmap + هيٺيون_لفظ, make_نمونو(هيٺيون_اشاريو, CONFIG_لفظ_سائيز), سيٽ);
+        هيٺيون_لفظ++;
         // iterate over the whole words
-        while (low_word < high_word) {
-            apply_pattern(bitmap + low_word, ~(word_t)0, set);
-            low_word++;
+        طالما (هيٺيون_لفظ < مٿاهون_لفظ) {
+            apply_نمونو(bitmap + هيٺيون_لفظ, ~(لفظ_t)0, سيٽ);
+            هيٺيون_لفظ++;
         }
         // apply to any remaining bits
-        apply_pattern(bitmap + low_word, make_pattern(0, high_index + 1), set);
+        apply_نمونو(bitmap + هيٺيون_لفظ, make_نمونو(0, مٿاهون_اشاريو + 1), سيٽ);
     }
 }

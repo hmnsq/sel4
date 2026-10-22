@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <api/invocation.h>
-#include <machine/io.h>
-#include <object/structures.h>
-#include <object/untyped.h>
-#include <object/objecttype.h>
-#include <object/cnode.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <util.h>
+#ضمن <config.h>
+#ضمن <types.h>
+#ضمن <api/failures.h>
+#ضمن <api/syscall.h>
+#ضمن <api/invocation.h>
+#ضمن <machine/io.h>
+#ضمن <object/structures.h>
+#ضمن <object/untyped.h>
+#ضمن <object/objecttype.h>
+#ضمن <object/cnode.h>
+#ضمن <kernel/cspace.h>
+#ضمن <kernel/thread.h>
+#ضمن <util.h>
 
-static word_t alignUp(word_t baseValue, word_t alignment)
+ساكن لفظ_t align_مٿي(لفظ_t بنياد_قدر, لفظ_t alignment)
 {
-    return (baseValue + (BIT(alignment) - 1)) & ~MASK(alignment);
+    أرجع (بنياد_قدر + (ٻٽو_انگ(alignment) - 1)) & ~نقاب(alignment);
 }
 
-exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
-                                    cap_t cap, bool_t call, word_t *buffer)
+exception_t decodeUntypedInvocation(لفظ_t invLabel, لفظ_t ڊيگهائي, cte_t *جڳهه,
+                                    cap_t cap, bool_t call, لفظ_t *بفر)
 {
-    word_t newType, userObjSize, nodeIndex;
-    word_t nodeDepth, nodeOffset, nodeWindow;
-    cte_t *rootSlot;
-    exception_t status;
-    cap_t nodeCap;
-    lookupSlot_ret_t lu_ret;
-    word_t nodeSize;
-    word_t i;
+    لفظ_t newType, user_Obj_سائيز, ڳنڍ_اشاريو;
+    لفظ_t ڳنڍ_اونهائي, ڳنڍ_وٿي, ڳنڍ_دري;
+    cte_t *پاڙ_جڳهه;
+    exception_t حالت;
+    cap_t ڳنڍ_Cap;
+    lookup_جڳهه_ret_t lu_ret;
+    لفظ_t ڳنڍ_سائيز;
+    لفظ_t i;
     cte_t *destCNode;
-    word_t freeRef, alignedFreeRef, objectSize, untypedFreeBytes;
-    word_t freeIndex;
-    bool_t deviceMemory;
+    لفظ_t freeRef, alignedFreeRef, object_سائيز, untyped_Free_بائيٽون;
+    لفظ_t free_اشاريو;
+    bool_t device_يادگيري;
     bool_t reset;
 
     /* Ensure operation is valid. */
-    if (invLabel != UntypedRetype) {
+    إذا (invLabel != UntypedRetype) {
         userError("Untyped cap: Illegal operation attempted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Ensure message length valid. */
-    if (length < 6 || current_extra_caps.excaprefs[0] == NULL) {
+    إذا (ڊيگهائي < 6 || current_extra_caps.excaprefs[0] == عدم) {
         userError("Untyped invocation: Truncated message.");
-        current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Truncated_پيغام;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Fetch arguments. */
-    newType     = getSyscallArg(0, buffer);
-    userObjSize = getSyscallArg(1, buffer);
-    nodeIndex   = getSyscallArg(2, buffer);
-    nodeDepth   = getSyscallArg(3, buffer);
-    nodeOffset  = getSyscallArg(4, buffer);
-    nodeWindow  = getSyscallArg(5, buffer);
-    rootSlot = current_extra_caps.excaprefs[0];
+    newType     = getSyscallArg(0, بفر);
+    user_Obj_سائيز = getSyscallArg(1, بفر);
+    ڳنڍ_اشاريو   = getSyscallArg(2, بفر);
+    ڳنڍ_اونهائي   = getSyscallArg(3, بفر);
+    ڳنڍ_وٿي  = getSyscallArg(4, بفر);
+    ڳنڍ_دري  = getSyscallArg(5, بفر);
+    پاڙ_جڳهه = current_extra_caps.excaprefs[0];
 
     /* Is the requested object type valid? */
-    if (newType >= seL4_ObjectTypeCount) {
+    إذا (newType >= se_L4_Object_Type_ڳڻپ) {
         userError("Untyped Retype: Invalid object type.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 0;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    objectSize = getObjectSize(newType, userObjSize);
+    object_سائيز = get_Object_سائيز(newType, user_Obj_سائيز);
 
     /* Exclude impossibly large object sizes. getObjectSize can overflow if userObjSize
        is close to 2^wordBits, which is nonsensical in any case, so we check that this
        did not happen. userObjSize will always need to be less than wordBits. */
-    if (userObjSize >= wordBits || objectSize > seL4_MaxUntypedBits) {
+    إذا (user_Obj_سائيز >= لفظ_بٽ || object_سائيز > se_L4_Max_Untyped_بٽ) {
         userError("Untyped Retype: Invalid object size.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = seL4_MaxUntypedBits;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = se_L4_Max_Untyped_بٽ;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If the target object is a CNode, is it at least size 1? */
-    if (newType == seL4_CapTableObject && userObjSize == 0) {
+    إذا (newType == se_L4_Cap_جدول_Object && user_Obj_سائيز == 0) {
         userError("Untyped Retype: Requested CapTable size too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* If the target object is a Untyped, is it at least size 4? */
-    if (newType == seL4_UntypedObject && userObjSize < seL4_MinUntypedBits) {
+    إذا (newType == seL4_UntypedObject && user_Obj_سائيز < se_L4_Min_Untyped_بٽ) {
         userError("Untyped Retype: Requested UntypedItem size too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    if (newType == seL4_SchedContextObject && userObjSize < seL4_MinSchedContextBits) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    إذا (newType == seL4_SchedContextObject && user_Obj_سائيز < se_L4_Min_Sched_Context_بٽ) {
         userError("Untyped retype: Requested a scheduling context too small.");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-#endif
+#جيڪڏهن_پورو
 
     /* Lookup the destination CNode (where our caps will be placed in). */
-    if (nodeDepth == 0) {
-        nodeCap = rootSlot->cap;
-    } else {
-        cap_t rootCap = rootSlot->cap;
-        lu_ret = lookupTargetSlot(rootCap, nodeIndex, nodeDepth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+    إذا (ڳنڍ_اونهائي == 0) {
+        ڳنڍ_Cap = پاڙ_جڳهه->cap;
+    } وإلا {
+        cap_t پاڙ_Cap = پاڙ_جڳهه->cap;
+        lu_ret = lookup_هدف_جڳهه(پاڙ_Cap, ڳنڍ_اشاريو, ڳنڍ_اونهائي);
+        إذا (lu_ret.حالت != EXCEPTION_NONE) {
             userError("Untyped Retype: Invalid destination address.");
-            return lu_ret.status;
+            أرجع lu_ret.حالت;
         }
-        nodeCap = lu_ret.slot->cap;
+        ڳنڍ_Cap = lu_ret.جڳهه->cap;
     }
 
     /* Is the destination actually a CNode? */
-    if (cap_get_capType(nodeCap) != cap_cnode_cap) {
+    إذا (cap_get_capType(ڳنڍ_Cap) != cap_cnode_cap) {
         userError("Untyped Retype: Destination cap invalid or read-only.");
         current_syscall_error.type = seL4_FailedLookup;
-        current_syscall_error.failedLookupWasSource = 0;
-        current_lookup_fault = lookup_fault_missing_capability_new(nodeDepth);
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.failed_Lookup_Was_ذريعو = 0;
+        current_lookup_fault = lookup_fault_missing_capability_new(ڳنڍ_اونهائي);
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Is the region where the user wants to put the caps valid? */
-    nodeSize = 1ul << cap_cnode_cap_get_capCNodeRadix(nodeCap);
-    if (nodeOffset > nodeSize - 1) {
+    ڳنڍ_سائيز = 1ul << cap_cnode_cap_get_capCNodeRadix(ڳنڍ_Cap);
+    إذا (ڳنڍ_وٿي > ڳنڍ_سائيز - 1) {
         userError("Untyped Retype: Destination node offset #%d too large.",
-                  (int)nodeOffset);
+                  (صحيح)ڳنڍ_وٿي);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 0;
-        current_syscall_error.rangeErrorMax = nodeSize - 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = ڳنڍ_سائيز - 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow < 1 || nodeWindow > CONFIG_RETYPE_FAN_OUT_LIMIT) {
+    إذا (ڳنڍ_دري < 1 || ڳنڍ_دري > CONFIG_RETYPE_FAN_ٻاهريون_حد_بندي) {
         userError("Untyped Retype: Number of requested objects (%d) too small or large.",
-                  (int)nodeWindow);
+                  (صحيح)ڳنڍ_دري);
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = CONFIG_RETYPE_FAN_OUT_LIMIT;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = CONFIG_RETYPE_FAN_ٻاهريون_حد_بندي;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
-    if (nodeWindow > nodeSize - nodeOffset) {
+    إذا (ڳنڍ_دري > ڳنڍ_سائيز - ڳنڍ_وٿي) {
         userError("Untyped Retype: Requested destination window overruns size of node.");
         current_syscall_error.type = seL4_RangeError;
         current_syscall_error.rangeErrorMin = 1;
-        current_syscall_error.rangeErrorMax = nodeSize - nodeOffset;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.rangeErrorMax = ڳنڍ_سائيز - ڳنڍ_وٿي;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Ensure that the destination slots are all empty. */
-    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(nodeCap));
-    for (i = nodeOffset; i < nodeOffset + nodeWindow; i++) {
-        status = ensureEmptySlot(destCNode + i);
-        if (status != EXCEPTION_NONE) {
+    destCNode = CTE_PTR(cap_cnode_cap_get_capCNodePtr(ڳنڍ_Cap));
+    لكل (i = ڳنڍ_وٿي; i < ڳنڍ_وٿي + ڳنڍ_دري; i++) {
+        حالت = ensure_خالي_جايون_جڳهه(destCNode + i);
+        إذا (حالت != EXCEPTION_NONE) {
             userError("Untyped Retype: Slot #%d in destination window non-empty.",
-                      (int)i);
-            return status;
+                      (صحيح)i);
+            أرجع حالت;
         }
     }
 
@@ -179,15 +179,15 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
      * If we have children, we just keep allocating from the "free" value
      * recorded in the cap.
      */
-    status = ensureNoChildren(slot);
-    if (status != EXCEPTION_NONE) {
-        freeIndex = cap_untyped_cap_get_capFreeIndex(cap);
+    حالت = ensureNoChildren(جڳهه);
+    إذا (حالت != EXCEPTION_NONE) {
+        free_اشاريو = cap_untyped_cap_get_cap_Free_اشاريو(cap);
         reset = false;
-    } else {
-        freeIndex = 0;
+    } وإلا {
+        free_اشاريو = 0;
         reset = true;
     }
-    freeRef = GET_FREE_REF(cap_untyped_cap_get_capPtr(cap), freeIndex);
+    freeRef = GET_FREE_REF(cap_untyped_cap_get_capPtr(cap), free_اشاريو);
 
     /*
      * Determine the maximum number of objects we can create, and return an
@@ -197,52 +197,52 @@ exception_t decodeUntypedInvocation(word_t invLabel, word_t length, cte_t *slot,
      * fits, it will also fit aligned up (by packing it on the right hand side
      * of the untyped).
      */
-    untypedFreeBytes = BIT(cap_untyped_cap_get_capBlockSize(cap)) -
-                       FREE_INDEX_TO_OFFSET(freeIndex);
+    untyped_Free_بائيٽون = ٻٽو_انگ(cap_untyped_cap_get_cap_بلاڪ_سائيز(cap)) -
+                       FREE_اشاريو_منزل_وٿي(free_اشاريو);
 
-    if ((untypedFreeBytes >> objectSize) < nodeWindow) {
+    إذا ((untyped_Free_بائيٽون >> object_سائيز) < ڳنڍ_دري) {
         userError("Untyped Retype: Insufficient memory "
                   "(%lu * %lu bytes needed, %lu bytes available).",
-                  (word_t)nodeWindow,
-                  (objectSize >= wordBits ? -1 : (1ul << objectSize)),
-                  (word_t)(untypedFreeBytes));
-        current_syscall_error.type = seL4_NotEnoughMemory;
-        current_syscall_error.memoryLeft = untypedFreeBytes;
-        return EXCEPTION_SYSCALL_ERROR;
+                  (لفظ_t)ڳنڍ_دري,
+                  (object_سائيز >= لفظ_بٽ ? -1 : (1ul << object_سائيز)),
+                  (لفظ_t)(untyped_Free_بائيٽون));
+        current_syscall_error.type = se_L4_Not_Enough_يادگيري;
+        current_syscall_error.يادگيري_کاٻو = untyped_Free_بائيٽون;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
-    deviceMemory = cap_untyped_cap_get_capIsDevice(cap);
-    if ((deviceMemory && !Arch_isFrameType(newType))
+    device_يادگيري = cap_untyped_cap_get_capIsDevice(cap);
+    إذا ((device_يادگيري && !Arch_is_چوکٺو_Type(newType))
         && newType != seL4_UntypedObject) {
         userError("Untyped Retype: Creating kernel objects with device untyped");
-        current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 1;
-        return EXCEPTION_SYSCALL_ERROR;
+        current_syscall_error.type = se_L4_Invalid_دليل;
+        current_syscall_error.invalid_دليل_عدد = 1;
+        أرجع EXCEPTION_SYSCALL_ERROR;
     }
 
     /* Align up the free region so that it is aligned to the target object's
      * size. */
-    alignedFreeRef = alignUp(freeRef, objectSize);
+    alignedFreeRef = align_مٿي(freeRef, object_سائيز);
 
     /* Perform the retype. */
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeUntyped_Retype(slot, reset,
-                                (void *)alignedFreeRef, newType, userObjSize,
-                                destCNode, nodeOffset, nodeWindow, deviceMemory);
+    سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Restart);
+    أرجع invokeUntyped_Retype(جڳهه, reset,
+                                (فراغ *)alignedFreeRef, newType, user_Obj_سائيز,
+                                destCNode, ڳنڍ_وٿي, ڳنڍ_دري, device_يادگيري);
 }
 
-static exception_t resetUntypedCap(cte_t *srcSlot)
+ساكن exception_t resetUntypedCap(cte_t *src_جڳهه)
 {
-    cap_t prev_cap = srcSlot->cap;
-    word_t block_size = cap_untyped_cap_get_capBlockSize(prev_cap);
-    void *regionBase = WORD_PTR(cap_untyped_cap_get_capPtr(prev_cap));
-    int chunk = CONFIG_RESET_CHUNK_BITS;
-    word_t offset = FREE_INDEX_TO_OFFSET(cap_untyped_cap_get_capFreeIndex(prev_cap));
-    exception_t status;
-    bool_t deviceMemory = cap_untyped_cap_get_capIsDevice(prev_cap);
+    cap_t prev_cap = src_جڳهه->cap;
+    لفظ_t بلاڪ_سائيز = cap_untyped_cap_get_cap_بلاڪ_سائيز(prev_cap);
+    فراغ *region_بنياد = لفظ_PTR(cap_untyped_cap_get_capPtr(prev_cap));
+    صحيح chunk = CONFIG_RESET_CHUNK_بٽ;
+    لفظ_t وٿي = FREE_اشاريو_منزل_وٿي(cap_untyped_cap_get_cap_Free_اشاريو(prev_cap));
+    exception_t حالت;
+    bool_t device_يادگيري = cap_untyped_cap_get_capIsDevice(prev_cap);
 
-    if (offset == 0) {
-        return EXCEPTION_NONE;
+    إذا (وٿي == 0) {
+        أرجع EXCEPTION_NONE;
     }
 
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>regionBase)
@@ -250,40 +250,40 @@ static exception_t resetUntypedCap(cte_t *srcSlot)
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>regionBase)
         (unat \<acute>block_size))" */
 
-    if (deviceMemory || block_size < chunk) {
-        if (! deviceMemory) {
-            clearMemory(regionBase, block_size);
+    إذا (device_يادگيري || بلاڪ_سائيز < chunk) {
+        إذا (! device_يادگيري) {
+            clear_يادگيري(region_بنياد, بلاڪ_سائيز);
         }
-        srcSlot->cap = cap_untyped_cap_set_capFreeIndex(prev_cap, 0);
-    } else {
-        for (offset = ROUND_DOWN(offset - 1, chunk);
-             offset != - BIT(chunk); offset -= BIT(chunk)) {
-            clearMemory(GET_OFFSET_FREE_PTR(regionBase, offset), chunk);
-            srcSlot->cap = cap_untyped_cap_set_capFreeIndex(prev_cap, OFFSET_TO_FREE_INDEX(offset));
-            status = preemptionPoint();
-            if (status != EXCEPTION_NONE) {
-                return status;
+        src_جڳهه->cap = cap_untyped_cap_سيٽ_cap_Free_اشاريو(prev_cap, 0);
+    } وإلا {
+        لكل (وٿي = ڦيرو_هيٺ_ڏانهن(وٿي - 1, chunk);
+             وٿي != - ٻٽو_انگ(chunk); وٿي -= ٻٽو_انگ(chunk)) {
+            clear_يادگيري(GET_وٿي_FREE_PTR(region_بنياد, وٿي), chunk);
+            src_جڳهه->cap = cap_untyped_cap_سيٽ_cap_Free_اشاريو(prev_cap, وٿي_منزل_FREE_اشاريو(وٿي));
+            حالت = preemption_نقطو();
+            إذا (حالت != EXCEPTION_NONE) {
+                أرجع حالت;
             }
         }
     }
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }
 
-exception_t invokeUntyped_Retype(cte_t *srcSlot,
-                                 bool_t reset, void *retypeBase,
-                                 object_t newType, word_t userSize,
-                                 cte_t *destCNode, word_t destOffset, word_t destLength,
-                                 bool_t deviceMemory)
+exception_t invokeUntyped_Retype(cte_t *src_جڳهه,
+                                 bool_t reset, فراغ *retype_بنياد,
+                                 object_t newType, لفظ_t user_سائيز,
+                                 cte_t *destCNode, لفظ_t dest_وٿي, لفظ_t dest_ڊيگهائي,
+                                 bool_t device_يادگيري)
 {
-    word_t freeRef;
-    word_t totalObjectSize;
-    void *regionBase = WORD_PTR(cap_untyped_cap_get_capPtr(srcSlot->cap));
-    exception_t status;
+    لفظ_t freeRef;
+    لفظ_t ڪل_Object_سائيز;
+    فراغ *region_بنياد = لفظ_PTR(cap_untyped_cap_get_capPtr(src_جڳهه->cap));
+    exception_t حالت;
 
-    if (reset) {
-        status = resetUntypedCap(srcSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+    إذا (reset) {
+        حالت = resetUntypedCap(src_جڳهه);
+        إذا (حالت != EXCEPTION_NONE) {
+            أرجع حالت;
         }
     }
 
@@ -292,14 +292,14 @@ exception_t invokeUntyped_Retype(cte_t *srcSlot,
      * Note that userSize is not necessarily the true size of the object in
      * memory. In the case where newType is seL4_CapTableObject, the size is
      * transformed by getObjectSize. */
-    totalObjectSize = destLength << getObjectSize(newType, userSize);
-    freeRef = (word_t)retypeBase + totalObjectSize;
-    srcSlot->cap = cap_untyped_cap_set_capFreeIndex(srcSlot->cap,
-                                                    GET_FREE_INDEX(regionBase, freeRef));
+    ڪل_Object_سائيز = dest_ڊيگهائي << get_Object_سائيز(newType, user_سائيز);
+    freeRef = (لفظ_t)retype_بنياد + ڪل_Object_سائيز;
+    src_جڳهه->cap = cap_untyped_cap_سيٽ_cap_Free_اشاريو(src_جڳهه->cap,
+                                                    GET_FREE_اشاريو(region_بنياد, freeRef));
 
     /* Create new objects and caps. */
-    createNewObjects(newType, srcSlot, destCNode, destOffset, destLength,
-                     retypeBase, userSize, deviceMemory);
+    createNewObjects(newType, src_جڳهه, destCNode, dest_وٿي, dest_ڊيگهائي,
+                     retype_بنياد, user_سائيز, device_يادگيري);
 
-    return EXCEPTION_NONE;
+    أرجع EXCEPTION_NONE;
 }

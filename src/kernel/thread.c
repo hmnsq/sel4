@@ -4,749 +4,749 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <util.h>
-#include <api/faults.h>
-#include <api/types.h>
-#include <kernel/cspace.h>
-#include <kernel/thread.h>
-#include <kernel/vspace.h>
-#include <object/domain.h>
-#ifdef CONFIG_KERNEL_MCS
-#include <object/schedcontext.h>
-#endif
-#include <model/statedata.h>
-#include <arch/machine.h>
-#include <arch/kernel/thread.h>
-#include <machine/registerset.h>
-#include <machine/fpu.h>
-#include <linker.h>
+#ضمن <config.h>
+#ضمن <object.h>
+#ضمن <util.h>
+#ضمن <api/faults.h>
+#ضمن <api/types.h>
+#ضمن <kernel/cspace.h>
+#ضمن <kernel/thread.h>
+#ضمن <kernel/vspace.h>
+#ضمن <object/domain.h>
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+#ضمن <object/schedcontext.h>
+#جيڪڏهن_پورو
+#ضمن <model/statedata.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/kernel/thread.h>
+#ضمن <machine/registerset.h>
+#ضمن <machine/fpu.h>
+#ضمن <linker.h>
 
-static seL4_MessageInfo_t
-transferCaps(seL4_MessageInfo_t info,
+ساكن se_L4_پيغام_Info_t
+transferCaps(se_L4_پيغام_Info_t info,
              endpoint_t *endpoint, tcb_t *receiver,
-             word_t *receiveBuffer);
+             لفظ_t *receive_بفر);
 
-BOOT_CODE void configureIdleThread(tcb_t *tcb)
+BOOT_ڪوڊ فراغ configureIdleThread(tcb_t *tcb)
 {
     tcb->tcbFlags = seL4_TCBFlag_fpuDisabled;
     Arch_configureIdleThread(tcb);
-    setThreadState(tcb, ThreadState_IdleThreadState);
+    سيٽ_Thread_State(tcb, ThreadState_IdleThreadState);
 }
 
-void activateThread(void)
+فراغ activateThread(فراغ)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (unlikely(NODE_STATE(ksCurThread)->tcbYieldTo)) {
-        schedContext_completeYieldTo(NODE_STATE(ksCurThread));
-        assert(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) == ThreadState_Running);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    إذا (unlikely(ڳنڍ_STATE(ksCurThread)->tcb_Yield_منزل)) {
+        sched_Context_complete_Yield_منزل(ڳنڍ_STATE(ksCurThread));
+        أكد(thread_state_get_tsType(ڳنڍ_STATE(ksCurThread)->tcbState) == ThreadState_Running);
     }
-#endif
+#جيڪڏهن_پورو
 
-    switch (thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState)) {
-    case ThreadState_Running:
-#ifdef CONFIG_VTX
-    case ThreadState_RunningVM:
-#endif
-        break;
+    بدل (thread_state_get_tsType(ڳنڍ_STATE(ksCurThread)->tcbState)) {
+    حالة ThreadState_Running:
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
+    حالة ThreadState_RunningVM:
+#جيڪڏهن_پورو
+        اكسر;
 
-    case ThreadState_Restart: {
-        word_t pc;
+    حالة ThreadState_Restart: {
+        لفظ_t pc;
 
-        pc = getRestartPC(NODE_STATE(ksCurThread));
-        setNextPC(NODE_STATE(ksCurThread), pc);
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-        break;
+        pc = getRestartPC(ڳنڍ_STATE(ksCurThread));
+        سيٽ_ايندڙ_PC(ڳنڍ_STATE(ksCurThread), pc);
+        سيٽ_Thread_State(ڳنڍ_STATE(ksCurThread), ThreadState_Running);
+        اكسر;
     }
 
-    case ThreadState_IdleThreadState:
-        Arch_activateIdleThread(NODE_STATE(ksCurThread));
-        break;
+    حالة ThreadState_IdleThreadState:
+        Arch_activateIdleThread(ڳنڍ_STATE(ksCurThread));
+        اكسر;
 
-    default:
+    افتراضي:
         fail("Current thread is blocked");
     }
 }
 
-void suspend(tcb_t *target)
+فراغ suspend(tcb_t *هدف)
 {
-    cancelIPC(target);
-    if (thread_state_get_tsType(target->tcbState) == ThreadState_Running) {
+    cancelIPC(هدف);
+    إذا (thread_state_get_tsType(هدف->tcbState) == ThreadState_Running) {
         /* whilst in the running state it is possible that restart pc of a thread is
          * incorrect. As we do not know what state this thread will transition to
          * after we make it inactive we update its restart pc so that the thread next
          * runs at the correct address whether it is restarted or moved directly to
          * running */
-        updateRestartPC(target);
+        updateRestartPC(هدف);
     }
-    tcbSchedDequeue(target);
-#ifdef CONFIG_KERNEL_MCS
-    tcbReleaseRemove(target);
-    schedContext_cancelYieldTo(target);
-#endif
-    setThreadState(target, ThreadState_Inactive);
+    tcb_Sched_قطار_مان_ڪڍو(هدف);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    tcbReleaseRemove(هدف);
+    sched_Context_cancel_Yield_منزل(هدف);
+#جيڪڏهن_پورو
+    سيٽ_Thread_State(هدف, ThreadState_Inactive);
 }
 
-void restart(tcb_t *target)
+فراغ restart(tcb_t *هدف)
 {
-    if (isStopped(target)) {
-        cancelIPC(target);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(target, ThreadState_Restart);
-        sched_context_t *sc = target->tcbSchedContext;
-        if (sc_sporadic(sc) && sc != NODE_STATE(ksCurSC)) {
+    إذا (isStopped(هدف)) {
+        cancelIPC(هدف);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        سيٽ_Thread_State(هدف, ThreadState_Restart);
+        sched_context_t *sc = هدف->tcbSchedContext;
+        إذا (sc_sporadic(sc) && sc != ڳنڍ_STATE(ksCurSC)) {
             refill_unblock_check(sc);
         }
         schedContext_resume(sc);
-        if (isSchedulable(target)) {
-            possibleSwitchTo(target);
+        إذا (isSchedulable(هدف)) {
+            possible_Switch_منزل(هدف);
         }
-#else
-        setupReplyMaster(target);
-        setThreadState(target, ThreadState_Restart);
-        SCHED_ENQUEUE(target);
-        possibleSwitchTo(target);
-#endif
+#وإلا
+        تياري_جواب_Master(هدف);
+        سيٽ_Thread_State(هدف, ThreadState_Restart);
+        SCHED_قطار_اندر_وجهو(هدف);
+        possible_Switch_منزل(هدف);
+#جيڪڏهن_پورو
     }
 }
 
-void doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, word_t badge,
+فراغ doIPCTransfer(tcb_t *sender, endpoint_t *endpoint, لفظ_t badge,
                    bool_t grant, tcb_t *receiver)
 {
-    void *receiveBuffer, *sendBuffer;
+    فراغ *receive_بفر, *send_بفر;
 
-    receiveBuffer = lookupIPCBuffer(true, receiver);
+    receive_بفر = lookupIPCBuffer(true, receiver);
 
-    if (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
-        sendBuffer = lookupIPCBuffer(false, sender);
-        doNormalTransfer(sender, sendBuffer, endpoint, badge, grant,
-                         receiver, receiveBuffer);
-    } else {
-        doFaultTransfer(badge, sender, receiver, receiveBuffer);
+    إذا (likely(seL4_Fault_get_seL4_FaultType(sender->tcbFault) == seL4_Fault_NullFault)) {
+        send_بفر = lookupIPCBuffer(false, sender);
+        do_عام_Transfer(sender, send_بفر, endpoint, badge, grant,
+                         receiver, receive_بفر);
+    } وإلا {
+        doFaultTransfer(badge, sender, receiver, receive_بفر);
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void doReplyTransfer(tcb_t *sender, reply_t *reply, bool_t grant)
-#else
-void doReplyTransfer(tcb_t *sender, tcb_t *receiver, cte_t *slot, bool_t grant)
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+فراغ do_جواب_Transfer(tcb_t *sender, جواب_t *جواب, bool_t grant)
+#وإلا
+فراغ do_جواب_Transfer(tcb_t *sender, tcb_t *receiver, cte_t *جڳهه, bool_t grant)
+#جيڪڏهن_پورو
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (reply->replyTCB == NULL ||
-        thread_state_get_tsType(reply->replyTCB->tcbState) != ThreadState_BlockedOnReply) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    إذا (جواب->جواب_TCB == عدم ||
+        thread_state_get_tsType(جواب->جواب_TCB->tcbState) != Thread_State_Blocked_On_جواب) {
         /* nothing to do */
-        return;
+        أرجع;
     }
 
-    tcb_t *receiver = reply->replyTCB;
-    reply_remove(reply, receiver);
-    assert(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
-    assert(reply->replyTCB == NULL);
+    tcb_t *receiver = جواب->جواب_TCB;
+    جواب_remove(جواب, receiver);
+    أكد(thread_state_get_tsType(receiver->tcbState) == ThreadState_Inactive);
+    أكد(جواب->جواب_TCB == عدم);
 
-    if (sc_sporadic(receiver->tcbSchedContext)
-        && receiver->tcbSchedContext != NODE_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
+    إذا (sc_sporadic(receiver->tcbSchedContext)
+        && receiver->tcbSchedContext != ڳنڍ_STATE_ON_CORE(ksCurSC, receiver->tcbSchedContext->scCore)) {
         refill_unblock_check(receiver->tcbSchedContext);
     }
-#else
-    assert(thread_state_get_tsType(receiver->tcbState) ==
-           ThreadState_BlockedOnReply);
-#endif
+#وإلا
+    أكد(thread_state_get_tsType(receiver->tcbState) ==
+           Thread_State_Blocked_On_جواب);
+#جيڪڏهن_پورو
 
-    word_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
-    if (likely(fault_type == seL4_Fault_NullFault)) {
-        doIPCTransfer(sender, NULL, 0, grant, receiver);
-#ifdef CONFIG_KERNEL_MCS
-        setThreadState(receiver, ThreadState_Running);
-#else
+    لفظ_t fault_type = seL4_Fault_get_seL4_FaultType(receiver->tcbFault);
+    إذا (likely(fault_type == seL4_Fault_NullFault)) {
+        doIPCTransfer(sender, عدم, 0, grant, receiver);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        سيٽ_Thread_State(receiver, ThreadState_Running);
+#وإلا
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-        setThreadState(receiver, ThreadState_Running);
-        possibleSwitchTo(receiver);
-#endif
-    } else {
-#ifndef CONFIG_KERNEL_MCS
+        cteDeleteOne(جڳهه);
+        سيٽ_Thread_State(receiver, ThreadState_Running);
+        possible_Switch_منزل(receiver);
+#جيڪڏهن_پورو
+    } وإلا {
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
         /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-        cteDeleteOne(slot);
-#endif
-        bool_t restart = handleFaultReply(receiver, sender);
+        cteDeleteOne(جڳهه);
+#جيڪڏهن_پورو
+        bool_t restart = handle_Fault_جواب(receiver, sender);
         receiver->tcbFault = seL4_Fault_NullFault_new();
-        if (restart) {
-            setThreadState(receiver, ThreadState_Restart);
-#ifndef CONFIG_KERNEL_MCS
-            possibleSwitchTo(receiver);
-#endif
-        } else {
-            setThreadState(receiver, ThreadState_Inactive);
+        إذا (restart) {
+            سيٽ_Thread_State(receiver, ThreadState_Restart);
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_KERNEL_MCS
+            possible_Switch_منزل(receiver);
+#جيڪڏهن_پورو
+        } وإلا {
+            سيٽ_Thread_State(receiver, ThreadState_Inactive);
         }
     }
 
-#ifdef CONFIG_KERNEL_MCS
-    if (receiver->tcbSchedContext && isRunnable(receiver)) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    إذا (receiver->tcbSchedContext && isRunnable(receiver)) {
         sched_context_t *sc = receiver->tcbSchedContext;
-        if ((refill_ready(sc) && refill_sufficient(sc, 0))) {
-            possibleSwitchTo(receiver);
-        } else {
-            if (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
+        إذا ((refill_ready(sc) && refill_sufficient(sc, 0))) {
+            possible_Switch_منزل(receiver);
+        } وإلا {
+            إذا (validTimeoutHandler(receiver) && fault_type != seL4_Fault_Timeout) {
                 current_fault = seL4_Fault_Timeout_new(sc->scBadge);
                 handleTimeout(receiver);
-            } else {
+            } وإلا {
                 postpone(sc);
             }
         }
     }
-#endif
+#جيڪڏهن_پورو
 }
 
-void doNormalTransfer(tcb_t *sender, word_t *sendBuffer, endpoint_t *endpoint,
-                      word_t badge, bool_t canGrant, tcb_t *receiver,
-                      word_t *receiveBuffer)
+فراغ do_عام_Transfer(tcb_t *sender, لفظ_t *send_بفر, endpoint_t *endpoint,
+                      لفظ_t badge, bool_t canGrant, tcb_t *receiver,
+                      لفظ_t *receive_بفر)
 {
-    word_t msgTransferred;
-    seL4_MessageInfo_t tag;
-    exception_t status;
+    لفظ_t نياپو_Transferred;
+    se_L4_پيغام_Info_t ٽيگ;
+    exception_t حالت;
 
-    tag = messageInfoFromWord(getRegister(sender, msgInfoRegister));
+    ٽيگ = پيغام_Info_From_لفظ(get_رجسٽر(sender, نياپو_Info_رجسٽر));
 
-    if (canGrant) {
-        status = lookupExtraCaps(sender, sendBuffer, tag);
-        if (unlikely(status != EXCEPTION_NONE)) {
-            current_extra_caps.excaprefs[0] = NULL;
+    إذا (canGrant) {
+        حالت = lookupExtraCaps(sender, send_بفر, ٽيگ);
+        إذا (unlikely(حالت != EXCEPTION_NONE)) {
+            current_extra_caps.excaprefs[0] = عدم;
         }
-    } else {
-        current_extra_caps.excaprefs[0] = NULL;
+    } وإلا {
+        current_extra_caps.excaprefs[0] = عدم;
     }
 
-    msgTransferred = copyMRs(sender, sendBuffer, receiver, receiveBuffer,
-                             seL4_MessageInfo_get_length(tag));
+    نياپو_Transferred = copyMRs(sender, send_بفر, receiver, receive_بفر,
+                             se_L4_پيغام_Info_get_ڊيگهائي(ٽيگ));
 
-    tag = transferCaps(tag, endpoint, receiver, receiveBuffer);
+    ٽيگ = transferCaps(ٽيگ, endpoint, receiver, receive_بفر);
 
-    tag = seL4_MessageInfo_set_length(tag, msgTransferred);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(tag));
-    setRegister(receiver, badgeRegister, badge);
+    ٽيگ = se_L4_پيغام_Info_سيٽ_ڊيگهائي(ٽيگ, نياپو_Transferred);
+    سيٽ_رجسٽر(receiver, نياپو_Info_رجسٽر, لفظ_From_پيغام_Info(ٽيگ));
+    سيٽ_رجسٽر(receiver, badge_رجسٽر, badge);
 }
 
-void doFaultTransfer(word_t badge, tcb_t *sender, tcb_t *receiver,
-                     word_t *receiverIPCBuffer)
+فراغ doFaultTransfer(لفظ_t badge, tcb_t *sender, tcb_t *receiver,
+                     لفظ_t *receiverIPCBuffer)
 {
-    word_t sent;
-    seL4_MessageInfo_t msgInfo;
+    لفظ_t موڪليل;
+    se_L4_پيغام_Info_t نياپو_Info;
 
-    sent = setMRs_fault(sender, receiver, receiverIPCBuffer);
-    msgInfo = seL4_MessageInfo_new(
-                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, sent);
-    setRegister(receiver, msgInfoRegister, wordFromMessageInfo(msgInfo));
-    setRegister(receiver, badgeRegister, badge);
+    موڪليل = سيٽ_MRs_fault(sender, receiver, receiverIPCBuffer);
+    نياپو_Info = se_L4_پيغام_Info_new(
+                  seL4_Fault_get_seL4_FaultType(sender->tcbFault), 0, 0, موڪليل);
+    سيٽ_رجسٽر(receiver, نياپو_Info_رجسٽر, لفظ_From_پيغام_Info(نياپو_Info));
+    سيٽ_رجسٽر(receiver, badge_رجسٽر, badge);
 }
 
 /* Like getReceiveSlots, this is specialised for single-cap transfer. */
-static seL4_MessageInfo_t transferCaps(seL4_MessageInfo_t info,
+ساكن se_L4_پيغام_Info_t transferCaps(se_L4_پيغام_Info_t info,
                                        endpoint_t *endpoint, tcb_t *receiver,
-                                       word_t *receiveBuffer)
+                                       لفظ_t *receive_بفر)
 {
-    word_t i;
-    cte_t *destSlot;
+    لفظ_t i;
+    cte_t *dest_جڳهه;
 
-    info = seL4_MessageInfo_set_extraCaps(info, 0);
-    info = seL4_MessageInfo_set_capsUnwrapped(info, 0);
+    info = se_L4_پيغام_Info_سيٽ_extra_Caps(info, 0);
+    info = se_L4_پيغام_Info_سيٽ_caps_Unwrapped(info, 0);
 
-    if (likely(!current_extra_caps.excaprefs[0] || !receiveBuffer)) {
-        return info;
+    إذا (likely(!current_extra_caps.excaprefs[0] || !receive_بفر)) {
+        أرجع info;
     }
 
-    destSlot = getReceiveSlots(receiver, receiveBuffer);
+    dest_جڳهه = getReceiveSlots(receiver, receive_بفر);
 
-    for (i = 0; i < seL4_MsgMaxExtraCaps && current_extra_caps.excaprefs[i] != NULL; i++) {
-        cte_t *slot = current_extra_caps.excaprefs[i];
-        cap_t cap = slot->cap;
+    لكل (i = 0; i < se_L4_نياپو_Max_Extra_Caps && current_extra_caps.excaprefs[i] != عدم; i++) {
+        cte_t *جڳهه = current_extra_caps.excaprefs[i];
+        cap_t cap = جڳهه->cap;
 
-        if (cap_get_capType(cap) == cap_endpoint_cap &&
+        إذا (cap_get_capType(cap) == cap_endpoint_cap &&
             EP_PTR(cap_endpoint_cap_get_capEPPtr(cap)) == endpoint) {
             /* If this is a cap to the endpoint on which the message was sent,
              * only transfer the badge, not the cap. */
-            setExtraBadge(receiveBuffer,
+            سيٽ_Extra_Badge(receive_بفر,
                           cap_endpoint_cap_get_capEPBadge(cap), i);
 
-            info = seL4_MessageInfo_set_capsUnwrapped(info,
-                                                      seL4_MessageInfo_get_capsUnwrapped(info) | (1 << i));
+            info = se_L4_پيغام_Info_سيٽ_caps_Unwrapped(info,
+                                                      se_L4_پيغام_Info_get_caps_Unwrapped(info) | (1 << i));
 
-        } else {
+        } وإلا {
             deriveCap_ret_t dc_ret;
 
-            if (!destSlot) {
-                break;
+            إذا (!dest_جڳهه) {
+                اكسر;
             }
 
-            dc_ret = deriveCap(slot, cap);
+            dc_ret = deriveCap(جڳهه, cap);
 
-            if (dc_ret.status != EXCEPTION_NONE) {
-                break;
+            إذا (dc_ret.حالت != EXCEPTION_NONE) {
+                اكسر;
             }
-            if (cap_get_capType(dc_ret.cap) == cap_null_cap) {
-                break;
+            إذا (cap_get_capType(dc_ret.cap) == cap_null_cap) {
+                اكسر;
             }
 
-            cteInsert(dc_ret.cap, slot, destSlot);
+            cte_وجهو(dc_ret.cap, جڳهه, dest_جڳهه);
 
-            destSlot = NULL;
+            dest_جڳهه = عدم;
         }
     }
 
-    return seL4_MessageInfo_set_extraCaps(info, i);
+    أرجع se_L4_پيغام_Info_سيٽ_extra_Caps(info, i);
 }
 
-void doNBRecvFailedTransfer(tcb_t *thread)
+فراغ doNBRecvFailedTransfer(tcb_t *thread)
 {
     /* Set the badge register to 0 to indicate there was no message */
-    setRegister(thread, badgeRegister, 0);
+    سيٽ_رجسٽر(thread, badge_رجسٽر, 0);
 }
 
-void prepareSetDomain(tcb_t *tptr, dom_t dom)
+فراغ prepare_سيٽ_Domain(tcb_t *tptr, dom_t dom)
 {
-    if (ksCurDomain != dom) {
-        Arch_prepareSetDomain(tptr, dom);
-#ifdef CONFIG_HAVE_FPU
+    إذا (ksCurDomain != dom) {
+        Arch_prepare_سيٽ_Domain(tptr, dom);
+#جيڪڏهن_وصف_ٿيل CONFIG_HAVE_FPU
         /* Save FPU state now to avoid touching cross-domain state later */
         fpuRelease(tptr);
-#endif
+#جيڪڏهن_پورو
     }
 }
 
-static void prepareNextDomain(void)
+ساكن فراغ prepare_ايندڙ_Domain(فراغ)
 {
-    Arch_prepareNextDomain();
-#ifdef CONFIG_HAVE_FPU
+    Arch_prepare_ايندڙ_Domain();
+#جيڪڏهن_وصف_ٿيل CONFIG_HAVE_FPU
     /* Save FPU state now to avoid touching cross-domain state later */
-    switchLocalFpuOwner(NULL);
-#endif
+    switchLocalFpuOwner(عدم);
+#جيڪڏهن_پورو
 }
 
-static void nextDomain(void)
+ساكن فراغ ايندڙ_Domain(فراغ)
 {
-    ksDomScheduleIdx++;
-    if (dschedule_is_end_marker(ksDomScheduleIdx)) {
-        ksDomScheduleIdx = ksDomScheduleStart;
+    ks_Dom_وقت_جدول_Idx++;
+    إذا (dschedule_is_پڇاڙي_marker(ks_Dom_وقت_جدول_Idx)) {
+        ks_Dom_وقت_جدول_Idx = ks_Dom_وقت_جدول_شروعات;
     }
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksReprogram) = true;
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    ڳنڍ_STATE(ksReprogram) = true;
+#جيڪڏهن_پورو
     ksWorkUnitsCompleted = 0;
-    ksCurDomain = dschedule_domain(ksDomSchedule[ksDomScheduleIdx]);
-    ksDomainTime = dschedule_duration(ksDomSchedule[ksDomScheduleIdx]);
+    ksCurDomain = dschedule_domain(ks_Dom_وقت_جدول[ks_Dom_وقت_جدول_Idx]);
+    ks_Domain_وقت = dschedule_duration(ks_Dom_وقت_جدول[ks_Dom_وقت_جدول_Idx]);
 }
 
-#ifdef CONFIG_KERNEL_MCS
-static void switchSchedContext(void)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+ساكن فراغ switchSchedContext(فراغ)
 {
-    if (unlikely(NODE_STATE(ksCurSC) != NODE_STATE(ksCurThread)->tcbSchedContext)) {
-        NODE_STATE(ksReprogram) = true;
-        if (sc_constant_bandwidth(NODE_STATE(ksCurThread)->tcbSchedContext)) {
-            refill_unblock_check(NODE_STATE(ksCurThread)->tcbSchedContext);
+    إذا (unlikely(ڳنڍ_STATE(ksCurSC) != ڳنڍ_STATE(ksCurThread)->tcbSchedContext)) {
+        ڳنڍ_STATE(ksReprogram) = true;
+        إذا (sc_constant_bandwidth(ڳنڍ_STATE(ksCurThread)->tcbSchedContext)) {
+            refill_unblock_check(ڳنڍ_STATE(ksCurThread)->tcbSchedContext);
         }
 
-        assert(refill_ready(NODE_STATE(ksCurThread)->tcbSchedContext));
-        assert(refill_sufficient(NODE_STATE(ksCurThread)->tcbSchedContext, 0));
+        أكد(refill_ready(ڳنڍ_STATE(ksCurThread)->tcbSchedContext));
+        أكد(refill_sufficient(ڳنڍ_STATE(ksCurThread)->tcbSchedContext, 0));
     }
 
-    if (NODE_STATE(ksReprogram)) {
+    إذا (ڳنڍ_STATE(ksReprogram)) {
         /* if we are reprogamming, we have acted on the new kernel time and cannot
          * rollback -> charge the current thread */
-        commitTime();
+        commit_وقت();
     }
 
-    NODE_STATE(ksCurSC) = NODE_STATE(ksCurThread)->tcbSchedContext;
+    ڳنڍ_STATE(ksCurSC) = ڳنڍ_STATE(ksCurThread)->tcbSchedContext;
 }
-#endif
+#جيڪڏهن_پورو
 
-static void scheduleChooseNewThread(void)
+ساكن فراغ وقت_جدول_چونڊيو_New_Thread(فراغ)
 {
-    if (ksDomainTime == 0) {
-        prepareNextDomain();
-        nextDomain();
+    إذا (ks_Domain_وقت == 0) {
+        prepare_ايندڙ_Domain();
+        ايندڙ_Domain();
     }
-    chooseThread();
+    چونڊيو_Thread();
 }
 
-void schedule(void)
+فراغ وقت_جدول(فراغ)
 {
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
     awaken();
-    checkDomainTime();
-#endif
+    check_Domain_وقت();
+#جيڪڏهن_پورو
 
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+    إذا (ڳنڍ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
         bool_t was_runnable;
-        if (isSchedulable(NODE_STATE(ksCurThread))) {
+        إذا (isSchedulable(ڳنڍ_STATE(ksCurThread))) {
             was_runnable = true;
-            SCHED_ENQUEUE_CURRENT_TCB;
-        } else {
+            SCHED_قطار_اندر_وجهو_CURRENT_TCB;
+        } وإلا {
             was_runnable = false;
         }
 
-        if (NODE_STATE(ksSchedulerAction) == SchedulerAction_ChooseNewThread) {
-            scheduleChooseNewThread();
-        } else {
-            tcb_t *candidate = NODE_STATE(ksSchedulerAction);
-            assert(isSchedulable(candidate));
+        إذا (ڳنڍ_STATE(ksSchedulerAction) == Scheduler_Action_چونڊيو_New_Thread) {
+            وقت_جدول_چونڊيو_New_Thread();
+        } وإلا {
+            tcb_t *candidate = ڳنڍ_STATE(ksSchedulerAction);
+            أكد(isSchedulable(candidate));
             /* Avoid checking bitmap when ksCurThread is higher prio, to
              * match fast path.
              * Don't look at ksCurThread prio when it's idle, to respect
              * information flow in non-fastpath cases. */
             bool_t fastfail =
-                NODE_STATE(ksCurThread) == NODE_STATE(ksIdleThread)
-                || (candidate->tcbPriority < NODE_STATE(ksCurThread)->tcbPriority);
-            if (fastfail &&
-                !isHighestPrio(ksCurDomain, candidate->tcbPriority)) {
-                SCHED_ENQUEUE(candidate);
+                ڳنڍ_STATE(ksCurThread) == ڳنڍ_STATE(ksIdleThread)
+                || (candidate->tcb_ترجيح < ڳنڍ_STATE(ksCurThread)->tcb_ترجيح);
+            إذا (fastfail &&
+                !isHighestPrio(ksCurDomain, candidate->tcb_ترجيح)) {
+                SCHED_قطار_اندر_وجهو(candidate);
                 /* we can't, need to reschedule */
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else if (was_runnable && candidate->tcbPriority == NODE_STATE(ksCurThread)->tcbPriority) {
+                ڳنڍ_STATE(ksSchedulerAction) = Scheduler_Action_چونڊيو_New_Thread;
+                وقت_جدول_چونڊيو_New_Thread();
+            } وإلا إذا (was_runnable && candidate->tcb_ترجيح == ڳنڍ_STATE(ksCurThread)->tcb_ترجيح) {
                 /* We append the candidate at the end of the scheduling queue, that way the
                  * current thread, that was enqueued at the start of the scheduling queue
                  * will get picked during chooseNewThread */
                 SCHED_APPEND(candidate);
-                NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
-                scheduleChooseNewThread();
-            } else {
-                assert(candidate != NODE_STATE(ksCurThread));
-                switchToThread(candidate);
+                ڳنڍ_STATE(ksSchedulerAction) = Scheduler_Action_چونڊيو_New_Thread;
+                وقت_جدول_چونڊيو_New_Thread();
+            } وإلا {
+                أكد(candidate != ڳنڍ_STATE(ksCurThread));
+                switch_منزل_Thread(candidate);
             }
         }
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
-#ifdef ENABLE_SMP_SUPPORT
-    doMaskReschedule(ARCH_NODE_STATE(ipiReschedulePending));
-    ARCH_NODE_STATE(ipiReschedulePending) = 0;
-#endif /* ENABLE_SMP_SUPPORT */
+    ڳنڍ_STATE(ksSchedulerAction) = SchedulerAction_ResumeCurrentThread;
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+    do_نقاب_Reschedule(ARCH_ڳنڍ_STATE(ipiReschedulePending));
+    ARCH_ڳنڍ_STATE(ipiReschedulePending) = 0;
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */
 
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
     switchSchedContext();
 
-    if (NODE_STATE(ksReprogram)) {
-        setNextInterrupt();
-        NODE_STATE(ksReprogram) = false;
+    إذا (ڳنڍ_STATE(ksReprogram)) {
+        سيٽ_ايندڙ_مداخلت();
+        ڳنڍ_STATE(ksReprogram) = false;
     }
-#endif
+#جيڪڏهن_پورو
 }
 
-void chooseThread(void)
+فراغ چونڊيو_Thread(فراغ)
 {
-    word_t prio;
-    word_t dom;
+    لفظ_t prio;
+    لفظ_t dom;
     tcb_t *thread;
 
-    if (numDomains > 1) {
+    إذا (انگ_Domains > 1) {
         dom = ksCurDomain;
-    } else {
+    } وإلا {
         dom = 0;
     }
 
-    if (likely(NODE_STATE(ksReadyQueuesL1Bitmap[dom]))) {
+    إذا (likely(ڳنڍ_STATE(ksReadyQueuesL1Bitmap[dom]))) {
         prio = getHighestPrio(dom);
-        thread = NODE_STATE(ksReadyQueues)[ready_queues_index(dom, prio)].head;
-        assert(thread);
-        assert(isSchedulable(thread));
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(thread->tcbSchedContext, 0));
-        assert(refill_ready(thread->tcbSchedContext));
-#endif
-        switchToThread(thread);
-    } else {
-        switchToIdleThread();
+        thread = ڳنڍ_STATE(ksReadyQueues)[ready_queues_اشاريو(dom, prio)].سر;
+        أكد(thread);
+        أكد(isSchedulable(thread));
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أكد(refill_sufficient(thread->tcbSchedContext, 0));
+        أكد(refill_ready(thread->tcbSchedContext));
+#جيڪڏهن_پورو
+        switch_منزل_Thread(thread);
+    } وإلا {
+        switch_منزل_Idle_Thread();
     }
 }
 
-void switchToThread(tcb_t *thread)
+فراغ switch_منزل_Thread(tcb_t *thread)
 {
-#ifdef CONFIG_KERNEL_MCS
-    assert(thread->tcbSchedContext != NULL);
-    assert(!thread_state_get_tcbInReleaseQueue(thread->tcbState));
-    assert(refill_sufficient(thread->tcbSchedContext, 0));
-    assert(refill_ready(thread->tcbSchedContext));
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    أكد(thread->tcbSchedContext != عدم);
+    أكد(!thread_state_get_tcb_اندريون_Release_قطار(thread->tcbState));
+    أكد(refill_sufficient(thread->tcbSchedContext, 0));
+    أكد(refill_ready(thread->tcbSchedContext));
+#جيڪڏهن_پورو
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), thread);
-#endif
-    Arch_switchToThread(thread);
+#جيڪڏهن_وصف_ٿيل CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ڳنڍ_STATE(ksCurThread), thread);
+#جيڪڏهن_پورو
+    Arch_switch_منزل_Thread(thread);
 
-#ifdef CONFIG_HAVE_FPU
+#جيڪڏهن_وصف_ٿيل CONFIG_HAVE_FPU
     lazyFPURestore(thread);
-#endif /* CONFIG_HAVE_FPU */
+#جيڪڏهن_پورو /* CONFIG_HAVE_FPU */
 
-    tcbSchedDequeue(thread);
-    NODE_STATE(ksCurThread) = thread;
+    tcb_Sched_قطار_مان_ڪڍو(thread);
+    ڳنڍ_STATE(ksCurThread) = thread;
 }
 
-void switchToIdleThread(void)
+فراغ switch_منزل_Idle_Thread(فراغ)
 {
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    benchmark_utilisation_switch(NODE_STATE(ksCurThread), NODE_STATE(ksIdleThread));
-#endif
-    Arch_switchToIdleThread();
-    NODE_STATE(ksCurThread) = NODE_STATE(ksIdleThread);
+#جيڪڏهن_وصف_ٿيل CONFIG_BENCHMARK_TRACK_UTILISATION
+    benchmark_utilisation_switch(ڳنڍ_STATE(ksCurThread), ڳنڍ_STATE(ksIdleThread));
+#جيڪڏهن_پورو
+    Arch_switch_منزل_Idle_Thread();
+    ڳنڍ_STATE(ksCurThread) = ڳنڍ_STATE(ksIdleThread);
 }
 
-void setDomain(tcb_t *tptr, dom_t dom)
+فراغ سيٽ_Domain(tcb_t *tptr, dom_t dom)
 {
-    tcbSchedDequeue(tptr);
+    tcb_Sched_قطار_مان_ڪڍو(tptr);
     tptr->tcbDomain = dom;
-    if (isSchedulable(tptr)) {
-        SCHED_ENQUEUE(tptr);
+    إذا (isSchedulable(tptr)) {
+        SCHED_قطار_اندر_وجهو(tptr);
     }
-    if (tptr == NODE_STATE(ksCurThread)) {
+    إذا (tptr == ڳنڍ_STATE(ksCurThread)) {
         rescheduleRequired();
     }
 }
 
-void setMCPriority(tcb_t *tptr, prio_t mcp)
+فراغ سيٽ_MCPriority(tcb_t *tptr, prio_t mcp)
 {
     tptr->tcbMCP = mcp;
 }
-#ifdef CONFIG_KERNEL_MCS
-void setPriority(tcb_t *tptr, prio_t prio)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+فراغ سيٽ_ترجيح(tcb_t *tptr, prio_t prio)
 {
-    switch (thread_state_get_tsType(tptr->tcbState)) {
-    case ThreadState_Running:
-    case ThreadState_Restart:
-        if (thread_state_get_tcbQueued(tptr->tcbState) || tptr == NODE_STATE(ksCurThread)) {
-            tcbSchedDequeue(tptr);
-            tptr->tcbPriority = prio;
-            SCHED_ENQUEUE(tptr);
+    بدل (thread_state_get_tsType(tptr->tcbState)) {
+    حالة ThreadState_Running:
+    حالة ThreadState_Restart:
+        إذا (thread_state_get_tcbQueued(tptr->tcbState) || tptr == ڳنڍ_STATE(ksCurThread)) {
+            tcb_Sched_قطار_مان_ڪڍو(tptr);
+            tptr->tcb_ترجيح = prio;
+            SCHED_قطار_اندر_وجهو(tptr);
             rescheduleRequired();
-        } else {
-            tptr->tcbPriority = prio;
+        } وإلا {
+            tptr->tcb_ترجيح = prio;
         }
-        break;
-    case ThreadState_BlockedOnReceive:
-    case ThreadState_BlockedOnSend:
-        tptr->tcbPriority = prio;
+        اكسر;
+    حالة ThreadState_BlockedOnReceive:
+    حالة ThreadState_BlockedOnSend:
+        tptr->tcb_ترجيح = prio;
         reorderEP(EP_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    case ThreadState_BlockedOnNotification:
-        tptr->tcbPriority = prio;
+        اكسر;
+    حالة ThreadState_BlockedOnNotification:
+        tptr->tcb_ترجيح = prio;
         reorderNTFN(NTFN_PTR(thread_state_get_blockingObject(tptr->tcbState)), tptr);
-        break;
-    default:
-        tptr->tcbPriority = prio;
-        break;
+        اكسر;
+    افتراضي:
+        tptr->tcb_ترجيح = prio;
+        اكسر;
     }
 }
-#else
-void setPriority(tcb_t *tptr, prio_t prio)
+#وإلا
+فراغ سيٽ_ترجيح(tcb_t *tptr, prio_t prio)
 {
-    tcbSchedDequeue(tptr);
-    tptr->tcbPriority = prio;
-    if (isRunnable(tptr)) {
-        if (tptr == NODE_STATE(ksCurThread)) {
+    tcb_Sched_قطار_مان_ڪڍو(tptr);
+    tptr->tcb_ترجيح = prio;
+    إذا (isRunnable(tptr)) {
+        إذا (tptr == ڳنڍ_STATE(ksCurThread)) {
             rescheduleRequired();
-        } else {
-            possibleSwitchTo(tptr);
+        } وإلا {
+            possible_Switch_منزل(tptr);
         }
     }
 }
-#endif
+#جيڪڏهن_پورو
 
 /* Note that this thread will possibly continue at the end of this kernel
  * entry. Do not queue it yet, since a queue+unqueue operation is wasteful
  * if it will be picked. Instead, it waits in the 'ksSchedulerAction' site
  * on which the scheduler will take action. */
-void possibleSwitchTo(tcb_t *target)
+فراغ possible_Switch_منزل(tcb_t *هدف)
 {
-#ifdef CONFIG_KERNEL_MCS
-    if (target->tcbSchedContext != NULL && !thread_state_get_tcbInReleaseQueue(target->tcbState)) {
-#endif
-        if (ksCurDomain != target->tcbDomain
-            SMP_COND_STATEMENT( || target->tcbAffinity != getCurrentCPUIndex())) {
-            SCHED_ENQUEUE(target);
-        } else if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    إذا (هدف->tcbSchedContext != عدم && !thread_state_get_tcb_اندريون_Release_قطار(هدف->tcbState)) {
+#جيڪڏهن_پورو
+        إذا (ksCurDomain != هدف->tcbDomain
+            SMP_COND_STATEMENT( || هدف->tcbAffinity != getCurrentCPUIndex())) {
+            SCHED_قطار_اندر_وجهو(هدف);
+        } وإلا إذا (ڳنڍ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread) {
             /* Too many threads want special treatment, use regular queues. */
             rescheduleRequired();
-            SCHED_ENQUEUE(target);
-        } else {
-            NODE_STATE(ksSchedulerAction) = target;
+            SCHED_قطار_اندر_وجهو(هدف);
+        } وإلا {
+            ڳنڍ_STATE(ksSchedulerAction) = هدف;
         }
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
     }
-#endif
+#جيڪڏهن_پورو
 
 }
 
-void setThreadState(tcb_t *tptr, _thread_state_t ts)
+فراغ سيٽ_Thread_State(tcb_t *tptr, _thread_state_t ts)
 {
-    thread_state_ptr_set_tsType(&tptr->tcbState, ts);
-    scheduleTCB(tptr);
+    thread_state_ptr_سيٽ_ts_Type(&tptr->tcbState, ts);
+    وقت_جدول_TCB(tptr);
 }
 
-void scheduleTCB(tcb_t *tptr)
+فراغ وقت_جدول_TCB(tcb_t *tptr)
 {
-    if (tptr == NODE_STATE(ksCurThread) &&
-        NODE_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
+    إذا (tptr == ڳنڍ_STATE(ksCurThread) &&
+        ڳنڍ_STATE(ksSchedulerAction) == SchedulerAction_ResumeCurrentThread &&
         !isSchedulable(tptr)) {
         /* short-cut rescheduleRequired(), because we know what the scheduler action is. */
-        NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+        ڳنڍ_STATE(ksSchedulerAction) = Scheduler_Action_چونڊيو_New_Thread;
     }
 }
 
-#ifdef CONFIG_KERNEL_MCS
-void postpone(sched_context_t *sc)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+فراغ postpone(sched_context_t *sc)
 {
     tcb_t *tcb = sc->scTcb;
-    assert(tcb != NULL);
+    أكد(tcb != عدم);
 
-    tcbSchedDequeue(tcb);
-    tcbReleaseEnqueue(tcb);
-    NODE_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
+    tcb_Sched_قطار_مان_ڪڍو(tcb);
+    tcb_Release_قطار_اندر_وجهو(tcb);
+    ڳنڍ_STATE_ON_CORE(ksReprogram, sc->scCore) = true;
 }
 
-void setNextInterrupt(void)
+فراغ سيٽ_ايندڙ_مداخلت(فراغ)
 {
     /* fetch the head refill separately to ease verification */
-    refill_t ct_head_refill = *refill_head(NODE_STATE(ksCurThread)->tcbSchedContext);
-    ticks_t next_interrupt = NODE_STATE(ksCurTime) + ct_head_refill.rAmount;
+    refill_t ct_سر_refill = *refill_سر(ڳنڍ_STATE(ksCurThread)->tcbSchedContext);
+    ticks_t ايندڙ_مداخلت = ڳنڍ_STATE(ks_Cur_وقت) + ct_سر_refill.rAmount;
 
-    if (numDomains > 1) {
-        next_interrupt = MIN(next_interrupt, NODE_STATE(ksCurTime) + ksDomainTime);
+    إذا (انگ_Domains > 1) {
+        ايندڙ_مداخلت = MIN(ايندڙ_مداخلت, ڳنڍ_STATE(ks_Cur_وقت) + ks_Domain_وقت);
     }
 
-    tcb_t *rlq_head = NODE_STATE(ksReleaseQueue.head);
-    if (rlq_head != NULL) {
+    tcb_t *rlq_سر = ڳنڍ_STATE(ks_Release_قطار.سر);
+    إذا (rlq_سر != عدم) {
         /* fetch the head refill separately to ease verification */
-        refill_t rlq_head_refill = *refill_head(rlq_head->tcbSchedContext);
-        next_interrupt = MIN(rlq_head_refill.rTime, next_interrupt);
+        refill_t rlq_سر_refill = *refill_سر(rlq_سر->tcbSchedContext);
+        ايندڙ_مداخلت = MIN(rlq_سر_refill.r_وقت, ايندڙ_مداخلت);
     }
 
     /* We should never be attempting to schedule anything earlier than ksCurTime */
-    assert(next_interrupt >= NODE_STATE(ksCurTime));
+    أكد(ايندڙ_مداخلت >= ڳنڍ_STATE(ks_Cur_وقت));
 
     /* Our lower bound ksCurTime is slightly in the past (at kernel entry) and
        we are further subtracting getTimerPrecision(), so we may be setting a
        deadline in the past. If that is the case, we assume the IRQ will be
        raised immediately after we leave the kernel. */
-    setDeadline(next_interrupt - getTimerPrecision());
+    سيٽ_Deadline(ايندڙ_مداخلت - getTimerPrecision());
 }
 
-void chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
+فراغ chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
 {
-    if (likely(NODE_STATE(ksCurSC) != NODE_STATE(ksIdleSC))) {
-        if (isRoundRobin(NODE_STATE(ksCurSC))) {
-            assert(refill_size(NODE_STATE(ksCurSC)) == MIN_REFILLS);
-            refill_t head = *refill_head(NODE_STATE(ksCurSC));
-            refill_t tail = *refill_tail(NODE_STATE(ksCurSC));
-            refill_head(NODE_STATE(ksCurSC))->rAmount = head.rAmount + tail.rAmount;
-            refill_tail(NODE_STATE(ksCurSC))->rAmount = 0;
-        } else {
+    إذا (likely(ڳنڍ_STATE(ksCurSC) != ڳنڍ_STATE(ksIdleSC))) {
+        إذا (is_ڦيرو_Robin(ڳنڍ_STATE(ksCurSC))) {
+            أكد(refill_سائيز(ڳنڍ_STATE(ksCurSC)) == MIN_REFILLS);
+            refill_t سر = *refill_سر(ڳنڍ_STATE(ksCurSC));
+            refill_t پڇ = *refill_پڇ(ڳنڍ_STATE(ksCurSC));
+            refill_سر(ڳنڍ_STATE(ksCurSC))->rAmount = سر.rAmount + پڇ.rAmount;
+            refill_پڇ(ڳنڍ_STATE(ksCurSC))->rAmount = 0;
+        } وإلا {
             refill_budget_check(consumed);
         }
 
-        assert(refill_head(NODE_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
-        NODE_STATE(ksCurSC)->scConsumed += consumed;
+        أكد(refill_سر(ڳنڍ_STATE(ksCurSC))->rAmount >= MIN_BUDGET);
+        ڳنڍ_STATE(ksCurSC)->scConsumed += consumed;
     }
-    NODE_STATE(ksConsumed) = 0;
-    if (likely(isSchedulable(NODE_STATE(ksCurThread)))) {
-        assert(NODE_STATE(ksCurThread)->tcbSchedContext == NODE_STATE(ksCurSC));
-        endTimeslice(canTimeoutFault);
+    ڳنڍ_STATE(ksConsumed) = 0;
+    إذا (likely(isSchedulable(ڳنڍ_STATE(ksCurThread)))) {
+        أكد(ڳنڍ_STATE(ksCurThread)->tcbSchedContext == ڳنڍ_STATE(ksCurSC));
+        پڇاڙي_Timeslice(canTimeoutFault);
         rescheduleRequired();
-        NODE_STATE(ksReprogram) = true;
+        ڳنڍ_STATE(ksReprogram) = true;
     }
 }
 
-void endTimeslice(bool_t can_timeout_fault)
+فراغ پڇاڙي_Timeslice(bool_t can_timeout_fault)
 {
-    bool_t round_robin = isRoundRobin(NODE_STATE(ksCurSC));
-    bool_t valid = validTimeoutHandler(NODE_STATE(ksCurThread));
+    bool_t ڦيرو_robin = is_ڦيرو_Robin(ڳنڍ_STATE(ksCurSC));
+    bool_t valid = validTimeoutHandler(ڳنڍ_STATE(ksCurThread));
 
-    if (can_timeout_fault && !round_robin && valid) {
-        current_fault = seL4_Fault_Timeout_new(NODE_STATE(ksCurSC)->scBadge);
-        handleTimeout(NODE_STATE(ksCurThread));
-    } else if (refill_ready(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), 0)) {
+    إذا (can_timeout_fault && !ڦيرو_robin && valid) {
+        current_fault = seL4_Fault_Timeout_new(ڳنڍ_STATE(ksCurSC)->scBadge);
+        handleTimeout(ڳنڍ_STATE(ksCurThread));
+    } وإلا إذا (refill_ready(ڳنڍ_STATE(ksCurSC)) && refill_sufficient(ڳنڍ_STATE(ksCurSC), 0)) {
         /* apply round robin */
-        assert(!thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState));
+        أكد(!thread_state_get_tcbQueued(ڳنڍ_STATE(ksCurThread)->tcbState));
         SCHED_APPEND_CURRENT_TCB;
-    } else {
+    } وإلا {
         /* postpone until ready */
-        postpone(NODE_STATE(ksCurSC));
+        postpone(ڳنڍ_STATE(ksCurSC));
     }
 }
-#else
+#وإلا
 
-void timerTick(void)
+فراغ timerTick(فراغ)
 {
-    if (likely(thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+    إذا (likely(thread_state_get_tsType(ڳنڍ_STATE(ksCurThread)->tcbState) ==
                ThreadState_Running)
-#ifdef CONFIG_VTX
-        || thread_state_get_tsType(NODE_STATE(ksCurThread)->tcbState) ==
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
+        || thread_state_get_tsType(ڳنڍ_STATE(ksCurThread)->tcbState) ==
         ThreadState_RunningVM
-#endif
+#جيڪڏهن_پورو
        ) {
-        if (NODE_STATE(ksCurThread)->tcbTimeSlice > 1) {
-            NODE_STATE(ksCurThread)->tcbTimeSlice--;
-        } else {
-            NODE_STATE(ksCurThread)->tcbTimeSlice = CONFIG_TIME_SLICE;
+        إذا (ڳنڍ_STATE(ksCurThread)->tcb_وقت_ٽڪرو > 1) {
+            ڳنڍ_STATE(ksCurThread)->tcb_وقت_ٽڪرو--;
+        } وإلا {
+            ڳنڍ_STATE(ksCurThread)->tcb_وقت_ٽڪرو = CONFIG_وقت_ٽڪرو;
             SCHED_APPEND_CURRENT_TCB;
             rescheduleRequired();
         }
     }
 
-    if (numDomains > 1) {
-        ksDomainTime--;
-        if (ksDomainTime == 0) {
+    إذا (انگ_Domains > 1) {
+        ks_Domain_وقت--;
+        إذا (ks_Domain_وقت == 0) {
             rescheduleRequired();
         }
     }
 }
-#endif
+#جيڪڏهن_پورو
 
-void rescheduleRequired(void)
+فراغ rescheduleRequired(فراغ)
 {
-    if (NODE_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
-        && NODE_STATE(ksSchedulerAction) != SchedulerAction_ChooseNewThread
-#ifdef CONFIG_KERNEL_MCS
-        && isSchedulable(NODE_STATE(ksSchedulerAction))
-#endif
+    إذا (ڳنڍ_STATE(ksSchedulerAction) != SchedulerAction_ResumeCurrentThread
+        && ڳنڍ_STATE(ksSchedulerAction) != Scheduler_Action_چونڊيو_New_Thread
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        && isSchedulable(ڳنڍ_STATE(ksSchedulerAction))
+#جيڪڏهن_پورو
        ) {
-#ifdef CONFIG_KERNEL_MCS
-        assert(refill_sufficient(NODE_STATE(ksSchedulerAction)->tcbSchedContext, 0));
-        assert(refill_ready(NODE_STATE(ksSchedulerAction)->tcbSchedContext));
-#endif
-        SCHED_ENQUEUE(NODE_STATE(ksSchedulerAction));
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+        أكد(refill_sufficient(ڳنڍ_STATE(ksSchedulerAction)->tcbSchedContext, 0));
+        أكد(refill_ready(ڳنڍ_STATE(ksSchedulerAction)->tcbSchedContext));
+#جيڪڏهن_پورو
+        SCHED_قطار_اندر_وجهو(ڳنڍ_STATE(ksSchedulerAction));
     }
-    NODE_STATE(ksSchedulerAction) = SchedulerAction_ChooseNewThread;
+    ڳنڍ_STATE(ksSchedulerAction) = Scheduler_Action_چونڊيو_New_Thread;
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
 
-static inline bool_t PURE release_q_non_empty_and_ready(void)
+ساكن مضمن bool_t خالص release_q_non_خالي_جايون_and_ready(فراغ)
 {
-    return NODE_STATE(ksReleaseQueue.head) != NULL
-           && refill_ready(NODE_STATE(ksReleaseQueue.head)->tcbSchedContext);
+    أرجع ڳنڍ_STATE(ks_Release_قطار.سر) != عدم
+           && refill_ready(ڳنڍ_STATE(ks_Release_قطار.سر)->tcbSchedContext);
 }
 
-static void tcbReleaseDequeue(void)
+ساكن فراغ tcb_Release_قطار_مان_ڪڍو(فراغ)
 {
-    assert(NODE_STATE(ksReleaseQueue.head) != NULL);
-    assert(NODE_STATE(ksReleaseQueue.head)->tcbSchedPrev == NULL);
-    SMP_COND_STATEMENT(assert(NODE_STATE(ksReleaseQueue.head)->tcbAffinity == getCurrentCPUIndex()));
+    أكد(ڳنڍ_STATE(ks_Release_قطار.سر) != عدم);
+    أكد(ڳنڍ_STATE(ks_Release_قطار.سر)->tcbSchedPrev == عدم);
+    SMP_COND_STATEMENT(أكد(ڳنڍ_STATE(ks_Release_قطار.سر)->tcbAffinity == getCurrentCPUIndex()));
 
-    tcb_t *awakened = NODE_STATE(ksReleaseQueue.head);
-    assert(awakened != NODE_STATE(ksCurThread));
+    tcb_t *awakened = ڳنڍ_STATE(ks_Release_قطار.سر);
+    أكد(awakened != ڳنڍ_STATE(ksCurThread));
     tcbReleaseRemove(awakened);
     /* round robin threads should not be in the release queue */
-    assert(!isRoundRobin(awakened->tcbSchedContext));
+    أكد(!is_ڦيرو_Robin(awakened->tcbSchedContext));
     /* threads should wake up on the correct core */
-    SMP_COND_STATEMENT(assert(awakened->tcbAffinity == getCurrentCPUIndex()));
+    SMP_COND_STATEMENT(أكد(awakened->tcbAffinity == getCurrentCPUIndex()));
     /* threads HEAD refill should always be >= MIN_BUDGET */
-    assert(refill_sufficient(awakened->tcbSchedContext, 0));
-    possibleSwitchTo(awakened);
+    أكد(refill_sufficient(awakened->tcbSchedContext, 0));
+    possible_Switch_منزل(awakened);
 }
 
-void awaken(void)
+فراغ awaken(فراغ)
 {
-    while (unlikely(release_q_non_empty_and_ready())) {
-        tcbReleaseDequeue();
+    طالما (unlikely(release_q_non_خالي_جايون_and_ready())) {
+        tcb_Release_قطار_مان_ڪڍو();
     }
 }
-#endif
+#جيڪڏهن_پورو

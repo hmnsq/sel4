@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <config.h>
+#ضمن <types.h>
+#ضمن <config.h>
 
-#ifdef CONFIG_TK1_SMMU
+#جيڪڏهن_وصف_ٿيل CONFIG_TK1_SMMU
 
-#include <plat/machine/smmu.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
-#include <object/structures.h>
-
-
-#define MC_PADDR                    0x70019000
-#define SMMU_CONFIG_OFFSET          0x10
-
-#define PTB_DATA_BASE_SHIFT         12
-#define PTB_DATA_READ               BIT(31)
-#define PTB_DATA_WRITE              BIT(30)
-#define PTB_DATA_NONSECURE          BIT(29)
-#define PTB_DATA_BASE_PD_MASK       0x3fffff
-
-#define MODULE_ASID_ENABLE          BIT(31)
-
-#define PTC_FLUSH_ALL               0
-#define PTC_FLUSH_ADR               1
-
-#define TLB_ASID_MATCH              BIT(31)
-#define TLB_FLUSH_ALL               (0)
-#define TLB_FLUSH_SECTION           (2)
-#define TLB_FLUSH_GROUP             (3)
-
-#define MC_DECERR_MTS_BIT           16u
-#define MC_SECERR_SEC_BIT           13u
-#define MC_DECERR_VPR_BIT           12u
-#define MC_APB_ASID_UPDATE_BIT      11u
-#define MC_SMMU_PAGE_BIT            10u
-#define MC_ARBITRATION_EMEM_BIT     9u
-#define MC_SECURITY_BIT             8u
-#define MC_DECERR_EMEM_BIT          6u
+#ضمن <plat/machine/smmu.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/hardware.h>
+#ضمن <object/structures.h>
 
 
-#define MC_ERR_ID_MASK              0x7f
-#define MC_ERR_ADR_MASK             0x7000
-#define MC_ERR_RW_MASK              0x10000
-#define MC_ERR_SEC_MASK             0x20000
-#define MC_ERR_SWAP_MASK            0x40000
-#define MC_ERR_ADR_HI_MASK          0x300000
-#define MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK     0x2000000
-#define MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK         0x4000000
-#define MC_ERR_INVALID_SMMU_PAGE_READ_MASK          0x8000000
-#define MC_ERR_TYPE_MASK                            0x70000000
-#define MC_ERR_TYPE_SHIFT                           28
+#وصف_ڪريو MC_PADDR                    0x70019000
+#وصف_ڪريو SMMU_CONFIG_وٿي          0x10
 
-#define MC_ERR_TYPE_RSVD                0
-#define MC_ERR_TYPE_DECERR_EMEM         2
-#define MC_ERR_TYPE_SECURITY            3
-#define MC_ERR_TYPE_SECURITY_CARVEOUT   4
-#define MC_ERR_TYPE_INVALID_SMMU_PAGE   6
+#وصف_ڪريو PTB_معلومات_بنياد_سرڪايو         12
+#وصف_ڪريو PTB_معلومات_READ               ٻٽو_انگ(31)
+#وصف_ڪريو PTB_معلومات_WRITE              ٻٽو_انگ(30)
+#وصف_ڪريو PTB_معلومات_NONSECURE          ٻٽو_انگ(29)
+#وصف_ڪريو PTB_معلومات_بنياد_PD_نقاب       0x3fffff
 
-#define IOPDE_4M_INDEX_SHIFT            22
+#وصف_ڪريو MODULE_ASID_ENABLE          ٻٽو_انگ(31)
 
-static volatile tk1_mc_regs_t *smmu_regs = (volatile tk1_mc_regs_t *)(SMMU_PPTR);
+#وصف_ڪريو PTC_FLUSH_ALL               0
+#وصف_ڪريو PTC_FLUSH_ADR               1
 
-static char smmu_pds[ARM_PLAT_NUM_SMMU][BIT(SMMU_PD_INDEX_BITS)] ALIGN(BIT(SMMU_PD_INDEX_BITS));
+#وصف_ڪريو TLB_ASID_ميلاپ              ٻٽو_انگ(31)
+#وصف_ڪريو TLB_FLUSH_ALL               (0)
+#وصف_ڪريو TLB_FLUSH_SECTION           (2)
+#وصف_ڪريو TLB_FLUSH_گروهه             (3)
 
-static void do_smmu_enable(void)
+#وصف_ڪريو MC_DECERR_MTS_ٻٽو_انگ           16u
+#وصف_ڪريو MC_SECERR_SEC_ٻٽو_انگ           13u
+#وصف_ڪريو MC_DECERR_VPR_ٻٽو_انگ           12u
+#وصف_ڪريو MC_APB_ASID_UPDATE_ٻٽو_انگ      11u
+#وصف_ڪريو MC_SMMU_صفحو_ٻٽو_انگ            10u
+#وصف_ڪريو MC_ARBITRATION_EMEM_ٻٽو_انگ     9u
+#وصف_ڪريو MC_SECURITY_ٻٽو_انگ             8u
+#وصف_ڪريو MC_DECERR_EMEM_ٻٽو_انگ          6u
+
+
+#وصف_ڪريو MC_ERR_ID_نقاب              0x7f
+#وصف_ڪريو MC_ERR_ADR_نقاب             0x7000
+#وصف_ڪريو MC_ERR_RW_نقاب              0x10000
+#وصف_ڪريو MC_ERR_SEC_نقاب             0x20000
+#وصف_ڪريو MC_ERR_مٽا_سٽا_نقاب            0x40000
+#وصف_ڪريو MC_ERR_ADR_HI_نقاب          0x300000
+#وصف_ڪريو MC_ERR_INVALID_SMMU_صفحو_NONSECURE_نقاب     0x2000000
+#وصف_ڪريو MC_ERR_INVALID_SMMU_صفحو_WRITE_نقاب         0x4000000
+#وصف_ڪريو MC_ERR_INVALID_SMMU_صفحو_READ_نقاب          0x8000000
+#وصف_ڪريو MC_ERR_TYPE_نقاب                            0x70000000
+#وصف_ڪريو MC_ERR_TYPE_سرڪايو                           28
+
+#وصف_ڪريو MC_ERR_TYPE_RSVD                0
+#وصف_ڪريو MC_ERR_TYPE_DECERR_EMEM         2
+#وصف_ڪريو MC_ERR_TYPE_SECURITY            3
+#وصف_ڪريو MC_ERR_TYPE_SECURITY_CARVEOUT   4
+#وصف_ڪريو MC_ERR_TYPE_INVALID_SMMU_صفحو   6
+
+#وصف_ڪريو IOPDE_4_M_اشاريو_سرڪايو            22
+
+ساكن متطاير tk1_mc_regs_t *smmu_regs = (متطاير tk1_mc_regs_t *)(SMMU_PPTR);
+
+ساكن حرف smmu_pds[ARM_PLAT_انگ_SMMU][ٻٽو_انگ(SMMU_PD_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(SMMU_PD_اشاريو_بٽ));
+
+ساكن فراغ do_smmu_enable(فراغ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    متطاير uint32_t *config = (متطاير uint32_t *)(MC_PADDR + SMMU_CONFIG_وٿي);
     *config = 1;
 }
 
-static void do_smmu_disable(void)
+ساكن فراغ do_smmu_disable(فراغ)
 {
-    volatile uint32_t *config = (volatile uint32_t *)(MC_PADDR + SMMU_CONFIG_OFFSET);
+    متطاير uint32_t *config = (متطاير uint32_t *)(MC_PADDR + SMMU_CONFIG_وٿي);
     *config = 0;
 }
 
-static inline void smmu_disable(void)
+ساكن مضمن فراغ smmu_disable(فراغ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    إذا (config_سيٽ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         /* in hyp mode, we need call the hook in monitor mode */
         /* we need physical address here */
         paddr_t addr = addrFromKPPtr(&do_smmu_disable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm متطاير("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } وإلا {
         /* in secure mode, can enable it directly */
         smmu_regs->smmu_config = 0;
     }
 
-    return;
+    أرجع;
 }
 
-static inline void smmu_enable(void)
+ساكن مضمن فراغ smmu_enable(فراغ)
 {
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+    إذا (config_سيٽ(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
         paddr_t addr = addrFromKPPtr(&do_smmu_enable);
         asm(".arch_extension sec\n");
-        asm volatile("mov r0, %0\n\t"
+        asm متطاير("mov r0, %0\n\t"
                      "dsb\nisb\n"
                      "smc #0\n"
                      ::"r"(addr):"r0", "r1", "r2", "r3", "ip");
-    } else {
+    } وإلا {
         smmu_regs->smmu_config = 1;
     }
 
-    return;
+    أرجع;
 }
 
 
-static uint32_t make_ptb_data(uint32_t pd_base, bool_t read, bool_t write, bool_t nonsecure)
+ساكن uint32_t make_ptb_معلومات(uint32_t pd_بنياد, bool_t اقرأ, bool_t اكتب, bool_t nonsecure)
 {
     uint32_t ret = 0;
-    ret = (pd_base >> PTB_DATA_BASE_SHIFT);
+    ret = (pd_بنياد >> PTB_معلومات_بنياد_سرڪايو);
 
-    if (read) {
-        ret |= PTB_DATA_READ;
+    إذا (اقرأ) {
+        ret |= PTB_معلومات_READ;
     }
-    if (write) {
-        ret |= PTB_DATA_WRITE;
+    إذا (اكتب) {
+        ret |= PTB_معلومات_WRITE;
     }
-    if (nonsecure) {
-        ret |= PTB_DATA_NONSECURE;
+    إذا (nonsecure) {
+        ret |= PTB_معلومات_NONSECURE;
     }
 
-    return ret;
+    أرجع ret;
 }
 
-void plat_smmu_ptc_flush_all(void)
+فراغ plat_smmu_ptc_flush_all(فراغ)
 {
     uint32_t cmd = PTC_FLUSH_ALL;
     smmu_regs->smmu_ptc_flush = cmd;
 }
 
-void plat_smmu_tlb_flush_all(void)
+فراغ plat_smmu_tlb_flush_all(فراغ)
 {
     uint32_t cmd = TLB_FLUSH_ALL;
     smmu_regs->smmu_tlb_flush = cmd;
 }
 
-BOOT_CODE int plat_smmu_init(void)
+BOOT_ڪوڊ صحيح plat_smmu_init(فراغ)
 {
     uint32_t asid;
 
     smmu_disable();
 
-    for (asid = SMMU_FIRST_ASID; asid <= SMMU_LAST_ASID; asid++) {
-        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    لكل (asid = SMMU_پهريون_ASID; asid <= SMMU_آخري_ASID; asid++) {
+        iopde_t *pd = (iopde_t *) smmu_pds[asid - SMMU_پهريون_ASID];
 
-        memset(pd, 0, BIT(SMMU_PD_INDEX_BITS));
-        cleanCacheRange_RAM((word_t)pd, ((word_t)pd + BIT(SMMU_PD_INDEX_BITS)),
+        memset(pd, 0, ٻٽو_انگ(SMMU_PD_اشاريو_بٽ));
+        cleanCacheRange_RAM((لفظ_t)pd, ((لفظ_t)pd + ٻٽو_انگ(SMMU_PD_اشاريو_بٽ)),
                             addrFromPPtr(pd));
 
         smmu_regs->smmu_ptb_asid = asid;
 
         /* make it read/write/nonsecure but all translation entries are invalid */
-        smmu_regs->smmu_ptb_data = make_ptb_data(pptr_to_paddr(pd), true, true, true);
+        smmu_regs->smmu_ptb_معلومات = make_ptb_معلومات(pptr_منزل_paddr(pd), true, true, true);
     }
-    printf("Total %d IOASID set up\n", (asid - 1));
+    لکو("Total %d IOASID set up\n", (asid - 1));
 
     /* now assign IOASID to each module */
     smmu_regs->smmu_afi_asid = SMMU_AFI_ASID | MODULE_ASID_ENABLE;
@@ -202,72 +202,72 @@ BOOT_CODE int plat_smmu_init(void)
     smmu_enable();
 
     /* also need to unmask interrupts */
-    if (config_set(CONFIG_SMMU_INTERRUPT_ENABLE)) {
-        smmu_regs->intmask = BIT(MC_APB_ASID_UPDATE_BIT) | BIT(MC_SMMU_PAGE_BIT) |
-                             BIT(MC_DECERR_MTS_BIT) | BIT(MC_SECERR_SEC_BIT) |
-                             BIT(MC_DECERR_VPR_BIT) | BIT(MC_ARBITRATION_EMEM_BIT) |
-                             BIT(MC_SECURITY_BIT) | BIT(MC_DECERR_EMEM_BIT);
-    } else {
+    إذا (config_سيٽ(CONFIG_SMMU_مداخلت_ENABLE)) {
+        smmu_regs->intmask = ٻٽو_انگ(MC_APB_ASID_UPDATE_ٻٽو_انگ) | ٻٽو_انگ(MC_SMMU_صفحو_ٻٽو_انگ) |
+                             ٻٽو_انگ(MC_DECERR_MTS_ٻٽو_انگ) | ٻٽو_انگ(MC_SECERR_SEC_ٻٽو_انگ) |
+                             ٻٽو_انگ(MC_DECERR_VPR_ٻٽو_انگ) | ٻٽو_انگ(MC_ARBITRATION_EMEM_ٻٽو_انگ) |
+                             ٻٽو_انگ(MC_SECURITY_ٻٽو_انگ) | ٻٽو_انگ(MC_DECERR_EMEM_ٻٽو_انگ);
+    } وإلا {
         smmu_regs->intmask = 0;
     }
-    return ARM_PLAT_NUM_SMMU;
+    أرجع ARM_PLAT_انگ_SMMU;
 }
 
 iopde_t *plat_smmu_lookup_iopd_by_asid(uint32_t asid)
 {
     /* There should be no way to generate bad ASID values through the kernel
      * so this is an assertion and not a check */
-    assert(asid >= SMMU_FIRST_ASID && asid <= SMMU_LAST_ASID);
-    return (iopde_t *) smmu_pds[asid - SMMU_FIRST_ASID];
+    أكد(asid >= SMMU_پهريون_ASID && asid <= SMMU_آخري_ASID);
+    أرجع (iopde_t *) smmu_pds[asid - SMMU_پهريون_ASID];
 }
 
-void plat_smmu_handle_interrupt(void)
+فراغ plat_smmu_handle_مداخلت(فراغ)
 {
-    uint32_t status = smmu_regs->intstatus;
-    uint32_t clear_status = 0;
+    uint32_t حالت = smmu_regs->intstatus;
+    uint32_t clear_حالت = 0;
 
-    if (status & BIT(MC_DECERR_MTS_BIT)) {
-        clear_status |= BIT(MC_DECERR_MTS_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_DECERR_MTS_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_DECERR_MTS_ٻٽو_انگ);
     }
-    if (status & BIT(MC_SECERR_SEC_BIT)) {
-        clear_status |= BIT(MC_SECERR_SEC_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_SECERR_SEC_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_SECERR_SEC_ٻٽو_انگ);
     }
-    if (status & BIT(MC_DECERR_VPR_BIT)) {
-        clear_status |= BIT(MC_DECERR_VPR_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_DECERR_VPR_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_DECERR_VPR_ٻٽو_انگ);
     }
-    if (status & BIT(MC_ARBITRATION_EMEM_BIT)) {
-        clear_status |= BIT(MC_ARBITRATION_EMEM_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_ARBITRATION_EMEM_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_ARBITRATION_EMEM_ٻٽو_انگ);
     }
-    if (status & BIT(MC_SECURITY_BIT)) {
-        clear_status |= BIT(MC_SECURITY_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_SECURITY_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_SECURITY_ٻٽو_انگ);
     }
-    if (status & BIT(MC_DECERR_EMEM_BIT)) {
-        clear_status |= BIT(MC_DECERR_EMEM_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_DECERR_EMEM_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_DECERR_EMEM_ٻٽو_انگ);
     }
-    if (status & BIT(MC_APB_ASID_UPDATE_BIT)) {
-        clear_status |= BIT(MC_APB_ASID_UPDATE_BIT);
+    إذا (حالت & ٻٽو_انگ(MC_APB_ASID_UPDATE_ٻٽو_انگ)) {
+        clear_حالت |= ٻٽو_انگ(MC_APB_ASID_UPDATE_ٻٽو_انگ);
     }
 
     /* we only care about SMMU translation failures */
-    if (status & BIT(MC_SMMU_PAGE_BIT)) {
-        if (config_set(CONFIG_PRINTING)) {
-            uint32_t err_status = smmu_regs->err_status;
-            uint32_t UNUSED err_adr = smmu_regs->err_adr;
-            uint32_t UNUSED id = err_status & MC_ERR_ID_MASK;
-            uint32_t UNUSED rw = (err_status & MC_ERR_RW_MASK);
-            uint32_t UNUSED read = (err_status & MC_ERR_INVALID_SMMU_PAGE_READ_MASK);
-            uint32_t UNUSED write = (err_status & MC_ERR_INVALID_SMMU_PAGE_WRITE_MASK);
-            uint32_t UNUSED nonsecure = (err_status & MC_ERR_INVALID_SMMU_PAGE_NONSECURE_MASK);
-            uint32_t UNUSED type = (err_status & MC_ERR_TYPE_MASK) >> MC_ERR_TYPE_SHIFT;
+    إذا (حالت & ٻٽو_انگ(MC_SMMU_صفحو_ٻٽو_انگ)) {
+        إذا (config_سيٽ(CONFIG_PRINTING)) {
+            uint32_t err_حالت = smmu_regs->err_حالت;
+            uint32_t اڻ_استعمال_ٿيل err_adr = smmu_regs->err_adr;
+            uint32_t اڻ_استعمال_ٿيل id = err_حالت & MC_ERR_ID_نقاب;
+            uint32_t اڻ_استعمال_ٿيل rw = (err_حالت & MC_ERR_RW_نقاب);
+            uint32_t اڻ_استعمال_ٿيل اقرأ = (err_حالت & MC_ERR_INVALID_SMMU_صفحو_READ_نقاب);
+            uint32_t اڻ_استعمال_ٿيل اكتب = (err_حالت & MC_ERR_INVALID_SMMU_صفحو_WRITE_نقاب);
+            uint32_t اڻ_استعمال_ٿيل nonsecure = (err_حالت & MC_ERR_INVALID_SMMU_صفحو_NONSECURE_نقاب);
+            uint32_t اڻ_استعمال_ٿيل type = (err_حالت & MC_ERR_TYPE_نقاب) >> MC_ERR_TYPE_سرڪايو;
 
-            printf("SMMU Address translation error:\n");
-            printf("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
-            printf("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", read, write, nonsecure);
+            لکو("SMMU Address translation error:\n");
+            لکو("ID: %d address: 0x%x type: %d direction: 0x%x\n", id, err_adr, type, rw);
+            لکو("IOPT permission: read 0x%x write 0x%x nonsecure 0x%x\n", اقرأ, اكتب, nonsecure);
         }
-        clear_status |= BIT(MC_SMMU_PAGE_BIT);
+        clear_حالت |= ٻٽو_انگ(MC_SMMU_صفحو_ٻٽو_انگ);
     }
 
     /* write 1 to clear the interrupt */
-    smmu_regs->intstatus = clear_status;
+    smmu_regs->intstatus = clear_حالت;
 }
-#endif
+#جيڪڏهن_پورو

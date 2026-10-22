@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/model/statedata.h>
+#ضمن <arch/model/statedata.h>
 
 /* The privileged kernel mapping PD & PT */
-pml4e_t x64KSKernelPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits)) VISIBLE;
-pdpte_t x64KSKernelPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-#ifdef CONFIG_HUGE_PAGE
-pde_t x64KSKernelPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#else
-pde_t x64KSKernelPDs[BIT(PDPT_INDEX_BITS)][BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
-pte_t x64KSKernelPT[BIT(PT_INDEX_BITS)] ALIGN(BIT(seL4_PageTableBits));
+pml4e_t x64KSKernelPML4[ٻٽو_انگ(PML4_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_PML4_بٽ)) VISIBLE;
+pdpte_t x64KSKernelPDPT[ٻٽو_انگ(PDPT_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(seL4_PDPTBits));
+#جيڪڏهن_وصف_ٿيل CONFIG_HUGE_صفحو
+pde_t x64KSKernelPD[ٻٽو_انگ(PD_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_صفحو_Dir_بٽ));
+#وإلا
+pde_t x64KSKernelPDs[ٻٽو_انگ(PDPT_اشاريو_بٽ)][ٻٽو_انگ(PD_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_صفحو_Dir_بٽ));
+#جيڪڏهن_پورو
+pte_t x64KSKernelPT[ٻٽو_انگ(PT_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_صفحو_جدول_بٽ));
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-pml4e_t x64KSSKIMPML4[BIT(PML4_INDEX_BITS)] ALIGN(BIT(seL4_PML4Bits));
-pdpte_t x64KSSKIMPDPT[BIT(PDPT_INDEX_BITS)] ALIGN(BIT(seL4_PDPTBits));
-pde_t x64KSSKIMPD[BIT(PD_INDEX_BITS)] ALIGN(BIT(seL4_PageDirBits));
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
+pml4e_t x64KSSKIMPML4[ٻٽو_انگ(PML4_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_PML4_بٽ));
+pdpte_t x64KSSKIMPDPT[ٻٽو_انگ(PDPT_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(seL4_PDPTBits));
+pde_t x64KSSKIMPD[ٻٽو_انگ(PD_اشاريو_بٽ)] ALIGN(ٻٽو_انگ(se_L4_صفحو_Dir_بٽ));
+#جيڪڏهن_پورو
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-UP_STATE_DEFINE(word_t, x64KSCurrentUserCR3);
-#else
-UP_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
+مٿي_STATE_DEFINE(لفظ_t, x64KSCurrentUserCR3);
+#وإلا
+مٿي_STATE_DEFINE(cr3_t, x64KSCurrentCR3);
+#جيڪڏهن_پورو
 
-word_t x64KSIRQStack[CONFIG_MAX_NUM_NODES][IRQ_STACK_SIZE + 2] ALIGN(64) VISIBLE SKIM_BSS;
+لفظ_t x64KSIRQStack[CONFIG_MAX_انگ_NODES][IRQ_ڍير_سائيز + 2] ALIGN(64) VISIBLE SKIM_BSS;

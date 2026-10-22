@@ -4,501 +4,501 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ضمن <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#جيڪڏهن_وصف_ٿيل CONFIG_DEBUG_BUILD
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
+#ضمن <arch/machine/capdl.h>
+#ضمن <string.h>
+#ضمن <kernel/cspace.h>
 
-word_t get_tcb_sp(tcb_t *tcb)
+لفظ_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[RSP];
+    أرجع tcb->tcbArch.tcbContext.registers[RSP];
 }
 
-#ifdef CONFIG_PRINTING
+#جيڪڏهن_وصف_ٿيل CONFIG_PRINTING
 
-static void obj_frame_print_attrs(paddr_t paddr, word_t page_size);
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace);
-static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace);
-static void obj_asidpool_print_attrs(cap_t asid_cap);
-static void cap_frame_print_attrs_pdpt(pdpte_t *pdptSlot);
-static void cap_frame_print_attrs_pd(pde_t *pdSlot);
-static void cap_frame_print_attrs_pt(pte_t *ptSlot);
-static void cap_frame_print_attrs_impl(word_t super_user, word_t read_write, word_t cache_disabled, word_t xd);
+ساكن فراغ obj_چوکٺو_print_attrs(paddr_t paddr, لفظ_t صفحو_سائيز);
+ساكن فراغ cap_چوکٺو_print_attrs_vptr_2(لفظ_t vptr, vspace_پاڙ_t *vspace);
+ساكن فراغ cap_چوکٺو_print_attrs_vptr(لفظ_t vptr, cap_t vspace);
+ساكن فراغ obj_asidpool_print_attrs(cap_t asid_cap);
+ساكن فراغ cap_چوکٺو_print_attrs_pdpt(pdpte_t *pdpt_جڳهه);
+ساكن فراغ cap_چوکٺو_print_attrs_pd(pde_t *pd_جڳهه);
+ساكن فراغ cap_چوکٺو_print_attrs_pt(pte_t *pt_جڳهه);
+ساكن فراغ cap_چوکٺو_print_attrs_impl(لفظ_t super_user, لفظ_t read_write, لفظ_t cache_disabled, لفظ_t xd);
 
 /* use when only have access to pte of frames */
-static void cap_frame_print_attrs_pdpt(pdpte_t *pdptSlot)
+ساكن فراغ cap_چوکٺو_print_attrs_pdpt(pdpte_t *pdpt_جڳهه)
 {
-    cap_frame_print_attrs_impl(pdpte_pdpte_1g_ptr_get_super_user(pdptSlot),
-                               pdpte_pdpte_1g_ptr_get_read_write(pdptSlot),
-                               pdpte_pdpte_1g_ptr_get_cache_disabled(pdptSlot),
-                               pdpte_pdpte_1g_ptr_get_xd(pdptSlot));
+    cap_چوکٺو_print_attrs_impl(pdpte_pdpte_1g_ptr_get_super_user(pdpt_جڳهه),
+                               pdpte_pdpte_1g_ptr_get_read_write(pdpt_جڳهه),
+                               pdpte_pdpte_1g_ptr_get_cache_disabled(pdpt_جڳهه),
+                               pdpte_pdpte_1g_ptr_get_xd(pdpt_جڳهه));
 }
-static void cap_frame_print_attrs_pd(pde_t *pdSlot)
+ساكن فراغ cap_چوکٺو_print_attrs_pd(pde_t *pd_جڳهه)
 {
-    cap_frame_print_attrs_impl(pde_pde_large_ptr_get_super_user(pdSlot),
-                               pde_pde_large_ptr_get_read_write(pdSlot),
-                               pde_pde_large_ptr_get_cache_disabled(pdSlot),
-                               pde_pde_large_ptr_get_xd(pdSlot));
-}
-
-static void cap_frame_print_attrs_pt(pte_t *ptSlot)
-{
-    cap_frame_print_attrs_impl(pte_ptr_get_super_user(ptSlot),
-                               pte_ptr_get_read_write(ptSlot),
-                               pte_ptr_get_cache_disabled(ptSlot),
-                               pte_ptr_get_xd(ptSlot));
+    cap_چوکٺو_print_attrs_impl(pde_pde_large_ptr_get_super_user(pd_جڳهه),
+                               pde_pde_large_ptr_get_read_write(pd_جڳهه),
+                               pde_pde_large_ptr_get_cache_disabled(pd_جڳهه),
+                               pde_pde_large_ptr_get_xd(pd_جڳهه));
 }
 
-static void cap_frame_print_attrs_impl(word_t super_user, word_t read_write, word_t cache_disabled, word_t xd)
+ساكن فراغ cap_چوکٺو_print_attrs_pt(pte_t *pt_جڳهه)
 {
-    printf("(");
+    cap_چوکٺو_print_attrs_impl(pte_ptr_get_super_user(pt_جڳهه),
+                               pte_ptr_get_read_write(pt_جڳهه),
+                               pte_ptr_get_cache_disabled(pt_جڳهه),
+                               pte_ptr_get_xd(pt_جڳهه));
+}
+
+ساكن فراغ cap_چوکٺو_print_attrs_impl(لفظ_t super_user, لفظ_t read_write, لفظ_t cache_disabled, لفظ_t xd)
+{
+    لکو("(");
 
     /* rights */
-    if (read_write) {
-        printf("RW");
-    } else if (super_user) {
-        printf("R");
+    إذا (read_write) {
+        لکو("RW");
+    } وإلا إذا (super_user) {
+        لکو("R");
     }
 
-    if (!xd) {
-        printf("X");
+    إذا (!xd) {
+        لکو("X");
     }
 
     /* asid, mapping */
 
-    if (cache_disabled) {
-        printf(", uncached");
+    إذا (cache_disabled) {
+        لکو(", uncached");
     }
 
-    printf(")\n");
+    لکو(")\n");
 }
 
-static void obj_frame_print_attrs(paddr_t paddr, word_t page_size)
+ساكن فراغ obj_چوکٺو_print_attrs(paddr_t paddr, لفظ_t صفحو_سائيز)
 {
-    printf("(");
+    لکو("(");
 
     /* VM size */
-    switch (page_size) {
-    case seL4_HugePageBits:
-        printf("1G");
-        break;
-    case seL4_LargePageBits:
-        printf("2M");
-        break;
-    case seL4_PageBits:
-        printf("4k");
-        break;
+    بدل (صفحو_سائيز) {
+    حالة se_L4_Huge_صفحو_بٽ:
+        لکو("1G");
+        اكسر;
+    حالة se_L4_Large_صفحو_بٽ:
+        لکو("2M");
+        اكسر;
+    حالة se_L4_صفحو_بٽ:
+        لکو("4k");
+        اكسر;
     }
 
-    printf(", paddr: 0x%p)\n", (void *)paddr);
+    لکو(", paddr: 0x%p)\n", (فراغ *)paddr);
 }
 
-static void x86_64_obj_pt_print_slots(pde_t *pdSlot)
+ساكن فراغ x86_64_obj_pt_print_slots(pde_t *pd_جڳهه)
 {
     paddr_t paddr;
-    word_t page_size;
-    pte_t *pt = paddr_to_pptr(pde_pde_pt_ptr_get_pt_base_address(pdSlot));
+    لفظ_t صفحو_سائيز;
+    pte_t *pt = paddr_منزل_pptr(pde_pde_pt_ptr_get_pt_بنياد_پتو(pd_جڳهه));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
-        pte_t *ptSlot = pt + GET_PT_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PT_اشاريو_وٿي + PT_اشاريو_بٽ); i += (1UL << PT_اشاريو_وٿي)) {
+        pte_t *pt_جڳهه = pt + GET_PT_اشاريو(i);
 
-        if (pte_ptr_get_present(ptSlot)) {
-            paddr = pte_ptr_get_page_base_address(ptSlot);
-            page_size = seL4_PageBits;
-            printf("frame_%p_%04lu = frame ", ptSlot, GET_PT_INDEX(i));
-            obj_frame_print_attrs(paddr, page_size);
+        إذا (pte_ptr_get_present(pt_جڳهه)) {
+            paddr = pte_ptr_get_صفحو_بنياد_پتو(pt_جڳهه);
+            صفحو_سائيز = se_L4_صفحو_بٽ;
+            لکو("frame_%p_%04lu = frame ", pt_جڳهه, GET_PT_اشاريو(i));
+            obj_چوکٺو_print_attrs(paddr, صفحو_سائيز);
         }
     }
 }
 
-static void x86_64_obj_pd_print_slots(pdpte_t *pdptSlot)
+ساكن فراغ x86_64_obj_pd_print_slots(pdpte_t *pdpt_جڳهه)
 {
     paddr_t paddr;
-    word_t page_size;
-    pde_t *pd = paddr_to_pptr(pdpte_pdpte_pd_ptr_get_pd_base_address(pdptSlot));
+    لفظ_t صفحو_سائيز;
+    pde_t *pd = paddr_منزل_pptr(pdpte_pdpte_pd_ptr_get_pd_بنياد_پتو(pdpt_جڳهه));
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
-        pde_t *pdSlot = pd + GET_PD_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PD_اشاريو_وٿي + PD_اشاريو_بٽ); i += (1UL << PD_اشاريو_وٿي)) {
+        pde_t *pd_جڳهه = pd + GET_PD_اشاريو(i);
 
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
-            paddr = pde_pde_large_ptr_get_page_base_address(pdSlot);
-            page_size = seL4_LargePageBits;
+        إذا ((pde_ptr_get_صفحو_سائيز(pd_جڳهه) == pde_pde_large) && pde_pde_large_ptr_get_present(pd_جڳهه)) {
+            paddr = pde_pde_large_ptr_get_صفحو_بنياد_پتو(pd_جڳهه);
+            صفحو_سائيز = se_L4_Large_صفحو_بٽ;
 
-            printf("frame_%p_%04lu = frame ", pdSlot, GET_PD_INDEX(i));
-            obj_frame_print_attrs(paddr, page_size);
+            لکو("frame_%p_%04lu = frame ", pd_جڳهه, GET_PD_اشاريو(i));
+            obj_چوکٺو_print_attrs(paddr, صفحو_سائيز);
 
-        } else if (pde_pde_pt_ptr_get_present(pdSlot)) {
-            printf("pt_%p_%04lu = pt\n", pdSlot, GET_PD_INDEX(i));
-            x86_64_obj_pt_print_slots(pdSlot);
+        } وإلا إذا (pde_pde_pt_ptr_get_present(pd_جڳهه)) {
+            لکو("pt_%p_%04lu = pt\n", pd_جڳهه, GET_PD_اشاريو(i));
+            x86_64_obj_pt_print_slots(pd_جڳهه);
         }
     }
 }
 
-static void x86_64_obj_pdpt_print_slots(pml4e_t *pml4Slot)
+ساكن فراغ x86_64_obj_pdpt_print_slots(pml4e_t *pml4_جڳهه)
 {
     paddr_t paddr;
-    word_t page_size;
-    pdpte_t *pdpt = paddr_to_pptr(pml4e_ptr_get_pdpt_base_address(pml4Slot));
+    لفظ_t صفحو_سائيز;
+    pdpte_t *pdpt = paddr_منزل_pptr(pml4e_ptr_get_pdpt_بنياد_پتو(pml4_جڳهه));
 
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
-        pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PDPT_اشاريو_وٿي + PDPT_اشاريو_بٽ); i += (1UL << PDPT_اشاريو_وٿي)) {
+        pdpte_t *pdpt_جڳهه = pdpt + GET_PDPT_اشاريو(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
-            pdpte_pdpte_1g_ptr_get_present(pdptSlot)) {
-            paddr = pdpte_pdpte_1g_ptr_get_page_base_address(pdptSlot);
-            page_size = seL4_HugePageBits;
+        إذا (pdpte_ptr_get_صفحو_سائيز(pdpt_جڳهه) == pdpte_pdpte_1g &&
+            pdpte_pdpte_1g_ptr_get_present(pdpt_جڳهه)) {
+            paddr = pdpte_pdpte_1g_ptr_get_صفحو_بنياد_پتو(pdpt_جڳهه);
+            صفحو_سائيز = se_L4_Huge_صفحو_بٽ;
 
-            printf("frame_%p_%04lu = frame ", pdptSlot, GET_PDPT_INDEX(i));
-            obj_frame_print_attrs(paddr, page_size);
+            لکو("frame_%p_%04lu = frame ", pdpt_جڳهه, GET_PDPT_اشاريو(i));
+            obj_چوکٺو_print_attrs(paddr, صفحو_سائيز);
 
-        } else if (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
-            printf("pd_%p_%04lu = pd\n", pdptSlot, GET_PDPT_INDEX(i));
-            x86_64_obj_pd_print_slots(pdptSlot);
+        } وإلا إذا (pdpte_pdpte_pd_ptr_get_present(pdpt_جڳهه)) {
+            لکو("pd_%p_%04lu = pd\n", pdpt_جڳهه, GET_PDPT_اشاريو(i));
+            x86_64_obj_pd_print_slots(pdpt_جڳهه);
         }
     }
 }
 
-static void x86_64_obj_pml4_print_slots(pml4e_t *pml4)
+ساكن فراغ x86_64_obj_pml4_print_slots(pml4e_t *pml4)
 {
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
-        pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
-            printf("pdpt_%p_%04lu = pdpt\n", pml4Slot, GET_PML4_INDEX(i));
-            x86_64_obj_pdpt_print_slots(pml4Slot);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PML4_اشاريو_وٿي + PML4_اشاريو_بٽ); i += (1UL << PML4_اشاريو_وٿي)) {
+        pml4e_t *pml4_جڳهه = lookup_PML4_جڳهه(pml4, i);
+        إذا (pml4e_ptr_get_present(pml4_جڳهه)) {
+            لکو("pdpt_%p_%04lu = pdpt\n", pml4_جڳهه, GET_PML4_اشاريو(i));
+            x86_64_obj_pdpt_print_slots(pml4_جڳهه);
         }
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+فراغ obj_tcb_print_vtable(tcb_t *tcb)
 {
     /* levels: PML4 -> PDPT -> PD -> PT */
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        printf("%p_pd = pml4\n", pml4);
+    إذا (is_Valid_VTable_پاڙ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !ڏٺل(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_cap_PML4_بنياد_Ptr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        جوڙيو_منزل_ڏٺل(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+        لکو("%p_pd = pml4\n", pml4);
         x86_64_obj_pml4_print_slots(pml4);
     }
 }
 
 /* use when only have access to vptr of frames */
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
+ساكن فراغ cap_چوکٺو_print_attrs_vptr_2(لفظ_t vptr, vspace_پاڙ_t *vspace)
 {
-    lookupPDPTSlot_ret_t pdptSlot = lookupPDPTSlot(vspace, vptr);
-    lookupPTSlot_ret_t ptSlot;
-    lookupPDSlot_ret_t pdSlot;
+    lookupPDPTSlot_ret_t pdpt_جڳهه = lookupPDPTSlot(vspace, vptr);
+    lookupPTSlot_ret_t pt_جڳهه;
+    lookupPDSlot_ret_t pd_جڳهه;
 
-    if (pdptSlot.status == EXCEPTION_NONE &&
-        pdpte_ptr_get_page_size(pdptSlot.pdptSlot) == pdpte_pdpte_1g &&
-        pdpte_pdpte_1g_ptr_get_present(pdptSlot.pdptSlot)) {
-        printf("frame_%p_%04lu ", pdptSlot.pdptSlot, GET_PDPT_INDEX(vptr));
-        cap_frame_print_attrs_pdpt(pdptSlot.pdptSlot);
-    } else {
-        pdSlot = lookupPDSlot(vspace, vptr);
-        if (pdSlot.status == EXCEPTION_NONE &&
-            ((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_large) &&
-             pde_pde_large_ptr_get_present(pdSlot.pdSlot))) {
-            printf("frame_%p_%04lu ", pdSlot.pdSlot, GET_PD_INDEX(vptr));
-            cap_frame_print_attrs_pd(pdSlot.pdSlot);
-        } else {
-            ptSlot = lookupPTSlot(vspace, vptr);
-            assert(ptSlot.status == EXCEPTION_NONE && pte_ptr_get_present(ptSlot.ptSlot));
-            printf("frame_%p_%04lu ", ptSlot.ptSlot, GET_PT_INDEX(vptr));
-            cap_frame_print_attrs_pt(ptSlot.ptSlot);
+    إذا (pdpt_جڳهه.حالت == EXCEPTION_NONE &&
+        pdpte_ptr_get_صفحو_سائيز(pdpt_جڳهه.pdpt_جڳهه) == pdpte_pdpte_1g &&
+        pdpte_pdpte_1g_ptr_get_present(pdpt_جڳهه.pdpt_جڳهه)) {
+        لکو("frame_%p_%04lu ", pdpt_جڳهه.pdpt_جڳهه, GET_PDPT_اشاريو(vptr));
+        cap_چوکٺو_print_attrs_pdpt(pdpt_جڳهه.pdpt_جڳهه);
+    } وإلا {
+        pd_جڳهه = lookupPDSlot(vspace, vptr);
+        إذا (pd_جڳهه.حالت == EXCEPTION_NONE &&
+            ((pde_ptr_get_صفحو_سائيز(pd_جڳهه.pd_جڳهه) == pde_pde_large) &&
+             pde_pde_large_ptr_get_present(pd_جڳهه.pd_جڳهه))) {
+            لکو("frame_%p_%04lu ", pd_جڳهه.pd_جڳهه, GET_PD_اشاريو(vptr));
+            cap_چوکٺو_print_attrs_pd(pd_جڳهه.pd_جڳهه);
+        } وإلا {
+            pt_جڳهه = lookupPTSlot(vspace, vptr);
+            أكد(pt_جڳهه.حالت == EXCEPTION_NONE && pte_ptr_get_present(pt_جڳهه.pt_جڳهه));
+            لکو("frame_%p_%04lu ", pt_جڳهه.pt_جڳهه, GET_PT_اشاريو(vptr));
+            cap_چوکٺو_print_attrs_pt(pt_جڳهه.pt_جڳهه);
         }
     }
 }
 
-static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace)
+ساكن فراغ cap_چوکٺو_print_attrs_vptr(لفظ_t vptr, cap_t vspace)
 {
     asid_t asid = cap_pml4_cap_get_capPML4MappedASID(vspace);
-    findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-    _cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
+    ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(asid);
+    cap_چوکٺو_print_attrs_vptr_2(vptr, ڳوليو_ret.vspace_پاڙ);
 }
 
-void print_cap_arch(cap_t cap)
+فراغ print_cap_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
+    بدل (cap_get_capType(cap)) {
     /* arch specific caps */
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPDSlot(find_ret.vspace_root, vptr).pdSlot, GET_PD_INDEX(vptr), (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", lookupPDSlot(find_ret.vspace_root, vptr).pdSlot, GET_PD_INDEX(vptr));
+    حالة cap_صفحو_جدول_cap: {
+        asid_t asid = cap_صفحو_جدول_cap_get_cap_PTMapped_ASID(cap);
+        ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(asid);
+        vptr_t vptr = cap_صفحو_جدول_cap_get_cap_PTMapped_پتو(cap);
+        إذا (asid) {
+            لکو("pt_%p_%04lu (asid: %lu)\n",
+                   lookupPDSlot(ڳوليو_ret.vspace_پاڙ, vptr).pd_جڳهه, GET_PD_اشاريو(vptr), (ڊگهو بنانشان صحيح)asid);
+        } وإلا {
+            لکو("pt_%p_%04lu\n", lookupPDSlot(ڳوليو_ret.vspace_پاڙ, vptr).pd_جڳهه, GET_PD_اشاريو(vptr));
         }
-        break;
+        اكسر;
     }
-    case cap_page_directory_cap: {
-        asid_t asid = cap_page_directory_cap_get_capPDMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        vptr_t vptr = cap_page_directory_cap_get_capPDMappedAddress(cap);
-        if (asid) {
-            printf("pd_%p_%04lu (asid: %lu)\n",
-                   lookupPDPTSlot(find_ret.vspace_root, vptr).pdptSlot, GET_PDPT_INDEX(vptr), (long unsigned int)asid);
-        } else {
-            printf("pd_%p_%04lu\n", lookupPDPTSlot(find_ret.vspace_root, vptr).pdptSlot, GET_PDPT_INDEX(vptr));
+    حالة cap_صفحو_directory_cap: {
+        asid_t asid = cap_صفحو_directory_cap_get_cap_PDMapped_ASID(cap);
+        ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(asid);
+        vptr_t vptr = cap_صفحو_directory_cap_get_cap_PDMapped_پتو(cap);
+        إذا (asid) {
+            لکو("pd_%p_%04lu (asid: %lu)\n",
+                   lookupPDPTSlot(ڳوليو_ret.vspace_پاڙ, vptr).pdpt_جڳهه, GET_PDPT_اشاريو(vptr), (ڊگهو بنانشان صحيح)asid);
+        } وإلا {
+            لکو("pd_%p_%04lu\n", lookupPDPTSlot(ڳوليو_ret.vspace_پاڙ, vptr).pdpt_جڳهه, GET_PDPT_اشاريو(vptr));
         }
-        break;
+        اكسر;
     }
-    case cap_pdpt_cap: {
+    حالة cap_pdpt_cap: {
         asid_t asid = cap_pdpt_cap_get_capPDPTMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        vptr_t vptr = cap_pdpt_cap_get_capPDPTMappedAddress(cap);
-        if (asid) {
-            printf("pdpt_%p_%04lu (asid: %lu)\n",
-                   lookupPML4Slot(find_ret.vspace_root, vptr), GET_PML4_INDEX(vptr), (long unsigned int)asid);
-        } else {
-            printf("pdpt_%p_%04lu\n", lookupPML4Slot(find_ret.vspace_root, vptr), GET_PML4_INDEX(vptr));
+        ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(asid);
+        vptr_t vptr = cap_pdpt_cap_get_cap_PDPTMapped_پتو(cap);
+        إذا (asid) {
+            لکو("pdpt_%p_%04lu (asid: %lu)\n",
+                   lookup_PML4_جڳهه(ڳوليو_ret.vspace_پاڙ, vptr), GET_PML4_اشاريو(vptr), (ڊگهو بنانشان صحيح)asid);
+        } وإلا {
+            لکو("pdpt_%p_%04lu\n", lookup_PML4_جڳهه(ڳوليو_ret.vspace_پاڙ, vptr), GET_PML4_اشاريو(vptr));
         }
-        break;
+        اكسر;
     }
-    case cap_pml4_cap: {
+    حالة cap_pml4_cap: {
         asid_t asid = cap_pml4_cap_get_capPML4MappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (asid) {
-            printf("%p_pd (asid: %lu)\n",
-                   find_ret.vspace_root, (long unsigned int)asid);
-        } else {
-            printf("%p_pd\n", find_ret.vspace_root);
+        ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(asid);
+        إذا (asid) {
+            لکو("%p_pd (asid: %lu)\n",
+                   ڳوليو_ret.vspace_پاڙ, (ڊگهو بنانشان صحيح)asid);
+        } وإلا {
+            لکو("%p_pd\n", ڳوليو_ret.vspace_پاڙ);
         }
-        break;
+        اكسر;
     }
-    case cap_asid_control_cap: {
+    حالة cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        لکو("asid_control\n");
+        اكسر;
     }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
-        _cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
-        break;
+    حالة cap_چوکٺو_cap: {
+        vptr_t vptr = cap_چوکٺو_cap_get_cap_FMapped_پتو(cap);
+        ڳوليو_VSpace_For_ASID_ret_t ڳوليو_ret = ڳوليو_VSpace_For_ASID(cap_چوکٺو_cap_get_cap_FMapped_ASID(cap));
+        أكد(ڳوليو_ret.حالت == EXCEPTION_NONE);
+        cap_چوکٺو_print_attrs_vptr_2(vptr, ڳوليو_ret.vspace_پاڙ);
+        اكسر;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    حالة cap_asid_pool_cap: {
+        لکو("%p_asid_pool\n", (فراغ *)cap_asid_pool_cap_get_capASIDPool(cap));
+        اكسر;
     }
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap: {
-        printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
+    حالة cap_vcpu_cap: {
+        لکو("%p_vcpu\n", (فراغ *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        اكسر;
     }
-#endif
+#جيڪڏهن_پورو
     /* X86 specific caps */
-    case cap_io_port_cap: {
-        printf("%p%p_io_port\n", (void *)cap_io_port_cap_get_capIOPortFirstPort(cap),
-               (void *)cap_io_port_cap_get_capIOPortLastPort(cap));
-        break;
+    حالة cap_io_پورٽ_cap: {
+        لکو("%p%p_io_port\n", (فراغ *)cap_io_پورٽ_cap_get_cap_IOPort_پهريون_پورٽ(cap),
+               (فراغ *)cap_io_پورٽ_cap_get_cap_IOPort_آخري_پورٽ(cap));
+        اكسر;
     }
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space\n", (void *)cap_io_space_cap_get_capPCIDevice(cap));
-        break;
+#جيڪڏهن_وصف_ٿيل CONFIG_IOMMU
+    حالة cap_io_space_cap: {
+        لکو("%p_io_space\n", (فراغ *)cap_io_space_cap_get_capPCIDevice(cap));
+        اكسر;
     }
-    case cap_io_page_table_cap: {
-        printf("%p_iopt\n", (void *)cap_io_page_table_cap_get_capIOPTBasePtr(cap));
-        break;
+    حالة cap_io_صفحو_جدول_cap: {
+        لکو("%p_iopt\n", (فراغ *)cap_io_صفحو_جدول_cap_get_cap_IOPTBase_Ptr(cap));
+        اكسر;
     }
-#endif
-    default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+#جيڪڏهن_پورو
+    افتراضي: {
+        لکو("[unknown cap %lu]\n", (ڊگهو بنانشان صحيح)cap_get_capType(cap));
+        اكسر;
     }
     }
 }
 
-static void obj_asidpool_print_attrs(cap_t asid_cap)
+ساكن فراغ obj_asidpool_print_attrs(cap_t asid_cap)
 {
     asid_t asid = cap_asid_pool_cap_get_capASIDBase(asid_cap);
-    printf("(asid_high: 0x%lx)\n", ASID_HIGH(asid));
+    لکو("(asid_high: 0x%lx)\n", ASID_مٿاهون(asid));
 }
 
-void print_object_arch(cap_t cap)
+فراغ print_object_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
+    بدل (cap_get_capType(cap)) {
     /* arch specific objects */
-    case cap_frame_cap:
-    case cap_page_table_cap:
-    case cap_page_directory_cap:
-    case cap_pdpt_cap:
-    case cap_pml4_cap:
+    حالة cap_چوکٺو_cap:
+    حالة cap_صفحو_جدول_cap:
+    حالة cap_صفحو_directory_cap:
+    حالة cap_pdpt_cap:
+    حالة cap_pml4_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        اكسر;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    حالة cap_asid_pool_cap: {
+        لکو("%p_asid_pool = asid_pool ",
+               (فراغ *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        اكسر;
     }
-#ifdef CONFIG_VTX
-    case cap_vcpu_cap: {
-        printf("%p_vcpu = vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
+    حالة cap_vcpu_cap: {
+        لکو("%p_vcpu = vcpu\n", (فراغ *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        اكسر;
     }
-#endif
+#جيڪڏهن_پورو
     /* X86 specific caps */
-    case cap_io_port_cap: {
-        printf("%p%p_io_port = io_port ",
-               (void *)cap_io_port_cap_get_capIOPortFirstPort(cap),
-               (void *)cap_io_port_cap_get_capIOPortLastPort(cap));
+    حالة cap_io_پورٽ_cap: {
+        لکو("%p%p_io_port = io_port ",
+               (فراغ *)cap_io_پورٽ_cap_get_cap_IOPort_پهريون_پورٽ(cap),
+               (فراغ *)cap_io_پورٽ_cap_get_cap_IOPort_آخري_پورٽ(cap));
         x86_obj_ioports_print_attrs(cap);
-        break;
+        اكسر;
     }
-#ifdef CONFIG_IOMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space = io_space ", (void *)cap_io_space_cap_get_capPCIDevice(cap));
+#جيڪڏهن_وصف_ٿيل CONFIG_IOMMU
+    حالة cap_io_space_cap: {
+        لکو("%p_io_space = io_space ", (فراغ *)cap_io_space_cap_get_capPCIDevice(cap));
         x86_obj_iospace_print_attrs(cap);
-        break;
+        اكسر;
     }
-    case cap_io_page_table_cap: {
-        printf("%p_iopt = iopt ", (void *)cap_io_page_table_cap_get_capIOPTBasePtr(cap));
+    حالة cap_io_صفحو_جدول_cap: {
+        لکو("%p_iopt = iopt ", (فراغ *)cap_io_صفحو_جدول_cap_get_cap_IOPTBase_Ptr(cap));
         x86_obj_iopt_print_attrs(cap);
-        break;
+        اكسر;
     }
-#endif
-    default: {
-        printf("[unknown object %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
+#جيڪڏهن_پورو
+    افتراضي: {
+        لکو("[unknown object %lu]\n", (ڊگهو بنانشان صحيح)cap_get_capType(cap));
+        اكسر;
     }
     }
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+فراغ print_ipc_بفر_جڳهه(tcb_t *tcb)
 {
-    word_t vptr = tcb->tcbIPCBuffer;
-    printf("ipc_buffer_slot: ");
-    cap_frame_print_attrs_vptr(vptr, TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    لفظ_t vptr = tcb->tcbIPCBuffer;
+    لکو("ipc_buffer_slot: ");
+    cap_چوکٺو_print_attrs_vptr(vptr, TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
 }
 
-static void x86_64_cap_pt_print_slots(pde_t *pdSlot, vptr_t vptr)
+ساكن فراغ x86_64_cap_pt_print_slots(pde_t *pd_جڳهه, vptr_t vptr)
 {
-    pte_t *pt = paddr_to_pptr(pde_pde_pt_ptr_get_pt_base_address(pdSlot));
-    printf("pt_%p_%04lu {\n", pdSlot, GET_PD_INDEX(vptr));
+    pte_t *pt = paddr_منزل_pptr(pde_pde_pt_ptr_get_pt_بنياد_پتو(pd_جڳهه));
+    لکو("pt_%p_%04lu {\n", pd_جڳهه, GET_PD_اشاريو(vptr));
 
-    for (word_t i = 0; i < BIT(PT_INDEX_OFFSET + PT_INDEX_BITS); i += (1UL << PT_INDEX_OFFSET)) {
-        pte_t *ptSlot = pt + GET_PT_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PT_اشاريو_وٿي + PT_اشاريو_بٽ); i += (1UL << PT_اشاريو_وٿي)) {
+        pte_t *pt_جڳهه = pt + GET_PT_اشاريو(i);
 
-        if (pte_ptr_get_present(ptSlot)) {
-            printf("0x%lx: frame_%p_%04lu ", GET_PT_INDEX(i), ptSlot, GET_PT_INDEX(i));
-            cap_frame_print_attrs_pt(ptSlot);
+        إذا (pte_ptr_get_present(pt_جڳهه)) {
+            لکو("0x%lx: frame_%p_%04lu ", GET_PT_اشاريو(i), pt_جڳهه, GET_PT_اشاريو(i));
+            cap_چوکٺو_print_attrs_pt(pt_جڳهه);
         }
     }
-    printf("}\n"); /* pt */
+    لکو("}\n"); /* pt */
 }
 
-static void x86_64_cap_pd_print_slots(pdpte_t *pdptSlot, vptr_t vptr)
+ساكن فراغ x86_64_cap_pd_print_slots(pdpte_t *pdpt_جڳهه, vptr_t vptr)
 {
-    pde_t *pd = paddr_to_pptr(pdpte_pdpte_pd_ptr_get_pd_base_address(pdptSlot));
-    printf("pd_%p_%04lu {\n", pdptSlot, GET_PDPT_INDEX(vptr));
+    pde_t *pd = paddr_منزل_pptr(pdpte_pdpte_pd_ptr_get_pd_بنياد_پتو(pdpt_جڳهه));
+    لکو("pd_%p_%04lu {\n", pdpt_جڳهه, GET_PDPT_اشاريو(vptr));
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
-        pde_t *pdSlot = pd + GET_PD_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PD_اشاريو_وٿي + PD_اشاريو_بٽ); i += (1UL << PD_اشاريو_وٿي)) {
+        pde_t *pd_جڳهه = pd + GET_PD_اشاريو(i);
 
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot)) {
-            printf("0x%lx: frame_%p_%04lu ", GET_PD_INDEX(i), pdSlot, GET_PD_INDEX(i));
-            cap_frame_print_attrs_pd(pdSlot);
+        إذا ((pde_ptr_get_صفحو_سائيز(pd_جڳهه) == pde_pde_large) && pde_pde_large_ptr_get_present(pd_جڳهه)) {
+            لکو("0x%lx: frame_%p_%04lu ", GET_PD_اشاريو(i), pd_جڳهه, GET_PD_اشاريو(i));
+            cap_چوکٺو_print_attrs_pd(pd_جڳهه);
 
-        } else if (pde_pde_pt_ptr_get_present(pdSlot)) {
-            printf("0x%lx: pt_%p_%04lu\n", GET_PD_INDEX(i), pdSlot, GET_PD_INDEX(i));
+        } وإلا إذا (pde_pde_pt_ptr_get_present(pd_جڳهه)) {
+            لکو("0x%lx: pt_%p_%04lu\n", GET_PD_اشاريو(i), pd_جڳهه, GET_PD_اشاريو(i));
         }
     }
-    printf("}\n"); /* pd */
+    لکو("}\n"); /* pd */
 
-    for (word_t i = 0; i < BIT(PD_INDEX_OFFSET + PD_INDEX_BITS); i += (1UL << PD_INDEX_OFFSET)) {
-        pde_t *pdSlot = pd + GET_PD_INDEX(i);
-        if ((pde_ptr_get_page_size(pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot)) {
-            x86_64_cap_pt_print_slots(pdSlot, i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PD_اشاريو_وٿي + PD_اشاريو_بٽ); i += (1UL << PD_اشاريو_وٿي)) {
+        pde_t *pd_جڳهه = pd + GET_PD_اشاريو(i);
+        إذا ((pde_ptr_get_صفحو_سائيز(pd_جڳهه) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pd_جڳهه)) {
+            x86_64_cap_pt_print_slots(pd_جڳهه, i);
         }
     }
 }
 
-static void x86_64_cap_pdpt_print_slots(pml4e_t *pml4Slot, vptr_t vptr)
+ساكن فراغ x86_64_cap_pdpt_print_slots(pml4e_t *pml4_جڳهه, vptr_t vptr)
 {
-    pdpte_t *pdpt = paddr_to_pptr(pml4e_ptr_get_pdpt_base_address(pml4Slot));
+    pdpte_t *pdpt = paddr_منزل_pptr(pml4e_ptr_get_pdpt_بنياد_پتو(pml4_جڳهه));
 
-    printf("pdpt_%p_%04lu {\n", pml4Slot, GET_PML4_INDEX(vptr));
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
-        pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
+    لکو("pdpt_%p_%04lu {\n", pml4_جڳهه, GET_PML4_اشاريو(vptr));
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PDPT_اشاريو_وٿي + PDPT_اشاريو_بٽ); i += (1UL << PDPT_اشاريو_وٿي)) {
+        pdpte_t *pdpt_جڳهه = pdpt + GET_PDPT_اشاريو(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_1g &&
-            pdpte_pdpte_1g_ptr_get_present(pdptSlot)) {
-            printf("0x%lx: frame_%p_%04lu ", GET_PDPT_INDEX(i), pdptSlot, GET_PDPT_INDEX(i));
-            cap_frame_print_attrs_pdpt(pdptSlot);
+        إذا (pdpte_ptr_get_صفحو_سائيز(pdpt_جڳهه) == pdpte_pdpte_1g &&
+            pdpte_pdpte_1g_ptr_get_present(pdpt_جڳهه)) {
+            لکو("0x%lx: frame_%p_%04lu ", GET_PDPT_اشاريو(i), pdpt_جڳهه, GET_PDPT_اشاريو(i));
+            cap_چوکٺو_print_attrs_pdpt(pdpt_جڳهه);
 
-        } else if (pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
-            printf("0x%lx: pd_%p_%04lu\n", GET_PDPT_INDEX(i), pdptSlot, GET_PDPT_INDEX(i));
+        } وإلا إذا (pdpte_pdpte_pd_ptr_get_present(pdpt_جڳهه)) {
+            لکو("0x%lx: pd_%p_%04lu\n", GET_PDPT_اشاريو(i), pdpt_جڳهه, GET_PDPT_اشاريو(i));
         }
     }
-    printf("}\n"); /* pdpt */
+    لکو("}\n"); /* pdpt */
 
-    for (word_t i = 0; i < BIT(PDPT_INDEX_OFFSET + PDPT_INDEX_BITS); i += (1UL << PDPT_INDEX_OFFSET)) {
-        pdpte_t *pdptSlot = pdpt + GET_PDPT_INDEX(i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PDPT_اشاريو_وٿي + PDPT_اشاريو_بٽ); i += (1UL << PDPT_اشاريو_وٿي)) {
+        pdpte_t *pdpt_جڳهه = pdpt + GET_PDPT_اشاريو(i);
 
-        if (pdpte_ptr_get_page_size(pdptSlot) == pdpte_pdpte_pd && pdpte_pdpte_pd_ptr_get_present(pdptSlot)) {
-            x86_64_cap_pd_print_slots(pdptSlot, i);
+        إذا (pdpte_ptr_get_صفحو_سائيز(pdpt_جڳهه) == pdpte_pdpte_pd && pdpte_pdpte_pd_ptr_get_present(pdpt_جڳهه)) {
+            x86_64_cap_pd_print_slots(pdpt_جڳهه, i);
         }
     }
 }
 
-static void x86_64_cap_pml4_print_slots(pml4e_t *pml4)
+ساكن فراغ x86_64_cap_pml4_print_slots(pml4e_t *pml4)
 {
-    printf("%p_pd {\n", pml4);
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
-        pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
-            printf("0x%lx: pdpt_%p_%04lu\n", GET_PML4_INDEX(i), pml4Slot, GET_PML4_INDEX(i));
+    لکو("%p_pd {\n", pml4);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PML4_اشاريو_وٿي + PML4_اشاريو_بٽ); i += (1UL << PML4_اشاريو_وٿي)) {
+        pml4e_t *pml4_جڳهه = lookup_PML4_جڳهه(pml4, i);
+        إذا (pml4e_ptr_get_present(pml4_جڳهه)) {
+            لکو("0x%lx: pdpt_%p_%04lu\n", GET_PML4_اشاريو(i), pml4_جڳهه, GET_PML4_اشاريو(i));
         }
     }
-    printf("}\n"); /* pml4 */
+    لکو("}\n"); /* pml4 */
 
-    for (word_t i = 0; i < BIT(PML4_INDEX_OFFSET + PML4_INDEX_BITS); i += (1UL << PML4_INDEX_OFFSET)) {
-        pml4e_t *pml4Slot = lookupPML4Slot(pml4, i);
-        if (pml4e_ptr_get_present(pml4Slot)) {
-            x86_64_cap_pdpt_print_slots(pml4Slot, i);
+    لكل (لفظ_t i = 0; i < ٻٽو_انگ(PML4_اشاريو_وٿي + PML4_اشاريو_بٽ); i += (1UL << PML4_اشاريو_وٿي)) {
+        pml4e_t *pml4_جڳهه = lookup_PML4_جڳهه(pml4, i);
+        إذا (pml4e_ptr_get_present(pml4_جڳهه)) {
+            x86_64_cap_pdpt_print_slots(pml4_جڳهه, i);
         }
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+فراغ obj_vtable_print_slots(tcb_t *tcb)
 {
     /* levels: PML4 -> PDPT -> PD -> PT */
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
-        pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_capPML4BasePtr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
-        add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
+    إذا (is_Valid_VTable_پاڙ(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !ڏٺل(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+        pml4e_t *pml4 = PML4E_PTR(cap_pml4_cap_get_cap_PML4_بنياد_Ptr(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
+        جوڙيو_منزل_ڏٺل(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         x86_64_cap_pml4_print_slots(pml4);
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#جيڪڏهن_پورو /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+فراغ debug_capDL(فراغ)
 {
-    printf("arch x86_64\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    لکو("arch x86_64\n");
+    لکو("objects {\n");
+#جيڪڏهن_وصف_ٿيل CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#جيڪڏهن_پورو
+    لکو("}\n");
 
-    printf("caps {\n");
+    لکو("caps {\n");
 
     /* reset the seen list */
-    reset_seen_list();
+    reset_ڏٺل_list();
 
-#ifdef CONFIG_PRINTING
+#جيڪڏهن_وصف_ٿيل CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    لکو("}\n");
 
     obj_irq_print_maps();
-#endif
+#جيڪڏهن_پورو
 }
 
-#endif /* CONFIG_DEBUG_BUILD */
+#جيڪڏهن_پورو /* CONFIG_DEBUG_BUILD */

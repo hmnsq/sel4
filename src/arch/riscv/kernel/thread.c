@@ -5,63 +5,63 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#ضمن <config.h>
+#ضمن <object.h>
+#ضمن <machine.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <arch/kernel/thread.h>
+#ضمن <linker.h>
 
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+خارجي حرف kernel_ڍير_alloc[CONFIG_MAX_انگ_NODES][ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ)];
 
-void Arch_switchToThread(tcb_t *tcb)
+فراغ Arch_switch_منزل_Thread(tcb_t *tcb)
 {
-    setVMRoot(tcb);
+    سيٽ_VMRoot(tcb);
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_ڪوڊ فراغ Arch_configureIdleThread(tcb_t *tcb)
 {
-    setRegister(tcb, NextIP, (word_t)&idle_thread);
+    سيٽ_رجسٽر(tcb, ايندڙ_IP, (لفظ_t)&idle_thread);
 
     /* Enable interrupts and keep working in supervisor mode */
-    setRegister(tcb, SSTATUS, (word_t) SSTATUS_SPP | SSTATUS_SPIE);
-#ifdef ENABLE_SMP_SUPPORT
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        if (NODE_STATE_ON_CORE(ksIdleThread, i) == tcb) {
-            setRegister(tcb, SP, (word_t)kernel_stack_alloc + (i + 1) * BIT(CONFIG_KERNEL_STACK_BITS));
-            break;
+    سيٽ_رجسٽر(tcb, SSTATUS, (لفظ_t) SSTATUS_SPP | SSTATUS_SPIE);
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+    لكل (صحيح i = 0; i < CONFIG_MAX_انگ_NODES; i++) {
+        إذا (ڳنڍ_STATE_ON_CORE(ksIdleThread, i) == tcb) {
+            سيٽ_رجسٽر(tcb, SP, (لفظ_t)kernel_ڍير_alloc + (i + 1) * ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ));
+            اكسر;
         }
     }
-#else
-    setRegister(tcb, SP, (word_t)kernel_stack_alloc + BIT(CONFIG_KERNEL_STACK_BITS));
-#endif
+#وإلا
+    سيٽ_رجسٽر(tcb, SP, (لفظ_t)kernel_ڍير_alloc + ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ));
+#جيڪڏهن_پورو
 }
 
-void Arch_switchToIdleThread(void)
+فراغ Arch_switch_منزل_Idle_Thread(فراغ)
 {
-    tcb_t *tcb = NODE_STATE(ksIdleThread);
+    tcb_t *tcb = ڳنڍ_STATE(ksIdleThread);
 
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(tcb);
+    سيٽ_VMRoot(tcb);
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+فراغ Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Arch_postModifyRegisters(tcb_t *tptr)
+فراغ Arch_postModifyRegisters(tcb_t *tptr)
 {
     /* Nothing to do */
 }
 
-void Arch_prepareNextDomain(void)
+فراغ Arch_prepare_ايندڙ_Domain(فراغ)
 {
     /* Don't need to do anything */
 }
 
-void Arch_prepareSetDomain(tcb_t *tptr, dom_t dom)
+فراغ Arch_prepare_سيٽ_Domain(tcb_t *tptr, dom_t dom)
 {
     /* Don't need to do anything */
 }

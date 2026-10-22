@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+#إذا CONFIG_MAX_انگ_TRACE_POINTS > 0
 
-#include <benchmark/benchmark.h>
-#include <arch/benchmark.h>
-#include <arch/machine/hardware.h>
+#ضمن <benchmark/benchmark.h>
+#ضمن <arch/benchmark.h>
+#ضمن <arch/machine/hardware.h>
 
-timestamp_t ksEntries[CONFIG_MAX_NUM_TRACE_POINTS];
-bool_t ksStarted[CONFIG_MAX_NUM_TRACE_POINTS];
+timestamp_t ksEntries[CONFIG_MAX_انگ_TRACE_POINTS];
+bool_t ksStarted[CONFIG_MAX_انگ_TRACE_POINTS];
 timestamp_t ksExit;
-seL4_Word ksLogIndex = 0;
-seL4_Word ksLogIndexFinalized = 0;
+se_L4_لفظ ks_Log_اشاريو = 0;
+se_L4_لفظ ks_Log_اشاريو_Finalized = 0;
 
-#endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
+#جيڪڏهن_پورو /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */

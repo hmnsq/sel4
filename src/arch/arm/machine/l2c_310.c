@@ -5,143 +5,143 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/l2c_310.h>
+#ضمن <config.h>
+#ضمن <arch/machine/l2c_310.h>
 
-#define L2_LINE_SIZE_BITS 5
-#define L2_LINE_SIZE BIT(L2_LINE_SIZE_BITS) /* 32 byte line size */
+#وصف_ڪريو L2_سٽ_سائيز_بٽ 5
+#وصف_ڪريو L2_سٽ_سائيز ٻٽو_انگ(L2_سٽ_سائيز_بٽ) /* 32 byte line size */
 
-#define L2_LINE_START(a) ROUND_DOWN(a, L2_LINE_SIZE_BITS)
+#وصف_ڪريو L2_سٽ_شروعات(a) ڦيرو_هيٺ_ڏانهن(a, L2_سٽ_سائيز_بٽ)
 
-compile_assert(l2_l1_same_line_size, L2_LINE_SIZE_BITS == L1_CACHE_LINE_SIZE_BITS)
+compile_assert(l2_l1_same_سٽ_سائيز, L2_سٽ_سائيز_بٽ == L1_CACHE_سٽ_سائيز_بٽ)
 
 /* MSHIELD Control */
-#define MSHIELD_SMC_ROM_CTRL_CTRL         0x102
-#define MSHIELD_SMC_ROM_CTRL_AUX          0x109
-#define MSHIELD_SMC_ROM_CTRL_LATENCY      0x112
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL_CTRL         0x102
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL_AUX          0x109
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL_LATENCY      0x112
 /* MSHIELD Address Filter */
-#define MSHIELD_SMC_ROM_ADDR_FILT_START   /* ? */
-#define MSHIELD_SMC_ROM_ADDR_FILT_END     /* ? */
+#وصف_ڪريو MSHIELD_SMC_ROM_ADDR_FILT_شروعات   /* ? */
+#وصف_ڪريو MSHIELD_SMC_ROM_ADDR_FILT_پڇاڙي     /* ? */
 /* MSHIELD Control 2 */
-#define MSHIELD_SMC_ROM_CTRL2_DEBUG       0x100
-#define MSHIELD_SMC_ROM_CTRL2_PREFETCH    0x113 /* ? */
-#define MSHIELD_SMC_ROM_CTRL2_POWER       /* ? */
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL2_DEBUG       0x100
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL2_PREFETCH    0x113 /* ? */
+#وصف_ڪريو MSHIELD_SMC_ROM_CTRL2_POWER       /* ? */
 /* MSHIELD Cache maintenance */
-#define MSHIELD_SMC_ROM_MAINT_INVALIDATE  0x101
+#وصف_ڪريو MSHIELD_SMC_ROM_MAINT_INVALIDATE  0x101
 
 
 /* Cache ID */
-#define PL310_LOCKDOWN_BY_MASK            (0xf<<25)
-#define PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
-#define PL310_LOCKDOWN_BY_LINE            (0xf<<25)
+#وصف_ڪريو PL310_LOCKDOWN_BY_نقاب            (0xf<<25)
+#وصف_ڪريو PL310_LOCKDOWN_BY_MASTER          (0xe<<25)
+#وصف_ڪريو PL310_LOCKDOWN_BY_سٽ            (0xf<<25)
 
 /* Primary control */
-#define CTRL_CTRL_EN BIT(0)
+#وصف_ڪريو CTRL_CTRL_EN ٻٽو_انگ(0)
 
 /* Auxiliary control */
-#define CTRL_AUX_EARLY_BRESP_EN                            BIT(30)
-#define CTRL_AUX_IPREFETCH_EN                              BIT(29)
-#define CTRL_AUX_DPREFETCH_EN                              BIT(28)
-#define CTRL_AUX_NSECURE_INT_ACCESS                        BIT(27)
-#define CTRL_AUX_NSECURE_LOCKDOWN_EN                       BIT(26)
-#define CTRL_AUX_REPLACEMENT_POLICY                        BIT(25)
-#define CTRL_AUX_FORCE_WR_ALLOC(X)            (((X)&0x3) * BIT(23)
-#define CTRL_AUX_SHARED_ATTRIB_OVERRIDE_EN                 BIT(22)
-#define CTRL_AUX_PARITY_EN                                 BIT(21)
-#define CTRL_AUX_EVENT_MONITOR_BUS_EN                      BIT(20)
-#define CTRL_AUX_WAYSIZE(X)                   (((X)&0x7) * BIT(17) )
-#define CTRL_AUX_ASSOCIATIVITY                             BIT(16)
-#define CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               BIT(13)
-#define CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    BIT(12)
-#define CTRL_AUX_STOREBUFDEV_LIMIT_EN                      BIT(11)
-#define CTRL_AUX_HIGH_PRIO_SODEV_EN                        BIT(10)
-#define CTRL_AUX_FULL_LINE_ZEROS_ENABLE                    BIT( 0)
+#وصف_ڪريو CTRL_AUX_EARLY_BRESP_EN                            ٻٽو_انگ(30)
+#وصف_ڪريو CTRL_AUX_IPREFETCH_EN                              ٻٽو_انگ(29)
+#وصف_ڪريو CTRL_AUX_DPREFETCH_EN                              ٻٽو_انگ(28)
+#وصف_ڪريو CTRL_AUX_NSECURE_INT_ACCESS                        ٻٽو_انگ(27)
+#وصف_ڪريو CTRL_AUX_NSECURE_LOCKDOWN_EN                       ٻٽو_انگ(26)
+#وصف_ڪريو CTRL_AUX_REPLACEMENT_POLICY                        ٻٽو_انگ(25)
+#وصف_ڪريو CTRL_AUX_FORCE_WR_ALLOC(X)            (((X)&0x3) * ٻٽو_انگ(23)
+#وصف_ڪريو CTRL_AUX_SHARED_ATTRIB_OVERRIDE_EN                 ٻٽو_انگ(22)
+#وصف_ڪريو CTRL_AUX_PARITY_EN                                 ٻٽو_انگ(21)
+#وصف_ڪريو CTRL_AUX_EVENT_MONITOR_BUS_EN                      ٻٽو_انگ(20)
+#وصف_ڪريو CTRL_AUX_WAYSIZE(X)                   (((X)&0x7) * ٻٽو_انگ(17) )
+#وصف_ڪريو CTRL_AUX_ASSOCIATIVITY                             ٻٽو_انگ(16)
+#وصف_ڪريو CTRL_AUX_SHARED_ATTRIB_INVALIDATE_EN               ٻٽو_انگ(13)
+#وصف_ڪريو CTRL_AUX_EXCLUSIVE_CACHE_CONFIG                    ٻٽو_انگ(12)
+#وصف_ڪريو CTRL_AUX_STOREBUFDEV_حد_بندي_EN                      ٻٽو_انگ(11)
+#وصف_ڪريو CTRL_AUX_مٿاهون_PRIO_SODEV_EN                        ٻٽو_انگ(10)
+#وصف_ڪريو CTRL_AUX_ڀريل_سٽ_ZEROS_ENABLE                    ٻٽو_انگ( 0)
 
-#define CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
-#define CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
-#define CTRL_AUX_WAYSIZE_64K         CTRL_AUX_WAYSIZE(3)
-#define CTRL_AUX_WAYSIZE_128K        CTRL_AUX_WAYSIZE(4)
-#define CTRL_AUX_WAYSIZE_256K        CTRL_AUX_WAYSIZE(5)
-#define CTRL_AUX_WAYSIZE_512K        CTRL_AUX_WAYSIZE(6)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_16K         CTRL_AUX_WAYSIZE(1)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_32K         CTRL_AUX_WAYSIZE(2)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_64K         CTRL_AUX_WAYSIZE(3)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_128K        CTRL_AUX_WAYSIZE(4)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_256K        CTRL_AUX_WAYSIZE(5)
+#وصف_ڪريو CTRL_AUX_WAYSIZE_512K        CTRL_AUX_WAYSIZE(6)
 
-#define CTRL_AUX_ASSOCIATIVITY_8WAY   (0 * CTRL_AUX_ASSOCIATIVITY)
-#define CTRL_AUX_ASSOCIATIVITY_16WAY  (1 * CTRL_AUX_ASSOCIATIVITY)
+#وصف_ڪريو CTRL_AUX_ASSOCIATIVITY_8WAY   (0 * CTRL_AUX_ASSOCIATIVITY)
+#وصف_ڪريو CTRL_AUX_ASSOCIATIVITY_16WAY  (1 * CTRL_AUX_ASSOCIATIVITY)
 
-#define CTRL_AUS_REPLPOLICY_RROBIN    (0 * CTRL_AUX_REPLACEMENT_POLICY)
-#define CTRL_AUS_REPLPOLICY_PRAND     (1 * CTRL_AUX_REPLACEMENT_POLICY)
+#وصف_ڪريو CTRL_AUS_REPLPOLICY_RROBIN    (0 * CTRL_AUX_REPLACEMENT_POLICY)
+#وصف_ڪريو CTRL_AUS_REPLPOLICY_PRAND     (1 * CTRL_AUX_REPLACEMENT_POLICY)
 
 /* Latency */
-#define CTRL_RAM_LATENCY_SET(X,S)    (((X)&0x7) * BIT(S))
-#define CTRL_RAM_LATENCY_SETUP(X)    CTRL_RAM_LATENCY_SET(X, 0)
-#define CTRL_RAM_LATENCY_READ(X)     CTRL_RAM_LATENCY_SET(X, 4)
-#define CTRL_RAM_LATENCY_WRITE(X)    CTRL_RAM_LATENCY_SET(X, 8)
+#وصف_ڪريو CTRL_RAM_LATENCY_سيٽ(X,S)    (((X)&0x7) * ٻٽو_انگ(S))
+#وصف_ڪريو CTRL_RAM_LATENCY_تياري(X)    CTRL_RAM_LATENCY_سيٽ(X, 0)
+#وصف_ڪريو CTRL_RAM_LATENCY_READ(X)     CTRL_RAM_LATENCY_سيٽ(X, 4)
+#وصف_ڪريو CTRL_RAM_LATENCY_WRITE(X)    CTRL_RAM_LATENCY_سيٽ(X, 8)
 
-#define CTRL_RAM_LATENCY(W,R,S)    ( CTRL_RAM_LATENCY_SETUP(S) \
+#وصف_ڪريو CTRL_RAM_LATENCY(W,R,S)    ( CTRL_RAM_LATENCY_تياري(S) \
                                    | CTRL_RAM_LATENCY_READ(R)  \
                                    | CTRL_RAM_LATENCY_WRITE(W) )
 
 
 /* Maintenance */
-#define MAINTENANCE_PENDING          BIT(0)
+#وصف_ڪريو MAINTENANCE_PENDING          ٻٽو_انگ(0)
 
 /* POWER */
-#define CTRL2_PWR_DYNAMIC_CLK_EN     BIT(1)
-#define CTRL2_PWR_STANDBY_ON         BIT(0)
+#وصف_ڪريو CTRL2_PWR_DYNAMIC_CLK_EN     ٻٽو_انگ(1)
+#وصف_ڪريو CTRL2_PWR_STANDBY_ON         ٻٽو_انگ(0)
 
 /* PREFECTCH */
-#define CTRL2_PFET_DBL_LINEFILL_EN              BIT(30)
-#define CTRL2_PFET_INST_PREFETCH_EN             BIT(29)
-#define CTRL2_PFET_DATA_PREFETCH_EN             BIT(28)
-#define CTRL2_PFET_DBL_LINEFILL_ON_WRAP_EN      BIT(27)
-#define CTRL2_PFET_PREFETCH_DROP_EN             BIT(24)
-#define CTRL2_PFET_INCR_DBL_LINEFILL_EN         BIT(23)
-#define CTRL2_PFET_NOT_SAME_ID_ON_EXCL_SEQ_EN   BIT(21)
-#define CTRL2_PFET_PREFETCH_OFFSET(X)    ((X) * BIT( 0) )
+#وصف_ڪريو CTRL2_PFET_DBL_LINEFILL_EN              ٻٽو_انگ(30)
+#وصف_ڪريو CTRL2_PFET_INST_PREFETCH_EN             ٻٽو_انگ(29)
+#وصف_ڪريو CTRL2_PFET_معلومات_PREFETCH_EN             ٻٽو_انگ(28)
+#وصف_ڪريو CTRL2_PFET_DBL_LINEFILL_ON_WRAP_EN      ٻٽو_انگ(27)
+#وصف_ڪريو CTRL2_PFET_PREFETCH_DROP_EN             ٻٽو_انگ(24)
+#وصف_ڪريو CTRL2_PFET_INCR_DBL_LINEFILL_EN         ٻٽو_انگ(23)
+#وصف_ڪريو CTRL2_PFET_NOT_SAME_ID_ON_EXCL_SEQ_EN   ٻٽو_انگ(21)
+#وصف_ڪريو CTRL2_PFET_PREFETCH_وٿي(X)    ((X) * ٻٽو_انگ( 0) )
 
 
-struct l2cc_map {
+بنية l2cc_map {
 
-    struct {
+    بنية {
         uint32_t cache_id;              /* 0x000 */
         uint32_t cache_type;            /* 0x004 */
         uint32_t res[62];
     } id /* reg0 */;
 
-    struct {
+    بنية {
         uint32_t control;               /* 0x100 */
         uint32_t aux_control;           /* 0x104 */
-        uint32_t tag_ram_control;       /* 0x108 */
-        uint32_t data_ram_control;      /* 0x10C */
+        uint32_t ٽيگ_ram_control;       /* 0x108 */
+        uint32_t معلومات_ram_control;      /* 0x10C */
         uint32_t res[60];
     } control /* reg1 */;
 
-    struct {
+    بنية {
         uint32_t ev_counter_ctrl;       /* 0x200 */
         uint32_t ev_counter1_cfg;       /* 0x204 */
         uint32_t ev_counter0_cfg;       /* 0x208 */
         uint32_t ev_counter1;           /* 0x20C */
         uint32_t ev_counter0;           /* 0x210 */
-        uint32_t int_mask;              /* 0x214 */
-        uint32_t int_mask_status;       /* 0x218 */
-        uint32_t int_raw_status;        /* 0x21C */
+        uint32_t int_نقاب;              /* 0x214 */
+        uint32_t int_نقاب_حالت;       /* 0x218 */
+        uint32_t int_raw_حالت;        /* 0x21C */
         uint32_t int_clear;             /* 0x220 */
         uint32_t res[55];
-    } interrupt /* reg2 */;
+    } مداخلت /* reg2 */;
 
-    struct {
+    بنية {
         uint32_t res[64];
     } reg3;
-    struct {
+    بنية {
         uint32_t res[64];
     } reg4;
-    struct {
+    بنية {
         uint32_t res[64];
     } reg5;
-    struct {
+    بنية {
         uint32_t res[64];
     } reg6;
 
-    struct {
+    بنية {
         uint32_t res[12];
         uint32_t cache_sync;            /* 0x730 */
         uint32_t res1[15];
@@ -151,20 +151,20 @@ struct l2cc_map {
         uint32_t res3[12];
         uint32_t clean_pa;              /* 0x7B0 */
         uint32_t res4[1];
-        uint32_t clean_index;           /* 0x7B8 */
+        uint32_t clean_اشاريو;           /* 0x7B8 */
         uint32_t clean_way;             /* 0x7BC */
         uint32_t res5[12];
         uint32_t clean_inv_pa;          /* 0x7F0 */
         uint32_t res6[1];
-        uint32_t clean_inv_index;       /* 0x7F8 */
+        uint32_t clean_inv_اشاريو;       /* 0x7F8 */
         uint32_t clean_inv_way;         /* 0x7FC */
     } maintenance /* reg7 */;
 
-    struct {
+    بنية {
         uint32_t res[64];
     } reg8;
 
-    struct {
+    بنية {
         uint32_t d_lockdown0;           /* 0x900 */
         uint32_t i_lockdown0;           /* 0x904 */
         uint32_t d_lockdown1;           /* 0x908 */
@@ -182,32 +182,32 @@ struct l2cc_map {
         uint32_t d_lockdown7;           /* 0x938 */
         uint32_t i_lockdown7;           /* 0x93C */
         uint32_t res[4];
-        uint32_t lock_line_eng;         /* 0x950 */
+        uint32_t تالو_سٽ_eng;         /* 0x950 */
         uint32_t unlock_wayg;           /* 0x954 */
         uint32_t res1[42];
     } lockdown /* reg9 */;
 
-    struct {
+    بنية {
         uint32_t res[64];
     } reg10;
-    struct {
+    بنية {
         uint32_t res[64];
     } reg11;
 
-    struct {
-        uint32_t addr_filtering_start;  /* 0xC00 */
-        uint32_t addr_filtering_end;    /* 0xC04 */
+    بنية {
+        uint32_t addr_filtering_شروعات;  /* 0xC00 */
+        uint32_t addr_filtering_پڇاڙي;    /* 0xC04 */
         uint32_t res[62];
     } filter /* reg12 */;
 
-    struct {
+    بنية {
         uint32_t res[64];
     } reg13;
-    struct {
+    بنية {
         uint32_t res[64];
     } reg14;
 
-    struct {
+    بنية {
         uint32_t res[16];
         uint32_t debug_ctrl;            /* 0xF40 */
         uint32_t res1[7];
@@ -219,49 +219,49 @@ struct l2cc_map {
 };
 
 
-#ifndef L2CC_L2C310_PPTR
-#error L2CC_L2C310_PPTR must be defined for virtual memory access to the L2 cache controller
-#else  /* L2CC_PPTR */
-volatile struct l2cc_map *const l2cc
-    = (volatile struct l2cc_map *)L2CC_L2C310_PPTR;
-#endif /* !L2CC_PPTR */
+#جيڪڏهن_وصف_نه_ٿيل L2CC_L2C310_PPTR
+#غلطي L2CC_L2C310_PPTR must be defined لكل مجازي يادگيري access منزل the L2 cache controller
+#وإلا  /* L2CC_PPTR */
+متطاير بنية l2cc_map *ثابت l2cc
+    = (متطاير بنية l2cc_map *)L2CC_L2C310_PPTR;
+#جيڪڏهن_پورو /* !L2CC_PPTR */
 
 
-#ifdef TI_MSHIELD
-BOOT_CODE static void mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
+#جيڪڏهن_وصف_ٿيل TI_MSHIELD
+BOOT_ڪوڊ ساكن فراغ mshield_smc(uint32_t callid, uint32_t arg1, uint32_t arg2)
 {
-    register uint32_t _arg1 asm("r0") = arg1;
-    register uint32_t _arg2 asm("r1") = arg2;
-    register uint32_t _callid asm("r12") = callid;
-    asm volatile("push {r2-r12, lr}\n"
+    سجل uint32_t _arg1 asm("r0") = arg1;
+    سجل uint32_t _arg2 asm("r1") = arg2;
+    سجل uint32_t _callid asm("r12") = callid;
+    asm متطاير("push {r2-r12, lr}\n"
                  "dsb\n"
                  "smc #0\n"
                  "pop {r2-r12, lr}"
                  :: "r"(_callid), "r"(_arg1), "r"(_arg2));
 }
-#endif /* TI_MSHIELD */
+#جيڪڏهن_پورو /* TI_MSHIELD */
 
-BOOT_CODE void initL2Cache(void)
+BOOT_ڪوڊ فراغ initL2Cache(فراغ)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_DEBUG_DISABLE_L2_CACHE
     uint32_t aux;
-    uint32_t tag_ram;
-    uint32_t data_ram;
+    uint32_t ٽيگ_ram;
+    uint32_t معلومات_ram;
     uint32_t prefetch;
 
     /* L2 cache must be disabled during initialisation */
-#ifndef TI_MSHIELD
+#جيڪڏهن_وصف_نه_ٿيل TI_MSHIELD
     l2cc->control.control &= ~CTRL_CTRL_EN;
-#endif
+#جيڪڏهن_پورو
 
-    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_DATA_PREFETCH_EN;
-#if defined(CONFIG_PLAT_IMX6)
-    tag_ram  = CTRL_RAM_LATENCY(1, 2, 1);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 1);
-#else
-    tag_ram  = CTRL_RAM_LATENCY(1, 1, 0);
-    data_ram = CTRL_RAM_LATENCY(1, 2, 0);
-#endif
+    prefetch = CTRL2_PFET_INST_PREFETCH_EN | CTRL2_PFET_معلومات_PREFETCH_EN;
+#إذا defined(CONFIG_PLAT_IMX6)
+    ٽيگ_ram  = CTRL_RAM_LATENCY(1, 2, 1);
+    معلومات_ram = CTRL_RAM_LATENCY(1, 2, 1);
+#وإلا
+    ٽيگ_ram  = CTRL_RAM_LATENCY(1, 1, 0);
+    معلومات_ram = CTRL_RAM_LATENCY(1, 2, 0);
+#جيڪڏهن_پورو
 
     aux      = 0
                | CTRL_AUX_IPREFETCH_EN
@@ -271,39 +271,39 @@ BOOT_CODE void initL2Cache(void)
                | CTRL_AUX_ASSOCIATIVITY_16WAY
                | CTRL_AUS_REPLPOLICY_RROBIN;
 
-#if defined(CONFIG_PLAT_IMX6SX)
+#إذا defined(CONFIG_PLAT_IMX6SX)
     aux |= CTRL_AUX_WAYSIZE_16K;
-#elif defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
+#وإلاإذا defined(CONFIG_PLAT_EXYNOS4) || defined(CONFIG_PLAT_IMX6) || defined(CONFIG_PLAT_ZYNQ7000) || defined(CONFIG_PLAT_ALLWINNERA20)
     aux |= CTRL_AUX_WAYSIZE_64K;
-#elif defined(OMAP4)
+#وإلاإذا defined(OMAP4)
     aux |= CTRL_AUX_WAYSIZE_32K;
-#else /* ! (EXYNOS4 || OMAP4 || IMX6) */
-#error Unknown platform for L2C-310
-#endif /* EXYNOS4 || OMAP4 || IMX6 */
+#وإلا /* ! (EXYNOS4 || OMAP4 || IMX6) */
+#غلطي Unknown platform لكل L2C-310
+#جيڪڏهن_پورو /* EXYNOS4 || OMAP4 || IMX6 */
 
-#ifdef TI_MSHIELD
+#جيڪڏهن_وصف_ٿيل TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 0, 0);
     mshield_smc(MSHIELD_SMC_ROM_CTRL_AUX, aux, 0);
-    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, tag_ram, data_ram);
+    mshield_smc(MSHIELD_SMC_ROM_CTRL_LATENCY, ٽيگ_ram, معلومات_ram);
 
-#else /* !TI_MSHIELD */
+#وإلا /* !TI_MSHIELD */
     /* Direct register access */
     /* 1: Write to aux Tag RAM latentcy, Data RAM latency, prefect, power control registers  */
     l2cc->control.aux_control      = aux;
-    l2cc->control.tag_ram_control  = tag_ram;
-    l2cc->control.data_ram_control = data_ram;
+    l2cc->control.ٽيگ_ram_control  = ٽيگ_ram;
+    l2cc->control.معلومات_ram_control = معلومات_ram;
     l2cc->control2.prefetch_ctrl   = prefetch;
 
-#endif /* TI_MSHIELD */
+#جيڪڏهن_پورو /* TI_MSHIELD */
 
     /* 2: Invalidate by way. */
     l2cc->maintenance.inv_way = 0xffff;
-    while (l2cc->maintenance.inv_way & 0xffff);
+    طالما (l2cc->maintenance.inv_way & 0xffff);
 
     /* 3: write to lockdown D & I reg9 if required  */
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_MASTER) {
+    إذا ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_نقاب) == PL310_LOCKDOWN_BY_MASTER) {
         /* disable lockdown */
         l2cc->lockdown.d_lockdown0 = 0;
         l2cc->lockdown.i_lockdown0 = 0;
@@ -322,43 +322,43 @@ BOOT_CODE void initL2Cache(void)
         l2cc->lockdown.d_lockdown7 = 0;
         l2cc->lockdown.i_lockdown7 = 0;
     }
-    if ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_MASK) == PL310_LOCKDOWN_BY_LINE) {
+    إذا ((l2cc->id.cache_type & PL310_LOCKDOWN_BY_نقاب) == PL310_LOCKDOWN_BY_سٽ) {
         /* disable lockdown */
-        l2cc->lockdown.lock_line_eng = 0;
+        l2cc->lockdown.تالو_سٽ_eng = 0;
     }
 
     /* 4: write to interrupt clear register to clear any residual raw interrupts set */
-    l2cc->interrupt.int_mask  = 0x0;
+    l2cc->مداخلت.int_نقاب  = 0x0;
     /* 5: write to interrupt mask register if you want to enable interrupts (active high) */
-    l2cc->interrupt.int_clear = MASK(9);
+    l2cc->مداخلت.int_clear = نقاب(9);
 
     /* 6: Enable the L2 cache */
-#ifdef TI_MSHIELD
+#جيڪڏهن_وصف_ٿيل TI_MSHIELD
     /* Access secure registers through Security Middleware Call */
     mshield_smc(MSHIELD_SMC_ROM_CTRL_CTRL, 1, 0);
-#else /* !TI_MSHIELD */
+#وإلا /* !TI_MSHIELD */
     /* Direct register access */
     l2cc->control.control |= CTRL_CTRL_EN;
-#endif /* TI_MSHIELD */
+#جيڪڏهن_پورو /* TI_MSHIELD */
     /* Guarantee that the setACTLR() doesn't start executing until the completion
      * of the l2cc register updates */
     dsb();
 
-#if defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
+#إذا defined(CONFIG_ARM_CORTEX_A9) && defined(CONFIG_ENABLE_A9_PREFETCHER)
     /* Set bit 1 in the ACTLR, which on the cortex-a9 is the l2 prefetch enable
      * bit. See section 4.3.10 of the Cortex-A9 Technical Reference Manual */
-    setACTLR(getACTLR() | BIT(1));
-#endif
+    سيٽ_ACTLR(getACTLR() | ٻٽو_انگ(1));
+#جيڪڏهن_پورو
 
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#جيڪڏهن_پورو /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-static inline void L2_cacheSync(void)
+ساكن مضمن فراغ L2_cacheSync(فراغ)
 {
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     l2cc->maintenance.cache_sync = 0;
-    while (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
+    طالما (l2cc->maintenance.cache_sync & MAINTENANCE_PENDING);
     /* Wait till the L2 cache operation has completed and avoid later memoy
      * operations being reordered to before this point */
     dsb();
@@ -372,82 +372,82 @@ static inline void L2_cacheSync(void)
  * The same is true when doing separate clean and invalidate operations,
  * hence that is not a proper work-around and worse than the errata.
  */
-void plat_cleanInvalidateL2Cache(void)
+فراغ plat_cleanInvalidateL2Cache(فراغ)
 {
-    if (!config_set(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
+    إذا (!config_سيٽ(CONFIG_DEBUG_DISABLE_L2_CACHE)) {
         /* Avoid normal memory writes being reordered with device memory writes */
         dmb();
         l2cc->maintenance.clean_inv_way = 0xffff;
-        while (l2cc->maintenance.clean_inv_way);
+        طالما (l2cc->maintenance.clean_inv_way);
         L2_cacheSync();
     }
 }
 
-void plat_cleanCache(void)
+فراغ plat_cleanCache(فراغ)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* Clean by way. */
     l2cc->maintenance.clean_way = 0xffff;
-    while (l2cc->maintenance.clean_way & 0xffff);
+    طالما (l2cc->maintenance.clean_way & 0xffff);
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#جيڪڏهن_پورو /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanL2Range(paddr_t start, paddr_t end)
+فراغ plat_cleanL2Range(paddr_t شروعات, paddr_t پڇاڙي)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    أكد(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.clean_pa = start;
+    لكل (شروعات = L2_سٽ_شروعات(شروعات);
+         شروعات != L2_سٽ_شروعات(پڇاڙي + L2_سٽ_سائيز);
+         شروعات += L2_سٽ_سائيز) {
+        l2cc->maintenance.clean_pa = شروعات;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#جيڪڏهن_پورو /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_invalidateL2Range(paddr_t start, paddr_t end)
+فراغ plat_invalidateL2Range(paddr_t شروعات, paddr_t پڇاڙي)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    أكد(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
     /* We assume that if this is a partial line that whoever is calling us
      * has already done the clean, so we just blindly invalidate all the lines */
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.inv_pa = start;
+    لكل (شروعات = L2_سٽ_شروعات(شروعات);
+         شروعات != L2_سٽ_شروعات(پڇاڙي + L2_سٽ_سائيز);
+         شروعات += L2_سٽ_سائيز) {
+        l2cc->maintenance.inv_pa = شروعات;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#جيڪڏهن_پورو /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end)
+فراغ plat_cleanInvalidateL2Range(paddr_t شروعات, paddr_t پڇاڙي)
 {
-#ifndef CONFIG_DEBUG_DISABLE_L2_CACHE
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_DEBUG_DISABLE_L2_CACHE
     /* Documentation specifies this as the only possible line size */
-    assert(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
+    أكد(((l2cc->id.cache_type >> 12) & 0x3) == 0x0);
 
     /* Avoid normal memory writes being reordered with device memory writes */
     dmb();
-    for (start = L2_LINE_START(start);
-         start != L2_LINE_START(end + L2_LINE_SIZE);
-         start += L2_LINE_SIZE) {
-        l2cc->maintenance.clean_inv_pa = start;
+    لكل (شروعات = L2_سٽ_شروعات(شروعات);
+         شروعات != L2_سٽ_شروعات(پڇاڙي + L2_سٽ_سائيز);
+         شروعات += L2_سٽ_سائيز) {
+        l2cc->maintenance.clean_inv_pa = شروعات;
         /* do not need to wait for every invalidate as 310 is atomic */
     }
     L2_cacheSync();
-#endif /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
+#جيڪڏهن_پورو /* !CONFIG_DEBUG_DISABLE_L2_CACHE */
 }
 

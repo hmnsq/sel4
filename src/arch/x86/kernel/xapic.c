@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/kernel/xapic.h>
-#include <arch/kernel/x2apic.h>
+#ضمن <config.h>
+#ضمن <arch/kernel/xapic.h>
+#ضمن <arch/kernel/x2apic.h>
 
-#ifdef CONFIG_XAPIC
-#ifdef CONFIG_USE_LOGICAL_IDS
+#جيڪڏهن_وصف_ٿيل CONFIG_XAPIC
+#جيڪڏهن_وصف_ٿيل CONFIG_USE_LOGICAL_IDS
 /* using flat cluster mode we only support 8 cores */
-compile_assert(number_of_cores_invalid_for_logical_ids, CONFIG_MAX_NUM_NODES <= 8)
+compile_assert(عدد_جو_cores_invalid_for_logical_ids, CONFIG_MAX_انگ_NODES <= 8)
 
-BOOT_CODE static void
-init_xapic_ldr(void)
+BOOT_ڪوڊ ساكن فراغ
+init_xapic_ldr(فراغ)
 {
     uint32_t ldr;
 
     apic_write_reg(APIC_DEST_FORMAT, XAPIC_DFR_FLAT);
-    ldr = apic_read_reg(APIC_LOGICAL_DEST) & MASK(XAPIC_LDR_SHIFT);
-    ldr |= (BIT(getCurrentCPUIndex()) << XAPIC_LDR_SHIFT);
+    ldr = apic_read_reg(APIC_LOGICAL_DEST) & نقاب(XAPIC_LDR_سرڪايو);
+    ldr |= (ٻٽو_انگ(getCurrentCPUIndex()) << XAPIC_LDR_سرڪايو);
     apic_write_reg(APIC_LOGICAL_DEST, ldr);
 }
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#جيڪڏهن_پورو /* CONFIG_USE_LOGICAL_IDS */
 
-BOOT_CODE bool_t apic_enable(void)
+BOOT_ڪوڊ bool_t apic_enable(فراغ)
 {
-    apic_base_msr_t apic_base_msr;
-    apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
+    apic_بنياد_msr_t apic_بنياد_msr;
+    apic_بنياد_msr.لفظ[0] = x86_rdmsr_هيٺيون(IA32_APIC_بنياد_MSR);
 
-    if (!apic_base_msr_get_enabled(apic_base_msr)) {
-        printf("APIC: Enabled bit not set\n");
-        return false;
+    إذا (!apic_بنياد_msr_get_enabled(apic_بنياد_msr)) {
+        لکو("APIC: Enabled bit not set\n");
+        أرجع false;
     }
 
-    if (x2apic_is_enabled()) {
-        printf("x2APIC enabled in BIOS but kernel does not support that\n");
-        return false;
+    إذا (x2apic_is_enabled()) {
+        لکو("x2APIC enabled in BIOS but kernel does not support that\n");
+        أرجع false;
     }
 
-#ifdef CONFIG_USE_LOGICAL_IDS
+#جيڪڏهن_وصف_ٿيل CONFIG_USE_LOGICAL_IDS
     init_xapic_ldr();
-#endif /* CONFIG_USE_LOGICAL_IDS */
+#جيڪڏهن_پورو /* CONFIG_USE_LOGICAL_IDS */
 
-    return true;
+    أرجع true;
 }
 
-bool_t apic_is_interrupt_pending(void)
+bool_t apic_is_مداخلت_pending(فراغ)
 {
-    word_t i;
+    لفظ_t i;
 
     /* read 256-bit register: each 32-bit word is 16 byte aligned */
-    assert(int_irq_min % 32 == 0);
-    for (i = int_irq_min; i <= int_irq_max; i += 32) {
-        if (apic_read_reg(APIC_IRR_BASE + i / 2) != 0) {
-            return true;
+    أكد(int_irq_min % 32 == 0);
+    لكل (i = int_irq_min; i <= int_irq_max; i += 32) {
+        إذا (apic_read_reg(APIC_IRR_بنياد + i / 2) != 0) {
+            أرجع true;
         }
     }
-    return false;
+    أرجع false;
 }
 
-BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
+BOOT_ڪوڊ فراغ apic_send_init_ipi(cpu_id_t cpu_id)
 {
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).لفظ[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             1,          /* trigger_mode    */
@@ -74,13 +74,13 @@ BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
             0,          /* delivery_status */
             0,          /* dest_mode       */
             5,          /* delivery_mode   */
-            0           /* vector          */
-        ).words[0]
+            0           /*ويڪٽر*/
+        ).لفظ[0]
     );
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).لفظ[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             1,          /* trigger_mode    */
@@ -88,23 +88,23 @@ BOOT_CODE void apic_send_init_ipi(cpu_id_t cpu_id)
             0,          /* delivery_status */
             0,          /* dest_mode       */
             5,          /* delivery_mode   */
-            0           /* vector          */
-        ).words[0]
+            0           /*ويڪٽر*/
+        ).لفظ[0]
     );
 }
 
-BOOT_CODE void apic_send_startup_ipi(cpu_id_t cpu_id, paddr_t startup_addr)
+BOOT_ڪوڊ فراغ apic_send_startup_ipi(cpu_id_t cpu_id, paddr_t startup_addr)
 {
     /* check if 4K aligned */
-    assert(IS_ALIGNED(startup_addr, PAGE_BITS));
+    أكد(IS_ALIGNED(startup_addr, صفحو_بٽ));
     /* check if startup_addr < 640K */
-    assert(startup_addr < 0xa0000);
-    startup_addr >>= PAGE_BITS;
+    أكد(startup_addr < 0xa0000);
+    startup_addr >>= صفحو_بٽ;
 
     apic_write_icr(
         apic_icr2_new(
             cpu_id       /* dest */
-        ).words[0],
+        ).لفظ[0],
         apic_icr1_new(
             0,           /* dest_shorthand  */
             0,           /* trigger_mode    */
@@ -112,23 +112,23 @@ BOOT_CODE void apic_send_startup_ipi(cpu_id_t cpu_id, paddr_t startup_addr)
             0,           /* delivery_status */
             0,           /* dest_mode       */
             6,           /* delivery_mode   */
-            startup_addr /* vector          */
-        ).words[0]
+            startup_addr /*ويڪٽر*/
+        ).لفظ[0]
     );
 }
 
-void apic_send_ipi_core(irq_t vector, cpu_id_t cpu_id)
+فراغ apic_send_ipi_core(irq_t ويڪٽر, cpu_id_t cpu_id)
 {
     apic_icr1_t icr1;
     /* wait till we can send an IPI */
-    do {
-        icr1.words[0] = apic_read_reg(APIC_ICR1);
-    } while (apic_icr1_get_delivery_status(icr1));
+    افعل {
+        icr1.لفظ[0] = apic_read_reg(APIC_ICR1);
+    } طالما (apic_icr1_get_delivery_حالت(icr1));
 
     apic_write_icr(
         apic_icr2_new(
             cpu_id      /* dest */
-        ).words[0],
+        ).لفظ[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             0,          /* trigger_mode    */
@@ -136,23 +136,23 @@ void apic_send_ipi_core(irq_t vector, cpu_id_t cpu_id)
             0,          /* delivery_status */
             0,          /* dest_mode       */
             0,          /* delivery_mode   */
-            vector      /* vector          */
-        ).words[0]
+            ويڪٽر      /*ويڪٽر*/
+        ).لفظ[0]
     );
 }
 
-void apic_send_ipi_cluster(irq_t vector, word_t mda)
+فراغ apic_send_ipi_cluster(irq_t ويڪٽر, لفظ_t mda)
 {
     apic_icr1_t icr1;
     /* wait till we can send an IPI */
-    do {
-        icr1.words[0] = apic_read_reg(APIC_ICR1);
-    } while (apic_icr1_get_delivery_status(icr1));
+    افعل {
+        icr1.لفظ[0] = apic_read_reg(APIC_ICR1);
+    } طالما (apic_icr1_get_delivery_حالت(icr1));
 
     apic_write_icr(
         apic_icr2_new(
             mda         /* message destination address */
-        ).words[0],
+        ).لفظ[0],
         apic_icr1_new(
             0,          /* dest_shorthand  */
             0,          /* trigger_mode    */
@@ -160,8 +160,8 @@ void apic_send_ipi_cluster(irq_t vector, word_t mda)
             0,          /* delivery_status */
             1,          /* dest_mode       */
             0,          /* delivery_mode   */
-            vector      /* vector          */
-        ).words[0]
+            ويڪٽر      /*ويڪٽر*/
+        ).لفظ[0]
     );
 }
-#endif /* CONFIG_XAPIC */
+#جيڪڏهن_پورو /* CONFIG_XAPIC */

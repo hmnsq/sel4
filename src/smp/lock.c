@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <assert.h>
-#include <smp/lock.h>
+#ضمن <config.h>
+#ضمن <assert.h>
+#ضمن <smp/lock.h>
 
-#ifdef ENABLE_SMP_SUPPORT
-compile_assert(BKL_not_padded, sizeof(big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+compile_assert(BKL_not_padded, حجم(big_kernel_تالو) % EXCL_RES_GRANULE_سائيز == 0);
 
-clh_lock_t big_kernel_lock;
+clh_تالو_t big_kernel_تالو;
 
-BOOT_CODE void clh_lock_init(void)
+BOOT_ڪوڊ فراغ clh_تالو_init(فراغ)
 {
     /* Check if linker honoured alignment */
-    assert(((seL4_Word)&big_kernel_lock) % EXCL_RES_GRANULE_SIZE == 0);
-    for (int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
-        big_kernel_lock.node[i].myreq = &big_kernel_lock.request[i];
+    أكد(((se_L4_لفظ)&big_kernel_تالو) % EXCL_RES_GRANULE_سائيز == 0);
+    لكل (صحيح i = 0; i < CONFIG_MAX_انگ_NODES; i++) {
+        big_kernel_تالو.ڳنڍ[i].myreq = &big_kernel_تالو.request[i];
     }
 
     /* Initialize the CLH tail */
-    big_kernel_lock.request[CONFIG_MAX_NUM_NODES].state = CLHState_Granted;
-    big_kernel_lock.tail = &big_kernel_lock.request[CONFIG_MAX_NUM_NODES];
+    big_kernel_تالو.request[CONFIG_MAX_انگ_NODES].state = CLHState_Granted;
+    big_kernel_تالو.پڇ = &big_kernel_تالو.request[CONFIG_MAX_انگ_NODES];
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */

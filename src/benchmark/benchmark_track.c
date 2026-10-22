@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <benchmark/benchmark_track.h>
-#include <model/statedata.h>
+#ضمن <config.h>
+#ضمن <benchmark/benchmark_track.h>
+#ضمن <model/statedata.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+#جيڪڏهن_وصف_ٿيل CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
 
 timestamp_t ksEnter;
-seL4_Word ksLogIndex;
-seL4_Word ksLogIndexFinalized;
+se_L4_لفظ ks_Log_اشاريو;
+se_L4_لفظ ks_Log_اشاريو_Finalized;
 
-void benchmark_track_exit(void)
+فراغ benchmark_track_exit(فراغ)
 {
     timestamp_t duration = 0;
     timestamp_t ksExit = timestamp();
-    benchmark_track_kernel_entry_t *ksLog = (benchmark_track_kernel_entry_t *) KS_LOG_PPTR;
+    benchmark_track_kernel_داخلا_t *ksLog = (benchmark_track_kernel_داخلا_t *) KS_LOG_PPTR;
 
-    if (likely(ksUserLogBuffer != 0)) {
+    إذا (likely(ks_User_Log_بفر != 0)) {
         /* If Log buffer is filled, do nothing */
-        if (likely(ksLogIndex < MAX_LOG_SIZE)) {
+        إذا (likely(ks_Log_اشاريو < MAX_LOG_سائيز)) {
             duration = ksExit - ksEnter;
-            ksLog[ksLogIndex].entry = ksKernelEntry;
-            ksLog[ksLogIndex].start_time = ksEnter;
-            ksLog[ksLogIndex].duration = duration;
-            ksLogIndex++;
+            ksLog[ks_Log_اشاريو].داخلا = ks_Kernel_داخلا;
+            ksLog[ks_Log_اشاريو].شروعات_وقت = ksEnter;
+            ksLog[ks_Log_اشاريو].duration = duration;
+            ks_Log_اشاريو++;
         }
     }
 }
-#endif /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */
+#جيڪڏهن_پورو /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */

@@ -4,49 +4,49 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <hardware.h>
-#include <machine/io.h>
-#include <arch/machine.h>
-#include <arch/kernel/apic.h>
-#include <arch/kernel/cmdline.h>
-#include <arch/kernel/boot.h>
-#include <arch/kernel/boot_sys.h>
-#include <arch/kernel/smp_sys.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/elf.h>
-#include <smp/lock.h>
-#include <linker.h>
-#include <plat/machine/acpi.h>
-#include <plat/machine/devices.h>
-#include <plat/machine/pic.h>
-#include <plat/machine/ioapic.h>
-#include <sel4/arch/bootinfo_types.h>
+#ضمن <config.h>
+#ضمن <util.h>
+#ضمن <hardware.h>
+#ضمن <machine/io.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/kernel/apic.h>
+#ضمن <arch/kernel/cmdline.h>
+#ضمن <arch/kernel/boot.h>
+#ضمن <arch/kernel/boot_sys.h>
+#ضمن <arch/kernel/smp_sys.h>
+#ضمن <arch/kernel/vspace.h>
+#ضمن <arch/kernel/elf.h>
+#ضمن <smp/lock.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/acpi.h>
+#ضمن <plat/machine/devices.h>
+#ضمن <plat/machine/pic.h>
+#ضمن <plat/machine/ioapic.h>
+#ضمن <sel4/arch/bootinfo_types.h>
 
 /* addresses defined in linker script */
 /* need a fake array to get the pointer from the linker script */
 
 /* start/end of CPU boot code */
-extern char boot_cpu_start[1];
-extern char boot_cpu_end[1];
+خارجي حرف boot_cpu_شروعات[1];
+خارجي حرف boot_cpu_پڇاڙي[1];
 
 /* start/end of boot stack */
-extern char boot_stack_bottom[1];
-extern char boot_stack_top[1];
+خارجي حرف boot_ڍير_bottom[1];
+خارجي حرف boot_ڍير_چوٽي[1];
 
 /* locations in kernel image */
-extern char ki_skim_start[1];
-extern char ki_skim_end[1];
+خارجي حرف ki_skim_شروعات[1];
+خارجي حرف ki_skim_پڇاڙي[1];
 
-#ifdef CONFIG_PRINTING
+#جيڪڏهن_وصف_ٿيل CONFIG_PRINTING
 /* kernel entry point */
-extern char _start[1];
-#endif
+خارجي حرف شروعات_2[1];
+#جيڪڏهن_پورو
 
 /* constants */
 
-#define HIGHMEM_PADDR 0x100000
+#وصف_ڪريو HIGHMEM_PADDR 0x100000
 
 BOOT_BSS
 boot_state_t boot_state;
@@ -58,122 +58,122 @@ cmdline_opt_t cmdline_opt;
 
 /* functions not modeled in abstract specification */
 
-BOOT_CODE static paddr_t find_load_paddr(paddr_t min_paddr, word_t image_size)
+BOOT_ڪوڊ ساكن paddr_t ڳوليو_ڀريو_paddr(paddr_t min_paddr, لفظ_t image_سائيز)
 {
-    int i;
+    صحيح i;
 
-    for (i = 0; i < boot_state.mem_p_regs.count; i++) {
-        paddr_t start = MAX(min_paddr, boot_state.mem_p_regs.list[i].start);
-        paddr_t end = boot_state.mem_p_regs.list[i].end;
-        word_t region_size = end - start;
+    لكل (i = 0; i < boot_state.mem_p_regs.ڳڻپ; i++) {
+        paddr_t شروعات = MAX(min_paddr, boot_state.mem_p_regs.list[i].شروعات);
+        paddr_t پڇاڙي = boot_state.mem_p_regs.list[i].پڇاڙي;
+        لفظ_t region_سائيز = پڇاڙي - شروعات;
 
-        if (region_size >= image_size) {
-            return start;
+        إذا (region_سائيز >= image_سائيز) {
+            أرجع شروعات;
         }
     }
 
-    return 0;
+    أرجع 0;
 }
 
-BOOT_CODE static paddr_t load_boot_module(word_t boot_module_start, word_t boot_module_end, paddr_t load_paddr)
+BOOT_ڪوڊ ساكن paddr_t ڀريو_boot_module(لفظ_t boot_module_شروعات, لفظ_t boot_module_پڇاڙي, paddr_t ڀريو_paddr)
 {
     v_region_t v_reg;
-    word_t entry;
-    Elf_Header_t *elf_file = (Elf_Header_t *)boot_module_start;
+    لفظ_t داخلا;
+    Elf_سرو_t *elf_file = (Elf_سرو_t *)boot_module_شروعات;
 
-    if (!elf_checkFile(elf_file, boot_module_end - boot_module_start)) {
-        printf("Boot module does not contain a valid ELF image\n");
-        return 0;
+    إذا (!elf_checkFile(elf_file, boot_module_پڇاڙي - boot_module_شروعات)) {
+        لکو("Boot module does not contain a valid ELF image\n");
+        أرجع 0;
     }
 
-    v_reg = elf_getMemoryBounds(elf_file);
-    entry = elf_file->e_entry;
+    v_reg = elf_get_يادگيري_Bounds(elf_file);
+    داخلا = elf_file->e_داخلا;
 
-    if (v_reg.end == 0) {
-        printf("ELF image in boot module does not contain any segments\n");
-        return 0;
+    إذا (v_reg.پڇاڙي == 0) {
+        لکو("ELF image in boot module does not contain any segments\n");
+        أرجع 0;
     }
-    v_reg.end = ROUND_UP(v_reg.end, PAGE_BITS);
+    v_reg.پڇاڙي = ڦيرو_مٿي(v_reg.پڇاڙي, صفحو_بٽ);
 
-    printf("size=0x%lx v_entry=%p v_start=%p v_end=%p ",
-           v_reg.end - v_reg.start,
-           (void *)entry,
-           (void *)v_reg.start,
-           (void *)v_reg.end
+    لکو("size=0x%lx v_entry=%p v_start=%p v_end=%p ",
+           v_reg.پڇاڙي - v_reg.شروعات,
+           (فراغ *)داخلا,
+           (فراغ *)v_reg.شروعات,
+           (فراغ *)v_reg.پڇاڙي
           );
 
-    if (!IS_ALIGNED(v_reg.start, PAGE_BITS)) {
-        printf("Userland image virtual start address must be 4KB-aligned\n");
-        return 0;
+    إذا (!IS_ALIGNED(v_reg.شروعات, صفحو_بٽ)) {
+        لکو("Userland image virtual start address must be 4KB-aligned\n");
+        أرجع 0;
     }
-    if (v_reg.end + 2 * BIT(PAGE_BITS) > USER_TOP) {
+    إذا (v_reg.پڇاڙي + 2 * ٻٽو_انگ(صفحو_بٽ) > USER_چوٽي) {
         /* for IPC buffer frame and bootinfo frame, need 2*4K of additional userland virtual memory */
-        printf("Userland image virtual end address too high\n");
-        return 0;
+        لکو("Userland image virtual end address too high\n");
+        أرجع 0;
     }
-    if ((entry < v_reg.start) || (entry >= v_reg.end)) {
-        printf("Userland image entry point does not lie within userland image\n");
-        return 0;
+    إذا ((داخلا < v_reg.شروعات) || (داخلا >= v_reg.پڇاڙي)) {
+        لکو("Userland image entry point does not lie within userland image\n");
+        أرجع 0;
     }
 
-    load_paddr = find_load_paddr(load_paddr, v_reg.end - v_reg.start);
-    assert(load_paddr);
+    ڀريو_paddr = ڳوليو_ڀريو_paddr(ڀريو_paddr, v_reg.پڇاڙي - v_reg.شروعات);
+    أكد(ڀريو_paddr);
 
     /* fill ui_info struct */
-    boot_state.ui_info.pv_offset = load_paddr - v_reg.start;
-    boot_state.ui_info.p_reg.start = load_paddr;
-    load_paddr += v_reg.end - v_reg.start;
-    boot_state.ui_info.p_reg.end = load_paddr;
-    boot_state.ui_info.v_entry = entry;
+    boot_state.ui_info.pv_وٿي = ڀريو_paddr - v_reg.شروعات;
+    boot_state.ui_info.p_reg.شروعات = ڀريو_paddr;
+    ڀريو_paddr += v_reg.پڇاڙي - v_reg.شروعات;
+    boot_state.ui_info.p_reg.پڇاڙي = ڀريو_paddr;
+    boot_state.ui_info.v_داخلا = داخلا;
 
-    printf("p_start=0x%lx p_end=0x%lx\n",
-           boot_state.ui_info.p_reg.start,
-           boot_state.ui_info.p_reg.end
+    لکو("p_start=0x%lx p_end=0x%lx\n",
+           boot_state.ui_info.p_reg.شروعات,
+           boot_state.ui_info.p_reg.پڇاڙي
           );
 
     /* initialise all initial userland memory and load potentially sparse ELF image */
     memzero(
-        (void *)boot_state.ui_info.p_reg.start,
-        boot_state.ui_info.p_reg.end - boot_state.ui_info.p_reg.start
+        (فراغ *)boot_state.ui_info.p_reg.شروعات,
+        boot_state.ui_info.p_reg.پڇاڙي - boot_state.ui_info.p_reg.شروعات
     );
-    elf_load(elf_file, boot_state.ui_info.pv_offset);
+    elf_ڀريو(elf_file, boot_state.ui_info.pv_وٿي);
 
-    return load_paddr;
+    أرجع ڀريو_paddr;
 }
 
-static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
+ساكن BOOT_ڪوڊ bool_t try_boot_sys_ڳنڍ(cpu_id_t cpu_id)
 {
-    if (!map_kernel_window(
-            boot_state.num_ioapic,
+    إذا (!map_kernel_دري(
+            boot_state.انگ_ioapic,
             boot_state.ioapic_paddr,
-            boot_state.num_drhu,
+            boot_state.انگ_drhu,
             boot_state.drhu_list
         )) {
-        return false;
+        أرجع false;
     }
-    setCurrentVSpaceRoot(kpptr_to_paddr(X86_KERNEL_VSPACE_ROOT), 0);
+    سيٽ_Current_VSpace_پاڙ(kpptr_منزل_paddr(X86_KERNEL_VSPACE_پاڙ), 0);
     /* Sync up the compilers view of the world here to force the PD to actually
      * be set *right now* instead of delayed */
-    asm volatile("" ::: "memory");
+    asm متطاير("" ::: "memory");
 
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-    if (!map_skim_window((vptr_t)ki_skim_start, (vptr_t)ki_skim_end)) {
-        return false;
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
+    إذا (!map_skim_دري((vptr_t)ki_skim_شروعات, (vptr_t)ki_skim_پڇاڙي)) {
+        أرجع false;
     }
-#endif
+#جيڪڏهن_پورو
 
     /* initialise the CPU */
-    if (!init_cpu(config_set(CONFIG_IRQ_IOAPIC) ? 1 : 0)) {
-        return false;
+    إذا (!init_cpu(config_سيٽ(CONFIG_IRQ_IOAPIC) ? 1 : 0)) {
+        أرجع false;
     }
 
     /* initialise NDKS and kernel heap */
-    if (!init_sys_state(
+    إذا (!init_sys_state(
             cpu_id,
             &boot_state.mem_p_regs,
             boot_state.ui_info,
             /* parameters below not modelled in abstract specification */
-            boot_state.num_drhu,
+            boot_state.انگ_drhu,
             boot_state.drhu_list,
             &boot_state.rmrr_list,
             &boot_state.acpi_rsdp,
@@ -181,372 +181,372 @@ static BOOT_CODE bool_t try_boot_sys_node(cpu_id_t cpu_id)
             &boot_state.mb_mmap_info,
             &boot_state.fb_info
         )) {
-        return false;
+        أرجع false;
     }
 
-    return true;
+    أرجع true;
 }
 
-static BOOT_CODE bool_t add_mem_p_regs(p_region_t reg)
+ساكن BOOT_ڪوڊ bool_t جوڙيو_mem_p_regs(p_region_t reg)
 {
-    if (reg.start == reg.end) {
+    إذا (reg.شروعات == reg.پڇاڙي) {
         // Return true here if asked to add an empty region.
         // Some of the callers round down the end address to
-        return true;
+        أرجع true;
     }
-    if (reg.end > PADDR_TOP && reg.start >= PADDR_TOP) {
+    إذا (reg.پڇاڙي > PADDR_چوٽي && reg.شروعات >= PADDR_چوٽي) {
         /* Return true here as it's not an error for there to exist memory outside the kernel window,
          * we're just going to ignore it and leave it to be given out as device memory */
-        return true;
+        أرجع true;
     }
-    if (boot_state.mem_p_regs.count == MAX_NUM_FREEMEM_REG) {
-        printf("Dropping memory region 0x%lx-0x%lx, try increasing MAX_NUM_FREEMEM_REG\n", reg.start, reg.end);
-        return false;
+    إذا (boot_state.mem_p_regs.ڳڻپ == MAX_انگ_FREEMEM_REG) {
+        لکو("Dropping memory region 0x%lx-0x%lx, try increasing MAX_NUM_FREEMEM_REG\n", reg.شروعات, reg.پڇاڙي);
+        أرجع false;
     }
-    if (reg.end > PADDR_TOP) {
-        assert(reg.start < PADDR_TOP);
+    إذا (reg.پڇاڙي > PADDR_چوٽي) {
+        أكد(reg.شروعات < PADDR_چوٽي);
         /* Clamp a region to the top of the kernel window if it extends beyond */
-        reg.end = PADDR_TOP;
+        reg.پڇاڙي = PADDR_چوٽي;
     }
-    printf("Adding physical memory region 0x%lx-0x%lx\n", reg.start, reg.end);
-    boot_state.mem_p_regs.list[boot_state.mem_p_regs.count] = reg;
-    boot_state.mem_p_regs.count++;
-    return true;
+    لکو("Adding physical memory region 0x%lx-0x%lx\n", reg.شروعات, reg.پڇاڙي);
+    boot_state.mem_p_regs.list[boot_state.mem_p_regs.ڳڻپ] = reg;
+    boot_state.mem_p_regs.ڳڻپ++;
+    أرجع true;
 }
 
 /*
  * the code relies that the GRUB provides correct information
  * about the actual physical memory regions.
  */
-static BOOT_CODE bool_t parse_mem_map(uint32_t mmap_length, uint32_t mmap_addr)
+ساكن BOOT_ڪوڊ bool_t parse_mem_map(uint32_t mmap_ڊيگهائي, uint32_t mmap_addr)
 {
-    multiboot_mmap_t *mmap = (multiboot_mmap_t *)((word_t)mmap_addr);
-    printf("Parsing GRUB physical memory map\n");
+    multiboot_mmap_t *mmap = (multiboot_mmap_t *)((لفظ_t)mmap_addr);
+    لکو("Parsing GRUB physical memory map\n");
 
-    while ((word_t)mmap < (word_t)(mmap_addr + mmap_length)) {
-        uint64_t mem_start = mmap->base_addr;
-        uint64_t mem_length = mmap->length;
+    طالما ((لفظ_t)mmap < (لفظ_t)(mmap_addr + mmap_ڊيگهائي)) {
+        uint64_t mem_شروعات = mmap->بنياد_addr;
+        uint64_t mem_ڊيگهائي = mmap->ڊيگهائي;
         uint32_t type = mmap->type;
-        if (mem_start != (uint64_t)(word_t)mem_start) {
-            printf("\tPhysical memory region not addressable\n");
-        } else {
-            printf("\tPhysical Memory Region from %lx size %lx type %d\n", (long)mem_start, (long)mem_length, type);
-            if (type == MULTIBOOT_MMAP_USEABLE_TYPE && mem_start >= HIGHMEM_PADDR && mem_length >= BIT(PAGE_BITS)) {
+        إذا (mem_شروعات != (uint64_t)(لفظ_t)mem_شروعات) {
+            لکو("\tPhysical memory region not addressable\n");
+        } وإلا {
+            لکو("\tPhysical Memory Region from %lx size %lx type %d\n", (ڊگهو)mem_شروعات, (ڊگهو)mem_ڊيگهائي, type);
+            إذا (type == MULTIBOOT_MMAP_USEABLE_TYPE && mem_شروعات >= HIGHMEM_PADDR && mem_ڊيگهائي >= ٻٽو_انگ(صفحو_بٽ)) {
 
-                if (!add_mem_p_regs((p_region_t) {
-                ROUND_UP(mem_start, PAGE_BITS), ROUND_DOWN(mem_start + mem_length, PAGE_BITS),
+                إذا (!جوڙيو_mem_p_regs((p_region_t) {
+                ڦيرو_مٿي(mem_شروعات, صفحو_بٽ), ڦيرو_هيٺ_ڏانهن(mem_شروعات + mem_ڊيگهائي, صفحو_بٽ),
                 })) {
-                    return false;
+                    أرجع false;
                 }
             }
         }
         mmap++;
     }
-    return true;
+    أرجع true;
 }
 
-static BOOT_CODE bool_t is_compiled_for_microarchitecture(void)
+ساكن BOOT_ڪوڊ bool_t is_compiled_for_microarchitecture(فراغ)
 {
-    word_t microarch_generation = 0;
-    x86_cpu_identity_t *model_info = x86_cpuid_get_model_info();
+    لفظ_t microarch_generation = 0;
+    x86_cpu_سڃاڻپ_عنصر_t *model_info = x86_cpuid_get_model_info();
 
-    if (config_set(CONFIG_ARCH_X86_SKYLAKE)) {
+    إذا (config_سيٽ(CONFIG_ARCH_X86_SKYLAKE)) {
         microarch_generation = 7;
-    } else if (config_set(CONFIG_ARCH_X86_BROADWELL)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_BROADWELL)) {
         microarch_generation = 6;
-    } else if (config_set(CONFIG_ARCH_X86_HASWELL)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_HASWELL)) {
         microarch_generation = 5;
-    } else if (config_set(CONFIG_ARCH_X86_IVY)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_IVY)) {
         microarch_generation = 4;
-    } else if (config_set(CONFIG_ARCH_X86_SANDY)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_SANDY)) {
         microarch_generation = 3;
-    } else if (config_set(CONFIG_ARCH_X86_WESTMERE)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_WESTMERE)) {
         microarch_generation = 2;
-    } else if (config_set(CONFIG_ARCH_X86_NEHALEM)) {
+    } وإلا إذا (config_سيٽ(CONFIG_ARCH_X86_NEHALEM)) {
         microarch_generation = 1;
     }
 
-    switch (model_info->model) {
-    case SKYLAKE_1_MODEL_ID:
-    case SKYLAKE_2_MODEL_ID:
-    case SKYLAKE_X_MODEL_ID:
-        if (microarch_generation > 7) {
-            return false;
+    بدل (model_info->model) {
+    حالة SKYLAKE_1_MODEL_ID:
+    حالة SKYLAKE_2_MODEL_ID:
+    حالة SKYLAKE_X_MODEL_ID:
+        إذا (microarch_generation > 7) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case BROADWELL_1_MODEL_ID:
-    case BROADWELL_2_MODEL_ID:
-    case BROADWELL_3_MODEL_ID:
-    case BROADWELL_4_MODEL_ID:
-    case BROADWELL_5_MODEL_ID:
-        if (microarch_generation > 6) {
-            return false;
+    حالة BROADWELL_1_MODEL_ID:
+    حالة BROADWELL_2_MODEL_ID:
+    حالة BROADWELL_3_MODEL_ID:
+    حالة BROADWELL_4_MODEL_ID:
+    حالة BROADWELL_5_MODEL_ID:
+        إذا (microarch_generation > 6) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case HASWELL_1_MODEL_ID:
-    case HASWELL_2_MODEL_ID:
-    case HASWELL_3_MODEL_ID:
-    case HASWELL_4_MODEL_ID:
-        if (microarch_generation > 5) {
-            return false;
+    حالة HASWELL_1_MODEL_ID:
+    حالة HASWELL_2_MODEL_ID:
+    حالة HASWELL_3_MODEL_ID:
+    حالة HASWELL_4_MODEL_ID:
+        إذا (microarch_generation > 5) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case IVY_BRIDGE_1_MODEL_ID:
-    case IVY_BRIDGE_2_MODEL_ID:
-    case IVY_BRIDGE_3_MODEL_ID:
-        if (microarch_generation > 4) {
-            return false;
+    حالة IVY_BRIDGE_1_MODEL_ID:
+    حالة IVY_BRIDGE_2_MODEL_ID:
+    حالة IVY_BRIDGE_3_MODEL_ID:
+        إذا (microarch_generation > 4) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case SANDY_BRIDGE_1_MODEL_ID:
-    case SANDY_BRIDGE_2_MODEL_ID:
-        if (microarch_generation > 3) {
-            return false;
+    حالة SANDY_BRIDGE_1_MODEL_ID:
+    حالة SANDY_BRIDGE_2_MODEL_ID:
+        إذا (microarch_generation > 3) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case WESTMERE_1_MODEL_ID:
-    case WESTMERE_2_MODEL_ID:
-    case WESTMERE_3_MODEL_ID:
-        if (microarch_generation > 2) {
-            return false;
+    حالة WESTMERE_1_MODEL_ID:
+    حالة WESTMERE_2_MODEL_ID:
+    حالة WESTMERE_3_MODEL_ID:
+        إذا (microarch_generation > 2) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    case NEHALEM_1_MODEL_ID:
-    case NEHALEM_2_MODEL_ID:
-    case NEHALEM_3_MODEL_ID:
-        if (microarch_generation > 1) {
-            return false;
+    حالة NEHALEM_1_MODEL_ID:
+    حالة NEHALEM_2_MODEL_ID:
+    حالة NEHALEM_3_MODEL_ID:
+        إذا (microarch_generation > 1) {
+            أرجع false;
         }
-        break;
+        اكسر;
 
-    default:
-        if (!config_set(CONFIG_ARCH_X86_GENERIC)) {
-            return false;
+    افتراضي:
+        إذا (!config_سيٽ(CONFIG_ARCH_X86_GENERIC)) {
+            أرجع false;
         }
     }
 
-    return true;
+    أرجع true;
 }
 
-static BOOT_CODE bool_t try_boot_sys(void)
+ساكن BOOT_ڪوڊ bool_t try_boot_sys(فراغ)
 {
-    paddr_t mods_end_paddr = boot_state.mods_end_paddr;
+    paddr_t mods_پڇاڙي_paddr = boot_state.mods_پڇاڙي_paddr;
     p_region_t ui_p_regs;
-    paddr_t load_paddr;
+    paddr_t ڀريو_paddr;
 
     boot_state.ki_p_reg = get_p_reg_kernel_img();
 
-    if (!x86_cpuid_initialize()) {
-        printf("Warning: Your x86 CPU has an unsupported vendor, '%s'.\n"
+    إذا (!x86_cpuid_initialize()) {
+        لکو("Warning: Your x86 CPU has an unsupported vendor, '%s'.\n"
                "\tYour setup may not be able to competently run seL4 as "
                "intended.\n"
                "\tCurrently supported x86 vendors are AMD and Intel.\n",
-               x86_cpuid_get_identity()->vendor_string);
+               x86_cpuid_get_سڃاڻپ_عنصر()->vendor_string);
     }
 
-    if (!is_compiled_for_microarchitecture()) {
-        printf("Warning: Your kernel was not compiled for the current microarchitecture.\n");
+    إذا (!is_compiled_for_microarchitecture()) {
+        لکو("Warning: Your kernel was not compiled for the current microarchitecture.\n");
     }
 
     cpuid_007h_edx_t edx;
-    edx.words[0] = x86_cpuid_edx(0x7, 0);
+    edx.لفظ[0] = x86_cpuid_edx(0x7, 0);
     /* see if we can definitively say whether or not we need the skim window by
      * checking whether the CPU is vulnerable to rogue data cache loads (rdcl) */
-    if (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
+    إذا (cpuid_007h_edx_get_ia32_arch_cap_msr(edx)) {
         ia32_arch_capabilities_msr_t cap_msr;
-        cap_msr.words[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
-        if (ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
-            printf("CPU reports not vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
+        cap_msr.لفظ[0] = x86_rdmsr(IA32_ARCH_CAPABILITIES_MSR);
+        إذا (ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && config_سيٽ(CONFIG_KERNEL_SKIM_دري)) {
+            لکو("CPU reports not vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
                    "yet SKIM window is enabled. Performance is needlessly being impacted, consider disabling.\n");
-        } else if (!ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && !config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
-            printf("CPU reports vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
+        } وإلا إذا (!ia32_arch_capabilities_msr_get_rdcl_no(cap_msr) && !config_سيٽ(CONFIG_KERNEL_SKIM_دري)) {
+            لکو("CPU reports vulnerable to Rogue Data Cache Load (aka Meltdown https://meltdownattack.com) "
                    "yet SKIM window is *not* enabled. Please re-build with SKIM window enabled.");
-            return false;
+            أرجع false;
         }
-    } else {
+    } وإلا {
         /* hardware doesn't tell us directly so guess based on CPU vendor */
-        if (config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_AMD) {
-            printf("SKIM window for mitigating Meltdown (https://www.meltdownattack.com) "
+        إذا (config_سيٽ(CONFIG_KERNEL_SKIM_دري) && x86_cpuid_get_سڃاڻپ_عنصر()->vendor == X86_VENDOR_AMD) {
+            لکو("SKIM window for mitigating Meltdown (https://www.meltdownattack.com) "
                    "not necessary for AMD and performance is being needlessly affected, "
                    "consider disabling\n");
         }
-        if (!config_set(CONFIG_KERNEL_SKIM_WINDOW) && x86_cpuid_get_identity()->vendor == X86_VENDOR_INTEL) {
-            printf("***WARNING*** SKIM window not enabled, this machine is probably vulnerable "
+        إذا (!config_سيٽ(CONFIG_KERNEL_SKIM_دري) && x86_cpuid_get_سڃاڻپ_عنصر()->vendor == X86_VENDOR_INTEL) {
+            لکو("***WARNING*** SKIM window not enabled, this machine is probably vulnerable "
                    "to Meltdown (https://www.meltdownattack.com), consider enabling\n");
         }
     }
 
-#ifdef ENABLE_SMP_SUPPORT
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
     /* copy boot code for APs to lower memory to run in real mode */
-    if (!copy_boot_code_aps(boot_state.mem_lower)) {
-        return false;
+    إذا (!copy_boot_ڪوڊ_aps(boot_state.mem_هيٺاهون)) {
+        أرجع false;
     }
     /* Initialize any kernel TLS */
-    mode_init_tls(0);
-#endif /* ENABLE_SMP_SUPPORT */
+    گهڻائي_init_tls(0);
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */
 
-    printf("Kernel loaded to: start=0x%lx end=0x%lx size=0x%lx entry=0x%lx\n",
-           boot_state.ki_p_reg.start,
-           boot_state.ki_p_reg.end,
-           boot_state.ki_p_reg.end - boot_state.ki_p_reg.start,
-           (paddr_t)_start
+    لکو("Kernel loaded to: start=0x%lx end=0x%lx size=0x%lx entry=0x%lx\n",
+           boot_state.ki_p_reg.شروعات,
+           boot_state.ki_p_reg.پڇاڙي,
+           boot_state.ki_p_reg.پڇاڙي - boot_state.ki_p_reg.شروعات,
+           (paddr_t)شروعات_2
           );
 
     /* remapping legacy IRQs to their correct vectors */
-    pic_remap_irqs(IRQ_INT_OFFSET);
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
+    pic_remap_irqs(IRQ_INT_وٿي);
+    إذا (config_سيٽ(CONFIG_IRQ_IOAPIC)) {
         /* Disable the PIC so that it does not generate any interrupts. We need to
          * do this *before* we initialize the apic */
         pic_disable();
     }
 
     /* validate the ACPI table */
-    if (!acpi_validate_rsdp(&boot_state.acpi_rsdp)) {
-        return false;
+    إذا (!acpi_validate_rsdp(&boot_state.acpi_rsdp)) {
+        أرجع false;
     }
 
     /* check if kernel configuration matches platform requirements */
-    if (!acpi_fadt_scan(&boot_state.acpi_rsdp)) {
-        return false;
+    إذا (!acpi_fadt_جاچ(&boot_state.acpi_rsdp)) {
+        أرجع false;
     }
 
-    if (!config_set(CONFIG_IOMMU) || cmdline_opt.disable_iommu) {
-        boot_state.num_drhu = 0;
-    } else {
+    إذا (!config_سيٽ(CONFIG_IOMMU) || cmdline_opt.disable_iommu) {
+        boot_state.انگ_drhu = 0;
+    } وإلا {
         /* query available IOMMUs from ACPI */
-        acpi_dmar_scan(
+        acpi_dmar_جاچ(
             &boot_state.acpi_rsdp,
             boot_state.drhu_list,
-            &boot_state.num_drhu,
-            MAX_NUM_DRHU,
+            &boot_state.انگ_drhu,
+            MAX_انگ_DRHU,
             &boot_state.rmrr_list
         );
     }
 
     /* query available CPUs from ACPI */
-    boot_state.num_cpus = acpi_madt_scan(&boot_state.acpi_rsdp, boot_state.cpus, &boot_state.num_ioapic,
+    boot_state.انگ_cpus = acpi_madt_جاچ(&boot_state.acpi_rsdp, boot_state.cpus, &boot_state.انگ_ioapic,
                                          boot_state.ioapic_paddr);
-    if (boot_state.num_cpus == 0) {
-        printf("No CPUs detected\n");
-        return false;
+    إذا (boot_state.انگ_cpus == 0) {
+        لکو("No CPUs detected\n");
+        أرجع false;
     }
 
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
-        if (boot_state.num_ioapic == 0) {
-            printf("No IOAPICs detected\n");
-            return false;
+    إذا (config_سيٽ(CONFIG_IRQ_IOAPIC)) {
+        إذا (boot_state.انگ_ioapic == 0) {
+            لکو("No IOAPICs detected\n");
+            أرجع false;
         }
-    } else {
-        if (boot_state.num_ioapic > 0) {
-            printf("Detected %d IOAPICs, but configured to use PIC instead\n", boot_state.num_ioapic);
+    } وإلا {
+        إذا (boot_state.انگ_ioapic > 0) {
+            لکو("Detected %d IOAPICs, but configured to use PIC instead\n", boot_state.انگ_ioapic);
         }
     }
 
-    mods_end_paddr = ROUND_UP(mods_end_paddr, PAGE_BITS);
-    assert(mods_end_paddr > boot_state.ki_p_reg.end);
+    mods_پڇاڙي_paddr = ڦيرو_مٿي(mods_پڇاڙي_paddr, صفحو_بٽ);
+    أكد(mods_پڇاڙي_paddr > boot_state.ki_p_reg.پڇاڙي);
 
-    printf("ELF-loading userland images from boot modules:\n");
-    load_paddr = mods_end_paddr;
+    لکو("ELF-loading userland images from boot modules:\n");
+    ڀريو_paddr = mods_پڇاڙي_paddr;
 
-    load_paddr = load_boot_module(boot_state.boot_module_start, boot_state.boot_module_end, load_paddr);
-    if (!load_paddr) {
-        return false;
+    ڀريو_paddr = ڀريو_boot_module(boot_state.boot_module_شروعات, boot_state.boot_module_پڇاڙي, ڀريو_paddr);
+    إذا (!ڀريو_paddr) {
+        أرجع false;
     }
 
     /* calculate final location of userland images */
-    ui_p_regs.start = boot_state.ki_p_reg.end;
-    ui_p_regs.end = ui_p_regs.start + load_paddr - mods_end_paddr;
+    ui_p_regs.شروعات = boot_state.ki_p_reg.پڇاڙي;
+    ui_p_regs.پڇاڙي = ui_p_regs.شروعات + ڀريو_paddr - mods_پڇاڙي_paddr;
 
-    printf(
+    لکو(
         "Moving loaded userland images to final location: from=0x%lx to=0x%lx size=0x%lx\n",
-        mods_end_paddr,
-        ui_p_regs.start,
-        ui_p_regs.end - ui_p_regs.start
+        mods_پڇاڙي_paddr,
+        ui_p_regs.شروعات,
+        ui_p_regs.پڇاڙي - ui_p_regs.شروعات
     );
-    memcpy((void *)ui_p_regs.start, (void *)mods_end_paddr, ui_p_regs.end - ui_p_regs.start);
+    يادگيري_نقل((فراغ *)ui_p_regs.شروعات, (فراغ *)mods_پڇاڙي_paddr, ui_p_regs.پڇاڙي - ui_p_regs.شروعات);
 
     /* adjust p_reg and pv_offset to final load address */
-    boot_state.ui_info.p_reg.start -= mods_end_paddr - ui_p_regs.start;
-    boot_state.ui_info.p_reg.end   -= mods_end_paddr - ui_p_regs.start;
-    boot_state.ui_info.pv_offset   -= mods_end_paddr - ui_p_regs.start;
+    boot_state.ui_info.p_reg.شروعات -= mods_پڇاڙي_paddr - ui_p_regs.شروعات;
+    boot_state.ui_info.p_reg.پڇاڙي   -= mods_پڇاڙي_paddr - ui_p_regs.شروعات;
+    boot_state.ui_info.pv_وٿي   -= mods_پڇاڙي_paddr - ui_p_regs.شروعات;
 
     /* ==== following code corresponds to abstract specification after "select" ==== */
 
-    if (!platAddDevices()) {
-        return false;
+    إذا (!plat_جوڙيو_Devices()) {
+        أرجع false;
     }
 
     /* Total number of cores we intend to boot */
-    ksNumCPUs = boot_state.num_cpus;
+    ks_انگ_CPUs = boot_state.انگ_cpus;
 
-    printf("Starting node #0 with APIC ID %lu\n", boot_state.cpus[0]);
-    if (!try_boot_sys_node(boot_state.cpus[0])) {
-        return false;
+    لکو("Starting node #0 with APIC ID %lu\n", boot_state.cpus[0]);
+    إذا (!try_boot_sys_ڳنڍ(boot_state.cpus[0])) {
+        أرجع false;
     }
 
-    if (config_set(CONFIG_IRQ_IOAPIC)) {
-        ioapic_init(1, boot_state.cpus, boot_state.num_ioapic);
+    إذا (config_سيٽ(CONFIG_IRQ_IOAPIC)) {
+        ioapic_init(1, boot_state.cpus, boot_state.انگ_ioapic);
     }
 
     /* initialize BKL before booting up APs */
-    SMP_COND_STATEMENT(clh_lock_init());
-    SMP_COND_STATEMENT(start_boot_aps());
+    SMP_COND_STATEMENT(clh_تالو_init());
+    SMP_COND_STATEMENT(شروعات_boot_aps());
 
     /* grab BKL before leaving the kernel */
-    NODE_LOCK_SYS;
+    ڳنڍ_تالو_SYS;
 
-    printf("Booting all finished, dropped to user space\n");
+    لکو("Booting all finished, dropped to user space\n");
 
-    return true;
+    أرجع true;
 }
 
-static BOOT_CODE bool_t try_boot_sys_mbi1(
+ساكن BOOT_ڪوڊ bool_t try_boot_sys_mbi1(
     multiboot_info_t *mbi
 )
 {
-    word_t i;
-    multiboot_module_t *modules = (multiboot_module_t *)(word_t)mbi->part1.mod_list;
+    لفظ_t i;
+    multiboot_module_t *modules = (multiboot_module_t *)(لفظ_t)mbi->part1.mod_list;
 
-    cmdline_parse((const char *)(word_t)mbi->part1.cmdline, &cmdline_opt);
+    cmdline_parse((ثابت حرف *)(لفظ_t)mbi->part1.cmdline, &cmdline_opt);
 
-    if ((mbi->part1.flags & MULTIBOOT_INFO_MEM_FLAG) == 0) {
-        printf("Boot loader did not provide information about physical memory size\n");
-        return false;
+    إذا ((mbi->part1.flags & MULTIBOOT_INFO_MEM_FLAG) == 0) {
+        لکو("Boot loader did not provide information about physical memory size\n");
+        أرجع false;
     }
 
-    if (!(mbi->part1.flags & MULTIBOOT_INFO_MODS_FLAG)) {
-        printf("Boot loader did not provide information about boot modules\n");
-        return false;
+    إذا (!(mbi->part1.flags & MULTIBOOT_INFO_MODS_FLAG)) {
+        لکو("Boot loader did not provide information about boot modules\n");
+        أرجع false;
     }
 
-    printf("Detected %d boot module(s):\n", mbi->part1.mod_count);
+    لکو("Detected %d boot module(s):\n", mbi->part1.mod_ڳڻپ);
 
-    if (mbi->part1.mod_count < 1) {
-        printf("Expect at least one boot module (containing a userland image)\n");
-        return false;
+    إذا (mbi->part1.mod_ڳڻپ < 1) {
+        لکو("Expect at least one boot module (containing a userland image)\n");
+        أرجع false;
     }
 
-    for (i = 0; i < mbi->part1.mod_count; i++) {
-        printf(
+    لكل (i = 0; i < mbi->part1.mod_ڳڻپ; i++) {
+        لکو(
             "  module #%ld: start=0x%x end=0x%x size=0x%x name='%s'\n",
             i,
-            modules[i].start,
-            modules[i].end,
-            modules[i].end - modules[i].start,
-            (char *)(long)modules[i].name
+            modules[i].شروعات,
+            modules[i].پڇاڙي,
+            modules[i].پڇاڙي - modules[i].شروعات,
+            (حرف *)(ڊگهو)modules[i].name
         );
-        if ((sword_t)(modules[i].end - modules[i].start) <= 0) {
-            printf("Invalid boot module size! Possible cause: boot module file not found by QEMU\n");
-            return false;
+        إذا ((sword_t)(modules[i].پڇاڙي - modules[i].شروعات) <= 0) {
+            لکو("Invalid boot module size! Possible cause: boot module file not found by QEMU\n");
+            أرجع false;
         }
-        if (boot_state.mods_end_paddr < modules[i].end) {
-            boot_state.mods_end_paddr = modules[i].end;
+        إذا (boot_state.mods_پڇاڙي_paddr < modules[i].پڇاڙي) {
+            boot_state.mods_پڇاڙي_paddr = modules[i].پڇاڙي;
         }
     }
 
@@ -555,185 +555,185 @@ static BOOT_CODE bool_t try_boot_sys_mbi1(
      * not give to the user. Memory regions that must not be given to the user
      * include all the physical memory in the kernel window, but also includes any
      * important or kernel devices. */
-    boot_state.mem_p_regs.count = 0;
-    if (mbi->part1.flags & MULTIBOOT_INFO_MMAP_FLAG) {
-        if (!parse_mem_map(mbi->part2.mmap_length, mbi->part2.mmap_addr)) {
-            return false;
+    boot_state.mem_p_regs.ڳڻپ = 0;
+    إذا (mbi->part1.flags & MULTIBOOT_INFO_MMAP_FLAG) {
+        إذا (!parse_mem_map(mbi->part2.mmap_ڊيگهائي, mbi->part2.mmap_addr)) {
+            أرجع false;
         }
-        uint32_t multiboot_mmap_length = mbi->part2.mmap_length;
-        if (multiboot_mmap_length > (SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * sizeof(seL4_X86_mb_mmap_t))) {
-            printf("Warning: Multiboot has reported more memory map entries, %zd, "
+        uint32_t multiboot_mmap_ڊيگهائي = mbi->part2.mmap_ڊيگهائي;
+        إذا (multiboot_mmap_ڊيگهائي > (SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * حجم(seL4_X86_mb_mmap_t))) {
+            لکو("Warning: Multiboot has reported more memory map entries, %zd, "
                    "than the max amount that will be passed in the bootinfo, %d. "
                    "These extra regions will still be turned into untyped caps.",
-                   multiboot_mmap_length / sizeof(seL4_X86_mb_mmap_t), SEL4_MULTIBOOT_MAX_MMAP_ENTRIES);
-            multiboot_mmap_length = SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * sizeof(seL4_X86_mb_mmap_t);
+                   multiboot_mmap_ڊيگهائي / حجم(seL4_X86_mb_mmap_t), SEL4_MULTIBOOT_MAX_MMAP_ENTRIES);
+            multiboot_mmap_ڊيگهائي = SEL4_MULTIBOOT_MAX_MMAP_ENTRIES * حجم(seL4_X86_mb_mmap_t);
         }
-        memcpy(&boot_state.mb_mmap_info.mmap, (void *)(word_t)mbi->part2.mmap_addr, multiboot_mmap_length);
-        boot_state.mb_mmap_info.mmap_length = multiboot_mmap_length;
-    } else {
+        يادگيري_نقل(&boot_state.mb_mmap_info.mmap, (فراغ *)(لفظ_t)mbi->part2.mmap_addr, multiboot_mmap_ڊيگهائي);
+        boot_state.mb_mmap_info.mmap_ڊيگهائي = multiboot_mmap_ڊيگهائي;
+    } وإلا {
         /* calculate memory the old way */
         p_region_t avail;
-        avail.start = HIGHMEM_PADDR;
-        avail.end = ROUND_DOWN(avail.start + (mbi->part1.mem_upper << 10), PAGE_BITS);
-        if (!add_mem_p_regs(avail)) {
-            return false;
+        avail.شروعات = HIGHMEM_PADDR;
+        avail.پڇاڙي = ڦيرو_هيٺ_ڏانهن(avail.شروعات + (mbi->part1.mem_مٿانهون << 10), صفحو_بٽ);
+        إذا (!جوڙيو_mem_p_regs(avail)) {
+            أرجع false;
         }
     }
 
     /* copy VESA information from multiboot header */
-    if ((mbi->part1.flags & MULTIBOOT_INFO_GRAPHICS_FLAG) == 0) {
-        boot_state.vbe_info.vbeMode = -1;
-        printf("Multiboot gave us no video information\n");
-    } else {
-        boot_state.vbe_info.vbeInfoBlock = *(seL4_VBEInfoBlock_t *)(seL4_Word)mbi->part2.vbe_control_info;
-        boot_state.vbe_info.vbeModeInfoBlock = *(seL4_VBEModeInfoBlock_t *)(seL4_Word)mbi->part2.vbe_mode_info;
-        boot_state.vbe_info.vbeMode = mbi->part2.vbe_mode;
-        printf("Got VBE info in multiboot. Current video mode is %d\n", mbi->part2.vbe_mode);
+    إذا ((mbi->part1.flags & MULTIBOOT_INFO_GRAPHICS_FLAG) == 0) {
+        boot_state.vbe_info.vbe_گهڻائي = -1;
+        لکو("Multiboot gave us no video information\n");
+    } وإلا {
+        boot_state.vbe_info.vbe_Info_بلاڪ = *(se_L4_VBEInfo_بلاڪ_t *)(se_L4_لفظ)mbi->part2.vbe_control_info;
+        boot_state.vbe_info.vbe_گهڻائي_Info_بلاڪ = *(se_L4_VBEMode_Info_بلاڪ_t *)(se_L4_لفظ)mbi->part2.vbe_گهڻائي_info;
+        boot_state.vbe_info.vbe_گهڻائي = mbi->part2.vbe_گهڻائي_2;
+        لکو("Got VBE info in multiboot. Current video mode is %d\n", mbi->part2.vbe_گهڻائي_2);
         boot_state.vbe_info.vbeInterfaceSeg = mbi->part2.vbe_interface_seg;
         boot_state.vbe_info.vbeInterfaceOff = mbi->part2.vbe_interface_off;
         boot_state.vbe_info.vbeInterfaceLen = mbi->part2.vbe_interface_len;
     }
 
-    boot_state.mem_lower = mbi->part1.mem_lower;
-    boot_state.boot_module_start = modules->start;
-    boot_state.boot_module_end = modules->end;
+    boot_state.mem_هيٺاهون = mbi->part1.mem_هيٺاهون;
+    boot_state.boot_module_شروعات = modules->شروعات;
+    boot_state.boot_module_پڇاڙي = modules->پڇاڙي;
 
     /* Initialize ACPI */
-    if (!acpi_init(&boot_state.acpi_rsdp)) {
-        return false;
+    إذا (!acpi_init(&boot_state.acpi_rsdp)) {
+        أرجع false;
     }
 
-    return true;
+    أرجع true;
 }
 
-static BOOT_CODE bool_t try_boot_sys_mbi2(
-    multiboot2_header_t *mbi2
+ساكن BOOT_ڪوڊ bool_t try_boot_sys_mbi2(
+    multiboot2_سرو_t *mbi2
 )
 {
-    int mod_count                  = 0;
-    multiboot2_tag_t const *tag   = (multiboot2_tag_t *)(mbi2 + 1);
-    multiboot2_tag_t const *tag_e = (multiboot2_tag_t *)((word_t)mbi2 + mbi2->total_size);
+    صحيح mod_ڳڻپ                  = 0;
+    multiboot2_ٽيگ_t ثابت *ٽيگ   = (multiboot2_ٽيگ_t *)(mbi2 + 1);
+    multiboot2_ٽيگ_t ثابت *ٽيگ_e = (multiboot2_ٽيگ_t *)((لفظ_t)mbi2 + mbi2->ڪل_سائيز);
 
     /* initialize the memory. We track two kinds of memory regions. Physical memory
      * that we will use for the kernel, and physical memory regions that we must
      * not give to the user. Memory regions that must not be given to the user
      * include all the physical memory in the kernel window, but also includes any
      * important or kernel devices. */
-    boot_state.mem_p_regs.count = 0;
-    boot_state.mb_mmap_info.mmap_length = 0;
-    boot_state.vbe_info.vbeMode = -1;
+    boot_state.mem_p_regs.ڳڻپ = 0;
+    boot_state.mb_mmap_info.mmap_ڊيگهائي = 0;
+    boot_state.vbe_info.vbe_گهڻائي = -1;
 
-    while (tag < tag_e && tag->type != MULTIBOOT2_TAG_END) {
-        word_t const behind_tag = (word_t)tag + sizeof(*tag);
+    طالما (ٽيگ < ٽيگ_e && ٽيگ->type != MULTIBOOT2_ٽيگ_پڇاڙي) {
+        لفظ_t ثابت behind_ٽيگ = (لفظ_t)ٽيگ + حجم(*ٽيگ);
 
-        if (tag->type == MULTIBOOT2_TAG_CMDLINE) {
-            char const *const cmdline = (char const * const)(behind_tag);
+        إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_CMDLINE) {
+            حرف ثابت *ثابت cmdline = (حرف ثابت * ثابت)(behind_ٽيگ);
             cmdline_parse(cmdline, &cmdline_opt);
-        } else if (tag->type == MULTIBOOT2_TAG_ACPI_1) {
-            if (ACPI_V1_SIZE == tag->size - sizeof(*tag)) {
-                memcpy(&boot_state.acpi_rsdp, (void *)behind_tag, tag->size - sizeof(*tag));
+        } وإلا إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_ACPI_1) {
+            إذا (ACPI_V1_سائيز == ٽيگ->سائيز - حجم(*ٽيگ)) {
+                يادگيري_نقل(&boot_state.acpi_rsdp, (فراغ *)behind_ٽيگ, ٽيگ->سائيز - حجم(*ٽيگ));
             }
-        } else if (tag->type == MULTIBOOT2_TAG_ACPI_2) {
-            if (sizeof(boot_state.acpi_rsdp) == tag->size - sizeof(*tag)) {
-                memcpy(&boot_state.acpi_rsdp, (void *)behind_tag, sizeof(boot_state.acpi_rsdp));
+        } وإلا إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_ACPI_2) {
+            إذا (حجم(boot_state.acpi_rsdp) == ٽيگ->سائيز - حجم(*ٽيگ)) {
+                يادگيري_نقل(&boot_state.acpi_rsdp, (فراغ *)behind_ٽيگ, حجم(boot_state.acpi_rsdp));
             }
-        } else if (tag->type == MULTIBOOT2_TAG_MODULE) {
-            multiboot2_module_t const *module = (multiboot2_module_t const *)behind_tag;
-            printf(
+        } وإلا إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_MODULE) {
+            multiboot2_module_t ثابت *module = (multiboot2_module_t ثابت *)behind_ٽيگ;
+            لکو(
                 "  module #%d: start=0x%x end=0x%x size=0x%x name='%s'\n",
-                mod_count,
-                module->start,
-                module->end,
-                module->end - module->start,
+                mod_ڳڻپ,
+                module->شروعات,
+                module->پڇاڙي,
+                module->پڇاڙي - module->شروعات,
                 module->string
             );
 
-            if (mod_count == 0) {
-                boot_state.boot_module_start = module->start;
-                boot_state.boot_module_end = module->end;
+            إذا (mod_ڳڻپ == 0) {
+                boot_state.boot_module_شروعات = module->شروعات;
+                boot_state.boot_module_پڇاڙي = module->پڇاڙي;
             }
 
-            mod_count ++;
-            if ((sword_t)(module->end - module->start) <= 0) {
-                printf("Invalid boot module size! Possible cause: boot module file not found\n");
-                return false;
+            mod_ڳڻپ ++;
+            إذا ((sword_t)(module->پڇاڙي - module->شروعات) <= 0) {
+                لکو("Invalid boot module size! Possible cause: boot module file not found\n");
+                أرجع false;
             }
-            if (boot_state.mods_end_paddr < module->end) {
-                boot_state.mods_end_paddr = module->end;
+            إذا (boot_state.mods_پڇاڙي_paddr < module->پڇاڙي) {
+                boot_state.mods_پڇاڙي_paddr = module->پڇاڙي;
             }
-        } else if (tag->type == MULTIBOOT2_TAG_MEMORY) {
-            multiboot2_memory_t const *s = (multiboot2_memory_t *)(behind_tag + 8);
-            multiboot2_memory_t const *e = (multiboot2_memory_t *)((word_t)tag + tag->size);
+        } وإلا إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_يادگيري) {
+            multiboot2_يادگيري_t ثابت *s = (multiboot2_يادگيري_t *)(behind_ٽيگ + 8);
+            multiboot2_يادگيري_t ثابت *e = (multiboot2_يادگيري_t *)((لفظ_t)ٽيگ + ٽيگ->سائيز);
 
-            for (multiboot2_memory_t const *m = s; m < e; m++) {
-                if (!m->addr) {
-                    boot_state.mem_lower = m->size;
+            لكل (multiboot2_يادگيري_t ثابت *m = s; m < e; m++) {
+                إذا (!m->addr) {
+                    boot_state.mem_هيٺاهون = m->سائيز;
                 }
 
-                printf("\tPhysical Memory Region from %llx size %llx type %u\n", m->addr, m->size, m->type);
-                if (m->addr != (uint64_t)(word_t)m->addr) {
-                    printf("\t\tPhysical memory region not addressable\n");
-                    continue;
+                لکو("\tPhysical Memory Region from %llx size %llx type %u\n", m->addr, m->سائيز, m->type);
+                إذا (m->addr != (uint64_t)(لفظ_t)m->addr) {
+                    لکو("\t\tPhysical memory region not addressable\n");
+                    استمر;
                 }
 
-                if (m->type == MULTIBOOT_MMAP_USEABLE_TYPE && m->addr >= HIGHMEM_PADDR) {
-                    if (!add_mem_p_regs((p_region_t) {
-                    m->addr, m->addr + m->size
+                إذا (m->type == MULTIBOOT_MMAP_USEABLE_TYPE && m->addr >= HIGHMEM_PADDR) {
+                    إذا (!جوڙيو_mem_p_regs((p_region_t) {
+                    m->addr, m->addr + m->سائيز
                 }))
-                    return false;
+                    أرجع false;
                 }
             }
-        } else if (tag->type == MULTIBOOT2_TAG_FB) {
-            multiboot2_fb_t const *fb = (multiboot2_fb_t const *)behind_tag;
-            printf("Got framebuffer info in multiboot2. Current video mode is at physical address=%llx pitch=%u resolution=%ux%u@%u type=%u\n",
-                   fb->addr, fb->pitch, fb->width, fb->height, fb->bpp, fb->type);
+        } وإلا إذا (ٽيگ->type == MULTIBOOT2_ٽيگ_FB) {
+            multiboot2_fb_t ثابت *fb = (multiboot2_fb_t ثابت *)behind_ٽيگ;
+            لکو("Got framebuffer info in multiboot2. Current video mode is at physical address=%llx pitch=%u resolution=%ux%u@%u type=%u\n",
+                   fb->addr, fb->pitch, fb->ويڪر, fb->اوچائي, fb->bpp, fb->type);
             boot_state.fb_info = *fb;
         }
 
-        tag = (multiboot2_tag_t const *)((word_t)tag + ROUND_UP(tag->size, 3));
+        ٽيگ = (multiboot2_ٽيگ_t ثابت *)((لفظ_t)ٽيگ + ڦيرو_مٿي(ٽيگ->سائيز, 3));
     }
 
-    printf("Detected %d boot module(s):\n", mod_count);
+    لکو("Detected %d boot module(s):\n", mod_ڳڻپ);
 
-    if (mod_count < 1) {
-        printf("Expect at least one boot module (containing a userland image)\n");
-        return false;
+    إذا (mod_ڳڻپ < 1) {
+        لکو("Expect at least one boot module (containing a userland image)\n");
+        أرجع false;
     }
 
-    return true;
+    أرجع true;
 }
 
-BOOT_CODE VISIBLE void boot_sys(
-    unsigned long multiboot_magic,
-    void *mbi)
+BOOT_ڪوڊ VISIBLE فراغ boot_sys(
+    بنانشان ڊگهو multiboot_magic,
+    فراغ *mbi)
 {
-    bool_t result = false;
+    bool_t نتيجو = false;
 
-    if (multiboot_magic == MULTIBOOT_MAGIC) {
-        result = try_boot_sys_mbi1(mbi);
-    } else if (multiboot_magic == MULTIBOOT2_MAGIC) {
-        result = try_boot_sys_mbi2(mbi);
-    } else {
-        printf("Boot loader is not multiboot 1 or 2 compliant %lx\n", multiboot_magic);
+    إذا (multiboot_magic == MULTIBOOT_MAGIC) {
+        نتيجو = try_boot_sys_mbi1(mbi);
+    } وإلا إذا (multiboot_magic == MULTIBOOT2_MAGIC) {
+        نتيجو = try_boot_sys_mbi2(mbi);
+    } وإلا {
+        لکو("Boot loader is not multiboot 1 or 2 compliant %lx\n", multiboot_magic);
     }
 
-    if (result) {
-        result = try_boot_sys();
+    إذا (نتيجو) {
+        نتيجو = try_boot_sys();
     }
 
-    if (!result) {
+    إذا (!نتيجو) {
         fail("boot_sys failed for some reason :(\n");
     }
 
-    ARCH_NODE_STATE(x86KScurInterrupt) = int_invalid;
-    ARCH_NODE_STATE(x86KSPendingInterrupt) = int_invalid;
+    ARCH_ڳنڍ_STATE(x86_KScur_مداخلت) = int_invalid;
+    ARCH_ڳنڍ_STATE(x86_KSPending_مداخلت) = int_invalid;
 
-#ifdef CONFIG_KERNEL_MCS
-    NODE_STATE(ksCurTime) = getCurrentTime();
-    NODE_STATE(ksConsumed) = 0;
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+    ڳنڍ_STATE(ks_Cur_وقت) = get_Current_وقت();
+    ڳنڍ_STATE(ksConsumed) = 0;
+#جيڪڏهن_پورو
 
-    schedule();
+    وقت_جدول();
     activateThread();
 }
 

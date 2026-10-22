@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/model/smp.h>
+#ضمن <config.h>
+#ضمن <mode/model/smp.h>
 
-#ifdef ENABLE_SMP_SUPPORT
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
 
-nodeInfo_t node_info[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE) VISIBLE;
-char nodeSkimScratch[CONFIG_MAX_NUM_NODES][sizeof(nodeInfo_t)] ALIGN(L1_CACHE_LINE_SIZE);
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+ڳنڍ_Info_t ڳنڍ_info[CONFIG_MAX_انگ_NODES] ALIGN(L1_CACHE_سٽ_سائيز) VISIBLE;
+حرف ڳنڍ_Skim_Scratch[CONFIG_MAX_انگ_NODES][حجم(ڳنڍ_Info_t)] ALIGN(L1_CACHE_سٽ_سائيز);
+خارجي حرف kernel_ڍير_alloc[CONFIG_MAX_انگ_NODES][ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ)];
 
-BOOT_CODE void mode_init_tls(cpu_id_t cpu_index)
+BOOT_ڪوڊ فراغ گهڻائي_init_tls(cpu_id_t cpu_اشاريو)
 {
-    node_info[cpu_index].stackTop = kernel_stack_alloc[cpu_index + 1];
-    node_info[cpu_index].irqStack = &x64KSIRQStack[cpu_index][0];
-    node_info[cpu_index].index = cpu_index;
-    x86_wrmsr(IA32_KERNEL_GS_BASE_MSR, (word_t)&node_info[cpu_index]);
+    ڳنڍ_info[cpu_اشاريو].ڍير_چوٽي_2 = kernel_ڍير_alloc[cpu_اشاريو + 1];
+    ڳنڍ_info[cpu_اشاريو].irq_ڍير_2 = &x64KSIRQStack[cpu_اشاريو][0];
+    ڳنڍ_info[cpu_اشاريو].اشاريو = cpu_اشاريو;
+    x86_wrmsr(IA32_KERNEL_GS_بنياد_MSR, (لفظ_t)&ڳنڍ_info[cpu_اشاريو]);
     swapgs();
 }
 
-#endif /* ENABLE_SMP_SUPPORT */
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */

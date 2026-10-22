@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#ضمن <config.h>
+#ضمن <stdint.h>
+#ضمن <util.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/devices_gen.h>
 
-#define URXD  0x00 /* UART Receiver Register */
-#define UTXD  0x40 /* UART Transmitter Register */
-#define UCR1  0x80 /* UART Control Register 1 */
-#define UCR2  0x84 /* UART Control Register 2 */
-#define UCR3  0x88 /* UART Control Register 3 */
-#define UCR4  0x8c /* UART Control Register 4 */
-#define UFCR  0x90 /* UART FIFO Control Register */
-#define USR1  0x94 /* UART Status Register 1 */
-#define USR2  0x98 /* UART Status Register 2 */
-#define UESC  0x9c /* UART Escape Character Register */
-#define UTIM  0xa0 /* UART Escape Timer Register */
-#define UBIR  0xa4 /* UART BRM Incremental Register */
-#define UBMR  0xa8 /* UART BRM Modulator Register */
-#define UBRC  0xac /* UART Baud Rate Counter Register */
-#define ONEMS 0xb0 /* UART One Millisecond Register */
-#define UTS   0xb4 /* UART Test Register */
+#وصف_ڪريو URXD  0x00 /* UART Receiver Register */
+#وصف_ڪريو UTXD  0x40 /* UART Transmitter Register */
+#وصف_ڪريو UCR1  0x80 /* UART Control Register 1 */
+#وصف_ڪريو UCR2  0x84 /* UART Control Register 2 */
+#وصف_ڪريو UCR3  0x88 /* UART Control Register 3 */
+#وصف_ڪريو UCR4  0x8c /* UART Control Register 4 */
+#وصف_ڪريو UFCR  0x90 /* UART FIFO Control Register */
+#وصف_ڪريو USR1  0x94 /* UART Status Register 1 */
+#وصف_ڪريو USR2  0x98 /* UART Status Register 2 */
+#وصف_ڪريو UESC  0x9c /* UART Escape Character Register */
+#وصف_ڪريو UTIM  0xa0 /* UART Escape Timer Register */
+#وصف_ڪريو UBIR  0xa4 /* UART BRM Incremental Register */
+#وصف_ڪريو UBMR  0xa8 /* UART BRM Modulator Register */
+#وصف_ڪريو UBRC  0xac /* UART Baud Rate Counter Register */
+#وصف_ڪريو ONEMS 0xb0 /* UART One Millisecond Register */
+#وصف_ڪريو UTS   0xb4 /* UART Test Register */
 
-#define UART_SR1_TRDY         BIT(13)
-#define UART_SR1_RRDY         BIT(9)
-#define UART_SR2_TXFIFO_EMPTY BIT(14)
-#define UART_SR2_RXFIFO_RDR   BIT(0)
+#وصف_ڪريو UART_SR1_TRDY         ٻٽو_انگ(13)
+#وصف_ڪريو UART_SR1_RRDY         ٻٽو_انگ(9)
+#وصف_ڪريو UART_SR2_TXFIFO_خالي_جايون ٻٽو_انگ(14)
+#وصف_ڪريو UART_SR2_RXFIFO_RDR   ٻٽو_انگ(0)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#وصف_ڪريو UART_REG(x) ((متطاير uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#جيڪڏهن_وصف_ٿيل CONFIG_PRINTING
+فراغ uart_drv_putchar(بنانشان حرف c)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_TXFIFO_EMPTY));
+    طالما (!(*UART_REG(USR2) & UART_SR2_TXFIFO_خالي_جايون));
     *UART_REG(UTXD) = c;
 }
-#endif /* CONFIG_PRINTING */
+#جيڪڏهن_پورو /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#جيڪڏهن_وصف_ٿيل CONFIG_DEBUG_BUILD
+بنانشان حرف uart_drv_getchar(فراغ)
 {
-    while (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
-    return *UART_REG(URXD);
+    طالما (!(*UART_REG(USR2) & UART_SR2_RXFIFO_RDR));
+    أرجع *UART_REG(URXD);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#جيڪڏهن_پورو /* CONFIG_DEBUG_BUILD */

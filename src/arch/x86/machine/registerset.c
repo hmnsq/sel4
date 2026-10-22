@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <arch/machine/registerset.h>
+#ضمن <config.h>
+#ضمن <arch/machine/registerset.h>
 
-void Arch_initContext(user_context_t *context)
+فراغ Arch_initContext(user_context_t *context)
 {
-    Mode_initContext(context);
-    context->registers[FS_BASE] = 0;
-    context->registers[GS_BASE] = 0;
+    گهڻائي_init_Context(context);
+    context->registers[FS_بنياد] = 0;
+    context->registers[GS_بنياد] = 0;
     context->registers[Error] = 0;
     context->registers[FaultIP] = 0;
-    context->registers[NextIP] = 0;            /* overwritten by setNextPC() later on */
+    context->registers[ايندڙ_IP] = 0;            /* overwritten by setNextPC() later on */
     context->registers[CS] = SEL_CS_3;
     context->registers[FLAGS] = FLAGS_USER_DEFAULT;
     context->registers[SS] = SEL_DS_3;
 
     Arch_initFpuContext(context);
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#جيڪڏهن_وصف_ٿيل CONFIG_HARDWARE_DEBUG_API
     Arch_initBreakpointContext(&context->breakpointState);
-#endif
+#جيڪڏهن_پورو
 }
 
-word_t sanitiseRegister(register_t reg, word_t v, bool_t archInfo)
+لفظ_t sanitise_رجسٽر(رجسٽر_t reg, لفظ_t v, bool_t archInfo)
 {
     /* First perform any mode specific sanitization */
-    v = Mode_sanitiseRegister(reg, v);
-    if (reg == FLAGS) {
+    v = گهڻائي_sanitise_رجسٽر(reg, v);
+    إذا (reg == FLAGS) {
         /* Set architecturally defined high and low bits */
-        v |=  FLAGS_HIGH;
-        v &= ~FLAGS_LOW;
+        v |=  FLAGS_مٿاهون;
+        v &= ~FLAGS_هيٺيون;
         /* require user to have interrupts and no traps */
         v |=  FLAGS_IF;
         v &= ~FLAGS_TF;
         /* remove any other bits that shouldn't be set */
-        v &=  FLAGS_MASK;
+        v &=  FLAGS_نقاب;
     }
-    return v;
+    أرجع v;
 }

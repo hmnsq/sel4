@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <assert.h>
-#include <arch/machine/registerset.h>
-#include <machine/fpu.h>
-#include <arch/object/structures.h>
+#ضمن <assert.h>
+#ضمن <arch/machine/registerset.h>
+#ضمن <machine/fpu.h>
+#ضمن <arch/object/structures.h>
 
-const register_t msgRegisters[] = {
+ثابت رجسٽر_t نياپو_Registers[] = {
     R10, R8, R9, R15
 };
 compile_assert(
-    consistent_message_registers,
-    sizeof(msgRegisters) / sizeof(msgRegisters[0]) == n_msgRegisters
+    consistent_پيغام_registers,
+    حجم(نياپو_Registers) / حجم(نياپو_Registers[0]) == n_نياپو_Registers
 );
 
-const register_t frameRegisters[] = {
+ثابت رجسٽر_t چوکٺو_Registers[] = {
     FaultIP, RSP, FLAGS, RAX, RBX, RCX, RDX, RSI, RDI, RBP,
     R8, R9, R10, R11, R12, R13, R14, R15
 };
 compile_assert(
-    consistent_frame_registers,
-    sizeof(frameRegisters) / sizeof(frameRegisters[0]) == n_frameRegisters
+    consistent_چوکٺو_registers,
+    حجم(چوکٺو_Registers) / حجم(چوکٺو_Registers[0]) == n_چوکٺو_Registers
 );
 
-const register_t gpRegisters[] = {
-    FS_BASE, GS_BASE
+ثابت رجسٽر_t gpRegisters[] = {
+    FS_بنياد, GS_بنياد
 };
 compile_assert(
     consistent_gp_registers,
-    sizeof(gpRegisters) / sizeof(gpRegisters[0]) == n_gpRegisters
+    حجم(gpRegisters) / حجم(gpRegisters[0]) == n_gpRegisters
 );
 
-void Mode_initContext(user_context_t *context)
+فراغ گهڻائي_init_Context(user_context_t *context)
 {
     context->registers[RAX] = 0;
     context->registers[RBX] = 0;
@@ -54,21 +54,21 @@ void Mode_initContext(user_context_t *context)
     context->registers[RSP] = 0;
 }
 
-word_t Mode_sanitiseRegister(register_t reg, word_t v)
+لفظ_t گهڻائي_sanitise_رجسٽر(رجسٽر_t reg, لفظ_t v)
 {
-    if (reg == FaultIP || reg == NextIP || reg == FS_BASE || reg == GS_BASE) {
+    إذا (reg == FaultIP || reg == ايندڙ_IP || reg == FS_بنياد || reg == GS_بنياد) {
         /* ensure instruction address is canonical */
-        if (v > 0x00007fffffffffff && v < 0xffff800000000000) {
+        إذا (v > 0x00007fffffffffff && v < 0xffff800000000000) {
             /* no way to guess what the user wanted so give them zero */
             v = 0;
         }
     }
-    return v;
+    أرجع v;
 }
 
-#ifdef CONFIG_KERNEL_MCS
-word_t getNBSendRecvDest(void)
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_MCS
+لفظ_t getNBSendRecvDest(فراغ)
 {
-    return getRegister(NODE_STATE(ksCurThread), nbsendRecvDest);
+    أرجع get_رجسٽر(ڳنڍ_STATE(ksCurThread), nbsendRecvDest);
 }
-#endif
+#جيڪڏهن_پورو

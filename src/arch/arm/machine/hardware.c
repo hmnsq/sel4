@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/registerset.h>
-#include <arch/machine.h>
-#include <plat/machine/hardware.h>
+#ضمن <types.h>
+#ضمن <machine/registerset.h>
+#ضمن <arch/machine.h>
+#ضمن <plat/machine/hardware.h>
 
-word_t PURE getRestartPC(tcb_t *thread)
+لفظ_t خالص getRestartPC(tcb_t *thread)
 {
-    return getRegister(thread, FaultIP);
+    أرجع get_رجسٽر(thread, FaultIP);
 }
 
-void setNextPC(tcb_t *thread, word_t v)
+فراغ سيٽ_ايندڙ_PC(tcb_t *thread, لفظ_t v)
 {
-    setRegister(thread, NEXT_PC_REG, v);
+    سيٽ_رجسٽر(thread, ايندڙ_PC_REG, v);
 }
 
-BOOT_CODE void map_kernel_devices(void)
+BOOT_ڪوڊ فراغ map_kernel_devices(فراغ)
 {
     /* If there are no kernel device frames at all, then kernel_device_frames is
      * NULL. Thus we can't use ARRAY_SIZE(kernel_device_frames) here directly,
      * but have to use NUM_KERNEL_DEVICE_FRAMES that is defined accordingly.
      */
-    for (int i = 0; i < NUM_KERNEL_DEVICE_FRAMES; i++) {
-        const kernel_frame_t *frame = &kernel_device_frames[i];
+    لكل (صحيح i = 0; i < انگ_KERNEL_DEVICE_چوکٺا; i++) {
+        ثابت kernel_چوکٺو_t *چوکٺو = &kernel_device_چوکٺا[i];
         /* all frames are supposed to describe device memory, so they should
          * never be marked as executable.
          */
-        assert(frame->armExecuteNever);
-        map_kernel_frame(frame->paddr, frame->pptr, VMKernelOnly,
-                         vm_attributes_new(frame->armExecuteNever, false,
+        أكد(چوکٺو->armExecuteNever);
+        map_kernel_چوکٺو(چوکٺو->paddr, چوکٺو->pptr, VMKernelOnly,
+                         vm_خاصيتون_new(چوکٺو->armExecuteNever, false,
                                            false));
-        if (!frame->userAvailable) {
+        إذا (!چوکٺو->user_موجود) {
             reserve_region((p_region_t) {
-                .start = frame->paddr,
-                .end   = frame->paddr + BIT(PAGE_BITS)
+                .شروعات = چوکٺو->paddr,
+                .پڇاڙي   = چوکٺو->paddr + ٻٽو_انگ(صفحو_بٽ)
             });
         }
     }

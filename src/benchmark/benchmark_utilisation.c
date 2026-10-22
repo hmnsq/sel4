@@ -4,75 +4,75 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <benchmark/benchmark_utilisation.h>
+#ضمن <config.h>
+#ضمن <benchmark/benchmark_utilisation.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+#جيڪڏهن_وصف_ٿيل CONFIG_BENCHMARK_TRACK_UTILISATION
 
 timestamp_t ksEnter;
 
-void benchmark_track_utilisation_dump(void)
+فراغ benchmark_track_utilisation_dump(فراغ)
 {
-    uint64_t *buffer = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, NODE_STATE(ksCurThread)))->msg[0]));
-    tcb_t *tcb = NULL;
-    word_t tcb_cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+    uint64_t *بفر = ((uint64_t *) & (((seL4_IPCBuffer *)lookupIPCBuffer(true, ڳنڍ_STATE(ksCurThread)))->نياپو[0]));
+    tcb_t *tcb = عدم;
+    لفظ_t tcb_cptr = get_رجسٽر(ڳنڍ_STATE(ksCurThread), cap_رجسٽر);
     lookupCap_ret_t lu_ret;
-    word_t cap_type;
+    لفظ_t cap_type;
 
-    lu_ret = lookupCap(NODE_STATE(ksCurThread), tcb_cptr);
+    lu_ret = lookupCap(ڳنڍ_STATE(ksCurThread), tcb_cptr);
     /* ensure we got a TCB cap */
     cap_type = cap_get_capType(lu_ret.cap);
-    if (cap_type != cap_thread_cap) {
+    إذا (cap_type != cap_thread_cap) {
         userError("SysBenchmarkFinalizeLog: cap is not a TCB, halting");
-        return;
+        أرجع;
     }
 
     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap));
 
     /* Selected TCB counters */
-    buffer[BENCHMARK_TCB_UTILISATION] = tcb->benchmark.utilisation; /* Requested thread utilisation */
-    buffer[BENCHMARK_TCB_NUMBER_SCHEDULES] = tcb->benchmark.number_schedules; /* Number of times scheduled */
-    buffer[BENCHMARK_TCB_KERNEL_UTILISATION] = tcb->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_TCB_NUMBER_KERNEL_ENTRIES] = tcb->benchmark.number_kernel_entries; /* Number of kernel entries */
+    بفر[BENCHMARK_TCB_UTILISATION] = tcb->benchmark.utilisation; /* Requested thread utilisation */
+    بفر[BENCHMARK_TCB_عدد_SCHEDULES] = tcb->benchmark.عدد_schedules; /* Number of times scheduled */
+    بفر[BENCHMARK_TCB_KERNEL_UTILISATION] = tcb->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
+    بفر[BENCHMARK_TCB_عدد_KERNEL_ENTRIES] = tcb->benchmark.عدد_kernel_entries; /* Number of kernel entries */
 
     /* Idle counters */
-    buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = NODE_STATE(
+    بفر[BENCHMARK_IDLE_LOCALCPU_UTILISATION] = ڳنڍ_STATE(
                                                       ksIdleThread)->benchmark.utilisation; /* Idle thread utilisation of current CPU */
-#ifdef ENABLE_SMP_SUPPORT
-    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = NODE_STATE_ON_CORE(ksIdleThread,
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+    بفر[BENCHMARK_IDLE_TCBCPU_UTILISATION] = ڳنڍ_STATE_ON_CORE(ksIdleThread,
                                                                    tcb->tcbAffinity)->benchmark.utilisation; /* Idle thread utilisation of CPU the TCB is running on */
-#else
-    buffer[BENCHMARK_IDLE_TCBCPU_UTILISATION] = buffer[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
-#endif
+#وإلا
+    بفر[BENCHMARK_IDLE_TCBCPU_UTILISATION] = بفر[BENCHMARK_IDLE_LOCALCPU_UTILISATION];
+#جيڪڏهن_پورو
 
-    buffer[BENCHMARK_IDLE_NUMBER_SCHEDULES] = NODE_STATE(
-                                                  ksIdleThread)->benchmark.number_schedules; /* Number of times scheduled */
-    buffer[BENCHMARK_IDLE_KERNEL_UTILISATION] = NODE_STATE(
+    بفر[BENCHMARK_IDLE_عدد_SCHEDULES] = ڳنڍ_STATE(
+                                                  ksIdleThread)->benchmark.عدد_schedules; /* Number of times scheduled */
+    بفر[BENCHMARK_IDLE_KERNEL_UTILISATION] = ڳنڍ_STATE(
                                                     ksIdleThread)->benchmark.kernel_utilisation; /* Utilisation spent in kernel */
-    buffer[BENCHMARK_IDLE_NUMBER_KERNEL_ENTRIES] = NODE_STATE(
-                                                       ksIdleThread)->benchmark.number_kernel_entries; /* Number of kernel entries */
+    بفر[BENCHMARK_IDLE_عدد_KERNEL_ENTRIES] = ڳنڍ_STATE(
+                                                       ksIdleThread)->benchmark.عدد_kernel_entries; /* Number of kernel entries */
 
 
     /* Total counters */
-#ifdef CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT
-    buffer[BENCHMARK_TOTAL_UTILISATION] =
-        (ARCH_NODE_STATE(ccnt_num_overflows) * 0xFFFFFFFFU) + NODE_STATE(benchmark_end_time) - NODE_STATE(benchmark_start_time);
-#else
-    buffer[BENCHMARK_TOTAL_UTILISATION] = NODE_STATE(benchmark_end_time) - NODE_STATE(
-                                              benchmark_start_time); /* Overall time */
-#endif /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
-    buffer[BENCHMARK_TOTAL_NUMBER_SCHEDULES] = NODE_STATE(benchmark_kernel_number_schedules);
-    buffer[BENCHMARK_TOTAL_KERNEL_UTILISATION] = NODE_STATE(benchmark_kernel_time);
-    buffer[BENCHMARK_TOTAL_NUMBER_KERNEL_ENTRIES] = NODE_STATE(benchmark_kernel_number_entries);
+#جيڪڏهن_وصف_ٿيل CONFIG_ARM_ENABLE_PMU_حد_کان_مٿي_مداخلت
+    بفر[BENCHMARK_ڪل_UTILISATION] =
+        (ARCH_ڳنڍ_STATE(ccnt_انگ_overflows) * 0xFFFFFFFFU) + ڳنڍ_STATE(benchmark_پڇاڙي_وقت) - ڳنڍ_STATE(benchmark_شروعات_وقت);
+#وإلا
+    بفر[BENCHMARK_ڪل_UTILISATION] = ڳنڍ_STATE(benchmark_پڇاڙي_وقت) - ڳنڍ_STATE(
+                                              benchmark_شروعات_وقت); /* Overall time */
+#جيڪڏهن_پورو /* CONFIG_ARM_ENABLE_PMU_OVERFLOW_INTERRUPT */
+    بفر[BENCHMARK_ڪل_عدد_SCHEDULES] = ڳنڍ_STATE(benchmark_kernel_عدد_schedules);
+    بفر[BENCHMARK_ڪل_KERNEL_UTILISATION] = ڳنڍ_STATE(benchmark_kernel_وقت);
+    بفر[BENCHMARK_ڪل_عدد_KERNEL_ENTRIES] = ڳنڍ_STATE(benchmark_kernel_عدد_entries);
 
 }
 
-void benchmark_track_reset_utilisation(tcb_t *tcb)
+فراغ benchmark_track_reset_utilisation(tcb_t *tcb)
 {
     tcb->benchmark.utilisation = 0;
-    tcb->benchmark.number_schedules = 0;
-    tcb->benchmark.number_kernel_entries = 0;
+    tcb->benchmark.عدد_schedules = 0;
+    tcb->benchmark.عدد_kernel_entries = 0;
     tcb->benchmark.kernel_utilisation = 0;
-    tcb->benchmark.schedule_start_time = 0;
+    tcb->benchmark.وقت_جدول_شروعات_وقت = 0;
 }
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+#جيڪڏهن_پورو /* CONFIG_BENCHMARK_TRACK_UTILISATION */

@@ -4,47 +4,47 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <machine/fpu.h>
-#include <kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <kernel/stack.h>
+#ضمن <config.h>
+#ضمن <model/statedata.h>
+#ضمن <machine/fpu.h>
+#ضمن <kernel/traps.h>
+#ضمن <arch/machine/debug.h>
+#ضمن <kernel/stack.h>
 
-#include <api/syscall.h>
+#ضمن <api/syscall.h>
 
-#ifdef CONFIG_VTX
-static void NORETURN USED vmlaunch_failed(word_t failInvalid, word_t failValid)
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
+ساكن فراغ NORETURN استعمال_ٿيل vmlaunch_failed(لفظ_t failInvalid, لفظ_t failValid)
 {
-    NODE_LOCK_SYS;
+    ڳنڍ_تالو_SYS;
 
-    c_entry_hook();
+    c_داخلا_hook();
 
-    if (failInvalid) {
+    إذا (failInvalid) {
         userError("current VMCS pointer is not valid");
     }
-    if (failValid) {
-        userError("vmlaunch/vmresume error %d", (int)vmread(VMX_DATA_INSTRUCTION_ERROR));
+    إذا (failValid) {
+        userError("vmlaunch/vmresume error %d", (صحيح)vmread(VMX_معلومات_INSTRUCTION_ERROR));
     }
 
-    handleVmEntryFail();
+    handle_Vm_داخلا_Fail();
     restore_user_context();
 }
 
-static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
+ساكن فراغ NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
 {
     restoreVMCS();
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#جيڪڏهن_وصف_ٿيل CONFIG_HARDWARE_DEBUG_API
     /* Do not support breakpoints in VMs, so just disable all breakpoints */
-    loadAllDisabledBreakpointState(cur_thread);
-#endif
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
+    ڀريو_All_Disabled_Breakpoint_State(cur_thread);
+#جيڪڏهن_پورو
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
     vcpu_restore_guest_msrs(vcpu);
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
     /* attempt to do a vmlaunch/vmresume */
-    asm volatile(
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
+    asm متطاير(
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
         // Save host's GS, Shadow GS, and FS
         "mov $0xC0000101, %%ecx\n"
         "rdmsr\n"
@@ -86,10 +86,10 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "shr $0x20,%%rdx\n"
         "wrmsr\n"
         "movq %[guest_regs], %%rsp\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#وإلا /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
         // Set our stack pointer to the top of the tcb so we can efficiently pop
         "movq %[guest_regs], %%rsp\n"
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         "cmpq $0x1, (%[launched])\n" // is the VM launched already?
         "jne launch\n"
         "popq %%rax\n"
@@ -99,7 +99,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%rsi\n"
         "popq %%rdi\n"
         "popq %%rbp\n"
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
         "popq %%r8\n"
         "popq %%r9\n"
         "popq %%r10\n"
@@ -108,11 +108,11 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%r13\n"
         "popq %%r14\n"
         "popq %%r15\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-#ifdef ENABLE_SMP_SUPPORT
+#وإلا /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
         "swapgs\n"
-#endif
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_پورو
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         "vmresume\n" // yes, do the vmresume
         "jmp done\n"
 
@@ -124,7 +124,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%rsi\n"
         "popq %%rdi\n"
         "popq %%rbp\n"
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
         "popq %%r8\n"
         "popq %%r9\n"
         "popq %%r10\n"
@@ -133,11 +133,11 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "popq %%r13\n"
         "popq %%r14\n"
         "popq %%r15\n"
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-#ifdef ENABLE_SMP_SUPPORT
+#وإلا /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
         "swapgs\n"
-#endif
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_پورو
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         "vmlaunch\n" // no, do the vmlaunch
 
         "done:\n"
@@ -147,7 +147,7 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "movzx %%bl, %%rsi\n"
         // if we get here we failed
 
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
         // Restore host's GS, Shadow GS, and FS
         "sub $0xA8, %%rsp\n" // 15 * 8 (regs) + 3 * 8 (guest_msr) + 3 * 8 (host_msr)
         "mov $0xC0000101, %%ecx\n"
@@ -166,29 +166,29 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
         "shr $0x20, %%rdx\n"
         "wrmsr\n" // FS
 
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-#ifdef ENABLE_SMP_SUPPORT
+#وإلا /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
         "swapgs\n"
         "movq %%gs:%c[stack_offset], %%rsp\n"
-#else
+#وإلا
         "leaq kernel_stack_alloc + %c[stack_size], %%rsp\n"
-#endif
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+#جيڪڏهن_پورو
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         "leaq vmlaunch_failed(%%rip), %%rax\n"
         "jmp *%%rax\n"
         :
         : [guest_regs]"r"(vcpu->gp_registers),
         [launched]"r"(&vcpu->launched),
-#ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS)),
+#جيڪڏهن_وصف_ٿيل CONFIG_X86_64_VTX_64_ٻٽو_انگ_GUESTS
+        [ڍير_سائيز]"i"(ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ)),
         [guest_msr]"r"(vcpu->guest_msr_registers),
-        [host_msr]"r"(&vcpu->host_msr_registers[n_vcpu_msr_register])
-#else /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
-        [stack_size]"i"(BIT(CONFIG_KERNEL_STACK_BITS))
-#ifdef ENABLE_SMP_SUPPORT
-        , [stack_offset]"i"(OFFSETOF(nodeInfo_t, stackTop))
-#endif
-#endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
+        [host_msr]"r"(&vcpu->host_msr_registers[n_vcpu_msr_رجسٽر])
+#وإلا /* not CONFIG_X86_64_VTX_64BIT_GUESTS */
+        [ڍير_سائيز]"i"(ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ))
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+        , [ڍير_وٿي]"i"(OFFSETOF(ڳنڍ_Info_t, ڍير_چوٽي_2))
+#جيڪڏهن_پورو
+#جيڪڏهن_پورو /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         // Clobber memory so the compiler is forced to complete all stores
         // before running this assembler. Leave rbx, r8, r9 and r10 not clobbered
         // so that the inputs get pinned to those general purpose registers.
@@ -196,66 +196,66 @@ static void NORETURN restore_vmx(tcb_t *cur_thread, vcpu_t *vcpu)
     );
     UNREACHABLE();
 }
-#endif
+#جيڪڏهن_پورو
 
-void VISIBLE NORETURN restore_user_context(void)
+فراغ VISIBLE NORETURN restore_user_context(فراغ)
 {
     c_exit_hook();
 
-    NODE_UNLOCK_IF_HELD;
+    ڳنڍ_UNLOCK_IF_HELD;
 
     /* we've now 'exited' the kernel. If we have a pending interrupt
      * we should 'enter' it again */
-    if (ARCH_NODE_STATE(x86KSPendingInterrupt) != int_invalid) {
-        interrupt_t irq = servicePendingIRQ();
+    إذا (ARCH_ڳنڍ_STATE(x86_KSPending_مداخلت) != int_invalid) {
+        مداخلت_t irq = servicePendingIRQ();
         /* reset our stack and jmp to the IRQ entry point */
-        asm volatile(
+        asm متطاير(
             "movq %[stack_top], %%rsp\n"
             "movq %[syscall], %%rsi\n"
             "movq %[irq], %%rdi\n"
             "call c_handle_interrupt"
             :
-            : [stack_top] "r"(&(kernel_stack_alloc[CURRENT_CPU_INDEX()][BIT(CONFIG_KERNEL_STACK_BITS)])),
+            : [ڍير_چوٽي] "r"(&(kernel_ڍير_alloc[CURRENT_CPU_اشاريو()][ٻٽو_انگ(CONFIG_KERNEL_ڍير_بٽ)])),
             [syscall] "i"(0), /* syscall is unused for irq path */
-            [irq] "r"((seL4_Word)irq)
+            [irq] "r"((se_L4_لفظ)irq)
             : "memory");
         UNREACHABLE();
     }
 
-    tcb_t *cur_thread = NODE_STATE(ksCurThread);
-    word_t *irqstack = x64KSIRQStack[CURRENT_CPU_INDEX()];
-#ifdef CONFIG_VTX
+    tcb_t *cur_thread = ڳنڍ_STATE(ksCurThread);
+    لفظ_t *irqstack = x64KSIRQStack[CURRENT_CPU_اشاريو()];
+#جيڪڏهن_وصف_ٿيل CONFIG_VTX
     vcpu_t *vcpu = cur_thread->tcbArch.tcbVCPU;
-    if (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
-        vcpu_fpu_to_guest(cur_thread, vcpu);
+    إذا (thread_state_ptr_get_tsType(&cur_thread->tcbState) == ThreadState_RunningVM) {
+        vcpu_fpu_منزل_guest(cur_thread, vcpu);
         restore_vmx(cur_thread, vcpu);
-    } else if (vcpu) {
-        vcpu_fpu_to_host(cur_thread, vcpu);
+    } وإلا إذا (vcpu) {
+        vcpu_fpu_منزل_host(cur_thread, vcpu);
     }
-#endif
+#جيڪڏهن_پورو
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#جيڪڏهن_وصف_ٿيل CONFIG_HARDWARE_DEBUG_API
     restore_user_debug_context(cur_thread);
-#endif
+#جيڪڏهن_پورو
 
-#ifdef ENABLE_SMP_SUPPORT
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
-    word_t user_cr3 = MODE_NODE_STATE(x64KSCurrentUserCR3);
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
+    لفظ_t user_cr3 = گهڻائي_ڳنڍ_STATE(x64KSCurrentUserCR3);
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
     swapgs();
-#endif /* ENABLE_SMP_SUPPORT */
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */
 
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    إذا (config_سيٽ(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_disable_ibrs();
     }
 
     // Check if we are returning from a syscall/sysenter or from an interrupt
     // There is a special case where if we would be returning from a sysenter,
     // but are current singlestepping, do a full return like an interrupt
-    if (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1) &&
-        (!config_set(CONFIG_SYSENTER) || !config_set(CONFIG_HARDWARE_DEBUG_API)
+    إذا (likely(cur_thread->tcbArch.tcbContext.registers[Error] == -1) &&
+        (!config_سيٽ(CONFIG_SYSENTER) || !config_سيٽ(CONFIG_HARDWARE_DEBUG_API)
          || ((cur_thread->tcbArch.tcbContext.registers[FLAGS] & FLAGS_TF) == 0))) {
-        if (config_set(CONFIG_KERNEL_SKIM_WINDOW)) {
+        إذا (config_سيٽ(CONFIG_KERNEL_SKIM_دري)) {
             /* if we are using the SKIM window then we are trying to hide kernel state from
              * the user in the case of Meltdown where the kernel region is effectively readable
              * by the user. To prevent a storage channel across threads through the irq stack,
@@ -271,12 +271,12 @@ void VISIBLE NORETURN restore_user_context(void)
             irqstack[4] = 0;
             irqstack[5] = 0;
         }
-        if (config_set(CONFIG_SYSENTER)) {
+        إذا (config_سيٽ(CONFIG_SYSENTER)) {
             cur_thread->tcbArch.tcbContext.registers[FLAGS] &= ~FLAGS_IF;
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
-            register word_t user_cr3_r11 asm("r11") = user_cr3;
-#endif
-            asm volatile(
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
+            سجل لفظ_t user_cr3_r11 asm("r11") = user_cr3;
+#جيڪڏهن_پورو
+            asm متطاير(
                 // Set our stack pointer to the top of the tcb so we can efficiently pop
                 "movq %0, %%rsp\n"
                 "popq %%rdi\n"
@@ -305,33 +305,33 @@ void VISIBLE NORETURN restore_user_context(void)
                 "popq %%rcx\n"
                 // Skip FaultIP
                 "addq $8, %%rsp\n"
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
                 "popq %%rsp\n"
                 "movq %%r11, %%cr3\n"
                 "movq %%rsp, %%r11\n"
-#else
+#وإلا
                 "popq %%r11\n"
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
                 "movq (x64KSCurrentUserCR3), %%rsp\n"
                 "movq %%rsp, %%cr3\n"
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
-#endif /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_پورو /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
                 // More register but we can ignore and are done restoring
                 // enable interrupt disabled by sysenter
                 "sti\n"
                 SYSEXITQ "\n"
                 :
                 : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI]),
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
                 "r"(user_cr3_r11),
-#endif
+#جيڪڏهن_پورو
                 [IF] "i"(FLAGS_IF)
                 // Clobber memory so the compiler is forced to complete all stores
                 // before running this assembler
                 : "memory"
             );
-        } else {
-            asm volatile(
+        } وإلا {
+            asm متطاير(
                 // Set our stack pointer to the top of the tcb so we can efficiently pop
                 "movq %0, %%rsp\n"
                 "popq %%rdi\n"
@@ -350,17 +350,17 @@ void VISIBLE NORETURN restore_user_context(void)
                 //restore RFLAGS
                 "popq %%r11\n"
                 // Restore NextIP
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
                 "popq %%rsp\n"
                 "movq %%rcx, %%cr3\n"
                 "movq %%rsp, %%rcx\n"
-#else
+#وإلا
                 "popq %%rcx\n"
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
                 "movq (x64KSCurrentUserCR3), %%rsp\n"
                 "movq %%rsp, %%cr3\n"
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
-#endif /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_پورو /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
                 // clear RSP to not leak information to the user
                 "xor %%rsp, %%rsp\n"
                 // More register but we can ignore and are done restoring
@@ -368,26 +368,26 @@ void VISIBLE NORETURN restore_user_context(void)
                 "sysretq\n"
                 :
                 : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI])
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
                 , "c"(user_cr3)
-#endif
+#جيڪڏهن_پورو
                 // Clobber memory so the compiler is forced to complete all stores
                 // before running this assembler
                 : "memory"
             );
         }
-    } else {
+    } وإلا {
         /* construct our return from interrupt frame */
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
         /* Have to zero this to prevent storage channel */
         irqstack[0] = 0;
-#endif
-        irqstack[1] = getRegister(cur_thread, NextIP);
-        irqstack[2] = getRegister(cur_thread, CS);
-        irqstack[3] = getRegister(cur_thread, FLAGS);
-        irqstack[4] = getRegister(cur_thread, RSP);
-        irqstack[5] = getRegister(cur_thread, SS);
-        asm volatile(
+#جيڪڏهن_پورو
+        irqstack[1] = get_رجسٽر(cur_thread, ايندڙ_IP);
+        irqstack[2] = get_رجسٽر(cur_thread, CS);
+        irqstack[3] = get_رجسٽر(cur_thread, FLAGS);
+        irqstack[4] = get_رجسٽر(cur_thread, RSP);
+        irqstack[5] = get_رجسٽر(cur_thread, SS);
+        asm متطاير(
             // Set our stack pointer to the top of the tcb so we can efficiently pop
             "movq %0, %%rsp\n"
             "popq %%rdi\n"
@@ -407,47 +407,47 @@ void VISIBLE NORETURN restore_user_context(void)
             "addq $40, %%rsp\n"
             "popq %%r11\n"
 
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
             /* pop into rsp as we're done with the stack for now and we need to
              * preserve our rcx value as it has our next cr3 value */
             "popq %%rsp\n"
-#else
+#وإلا
             "popq %%rcx\n"
-#endif /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
+#جيڪڏهن_پورو /* defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW) */
 
-#ifdef ENABLE_SMP_SUPPORT
+#جيڪڏهن_وصف_ٿيل ENABLE_SMP_SUPPORT
             // Swapping gs twice here is worth it as it allows us to efficiently
             // set the user gs base previously
             "swapgs\n"
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
             /* now we stash rcx in the scratch space that we can access once we've
              * loaded the user cr3 */
             "movq %%rsp, %%gs:%c[scratch_offset]\n"
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
             "movq %%gs:8, %%rsp\n"
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
             /* change to the user address space and then load the value of rcx that
              * we stashed */
             "movq %%rcx, %%cr3\n"
             "movq %%gs:%c[scratch_offset], %%rcx\n"
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
             "addq $8, %%rsp\n"
             // Switch to the user GS value
             "swapgs\n"
-#else /* !ENABLE_SMP_SUPPORT */
-#ifdef CONFIG_KERNEL_SKIM_WINDOW
+#وإلا /* !ENABLE_SMP_SUPPORT */
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_SKIM_دري
             "movq (x64KSCurrentUserCR3), %%rsp\n"
             "movq %%rsp, %%cr3\n"
-#endif /* CONFIG_KERNEL_SKIM_WINDOW */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_SKIM_WINDOW */
             "leaq x64KSIRQStack + 8, %%rsp\n"
-#endif /* ENABLE_SMP_SUPPORT */
+#جيڪڏهن_پورو /* ENABLE_SMP_SUPPORT */
             "iretq\n"
             :
             : "r"(&cur_thread->tcbArch.tcbContext.registers[RDI])
-#if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_WINDOW)
+#إذا defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_KERNEL_SKIM_دري)
             , "c"(user_cr3)
-            , [scratch_offset] "i"(nodeSkimScratchOffset)
-#endif
+            , [scratch_وٿي] "i"(ڳنڍ_Skim_Scratch_وٿي)
+#جيڪڏهن_پورو
             // Clobber memory so the compiler is forced to complete all stores
             // before running this assembler
             : "memory"
@@ -456,22 +456,22 @@ void VISIBLE NORETURN restore_user_context(void)
     UNREACHABLE();
 }
 
-void VISIBLE NORETURN c_x64_handle_interrupt(int irq, int syscall);
-void VISIBLE NORETURN c_x64_handle_interrupt(int irq, int syscall)
+فراغ VISIBLE NORETURN c_x64_handle_مداخلت(صحيح irq, صحيح syscall);
+فراغ VISIBLE NORETURN c_x64_handle_مداخلت(صحيح irq, صحيح syscall)
 {
-    if (config_set(CONFIG_KERNEL_X86_IBRS_BASIC)) {
+    إذا (config_سيٽ(CONFIG_KERNEL_X86_IBRS_BASIC)) {
         x86_enable_ibrs();
     }
-    word_t *irq_stack = x64KSIRQStack[CURRENT_CPU_INDEX()];
-    setRegister(NODE_STATE(ksCurThread), Error, irq_stack[0]);
+    لفظ_t *irq_ڍير = x64KSIRQStack[CURRENT_CPU_اشاريو()];
+    سيٽ_رجسٽر(ڳنڍ_STATE(ksCurThread), Error, irq_ڍير[0]);
     /* In the case of an interrupt the NextIP and the FaultIP should be the same value,
      * i.e. the address of the instruction the CPU was about to execute before the
      * interrupt. This is the 5th value pushed on by the hardware, so indexing from
      * the bottom is x64KSIRQStack[1] */
-    setRegister(NODE_STATE(ksCurThread), NextIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FaultIP, irq_stack[1]);
-    setRegister(NODE_STATE(ksCurThread), FLAGS, irq_stack[3]);
-    setRegister(NODE_STATE(ksCurThread), RSP, irq_stack[4]);
-    c_handle_interrupt(irq, syscall);
+    سيٽ_رجسٽر(ڳنڍ_STATE(ksCurThread), ايندڙ_IP, irq_ڍير[1]);
+    سيٽ_رجسٽر(ڳنڍ_STATE(ksCurThread), FaultIP, irq_ڍير[1]);
+    سيٽ_رجسٽر(ڳنڍ_STATE(ksCurThread), FLAGS, irq_ڍير[3]);
+    سيٽ_رجسٽر(ڳنڍ_STATE(ksCurThread), RSP, irq_ڍير[4]);
+    c_handle_مداخلت(irq, syscall);
     UNREACHABLE();
 }
