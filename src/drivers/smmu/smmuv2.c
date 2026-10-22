@@ -3,13 +3,13 @@
  *
  * SPDX-License-Identifier: GPL-2.0-only
  */
-#include <config.h>
+#അന്തര്ഭാവ <config.h>
 
 #ifdef CONFIG_ARM_SMMU
 
-#include <types.h>
-#include <plat/machine/devices_gen.h>
-#include <drivers/smmu/smmuv2.h>
+#അന്തര്ഭാവ <types.h>
+#അന്തര്ഭാവ <plat/machine/devices_gen.h>
+#അന്തര്ഭാവ <drivers/smmu/smmuv2.h>
 
 /*supported stages of translations*/
 #define STAGE1_TRANS           (1 << 0)
@@ -26,7 +26,7 @@
 /*the default virtual address bits for partition TTBR0 and TTBR1*/
 #define SMMU_VA_DEFAULT_BITS      48
 
-struct  smmu_feature {
+ഘടന  smmu_feature {
     bool_t stream_match;              /*stream match register functionality included*/
     bool_t trans_op;                  /*address translation operations supported*/
     bool_t cotable_walk;              /*coherent translation table walk*/
@@ -34,104 +34,104 @@ struct  smmu_feature {
     bool_t vmid16;                    /*16 bits VMIDs are supported*/
     uint32_t supported_trans;         /*supported translation stages*/
     uint32_t supported_fmt;           /*supported translation formats*/
-    uint32_t num_cfault_ints;         /*supported number of context fault interrupts*/
-    uint32_t num_stream_ids;          /*number of stream IDs*/
-    uint32_t num_stream_map_groups;   /*num stream mapping register groups*/
+    uint32_t അക്കം_cfault_ints;         /*supported number of context fault interrupts*/
+    uint32_t അക്കം_stream_ids;          /*number of stream IDs*/
+    uint32_t അക്കം_stream_map_groups;   /*num stream mapping register groups*/
     uint32_t smmu_page_size;          /*page size in SMMU register address space*/
-    uint32_t smmu_num_pages;          /*number of pages in global or context bank address space*/
-    uint32_t num_s2_cbanks;           /*cbanks that support stage 2 only*/
-    uint32_t num_cbanks;              /*total number of context banks*/
+    uint32_t smmu_അക്കം_pages;          /*number of pages in global or context bank address space*/
+    uint32_t അക്കം_s2_cbanks;           /*cbanks that support stage 2 only*/
+    uint32_t അക്കം_cbanks;              /*total number of context banks*/
     uint32_t va_bits;                 /*upstream address size*/
     uint32_t pa_bits;                 /*PA address size*/
     uint32_t ipa_bits;                /*IPA address size*/
     pptr_t cb_base;                   /*base of context bank address space*/
 };
 
-struct smmu_table_config {
+ഘടന smmu_table_config {
     uint32_t tcr[2];                    /*SMMU_CBn_TCRm*/
     uint32_t mair[2];                  /*SMMU_CBn_MAIRm*/
     uint64_t ttbr[2];                  /*SMMU_CBn_TTBRm*/
 };
 
-static struct smmu_feature smmu_dev_knowledge;
-static struct smmu_table_config smmu_stage_table_config;
+സ്ഥിതം ഘടന smmu_feature smmu_dev_knowledge;
+സ്ഥിതം ഘടന smmu_table_config smmu_stage_table_config;
 
 
-static inline uint32_t smmu_read_reg32(pptr_t base, uint32_t index)
+സ്ഥിതം വരിയിൽ uint32_t smmu_read_reg32(pptr_t base, uint32_t index)
 {
-    return *(volatile uint32_t *)(base + index);
+    തിരികെ *(അസ്ഥിര uint32_t *)(base + index);
 }
 
-static inline void smmu_write_reg32(pptr_t base, uint32_t index, uint32_t val)
+സ്ഥിതം വരിയിൽ ശൂന്യം smmu_write_reg32(pptr_t base, uint32_t index, uint32_t val)
 {
-    *(volatile uint32_t *)(base + index) = val;
+    *(അസ്ഥിര uint32_t *)(base + index) = val;
 }
 
-static inline uint64_t smmu_read_reg64(pptr_t base, uint32_t index)
+സ്ഥിതം വരിയിൽ uint64_t smmu_read_reg64(pptr_t base, uint32_t index)
 {
-    return *(volatile uint64_t *)(base + index);
+    തിരികെ *(അസ്ഥിര uint64_t *)(base + index);
 }
 
-static inline void smmu_write_reg64(pptr_t base, uint32_t index, uint64_t val)
+സ്ഥിതം വരിയിൽ ശൂന്യം smmu_write_reg64(pptr_t base, uint32_t index, uint64_t val)
 {
-    *(volatile uint64_t *)(base + index) = val;
+    *(അസ്ഥിര uint64_t *)(base + index) = val;
 }
 
-static void smmu_tlb_sync(pptr_t base, uint32_t sync, uint32_t status)
+സ്ഥിതം ശൂന്യം smmu_tlb_sync(pptr_t base, uint32_t sync, uint32_t status)
 {
-    int count = 0;
+    പൂർണ്ണസംഖ്യ എണ്ണം = 0;
     smmu_write_reg32(base, sync, SMMU_TLB_SYNC_MASK);
-    while (count < TLBSYNC_LOOP) {
+    ആകുമ്പോൾ (എണ്ണം < TLBSYNC_LOOP) {
         /*pulling the active flag, reading the TLB command state.*/
-        if (!(smmu_read_reg32(base, status) & TLBSTATUS_GSACTIVE)) {
-            break;
+        എങ്കിൽ (!(smmu_read_reg32(base, status) & TLBSTATUS_GSACTIVE)) {
+            നിർത്തുക;
         }
-        count++;
+        എണ്ണം++;
     }
 }
 
-static inline uint32_t smmu_obs_size_to_bits(uint32_t size)
+സ്ഥിതം വരിയിൽ uint32_t smmu_obs_size_to_bits(uint32_t size)
 {
     /*converting the output bus address size into address bit, defined in
     IDx registers*/
-    switch (size) {
-    case 0:
-        return 32;
-    case 1:
-        return 36;
-    case 2:
-        return 40;
-    case 3:
-        return 42;
-    case 4:
-        return 44;
-    default:
-        return 48;
+    തിരഞ്ഞെടുപ്പ് (size) {
+    അവസ്ഥ 0:
+        തിരികെ 32;
+    അവസ്ഥ 1:
+        തിരികെ 36;
+    അവസ്ഥ 2:
+        തിരികെ 40;
+    അവസ്ഥ 3:
+        തിരികെ 42;
+    അവസ്ഥ 4:
+        തിരികെ 44;
+    സ്ഥിരസ്ഥിതി:
+        തിരികെ 48;
     }
 }
-static inline uint32_t smmu_ubs_size_to_bits(uint32_t size)
+സ്ഥിതം വരിയിൽ uint32_t smmu_ubs_size_to_bits(uint32_t size)
 {
     /*converting the upstream address size into address bit, defined in
     IDx registers*/
-    switch (size) {
-    case 0:
-        return 32;
-    case 1:
-        return 36;
-    case 2:
-        return 40;
-    case 3:
-        return 42;
-    case 4:
-        return 44;
-    case 5:
-        return 49;
-    default:
-        return 64;
+    തിരഞ്ഞെടുപ്പ് (size) {
+    അവസ്ഥ 0:
+        തിരികെ 32;
+    അവസ്ഥ 1:
+        തിരികെ 36;
+    അവസ്ഥ 2:
+        തിരികെ 40;
+    അവസ്ഥ 3:
+        തിരികെ 42;
+    അവസ്ഥ 4:
+        തിരികെ 44;
+    അവസ്ഥ 5:
+        തിരികെ 49;
+    സ്ഥിരസ്ഥിതി:
+        തിരികെ 64;
     }
 }
 
-BOOT_CODE static void smmu_mapping_init(void)
+BOOT_CODE സ്ഥിതം ശൂന്യം smmu_mapping_init(ശൂന്യം)
 {
     /*Creating mapping for the rest of SMMU address space.
      * the code assumes registers in each SMMU page are located in a 4K page
@@ -170,7 +170,7 @@ BOOT_CODE static void smmu_mapping_init(void)
                      VMKernelOnly,
                      vm_attributes_new(true, false, false));
     /*map the context banks, each bank maps to a 4K page*/
-    for (int i = 0; i < smmu_dev_knowledge.num_cbanks; i++) {
+    വേണ്ടി (പൂർണ്ണസംഖ്യ i = 0; i < smmu_dev_knowledge.അക്കം_cbanks; i++) {
         map_kernel_frame(SMMU_CBn_PADDR(smmu_dev_knowledge.cb_base, i, smmu_dev_knowledge.smmu_page_size),
                          SMMU_CBn_BASE_PPTR(i),
                          VMKernelOnly,
@@ -178,92 +178,92 @@ BOOT_CODE static void smmu_mapping_init(void)
     }
 }
 
-BOOT_CODE static void smmu_config_prob(void)
+BOOT_CODE സ്ഥിതം ശൂന്യം smmu_config_prob(ശൂന്യം)
 {
     uint32_t reg, field;
     /*ID0*/
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_IDR0);
     /*stages supported*/
-    if (reg & IDR0_S1TS) {
+    എങ്കിൽ (reg & IDR0_S1TS) {
         smmu_dev_knowledge.supported_trans |= STAGE1_TRANS;
     }
-    if (reg & IDR0_S2TS) {
+    എങ്കിൽ (reg & IDR0_S2TS) {
         smmu_dev_knowledge.supported_trans |= STAGE2_TRANS;
     }
-    if (reg & IDR0_NTS) {
+    എങ്കിൽ (reg & IDR0_NTS) {
         smmu_dev_knowledge.supported_trans |= NESTED_TRANS;
     }
     /*stream matching register*/
-    if (reg & IDR0_SMS) {
+    എങ്കിൽ (reg & IDR0_SMS) {
         smmu_dev_knowledge.stream_match = true;
     }
     /*address translation operation*/
-    if ((reg & IDR0_ATOSNS) == 0) {
+    എങ്കിൽ ((reg & IDR0_ATOSNS) == 0) {
         smmu_dev_knowledge.trans_op = true;
     }
     /*AARCH32 translation format support*/
     field = IDR0_PTFS_VAL(reg & IDR0_PTFS);
-    if (field == PTFS_AARCH32S_AARCH32L) {
+    എങ്കിൽ (field == PTFS_AARCH32S_AARCH32L) {
         smmu_dev_knowledge.supported_fmt |= AARCH32L_FMT;
         smmu_dev_knowledge.supported_fmt |= AARCH32S_FMT;
-    } else if (field == PTFS_AARCH32L_ONLY) {
+    } അല്ലെങ്കിൽ എങ്കിൽ (field == PTFS_AARCH32L_ONLY) {
         smmu_dev_knowledge.supported_fmt |= AARCH32L_FMT;
-    } else {
+    } അല്ലെങ്കിൽ {
         smmu_dev_knowledge.supported_fmt |= NO_AARCH32_FMT;
     }
     /*number of context fault interrupts
     * However, in smmuv2, each context bank has dedicated interrupt pin
     * hence no requirement to specify implemented interrupts here.*/
-    smmu_dev_knowledge.num_cfault_ints = IDR0_NUMIRPT_VAL(reg & IDR0_NUMIRPT);
+    smmu_dev_knowledge.അക്കം_cfault_ints = IDR0_NUMIRPT_VAL(reg & IDR0_NUMIRPT);
     /*coherent translation table walk*/
-    if (reg & IDR0_CTTW) {
+    എങ്കിൽ (reg & IDR0_CTTW) {
         smmu_dev_knowledge.cotable_walk = true;
     }
     /*broadcast TLB maintenance*/
-    if (reg & IDR0_BTM) {
+    എങ്കിൽ (reg & IDR0_BTM) {
         smmu_dev_knowledge.broadcast_tlb = true;
     }
     /*number of stream IDs*/
-    smmu_dev_knowledge.num_stream_ids = (1 << IDR0_NUMSIDB_VAL(reg & IDR0_NUMSIDB)) - 1;
+    smmu_dev_knowledge.അക്കം_stream_ids = (1 << IDR0_NUMSIDB_VAL(reg & IDR0_NUMSIDB)) - 1;
     /*number of stream mapping register groups*/
-    smmu_dev_knowledge.num_stream_map_groups = reg & IDR0_NUMSMRG;
+    smmu_dev_knowledge.അക്കം_stream_map_groups = reg & IDR0_NUMSMRG;
 
     /*ID1*/
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_IDR1);
     /*smmu page size*/
-    if (reg & IDR1_PAGESIZE) {
+    എങ്കിൽ (reg & IDR1_PAGESIZE) {
         smmu_dev_knowledge.smmu_page_size = SMMU_PAGE_64KB;
-    } else {
+    } അല്ലെങ്കിൽ {
         smmu_dev_knowledge.smmu_page_size = SMMU_PAGE_4KB;
     }
     /*smmu num pages, 2^(numdxb + 1)*/
     field = IDR1_NUMPAGENDXB_VAL(reg & IDR1_NUMPAGENDXB);
-    smmu_dev_knowledge.smmu_num_pages = 1 << (field + 1);
+    smmu_dev_knowledge.smmu_അക്കം_pages = 1 << (field + 1);
     /*num of stage 2 context banks*/
-    smmu_dev_knowledge.num_s2_cbanks = IDR1_NUMS2CB_VAL(reg & IDR1_NUMS2CB);
+    smmu_dev_knowledge.അക്കം_s2_cbanks = IDR1_NUMS2CB_VAL(reg & IDR1_NUMS2CB);
     /*total num of context banks*/
-    smmu_dev_knowledge.num_cbanks = reg & IDR1_NUMCB;
+    smmu_dev_knowledge.അക്കം_cbanks = reg & IDR1_NUMCB;
     /*calculate the context bank base*/
     smmu_dev_knowledge.cb_base = SMMU_CB_BASE_PADDR(
-                                     SMMU_GLOBAL_SIZE(smmu_dev_knowledge.smmu_num_pages, smmu_dev_knowledge.smmu_page_size));
+                                     SMMU_GLOBAL_SIZE(smmu_dev_knowledge.smmu_അക്കം_pages, smmu_dev_knowledge.smmu_page_size));
 
     /*ID2*/
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_IDR2);
     /*VNID16S*/
-    if (reg & IDR2_VMID16S) {
+    എങ്കിൽ (reg & IDR2_VMID16S) {
         smmu_dev_knowledge.vmid16 = true;
     }
     /*PTFSV8_64KB*/
-    if (reg & IDR2_PTFSV8_64) {
+    എങ്കിൽ (reg & IDR2_PTFSV8_64) {
         smmu_dev_knowledge.supported_fmt |= TRANS_PAGES_64KB;
     }
     /*PTFSV8_16KB*/
-    if (reg & IDR2_PTFSV8_16) {
+    എങ്കിൽ (reg & IDR2_PTFSV8_16) {
         smmu_dev_knowledge.supported_fmt |= TRANS_PAGES_16KB;
     }
     /*PTFSV8_64KB*/
 
-    if (reg & IDR2_PTFSV8_4) {
+    എങ്കിൽ (reg & IDR2_PTFSV8_4) {
         smmu_dev_knowledge.supported_fmt |= TRANS_PAGES_4KB;
     }
     /*UBS virtual address size*/
@@ -276,7 +276,7 @@ BOOT_CODE static void smmu_config_prob(void)
 
 
 
-BOOT_CODE  static void smmu_dev_reset(void)
+BOOT_CODE  സ്ഥിതം ശൂന്യം smmu_dev_reset(ശൂന്യം)
 {
     uint32_t reg = 0;
     pptr_t cb_bank_ptr;
@@ -294,19 +294,19 @@ BOOT_CODE  static void smmu_dev_reset(void)
     reg |= S2CR_TYPE_SET(S2CR_TYPE_CB);
 
     /*the number of stream-to-context is related to the stream indexing method*/
-    if (smmu_dev_knowledge.stream_match) {
+    എങ്കിൽ (smmu_dev_knowledge.stream_match) {
         /*stream matching*/
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_map_groups; i++) {
+        വേണ്ടി (പൂർണ്ണസംഖ്യ i = 0; i < smmu_dev_knowledge.അക്കം_stream_map_groups; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_S2CRn(i), reg);
         }
         /*reset the stream match registers as invalid*/
         reg = SMR_VALID_SET(SMR_VALID_DIS);
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_map_groups; i++) {
+        വേണ്ടി (പൂർണ്ണസംഖ്യ i = 0; i < smmu_dev_knowledge.അക്കം_stream_map_groups; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_SMRn(i), reg);
         }
-    } else {
+    } അല്ലെങ്കിൽ {
         /*stream ID*/
-        for (int i = 0; i < smmu_dev_knowledge.num_stream_ids; i++) {
+        വേണ്ടി (പൂർണ്ണസംഖ്യ i = 0; i < smmu_dev_knowledge.അക്കം_stream_ids; i++) {
             smmu_write_reg32(SMMU_GR0_PPTR, SMMU_S2CRn(i), reg);
         }
     }
@@ -318,7 +318,7 @@ BOOT_CODE  static void smmu_dev_reset(void)
     reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_sACR);
     /*unlock the write access to SMMU_CBn_ACTLR,
     only provided in version 2 and above*/
-    if (major >= 2) {
+    എങ്കിൽ (major >= 2) {
         reg &= ~ACR_CACHE_LOCK;
     }
     /*enable the TLB to cache bypassing*/
@@ -326,7 +326,7 @@ BOOT_CODE  static void smmu_dev_reset(void)
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_sACR, reg);
     /*special init requested by the smmu-500: end*/
 
-    for (int i = 0; i < smmu_dev_knowledge.num_cbanks; i++) {
+    വേണ്ടി (പൂർണ്ണസംഖ്യ i = 0; i < smmu_dev_knowledge.അക്കം_cbanks; i++) {
         cb_bank_ptr = SMMU_CBn_BASE_PPTR(i);
         /*disable context banks and clear the context bank fault registers*/
         smmu_write_reg32(cb_bank_ptr, SMMU_CBn_SCTLR, 0);
@@ -369,7 +369,7 @@ BOOT_CODE  static void smmu_dev_reset(void)
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_sCR0, reg);
 }
 
-BOOT_CODE void plat_smmu_init(void)
+BOOT_CODE ശൂന്യം plat_smmu_init(ശൂന്യം)
 {
     smmu_config_prob();
     smmu_mapping_init();
@@ -377,8 +377,8 @@ BOOT_CODE void plat_smmu_init(void)
 }
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-static void smmu_config_stage2(struct smmu_table_config *cfg,
-                               vspace_root_t *vspace)
+സ്ഥിതം ശൂന്യം smmu_config_stage2(ഘടന smmu_table_config *cfg,
+                               vspace_വേര്_t *vspace)
 {
     uint32_t reg = 0;
     /*SMMU_CBn_TCR*/
@@ -391,7 +391,7 @@ static void smmu_config_stage2(struct smmu_table_config *cfg,
     reg |= CBn_TCR_T0SZ_SET(24);
     reg |= CBn_TCR_PASize_SET(CBn_TCR2_PASize_40);
     reg |= CBn_TCR_SL0_SET(CBn_TCR_SL0_4KB_L1);
-#else
+#അല്ലെങ്കിൽ
     reg |= CBn_TCR_T0SZ_SET(20);
     reg |= CBn_TCR_PASize_SET(CBn_TCR2_PASize_44);
     reg |= CBn_TCR_SL0_SET(CBn_TCR_SL0_4KB_L0);
@@ -400,20 +400,20 @@ static void smmu_config_stage2(struct smmu_table_config *cfg,
     reg |= BIT(31);
     cfg->tcr[0] = reg;
     /*vttbr*/
-    cfg->ttbr[0] = ttbr_new(0, pptr_to_paddr(vspace)).words[0];
+    cfg->ttbr[0] = ttbr_new(0, pptr_to_paddr(vspace)).വാക്കുകൾ[0];
 }
-#else
-static void smmu_config_stage1(struct smmu_table_config *cfg,
+#അല്ലെങ്കിൽ
+സ്ഥിതം ശൂന്യം smmu_config_stage1(ഘടന smmu_table_config *cfg,
                                bool_t coherence, uint32_t pa_bits,
-                               vspace_root_t *vspace, asid_t asid)
+                               vspace_വേര്_t *vspace, asid_t asid)
 {
     uint32_t reg = 0;
     /*SMMU_CBn_TCR*/
-    if (coherence) {
+    എങ്കിൽ (coherence) {
         reg |= CBn_TCR_SH0_SET(CBn_TCR_SH_INNER);
         reg |= CBn_TCR_ORGN0_SET(CBn_TCR_GN_WB_WA_CACHE);
         reg |= CBn_TCR_IRGN0_SET(CBn_TCR_GN_WB_WA_CACHE);
-    } else {
+    } അല്ലെങ്കിൽ {
         reg |= CBn_TCR_SH0_SET(CBn_TCR_SH_OUTER);
         reg |= CBn_TCR_ORGN0_SET(CBn_TCR_GN_NCACHE);
         reg |= CBn_TCR_IRGN0_SET(CBn_TCR_GN_NCACHE);
@@ -427,25 +427,25 @@ static void smmu_config_stage1(struct smmu_table_config *cfg,
     cfg->tcr[0] = reg;
     /*TCR2*/
     reg = 0;
-    switch (pa_bits) {
-    case 32:
+    തിരഞ്ഞെടുപ്പ് (pa_bits) {
+    അവസ്ഥ 32:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_32);
-        break;
-    case 36:
+        നിർത്തുക;
+    അവസ്ഥ 36:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_36);
-        break;
-    case 40:
+        നിർത്തുക;
+    അവസ്ഥ 40:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_40);
-        break;
-    case 42:
+        നിർത്തുക;
+    അവസ്ഥ 42:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_42);
-        break;
-    case 44:
+        നിർത്തുക;
+    അവസ്ഥ 44:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_44);
-        break;
-    default:
+        നിർത്തുക;
+    സ്ഥിരസ്ഥിതി:
         reg |= CBn_TCR2_PASize_SET(CBn_TCR2_PASize_48);
-        break;
+        നിർത്തുക;
     }
     /*currently only support AArch64*/
     reg |= CBn_TCR2_SEP_SET(CBn_TCR2_SEP_UPSTREAM_SIZE) | CBn_TCR2_AS_SET(CBn_TCR2_AS_16);
@@ -461,13 +461,13 @@ static void smmu_config_stage1(struct smmu_table_config *cfg,
     cfg->mair[1] = reg;
     /*TTBRs*/
     /*The SMMU only uses user-level address space, TTBR0.*/
-    cfg->ttbr[0] = ttbr_new(asid, pptr_to_paddr(vspace)).words[0];
+    cfg->ttbr[0] = ttbr_new(asid, pptr_to_paddr(vspace)).വാക്കുകൾ[0];
     cfg->ttbr[1] = 0;
 }
 #endif /*CONFIG_ARM_HYPERVISOR_SUPPORT*/
 
 
-void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
+ശൂന്യം smmu_cb_assign_vspace(word_t cb, vspace_വേര്_t *vspace, asid_t asid)
 {
     uint32_t reg = 0;
     uint32_t vmid = cb;
@@ -480,7 +480,7 @@ void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     smmu_config_stage2(&smmu_stage_table_config,
                        vspace);
-#else
+#അല്ലെങ്കിൽ
     smmu_config_stage1(&smmu_stage_table_config,
                        smmu_dev_knowledge.cotable_walk,
                        smmu_dev_knowledge.ipa_bits,
@@ -490,7 +490,7 @@ void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
     /*CBA2R*/
     /*currently only support aarch64*/
     reg = CBA2Rn_VA64_SET;
-    if (smmu_dev_knowledge.vmid16) {
+    എങ്കിൽ (smmu_dev_knowledge.vmid16) {
         reg |= CBA2Rn_VMID_SET(vmid);
     }
     smmu_write_reg32(SMMU_GR1_PPTR, SMMU_CBA2Rn(cb), reg);
@@ -500,10 +500,10 @@ void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
     /*stage 2 translation only, CBAR_TYPE_S2_TRANS*/
     reg = CBARn_TYPE_SET(CBARn_TYPE_STAGE2);
     /*8 bit VMID*/
-    if (!smmu_dev_knowledge.vmid16) {
+    എങ്കിൽ (!smmu_dev_knowledge.vmid16) {
         reg |= CBARn_VMID_SET(vmid);
     }
-#else
+#അല്ലെങ്കിൽ
     /*stage 1 translation only, CBAR_TYPE_S1_TRANS_S2_BYPASS*/
     reg = CBARn_TYPE_SET(CBARn_TYPE_STAGE1);
     /*configured as the weakest shareability/memory types,
@@ -534,7 +534,7 @@ void smmu_cb_assign_vspace(word_t cb, vspace_root_t *vspace, asid_t asid)
     smmu_write_reg32(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_SCTLR, reg);
 }
 
-void smmu_cb_disable(word_t cb, asid_t asid)
+ശൂന്യം smmu_cb_disable(word_t cb, asid_t asid)
 {
 
     uint32_t reg = smmu_read_reg32(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_SCTLR);
@@ -543,7 +543,7 @@ void smmu_cb_disable(word_t cb, asid_t asid)
     smmu_tlb_invalidate_cb(cb, asid);
 }
 
-void smmu_sid_bind_cb(word_t sid, word_t cb)
+ശൂന്യം smmu_sid_bind_cb(word_t sid, word_t cb)
 {
 
     uint32_t reg = 0;
@@ -554,29 +554,29 @@ void smmu_sid_bind_cb(word_t sid, word_t cb)
     /* The number of stream-to-context mapping
      * is related to the stream indexing method.
      * We currently supports mapping one stream ID to one context bank.*/
-    if (smmu_dev_knowledge.stream_match) {
+    എങ്കിൽ (smmu_dev_knowledge.stream_match) {
         reg = SMR_VALID_SET(SMR_VALID_EN) | SMR_ID_SET(sid);
         smmu_write_reg32(SMMU_GR0_PPTR, SMMU_SMRn(sid), reg);
     }
 }
 
-void smmu_sid_unbind(word_t sid)
+ശൂന്യം smmu_sid_unbind(word_t sid)
 {
 
     uint32_t reg =  S2CR_TYPE_SET(S2CR_TYPE_FAULT);
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_S2CRn(sid), reg);
-    if (smmu_dev_knowledge.stream_match) {
+    എങ്കിൽ (smmu_dev_knowledge.stream_match) {
         reg = SMR_VALID_SET(SMR_VALID_DIS);
         smmu_write_reg32(SMMU_GR0_PPTR, SMMU_SMRn(sid), reg);
     }
 }
 
-void smmu_tlb_invalidate_all(void)
+ശൂന്യം smmu_tlb_invalidate_all(ശൂന്യം)
 {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /*on hyp entries*/
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_TLBIALLH, SMMU_TLB_INVALL_MASK);
-#else
+#അല്ലെങ്കിൽ
     /*on non-secure non-hyp entries*/
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_TLBIALLNSNH, SMMU_TLB_INVALL_MASK);
 #endif
@@ -584,7 +584,7 @@ void smmu_tlb_invalidate_all(void)
     smmu_tlb_sync(SMMU_GR0_PPTR, SMMU_sTLBGSYNC, SMMU_sTLBGSTATUS);
 }
 
-void smmu_tlb_invalidate_cb(int cb, asid_t asid)
+ശൂന്യം smmu_tlb_invalidate_cb(പൂർണ്ണസംഖ്യ cb, asid_t asid)
 {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /*stage 2*/
@@ -593,7 +593,7 @@ void smmu_tlb_invalidate_cb(int cb, asid_t asid)
     uint32_t reg = TLBIVMID_SET(cb);
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_TLBIVMID, reg);
     smmu_tlb_sync(SMMU_GR0_PPTR, SMMU_sTLBGSYNC, SMMU_sTLBGSTATUS);
-#else
+#അല്ലെങ്കിൽ
     /*stage 1*/
     uint32_t reg = CBn_TLBIASID_SET(asid);
     smmu_write_reg32(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_TLBIASID, reg);
@@ -601,7 +601,7 @@ void smmu_tlb_invalidate_cb(int cb, asid_t asid)
 #endif
 }
 
-void smmu_tlb_invalidate_cb_va(int cb, asid_t asid, vptr_t vaddr)
+ശൂന്യം smmu_tlb_invalidate_cb_va(പൂർണ്ണസംഖ്യ cb, asid_t asid, vptr_t vaddr)
 {
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /*stage 2*/
@@ -610,7 +610,7 @@ void smmu_tlb_invalidate_cb_va(int cb, asid_t asid, vptr_t vaddr)
     uint64_t reg = CBn_TLBIIPAS2_SET(vaddr);
     smmu_write_reg64(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_TLBIIPAS2, reg);
     smmu_tlb_sync(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_TLBSYNC, SMMU_CBn_TLBSTATUS);
-#else
+#അല്ലെങ്കിൽ
     /*stage 1*/
     uint64_t reg = CBn_TLBIVA_SET(asid, vaddr);
     smmu_write_reg64(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_TLBIVA, reg);
@@ -618,26 +618,26 @@ void smmu_tlb_invalidate_cb_va(int cb, asid_t asid, vptr_t vaddr)
 #endif
 }
 
-void smmu_read_fault_state(uint32_t *status, uint32_t *syndrome_0, uint32_t *syndrome_1)
+ശൂന്യം smmu_read_fault_state(uint32_t *status, uint32_t *syndrome_0, uint32_t *syndrome_1)
 {
     *status = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_sGFSR);
     *syndrome_0 = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_sGFSYNR0);
     *syndrome_1 = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_sGFSYNR1);
 }
 
-void smmu_clear_fault_state(void)
+ശൂന്യം smmu_clear_fault_state(ശൂന്യം)
 {
     uint32_t reg = smmu_read_reg32(SMMU_GR0_PPTR, SMMU_sGFSR);
     smmu_write_reg32(SMMU_GR0_PPTR, SMMU_sGFSR, reg);
 }
 
-void smmu_cb_read_fault_state(int cb, uint32_t *status, word_t *address)
+ശൂന്യം smmu_cb_read_fault_state(പൂർണ്ണസംഖ്യ cb, uint32_t *status, word_t *address)
 {
     *status = smmu_read_reg32(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_FSR);
     *address = smmu_read_reg64(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_FAR);
 }
 
-void smmu_cb_clear_fault_state(int cb)
+ശൂന്യം smmu_cb_clear_fault_state(പൂർണ്ണസംഖ്യ cb)
 {
     smmu_write_reg32(SMMU_CBn_BASE_PPTR(cb), SMMU_CBn_FSR, CBn_FSR_CLEAR_ALL);
 }

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <arch/machine.h>
-#include <linker.h>
+#അന്തര്ഭാവ <config.h>
+#അന്തര്ഭാവ <types.h>
+#അന്തര്ഭാവ <arch/machine.h>
+#അന്തര്ഭാവ <linker.h>
 
-void initL2Cache(void) {}
-void plat_cleanL2Range(paddr_t start, paddr_t end) {}
-void plat_invalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Cache(void) {}
+ശൂന്യം initL2Cache(ശൂന്യം) {}
+ശൂന്യം plat_cleanL2Range(paddr_t start, paddr_t end) {}
+ശൂന്യം plat_invalidateL2Range(paddr_t start, paddr_t end) {}
+ശൂന്യം plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
+ശൂന്യം plat_cleanInvalidateL2Cache(ശൂന്യം) {}

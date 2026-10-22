@@ -10,13 +10,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <config.h>
-#include <machine/io.h>
+#അന്തര്ഭാവ <config.h>
+#അന്തര്ഭാവ <machine/io.h>
 
 #ifdef CONFIG_PRINTING
 
-#include <stdarg.h>
-#include <stdint.h>
+#അന്തര്ഭാവ <stdarg.h>
+#അന്തര്ഭാവ <stdint.h>
 
 /*
  *------------------------------------------------------------------------------
@@ -24,15 +24,15 @@
  *------------------------------------------------------------------------------
  */
 
-typedef struct _out_wrap_t  out_wrap_t;
+തരനിർവചനം ഘടന _out_wrap_t  out_wrap_t;
 
 /* handler defining how/where to actually output a buffer */
-typedef void (*out_write_fn)(out_wrap_t *out, const char *buf, word_t len);
+തരനിർവചനം ശൂന്യം (*out_write_fn)(out_wrap_t *out, സ്ഥിരം അക്ഷരം *buf, word_t len);
 
-struct _out_wrap_t {
-    const out_write_fn write;
-    char *const buf;
-    const word_t maxlen;
+ഘടന _out_wrap_t {
+    സ്ഥിരം out_write_fn ലിഖ;
+    അക്ഷരം *സ്ഥിരം buf;
+    സ്ഥിരം word_t maxlen;
     word_t used;
 };
 
@@ -40,23 +40,23 @@ struct _out_wrap_t {
  * parameter 'out_wrap' cam be NULL, e.g. when printf_core() is just caller to
  * validate the format string. In this case we do nothing.
  */
-static void out(out_wrap_t *out_wrap, const char *buf, word_t len)
+സ്ഥിതം ശൂന്യം out(out_wrap_t *out_wrap, സ്ഥിരം അക്ഷരം *buf, word_t len)
 {
-    if (out_wrap) {
-        out_wrap->write(out_wrap, buf, len);
+    എങ്കിൽ (out_wrap) {
+        out_wrap->ലിഖ(out_wrap, buf, len);
     }
 }
 
 /* An out_write_fn implementation to print the characters via putchar(). It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_putchar(
+സ്ഥിതം ശൂന്യം do_output_to_putchar(
     UNUSED out_wrap_t *out,
-    const char *buf,
+    സ്ഥിരം അക്ഷരം *buf,
     word_t len)
 {
-    if (buf) {
-        while (len-- > 0) {
+    എങ്കിൽ (buf) {
+        ആകുമ്പോൾ (len-- > 0) {
             putchar(*buf++);
         }
     }
@@ -65,18 +65,18 @@ static void do_output_to_putchar(
 /* An out_write_fn implementation to copy the buffer into the out buffer. It is
  * guaranteed here that 'out' is not NULL. The current implementation also never
  * passes NULL for 'buf'. */
-static void do_output_to_buffer(
+സ്ഥിതം ശൂന്യം do_output_to_buffer(
     out_wrap_t *out,
-    const char *buf,
+    സ്ഥിരം അക്ഷരം *buf,
     word_t len)
 {
     /* It's guaranteed here that 'out' is not NULL. The current implementation
      * also never passes NULL for 'buf'. */
-    if (buf && (out->used < out->maxlen)) {
+    എങ്കിൽ (buf && (out->used < out->maxlen)) {
         /* there is still space in the buffer*/
-        word_t free = out->maxlen - out->used;
-        if (len > free) {
-            len = free;
+        word_t സ്വതന്ത്രം = out->maxlen - out->used;
+        എങ്കിൽ (len > സ്വതന്ത്രം) {
+            len = സ്വതന്ത്രം;
         }
         memcpy(&out->buf[out->used], buf, len);
         out->used += len;
@@ -89,9 +89,9 @@ static void do_output_to_buffer(
  *------------------------------------------------------------------------------
  */
 
-static inline bool_t isdigit(char c)
+സ്ഥിതം വരിയിൽ bool_t isdigit(അക്ഷരം c)
 {
-    return c >= '0' &&
+    തിരികെ c >= '0' &&
            c <= '9';
 }
 
@@ -102,18 +102,18 @@ static inline bool_t isdigit(char c)
 
 #define ALT_FORM     (1U<<('#'-' '))
 #define ZERO_PAD     (1U<<('0'-' '))
-#define LEFT_ADJ     (1U<<('-'-' '))
+#define ഇടത്_ADJ     (1U<<('-'-' '))
 #define PAD_POS      (1U<<(' '-' '))
 #define MARK_POS     (1U<<('+'-' '))
 #define GROUPED      (1U<<('\''-' '))
 
-#define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
+#define FLAGMASK (ALT_FORM|ZERO_PAD|ഇടത്_ADJ|PAD_POS|MARK_POS|GROUPED)
 
 /* State machine to accept length modifiers + conversion specifiers.
  * Result is 0 on failure, or an argument type to pop on success.
  */
 
-enum {
+എണ്ണൽ {
     BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
     ZTPRE, JPRE,
     STOP,
@@ -131,7 +131,7 @@ enum {
 
 #define S(x) [(x)-'A']
 
-static const unsigned char states[]['z' - 'A' + 1] = {
+സ്ഥിതം സ്ഥിരം unsigned അക്ഷരം states[]['z' - 'A' + 1] = {
     { /* 0: bare types */
         S('d') = INT, S('i') = INT,
         S('o') = UINT, S('u') = UINT, S('x') = UINT, S('X') = UINT,
@@ -177,92 +177,92 @@ static const unsigned char states[]['z' - 'A' + 1] = {
 #define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
 #define DIGIT(c) (c - '0')
 
-union arg {
+സംഘം arg {
     uintmax_t i;
-    long double f;
-    void *p;
+    long ഇരട്ട f;
+    ശൂന്യം *p;
 };
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+സ്ഥിതം ശൂന്യം എടുക്കുക_arg(സംഘം arg *arg, പൂർണ്ണസംഖ്യ type, va_list *ap)
 {
-    switch (type) {
-    case PTR:
-        arg->p = va_arg(*ap, void *);
-        break;
-    case INT:
-        arg->i = va_arg(*ap, int);
-        break;
-    case UINT:
-        arg->i = va_arg(*ap, unsigned int);
-        break;
-    case LONG:
+    തിരഞ്ഞെടുപ്പ് (type) {
+    അവസ്ഥ PTR:
+        arg->p = va_arg(*ap, ശൂന്യം *);
+        നിർത്തുക;
+    അവസ്ഥ INT:
+        arg->i = va_arg(*ap, പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ UINT:
+        arg->i = va_arg(*ap, unsigned പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ LONG:
         arg->i = va_arg(*ap, long);
-        break;
-    case ULONG:
+        നിർത്തുക;
+    അവസ്ഥ ULONG:
         arg->i = va_arg(*ap, unsigned long);
-        break;
-    case LLONG:
+        നിർത്തുക;
+    അവസ്ഥ LLONG:
         arg->i = va_arg(*ap, long long);
-        break;
-    case ULLONG:
+        നിർത്തുക;
+    അവസ്ഥ ULLONG:
         arg->i = va_arg(*ap, unsigned long long);
-        break;
-    case SHORT:
-        arg->i = (short)va_arg(*ap, int);
-        break;
-    case USHORT:
-        arg->i = (unsigned short)va_arg(*ap, int);
-        break;
-    case CHAR:
-        arg->i = (signed char)va_arg(*ap, int);
-        break;
-    case UCHAR:
-        arg->i = (unsigned char)va_arg(*ap, int);
-        break;
-    case WORDT:
+        നിർത്തുക;
+    അവസ്ഥ SHORT:
+        arg->i = (short)va_arg(*ap, പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ USHORT:
+        arg->i = (unsigned short)va_arg(*ap, പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ CHAR:
+        arg->i = (signed അക്ഷരം)va_arg(*ap, പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ UCHAR:
+        arg->i = (unsigned അക്ഷരം)va_arg(*ap, പൂർണ്ണസംഖ്യ);
+        നിർത്തുക;
+    അവസ്ഥ WORDT:
         arg->i = va_arg(*ap, word_t);
     }
 }
 
 
-static void pad(out_wrap_t *f, char c, int w, int l, int fl)
+സ്ഥിതം ശൂന്യം pad(out_wrap_t *f, അക്ഷരം c, പൂർണ്ണസംഖ്യ w, പൂർണ്ണസംഖ്യ l, പൂർണ്ണസംഖ്യ fl)
 {
-    char pad[32]; /* good enough for what the kernel prints */
-    if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) {
-        return;
+    അക്ഷരം pad[32]; /* good enough for what the kernel prints */
+    എങ്കിൽ (fl & (ഇടത്_ADJ | ZERO_PAD) || l >= w) {
+        തിരികെ;
     }
     l = w - l;
-    memset(pad, c, l > sizeof(pad) ? sizeof(pad) : l);
-    for (; l >= sizeof(pad); l -= sizeof(pad)) {
-        out(f, pad, sizeof(pad));
+    memset(pad, c, l > വലുപ്പം(pad) ? വലുപ്പം(pad) : l);
+    വേണ്ടി (; l >= വലുപ്പം(pad); l -= വലുപ്പം(pad)) {
+        out(f, pad, വലുപ്പം(pad));
     }
     out(f, pad, l);
 }
 
-static const char xdigits[16] = {
+സ്ഥിതം സ്ഥിരം അക്ഷരം xdigits[16] = {
     "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower)
+സ്ഥിതം അക്ഷരം *fmt_x(uintmax_t x, അക്ഷരം *s, പൂർണ്ണസംഖ്യ lower)
 {
-    for (; x; x >>= 4) {
+    വേണ്ടി (; x; x >>= 4) {
         *--s = xdigits[(x & 15)] | lower;
     }
-    return s;
+    തിരികെ s;
 }
 
-static char *fmt_o(uintmax_t x, char *s)
+സ്ഥിതം അക്ഷരം *fmt_o(uintmax_t x, അക്ഷരം *s)
 {
-    for (; x; x >>= 3) {
+    വേണ്ടി (; x; x >>= 3) {
         *--s = '0' + (x & 7);
     }
-    return s;
+    തിരികെ s;
 }
 
-static char *fmt_u(uintmax_t x, char *s)
+സ്ഥിതം അക്ഷരം *fmt_u(uintmax_t x, അക്ഷരം *s)
 {
-    while (0 != x) {
-#if defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
+    ആകുമ്പോൾ (0 != x) {
+#എങ്കിൽ defined(CONFIG_ARCH_AARCH32) || defined(CONFIG_ARCH_RISCV32) || defined(CONFIG_ARCH_IA32)
         /* On 32-bit systems, dividing a 64-bit number by 10 makes the compiler
          * call a helper function from a compiler runtime library. The actual
          * function differs, currently for x86 it's __udivdi3(), for ARM its
@@ -277,20 +277,20 @@ static char *fmt_u(uintmax_t x, char *s)
         q += (q >> 16); /* q += (13107x/2^14)/2^16 = 858993458x/2^30 */
         q += (q >> 32); /* q += (858993458x/2^30)/2^32 = .../2^62 */
         q >>= 3; /* q is roughly 0.8x, so q/8 is roughly x/10 */
-        unsigned int rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
-        if (rem > 9) { /* handle rounding issues */
+        unsigned പൂർണ്ണസംഖ്യ rem = x - (((q << 2) + q) << 1); // rem = x - 10q */
+        എങ്കിൽ (rem > 9) { /* handle rounding issues */
             q += 1;
             rem = x - (((q << 2) + q) << 1); /* recalculate reminder */
-            assert(rem <= 9); /* there must be no rounding error now */
+            പ്രതിജ്ഞാ(rem <= 9); /* there must be no rounding error now */
         }
-#else
+#അല്ലെങ്കിൽ
         uintmax_t q = x / 10;
-        unsigned int rem = x % 10;
+        unsigned പൂർണ്ണസംഖ്യ rem = x % 10;
 #endif
         *--s = '0' + rem;
         x = q;
     }
-    return s;
+    തിരികെ s;
 }
 
 /* Maximum buffer size taken to ensure correct adaptation. However, it could be
@@ -300,261 +300,261 @@ static char *fmt_u(uintmax_t x, char *s)
 
 #define NL_ARGMAX 9
 
-static int getint(char **s)
+സ്ഥിതം പൂർണ്ണസംഖ്യ getint(അക്ഷരം **s)
 {
-    int i;
-    for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
+    പൂർണ്ണസംഖ്യ i;
+    വേണ്ടി (i = 0; isdigit(**s); (*s)++) {
+        എങ്കിൽ (i > INTMAX_MAX / 10U || DIGIT(**s) > INTMAX_MAX - 10 * i) {
             i = -1;
-        } else {
+        } അല്ലെങ്കിൽ {
             i = 10 * i + DIGIT(**s);
         }
     }
-    return i;
+    തിരികെ i;
 }
 
-static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+സ്ഥിതം പൂർണ്ണസംഖ്യ printf_core(out_wrap_t *f, സ്ഥിരം അക്ഷരം *fmt, va_list *ap, സംഘം arg *nl_arg, പൂർണ്ണസംഖ്യ *nl_type)
 {
-    char *a, *z, *s = (char *)fmt;
+    അക്ഷരം *a, *z, *s = (അക്ഷരം *)fmt;
     unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
+    പൂർണ്ണസംഖ്യ w, p, xp;
+    സംഘം arg arg;
+    പൂർണ്ണസംഖ്യ argpos;
     unsigned st, ps;
-    int cnt = 0, l = 0;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
-    const char *prefix;
-    int t, pl;
+    പൂർണ്ണസംഖ്യ cnt = 0, l = 0;
+    അക്ഷരം buf[വലുപ്പം(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    സ്ഥിരം അക്ഷരം *prefix;
+    പൂർണ്ണസംഖ്യ t, pl;
 
-    for (;;) {
-        if (l > INTMAX_MAX - cnt) {
+    വേണ്ടി (;;) {
+        എങ്കിൽ (l > INTMAX_MAX - cnt) {
             /* This error is only specified for snprintf, for other function
              * from the printf() family the behavior is unspecified. Stopping
              * immediately here also seems sane, otherwise %n could produce
              * wrong results.
              */
-            return -1; /* overflow */
+            തിരികെ -1; /* overflow */
         }
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) {
-            break;
+        എങ്കിൽ (!*s) {
+            നിർത്തുക;
         }
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++);
-        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        വേണ്ടി (a = s; *s && *s != '%'; s++);
+        വേണ്ടി (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        എങ്കിൽ (z - a > INTMAX_MAX - cnt) {
+            തിരികെ -1; /* overflow */
         }
         l = z - a;
         out(f, a, l);
-        if (l) {
-            continue;
+        എങ്കിൽ (l) {
+            തുടരുക;
         }
 
-        if (isdigit(s[1]) && s[2] == '$') {
+        എങ്കിൽ (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = DIGIT(s[1]);
             s += 3;
-        } else {
+        } അല്ലെങ്കിൽ {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
+        വേണ്ടി (fl = 0; (unsigned)*s - ' ' < 32 && (FLAGMASK & MASK_TYPE(*s)); s++) {
             fl |= MASK_TYPE(*s);
         }
 
         /* Read field width */
-        if (*s == '*') {
-            if (isdigit(s[1]) && s[2] == '$') {
+        എങ്കിൽ (*s == '*') {
+            എങ്കിൽ (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[DIGIT(s[1])] = INT;
                 w = nl_arg[DIGIT(s[1])].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+            } അല്ലെങ്കിൽ എങ്കിൽ (!l10n) {
+                w = f ? va_arg(*ap, പൂർണ്ണസംഖ്യ) : 0;
                 s++;
-            } else {
-                return -1; /* invalid */
+            } അല്ലെങ്കിൽ {
+                തിരികെ -1; /* invalid */
             }
-            if (w < 0) {
-                fl |= LEFT_ADJ;
+            എങ്കിൽ (w < 0) {
+                fl |= ഇടത്_ADJ;
                 w = -w;
             }
-        } else if ((w = getint(&s)) < 0) {
-            return -1; /* overflow */
+        } അല്ലെങ്കിൽ എങ്കിൽ ((w = getint(&s)) < 0) {
+            തിരികെ -1; /* overflow */
         }
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*') {
-            if (isdigit(s[2]) && s[3] == '$') {
+        എങ്കിൽ (*s == '.' && s[1] == '*') {
+            എങ്കിൽ (isdigit(s[2]) && s[3] == '$') {
                 nl_type[DIGIT(s[2])] = INT;
                 p = nl_arg[DIGIT(s[2])].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap, int) : 0;
+            } അല്ലെങ്കിൽ എങ്കിൽ (!l10n) {
+                p = f ? va_arg(*ap, പൂർണ്ണസംഖ്യ) : 0;
                 s += 2;
-            } else {
-                return -1;/* invalid */
+            } അല്ലെങ്കിൽ {
+                തിരികെ -1;/* invalid */
             }
             xp = (p >= 0);
-        } else if (*s == '.') {
+        } അല്ലെങ്കിൽ എങ്കിൽ (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        } അല്ലെങ്കിൽ {
             p = -1;
             xp = 0;
         }
 
         /* Format specifier state machine */
         st = 0;
-        do {
-            if (OOB(*s)) {
-                return -1; /* invalid */
+        ചെയ്യുക {
+            എങ്കിൽ (OOB(*s)) {
+                തിരികെ -1; /* invalid */
             }
             ps = st;
             st = states[st]S(*s++);
-        } while (st - 1 < STOP);
-        if (!st) {
-            return -1; /* invalid */
+        } ആകുമ്പോൾ (st - 1 < STOP);
+        എങ്കിൽ (!st) {
+            തിരികെ -1; /* invalid */
         }
 
         /* Check validity of argument type (nl/normal) */
-        if (st == NOARG) {
-            if (argpos >= 0) {
-                return -1; /* invalid */
+        എങ്കിൽ (st == NOARG) {
+            എങ്കിൽ (argpos >= 0) {
+                തിരികെ -1; /* invalid */
             }
-        } else {
-            if (argpos >= 0) {
+        } അല്ലെങ്കിൽ {
+            എങ്കിൽ (argpos >= 0) {
                 nl_type[argpos] = st;
                 arg = nl_arg[argpos];
-            } else if (f) {
-                pop_arg(&arg, st, ap);
-            } else {
-                return 0;
+            } അല്ലെങ്കിൽ എങ്കിൽ (f) {
+                എടുക്കുക_arg(&arg, st, ap);
+            } അല്ലെങ്കിൽ {
+                തിരികെ 0;
             }
         }
 
-        if (!f) {
-            continue;
+        എങ്കിൽ (!f) {
+            തുടരുക;
         }
 
-        z = buf + sizeof(buf);
+        z = buf + വലുപ്പം(buf);
         prefix = "-+   0X0x";
         pl = 0;
         t = s[-1];
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) {
+        എങ്കിൽ (fl & ഇടത്_ADJ) {
             fl &= ~ZERO_PAD;
         }
 
-        if (t == 'n') {
-            if (!arg.p) {
-                continue;
+        എങ്കിൽ (t == 'n') {
+            എങ്കിൽ (!arg.p) {
+                തുടരുക;
             }
-            switch (ps) {
-            case BARE:
-                *(int *)arg.p = cnt;
-                break;
-            case LPRE:
+            തിരഞ്ഞെടുപ്പ് (ps) {
+            അവസ്ഥ BARE:
+                *(പൂർണ്ണസംഖ്യ *)arg.p = cnt;
+                നിർത്തുക;
+            അവസ്ഥ LPRE:
                 *(long *)arg.p = cnt;
-                break;
-            case LLPRE:
+                നിർത്തുക;
+            അവസ്ഥ LLPRE:
                 *(long long *)arg.p = cnt;
-                break;
-            case HPRE:
+                നിർത്തുക;
+            അവസ്ഥ HPRE:
                 *(unsigned short *)arg.p = cnt;
-                break;
-            case HHPRE:
-                *(unsigned char *)arg.p = cnt;
-                break;
-            case ZTPRE:
+                നിർത്തുക;
+            അവസ്ഥ HHPRE:
+                *(unsigned അക്ഷരം *)arg.p = cnt;
+                നിർത്തുക;
+            അവസ്ഥ ZTPRE:
                 *(word_t *)arg.p = cnt;
-                break;
-            case JPRE:
+                നിർത്തുക;
+            അവസ്ഥ JPRE:
                 *(word_t *)arg.p = cnt;
-                break;
+                നിർത്തുക;
             }
-            continue;
-        } else if (t == 'c') {
+            തുടരുക;
+        } അല്ലെങ്കിൽ എങ്കിൽ (t == 'c') {
             p = 1;
             a = z - p;
             *a = arg.i;
             fl &= ~ZERO_PAD;
-        } else if (t == 's') {
+        } അല്ലെങ്കിൽ എങ്കിൽ (t == 's') {
             a = arg.p ? arg.p : "(null)";
             z = a + strnlen(a, p < 0 ? UINTPTR_MAX : p);
-            if (p < 0 && *z) {
-                return -1; /* overflow */
+            എങ്കിൽ (p < 0 && *z) {
+                തിരികെ -1; /* overflow */
             }
             p = z - a;
             fl &= ~ZERO_PAD;
-        } else {
-            switch (t) {
-            case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+        } അല്ലെങ്കിൽ {
+            തിരഞ്ഞെടുപ്പ് (t) {
+            അവസ്ഥ 'p':
+                p = MAX(p, 2 * വലുപ്പം(ശൂന്യം *));
                 t = 'x';
                 fl |= ALT_FORM;
-            case 'x':
-            case 'X':
+            അവസ്ഥ 'x':
+            അവസ്ഥ 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) {
+                എങ്കിൽ (arg.i && (fl & ALT_FORM)) {
                     prefix += (t >> 4);
                     pl = 2;
                 }
-                break;
-            case 'o':
+                നിർത്തുക;
+            അവസ്ഥ 'o':
                 a = fmt_o(arg.i, z);
-                if ((fl & ALT_FORM) && p < (z - a + 1)) {
+                എങ്കിൽ ((fl & ALT_FORM) && p < (z - a + 1)) {
                     p = z - a + 1;
                 }
-                break;
-            case 'd':
-            case 'i':
+                നിർത്തുക;
+            അവസ്ഥ 'd':
+            അവസ്ഥ 'i':
                 pl = 1;
-                if (arg.i > INTMAX_MAX) {
+                എങ്കിൽ (arg.i > INTMAX_MAX) {
                     arg.i = -arg.i;
-                } else if (fl & MARK_POS) {
+                } അല്ലെങ്കിൽ എങ്കിൽ (fl & MARK_POS) {
                     prefix++;
-                } else if (fl & PAD_POS) {
+                } അല്ലെങ്കിൽ എങ്കിൽ (fl & PAD_POS) {
                     prefix += 2;
-                } else {
+                } അല്ലെങ്കിൽ {
                     pl = 0;
                 }
-            case 'u':
+            അവസ്ഥ 'u':
                 a = fmt_u(arg.i, z);
-                break;
+                നിർത്തുക;
             }
-            if (xp && p < 0) {
-                return -1; /* overflow */
+            എങ്കിൽ (xp && p < 0) {
+                തിരികെ -1; /* overflow */
             }
-            if (xp) {
+            എങ്കിൽ (xp) {
                 fl &= ~ZERO_PAD;
             }
-            if (!arg.i && !p) {
+            എങ്കിൽ (!arg.i && !p) {
                 a = z;
-            } else {
+            } അല്ലെങ്കിൽ {
                 p = MAX(p, z - a + !arg.i);
             }
         }
 
-        if (p < z - a) {
+        എങ്കിൽ (p < z - a) {
             p = z - a;
         }
-        if (p > INTMAX_MAX - pl) {
-            return -1; /* overflow */
+        എങ്കിൽ (p > INTMAX_MAX - pl) {
+            തിരികെ -1; /* overflow */
         }
-        if (w < pl + p) {
+        എങ്കിൽ (w < pl + p) {
             w = pl + p;
         }
-        if (w > INTMAX_MAX - cnt) {
-            return -1; /* overflow */
+        എങ്കിൽ (w > INTMAX_MAX - cnt) {
+            തിരികെ -1; /* overflow */
         }
 
         pad(f, ' ', w, pl + p, fl);
@@ -562,47 +562,47 @@ static int printf_core(out_wrap_t *f, const char *fmt, va_list *ap, union arg *n
         pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
         pad(f, '0', p, z - a, 0);
         out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        pad(f, ' ', w, pl + p, fl ^ ഇടത്_ADJ);
 
         l = w;
     }
 
-    if (f) {
-        return cnt;
+    എങ്കിൽ (f) {
+        തിരികെ cnt;
     }
-    if (!l10n) {
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
-        pop_arg(nl_arg + i, nl_type[i], ap);
-    }
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) {
-        return -1; /* invalid */
+    എങ്കിൽ (!l10n) {
+        തിരികെ 0;
     }
 
-    return 1;
+    പൂർണ്ണസംഖ്യ i;
+    വേണ്ടി (i = 1; i <= NL_ARGMAX && nl_type[i]; i++) {
+        എടുക്കുക_arg(nl_arg + i, nl_type[i], ap);
+    }
+    വേണ്ടി (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    എങ്കിൽ (i <= NL_ARGMAX) {
+        തിരികെ -1; /* invalid */
+    }
+
+    തിരികെ 1;
 }
 
-static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
+സ്ഥിതം പൂർണ്ണസംഖ്യ vprintf(out_wrap_t *out, സ്ഥിരം അക്ഷരം *fmt, va_list ap)
 {
     va_list ap2;
-    int nl_type[NL_ARGMAX + 1] = {0};
-    union arg nl_arg[NL_ARGMAX + 1];
-    int ret;
+    പൂർണ്ണസംഖ്യ nl_type[NL_ARGMAX + 1] = {0};
+    സംഘം arg nl_arg[NL_ARGMAX + 1];
+    പൂർണ്ണസംഖ്യ ret;
 
     /* validate format string */
     va_copy(ap2, ap);
-    if (printf_core(NULL, fmt, &ap2, nl_arg, nl_type) < 0) {
+    എങ്കിൽ (printf_core(ശൂന്യ, fmt, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
-        return -1;
+        തിരികെ -1;
     }
 
     ret = printf_core(out, fmt, &ap2, nl_arg, nl_type);
     va_end(ap2);
-    return ret;
+    തിരികെ ret;
 }
 
 /*
@@ -611,32 +611,32 @@ static int vprintf(out_wrap_t *out, const char *fmt, va_list ap)
  *------------------------------------------------------------------------------
  */
 
-int impl_kvprintf(const char *format, va_list ap)
+പൂർണ്ണസംഖ്യ impl_kvprintf(സ്ഥിരം അക്ഷരം *format, va_list ap)
 {
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_putchar,
-        .buf    = NULL,
+        .ലിഖ  = do_output_to_putchar,
+        .buf    = ശൂന്യ,
         .maxlen = 0,
         .used   = 0
     };
 
-    return vprintf(&out_wrap, format, ap);
+    തിരികെ vprintf(&out_wrap, format, ap);
 }
 
-int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
+പൂർണ്ണസംഖ്യ impl_ksnvprintf(അക്ഷരം *str, word_t size, സ്ഥിരം അക്ഷരം *format, va_list ap)
 {
-    if (!str) {
+    എങ്കിൽ (!str) {
         size = 0;
     }
 
     out_wrap_t out_wrap =  {
-        .write  = do_output_to_buffer,
+        .ലിഖ  = do_output_to_buffer,
         .buf    = str,
         .maxlen = size,
         .used   = 0
     };
 
-    int ret = vprintf(&out_wrap, format, ap);
+    പൂർണ്ണസംഖ്യ ret = vprintf(&out_wrap, format, ap);
 
     /* We return the number of characters written into the buffer, excluding the
      * terminating null char. However, we do never write more than 'size' bytes,
@@ -646,11 +646,11 @@ int impl_ksnvprintf(char *str, word_t size, const char *format, va_list ap)
      * enough space had been available. Thus, a return value of 'size' or more
      * means that the output was truncated.
      */
-    if ((ret > 0) && (size > 0)) {
+    എങ്കിൽ ((ret > 0) && (size > 0)) {
         str[(ret < size) ? ret : size - 1] = '\0';
     }
 
-    return ret;
+    തിരികെ ret;
 }
 
 #endif /* CONFIG_PRINTING */

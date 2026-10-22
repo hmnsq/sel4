@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <object.h>
-#include <machine.h>
-#include <arch/model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/kernel/thread.h>
-#include <linker.h>
+#അന്തര്ഭാവ <object.h>
+#അന്തര്ഭാവ <machine.h>
+#അന്തര്ഭാവ <arch/model/statedata.h>
+#അന്തര്ഭാവ <arch/kernel/vspace.h>
+#അന്തര്ഭാവ <arch/kernel/thread.h>
+#അന്തര്ഭാവ <linker.h>
 
-void Arch_switchToThread(tcb_t *tcb)
+ശൂന്യം Arch_switchToThread(tcb_t *tcb)
 {
     /* set PD */
     setVMRoot(tcb);
-    if (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
+    എങ്കിൽ (config_set(CONFIG_KERNEL_X86_IBPB_ON_CONTEXT_SWITCH)) {
         x86_ibpb();
     }
 
-    if (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
+    എങ്കിൽ (config_set(CONFIG_KERNEL_X86_RSB_ON_CONTEXT_SWITCH)) {
         x86_flush_rsb();
     }
 }
 
-BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
+BOOT_CODE ശൂന്യം Arch_configureIdleThread(tcb_t *tcb)
 {
     setRegister(tcb, FLAGS, FLAGS_USER_DEFAULT);
     setRegister(tcb, NextIP, (word_t)&idle_thread);
@@ -34,18 +34,18 @@ BOOT_CODE void Arch_configureIdleThread(tcb_t *tcb)
     setRegister(tcb, GS_BASE, 0);
 }
 
-void Arch_switchToIdleThread(void)
+ശൂന്യം Arch_switchToIdleThread(ശൂന്യം)
 {
     /* Force the idle thread to run on kernel page table */
-    setVMRoot(NODE_STATE(ksIdleThread));
+    setVMRoot(കണ്ണി_STATE(ksIdleThread));
 }
 
-void Arch_activateIdleThread(tcb_t *tcb)
+ശൂന്യം Arch_activateIdleThread(tcb_t *tcb)
 {
     /* Don't need to do anything */
 }
 
-void Mode_postModifyRegisters(tcb_t *tptr)
+ശൂന്യം Mode_postModifyRegisters(tcb_t *tptr)
 {
     /* Don't need to do anything */
 }

@@ -20,7 +20,7 @@
 # leaving the stack pointer pointing to TLS_BASE. The kernel pushes the rest.
 
 #define INT_HANDLER_COMMON(number, error_code) \
-.global int_##number;                        \
+.വൈശ്വിക int_##number;                        \
 .type int_##number, %function;               \
 int_##number:                                \
     error_code;                              \
@@ -370,7 +370,7 @@ user_interrupt:
     pushl   %ecx
 
     # gtfo to C land, we will not return
-    call    c_handle_interrupt
+    വിളിക്കുക    c_handle_interrupt
 
 kernel_interrupt:
     cmpl    $0x20, %ecx      # if interrupt vector is below 0x20, we have an exception
@@ -387,7 +387,7 @@ not_idle_thread:
     # We got an interrupt from the kernel. Call into C to save
     # the IRQ number, then return back to where we were
     pushl %ecx
-    call c_nested_interrupt
+    വിളിക്കുക c_nested_interrupt
     addl $4, %esp
     # Disable the interrupt flag so that we do not take any additional interrupts
     andl $~0x200, (4 * FLAGS)(%esp)
@@ -465,7 +465,7 @@ BEGIN_FUNC(kernel_exception)
     movl    (4 * FLAGS)(%esp), %edx # EDX contains EFLAGS
     leal    (4 * ESP)(%esp), %edi # EDI contains ESP when exception happened
 
-    # call handleKernelException(vector, errcode, EIP, ESP, EFLAGS, CR0, CR2, CR3, CR4)
+    # വിളിക്കുക handleKernelException(vector, errcode, EIP, ESP, EFLAGS, CR0, CR2, CR3, CR4)
     movl    %cr4, %esi
     pushl   %esi
     movl    %cr3, %esi
@@ -479,7 +479,7 @@ BEGIN_FUNC(kernel_exception)
     pushl   %ebx
     pushl   %eax
     pushl   %ecx
-    call    handleKernelException
+    വിളിക്കുക    handleKernelException
     addl    $36, %esp
     # Set EIP in the saved register context to the new IP returned from handleKernelException
     movl    %eax, (4 * NextIP)(%esp)
@@ -504,7 +504,7 @@ BEGIN_FUNC(handle_vmexit)
     # switch to kernel stack
     SET_KERNEL_STACK_FROM(7 * 4)
     # Handle the vmexit, we will not return
-    call    c_handle_vmexit
+    വിളിക്കുക    c_handle_vmexit
 END_FUNC(handle_vmexit)
 #endif
 
@@ -552,6 +552,6 @@ BEGIN_FUNC(handle_syscall)
     pushl   %ebx # cptr
 
     # gtfo to C land, we will not return
-    call    c_handle_syscall
+    വിളിക്കുക    c_handle_syscall
 
 END_FUNC(handle_syscall)

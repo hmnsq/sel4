@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/debug.h>
+#അന്തര്ഭാവ <config.h>
+#അന്തര്ഭാവ <api/debug.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE halt(void)
+ശൂന്യം VISIBLE halt(ശൂന്യം)
 {
     /* halt is actually, idle thread without the interrupts */
-    asm volatile("cli");
+    asm അസ്ഥിര("cli");
 
 #ifdef CONFIG_PRINTING
     printf("halting...");

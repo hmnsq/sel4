@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#അന്തര്ഭാവ <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+സ്ഥിതം വരിയിൽ ശൂന്യം cleanByWSL(word_t wsl)
 {
-    asm volatile("mcr p15, 0, %0, c7, c10, 2" : : "r"(wsl));
+    asm അസ്ഥിര("mcr p15, 0, %0, c7, c10, 2" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+സ്ഥിതം വരിയിൽ ശൂന്യം cleanInvalidateByWSL(word_t wsl)
 {
-    asm volatile("mcr p15, 0, %0, c7, c14, 2" : : "r"(wsl));
+    asm അസ്ഥിര("mcr p15, 0, %0, c7, c14, 2" : : "r"(wsl));
 }
 
 
-static inline word_t readCLID(void)
+സ്ഥിതം വരിയിൽ word_t readCLID(ശൂന്യം)
 {
     word_t CLID;
-    asm volatile("mrc p15, 1, %0, c0, c0, 1" : "=r"(CLID));
-    return CLID;
+    asm അസ്ഥിര("mrc p15, 1, %0, c0, c0, 1" : "=r"(CLID));
+    തിരികെ CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -29,7 +29,7 @@ static inline word_t readCLID(void)
 #define LOUIS(x)   (((x) >> 21)        & MASK(3))
 #define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
 
-enum arm_cache_type {
+എണ്ണൽ arm_cache_type {
     ARMCacheNone = 0,
     ARMCacheI =    1,
     ARMCacheD =    2,
@@ -38,18 +38,18 @@ enum arm_cache_type {
 };
 
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+സ്ഥിതം വരിയിൽ word_t readCacheSize(പൂർണ്ണസംഖ്യ level, bool_t instruction)
 {
     word_t size_unique_name, csselr_old;
     /* Save CSSELR */
-    asm volatile("mrc p15, 2, %0, c0, c0, 0" : "=r"(csselr_old));
+    asm അസ്ഥിര("mrc p15, 2, %0, c0, c0, 0" : "=r"(csselr_old));
     /* Select cache level */
-    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r"((level << 1) | instruction));
+    asm അസ്ഥിര("mcr p15, 2, %0, c0, c0, 0" : : "r"((level << 1) | instruction));
     /* Read 'size' */
-    asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r"(size_unique_name));
+    asm അസ്ഥിര("mrc p15, 1, %0, c0, c0, 0" : "=r"(size_unique_name));
     /* Restore CSSELR */
-    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r"(csselr_old));
-    return size_unique_name;
+    asm അസ്ഥിര("mcr p15, 2, %0, c0, c0, 0" : : "r"(csselr_old));
+    തിരികെ size_unique_name;
 }
 
 /* Number of bits to index within a cache line.  The field is log2(nwords) - 2
@@ -61,25 +61,25 @@ static inline word_t readCacheSize(int level, bool_t instruction)
 #define NSETS(s)    ((((s) >> 13) & MASK(15)) + 1)
 
 
-void clean_D_PoU(void)
+ശൂന്യം clean_D_PoU(ശൂന്യം)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
-    int l;
+    പൂർണ്ണസംഖ്യ clid = readCLID();
+    പൂർണ്ണസംഖ്യ lou = LOUU(clid);
+    പൂർണ്ണസംഖ്യ l;
 
-    for (l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    വേണ്ടി (l = 0; l < lou; l++) {
+        എങ്കിൽ (CTYPE(clid, l) > ARMCacheI) {
             word_t s = readCacheSize(l, 0);
-            int lbits = LINEBITS(s);
-            int assoc = ASSOC(s);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(s);
-            int w;
+            പൂർണ്ണസംഖ്യ lbits = LINEBITS(s);
+            പൂർണ്ണസംഖ്യ assoc = ASSOC(s);
+            പൂർണ്ണസംഖ്യ assoc_bits = wordBits - clzl(assoc - 1);
+            പൂർണ്ണസംഖ്യ nsets = NSETS(s);
+            പൂർണ്ണസംഖ്യ w;
 
-            for (w = 0; w < assoc; w++) {
-                int v;
+            വേണ്ടി (w = 0; w < assoc; w++) {
+                പൂർണ്ണസംഖ്യ v;
 
-                for (v = 0; v < nsets; v++) {
+                വേണ്ടി (v = 0; v < nsets; v++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (v << lbits) | (l << 1));
                 }
@@ -88,39 +88,39 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+സ്ഥിതം വരിയിൽ ശൂന്യം cleanInvalidate_D_by_level(പൂർണ്ണസംഖ്യ l)
 {
     word_t s = readCacheSize(l, 0);
-    int lbits = LINEBITS(s);
-    int assoc = ASSOC(s);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(s);
-    int w;
+    പൂർണ്ണസംഖ്യ lbits = LINEBITS(s);
+    പൂർണ്ണസംഖ്യ assoc = ASSOC(s);
+    പൂർണ്ണസംഖ്യ assoc_bits = wordBits - clzl(assoc - 1);
+    പൂർണ്ണസംഖ്യ nsets = NSETS(s);
+    പൂർണ്ണസംഖ്യ w;
 
-    for (w = 0; w < assoc; w++) {
-        int v;
+    വേണ്ടി (w = 0; w < assoc; w++) {
+        പൂർണ്ണസംഖ്യ v;
 
-        for (v = 0; v < nsets; v++) {
+        വേണ്ടി (v = 0; v < nsets; v++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (v << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+ശൂന്യം cleanInvalidate_D_PoC(ശൂന്യം)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
-    int l;
+    പൂർണ്ണസംഖ്യ clid = readCLID();
+    പൂർണ്ണസംഖ്യ loc = LOC(clid);
+    പൂർണ്ണസംഖ്യ l;
 
-    for (l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    വേണ്ടി (l = 0; l < loc; l++) {
+        എങ്കിൽ (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+ശൂന്യം cleanInvalidate_L1D(ശൂന്യം)
 {
     cleanInvalidate_D_by_level(0);
 }
