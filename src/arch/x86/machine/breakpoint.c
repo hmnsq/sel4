@@ -52,7 +52,7 @@ static bool_t byte8_bps_supported = false;
 
 bool_t byte8BreakpointsSupported(void)
 {
-    return byte8_bps_supported;
+    върни byte8_bps_supported;
 }
 
 static inline void bitwiseAndDr6Reg(word_t mask)
@@ -65,7 +65,7 @@ static inline void bitwiseAndDr6Reg(word_t mask)
 
 static inline word_t readDr7Context(tcb_t *t)
 {
-    return t->tcbArch.tcbContext.breakpointState.dr[5];
+    върни t->tcbArch.tcbContext.breakpointState.dr[5];
 }
 
 static inline void bitwiseOrDr7Context(tcb_t *t, word_t val)
@@ -124,14 +124,14 @@ PURE static inline word_t convertTypeAndAccessToArch(uint16_t bp_num, word_t typ
 
     switch (bp_num) {
     case 0:
-        return type << X86_DEBUG_BP0_TYPE_SHIFT;
+        върни type << X86_DEBUG_BP0_TYPE_SHIFT;
     case 1:
-        return type << X86_DEBUG_BP1_TYPE_SHIFT;
+        върни type << X86_DEBUG_BP1_TYPE_SHIFT;
     case 2:
-        return type << X86_DEBUG_BP2_TYPE_SHIFT;
+        върни type << X86_DEBUG_BP2_TYPE_SHIFT;
     default: /* 3 */
         assert(bp_num == 3);
-        return type << X86_DEBUG_BP3_TYPE_SHIFT;
+        върни type << X86_DEBUG_BP3_TYPE_SHIFT;
     }
 }
 
@@ -184,7 +184,7 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
         ret.rw = seL4_BreakOnReadWrite;
         break;
     }
-    return ret;
+    върни ret;
 }
 
 /** Converts an integer size number into an equivalent hardware register value.
@@ -195,13 +195,13 @@ PURE static inline convertedTypeAndAccess_t convertArchToTypeAndAccess(word_t dr
  */
 PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t size)
 {
-    if (type == seL4_InstructionBreakpoint) {
+    ако (type == seL4_InstructionBreakpoint) {
         /* Intel manual vol3 17.2.4:
          * "If the corresponding RWn field in register DR7 is 00 (instruction
          * execution), then the LENn field should also be 00"
          */
         size = 0;
-    } else {
+    } иначе {
         switch (size) {
         case 1:
             size = X86_DEBUG_BP_SIZE_1B;
@@ -220,14 +220,14 @@ PURE static inline word_t convertSizeToArch(uint16_t bp_num, word_t type, word_t
 
     switch (bp_num) {
     case 0:
-        return size << X86_DEBUG_BP0_SIZE_SHIFT;
+        върни size << X86_DEBUG_BP0_SIZE_SHIFT;
     case 1:
-        return size << X86_DEBUG_BP1_SIZE_SHIFT;
+        върни size << X86_DEBUG_BP1_SIZE_SHIFT;
     case 2:
-        return size << X86_DEBUG_BP2_SIZE_SHIFT;
+        върни size << X86_DEBUG_BP2_SIZE_SHIFT;
     default: /* 3 */
         assert(bp_num == 3);
-        return size << X86_DEBUG_BP3_SIZE_SHIFT;
+        върни size << X86_DEBUG_BP3_SIZE_SHIFT;
     }
 }
 
@@ -269,20 +269,20 @@ PURE static inline word_t convertArchToSize(word_t dr7, uint16_t bp_num)
     }
 
     /* Force size to 0 if type is instruction breakpoint. */
-    if (type == X86_DEBUG_BP_TYPE_INSTR) {
-        return 0;
+    ако (type == X86_DEBUG_BP_TYPE_INSTR) {
+        върни 0;
     }
 
     switch (dr7) {
     case X86_DEBUG_BP_SIZE_1B:
-        return 1;
+        върни 1;
     case X86_DEBUG_BP_SIZE_2B:
-        return 2;
+        върни 2;
     case X86_DEBUG_BP_SIZE_8B:
-        return 8;
+        върни 8;
     default: /* 4B */
         assert(dr7 == X86_DEBUG_BP_SIZE_4B);
-        return 4;
+        върни 4;
     }
 }
 
@@ -355,13 +355,13 @@ static bool_t breakpointIsEnabled(tcb_t *t, uint16_t bp_num)
     dr7 = readDr7Context(t);
     switch (bp_num) {
     case 0:
-        return !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
+        върни !!(dr7 & X86_DEBUG_BP0_ENABLE_BIT);
     case 1:
-        return !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
+        върни !!(dr7 & X86_DEBUG_BP1_ENABLE_BIT);
     case 2:
-        return !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
+        върни !!(dr7 & X86_DEBUG_BP2_ENABLE_BIT);
     default:
-        return !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
+        върни !!(dr7 & X86_DEBUG_BP3_ENABLE_BIT);
     }
 }
 
@@ -385,7 +385,7 @@ static void setBpVaddrContext(tcb_t *t, uint16_t bp_num, word_t vaddr)
         ubs->dr[3] = vaddr;
         break;
     }
-    return;
+    върни;
 }
 
 /** Backend for the seL4_TCB_SetBreakpoint invocation.
@@ -422,14 +422,14 @@ static word_t getBpVaddrContext(tcb_t *t, uint16_t bp_num)
 
     switch (bp_num) {
     case 0:
-        return ubs->dr[0];
+        върни ubs->dr[0];
     case 1:
-        return ubs->dr[1];
+        върни ubs->dr[1];
     case 2:
-        return ubs->dr[2];
+        върни ubs->dr[2];
     default:
         assert(bp_num == 3);
-        return ubs->dr[3];
+        върни ubs->dr[3];
     }
 }
 
@@ -455,7 +455,7 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
     ret.type = res.type;
     ret.rw = res.rw;
     ret.is_enabled = breakpointIsEnabled(t, bp_num);
-    return ret;
+    върни ret;
 }
 
 /** Backend for the x86 seL4_TCB_UnsetBreakpoint invocation.
@@ -489,9 +489,9 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
     word_t dr6;
 
     dr6 = readDr6Reg();
-    if (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
+    ако (!(dr6 & X86_DEBUG_DR6_SINGLE_STEP_FLAG)) {
         ret.ret = false;
-        return ret;
+        върни ret;
     }
 
     ret.ret = true;
@@ -511,25 +511,25 @@ static testAndResetSingleStepException_t testAndResetSingleStepException(tcb_t *
      */
     /* This will automatically be popped by restore_user_context() */
     t->tcbArch.tcbContext.registers[FLAGS] |= X86_DEBUG_EFLAGS_RESUME_FLAG;
-    return ret;
+    върни ret;
 }
 
 bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
                                UNUSED bool_t is_reply)
 {
     /* On x86 no hardware breakpoints are needed for single stepping. */
-    if (n_instr == 0) {
+    ако (n_instr == 0) {
         /* If n_instr (number of instructions to single-step) is 0, that is the
           * same as requesting that single-stepping be disabled.
           */
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = false;
         t->tcbArch.tcbContext.registers[FLAGS] &= ~X86_DEBUG_EFLAGS_TRAP_FLAG;
-    } else {
+    } иначе {
         t->tcbArch.tcbContext.breakpointState.single_step_enabled = true;
     }
 
     t->tcbArch.tcbContext.breakpointState.n_instructions = n_instr;
-    return false;
+    върни false;
 }
 
 /** Used in the exception path to determine which breakpoint triggered the
@@ -549,7 +549,7 @@ bool_t configureSingleStepping(tcb_t *t, uint16_t bp_num, word_t n_instr,
  *          breakpoint.
  */
 typedef struct {
-    int bp_num;
+    цяло bp_num;
     word_t vaddr, reason;
 } getAndResetActiveBreakpoint_t;
 
@@ -560,17 +560,17 @@ static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
 
     /* Read from the hardware regs, not user context */
     word_t dr6 = readDr6Reg();
-    if (dr6 & BIT(0)) {
+    ако (dr6 & BIT(0)) {
         ret.bp_num = 0;
-    } else if (dr6 & BIT(1)) {
+    } иначе ако (dr6 & BIT(1)) {
         ret.bp_num = 1;
-    } else if (dr6 & BIT(2)) {
+    } иначе ако (dr6 & BIT(2)) {
         ret.bp_num = 2;
-    } else if (dr6 & BIT(3)) {
+    } иначе ако (dr6 & BIT(3)) {
         ret.bp_num = 3;
-    } else {
+    } иначе {
         ret.bp_num = -1;
-        return ret;
+        върни ret;
     }
 
     tmp = convertArchToTypeAndAccess(readDr7Context(t), ret.bp_num);
@@ -578,10 +578,10 @@ static getAndResetActiveBreakpoint_t getAndResetActiveBreakpoint(tcb_t *t)
     ret.reason = tmp.type;
 
     bitwiseAndDr6Reg(~BIT(ret.bp_num));
-    return ret;
+    върни ret;
 }
 
-exception_t handleUserLevelDebugException(int int_vector)
+exception_t handleUserLevelDebugException(цяло int_vector)
 {
     tcb_t *ct;
     getAndResetActiveBreakpoint_t active_bp;
@@ -599,31 +599,31 @@ exception_t handleUserLevelDebugException(int int_vector)
     ct = NODE_STATE(ksCurThread);
 
     /* Software break request (INT3) is detected by the vector number */
-    if (int_vector == int_software_break_request) {
+    ако (int_vector == int_software_break_request) {
         current_fault = seL4_Fault_DebugException_new(getRestartPC(NODE_STATE(ksCurThread)),
                                                       0, seL4_SoftwareBreakRequest);
-    } else {
+    } иначе {
         /* Hardware breakpoint trigger is detected using DR6 */
         active_bp = getAndResetActiveBreakpoint(ct);
-        if (active_bp.bp_num >= 0) {
+        ако (active_bp.bp_num >= 0) {
             current_fault = seL4_Fault_DebugException_new(active_bp.vaddr,
                                                           active_bp.bp_num,
                                                           active_bp.reason);
-        } else {
+        } иначе {
             single_step_info = testAndResetSingleStepException(ct);
-            if (single_step_info.ret == true) {
+            ако (single_step_info.ret == true) {
                 /* If the caller asked us to skip over N instructions before
                  * generating the next single-step breakpoint, we shouldn't
                  * bother to construct a fault message until we've skipped N
                  * instructions.
                  */
-                if (singleStepFaultCounterReady(ct) == false) {
-                    return EXCEPTION_NONE;
+                ако (singleStepFaultCounterReady(ct) == false) {
+                    върни EXCEPTION_NONE;
                 }
                 current_fault = seL4_Fault_DebugException_new(single_step_info.instr_vaddr,
                                                               0, seL4_SingleStep);
-            } else {
-                return EXCEPTION_SYSCALL_ERROR;
+            } иначе {
+                върни EXCEPTION_SYSCALL_ERROR;
             }
         }
     }
@@ -633,7 +633,7 @@ exception_t handleUserLevelDebugException(int int_vector)
     schedule();
     activateThread();
 
-    return EXCEPTION_NONE;
+    върни EXCEPTION_NONE;
 }
 
 BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
@@ -642,19 +642,19 @@ BOOT_CODE bool_t Arch_initHardwareBreakpoints(void)
 
     modelinfo = x86_cpuid_get_model_info();
     /* Intel manuals, vol3, section 17.2.4, "NOTES". */
-    if (modelinfo->family == 15) {
-        if (modelinfo->model == 3 || modelinfo->model == 4
+    ако (modelinfo->family == 15) {
+        ако (modelinfo->model == 3 || modelinfo->model == 4
             || modelinfo->model == 6) {
             byte8_bps_supported = true;
         }
     }
-    if (modelinfo->family == 6) {
-        if (modelinfo->model == 15 || modelinfo->model == 23
+    ако (modelinfo->family == 6) {
+        ако (modelinfo->model == 15 || modelinfo->model == 23
             || modelinfo->model == 0x1C) {
             byte8_bps_supported = true;
         }
     }
-    return true;
+    върни true;
 }
 
 void Arch_initBreakpointContext(user_breakpoint_state_t *uds)
