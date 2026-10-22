@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/faults.h>
-#include <api/syscall.h>
-#include <util.h>
+#अन्तर्भाव <types.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <api/faults.h>
+#अन्तर्भाव <api/syscall.h>
+#अन्तर्भाव <util.h>
 
 bool_t Arch_handleFaultReply(tcb_t *receiver, tcb_t *sender, word_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault:
-        return true;
+    विकल्प (faultType) {
+    पक्ष seL4_Fault_VMFault:
+        प्रत्यागम true;
 
-    default:
+    स्वभाव:
         fail("Invalid fault");
     }
 }
 
 word_t Arch_setMRs_fault(tcb_t *sender, tcb_t *receiver, word_t *receiveIPCBuffer, word_t faultType)
 {
-    switch (faultType) {
-    case seL4_Fault_VMFault: {
+    विकल्प (faultType) {
+    पक्ष seL4_Fault_VMFault: {
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_IP, getRestartPC(sender));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_Addr,
               seL4_Fault_VMFault_get_address(sender->tcbFault));
         setMR(receiver, receiveIPCBuffer, seL4_VMFault_PrefetchFault,
               seL4_Fault_VMFault_get_instructionFault(sender->tcbFault));
-        return setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
+        प्रत्यागम setMR(receiver, receiveIPCBuffer, seL4_VMFault_FSR,
                      seL4_Fault_VMFault_get_FSR(sender->tcbFault));
     }
-    default:
+    स्वभाव:
         fail("Invalid fault");
     }
 }
@@ -66,27 +66,27 @@ word_t handleKernelException(
     word_t i;
 
     /* Check if we are in a state where we expect a GP fault, if so record it and return */
-    if (vector == int_gp_fault && ARCH_NODE_STATE(x86KSGPExceptReturnTo) != 0) {
-        word_t ret = ARCH_NODE_STATE(x86KSGPExceptReturnTo);
-        ARCH_NODE_STATE(x86KSGPExceptReturnTo) = 0;
-        return ret;
+    यदि (vector == int_gp_fault && ARCH_गाँठ_STATE(x86KSGPExceptReturnTo) != 0) {
+        word_t ret = ARCH_गाँठ_STATE(x86KSGPExceptReturnTo);
+        ARCH_गाँठ_STATE(x86KSGPExceptReturnTo) = 0;
+        प्रत्यागम ret;
     }
-    printf("\n========== KERNEL EXCEPTION ==========\n");
-    printf("Vector:  0x%lx\n", vector);
-    printf("ErrCode: 0x%lx\n", errcode);
-    printf("IP:      0x%lx\n", ip);
-    printf("SP:      0x%lx\n", sp);
-    printf("FLAGS:   0x%lx\n", flags);
-    printf("CR0:     0x%lx\n", cr0);
-    printf("CR2:     0x%lx (page-fault address)\n", cr2);
-    printf("CR3:     0x%lx (page-directory physical address)\n", cr3);
-    printf("CR4:     0x%lx\n", cr4);
-    printf("\nStack Dump:\n");
-    for (i = 0; i < 20; i++) {
-        word_t UNUSED stack = sp + i * sizeof(word_t);
-        printf("*0x%lx == 0x%lx\n", stack, *(word_t *)stack);
+    म_लिखो("\n========== KERNEL EXCEPTION ==========\n");
+    म_लिखो("Vector:  0x%lx\n", vector);
+    म_लिखो("ErrCode: 0x%lx\n", errcode);
+    म_लिखो("IP:      0x%lx\n", ip);
+    म_लिखो("SP:      0x%lx\n", sp);
+    म_लिखो("FLAGS:   0x%lx\n", flags);
+    म_लिखो("CR0:     0x%lx\n", cr0);
+    म_लिखो("CR2:     0x%lx (page-fault address)\n", cr2);
+    म_लिखो("CR3:     0x%lx (page-directory physical address)\n", cr3);
+    म_लिखो("CR4:     0x%lx\n", cr4);
+    म_लिखो("\nStack Dump:\n");
+    प्रति (i = 0; i < 20; i++) {
+        word_t UNUSED ढेर = sp + i * परिमाण(word_t);
+        म_लिखो("*0x%lx == 0x%lx\n", ढेर, *(word_t *)ढेर);
     }
-    printf("\nHalting...\n");
+    म_लिखो("\nHalting...\n");
     halt();
     UNREACHABLE();
 }

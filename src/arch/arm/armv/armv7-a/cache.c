@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#अन्तर्भाव <arch/machine/hardware.h>
 
-static inline void cleanByWSL(word_t wsl)
+स्थिर अन्तःस्थ शून्य cleanByWSL(word_t wsl)
 {
-    asm volatile("mcr p15, 0, %0, c7, c10, 2" : : "r"(wsl));
+    यंत्र चञ्चल("mcr p15, 0, %0, c7, c10, 2" : : "r"(wsl));
 }
 
-static inline void cleanInvalidateByWSL(word_t wsl)
+स्थिर अन्तःस्थ शून्य cleanInvalidateByWSL(word_t wsl)
 {
-    asm volatile("mcr p15, 0, %0, c7, c14, 2" : : "r"(wsl));
+    यंत्र चञ्चल("mcr p15, 0, %0, c7, c14, 2" : : "r"(wsl));
 }
 
 
-static inline word_t readCLID(void)
+स्थिर अन्तःस्थ word_t readCLID(शून्य)
 {
     word_t CLID;
-    asm volatile("mrc p15, 1, %0, c0, c0, 1" : "=r"(CLID));
-    return CLID;
+    यंत्र चञ्चल("mrc p15, 1, %0, c0, c0, 1" : "=r"(CLID));
+    प्रत्यागम CLID;
 }
 
 #define LOUU(x)    (((x) >> 27)        & MASK(3))
@@ -29,7 +29,7 @@ static inline word_t readCLID(void)
 #define LOUIS(x)   (((x) >> 21)        & MASK(3))
 #define CTYPE(x,n) (((x) >> (n*3))     & MASK(3))
 
-enum arm_cache_type {
+गणना arm_cache_type {
     ARMCacheNone = 0,
     ARMCacheI =    1,
     ARMCacheD =    2,
@@ -38,18 +38,18 @@ enum arm_cache_type {
 };
 
 
-static inline word_t readCacheSize(int level, bool_t instruction)
+स्थिर अन्तःस्थ word_t readCacheSize(पूर्णाङ्क level, bool_t instruction)
 {
     word_t size_unique_name, csselr_old;
     /* Save CSSELR */
-    asm volatile("mrc p15, 2, %0, c0, c0, 0" : "=r"(csselr_old));
+    यंत्र चञ्चल("mrc p15, 2, %0, c0, c0, 0" : "=r"(csselr_old));
     /* Select cache level */
-    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r"((level << 1) | instruction));
+    यंत्र चञ्चल("mcr p15, 2, %0, c0, c0, 0" : : "r"((level << 1) | instruction));
     /* Read 'size' */
-    asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r"(size_unique_name));
+    यंत्र चञ्चल("mrc p15, 1, %0, c0, c0, 0" : "=r"(size_unique_name));
     /* Restore CSSELR */
-    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r"(csselr_old));
-    return size_unique_name;
+    यंत्र चञ्चल("mcr p15, 2, %0, c0, c0, 0" : : "r"(csselr_old));
+    प्रत्यागम size_unique_name;
 }
 
 /* Number of bits to index within a cache line.  The field is log2(nwords) - 2
@@ -61,25 +61,25 @@ static inline word_t readCacheSize(int level, bool_t instruction)
 #define NSETS(s)    ((((s) >> 13) & MASK(15)) + 1)
 
 
-void clean_D_PoU(void)
+शून्य clean_D_PoU(शून्य)
 {
-    int clid = readCLID();
-    int lou = LOUU(clid);
-    int l;
+    पूर्णाङ्क clid = readCLID();
+    पूर्णाङ्क lou = LOUU(clid);
+    पूर्णाङ्क l;
 
-    for (l = 0; l < lou; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    प्रति (l = 0; l < lou; l++) {
+        यदि (CTYPE(clid, l) > ARMCacheI) {
             word_t s = readCacheSize(l, 0);
-            int lbits = LINEBITS(s);
-            int assoc = ASSOC(s);
-            int assoc_bits = wordBits - clzl(assoc - 1);
-            int nsets = NSETS(s);
-            int w;
+            पूर्णाङ्क lbits = LINEBITS(s);
+            पूर्णाङ्क assoc = ASSOC(s);
+            पूर्णाङ्क assoc_bits = wordBits - clzl(assoc - 1);
+            पूर्णाङ्क nsets = NSETS(s);
+            पूर्णाङ्क w;
 
-            for (w = 0; w < assoc; w++) {
-                int v;
+            प्रति (w = 0; w < assoc; w++) {
+                पूर्णाङ्क v;
 
-                for (v = 0; v < nsets; v++) {
+                प्रति (v = 0; v < nsets; v++) {
                     cleanByWSL((w << (32 - assoc_bits)) |
                                (v << lbits) | (l << 1));
                 }
@@ -88,39 +88,39 @@ void clean_D_PoU(void)
     }
 }
 
-static inline void cleanInvalidate_D_by_level(int l)
+स्थिर अन्तःस्थ शून्य cleanInvalidate_D_by_level(पूर्णाङ्क l)
 {
     word_t s = readCacheSize(l, 0);
-    int lbits = LINEBITS(s);
-    int assoc = ASSOC(s);
-    int assoc_bits = wordBits - clzl(assoc - 1);
-    int nsets = NSETS(s);
-    int w;
+    पूर्णाङ्क lbits = LINEBITS(s);
+    पूर्णाङ्क assoc = ASSOC(s);
+    पूर्णाङ्क assoc_bits = wordBits - clzl(assoc - 1);
+    पूर्णाङ्क nsets = NSETS(s);
+    पूर्णाङ्क w;
 
-    for (w = 0; w < assoc; w++) {
-        int v;
+    प्रति (w = 0; w < assoc; w++) {
+        पूर्णाङ्क v;
 
-        for (v = 0; v < nsets; v++) {
+        प्रति (v = 0; v < nsets; v++) {
             cleanInvalidateByWSL((w << (32 - assoc_bits)) |
                                  (v << lbits) | (l << 1));
         }
     }
 }
 
-void cleanInvalidate_D_PoC(void)
+शून्य cleanInvalidate_D_PoC(शून्य)
 {
-    int clid = readCLID();
-    int loc = LOC(clid);
-    int l;
+    पूर्णाङ्क clid = readCLID();
+    पूर्णाङ्क loc = LOC(clid);
+    पूर्णाङ्क l;
 
-    for (l = 0; l < loc; l++) {
-        if (CTYPE(clid, l) > ARMCacheI) {
+    प्रति (l = 0; l < loc; l++) {
+        यदि (CTYPE(clid, l) > ARMCacheI) {
             cleanInvalidate_D_by_level(l);
         }
     }
 }
 
-void cleanInvalidate_L1D(void)
+शून्य cleanInvalidate_L1D(शून्य)
 {
     cleanInvalidate_D_by_level(0);
 }

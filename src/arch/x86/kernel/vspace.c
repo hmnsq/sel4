@@ -4,55 +4,55 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/syscall.h>
-#include <machine/io.h>
-#include <kernel/boot.h>
-#include <model/statedata.h>
-#include <arch/kernel/vspace.h>
-#include <arch/api/invocation.h>
-#include <arch/kernel/tlb_bitmap.h>
-#include <mode/kernel/tlb.h>
-#include <mode/kernel/vspace.h>
+#अन्तर्भाव <config.h>
+#अन्तर्भाव <api/syscall.h>
+#अन्तर्भाव <machine/io.h>
+#अन्तर्भाव <kernel/boot.h>
+#अन्तर्भाव <model/statedata.h>
+#अन्तर्भाव <arch/kernel/vspace.h>
+#अन्तर्भाव <arch/api/invocation.h>
+#अन्तर्भाव <arch/kernel/tlb_bitmap.h>
+#अन्तर्भाव <mode/kernel/tlb.h>
+#अन्तर्भाव <mode/kernel/vspace.h>
 
-static exception_t performPageGetAddress(void *vbase_ptr, bool_t call)
+स्थिर exception_t performPageGetAddress(शून्य *vbase_ptr, bool_t call)
 {
     /* Get the physical address of this frame. */
     paddr_t capFBasePtr;
     capFBasePtr = addrFromPPtr(vbase_ptr);
 
     tcb_t *thread;
-    thread = NODE_STATE(ksCurThread);
-    if (call) {
+    thread = गाँठ_STATE(ksCurThread);
+    यदि (call) {
         word_t *ipcBuffer = lookupIPCBuffer(true, thread);
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, ipcBuffer, 0, capFBasePtr);
-        setRegister(thread, msgInfoRegister, wordFromMessageInfo(
+        अचिन्हित पूर्णाङ्क length = setMR(thread, ipcBuffer, 0, capFBasePtr);
+        setRegister(thread, संदेश_Info_Register, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Running);
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-void deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
+शून्य deleteASIDPool(asid_t asid_base, asid_pool_t *pool)
 {
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert(IS_ALIGNED(asid_base, asidLowBits));
+    प्रतिज्ञा(IS_ALIGNED(asid_base, asid_निचला_Bits));
 
-    if (x86KSASIDTable[ASID_HIGH(asid_base)] == pool) {
-        for (unsigned int offset = 0; offset < BIT(asidLowBits); offset++) {
+    यदि (x86KSASIDTable[ASID_ऊपरी(asid_base)] == pool) {
+        प्रति (अचिन्हित पूर्णाङ्क offset = 0; offset < BIT(asid_निचला_Bits); offset++) {
             asid_map_t asid_map = pool->array[offset];
-            if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
-                vspace_root_t *vspace = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
+            यदि (asid_map_get_type(asid_map) == asid_map_asid_map_vspace) {
+                vspace_मूल_t *vspace = (vspace_मूल_t *)asid_map_asid_map_vspace_get_vspace_मूल(asid_map);
                 hwASIDInvalidate(asid_base + offset, vspace);
             }
         }
-        x86KSASIDTable[ASID_HIGH(asid_base)] = NULL;
-        setVMRoot(NODE_STATE(ksCurThread));
+        x86KSASIDTable[ASID_ऊपरी(asid_base)] = रिक्त;
+        setVMRoot(गाँठ_STATE(ksCurThread));
     }
 }
 
-exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
+exception_t performASIDControlInvocation(शून्य *frame, cte_t *slot, cte_t *parent, asid_t asid_base)
 {
     /** AUXUPD: "(True, typ_region_bytes (ptr_val \<acute>frame) 12)" */
     /** GHOSTUPD: "(True, gs_clear_region (ptr_val \<acute>frame) 12)" */
@@ -62,7 +62,7 @@ exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent
     memzero(frame, BIT(pageBitsForSize(X86_SmallPage)));
     /** AUXUPD: "(True, ptr_retyps 1 (Ptr (ptr_val \<acute>frame) :: asid_pool_C ptr))" */
 
-    cteInsert(
+    cte_जोड़ो(
         cap_asid_pool_cap_new(
             asid_base,          /* capASIDBase  */
             WORD_REF(frame)     /* capASIDPool  */
@@ -71,24 +71,24 @@ exception_t performASIDControlInvocation(void *frame, cte_t *slot, cte_t *parent
         slot
     );
     /* Haskell error: "ASID pool's base must be aligned" */
-    assert((asid_base & MASK(asidLowBits)) == 0);
-    x86KSASIDTable[ASID_HIGH(asid_base)] = (asid_pool_t *)frame;
+    प्रतिज्ञा((asid_base & MASK(asid_निचला_Bits)) == 0);
+    x86KSASIDTable[ASID_ऊपरी(asid_base)] = (asid_pool_t *)frame;
 
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-void deleteASID(asid_t asid, vspace_root_t *vspace)
+शून्य deleteASID(asid_t asid, vspace_मूल_t *vspace)
 {
     asid_pool_t *poolPtr;
 
-    poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
-    if (poolPtr != NULL) {
-        asid_map_t asid_map = poolPtr->array[ASID_LOW(asid)];
-        if (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
-            (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map) == vspace) {
+    poolPtr = x86KSASIDTable[ASID_ऊपरी(asid)];
+    यदि (poolPtr != रिक्त) {
+        asid_map_t asid_map = poolPtr->array[ASID_निचला(asid)];
+        यदि (asid_map_get_type(asid_map) == asid_map_asid_map_vspace &&
+            (vspace_मूल_t *)asid_map_asid_map_vspace_get_vspace_मूल(asid_map) == vspace) {
             hwASIDInvalidate(asid, vspace);
-            poolPtr->array[ASID_LOW(asid)] = asid_map_asid_map_none_new();
-            setVMRoot(NODE_STATE(ksCurThread));
+            poolPtr->array[ASID_निचला(asid)] = asid_map_asid_map_none_new();
+            setVMRoot(गाँठ_STATE(ksCurThread));
         }
     }
 }
@@ -102,107 +102,107 @@ word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread)
     w_bufferPtr = thread->tcbIPCBuffer;
     bufferCap = TCB_PTR_CTE_PTR(thread, tcbBuffer)->cap;
 
-    if (cap_get_capType(bufferCap) != cap_frame_cap) {
-        return NULL;
+    यदि (cap_get_capType(bufferCap) != cap_frame_cap) {
+        प्रत्यागम रिक्त;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
-        return NULL;
+    यदि (unlikely(cap_frame_cap_get_capFIsDevice(bufferCap))) {
+        प्रत्यागम रिक्त;
     }
 
     vm_rights = cap_frame_cap_get_capFVMRights(bufferCap);
-    if (vm_rights == VMReadWrite || (!isReceiver && vm_rights == VMReadOnly)) {
+    यदि (vm_rights == VMReadWrite || (!isReceiver && vm_rights == VMReadOnly)) {
         word_t basePtr, pageBits;
 
         basePtr = cap_frame_cap_get_capFBasePtr(bufferCap);
         pageBits = pageBitsForSize(cap_frame_cap_get_capFSize(bufferCap));
-        return (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
-    } else {
-        return NULL;
+        प्रत्यागम (word_t *)(basePtr + (w_bufferPtr & MASK(pageBits)));
+    } अन्यथा {
+        प्रत्यागम रिक्त;
     }
 }
 
-bool_t CONST isValidVTableRoot(cap_t cap)
+bool_t CONST is_Valid_VTable_मूल(cap_t cap)
 {
-    return isValidNativeRoot(cap);
+    प्रत्यागम is_Valid_Native_मूल(cap);
 }
 
 
-BOOT_CODE bool_t map_kernel_window_devices(pte_t *pt, uint32_t num_ioapic, paddr_t *ioapic_paddrs, uint32_t num_drhu,
+BOOT_CODE bool_t map_kernel_window_devices(pte_t *pt, uint32_t अंक_ioapic, paddr_t *ioapic_paddrs, uint32_t अंक_drhu,
                                            paddr_t *drhu_list)
 {
     word_t idx = (KDEV_BASE & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS;
     paddr_t phys;
     pte_t pte;
-    unsigned int i;
+    अचिन्हित पूर्णाङ्क i;
     /* map kernel devices: APIC */
     phys = apic_get_base_paddr();
-    if (!phys) {
-        return false;
+    यदि (!phys) {
+        प्रत्यागम false;
     }
-    if (!reserve_region((p_region_t) {
+    यदि (!reserve_region((p_region_t) {
     phys, phys + 0x1000
 })) {
-        return false;
+        प्रत्यागम false;
     }
     pte = x86_make_device_pte(phys);
 
-    assert(idx == (PPTR_APIC & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+    प्रतिज्ञा(idx == (PPTR_APIC & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
     pt[idx] = pte;
     idx++;
-    for (i = 0; i < num_ioapic; i++) {
+    प्रति (i = 0; i < अंक_ioapic; i++) {
         phys = ioapic_paddrs[i];
-        if (!reserve_region((p_region_t) {
+        यदि (!reserve_region((p_region_t) {
         phys, phys + 0x1000
     })) {
-            return false;
+            प्रत्यागम false;
         }
         pte = x86_make_device_pte(phys);
-        assert(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        प्रतिज्ञा(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
-        if (idx == BIT(PT_INDEX_BITS)) {
-            return false;
+        यदि (idx == BIT(PT_INDEX_BITS)) {
+            प्रत्यागम false;
         }
     }
     /* put in null mappings for any extra IOAPICs */
-    for (; i < CONFIG_MAX_NUM_IOAPIC; i++) {
+    प्रति (; i < CONFIG_MAX_अंक_IOAPIC; i++) {
         pte = x86_make_empty_pte();
-        assert(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        प्रतिज्ञा(idx == ((PPTR_IOAPIC_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
     }
 
     /* map kernel devices: IOMMUs */
-    for (i = 0; i < num_drhu; i++) {
+    प्रति (i = 0; i < अंक_drhu; i++) {
         phys = (paddr_t)drhu_list[i];
-        if (!reserve_region((p_region_t) {
+        यदि (!reserve_region((p_region_t) {
         phys, phys + 0x1000
     })) {
-            return false;
+            प्रत्यागम false;
         }
         pte = x86_make_device_pte(phys);
 
-        assert(idx == ((PPTR_DRHU_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
+        प्रतिज्ञा(idx == ((PPTR_DRHU_START + i * BIT(PAGE_BITS)) & MASK(LARGE_PAGE_BITS)) >> PAGE_BITS);
         pt[idx] = pte;
         idx++;
-        if (idx == BIT(PT_INDEX_BITS)) {
-            return false;
+        यदि (idx == BIT(PT_INDEX_BITS)) {
+            प्रत्यागम false;
         }
     }
 
     /* mark unused kernel-device pages as 'not present' */
-    while (idx < BIT(PT_INDEX_BITS)) {
+    यावत् (idx < BIT(PT_INDEX_BITS)) {
         pte = x86_make_empty_pte();
         pt[idx] = pte;
         idx++;
     }
 
     /* Check we haven't added too many kernel-device mappings.*/
-    assert(idx == BIT(PT_INDEX_BITS));
-    return true;
+    प्रतिज्ञा(idx == BIT(PT_INDEX_BITS));
+    प्रत्यागम true;
 }
 
-BOOT_CODE static void init_idt(idt_entry_t *idt)
+BOOT_CODE स्थिर शून्य init_idt(idt_entry_t *idt)
 {
     init_idt_entry(idt, 0x00, int_00);
     init_idt_entry(idt, 0x01, int_01);
@@ -477,43 +477,43 @@ BOOT_CODE static void init_idt(idt_entry_t *idt)
     init_idt_entry(idt, 0xff, int_ff);
 }
 
-BOOT_CODE bool_t init_vm_state(void)
+BOOT_CODE bool_t init_vm_state(शून्य)
 {
-    word_t cacheLineSize;
-    x86KScacheLineSizeBits = getCacheLineSizeBits();
-    if (!x86KScacheLineSizeBits) {
-        return false;
+    word_t cache_पंक्ति_Size;
+    x86_KScache_पंक्ति_Size_Bits = get_Cache_पंक्ति_Size_Bits();
+    यदि (!x86_KScache_पंक्ति_Size_Bits) {
+        प्रत्यागम false;
     }
 
-    cacheLineSize = BIT(x86KScacheLineSizeBits);
-    if (cacheLineSize != L1_CACHE_LINE_SIZE) {
-        printf("Configured cache line size is %d but detected size is %lu\n",
-               L1_CACHE_LINE_SIZE, cacheLineSize);
-        SMP_COND_STATEMENT(return false);
+    cache_पंक्ति_Size = BIT(x86_KScache_पंक्ति_Size_Bits);
+    यदि (cache_पंक्ति_Size != L1_CACHE_पंक्ति_SIZE) {
+        म_लिखो("Configured cache line size is %d but detected size is %lu\n",
+               L1_CACHE_पंक्ति_SIZE, cache_पंक्ति_Size);
+        SMP_COND_STATEMENT(प्रत्यागम false);
     }
 
     /*
      * Work around -Waddress-of-packed-member. TSS is the first thing
      * in the struct and so it's safe to take its address.
      */
-    void *tss_ptr = &x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss;
+    शून्य *tss_ptr = &x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss;
     init_tss(tss_ptr);
     init_gdt(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSgdt, tss_ptr);
     init_idt(x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt);
-    return true;
+    प्रत्यागम true;
 }
 
-BOOT_CODE bool_t init_pat_msr(void)
+BOOT_CODE bool_t init_pat_msr(शून्य)
 {
     x86_pat_msr_t pat_msr;
     /* First verify PAT is supported by the machine.
      *      See section 11.12.1 of Volume 3 of the Intel manual */
-    if ((x86_cpuid_edx(0x1, 0x0) & BIT(16)) == 0) {
-        printf("PAT support not found\n");
-        return false;
+    यदि ((x86_cpuid_edx(0x1, 0x0) & BIT(16)) == 0) {
+        म_लिखो("PAT support not found\n");
+        प्रत्यागम false;
     }
-    pat_msr.words[0] = x86_rdmsr_low(IA32_PAT_MSR);
-    pat_msr.words[1] = x86_rdmsr_high(IA32_PAT_MSR);
+    pat_msr.शब्दगण[0] = x86_rdmsr_निचला(IA32_PAT_MSR);
+    pat_msr.शब्दगण[1] = x86_rdmsr_ऊपरी(IA32_PAT_MSR);
     /* Set up the PAT MSR to the Intel defaults, just in case
      * they have been changed but a bootloader somewhere along the way */
     pat_msr = x86_pat_msr_set_pa0(pat_msr, IA32_PAT_MT_WRITE_BACK);
@@ -522,27 +522,27 @@ BOOT_CODE bool_t init_pat_msr(void)
     pat_msr = x86_pat_msr_set_pa3(pat_msr, IA32_PAT_MT_UNCACHEABLE);
     /* Add the WriteCombining cache type to the PAT */
     pat_msr = x86_pat_msr_set_pa4(pat_msr, IA32_PAT_MT_WRITE_COMBINING);
-    x86_wrmsr(IA32_PAT_MSR, ((uint64_t)pat_msr.words[1]) << 32 | pat_msr.words[0]);
-    return true;
+    x86_wrmsr(IA32_PAT_MSR, ((uint64_t)pat_msr.शब्दगण[1]) << 32 | pat_msr.शब्दगण[0]);
+    प्रत्यागम true;
 }
 
-BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
+BOOT_CODE शून्य write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
 {
     asid_pool_t *ap = ASID_POOL_PTR(pptr_of_cap(it_ap_cap));
-    ap->array[ASID_LOW(IT_ASID)] = asid_map_asid_map_vspace_new(pptr_of_cap(it_vspace_cap));
-    x86KSASIDTable[ASID_HIGH(IT_ASID)] = ap;
+    ap->array[ASID_निचला(IT_ASID)] = asid_map_asid_map_vspace_new(pptr_of_cap(it_vspace_cap));
+    x86KSASIDTable[ASID_ऊपरी(IT_ASID)] = ap;
 }
 
 asid_map_t findMapForASID(asid_t asid)
 {
     asid_pool_t        *poolPtr;
 
-    poolPtr = x86KSASIDTable[ASID_HIGH(asid)];
-    if (!poolPtr) {
-        return asid_map_asid_map_none_new();
+    poolPtr = x86KSASIDTable[ASID_ऊपरी(asid)];
+    यदि (!poolPtr) {
+        प्रत्यागम asid_map_asid_map_none_new();
     }
 
-    return poolPtr->array[ASID_LOW(asid)];
+    प्रत्यागम poolPtr->array[ASID_निचला(asid)];
 }
 
 findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
@@ -551,17 +551,17 @@ findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid)
     asid_map_t asid_map;
 
     asid_map = findMapForASID(asid);
-    if (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
-        current_lookup_fault = lookup_fault_invalid_root_new();
+    यदि (asid_map_get_type(asid_map) != asid_map_asid_map_vspace) {
+        current_lookup_fault = lookup_fault_invalid_मूल_new();
 
-        ret.vspace_root = NULL;
+        ret.vspace_मूल = रिक्त;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
+        प्रत्यागम ret;
     }
 
-    ret.vspace_root = (vspace_root_t *)asid_map_asid_map_vspace_get_vspace_root(asid_map);
+    ret.vspace_मूल = (vspace_मूल_t *)asid_map_asid_map_vspace_get_vspace_मूल(asid_map);
     ret.status = EXCEPTION_NONE;
-    return ret;
+    प्रत्यागम ret;
 }
 
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
@@ -572,68 +572,68 @@ exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType)
     addr = getFaultAddr();
     fault = getRegister(thread, Error);
 
-    switch (vm_faultType) {
-    case X86DataFault:
+    विकल्प (vm_faultType) {
+    पक्ष X86DataFault:
         current_fault = seL4_Fault_VMFault_new(addr, fault, false);
-        return EXCEPTION_FAULT;
+        प्रत्यागम EXCEPTION_FAULT;
 
-    case X86InstructionFault:
+    पक्ष X86InstructionFault:
         current_fault = seL4_Fault_VMFault_new(addr, fault, true);
-        return EXCEPTION_FAULT;
+        प्रत्यागम EXCEPTION_FAULT;
 
-    default:
+    स्वभाव:
         fail("Invalid VM fault type");
     }
 }
 
 uint32_t CONST WritableFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMReadOnly:
-        return 0;
+    विकल्प (vm_rights) {
+    पक्ष VMReadOnly:
+        प्रत्यागम 0;
 
-    case VMKernelOnly:
-    case VMReadWrite:
-        return 1;
+    पक्ष VMKernelOnly:
+    पक्ष VMReadWrite:
+        प्रत्यागम 1;
 
-    default:
+    स्वभाव:
         fail("Invalid VM rights");
     }
 }
 
 uint32_t CONST SuperUserFromVMRights(vm_rights_t vm_rights)
 {
-    switch (vm_rights) {
-    case VMKernelOnly:
-        return 0;
+    विकल्प (vm_rights) {
+    पक्ष VMKernelOnly:
+        प्रत्यागम 0;
 
-    case VMReadOnly:
-    case VMReadWrite:
-        return 1;
+    पक्ष VMReadOnly:
+    पक्ष VMReadWrite:
+        प्रत्यागम 1;
 
-    default:
+    स्वभाव:
         fail("Invalid VM rights");
     }
 }
 
-lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
+lookupPTSlot_ret_t lookupPTSlot(vspace_मूल_t *vspace, vptr_t vptr)
 {
     lookupPTSlot_ret_t ret;
     lookupPDSlot_ret_t pdSlot;
 
     pdSlot = lookupPDSlot(vspace, vptr);
-    if (pdSlot.status != EXCEPTION_NONE) {
-        ret.ptSlot = NULL;
+    यदि (pdSlot.status != EXCEPTION_NONE) {
+        ret.ptSlot = रिक्त;
         ret.status = pdSlot.status;
-        return ret;
+        प्रत्यागम ret;
     }
-    if ((pde_ptr_get_page_size(pdSlot.pdSlot) != pde_pde_pt) ||
+    यदि ((pde_ptr_get_page_size(pdSlot.pdSlot) != pde_pde_pt) ||
         !pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) {
         current_lookup_fault = lookup_fault_missing_capability_new(PAGE_BITS + PT_INDEX_BITS);
-        ret.ptSlot = NULL;
+        ret.ptSlot = रिक्त;
         ret.status = EXCEPTION_LOOKUP_FAULT;
-        return ret;
-    } else {
+        प्रत्यागम ret;
+    } अन्यथा {
         pte_t *pt;
         pte_t *ptSlot;
         word_t ptIndex;
@@ -644,66 +644,66 @@ lookupPTSlot_ret_t lookupPTSlot(vspace_root_t *vspace, vptr_t vptr)
 
         ret.ptSlot = ptSlot;
         ret.status = EXCEPTION_NONE;
-        return ret;
+        प्रत्यागम ret;
     }
 }
 
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 {
-    if (cap_get_capType(cap) != cap_frame_cap) {
+    यदि (cap_get_capType(cap) != cap_frame_cap) {
         userError("IPC Buffer is an invalid cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
-    if (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
+    यदि (unlikely(cap_frame_cap_get_capFIsDevice(cap))) {
         userError("Specifying a device frame as an IPC buffer is not permitted.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
-        userError("IPC Buffer vaddr 0x%x is not aligned.", (int)vptr);
+    यदि (!IS_ALIGNED(vptr, seL4_IPCBufferSizeBits)) {
+        userError("IPC Buffer vaddr 0x%x is not aligned.", (पूर्णाङ्क)vptr);
         current_syscall_error.type = seL4_AlignmentError;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
 vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
 {
-    if (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        return VMReadOnly;
+    यदि (vm_rights == VMReadOnly && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        प्रत्यागम VMReadOnly;
     }
-    if (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-            return VMReadOnly;
-        } else {
-            return VMReadWrite;
+    यदि (vm_rights == VMReadWrite && seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        यदि (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+            प्रत्यागम VMReadOnly;
+        } अन्यथा {
+            प्रत्यागम VMReadWrite;
         }
     }
-    if (vm_rights == VMReadWrite &&
+    यदि (vm_rights == VMReadWrite &&
         !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
         seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
         userError("Attempted to make unsupported write only mapping");
     }
-    return VMKernelOnly;
+    प्रत्यागम VMKernelOnly;
 }
 
-void flushTable(vspace_root_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
+शून्य flushTable(vspace_मूल_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
 {
     word_t i;
-    cap_t        threadRoot;
+    cap_t        thread_मूल;
 
-    assert(IS_ALIGNED(vptr, PT_INDEX_BITS + PAGE_BITS));
+    प्रतिज्ञा(IS_ALIGNED(vptr, PT_INDEX_BITS + PAGE_BITS));
 
     /* check if page table belongs to current address space */
-    threadRoot = TCB_PTR_CTE_PTR(NODE_STATE(ksCurThread), tcbVTable)->cap;
+    thread_मूल = TCB_PTR_CTE_PTR(गाँठ_STATE(ksCurThread), tcbVTable)->cap;
     /* find valid mappings */
-    for (i = 0; i < BIT(PT_INDEX_BITS); i++) {
-        if (pte_get_present(pt[i])) {
-            if (config_set(CONFIG_SUPPORT_PCID) || (isValidNativeRoot(threadRoot)
-                                                    && (vspace_root_t *)pptr_of_cap(threadRoot) == vspace)) {
+    प्रति (i = 0; i < BIT(PT_INDEX_BITS); i++) {
+        यदि (pte_get_present(pt[i])) {
+            यदि (config_set(CONFIG_SUPPORT_PCID) || (is_Valid_Native_मूल(thread_मूल)
+                                                    && (vspace_मूल_t *)pptr_of_cap(thread_मूल) == vspace)) {
                 invalidateTranslationSingleASID(vptr + (i << PAGE_BITS), asid,
                                                 SMP_TERNARY(tlb_bitmap_get(vspace), 0));
             }
@@ -712,7 +712,7 @@ void flushTable(vspace_root_t *vspace, word_t vptr, pte_t *pt, asid_t asid)
 }
 
 
-void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
+शून्य unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, शून्य *pptr)
 {
     findVSpaceForASID_ret_t find_ret;
     lookupPTSlot_ret_t  lu_ret;
@@ -720,114 +720,114 @@ void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, void *pptr)
     pde_t               *pde;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    यदि (find_ret.status != EXCEPTION_NONE) {
+        प्रत्यागम;
     }
 
-    switch (page_size) {
-    case X86_SmallPage:
-        lu_ret = lookupPTSlot(find_ret.vspace_root, vptr);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return;
+    विकल्प (page_size) {
+    पक्ष X86_SmallPage:
+        lu_ret = lookupPTSlot(find_ret.vspace_मूल, vptr);
+        यदि (lu_ret.status != EXCEPTION_NONE) {
+            प्रत्यागम;
         }
-        if (!(pte_ptr_get_present(lu_ret.ptSlot)
+        यदि (!(pte_ptr_get_present(lu_ret.ptSlot)
               && (pte_ptr_get_page_base_address(lu_ret.ptSlot)
                   == pptr_to_paddr(pptr)))) {
-            return;
+            प्रत्यागम;
         }
         *lu_ret.ptSlot = makeUserPTEInvalid();
-        break;
+        भङ्ग;
 
-    case X86_LargePage:
-        pd_ret = lookupPDSlot(find_ret.vspace_root, vptr);
-        if (pd_ret.status != EXCEPTION_NONE) {
-            return;
+    पक्ष X86_LargePage:
+        pd_ret = lookupPDSlot(find_ret.vspace_मूल, vptr);
+        यदि (pd_ret.status != EXCEPTION_NONE) {
+            प्रत्यागम;
         }
         pde = pd_ret.pdSlot;
-        if (!(pde_ptr_get_page_size(pde) == pde_pde_large
+        यदि (!(pde_ptr_get_page_size(pde) == pde_pde_large
               && pde_pde_large_ptr_get_present(pde)
               && (pde_pde_large_ptr_get_page_base_address(pde)
                   == pptr_to_paddr(pptr)))) {
-            return;
+            प्रत्यागम;
         }
         *pde = makeUserPDEInvalid();
-        break;
+        भङ्ग;
 
-    default:
-        if (!modeUnmapPage(page_size, find_ret.vspace_root, vptr, pptr)) {
-            return;
+    स्वभाव:
+        यदि (!modeUnmapPage(page_size, find_ret.vspace_मूल, vptr, pptr)) {
+            प्रत्यागम;
         }
-        break;
+        भङ्ग;
     }
 
     invalidateTranslationSingleASID(vptr, asid,
-                                    SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_root), 0));
+                                    SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_मूल), 0));
 }
 
-void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+शून्य unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
 {
     findVSpaceForASID_ret_t find_ret;
     lookupPDSlot_ret_t    lu_ret;
 
     find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return;
+    यदि (find_ret.status != EXCEPTION_NONE) {
+        प्रत्यागम;
     }
 
-    lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return;
+    lu_ret = lookupPDSlot(find_ret.vspace_मूल, vaddr);
+    यदि (lu_ret.status != EXCEPTION_NONE) {
+        प्रत्यागम;
     }
 
     /* check if the PD actually refers to the PT */
-    if (!(pde_ptr_get_page_size(lu_ret.pdSlot) == pde_pde_pt &&
+    यदि (!(pde_ptr_get_page_size(lu_ret.pdSlot) == pde_pde_pt &&
           pde_pde_pt_ptr_get_present(lu_ret.pdSlot) &&
           (pde_pde_pt_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt)))) {
-        return;
+        प्रत्यागम;
     }
 
-    flushTable(find_ret.vspace_root, vaddr, pt, asid);
+    flushTable(find_ret.vspace_मूल, vaddr, pt, asid);
 
     *lu_ret.pdSlot = makeUserPDEInvalid();
 
-    invalidatePageStructureCacheASID(pptr_to_paddr(find_ret.vspace_root), asid,
-                                     SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_root), 0));
+    invalidatePageStructureCacheASID(pptr_to_paddr(find_ret.vspace_मूल), asid,
+                                     SMP_TERNARY(tlb_bitmap_get(find_ret.vspace_मूल), 0));
 }
 
-static exception_t performX86PageInvocationMapPTE(cap_t cap, cte_t *ctSlot, pte_t *ptSlot, pte_t pte,
-                                                  vspace_root_t *vspace)
+स्थिर exception_t performX86PageInvocationMapPTE(cap_t cap, cte_t *ctSlot, pte_t *ptSlot, pte_t pte,
+                                                  vspace_मूल_t *vspace)
 {
     ctSlot->cap = cap;
     *ptSlot = pte;
     invalidatePageStructureCacheASID(pptr_to_paddr(vspace), cap_frame_cap_get_capFMappedASID(cap),
                                      SMP_TERNARY(tlb_bitmap_get(vspace), 0));
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-static exception_t performX86PageInvocationMapPDE(cap_t cap, cte_t *ctSlot, pde_t *pdSlot, pde_t pde,
-                                                  vspace_root_t *vspace)
+स्थिर exception_t performX86PageInvocationMapPDE(cap_t cap, cte_t *ctSlot, pde_t *pdSlot, pde_t pde,
+                                                  vspace_मूल_t *vspace)
 {
     ctSlot->cap = cap;
     *pdSlot = pde;
     invalidatePageStructureCacheASID(pptr_to_paddr(vspace), cap_frame_cap_get_capFMappedASID(cap),
                                      SMP_TERNARY(tlb_bitmap_get(vspace), 0));
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
 
-static exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
+स्थिर exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
-    assert(cap_frame_cap_get_capFMappedASID(cap));
-    assert(cap_frame_cap_get_capFMapType(cap) == X86_MappingVSpace);
+    प्रतिज्ञा(cap_frame_cap_get_capFMappedASID(cap));
+    प्रतिज्ञा(cap_frame_cap_get_capFMapType(cap) == X86_MappingVSpace);
     // We have this `if` for something we just asserted to be true for simplicity of verification
     // This has no performance implications as when this function is inlined this `if` will be
     // inside an identical `if` and will therefore be elided
-    if (cap_frame_cap_get_capFMappedASID(cap)) {
+    यदि (cap_frame_cap_get_capFMappedASID(cap)) {
         unmapPage(
             cap_frame_cap_get_capFSize(cap),
             cap_frame_cap_get_capFMappedASID(cap),
             cap_frame_cap_get_capFMappedAddress(cap),
-            (void *)cap_frame_cap_get_capFBasePtr(cap)
+            (शून्य *)cap_frame_cap_get_capFBasePtr(cap)
         );
     }
 
@@ -835,97 +835,97 @@ static exception_t performX86PageInvocationUnmap(cap_t cap, cte_t *ctSlot)
     cap_frame_cap_ptr_set_capFMappedASID(&ctSlot->cap, asidInvalid);
     cap_frame_cap_ptr_set_capFMapType(&ctSlot->cap, X86_MappingNone);
 
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-static exception_t performX86FrameInvocationUnmap(cap_t cap, cte_t *cte)
+स्थिर exception_t performX86FrameInvocationUnmap(cap_t cap, cte_t *cte)
 {
-    if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
-        switch (cap_frame_cap_get_capFMapType(cap)) {
-        case X86_MappingVSpace:
-            return performX86PageInvocationUnmap(cap, cte);
+    यदि (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+        विकल्प (cap_frame_cap_get_capFMapType(cap)) {
+        पक्ष X86_MappingVSpace:
+            प्रत्यागम performX86PageInvocationUnmap(cap, cte);
 #ifdef CONFIG_IOMMU
-        case X86_MappingIOSpace:
-            return performX86IOUnMapInvocation(cap, cte);
+        पक्ष X86_MappingIOSpace:
+            प्रत्यागम performX86IOUnMapInvocation(cap, cte);
 #endif
 #ifdef CONFIG_VTX
-        case X86_MappingEPT:
-            return performX86EPTPageInvocationUnmap(cap, cte);
+        पक्ष X86_MappingEPT:
+            प्रत्यागम performX86EPTPageInvocationUnmap(cap, cte);
 #endif
-        case X86_MappingNone:
+        पक्ष X86_MappingNone:
             fail("Mapped frame cap was not mapped");
-            break;
+            भङ्ग;
         }
     }
 
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-struct create_mapping_pte_return {
+संरचना create_mapping_pte_return {
     exception_t status;
     pte_t pte;
     pte_t *ptSlot;
 };
-typedef struct create_mapping_pte_return create_mapping_pte_return_t;
+प्रकारनिर्देश संरचना create_mapping_pte_return create_mapping_pte_return_t;
 
-static create_mapping_pte_return_t createSafeMappingEntries_PTE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
+स्थिर create_mapping_pte_return_t createSafeMappingEntries_PTE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
                                                                 vm_attributes_t attr,
-                                                                vspace_root_t *vspace)
+                                                                vspace_मूल_t *vspace)
 {
     create_mapping_pte_return_t ret;
     lookupPTSlot_ret_t          lu_ret;
 
     lu_ret = lookupPTSlot(vspace, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    यदि (lu_ret.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
         ret.status = EXCEPTION_SYSCALL_ERROR;
         /* current_lookup_fault will have been set by lookupPTSlot */
-        return ret;
+        प्रत्यागम ret;
     }
 
     ret.pte = makeUserPTE(base, attr, vmRights);
     ret.ptSlot = lu_ret.ptSlot;
     ret.status = EXCEPTION_NONE;
-    return ret;
+    प्रत्यागम ret;
 }
 
-struct create_mapping_pde_return {
+संरचना create_mapping_pde_return {
     exception_t status;
     pde_t pde;
     pde_t *pdSlot;
 };
-typedef struct create_mapping_pde_return create_mapping_pde_return_t;
+प्रकारनिर्देश संरचना create_mapping_pde_return create_mapping_pde_return_t;
 
-static create_mapping_pde_return_t createSafeMappingEntries_PDE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
+स्थिर create_mapping_pde_return_t createSafeMappingEntries_PDE(paddr_t base, word_t vaddr, vm_rights_t vmRights,
                                                                 vm_attributes_t attr,
-                                                                vspace_root_t *vspace)
+                                                                vspace_मूल_t *vspace)
 {
     create_mapping_pde_return_t ret;
     lookupPDSlot_ret_t          lu_ret;
 
     lu_ret = lookupPDSlot(vspace, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
+    यदि (lu_ret.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
         ret.status = EXCEPTION_SYSCALL_ERROR;
         /* current_lookup_fault will have been set by lookupPDSlot */
-        return ret;
+        प्रत्यागम ret;
     }
     ret.pdSlot = lu_ret.pdSlot;
 
     /* check for existing page table */
-    if ((pde_ptr_get_page_size(ret.pdSlot) == pde_pde_pt) &&
+    यदि ((pde_ptr_get_page_size(ret.pdSlot) == pde_pde_pt) &&
         (pde_pde_pt_ptr_get_present(ret.pdSlot))) {
         current_syscall_error.type = seL4_DeleteFirst;
         ret.status = EXCEPTION_SYSCALL_ERROR;
-        return ret;
+        प्रत्यागम ret;
     }
 
 
     ret.pde = makeUserPDELargePage(base, attr, vmRights);
     ret.status = EXCEPTION_NONE;
-    return ret;
+    प्रत्यागम ret;
 }
 
 
@@ -938,24 +938,24 @@ exception_t decodeX86FrameInvocation(
     word_t *buffer
 )
 {
-    switch (invLabel) {
-    case X86PageMap: { /* Map */
+    विकल्प (invLabel) {
+    पक्ष X86PageMap: { /* Map */
         word_t          vaddr;
         word_t          vtop;
         word_t          w_rightsMask;
         paddr_t         paddr;
         cap_t           vspaceCap;
-        vspace_root_t  *vspace;
+        vspace_मूल_t  *vspace;
         vm_rights_t     capVMRights;
         vm_rights_t     vmRights;
         vm_attributes_t vmAttr;
         vm_page_size_t  frameSize;
         asid_t          asid;
 
-        if (length < 3 || current_extra_caps.excaprefs[0] == NULL) {
+        यदि (length < 3 || current_extra_caps.excaprefs[0] == रिक्त) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         frameSize = cap_frame_cap_get_capFSize(cap);
@@ -966,48 +966,48 @@ exception_t decodeX86FrameInvocation(
 
         capVMRights = cap_frame_cap_get_capFVMRights(cap);
 
-        if (!isValidNativeRoot(vspaceCap)) {
+        यदि (!is_Valid_Native_मूल(vspaceCap)) {
             userError("X86FrameMap: Attempting to map frame into invalid page directory cap.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_संख्या = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
-        vspace = (vspace_root_t *)pptr_of_cap(vspaceCap);
+        vspace = (vspace_मूल_t *)pptr_of_cap(vspaceCap);
         asid = cap_get_capMappedASID(vspaceCap);
 
-        if (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
-            if (cap_frame_cap_get_capFMappedASID(cap) != asid) {
+        यदि (cap_frame_cap_get_capFMappedASID(cap) != asidInvalid) {
+            यदि (cap_frame_cap_get_capFMappedASID(cap) != asid) {
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_संख्या = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (cap_frame_cap_get_capFMapType(cap) != X86_MappingVSpace) {
+            यदि (cap_frame_cap_get_capFMapType(cap) != X86_MappingVSpace) {
                 userError("X86Frame: Attempting to remap frame with different mapping type");
                 current_syscall_error.type = seL4_IllegalOperation;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
+            यदि (cap_frame_cap_get_capFMappedAddress(cap) != vaddr) {
                 userError("X86Frame: Attempting to map frame into multiple addresses");
                 current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.invalid_Argument_संख्या = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
-        } else {
+        } अन्यथा {
             vtop = vaddr + BIT(pageBitsForSize(frameSize));
 
             /* check vaddr and vtop against USER_TOP to catch case where vaddr + frame_size wrapped around */
-            if (vaddr > USER_TOP || vtop > USER_TOP) {
+            यदि (vaddr > USER_शीर्ष || vtop > USER_शीर्ष) {
                 userError("X86Frame: Mapping address too high.");
                 current_syscall_error.type = seL4_InvalidArgument;
-                current_syscall_error.invalidArgumentNumber = 0;
+                current_syscall_error.invalid_Argument_संख्या = 0;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
         }
 
@@ -1015,129 +1015,129 @@ exception_t decodeX86FrameInvocation(
             findVSpaceForASID_ret_t find_ret;
 
             find_ret = findVSpaceForASID(asid);
-            if (find_ret.status != EXCEPTION_NONE) {
+            यदि (find_ret.status != EXCEPTION_NONE) {
                 current_syscall_error.type = seL4_FailedLookup;
                 current_syscall_error.failedLookupWasSource = false;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
 
-            if (find_ret.vspace_root != vspace) {
+            यदि (find_ret.vspace_मूल != vspace) {
                 current_syscall_error.type = seL4_InvalidCapability;
-                current_syscall_error.invalidCapNumber = 1;
+                current_syscall_error.invalid_Cap_संख्या = 1;
 
-                return EXCEPTION_SYSCALL_ERROR;
+                प्रत्यागम EXCEPTION_SYSCALL_ERROR;
             }
         }
 
         vmRights = maskVMRights(capVMRights, rightsFromWord(w_rightsMask));
 
-        if (!checkVPAlignment(frameSize, vaddr)) {
+        यदि (!checkVPAlignment(frameSize, vaddr)) {
             current_syscall_error.type = seL4_AlignmentError;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        paddr = pptr_to_paddr((void *)cap_frame_cap_get_capFBasePtr(cap));
+        paddr = pptr_to_paddr((शून्य *)cap_frame_cap_get_capFBasePtr(cap));
 
         cap = cap_frame_cap_set_capFMappedASID(cap, asid);
         cap = cap_frame_cap_set_capFMappedAddress(cap, vaddr);
         cap = cap_frame_cap_set_capFMapType(cap, X86_MappingVSpace);
 
-        switch (frameSize) {
+        विकल्प (frameSize) {
         /* PTE mappings */
-        case X86_SmallPage: {
+        पक्ष X86_SmallPage: {
             create_mapping_pte_return_t map_ret;
 
             map_ret = createSafeMappingEntries_PTE(paddr, vaddr, vmRights, vmAttr, vspace);
-            if (map_ret.status != EXCEPTION_NONE) {
-                return map_ret.status;
+            यदि (map_ret.status != EXCEPTION_NONE) {
+                प्रत्यागम map_ret.status;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performX86PageInvocationMapPTE(cap, cte, map_ret.ptSlot, map_ret.pte, vspace);
+            setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+            प्रत्यागम performX86PageInvocationMapPTE(cap, cte, map_ret.ptSlot, map_ret.pte, vspace);
         }
 
         /* PDE mappings */
-        case X86_LargePage: {
+        पक्ष X86_LargePage: {
             create_mapping_pde_return_t map_ret;
 
             map_ret = createSafeMappingEntries_PDE(paddr, vaddr, vmRights, vmAttr, vspace);
-            if (map_ret.status != EXCEPTION_NONE) {
-                return map_ret.status;
+            यदि (map_ret.status != EXCEPTION_NONE) {
+                प्रत्यागम map_ret.status;
             }
 
-            setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-            return performX86PageInvocationMapPDE(cap, cte, map_ret.pdSlot, map_ret.pde, vspace);
+            setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+            प्रत्यागम performX86PageInvocationMapPDE(cap, cte, map_ret.pdSlot, map_ret.pde, vspace);
         }
 
-        default: {
-            return decodeX86ModeMapPage(invLabel, frameSize, cte, cap, vspace, vaddr, paddr, vmRights, vmAttr);
+        स्वभाव: {
+            प्रत्यागम decodeX86ModeMapPage(invLabel, frameSize, cte, cap, vspace, vaddr, paddr, vmRights, vmAttr);
         }
         }
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    case X86PageUnmap: { /* Unmap */
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86FrameInvocationUnmap(cap, cte);
+    पक्ष X86PageUnmap: { /* Unmap */
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        प्रत्यागम performX86FrameInvocationUnmap(cap, cte);
     }
 
 #ifdef CONFIG_IOMMU
-    case X86PageMapIO: { /* MapIO */
-        return decodeX86IOMapInvocation(length, cte, cap, buffer);
+    पक्ष X86PageMapIO: { /* MapIO */
+        प्रत्यागम decodeX86IOMapInvocation(length, cte, cap, buffer);
     }
 #endif
 
 #ifdef CONFIG_VTX
-    case X86PageMapEPT:
-        return decodeX86EPTPageMap(invLabel, length, cte, cap, buffer);
+    पक्ष X86PageMapEPT:
+        प्रत्यागम decodeX86EPTPageMap(invLabel, length, cte, cap, buffer);
 #endif
 
-    case X86PageGetAddress: {
+    पक्ष X86PageGetAddress: {
         /* Return it in the first message register. */
-        assert(n_msgRegisters >= 1);
+        प्रतिज्ञा(n_संदेश_Registers >= 1);
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performPageGetAddress((void *)cap_frame_cap_get_capFBasePtr(cap), call);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        प्रत्यागम performPageGetAddress((शून्य *)cap_frame_cap_get_capFBasePtr(cap), call);
     }
 
-    default:
+    स्वभाव:
         current_syscall_error.type = seL4_IllegalOperation;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-static exception_t performX86PageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
+स्थिर exception_t performX86PageTableInvocationUnmap(cap_t cap, cte_t *ctSlot)
 {
 
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    यदि (cap_page_table_cap_get_capPTIsMapped(cap)) {
         pte_t *pt = PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
         unmapPageTable(
             cap_page_table_cap_get_capPTMappedASID(cap),
             cap_page_table_cap_get_capPTMappedAddress(cap),
             pt
         );
-        clearMemory((void *)pt, cap_get_capSizeBits(cap));
+        clearMemory((शून्य *)pt, cap_get_capSizeBits(cap));
     }
     cap_page_table_cap_ptr_set_capPTIsMapped(&(ctSlot->cap), 0);
 
-    return EXCEPTION_NONE;
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-static exception_t performX86PageTableInvocationMap(cap_t cap, cte_t *ctSlot, pde_t pde, pde_t *pdSlot,
-                                                    vspace_root_t *root)
+स्थिर exception_t performX86PageTableInvocationMap(cap_t cap, cte_t *ctSlot, pde_t pde, pde_t *pdSlot,
+                                                    vspace_मूल_t *मूल)
 {
     ctSlot->cap = cap;
     *pdSlot = pde;
-    invalidatePageStructureCacheASID(pptr_to_paddr(root), cap_page_table_cap_get_capPTMappedASID(cap),
-                                     SMP_TERNARY(tlb_bitmap_get(root), 0));
-    return EXCEPTION_NONE;
+    invalidatePageStructureCacheASID(pptr_to_paddr(मूल), cap_page_table_cap_get_capPTMappedASID(cap),
+                                     SMP_TERNARY(tlb_bitmap_get(मूल), 0));
+    प्रत्यागम EXCEPTION_NONE;
 }
 
-static exception_t decodeX86PageTableInvocation(
+स्थिर exception_t decodeX86PageTableInvocation(
     word_t invLabel,
     word_t length,
     cte_t *cte, cap_t cap,
@@ -1148,96 +1148,96 @@ static exception_t decodeX86PageTableInvocation(
     vm_attributes_t attr;
     lookupPDSlot_ret_t pdSlot;
     cap_t           vspaceCap;
-    vspace_root_t  *vspace;
+    vspace_मूल_t  *vspace;
     pde_t           pde;
     paddr_t         paddr;
     asid_t          asid;
 
-    if (invLabel == X86PageTableUnmap) {
-        if (! isFinalCapability(cte)) {
+    यदि (invLabel == X86PageTableUnmap) {
+        यदि (! isFinalCapability(cte)) {
             current_syscall_error.type = seL4_RevokeFirst;
             userError("X86PageTable: Cannot unmap if more than one cap exists.");
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performX86PageTableInvocationUnmap(cap, cte);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        प्रत्यागम performX86PageTableInvocationUnmap(cap, cte);
     }
 
-    if (invLabel != X86PageTableMap) {
+    यदि (invLabel != X86PageTableMap) {
         userError("X86PageTable: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (length < 2 || current_extra_caps.excaprefs[0] == NULL) {
+    यदि (length < 2 || current_extra_caps.excaprefs[0] == रिक्त) {
         userError("X86PageTable: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (cap_page_table_cap_get_capPTIsMapped(cap)) {
+    यदि (cap_page_table_cap_get_capPTIsMapped(cap)) {
         userError("X86PageTable: Page table is already mapped to a page directory.");
         current_syscall_error.type =
             seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 0;
+        current_syscall_error.invalid_Cap_संख्या = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
     vaddr = getSyscallArg(0, buffer) & (~MASK(PT_INDEX_BITS + PAGE_BITS));
     attr = vmAttributesFromWord(getSyscallArg(1, buffer));
     vspaceCap = current_extra_caps.excaprefs[0]->cap;
 
-    if (!isValidNativeRoot(vspaceCap)) {
+    यदि (!is_Valid_Native_मूल(vspaceCap)) {
         current_syscall_error.type = seL4_InvalidCapability;
-        current_syscall_error.invalidCapNumber = 1;
+        current_syscall_error.invalid_Cap_संख्या = 1;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    vspace = (vspace_root_t *)pptr_of_cap(vspaceCap);
+    vspace = (vspace_मूल_t *)pptr_of_cap(vspaceCap);
     asid = cap_get_capMappedASID(vspaceCap);
 
-    if (vaddr > USER_TOP) {
+    यदि (vaddr > USER_शीर्ष) {
         userError("X86PageTable: Mapping address too high.");
         current_syscall_error.type = seL4_InvalidArgument;
-        current_syscall_error.invalidArgumentNumber = 0;
+        current_syscall_error.invalid_Argument_संख्या = 0;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
     {
         findVSpaceForASID_ret_t find_ret;
 
         find_ret = findVSpaceForASID(asid);
-        if (find_ret.status != EXCEPTION_NONE) {
+        यदि (find_ret.status != EXCEPTION_NONE) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (find_ret.vspace_root != vspace) {
+        यदि (find_ret.vspace_मूल != vspace) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_संख्या = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
     }
 
     pdSlot = lookupPDSlot(vspace, vaddr);
-    if (pdSlot.status != EXCEPTION_NONE) {
+    यदि (pdSlot.status != EXCEPTION_NONE) {
         current_syscall_error.type = seL4_FailedLookup;
         current_syscall_error.failedLookupWasSource = false;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
-    if (((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) ||
+    यदि (((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_pt) && pde_pde_pt_ptr_get_present(pdSlot.pdSlot)) ||
         ((pde_ptr_get_page_size(pdSlot.pdSlot) == pde_pde_large) && pde_pde_large_ptr_get_present(pdSlot.pdSlot))) {
         current_syscall_error.type = seL4_DeleteFirst;
 
-        return EXCEPTION_SYSCALL_ERROR;
+        प्रत्यागम EXCEPTION_SYSCALL_ERROR;
     }
 
     paddr = pptr_to_paddr(PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
@@ -1247,8 +1247,8 @@ static exception_t decodeX86PageTableInvocation(
     cap = cap_page_table_cap_set_capPTMappedASID(cap, asid);
     cap = cap_page_table_cap_set_capPTMappedAddress(cap, vaddr);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return performX86PageTableInvocationMap(cap, cte, pde, pdSlot.pdSlot, vspace);
+    setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+    प्रत्यागम performX86PageTableInvocationMap(cap, cte, pde, pdSlot.pdSlot, vspace);
 }
 
 exception_t decodeX86MMUInvocation(
@@ -1261,151 +1261,151 @@ exception_t decodeX86MMUInvocation(
     word_t *buffer
 )
 {
-    switch (cap_get_capType(cap)) {
+    विकल्प (cap_get_capType(cap)) {
 
-    case cap_frame_cap:
-        return decodeX86FrameInvocation(invLabel, length, cte, cap, call, buffer);
+    पक्ष cap_frame_cap:
+        प्रत्यागम decodeX86FrameInvocation(invLabel, length, cte, cap, call, buffer);
 
-    case cap_page_table_cap:
-        return decodeX86PageTableInvocation(invLabel, length, cte, cap, buffer);
+    पक्ष cap_page_table_cap:
+        प्रत्यागम decodeX86PageTableInvocation(invLabel, length, cte, cap, buffer);
 
-    case cap_asid_control_cap: {
+    पक्ष cap_asid_control_cap: {
         word_t     i;
         asid_t           asid_base;
         word_t           index;
         word_t           depth;
         cap_t            untyped;
-        cap_t            root;
+        cap_t            मूल;
         cte_t           *parentSlot;
         cte_t           *destSlot;
         lookupSlot_ret_t lu_ret;
-        void            *frame;
+        शून्य            *frame;
         exception_t      status;
 
-        if (invLabel != X86ASIDControlMakePool) {
+        यदि (invLabel != X86ASIDControlMakePool) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-            || current_extra_caps.excaprefs[1] == NULL) {
+        यदि (length < 2 || current_extra_caps.excaprefs[0] == रिक्त
+            || current_extra_caps.excaprefs[1] == रिक्त) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         index = getSyscallArg(0, buffer);
         depth = getSyscallArg(1, buffer);
         parentSlot = current_extra_caps.excaprefs[0];
         untyped = parentSlot->cap;
-        root = current_extra_caps.excaprefs[1]->cap;
+        मूल = current_extra_caps.excaprefs[1]->cap;
 
         /* Find first free pool */
-        for (i = 0; i < nASIDPools && x86KSASIDTable[i]; i++);
+        प्रति (i = 0; i < nASIDPools && x86KSASIDTable[i]; i++);
 
-        if (i == nASIDPools) {
+        यदि (i == nASIDPools) {
             userError("ASIDControlMakePool: No unallocated pools found.");
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        asid_base = i << asidLowBits;
+        asid_base = i << asid_निचला_Bits;
 
 
-        if (cap_get_capType(untyped) != cap_untyped_cap ||
+        यदि (cap_get_capType(untyped) != cap_untyped_cap ||
             cap_untyped_cap_get_capBlockSize(untyped) != seL4_ASIDPoolBits ||
             cap_untyped_cap_get_capIsDevice(untyped)) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_संख्या = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         status = ensureNoChildren(parentSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        यदि (status != EXCEPTION_NONE) {
+            प्रत्यागम status;
         }
 
         frame = WORD_PTR(cap_untyped_cap_get_capPtr(untyped));
 
-        lu_ret = lookupTargetSlot(root, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
-            return lu_ret.status;
+        lu_ret = lookupTargetSlot(मूल, index, depth);
+        यदि (lu_ret.status != EXCEPTION_NONE) {
+            प्रत्यागम lu_ret.status;
         }
         destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        यदि (status != EXCEPTION_NONE) {
+            प्रत्यागम status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        प्रत्यागम performASIDControlInvocation(frame, destSlot, parentSlot, asid_base);
     }
 
-    case cap_asid_pool_cap: {
+    पक्ष cap_asid_pool_cap: {
         cap_t        vspaceCap;
         cte_t       *vspaceCapSlot;
         asid_pool_t *pool;
         word_t i;
         asid_t       asid;
 
-        if (invLabel != X86ASIDPoolAssign) {
+        यदि (invLabel != X86ASIDPoolAssign) {
             current_syscall_error.type = seL4_IllegalOperation;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
-        if (current_extra_caps.excaprefs[0] == NULL) {
+        यदि (current_extra_caps.excaprefs[0] == रिक्त) {
             current_syscall_error.type = seL4_TruncatedMessage;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         vspaceCapSlot = current_extra_caps.excaprefs[0];
         vspaceCap = vspaceCapSlot->cap;
 
-        if (!(isVTableRoot(vspaceCap) || VTX_TERNARY(cap_get_capType(vspaceCap) == cap_ept_pml4_cap, 0))
+        यदि (!(is_VTable_मूल(vspaceCap) || VTX_TERNARY(cap_get_capType(vspaceCap) == cap_ept_pml4_cap, 0))
             || cap_get_capMappedASID(vspaceCap) != asidInvalid) {
             userError("X86ASIDPool: Invalid vspace root.");
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 1;
+            current_syscall_error.invalid_Cap_संख्या = 1;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        pool = x86KSASIDTable[ASID_HIGH(cap_asid_pool_cap_get_capASIDBase(cap))];
-        if (!pool) {
+        pool = x86KSASIDTable[ASID_ऊपरी(cap_asid_pool_cap_get_capASIDBase(cap))];
+        यदि (!pool) {
             current_syscall_error.type = seL4_FailedLookup;
             current_syscall_error.failedLookupWasSource = false;
-            current_lookup_fault = lookup_fault_invalid_root_new();
-            return EXCEPTION_SYSCALL_ERROR;
+            current_lookup_fault = lookup_fault_invalid_मूल_new();
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
+        यदि (pool != ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap))) {
             current_syscall_error.type = seL4_InvalidCapability;
-            current_syscall_error.invalidCapNumber = 0;
-            return EXCEPTION_SYSCALL_ERROR;
+            current_syscall_error.invalid_Cap_संख्या = 0;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         /* Find first free ASID */
         asid = cap_asid_pool_cap_get_capASIDBase(cap);
-        for (i = 0; i < BIT(asidLowBits) && (asid + i == 0
+        प्रति (i = 0; i < BIT(asid_निचला_Bits) && (asid + i == 0
                                              || asid_map_get_type(pool->array[i]) != asid_map_asid_map_none); i++);
 
-        if (i == BIT(asidLowBits)) {
+        यदि (i == BIT(asid_निचला_Bits)) {
             current_syscall_error.type = seL4_DeleteFirst;
 
-            return EXCEPTION_SYSCALL_ERROR;
+            प्रत्यागम EXCEPTION_SYSCALL_ERROR;
         }
 
         asid += i;
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return performASIDPoolInvocation(asid, pool, vspaceCapSlot);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        प्रत्यागम performASIDPoolInvocation(asid, pool, vspaceCapSlot);
     }
 
-    default:
-        return decodeX86ModeMMUInvocation(invLabel, length, cptr, cte, cap, call, buffer);
+    स्वभाव:
+        प्रत्यागम decodeX86ModeMMUInvocation(invLabel, length, cptr, cte, cap, call, buffer);
     }
 }
