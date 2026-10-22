@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#समावेश <config.h>
 
-#ifdef CONFIG_DEBUG_BUILD
+#अगर_घोषित CONFIG_DEBUG_BUILD
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
+#समावेश <arch/machine/capdl.h>
+#समावेश <string.h>
+#समावेश <kernel/cspace.h>
 
-#define MAX_UL          0xffffffff
-#define PT_INDEX(vptr)  ((vptr >> PAGE_BITS) & MASK(PT_INDEX_BITS))
-#define PD_INDEX(vptr)  (vptr >> (PAGE_BITS + PT_INDEX_BITS))
+#घोषणा MAX_UL          0xffffffff
+#घोषणा PT_सूचकांक(vptr)  ((vptr >> PAGE_BITS) & MASK(PT_सूचकांक_BITS))
+#घोषणा PD_सूचकांक(vptr)  (vptr >> (PAGE_BITS + PT_सूचकांक_BITS))
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[SP];
+    वापस tcb->tcbArch.tcbContext.registers[SP];
 }
 
-#ifdef CONFIG_PRINTING
+#अगर_घोषित CONFIG_PRINTING
 
-static void obj_frame_print_attrs(resolve_ret_t ret);
-static void cap_frame_print_attrs_pt(pte_t *pte);
-static void cap_frame_print_attrs_pd(pde_t *pde);
-static void cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX);
-static void arm32_obj_pt_print_slots(pte_t *pt);
-static void arm32_cap_pt_print_slots(pte_t *pt);
+अटल व्योम obj_frame_print_attrs(resolve_ret_t ret);
+अटल व्योम cap_frame_print_attrs_pt(pte_t *pte);
+अटल व्योम cap_frame_print_attrs_pd(pde_t *pde);
+अटल व्योम cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX);
+अटल व्योम arm32_obj_pt_print_slots(pte_t *pt);
+अटल व्योम arm32_cap_pt_print_slots(pte_t *pt);
 
 /*
  * Caps
@@ -45,484 +45,484 @@ static void arm32_cap_pt_print_slots(pte_t *pt);
  * 11   x   x   Read/write              Read/write
  */
 /* use when only have access to pte of frames */
-static void cap_frame_print_attrs_pt(pte_t *pte)
+अटल व्योम cap_frame_print_attrs_pt(pte_t *pte)
 {
     word_t AP, XN, TEX;
-    switch (pte_ptr_get_pteType(pte)) {
-    case pte_pte_small:
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    चयन (pte_ptr_get_pteType(pte)) {
+    हाल pte_pte_small:
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
         AP = pte_pte_small_ptr_get_HAP(pte);
         TEX = pte_pte_small_ptr_get_MemAttr(pte);
-#else
+#अन्यथा
         AP = pte_pte_small_ptr_get_AP(pte);
         TEX = pte_pte_small_ptr_get_TEX(pte);
-#endif
+#पूर्ण_अगर
         XN = pte_pte_small_ptr_get_XN(pte);
-        break;
+        अवरोध;
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case pte_pte_large:
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+    हाल pte_pte_large:
         AP = pte_pte_large_ptr_get_AP(pte);
         TEX = pte_pte_large_ptr_get_TEX(pte);
         XN = pte_pte_large_ptr_get_XN(pte);
-        break;
-#endif
-    default:
-        assert(!"should not happend");
+        अवरोध;
+#पूर्ण_अगर
+    शेष:
+        निश्चित(!"should not happend");
     }
     cap_frame_print_attrs_impl(AP, XN, TEX);
 }
 
-static void cap_frame_print_attrs_pd(pde_t *pde)
+अटल व्योम cap_frame_print_attrs_pd(pde_t *pde)
 {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
     cap_frame_print_attrs_impl(pde_pde_section_ptr_get_HAP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_MemAttr(pde));
-#else
+#अन्यथा
     cap_frame_print_attrs_impl(pde_pde_section_ptr_get_AP(pde),
                                pde_pde_section_ptr_get_XN(pde),
                                pde_pde_section_ptr_get_TEX(pde));
-#endif
+#पूर्ण_अगर
 }
 
-static void cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX)
+अटल व्योम cap_frame_print_attrs_impl(word_t AP, word_t XN, word_t TEX)
 {
-    printf("(");
+    म_लिखो("(");
 
     /* rights */
-    switch (AP) {
-    case 0b00:
-    case 0b01:
-        break;
-    case 0b10:
-        printf("R");
-        break;
-    case 0b11:
-        printf("RW");
-    default:
-        break;
+    चयन (AP) {
+    हाल 0b00:
+    हाल 0b01:
+        अवरोध;
+    हाल 0b10:
+        म_लिखो("R");
+        अवरोध;
+    हाल 0b11:
+        म_लिखो("RW");
+    शेष:
+        अवरोध;
     }
 
-    if (!XN) {
-        printf("X");
+    अगर (!XN) {
+        म_लिखो("X");
     }
 
-    if (!TEX) {
-        printf(", uncached");
+    अगर (!TEX) {
+        म_लिखो(", uncached");
     }
 
-    printf(")\n");
+    म_लिखो(")\n");
 }
 
-static void arm32_cap_pt_print_slots(pte_t *pt)
+अटल व्योम arm32_cap_pt_print_slots(pte_t *pt)
 {
-    vm_page_size_t page_size;
+    vm_page_आकार_t page_आकार;
     word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    जबतक (i < BIT(PT_सूचकांक_BITS + PAGE_BITS)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
-                page_size = ARMLargePage;
-            } else {
-                page_size = ARMSmallPage;
+        चयन (pte_ptr_get_pteType(pte)) {
+        हाल pte_pte_small: {
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+            अगर (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+                page_आकार = ARMLargePage;
+            } अन्यथा {
+                page_आकार = ARMSmallPage;
             }
-#else
-            page_size = ARMSmallPage;
-#endif
-            printf("0x%lx: frame_%p_%04lu ", PT_INDEX(i), pte, PT_INDEX(i));
+#अन्यथा
+            page_आकार = ARMSmallPage;
+#पूर्ण_अगर
+            म_लिखो("0x%lx: frame_%p_%04lu ", PT_सूचकांक(i), pte, PT_सूचकांक(i));
             cap_frame_print_attrs_pt(pte);
-            break;
+            अवरोध;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
-            page_size = ARMLargePage;
-            printf("0x%lx: frame_%p_%04lu ", PT_INDEX(i), pte, PT_INDEX(i));
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+        हाल pte_pte_large: {
+            page_आकार = ARMLargePage;
+            म_लिखो("0x%lx: frame_%p_%04lu ", PT_सूचकांक(i), pte, PT_सूचकांक(i));
             cap_frame_print_attrs_pt(pte);
-            break;
+            अवरोध;
         }
-#endif
-        default:
-            page_size = ARMSmallPage;
+#पूर्ण_अगर
+        शेष:
+            page_आकार = ARMSmallPage;
         }
-        i += (1 << pageBitsForSize(page_size));
+        i += (1 << page_Bits_For_आकार(page_आकार));
     }
 }
 
-void obj_vtable_print_slots(tcb_t *tcb)
+व्योम obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    अगर (is_Valid_VTable_मूल(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
-        vm_page_size_t page_size;
-        printf("%p_pd {\n", pd);
+        vm_page_आकार_t page_आकार;
+        म_लिखो("%p_pd {\n", pd);
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
         word_t i = 0;
-        while (i < MAX_UL) {
+        जबतक (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            switch (pde_ptr_get_pdeType(pde)) {
-            case pde_pde_section: {
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
-                    page_size = ARMSuperSection;
-                } else {
-                    page_size = ARMSection;
+            चयन (pde_ptr_get_pdeType(pde)) {
+            हाल pde_pde_section: {
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+                अगर (pde_pde_section_ptr_get_आकार(pde)) {
+                    page_आकार = ARMSuperSection;
+                } अन्यथा {
+                    page_आकार = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
-                    page_size = ARMSuperSection;
-                } else {
-                    page_size = ARMSection;
+#अन्यथा
+                अगर (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+                    page_आकार = ARMSuperSection;
+                } अन्यथा {
+                    page_आकार = ARMSection;
                 }
-#endif
-                printf("0x%lx: frame_%p_%04lu ", PD_INDEX(i), pde, PD_INDEX(i));
+#पूर्ण_अगर
+                म_लिखो("0x%lx: frame_%p_%04lu ", PD_सूचकांक(i), pde, PD_सूचकांक(i));
                 cap_frame_print_attrs_pd(pde);
-                break;
+                अवरोध;
             }
 
-            case pde_pde_coarse: {
-                printf("0x%lx: pt_%p_%04lu\n", PD_INDEX(i), pde, PD_INDEX(i));
-                page_size = ARMSection;
-                break;
+            हाल pde_pde_coarse: {
+                म_लिखो("0x%lx: pt_%p_%04lu\n", PD_सूचकांक(i), pde, PD_सूचकांक(i));
+                page_आकार = ARMSection;
+                अवरोध;
             }
-            default:
-                page_size = ARMSection;
-                break;
+            शेष:
+                page_आकार = ARMSection;
+                अवरोध;
             }
-            i += (1 << pageBitsForSize(page_size));
-            if (i < (1 << pageBitsForSize(page_size))) {
-                break; /* overflowed */
+            i += (1 << page_Bits_For_आकार(page_आकार));
+            अगर (i < (1 << page_Bits_For_आकार(page_आकार))) {
+                अवरोध; /* overflowed */
             }
         }
-        printf("}\n"); /* pd */
+        म_लिखो("}\n"); /* pd */
 
         i = 0;
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
-        while (i < MAX_UL) {
+        जबतक (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            if (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
+            अगर (pde_ptr_get_pdeType(pde) == pde_pde_coarse) {
                 pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
-                printf("pt_%p_%04lu {\n", pde, PD_INDEX(i));
+                म_लिखो("pt_%p_%04lu {\n", pde, PD_सूचकांक(i));
                 arm32_cap_pt_print_slots(pt);
-                printf("}\n"); /* pt */
+                म_लिखो("}\n"); /* pt */
             }
-            i += (1 << pageBitsForSize(ARMSection));
-            if (i < (1 << pageBitsForSize(ARMSection))) {
-                break; /* overflowed */
+            i += (1 << page_Bits_For_आकार(ARMSection));
+            अगर (i < (1 << page_Bits_For_आकार(ARMSection))) {
+                अवरोध; /* overflowed */
             }
         }
     }
 }
 
 /* use when only have access to vptr of frames */
-static void cap_frame_print_attrs_vptr(word_t vptr, pde_t *pd)
+अटल व्योम cap_frame_print_attrs_vptr(word_t vptr, pde_t *pd)
 {
     pde_t *pde = lookupPDSlot(pd, vptr);
 
-    switch (pde_ptr_get_pdeType(pde)) {
-    case pde_pde_section: {
-        printf("frame_%p_%04lu ", pde, PD_INDEX(vptr));
+    चयन (pde_ptr_get_pdeType(pde)) {
+    हाल pde_pde_section: {
+        म_लिखो("frame_%p_%04lu ", pde, PD_सूचकांक(vptr));
         cap_frame_print_attrs_pd(pde);
-        break;
+        अवरोध;
     }
-    case pde_pde_coarse: {
+    हाल pde_pde_coarse: {
         pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
         pte_t *pte = lookupPTSlot_nofail(pt, vptr);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
-            printf("frame_%p_%04lu ", pte, PT_INDEX(vptr));
+        चयन (pte_ptr_get_pteType(pte)) {
+        हाल pte_pte_small: {
+            म_लिखो("frame_%p_%04lu ", pte, PT_सूचकांक(vptr));
             cap_frame_print_attrs_pt(pte);
-            break;
+            अवरोध;
         }
 
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
-            printf("frame_%p_%04lu ", pte, PT_INDEX(vptr));
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+        हाल pte_pte_large: {
+            म_लिखो("frame_%p_%04lu ", pte, PT_सूचकांक(vptr));
             cap_frame_print_attrs_pt(pte);
-            break;
+            अवरोध;
         }
-#endif
-        default:
-            assert(0);
+#पूर्ण_अगर
+        शेष:
+            निश्चित(0);
         }
-        break;
+        अवरोध;
     }
-    default:
-        assert(0);
+    शेष:
+        निश्चित(0);
     }
 }
 
-void print_ipc_buffer_slot(tcb_t *tcb)
+व्योम print_ipc_बफर_slot(tcb_t *tcb)
 {
     word_t vptr = tcb->tcbIPCBuffer;
     asid_t asid = cap_page_directory_cap_get_capPDMappedASID(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
     findPDForASID_ret_t find_ret = findPDForASID(asid);
-    printf("ipc_buffer_slot: ");
+    म_लिखो("ipc_buffer_slot: ");
     cap_frame_print_attrs_vptr(vptr, find_ret.pd);
 }
 
-void print_cap_arch(cap_t cap)
+व्योम print_cap_arch(cap_t cap)
 {
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
+    चयन (cap_get_capType(cap)) {
+    हाल cap_page_table_cap: {
         asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
         findPDForASID_ret_t find_ret = findPDForASID(asid);
         vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr), (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", lookupPDSlot(find_ret.pd, vptr), PD_INDEX(vptr));
+        अगर (asid) {
+            म_लिखो("pt_%p_%04lu (asid: %lu)\n",
+                   lookupPDSlot(find_ret.pd, vptr), PD_सूचकांक(vptr), (दीर्घ अचिन्हित पूर्णांक)asid);
+        } अन्यथा {
+            म_लिखो("pt_%p_%04lu\n", lookupPDSlot(find_ret.pd, vptr), PD_सूचकांक(vptr));
         }
-        break;
+        अवरोध;
     }
-    case cap_page_directory_cap: {
+    हाल cap_page_directory_cap: {
         asid_t asid = cap_page_directory_cap_get_capPDMappedASID(cap);
         findPDForASID_ret_t find_ret = findPDForASID(asid);
-        if (asid) {
-            printf("%p_pd (asid: %lu)\n",
-                   find_ret.pd, (long unsigned int)asid);
-        } else {
-            printf("%p_pd\n", find_ret.pd);
+        अगर (asid) {
+            म_लिखो("%p_pd (asid: %lu)\n",
+                   find_ret.pd, (दीर्घ अचिन्हित पूर्णांक)asid);
+        } अन्यथा {
+            म_लिखो("%p_pd\n", find_ret.pd);
         }
-        break;
+        अवरोध;
     }
-    case cap_asid_control_cap: {
+    हाल cap_asid_control_cap: {
         /* only one in the system */
-        printf("asid_control\n");
-        break;
+        म_लिखो("asid_control\n");
+        अवरोध;
     }
-    case cap_small_frame_cap: {
+    हाल cap_small_frame_cap: {
         vptr_t vptr = cap_small_frame_cap_get_capFMappedAddress(cap);
         findPDForASID_ret_t find_ret = findPDForASID(cap_small_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
+        निश्चित(find_ret.status == EXCEPTION_NONE);
         cap_frame_print_attrs_vptr(vptr, find_ret.pd);
-        break;
+        अवरोध;
     }
-    case cap_frame_cap: {
+    हाल cap_frame_cap: {
         vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
         findPDForASID_ret_t find_ret = findPDForASID(cap_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
+        निश्चित(find_ret.status == EXCEPTION_NONE);
         cap_frame_print_attrs_vptr(vptr, find_ret.pd);
-        break;
+        अवरोध;
     }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
+    हाल cap_asid_pool_cap: {
+        म_लिखो("%p_asid_pool\n", (व्योम *)cap_asid_pool_cap_get_capASIDPool(cap));
+        अवरोध;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+    हाल cap_vcpu_cap: {
+        म_लिखो("%p_vcpu\n", (व्योम *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        अवरोध;
     }
-#endif
+#पूर्ण_अगर
 
         /* ARM specific caps */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space\n", (void *)cap_io_space_cap_get_capModuleID(cap));
-        break;
+#अगर_घोषित CONFIG_TK1_SMMU
+    हाल cap_io_space_cap: {
+        म_लिखो("%p_io_space\n", (व्योम *)cap_io_space_cap_get_capModuleID(cap));
+        अवरोध;
     }
-#endif
-    default: {
-        printf("[unknown cap %u]\n", cap_get_capType(cap));
-        break;
+#पूर्ण_अगर
+    शेष: {
+        म_लिखो("[unknown cap %u]\n", cap_get_capType(cap));
+        अवरोध;
     }
     }
 }
 
-void print_object_arch(cap_t cap)
+व्योम print_object_arch(cap_t cap)
 {
 
-    switch (cap_get_capType(cap)) {
-    case cap_frame_cap:
-    case cap_small_frame_cap:
-    case cap_page_table_cap:
-    case cap_page_directory_cap:
+    चयन (cap_get_capType(cap)) {
+    हाल cap_frame_cap:
+    हाल cap_small_frame_cap:
+    हाल cap_page_table_cap:
+    हाल cap_page_directory_cap:
         /* don't need to deal with these objects since they get handled from vtable */
-        break;
+        अवरोध;
 
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool = asid_pool ",
-               (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+    हाल cap_asid_pool_cap: {
+        म_लिखो("%p_asid_pool = asid_pool ",
+               (व्योम *)cap_asid_pool_cap_get_capASIDPool(cap));
         obj_asidpool_print_attrs(cap);
-        break;
+        अवरोध;
     }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu = vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+    हाल cap_vcpu_cap: {
+        म_लिखो("%p_vcpu = vcpu\n", (व्योम *)cap_vcpu_cap_get_capVCPUPtr(cap));
+        अवरोध;
     }
-#endif
+#पूर्ण_अगर
         /* ARM specific objects */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space = io_space ", (void *)cap_io_space_cap_get_capModuleID(cap));
+#अगर_घोषित CONFIG_TK1_SMMU
+    हाल cap_io_space_cap: {
+        म_लिखो("%p_io_space = io_space ", (व्योम *)cap_io_space_cap_get_capModuleID(cap));
         arm_obj_iospace_print_attrs(cap);
-        break;
+        अवरोध;
     }
-#endif
-    default: {
-        printf("[unknown object %u]\n", cap_get_capType(cap));
-        break;
+#पूर्ण_अगर
+    शेष: {
+        म_लिखो("[unknown object %u]\n", cap_get_capType(cap));
+        अवरोध;
     }
     }
 }
 
-static void obj_frame_print_attrs(resolve_ret_t ret)
+अटल व्योम obj_frame_print_attrs(resolve_ret_t ret)
 {
-    printf("(");
+    म_लिखो("(");
 
     /* VM size */
-    switch (ret.frameSize) {
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case ARMSection:
-        printf("2M");
-        break;
-    case ARMSuperSection:
-        printf("32M");
-        break;
-#else
-    case ARMSection:
-        printf("1M");
-        break;
-    case ARMSuperSection:
-        printf("16M");
-        break;
-#endif
-    case ARMLargePage:
-        printf("64k");
-        break;
-    case ARMSmallPage:
-        printf("4k");
-        break;
+    चयन (ret.frame_आकार) {
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+    हाल ARMSection:
+        म_लिखो("2M");
+        अवरोध;
+    हाल ARMSuperSection:
+        म_लिखो("32M");
+        अवरोध;
+#अन्यथा
+    हाल ARMSection:
+        म_लिखो("1M");
+        अवरोध;
+    हाल ARMSuperSection:
+        म_लिखो("16M");
+        अवरोध;
+#पूर्ण_अगर
+    हाल ARMLargePage:
+        म_लिखो("64k");
+        अवरोध;
+    हाल ARMSmallPage:
+        म_लिखो("4k");
+        अवरोध;
     }
 
-    printf(", paddr: %p)\n", (void *)ret.frameBase);
+    म_लिखो(", paddr: %p)\n", (व्योम *)ret.frameBase);
 }
 
-static void arm32_obj_pt_print_slots(pte_t *pt)
+अटल व्योम arm32_obj_pt_print_slots(pte_t *pt)
 {
     resolve_ret_t ret;
     word_t i = 0;
-    while (i < BIT(PT_INDEX_BITS + PAGE_BITS)) {
+    जबतक (i < BIT(PT_सूचकांक_BITS + PAGE_BITS)) {
         pte_t *pte = lookupPTSlot_nofail(pt, i);
-        switch (pte_ptr_get_pteType(pte)) {
-        case pte_pte_small: {
+        चयन (pte_ptr_get_pteType(pte)) {
+        हाल pte_pte_small: {
             ret.frameBase = pte_pte_small_ptr_get_address(pte);
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-            if (pte_pte_small_ptr_get_contiguous_hint(pte)) {
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+            अगर (pte_pte_small_ptr_get_contiguous_hint(pte)) {
                 /* Entries are represented as 16 contiguous small frames. We need to mask
                    to get the large frame base */
-                ret.frameBase &= ~MASK(pageBitsForSize(ARMLargePage));
-                ret.frameSize = ARMLargePage;
-            } else {
-                ret.frameSize = ARMSmallPage;
+                ret.frameBase &= ~MASK(page_Bits_For_आकार(ARMLargePage));
+                ret.frame_आकार = ARMLargePage;
+            } अन्यथा {
+                ret.frame_आकार = ARMSmallPage;
             }
-#else
-            ret.frameSize = ARMSmallPage;
-#endif
-            printf("frame_%p_%04lu = frame ", pte, PT_INDEX(i));
+#अन्यथा
+            ret.frame_आकार = ARMSmallPage;
+#पूर्ण_अगर
+            म_लिखो("frame_%p_%04lu = frame ", pte, PT_सूचकांक(i));
             obj_frame_print_attrs(ret);
-            break;
+            अवरोध;
         }
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-        case pte_pte_large: {
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+        हाल pte_pte_large: {
             ret.frameBase = pte_pte_large_ptr_get_address(pte);
-            ret.frameSize = ARMLargePage;
-            printf("frame_%p_%04lu = frame ", pte, PT_INDEX(i));
+            ret.frame_आकार = ARMLargePage;
+            म_लिखो("frame_%p_%04lu = frame ", pte, PT_सूचकांक(i));
             obj_frame_print_attrs(ret);
-            break;
+            अवरोध;
         }
-#endif
-        default:
-            ret.frameSize = ARMSmallPage;
+#पूर्ण_अगर
+        शेष:
+            ret.frame_आकार = ARMSmallPage;
         }
-        i += (1 << pageBitsForSize(ret.frameSize));
+        i += (1 << page_Bits_For_आकार(ret.frame_आकार));
     }
 }
 
-void obj_tcb_print_vtable(tcb_t *tcb)
+व्योम obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    अगर (is_Valid_VTable_मूल(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pde_t *pd = (pde_t *)pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         resolve_ret_t ret = {};
-        printf("%p_pd = pd\n", pd);
+        म_लिखो("%p_pd = pd\n", pd);
 
         /* PD_INDEX_BITS + ARMSectionBits = 32, can't use left shift here */
         word_t i = 0;
-        while (i < MAX_UL) {
+        जबतक (i < MAX_UL) {
             pde_t *pde = lookupPDSlot(pd, i);
-            switch (pde_ptr_get_pdeType(pde)) {
-            case pde_pde_section: {
+            चयन (pde_ptr_get_pdeType(pde)) {
+            हाल pde_pde_section: {
                 ret.frameBase = pde_pde_section_ptr_get_address(pde);
-#ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
-                if (pde_pde_section_ptr_get_size(pde)) {
-                    ret.frameSize = ARMSuperSection;
-                } else {
-                    ret.frameSize = ARMSection;
+#अगर_अघोषित CONFIG_ARM_HYPERVISOR_SUPPORT
+                अगर (pde_pde_section_ptr_get_आकार(pde)) {
+                    ret.frame_आकार = ARMSuperSection;
+                } अन्यथा {
+                    ret.frame_आकार = ARMSection;
                 }
-#else
-                if (pde_pde_section_ptr_get_contiguous_hint(pde)) {
+#अन्यथा
+                अगर (pde_pde_section_ptr_get_contiguous_hint(pde)) {
                     /* Entries are represented as 16 contiguous sections. We need to mask
                     to get the super section frame base */
-                    ret.frameBase &= ~MASK(pageBitsForSize(ARMSuperSection));
-                    ret.frameSize = ARMSuperSection;
-                } else {
-                    ret.frameSize = ARMSection;
+                    ret.frameBase &= ~MASK(page_Bits_For_आकार(ARMSuperSection));
+                    ret.frame_आकार = ARMSuperSection;
+                } अन्यथा {
+                    ret.frame_आकार = ARMSection;
                 }
-#endif
-                printf("frame_%p_%04lu = frame ", pde, PD_INDEX(i));
+#पूर्ण_अगर
+                म_लिखो("frame_%p_%04lu = frame ", pde, PD_सूचकांक(i));
                 obj_frame_print_attrs(ret);
-                break;
+                अवरोध;
             }
 
-            case pde_pde_coarse: {
+            हाल pde_pde_coarse: {
                 pte_t *pt = ptrFromPAddr(pde_pde_coarse_ptr_get_address(pde));
-                printf("pt_%p_%04lu = pt\n", pde, PD_INDEX(i));
+                म_लिखो("pt_%p_%04lu = pt\n", pde, PD_सूचकांक(i));
                 arm32_obj_pt_print_slots(pt);
-                ret.frameSize = ARMSection;
-                break;
+                ret.frame_आकार = ARMSection;
+                अवरोध;
             }
-            default:
-                ret.frameSize = ARMSection;
-                break;
+            शेष:
+                ret.frame_आकार = ARMSection;
+                अवरोध;
             }
-            i += (1 << pageBitsForSize(ret.frameSize));
-            if (i < (1 << pageBitsForSize(ret.frameSize))) {
-                break; /* overflowed */
+            i += (1 << page_Bits_For_आकार(ret.frame_आकार));
+            अगर (i < (1 << page_Bits_For_आकार(ret.frame_आकार))) {
+                अवरोध; /* overflowed */
             }
         }
     }
 }
 
-#endif /* CONFIG_PRINTING */
+#पूर्ण_अगर /* CONFIG_PRINTING */
 
-void debug_capDL(void)
+व्योम debug_capDL(व्योम)
 {
-    printf("arch aarch32\n");
-    printf("objects {\n");
-#ifdef CONFIG_PRINTING
+    म_लिखो("arch aarch32\n");
+    म_लिखो("objects {\n");
+#अगर_घोषित CONFIG_PRINTING
     print_objects();
-#endif
-    printf("}\n");
+#पूर्ण_अगर
+    म_लिखो("}\n");
 
-    printf("caps {\n");
+    म_लिखो("caps {\n");
 
     /* reset the seen list */
     reset_seen_list();
 
-#ifdef CONFIG_PRINTING
+#अगर_घोषित CONFIG_PRINTING
     print_caps();
-    printf("}\n");
+    म_लिखो("}\n");
 
     obj_irq_print_maps();
-#endif /* CONFIG_PRINTING */
+#पूर्ण_अगर /* CONFIG_PRINTING */
 }
 
 
-#endif /* CONFIG_DEBUG_BUILD */
+#पूर्ण_अगर /* CONFIG_DEBUG_BUILD */

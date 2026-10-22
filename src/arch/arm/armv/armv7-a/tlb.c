@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#समावेश <arch/machine/hardware.h>
 
-#if defined(CONFIG_ARM_HAS_TLB_LOCK)
+#अगर defined(CONFIG_ARM_HAS_TLB_LOCK)
 
-void lockTLBEntry(vptr_t vaddr)
+व्योम lockTLBEntry(vptr_t vaddr)
 {
-    int n = armKSTlbLockCount;
-    int x, y;
+    पूर्णांक n = arm_KSTlb_Lock_गिनती;
+    पूर्णांक x, y;
 
     /* tlbLockCount is used only in this function, which is called at most 2 times for unicore
        platforms (and we only have unicore A8 platforms). */
-    assert(armKSTlbLockCount < 2);
+    निश्चित(arm_KSTlb_Lock_गिनती < 2);
     /* Since asserts are off in release mode, we enforce the bound on tlbLockCount manually, so we
        don't have to verify calling context. We need the bound to be sure the bit operations below
        are not undefined behaviour. We leave the assert in, because we want to know about it when
        the calling context ever changes. */
-    if (armKSTlbLockCount >= 2) {
-        return;
+    अगर (arm_KSTlb_Lock_गिनती >= 2) {
+        वापस;
     }
 
-    armKSTlbLockCount++;
+    arm_KSTlb_Lock_गिनती++;
     /* Compute two values, x and y, to write to the lockdown register. */
 
     /* Before lockdown, base = victim = num_locked_tlb_entries. */
@@ -36,12 +36,12 @@ void lockTLBEntry(vptr_t vaddr)
     lockTLBEntryCritical(vaddr, x, y);
 }
 
-#else
+#अन्यथा
 
 /* We don't currently support TLB locking for other processors. */
-void lockTLBEntry(vptr_t vaddr)
+व्योम lockTLBEntry(vptr_t vaddr)
 {
 
 }
 
-#endif
+#पूर्ण_अगर

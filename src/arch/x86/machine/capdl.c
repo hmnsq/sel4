@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#समावेश <config.h>
 
-#if defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
+#अगर defined(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING)
 
-#include <arch/machine/capdl.h>
-#include <string.h>
-#include <kernel/cspace.h>
-#include <machine/io.h>
-#include <arch/object/iospace.h>
+#समावेश <arch/machine/capdl.h>
+#समावेश <string.h>
+#समावेश <kernel/cspace.h>
+#समावेश <machine/io.h>
+#समावेश <arch/object/iospace.h>
 
 
-void x86_obj_ioports_print_attrs(cap_t ioports_cap)
+व्योम x86_obj_ioports_print_attrs(cap_t ioports_cap)
 {
-    printf("(ports: (%lu, %lu))\n",
-           (long unsigned int)cap_io_port_cap_get_capIOPortFirstPort(ioports_cap),
-           (long unsigned int)cap_io_port_cap_get_capIOPortLastPort(ioports_cap));
+    म_लिखो("(ports: (%lu, %lu))\n",
+           (दीर्घ अचिन्हित पूर्णांक)cap_io_port_cap_get_capIOPortFirstPort(ioports_cap),
+           (दीर्घ अचिन्हित पूर्णांक)cap_io_port_cap_get_capIOPortLastPort(ioports_cap));
 }
 
-#ifdef CONFIG_IOMMU
+#अगर_घोषित CONFIG_IOMMU
 
-void x86_obj_iospace_print_attrs(cap_t iospace_cap)
+व्योम x86_obj_iospace_print_attrs(cap_t iospace_cap)
 {
-    printf("(domain_id: %lu, pci_device: %lu)\n",
-           (long unsigned int)cap_io_space_cap_get_capPCIDevice(iospace_cap),
-           (long unsigned int)cap_io_space_cap_get_capDomainID(iospace_cap));
+    म_लिखो("(domain_id: %lu, pci_device: %lu)\n",
+           (दीर्घ अचिन्हित पूर्णांक)cap_io_space_cap_get_capPCIDevice(iospace_cap),
+           (दीर्घ अचिन्हित पूर्णांक)cap_io_space_cap_get_capDomainID(iospace_cap));
 }
 
-void x86_obj_iopt_print_attrs(cap_t iopt_cap)
+व्योम x86_obj_iopt_print_attrs(cap_t iopt_cap)
 {
-    printf("(level: %lu)\n", (long unsigned int)cap_io_page_table_cap_get_capIOPTLevel(iopt_cap));
+    म_लिखो("(level: %lu)\n", (दीर्घ अचिन्हित पूर्णांक)cap_io_page_table_cap_get_capIOPTLevel(iopt_cap));
 }
-#endif
+#पूर्ण_अगर
 
-#endif /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */
+#पूर्ण_अगर /* defind(CONFIG_DEBUG_BUILD) && defined(CONFIG_PRINTING) */

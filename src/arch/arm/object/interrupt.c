@@ -4,224 +4,224 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <types.h>
-#include <api/failures.h>
-#include <config.h>
+#समावेश <types.h>
+#समावेश <api/failures.h>
+#समावेश <config.h>
 
-#include <arch/object/interrupt.h>
+#समावेश <arch/object/interrupt.h>
 
-static exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, bool_t trigger)
+अटल exception_t Arch_invokeIRQControl(irq_t irq, cte_t *handlerSlot, cte_t *controlSlot, bool_t trigger)
 {
-    if (config_set(HAVE_SET_TRIGGER)) {
+    अगर (config_set(HAVE_SET_TRIGGER)) {
         setIRQTrigger(irq, trigger);
     }
-    return invokeIRQControl(irq, handlerSlot, controlSlot);
+    वापस invokeIRQControl(irq, handlerSlot, controlSlot);
 }
 
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
+#अगर_अघोषित CONFIG_ENABLE_SMP_SUPPORT
 
-static exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *sgiSlot, cte_t *controlSlot)
+अटल exception_t Arch_invokeIssueSGISignal(word_t irq, word_t target, cte_t *sgiSlot, cte_t *controlSlot)
 {
-    cteInsert(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
-    return EXCEPTION_NONE;
+    cte_जोड़ो(cap_sgi_signal_cap_new(target, irq), controlSlot, sgiSlot);
+    वापस EXCEPTION_NONE;
 }
 
-#endif
+#पूर्ण_अगर
 
-exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t length,
-                                            cte_t *srcSlot, word_t *buffer)
+exception_t Arch_decodeIRQControlInvocation(word_t invLabel, word_t लंबाई,
+                                            cte_t *srcSlot, word_t *बफर)
 {
-    if (invLabel == ARMIRQIssueIRQHandlerTrigger) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+    अगर (invLabel == ARMIRQIssueIRQHandlerTrigger) {
+        अगर (लंबाई < 4 || current_extra_caps.excaprefs[0] == शून्य) {
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!config_set(HAVE_SET_TRIGGER)) {
+        अगर (!config_set(HAVE_SET_TRIGGER)) {
             userError("This platform does not support setting the IRQ trigger");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t irq_w = getSyscallArg(0, buffer);
+        word_t irq_w = getSyscallArg(0, बफर);
         irq_t irq = (irq_t) CORE_IRQ_TO_IRQT(0, irq_w);
-        bool_t trigger = !!getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer);
+        bool_t trigger = !!getSyscallArg(1, बफर);
+        word_t सूचकांक = getSyscallArg(2, बफर);
+        word_t depth = getSyscallArg(3, बफर);
 
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
         exception_t status = Arch_checkIRQ(irq_w);
-        if (status != EXCEPTION_NONE) {
-            return status;
+        अगर (status != EXCEPTION_NONE) {
+            वापस status;
         }
 
-#if defined ENABLE_SMP_SUPPORT
-        if (IRQ_IS_PPI(irq)) {
+#अगर defined ENABLE_SMP_SUPPORT
+        अगर (IRQ_IS_PPI(irq)) {
             userError("Trying to get a handler on a PPI: use GetTriggerCore.");
             current_syscall_error.type = seL4_IllegalOperation;
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
-#endif
-        if (isIRQActive(irq)) {
+#पूर्ण_अगर
+        अगर (isIRQActive(irq)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+            userError("Rejecting request for IRQ %u. Already active.", (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, सूचकांक, depth);
+        अगर (lu_ret.status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(बफर, 0), (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस lu_ret.status;
         }
 
         cte_t *destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        अगर (status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(बफर, 0), (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueSGISignal) {
-        if (length < 4 || current_extra_caps.excaprefs[0] == NULL) {
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        वापस Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
+#अगर_अघोषित CONFIG_ENABLE_SMP_SUPPORT
+    } अन्यथा अगर (invLabel == ARMIRQIssueSGISignal) {
+        अगर (लंबाई < 4 || current_extra_caps.excaprefs[0] == शून्य) {
             userError("IRQControl: IssueSGISignal: Truncated message.");
             current_syscall_error.type = seL4_TruncatedMessage;
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (wrap_config_set(NUM_SGIS) == 0) {
+        अगर (wrap_config_set(अंक_SGIS) == 0) {
             current_syscall_error.type = seL4_IllegalOperation;
             userError("IRQControl: IssueSGISignal not available on this platform.");
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        word_t irq = getSyscallArg(0, buffer);
-        word_t target = getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer);
+        word_t irq = getSyscallArg(0, बफर);
+        word_t target = getSyscallArg(1, बफर);
+        word_t सूचकांक = getSyscallArg(2, बफर);
+        word_t depth = getSyscallArg(3, बफर);
 
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
 
         /* wrap_config_set to prevent verification automation from simplifying
            away the condition when NUM_SGIS = 0 */
-        if (irq >= wrap_config_set(NUM_SGIS)) {
+        अगर (irq >= wrap_config_set(अंक_SGIS)) {
             current_syscall_error.type = seL4_RangeError;
             current_syscall_error.rangeErrorMin = 0;
-            current_syscall_error.rangeErrorMax = NUM_SGIS - 1;
+            current_syscall_error.rangeErrorMax = अंक_SGIS - 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI IRQ 0x%lx.", irq);
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (!plat_SGITargetValid(target)) {
+        अगर (!plat_SGITargetValid(target)) {
             current_syscall_error.type = seL4_InvalidArgument;
-            current_syscall_error.invalidArgumentNumber = 1;
+            current_syscall_error.invalid_Argument_संख्या = 1;
             userError("IRQControl: IssueSGISignal: Invalid SGI Target 0x%lx.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, सूचकांक, depth);
+        अगर (lu_ret.status != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap invalid: cap %lu.",
-                      getExtraCPtr(buffer, 0));
-            return lu_ret.status;
+                      getExtraCPtr(बफर, 0));
+            वापस lu_ret.status;
         }
         cte_t *destSlot = lu_ret.slot;
 
         exception_t status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        अगर (status != EXCEPTION_NONE) {
             userError("IRQControl: IssueSGISignal: Target slot for new ARM_SGI_Signal cap not empty: cap %lu.",
-                      getExtraCPtr(buffer, 0));
-            return status;
+                      getExtraCPtr(बफर, 0));
+            वापस status;
         }
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-        return Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+        वापस Arch_invokeIssueSGISignal(irq, target, destSlot, srcSlot);
 
-#endif
-#ifdef ENABLE_SMP_SUPPORT
-    } else if (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
-        word_t irq_w = getSyscallArg(0, buffer);
-        bool_t trigger = !!getSyscallArg(1, buffer);
-        word_t index = getSyscallArg(2, buffer);
-        word_t depth = getSyscallArg(3, buffer) & 0xfful;
-        seL4_Word target = getSyscallArg(4, buffer);
+#पूर्ण_अगर
+#अगर_घोषित ENABLE_SMP_SUPPORT
+    } अन्यथा अगर (invLabel == ARMIRQIssueIRQHandlerTriggerCore) {
+        word_t irq_w = getSyscallArg(0, बफर);
+        bool_t trigger = !!getSyscallArg(1, बफर);
+        word_t सूचकांक = getSyscallArg(2, बफर);
+        word_t depth = getSyscallArg(3, बफर) & 0xfful;
+        seL4_Word target = getSyscallArg(4, बफर);
         cap_t cnodeCap = current_extra_caps.excaprefs[0]->cap;
         exception_t status = Arch_checkIRQ(irq_w);
         irq_t irq = CORE_IRQ_TO_IRQT(target, irq_w);
 
-        if (status != EXCEPTION_NONE) {
-            return status;
+        अगर (status != EXCEPTION_NONE) {
+            वापस status;
         }
 
-        if (target >= CONFIG_MAX_NUM_NODES) {
+        अगर (target >= CONFIG_MAX_अंक_NODES) {
             current_syscall_error.type = seL4_InvalidArgument;
             userError("Target core %lu is invalid.", target);
-            return EXCEPTION_SYSCALL_ERROR;
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        if (isIRQActive(irq)) {
+        अगर (isIRQActive(irq)) {
             current_syscall_error.type = seL4_RevokeFirst;
-            userError("Rejecting request for IRQ %u. Already active.", (int)IRQT_TO_IRQ(irq));
-            return EXCEPTION_SYSCALL_ERROR;
+            userError("Rejecting request for IRQ %u. Already active.", (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस EXCEPTION_SYSCALL_ERROR;
         }
 
-        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, index, depth);
-        if (lu_ret.status != EXCEPTION_NONE) {
+        lookupSlot_ret_t lu_ret = lookupTargetSlot(cnodeCap, सूचकांक, depth);
+        अगर (lu_ret.status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap invalid: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return lu_ret.status;
+                      getExtraCPtr(बफर, 0), (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस lu_ret.status;
         }
 
         cte_t *destSlot = lu_ret.slot;
 
         status = ensureEmptySlot(destSlot);
-        if (status != EXCEPTION_NONE) {
+        अगर (status != EXCEPTION_NONE) {
             userError("Target slot for new IRQ Handler cap not empty: cap %lu, IRQ %u.",
-                      getExtraCPtr(buffer, 0), (int)IRQT_TO_IRQ(irq));
-            return status;
+                      getExtraCPtr(बफर, 0), (पूर्णांक)IRQT_TO_IRQ(irq));
+            वापस status;
         }
 
-        setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
+        setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
 
         /* If the IRQ is not a private interrupt, then the role of the syscall is to set
          * target core to which the shared interrupt will be physically delivered.
          */
-        if (!IRQ_IS_PPI(irq)) {
+        अगर (!IRQ_IS_PPI(irq)) {
             setIRQTarget(irq, target);
         }
-        return Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
-#endif /* ENABLE_SMP_SUPPORT */
-    } else {
+        वापस Arch_invokeIRQControl(irq, destSlot, srcSlot, trigger);
+#पूर्ण_अगर /* ENABLE_SMP_SUPPORT */
+    } अन्यथा {
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        वापस EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-#ifndef CONFIG_ENABLE_SMP_SUPPORT
+#अगर_अघोषित CONFIG_ENABLE_SMP_SUPPORT
 
-static exception_t invokeSGISignalGenerate(word_t irq, word_t target)
+अटल exception_t invokeSGISignalGenerate(word_t irq, word_t target)
 {
     plat_sendSGI(irq, target);
-    return EXCEPTION_NONE;
+    वापस EXCEPTION_NONE;
 }
 
 
-exception_t decodeSGISignalInvocation(word_t invLabel, word_t length,
-                                      cap_t cap, word_t *buffer)
+exception_t decodeSGISignalInvocation(word_t invLabel, word_t लंबाई,
+                                      cap_t cap, word_t *बफर)
 {
 
     word_t irq = cap_sgi_signal_cap_get_capSGIIRQ(cap);
     word_t target = cap_sgi_signal_cap_get_capSGITarget(cap);
 
-    setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeSGISignalGenerate(irq, target);
+    setThreadState(गाँठ_STATE(ksCurThread), ThreadState_Restart);
+    वापस invokeSGISignalGenerate(irq, target);
 }
-#endif /* !CONFIG_ENABLE_SMP_SUPPORT */
+#पूर्ण_अगर /* !CONFIG_ENABLE_SMP_SUPPORT */

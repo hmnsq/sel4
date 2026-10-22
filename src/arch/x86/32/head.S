@@ -77,7 +77,7 @@ BEGIN_FUNC(_start)
     pushl %edi /* 1st parameter: multiboot_magic    */
 
     /* Call boot_sys() (takes 2 parameters) and set restore_user_context() as  */
-    /* return EIP. This will start the roottask as soon as boot_sys() returns. */
+    /* return बनस. This will start the roottask as soon as boot_sys() returns. */
     pushl $restore_user_context
     jmp   boot_sys
 END_FUNC(_start)
@@ -87,7 +87,7 @@ END_FUNC(_start)
 BEGIN_FUNC(boot_cpu_start)
 
 .code16
-    /* Set DS equal to CS and load GDTR register with GDT pointer */
+    /* Set तख equal to कख and load GDTR register with GDT pointer */
     movw %cs, %ax
     movw %ax, %ds
     lgdt _boot_gdt_ptr - boot_cpu_start
@@ -97,11 +97,11 @@ BEGIN_FUNC(boot_cpu_start)
     orl  $1,   %eax
     movl %eax, %cr0
 
-    /* Reload CS with a far jump */
+    /* Reload कख with a far jump */
     ljmpl $0x08, $1f
 
 .code32
-    /* Load DS/ES/SS with kernel data segment selector */
+    /* Load तख/बख/ढख with kernel data segment selector */
 1:  movw $0x10, %ax
     movw %ax,   %ds
     movw %ax,   %es
@@ -127,7 +127,7 @@ BEGIN_FUNC(boot_cpu_start)
     addl %ecx, %esp
     subl $4, %esp
 
-    /* Call boot_node() and set restore_user_context() as return EIP. */
+    /* Call boot_node() and set restore_user_context() as return बनस. */
     pushl $restore_user_context
     jmp   boot_node
 END_FUNC(boot_cpu_start)

@@ -13,30 +13,30 @@
  * All interrupt handlers pointed by the IDT are in 64-bit code. (this does not apply to SMI handler)
  * The size of interrupt-stack pushes is fixed at 64 bits; and the processor uses 8-byte, zero extended
  * stores.
- * The stack pointer (SS:RSP) is pushed unconditionally on interrupts.
- * The new SS is set to NULL if there is a change in CPL.
+ * The stack pointer (ढख:RSP) is pushed unconditionally on interrupts.
+ * The new ढख is set to NULL if there is a change in CPL.
  * Only 64-bit interrupt and trap gates can be referenced in x86-64 mode.
  * No 32-bit interrupt or trap gate type exists in x86-64 mode.
  * The RSP is aligned to a 16-byte boundary before pushing the stack frame.
  * In x86-64 mode, when stacks are switched as part of a 64-bit mode privilege-level
- * change, a new SS descriptor is not loaded. x86-64 mode loads only an inner-level
- * RSP from the TSS. The new SS selector is forced to NULL and the SS selector's RPL
- * field is set to the new CPL. The old SS and RSP are saved on the new stack.
+ * change, a new ढख descriptor is not loaded. x86-64 mode loads only an inner-level
+ * RSP from the TSS. The new ढख selector is forced to NULL and the ढख selector's RPL
+ * field is set to the new CPL. The old ढख and RSP are saved on the new stack.
  *
  * Stack Usage with Privilege-Level Change
  *
- *          SS                      +40
+ *          ढख                      +40
  *         RSP                      +32
  *      RFLAGS                      +24
- *          CS                      +16
+ *          कख                      +16
  *         RIP                      +8
  *     ErrCode                      0  - RSP
  *
  * About Segment in x86-64 mode
- * ES, DS and SS segment registers are not used in 64-bit mode, their
+ * बख, तख and ढख segment registers are not used in 64-bit mode, their
  * fields (base, limit and attribute) in segment descriptor registers
  * are ignored. Some forms of segment load instructions are also invalid.
- * Address calculations that reference the DS, ES or SS segments are treated
+ * Address calculations that reference the तख, बख or ढख segments are treated
  * as if the segment base is zero. Mode change does not change the contents
  * of the segment registers or associated descriptor register. These registers
  * are also not changed during 64-bit mode execution, unless explicit
@@ -67,7 +67,7 @@
 /* The location in the user context we want is in ksCurThread after the
  * fpu state (CONFIG_XSAVE_SIZE) and then the end of the user context is
  * after 22 words (22 == n_immContextRegisters). By default (in the case
- * of a fast syscall trap) we skip 6 registers (SS, CS, RCX, R11,
+ * of a fast syscall trap) we skip 6 registers (ढख, कख, RCX, R11,
  * FaultIP, and RSP) and are ready to push Error.
  */
 #define MAYBE_SWAPGS
@@ -524,12 +524,12 @@ BEGIN_FUNC(kernel_exception)
      * It will then be the debug exception handler's responsibility to re-set
      * EFLAGS.TF for the userspace thread before it returns.
      *
-     * So at this point we want to just unset EFLAGS.TF and IRET immediately.
+     * So at this point we want to just unset EFLAGS.TF and ववाप immediately.
      */
     andq    $~(1<<8), %rax
     movq    %rax, 24(%rdx)
 
-    /* Begin popping registers to IRET now. We don't need to consider any
+    /* Begin popping registers to ववाप now. We don't need to consider any
      * unexpected side effects because we are just immediately returning after
      * entering.
      */
@@ -581,7 +581,7 @@ BEGIN_FUNC(kernel_exception)
     push    %r11
     call    handleKernelException
     addq    $32, %rsp
-    # Set RIP in the saved register context to the new IP returned from handleKernelException
+    # Set RIP in the saved register context to the new नस returned from handleKernelException
     LOAD_IRQ_STACK(r8)
     movq    %rax, 8(%r8)
     jmp     interrupt_return
@@ -589,7 +589,7 @@ END_FUNC(kernel_exception)
 
 # For a fast syscall the RFLAGS have been placed in
 # r11, the instruction *AFTER* the syscall is in
-# rcx. The current CS and SS have been loaded from
+# rcx. The current कख and ढख have been loaded from
 # IA32_LSTAR (along with this code location). Additionally
 # the current RFLAGS (after saving) have been masked
 # with IA32_FMASK.
@@ -630,7 +630,7 @@ END_FUNC(handle_fastsyscall)
 # Assume following register contents when called:
 #   RAX : syscall number
 #   RCX : user ESP
-#   RDX : user EIP (pointing to the sysenter instruction)
+#   RDX : user बनस (pointing to the sysenter instruction)
 #   RSP : NULL
 BEGIN_FUNC(handle_syscall)
     /* We need to save r11, rdx TLS_BASE and RSP */
@@ -697,43 +697,43 @@ BEGIN_FUNC(handle_vmexit)
     push    %rax
 
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-    # Save the guest's GS, Shadow GS, and FS
+    # Save the guest's गख, Shadow गख, and दख
     mov $0xC0000100, %ecx
     rdmsr
     shl $0x20,%rdx
     or %rdx, %rax
-    pushq %rax # Save FS
+    pushq %rax # Save दख
     swapgs
     mov $0xC0000101, %ecx
     rdmsr
     shl $0x20,%rdx
     or %rdx, %rax
-    pushq %rax # Save Shadow GS
+    pushq %rax # Save Shadow गख
     swapgs
     rdmsr
     shl $0x20,%rdx
     or %rdx, %rax
-    pushq %rax # Save GS
+    pushq %rax # Save गख
 
     # RSP now at host_gs registers
     sub $0x18, %rsp
 
-    # Restore the host's GS and Shadow GS
+    # Restore the host's गख and Shadow गख
     pop %rax
     movq %rax, %rdx
     shr $0x20, %rdx
-    wrmsr # GS
+    wrmsr # गख
     swapgs
     pop %rax
     movq %rax, %rdx
     shr $0x20, %rdx
-    wrmsr # Shadow GS
+    wrmsr # Shadow गख
     swapgs
     mov $0xC0000100, %ecx
     pop %rax
     movq %rax, %rdx
     shr $0x20, %rdx
-    wrmsr # FS
+    wrmsr # दख
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
     # switch to kernel stack

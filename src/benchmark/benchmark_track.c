@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <benchmark/benchmark_track.h>
-#include <model/statedata.h>
+#समावेश <config.h>
+#समावेश <benchmark/benchmark_track.h>
+#समावेश <model/statedata.h>
 
-#ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
+#अगर_घोषित CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
 
 timestamp_t ksEnter;
-seL4_Word ksLogIndex;
-seL4_Word ksLogIndexFinalized;
+seL4_Word ks_Log_सूचकांक;
+seL4_Word ks_Log_सूचकांक_Finalized;
 
-void benchmark_track_exit(void)
+व्योम benchmark_track_exit(व्योम)
 {
     timestamp_t duration = 0;
     timestamp_t ksExit = timestamp();
     benchmark_track_kernel_entry_t *ksLog = (benchmark_track_kernel_entry_t *) KS_LOG_PPTR;
 
-    if (likely(ksUserLogBuffer != 0)) {
+    अगर (likely(ks_User_Log_बफर != 0)) {
         /* If Log buffer is filled, do nothing */
-        if (likely(ksLogIndex < MAX_LOG_SIZE)) {
+        अगर (likely(ks_Log_सूचकांक < MAX_LOG_आकार)) {
             duration = ksExit - ksEnter;
-            ksLog[ksLogIndex].entry = ksKernelEntry;
-            ksLog[ksLogIndex].start_time = ksEnter;
-            ksLog[ksLogIndex].duration = duration;
-            ksLogIndex++;
+            ksLog[ks_Log_सूचकांक].entry = ksKernelEntry;
+            ksLog[ks_Log_सूचकांक].start_time = ksEnter;
+            ksLog[ks_Log_सूचकांक].duration = duration;
+            ks_Log_सूचकांक++;
         }
     }
 }
-#endif /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */
+#पूर्ण_अगर /* CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES */

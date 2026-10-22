@@ -114,7 +114,7 @@ END_FUNC(arm_vector_table)
     stp     x26, x27, [sp, #16 * 13]
     stp     x28, x29, [sp, #16 * 14]
 
-    /* Store thread's SPSR, LR, and SP */
+    /* Store thread's SPSR, LR, and ढस */
     mrs     x21, sp_el0
     mrs     x22, ELR
     mrs     x23, SPSR

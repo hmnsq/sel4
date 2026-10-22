@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#समावेश <config.h>
+#समावेश <stdint.h>
+#समावेश <util.h>
+#समावेश <machine/io.h>
+#समावेश <plat/machine/devices_gen.h>
 
-#define UARTDR                    0x000
-#define UARTFR                    0x018
+#घोषणा UARTDR                    0x000
+#घोषणा UARTFR                    0x018
 
-#define PL011_UARTFR_TXFF         BIT(5)
-#define PL011_UARTFR_RXFE         BIT(4)
+#घोषणा PL011_UARTFR_TXFF         BIT(5)
+#घोषणा PL011_UARTFR_RXFE         BIT(4)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#घोषणा UART_REG(x) ((अस्थिर uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#अगर_घोषित CONFIG_PRINTING
+व्योम uart_drv_putchar(अचिन्हित अक्षर c)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
+    जबतक ((*UART_REG(UARTFR) & PL011_UARTFR_TXFF) != 0);
 
     *UART_REG(UARTDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#पूर्ण_अगर /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#अगर_घोषित CONFIG_DEBUG_BUILD
+अचिन्हित अक्षर uart_drv_getchar(व्योम)
 {
-    while ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
+    जबतक ((*UART_REG(UARTFR) & PL011_UARTFR_RXFE) != 0);
 
-    return *UART_REG(UARTDR);
+    वापस *UART_REG(UARTDR);
 }
-#endif  /* CONFIG_DEBUG_BUILD */
+#पूर्ण_अगर  /* CONFIG_DEBUG_BUILD */

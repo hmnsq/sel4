@@ -10,13 +10,13 @@
 /* From <arch/mode/machine/registerset.h> */
 #define Error              9
 #define NextIP             10
-#define CS                 11
+#define कख                 11
 #define FLAGS              12
 #define ESP                13
 #define n_contextRegisters 17
 
 # On kernel entry, ESP points to the end of the thread's registers array.
-# Hardware pushes onto the stack SS, ESP, EFLAGS, CS, NextIP and Error,
+# Hardware pushes onto the stack ढख, ESP, EFLAGS, कख, NextIP and Error,
 # leaving the stack pointer pointing to TLS_BASE. The kernel pushes the rest.
 
 #define INT_HANDLER_COMMON(number, error_code) \
@@ -358,7 +358,7 @@ handle_interrupt:
     RESET_SELECTORS(edx)
 
     # determine if we have a kernel exception
-    testl   $3, (4 * CS)(%esp)     # extract CPL (current privilege level)
+    testl   $3, (4 * कख)(%esp)     # extract CPL (current privilege level)
     jz kernel_interrupt
 
 user_interrupt:
@@ -435,12 +435,12 @@ BEGIN_FUNC(kernel_exception)
      * It will then be the debug exception handler's responsibility to re-set
      * EFLAGS.TF for the userspace thread before it returns.
      *
-     * So at this point we want to just unset EFLAGS.TF and IRET immediately.
+     * So at this point we want to just unset EFLAGS.TF and ववाप immediately.
      */
     andl    $~(1<<8), %eax
     movl    %eax, (4 * FLAGS)(%esp)
 
-    /* Begin popping registers to IRET now. We don't need to consider any
+    /* Begin popping registers to ववाप now. We don't need to consider any
      * unexpected side effects because we are just immediately returning after
      * entering.
      */
@@ -460,12 +460,12 @@ BEGIN_FUNC(kernel_exception)
 #endif /* CONFIG_HARDWARE_DEBUG_API */
 
     # prepare debug info
-    movl    (4 * Error)(%esp), %eax # EAX contains Error Code
-    movl    (4 * NextIP)(%esp), %ebx # EBX contains EIP of the exception generating instruction
-    movl    (4 * FLAGS)(%esp), %edx # EDX contains EFLAGS
-    leal    (4 * ESP)(%esp), %edi # EDI contains ESP when exception happened
+    movl    (4 * Error)(%esp), %eax # बकक्ष contains Error Code
+    movl    (4 * NextIP)(%esp), %ebx # बखक्ष contains बनस of the exception generating instruction
+    movl    (4 * FLAGS)(%esp), %edx # बघक्ष contains EFLAGS
+    leal    (4 * ESP)(%esp), %edi # बतक contains ESP when exception happened
 
-    # call handleKernelException(vector, errcode, EIP, ESP, EFLAGS, CR0, CR2, CR3, CR4)
+    # call handleKernelException(vector, errcode, बनस, ESP, EFLAGS, CR0, CR2, CR3, CR4)
     movl    %cr4, %esi
     pushl   %esi
     movl    %cr3, %esi
@@ -481,7 +481,7 @@ BEGIN_FUNC(kernel_exception)
     pushl   %ecx
     call    handleKernelException
     addl    $36, %esp
-    # Set EIP in the saved register context to the new IP returned from handleKernelException
+    # Set बनस in the saved register context to the new नस returned from handleKernelException
     movl    %eax, (4 * NextIP)(%esp)
     jmp     kernel_int_return
 END_FUNC(kernel_exception)
@@ -510,9 +510,9 @@ END_FUNC(handle_vmexit)
 
 # Handle Syscall (coming via sysenter)
 # Assume following register contents when called:
-#   EAX : syscall number
-#   ECX : user ESP
-#   EDX : user EIP (pointing to the sysenter instruction)
+#   बकक्ष : syscall number
+#   बगक्ष : user ESP
+#   बघक्ष : user बनस (pointing to the sysenter instruction)
 #   ESP : points to tss.esp0 which points to the end of the thread's registers array
 
 BEGIN_FUNC(handle_syscall)
@@ -520,21 +520,21 @@ BEGIN_FUNC(handle_syscall)
     movl    (%esp), %esp    # ESP := tss.esp0
 #endif
 
-    subl    $4, %esp        # skip SS
-    pushl   %ecx            # save ESP (passed in ECX)
+    subl    $4, %esp        # skip ढख
+    pushl   %ecx            # save ESP (passed in बगक्ष)
     pushfl                  # save EFLAGS
     orl     $0x200, (%esp)  # set interrupt bit in saved EFLAGS
-    subl    $4, %esp        # skip CS
-    pushl   %edx            # NextIP := EDX
+    subl    $4, %esp        # skip कख
+    pushl   %edx            # NextIP := बघक्ष
     pushl   $-1             # save Error (-1 means we entered via syscall)
-    pushl   %edx            # save FaultIP (passed in EDX)
-    pushl   %ebp            # save EBP (reply register)
-    pushl   %edi            # save EDI (message register)
-    pushl   %esi            # save ESI (msgInfo register)
-    pushl   %edx            # save EDX (contains FaultIP)
-    pushl   %ecx            # save ECX (contains ESP)
-    pushl   %ebx            # save EBX (cap/badge register)
-    pushl   %eax            # save EAX (syscall number)
+    pushl   %edx            # save FaultIP (passed in बघक्ष)
+    pushl   %ebp            # save बआस (reply register)
+    pushl   %edi            # save बतक (message register)
+    pushl   %esi            # save बढक (msgInfo register)
+    pushl   %edx            # save बघक्ष (contains FaultIP)
+    pushl   %ecx            # save बगक्ष (contains ESP)
+    pushl   %ebx            # save बखक्ष (cap/badge register)
+    pushl   %eax            # save बकक्ष (syscall number)
     pushl   $0
 
     # Reset segment selectors

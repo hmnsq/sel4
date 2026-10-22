@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <types.h>
-#include <machine/io.h>
-#include <kernel/vspace.h>
-#include <arch/machine.h>
-#include <arch/kernel/vspace.h>
-#include <plat/machine.h>
-#include <linker.h>
-#include <plat/machine/devices_gen.h>
-#include <plat/machine/hardware.h>
+#समावेश <config.h>
+#समावेश <types.h>
+#समावेश <machine/io.h>
+#समावेश <kernel/vspace.h>
+#समावेश <arch/machine.h>
+#समावेश <arch/kernel/vspace.h>
+#समावेश <plat/machine.h>
+#समावेश <linker.h>
+#समावेश <plat/machine/devices_gen.h>
+#समावेश <plat/machine/hardware.h>
 
-#define TIOCP_CFG_SOFTRESET BIT(1)
-#define TCLR_AUTORELOAD     BIT(1)
-#define TCLR_COMPAREENABLE  BIT(6)
-#define TCLR_STARTTIMER     BIT(0)
-#define TIER_MATCHENABLE    BIT(0)
-#define TIER_OVERFLOWENABLE BIT(1)
+#घोषणा TIOCP_CFG_SOFTRESET BIT(1)
+#घोषणा TCLR_AUTORELOAD     BIT(1)
+#घोषणा TCLR_COMPAREENABLE  BIT(6)
+#घोषणा TCLR_STARTTIMER     BIT(0)
+#घोषणा TIER_MATCHENABLE    BIT(0)
+#घोषणा TIER_OVERFLOWENABLE BIT(1)
 
 timer_t *timer = (timer_t *) TIMER_PPTR;
 
-#ifdef CONFIG_KERNEL_MCS
-#define INTCPS_SYSCONFIG_SOFTRESET BIT(1)
-#define INTCPS_SYSSTATUS_RESETDONE BIT(0)
-uint32_t high_bits = 0;
-BOOT_CODE void initTimer(void)
+#अगर_घोषित CONFIG_KERNEL_MCS
+#घोषणा INTCPS_SYSCONFIG_SOFTRESET BIT(1)
+#घोषणा INTCPS_SYSSTATUS_RESETDONE BIT(0)
+uint32_t ऊपरी_bits = 0;
+BOOT_CODE व्योम initTimer(व्योम)
 {
     /* Configure gptimer9 as kernel timer */
     timer->cfg = TIOCP_CFG_SOFTRESET;
@@ -37,7 +37,7 @@ BOOT_CODE void initTimer(void)
     timer->tclr = 0;
 
     /* wait for reset */
-    while (!timer->tistat);
+    जबतक (!timer->tistat);
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
 
@@ -53,14 +53,14 @@ BOOT_CODE void initTimer(void)
     /* start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER | TCLR_COMPAREENABLE;
 }
-#else /* CONFIG_KERNEL_MCS */
-#define TIMER_INTERVAL_MS (CONFIG_TIMER_TICK_MS)
-BOOT_CODE void initTimer(void)
+#अन्यथा /* CONFIG_KERNEL_MCS */
+#घोषणा TIMER_INTERVAL_MS (CONFIG_TIMER_TICK_MS)
+BOOT_CODE व्योम initTimer(व्योम)
 {
     /* Configure gptimer9 as kernel timer */
     timer->cfg = TIOCP_CFG_SOFTRESET;
 
-    while (!timer->tistat);
+    जबतक (!timer->tistat);
 
     maskInterrupt(/*disable*/ true, KERNEL_TIMER_IRQ);
 
@@ -76,4 +76,4 @@ BOOT_CODE void initTimer(void)
     /* Set autoreload and start the timer */
     timer->tclr = TCLR_AUTORELOAD | TCLR_STARTTIMER;
 }
-#endif /* !CONFIG_KERNEL_MCS */
+#पूर्ण_अगर /* !CONFIG_KERNEL_MCS */

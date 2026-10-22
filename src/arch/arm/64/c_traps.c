@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#समावेश <config.h>
+#समावेश <model/statedata.h>
+#समावेश <arch/fastpath/fastpath.h>
+#समावेश <arch/kernel/traps.h>
+#समावेश <api/syscall.h>
+#समावेश <linker.h>
+#समावेश <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#समावेश <benchmark/benchmark_track.h>
+#समावेश <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+व्योम VISIBLE NORETURN restore_user_context(व्योम)
 {
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#अगर_घोषित ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
+    restore_user_debug_context(गाँठ_STATE(ksCurThread));
+#पूर्ण_अगर
 
-    NODE_UNLOCK_IF_HELD;
+    गाँठ_UNLOCK_IF_HELD;
 
-    asm volatile(
+    यंत्र अस्थिर(
         "mov     sp, %0                     \n"
 
         /* Restore thread's SPSR, LR, and SP */
         "ldp     x21, x22, [sp, %[SP_EL0]] \n"
         "ldr     x23, [sp, %[SPSR_EL1]]    \n"
         "msr     sp_el0, x21                \n"
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
         "msr     elr_el2, x22               \n"
         "msr     spsr_el2, x23              \n"
-#else
+#अन्यथा
         "msr     elr_el1, x22               \n"
         "msr     spsr_el1, x23              \n"
-#endif
+#पूर्ण_अगर
         /* Restore remaining registers */
         "ldp     x0,  x1,  [sp, #16 * 0]    \n"
         "ldp     x2,  x3,  [sp, #16 * 1]    \n"
@@ -59,60 +59,60 @@ void VISIBLE NORETURN restore_user_context(void)
         "ldr     x30, [sp, %[LR]]          \n"
         "eret"
         :
-        : "r"(NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers),
+        : "r"(गाँठ_STATE(ksCurThread)->tcbArch.tcbContext.registers),
         [SP_EL0] "i"(PT_SP_EL0), [SPSR_EL1] "i"(PT_SPSR_EL1), [LR] "i"(PT_LR)
         : "memory"
     );
     UNREACHABLE();
 }
 
-#if defined(CONFIG_DEBUG_BUILD)
+#अगर defined(CONFIG_DEBUG_BUILD)
 /* See 'arm_vector_table' for details on 'vect_offset' */
-UNUSED static const char *vect_offset_to_name(word_t vect_offset)
+UNUSED अटल स्थिर अक्षर *vect_offset_to_name(word_t vect_offset)
 {
-    switch (vect_offset) {
-    case 0x000:
-        return "Synchronous EL1t/EL2t";
-    case 0x080:
-        return "IRQ EL1t/EL2t";
-    case 0x100:
-        return "FIQ EL1t/EL2t";
-    case 0x180:
-        return "SError EL1t/EL2t";
-    case 0x200:
-        return "Synchronous Current EL";
-    case 0x280:
-        return "IRQ Current EL";
-    case 0x300:
-        return "FIQ Current EL";
-    case 0x380:
-        return "SError Current EL";
-    case 0x400:
-        return "Synchronous 64-bit EL0/EL1";
-    case 0x480:
-        return "IRQ 64-bit EL0/EL1";
-    case 0x500:
-        return "FIQ 64-bit EL0/EL1";
-    case 0x580:
-        return "SError 64-bit EL0/EL1";
-    case 0x600:
-        return "Synchronous 32-bit EL0/EL1";
-    case 0x680:
-        return "IRQ 32-bit EL0/EL1";
-    case 0x700:
-        return "FIQ 32-bit EL0/EL1";
-    case 0x780:
-        return "SError 32-bit EL0/EL1";
-    default:
-        return "<Unknown>";
+    चयन (vect_offset) {
+    हाल 0x000:
+        वापस "Synchronous EL1t/EL2t";
+    हाल 0x080:
+        वापस "IRQ EL1t/EL2t";
+    हाल 0x100:
+        वापस "FIQ EL1t/EL2t";
+    हाल 0x180:
+        वापस "SError EL1t/EL2t";
+    हाल 0x200:
+        वापस "Synchronous Current EL";
+    हाल 0x280:
+        वापस "IRQ Current EL";
+    हाल 0x300:
+        वापस "FIQ Current EL";
+    हाल 0x380:
+        वापस "SError Current EL";
+    हाल 0x400:
+        वापस "Synchronous 64-bit EL0/EL1";
+    हाल 0x480:
+        वापस "IRQ 64-bit EL0/EL1";
+    हाल 0x500:
+        वापस "FIQ 64-bit EL0/EL1";
+    हाल 0x580:
+        वापस "SError 64-bit EL0/EL1";
+    हाल 0x600:
+        वापस "Synchronous 32-bit EL0/EL1";
+    हाल 0x680:
+        वापस "IRQ 32-bit EL0/EL1";
+    हाल 0x700:
+        वापस "FIQ 32-bit EL0/EL1";
+    हाल 0x780:
+        वापस "SError 32-bit EL0/EL1";
+    शेष:
+        वापस "<Unknown>";
     }
 }
 
-void VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
+व्योम VISIBLE c_handle_invalid_vector_entry(word_t vect_offset, word_t pc)
 {
-    printf("\n\nKERNEL INVALID VECTOR ENTRY!\n");
-    printf("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));
-    printf("Fault attributed to program counter: 0x%"SEL4_PRIx_word"\n", pc);
-    printf("ESR: 0x%"SEL4_PRIx_word" FAR: 0x%"SEL4_PRIx_word"\n", getESR(), getFAR());
+    म_लिखो("\n\nKERNEL INVALID VECTOR ENTRY!\n");
+    म_लिखो("Vector: 0x%"SEL4_PRIx_word" (%s)\n", vect_offset, vect_offset_to_name(vect_offset));
+    म_लिखो("Fault attributed to program counter: 0x%"SEL4_PRIx_word"\n", pc);
+    म_लिखो("ESR: 0x%"SEL4_PRIx_word" FAR: 0x%"SEL4_PRIx_word"\n", getESR(), getFAR());
 }
-#endif
+#पूर्ण_अगर

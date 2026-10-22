@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#समावेश <config.h>
+#समावेश <stdint.h>
+#समावेश <util.h>
+#समावेश <machine/io.h>
+#समावेश <plat/machine/devices_gen.h>
 
-#define USART_ISR               0x1C
-#define USART_TDR               0x28
+#घोषणा USART_ISR               0x1C
+#घोषणा USART_TDR               0x28
 
-#define USART_ISR_TXE           0x80U
+#घोषणा USART_ISR_TXE           0x80U
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#घोषणा UART_REG(x) ((अस्थिर uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#अगर_घोषित CONFIG_PRINTING
+व्योम uart_drv_putchar(अचिन्हित अक्षर c)
 {
-    while (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
+    जबतक (!(*UART_REG(USART_ISR) & USART_ISR_TXE));
     *UART_REG(USART_TDR) = c;
 }
-#endif /* CONFIG_PRINTING */
+#पूर्ण_अगर /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#अगर_घोषित CONFIG_DEBUG_BUILD
+अचिन्हित अक्षर uart_drv_getchar(व्योम)
 {
-    return -1;
+    वापस -1;
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#पूर्ण_अगर /* CONFIG_DEBUG_BUILD */

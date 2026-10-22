@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <api/types.h>
-#include <arch/machine.h>
-#include <arch/machine/hardware.h>
-#include <arch/machine/l2c_310.h>
+#समावेश <api/types.h>
+#समावेश <arch/machine.h>
+#समावेश <arch/machine/hardware.h>
+#समावेश <arch/machine/l2c_310.h>
 
-#define LINE_START(a) ROUND_DOWN(a, L1_CACHE_LINE_SIZE_BITS)
-#define LINE_INDEX(a) (LINE_START(a)>>L1_CACHE_LINE_SIZE_BITS)
+#घोषणा पंक्ति_START(a) ROUND_DOWN(a, L1_CACHE_पंक्ति_आकार_BITS)
+#घोषणा पंक्ति_सूचकांक(a) (पंक्ति_START(a)>>L1_CACHE_पंक्ति_आकार_BITS)
 
-static void cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
+अटल व्योम cleanCacheRange_PoC(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        cleanByVA(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
 }
 
-void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end, id)" */
@@ -44,15 +44,15 @@ void cleanInvalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
      * in a multiprocessor environment to prevent a write being lost if another core is
      * attempting a store at the same time. As the range should already be clean asking
      * it to clean again should not affect performance */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanInvalByVA(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        cleanInvalByVA(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
     /* ensure clean and invalidate complete */
     dsb();
 }
 
-void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
@@ -74,38 +74,38 @@ void cleanCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
     plat_cleanL2Range(pstart, pstart + (end - start));
 }
 
-void cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम cleanCacheRange_PoU(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
             \<or> \<acute>end - \<acute>start <= gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state)
         \<and> \<acute>start <= \<acute>end
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        cleanByVA_PoU(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        cleanByVA_PoU(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
 }
 
-void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
 
     /* If the start and end are not aligned to a cache line boundary
      * then we need to clean the line first to prevent invalidating
      * bytes we didn't mean to. Calling the functions in this way is
      * not the most efficient method, but we assume the user will
      * rarely be this silly */
-    if (start != LINE_START(start)) {
+    अगर (start != पंक्ति_START(start)) {
         cleanCacheRange_RAM(start, start, pstart);
     }
-    if (end + 1 != LINE_START(end + 1)) {
-        line = LINE_START(end);
-        cleanCacheRange_RAM(line, line, pstart + (line - start));
+    अगर (end + 1 != पंक्ति_START(end + 1)) {
+        पंक्ति_2 = पंक्ति_START(end);
+        cleanCacheRange_RAM(पंक्ति_2, पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
 
     /** GHOSTUPD: "((gs_get_assn cap_get_capSizeBits_'proc \<acute>ghost'state = 0
@@ -124,17 +124,17 @@ void invalidateCacheRange_RAM(vptr_t start, vptr_t end, paddr_t pstart)
         \<and> \<acute>pstart <= \<acute>pstart + (\<acute>end - \<acute>start), id)" */
 
     /* Now invalidate L1 range */
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        invalidateByVA(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
     /* Ensure invalidate completes */
     dsb();
 }
 
-void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
 {
-#if defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
+#अगर defined(CONFIG_ARM_ICACHE_VIPT) && defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     /* In cases where the hypervisor is supported, the virtual address passed
      * to this function are kernel aliases for the underlying physical memory
      * rather than the virtual address in the actual vspace. This works fine
@@ -145,29 +145,29 @@ void invalidateCacheRange_I(vptr_t start, vptr_t end, paddr_t pstart)
      * case
      */
     invalidate_I_PoU();
-#else
-    vptr_t line;
-    word_t index;
+#अन्यथा
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        invalidateByVA_I(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        invalidateByVA_I(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
-#endif
+#पूर्ण_अगर
 }
 
-void branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
+व्योम branchFlushRange(vptr_t start, vptr_t end, paddr_t pstart)
 {
-    vptr_t line;
-    word_t index;
+    vptr_t पंक्ति_2;
+    word_t सूचकांक;
 
-    for (index = LINE_INDEX(start); index < LINE_INDEX(end) + 1; index++) {
-        line = index << L1_CACHE_LINE_SIZE_BITS;
-        branchFlush(line, pstart + (line - start));
+    क्रम (सूचकांक = पंक्ति_सूचकांक(start); सूचकांक < पंक्ति_सूचकांक(end) + 1; सूचकांक++) {
+        पंक्ति_2 = सूचकांक << L1_CACHE_पंक्ति_आकार_BITS;
+        branchFlush(पंक्ति_2, pstart + (पंक्ति_2 - start));
     }
 }
 
-void cleanCaches_PoU(void)
+व्योम cleanCaches_PoU(व्योम)
 {
     dsb();
     clean_D_PoU();
@@ -176,7 +176,7 @@ void cleanCaches_PoU(void)
     dsb();
 }
 
-void cleanInvalidateL1Caches(void)
+व्योम cleanInvalidateL1Caches(व्योम)
 {
     dsb();
     cleanInvalidate_D_PoC();
@@ -185,7 +185,7 @@ void cleanInvalidateL1Caches(void)
     dsb();
 }
 
-void arch_clean_invalidate_caches(void)
+व्योम arch_clean_invalidate_caches(व्योम)
 {
     cleanCaches_PoU();
     plat_cleanInvalidateL2Cache();
@@ -193,14 +193,14 @@ void arch_clean_invalidate_caches(void)
     isb();
 }
 
-void arch_clean_invalidate_L1_caches(word_t type)
+व्योम arch_clean_invalidate_L1_caches(word_t type)
 {
     dsb();
-    if (type & BIT(1)) {
+    अगर (type & BIT(1)) {
         cleanInvalidate_L1D();
         dsb();
     }
-    if (type & BIT(0)) {
+    अगर (type & BIT(0)) {
         invalidate_I_PoU();
         dsb();
         isb();

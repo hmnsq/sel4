@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine.h>
+#समावेश <arch/machine.h>
 
-static inline word_t readACR(void)
+अटल अंतरभूत word_t readACR(व्योम)
 {
     word_t ACR;
-    asm volatile("mrc p15,0,%0,c1,c0,1" : "=r"(ACR));
-    return ACR;
+    यंत्र अस्थिर("mrc p15,0,%0,c1,c0,1" : "=r"(ACR));
+    वापस ACR;
 }
 
-static inline void writeACR(word_t ACR)
+अटल अंतरभूत व्योम writeACR(word_t ACR)
 {
-    asm volatile("mcr p15,0,%0,c1,c0,1" : : "r"(ACR));
+    यंत्र अस्थिर("mcr p15,0,%0,c1,c0,1" : : "r"(ACR));
 }
 
-void initL2Cache(void)
+व्योम initL2Cache(व्योम)
 {
     cleanInvalidateL1Caches();
 
@@ -34,7 +34,7 @@ void initL2Cache(void)
     cleanInvalidateL1Caches();
 }
 
-void plat_cleanL2Range(paddr_t start, paddr_t end) {}
-void plat_invalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
-void plat_cleanInvalidateL2Cache(void) {}
+व्योम plat_cleanL2Range(paddr_t start, paddr_t end) {}
+व्योम plat_invalidateL2Range(paddr_t start, paddr_t end) {}
+व्योम plat_cleanInvalidateL2Range(paddr_t start, paddr_t end) {}
+व्योम plat_cleanInvalidateL2Cache(व्योम) {}

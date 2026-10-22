@@ -4,46 +4,46 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <stdint.h>
-#include <util.h>
-#include <machine/io.h>
-#include <plat/machine/devices_gen.h>
+#समावेश <config.h>
+#समावेश <stdint.h>
+#समावेश <util.h>
+#समावेश <machine/io.h>
+#समावेश <plat/machine/devices_gen.h>
 
-#define UART_CONTROL                 0x00
-#define UART_MODE                    0x04
-#define UART_INTRPT_EN               0x08
-#define UART_INTRPT_DIS              0x0C
-#define UART_INTRPT_MASK             0x10
-#define UART_CHNL_INT_STS            0x14
-#define UART_BAUD_RATE_GEN           0x18
-#define UART_RCVR_TIMEOUT            0x1C
-#define UART_RCVR_FIFO_TRIGGER_LEVEL 0x20
-#define UART_MODEM_CTRL              0x24
-#define UART_MODEM_STS               0x28
-#define UART_CHANNEL_STS             0x2C
-#define UART_TX_RX_FIFO              0x30
-#define UART_BAUD_RATE_DIVIDER       0x34
-#define UART_FLOW_DELAY              0x38
-#define UART_TX_FIFO_TRIGGER_LEVEL   0x44
+#घोषणा UART_CONTROL                 0x00
+#घोषणा UART_MODE                    0x04
+#घोषणा UART_INTRPT_EN               0x08
+#घोषणा UART_INTRPT_DIS              0x0C
+#घोषणा UART_INTRPT_MASK             0x10
+#घोषणा UART_CHNL_INT_STS            0x14
+#घोषणा UART_BAUD_RATE_GEN           0x18
+#घोषणा UART_RCVR_TIMEOUT            0x1C
+#घोषणा UART_RCVR_FIFO_TRIGGER_LEVEL 0x20
+#घोषणा UART_MODEM_CTRL              0x24
+#घोषणा UART_MODEM_STS               0x28
+#घोषणा UART_CHANNEL_STS             0x2C
+#घोषणा UART_TX_RX_FIFO              0x30
+#घोषणा UART_BAUD_RATE_DIVIDER       0x34
+#घोषणा UART_FLOW_DELAY              0x38
+#घोषणा UART_TX_FIFO_TRIGGER_LEVEL   0x44
 
-#define UART_INTRPT_MASK_TXEMPTY     BIT(3)
-#define UART_CHANNEL_STS_TXEMPTY     BIT(3)
+#घोषणा UART_INTRPT_MASK_TXEMPTY     BIT(3)
+#घोषणा UART_CHANNEL_STS_TXEMPTY     BIT(3)
 
-#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
+#घोषणा UART_REG(x) ((अस्थिर uint32_t *)(UART_PPTR + (x)))
 
-#ifdef CONFIG_PRINTING
-void uart_drv_putchar(unsigned char c)
+#अगर_घोषित CONFIG_PRINTING
+व्योम uart_drv_putchar(अचिन्हित अक्षर c)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
+    जबतक (!(*UART_REG(UART_CHANNEL_STS) & UART_CHANNEL_STS_TXEMPTY));
     *UART_REG(UART_TX_RX_FIFO) = c;
 }
-#endif /* CONFIG_PRINTING */
+#पूर्ण_अगर /* CONFIG_PRINTING */
 
-#ifdef CONFIG_DEBUG_BUILD
-unsigned char uart_drv_getchar(void)
+#अगर_घोषित CONFIG_DEBUG_BUILD
+अचिन्हित अक्षर uart_drv_getchar(व्योम)
 {
-    while (!(*UART_REG(UART_CHANNEL_STS) & BIT(UART_CHANNEL_STS_TXEMPTY)));
-    return *UART_REG(UART_TX_RX_FIFO);
+    जबतक (!(*UART_REG(UART_CHANNEL_STS) & BIT(UART_CHANNEL_STS_TXEMPTY)));
+    वापस *UART_REG(UART_TX_RX_FIFO);
 }
-#endif /* CONFIG_DEBUG_BUILD */
+#पूर्ण_अगर /* CONFIG_DEBUG_BUILD */

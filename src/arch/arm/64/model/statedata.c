@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <util.h>
-#include <api/types.h>
-#include <arch/types.h>
-#include <arch/model/statedata.h>
-#include <arch/object/structures.h>
-#include <linker.h>
-#include <plat/machine/hardware.h>
+#समावेश <config.h>
+#समावेश <util.h>
+#समावेश <api/types.h>
+#समावेश <arch/types.h>
+#समावेश <arch/model/statedata.h>
+#समावेश <arch/object/structures.h>
+#समावेश <linker.h>
+#समावेश <plat/machine/hardware.h>
 
-#ifdef CONFIG_ARM_SMMU
-#include <arch/object/smmu.h>
-#endif
+#अगर_घोषित CONFIG_ARM_SMMU
+#समावेश <arch/object/smmu.h>
+#पूर्ण_अगर
 
 
 asid_pool_t *armKSASIDTable[nASIDPools];
@@ -82,22 +82,22 @@ asid_pool_t *armKSASIDTable[nASIDPools];
  * applies.
  */
 
-vspace_root_t armKSGlobalUserVSpace[BIT(seL4_VSpaceIndexBits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
-pte_t armKSGlobalKernelPGD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+vspace_मूल_t armKSGlobalUserVSpace[BIT(se_L4_VSpace_सूचकांक_Bits)] ALIGN_BSS(BIT(seL4_VSpaceBits));
+pte_t armKSGlobalKernelPGD[BIT(PT_सूचकांक_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
-pte_t armKSGlobalKernelPUD[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPDs[BIT(PT_INDEX_BITS)][BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
-pte_t armKSGlobalKernelPT[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPUD[BIT(PT_सूचकांक_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPDs[BIT(PT_सूचकांक_BITS)][BIT(PT_सूचकांक_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+pte_t armKSGlobalKernelPT[BIT(PT_सूचकांक_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][BIT(PT_INDEX_BITS) - 2];
+#अगर_घोषित CONFIG_KERNEL_LOG_बफर
+pte_t *armKSGlobalLogPTE = &armKSGlobalKernelPDs[BIT(PT_सूचकांक_BITS) - 1][BIT(PT_सूचकांक_BITS) - 2];
 compile_assert(log_pude_is_correct_preallocated_pude,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
+               GET_KPT_सूचकांक(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_सूचकांक_BITS) - 1);
 compile_assert(log_pde_is_correct_preallocated_pde,
-               GET_KPT_INDEX(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == BIT(PT_INDEX_BITS) - 2);
-#endif
+               GET_KPT_सूचकांक(KS_LOG_PPTR, KLVL_FRM_ARM_PT_LVL(2)) == BIT(PT_सूचकांक_BITS) - 2);
+#पूर्ण_अगर
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#अगर_घोषित CONFIG_ARM_HYPERVISOR_SUPPORT
 UP_STATE_DEFINE(vcpu_t, *armHSCurVCPU);
 UP_STATE_DEFINE(bool_t, armHSVCPUActive);
 
@@ -107,25 +107,25 @@ UP_STATE_DEFINE(bool_t, armHSVCPUActive);
  */
 asid_t armKSHWASIDTable[BIT(hwASIDBits)];
 hw_asid_t armKSNextASID = hwASIDMin;
-#endif
+#पूर्ण_अगर
 
-#ifdef CONFIG_ARM_SMMU
+#अगर_घोषित CONFIG_ARM_SMMU
 /*recording the state of created SID caps*/
 bool_t smmuStateSIDTable[SMMU_MAX_SID];
 /* CNode containing the cb_cap that is assigned to sids*/
 cte_t smmuStateSIDNode[BIT(SMMU_SID_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_SID_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateSIDCNodeSize, sizeof(smmuStateSIDNode) >= ((SMMU_MAX_SID) * sizeof(cte_t)));
+compile_assert(smmu_State_SIDCNode_आकार, माप(smmuStateSIDNode) >= ((SMMU_MAX_SID) * माप(cte_t)));
 
 /*recording the state of the created cb caps*/
 bool_t smmuStateCBTable[SMMU_MAX_CB];
 /* CNode containing the vspace root cap that is assigned to sids*/
 cte_t smmuStateCBNode[BIT(SMMU_CB_CNODE_SLOT_BITS)] ALIGN(BIT(SMMU_CB_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(smmuStateCBCNodeSize, sizeof(smmuStateCBNode) >= ((SMMU_MAX_CB) * sizeof(cte_t)));
+compile_assert(smmu_State_CBCNode_आकार, माप(smmuStateCBNode) >= ((SMMU_MAX_CB) * माप(cte_t)));
 /*recording the context bank to ASID relationship*/
 asid_t smmuStateCBAsidTable[SMMU_MAX_CB];
-#endif
+#पूर्ण_अगर
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#अगर_घोषित ARM_BASE_CP14_SAVE_AND_RESTORE
 /* Null state for the Debug coprocessor's break/watchpoint registers */
 user_breakpoint_state_t armKSNullBreakpointState;
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#पूर्ण_अगर /* ARM_BASE_CP14_SAVE_AND_RESTORE */

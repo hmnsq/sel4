@@ -4,34 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <model/statedata.h>
-#include <arch/fastpath/fastpath.h>
-#include <arch/kernel/traps.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <api/syscall.h>
-#include <linker.h>
-#include <machine/fpu.h>
+#समावेश <config.h>
+#समावेश <model/statedata.h>
+#समावेश <arch/fastpath/fastpath.h>
+#समावेश <arch/kernel/traps.h>
+#समावेश <arch/machine/debug.h>
+#समावेश <arch/machine/debug_conf.h>
+#समावेश <api/syscall.h>
+#समावेश <linker.h>
+#समावेश <machine/fpu.h>
 
-#include <benchmark/benchmark_track.h>
-#include <benchmark/benchmark_utilisation.h>
+#समावेश <benchmark/benchmark_track.h>
+#समावेश <benchmark/benchmark_utilisation.h>
 
 /** DONT_TRANSLATE */
-void VISIBLE NORETURN restore_user_context(void)
+व्योम VISIBLE NORETURN restore_user_context(व्योम)
 {
-    word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread);
+    word_t cur_thread_reg = (word_t) गाँठ_STATE(ksCurThread);
 
     c_exit_hook();
 
-#ifdef ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
-    restore_user_debug_context(NODE_STATE(ksCurThread));
-#endif
+#अगर_घोषित ARM_CP14_SAVE_AND_RESTORE_NATIVE_THREADS
+    restore_user_debug_context(गाँठ_STATE(ksCurThread));
+#पूर्ण_अगर
 
-    NODE_UNLOCK_IF_HELD;
+    गाँठ_UNLOCK_IF_HELD;
 
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        asm volatile(
+    अगर (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+        यंत्र अस्थिर(
             /* Set stack pointer to point at the r0 of the user context. */
             "mov sp, %[cur_thread_reg] \n"
             /* Pop user registers */
@@ -53,12 +53,12 @@ void VISIBLE NORETURN restore_user_context(void)
             : [cur_thread_reg] "r"(cur_thread_reg)
             : "memory"
         );
-    } else {
-        asm volatile("mov sp, %[cur_thread] \n\
+    } अन्यथा {
+        यंत्र अस्थिर("mov sp, %[cur_thread] \n\
                   ldmdb sp, {r0-lr}^ \n\
                   rfeia sp"
                      : /* no output */
-                     : [cur_thread] "r"(cur_thread_reg + NextIP * sizeof(word_t))
+                     : [cur_thread] "r"(cur_thread_reg + अग्र_IP * माप(word_t))
                     );
     }
     UNREACHABLE();

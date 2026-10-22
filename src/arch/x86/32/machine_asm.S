@@ -28,16 +28,16 @@
 BEGIN_FUNC(ia32_install_gdt)
     movl 4(%esp), %eax
     lgdt (%eax)             # load gdtr register with gdt pointer
-    movw $SEL_DS_3, %ax     # load register ax with seg selector DS
+    movw $SEL_DS_3, %ax     # load register ax with seg selector तख
     movw %ax,   %ds
     movw %ax,   %es
-    movw $SEL_FS, %ax       # load register ax with seg selector FS
+    movw $SEL_FS, %ax       # load register ax with seg selector दख
     movw %ax,   %fs
-    movw $SEL_GS, %ax       # load register ax with seg selector GS
+    movw $SEL_GS, %ax       # load register ax with seg selector गख
     movw %ax,   %gs
-    movw $SEL_DS_0, %ax     # load register ax with seg selector for kernel DS
+    movw $SEL_DS_0, %ax     # load register ax with seg selector for kernel तख
     movw %ax,   %ss
-    ljmp $0x08, $1f         # reload kernel CS with a far jump
+    ljmp $0x08, $1f         # reload kernel कख with a far jump
 1:  ret
 END_FUNC(ia32_install_gdt)
 

@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#समावेश <config.h>
+#अगर_घोषित CONFIG_HARDWARE_DEBUG_API
 
-#include <string.h>
-#include <util.h>
-#include <arch/model/statedata.h>
-#include <arch/machine/debug.h>
-#include <arch/machine/debug_conf.h>
-#include <arch/kernel/vspace.h>
-#include <arch/machine/registerset.h>
-#include <armv/debug.h>
-#include <mode/machine/debug.h>
-#include <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
+#समावेश <string.h>
+#समावेश <util.h>
+#समावेश <arch/model/statedata.h>
+#समावेश <arch/machine/debug.h>
+#समावेश <arch/machine/debug_conf.h>
+#समावेश <arch/kernel/vspace.h>
+#समावेश <arch/machine/registerset.h>
+#समावेश <armv/debug.h>
+#समावेश <mode/machine/debug.h>
+#समावेश <sel4/constants.h> /* seL4_NumExclusiveBreakpoints/Watchpoints */
 
 /* ARMv7 Manuals, c3.3.1:
  *  "Breakpoint debug events are synchronous. That is, the debug event acts
@@ -30,78 +30,78 @@
  *  cancels a later instruction."
  */
 
-enum watchpoint_privilege /* WCR[2:1] */ {
+क्रमागत watchpoint_privilege /* WCR[2:1] */ {
     DBGWCR_PRIV_RESERVED = 0u,
     DBGWCR_PRIV_PRIVILEGED = 1u,
     DBGWCR_PRIV_USER = 2u,
     DBGWCR_PRIV_EITHER = 3u
 };
 
-enum watchpoint_access /* WCR[4:3] */ {
+क्रमागत watchpoint_access /* WCR[4:3] */ {
     DBGWCR_ACCESS_RESERVED = 0u,
     DBGWCR_ACCESS_LOAD = 1u,
     DBGWCR_ACCESS_STORE = 2u,
     DBGWCR_ACCESS_EITHER = 3u
 };
 
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#पूर्ण_अगर /* CONFIG_HARDWARE_DEBUG_API */
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#अगर_घोषित ARM_BASE_CP14_SAVE_AND_RESTORE
 
 /* These next few functions (read*Context()/write*Context()) read from TCB
  * context and not from the hardware registers.
  */
-word_t readBcrContext(tcb_t *t, uint16_t index)
+word_t readBcrContext(tcb_t *t, uint16_t सूचकांक)
 {
-    assert(index < seL4_NumExclusiveBreakpoints);
-    return t->tcbArch.tcbContext.breakpointState.breakpoint[index].cr;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Breakpoints);
+    वापस t->tcbArch.tcbContext.breakpointState.breakpoint[सूचकांक].cr;
 }
 
-static word_t readBvrContext(tcb_t *t, uint16_t index)
+अटल word_t readBvrContext(tcb_t *t, uint16_t सूचकांक)
 {
-    assert(index < seL4_NumExclusiveBreakpoints);
-    return t->tcbArch.tcbContext.breakpointState.breakpoint[index].vr;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Breakpoints);
+    वापस t->tcbArch.tcbContext.breakpointState.breakpoint[सूचकांक].vr;
 }
 
-static word_t readWcrContext(tcb_t *t, uint16_t index)
+अटल word_t readWcrContext(tcb_t *t, uint16_t सूचकांक)
 {
-    assert(index < seL4_NumExclusiveWatchpoints);
-    return t->tcbArch.tcbContext.breakpointState.watchpoint[index].cr;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Watchpoints);
+    वापस t->tcbArch.tcbContext.breakpointState.watchpoint[सूचकांक].cr;
 }
 
-static word_t readWvrContext(tcb_t *t, uint16_t index)
+अटल word_t readWvrContext(tcb_t *t, uint16_t सूचकांक)
 {
-    assert(index < seL4_NumExclusiveWatchpoints);
-    return t->tcbArch.tcbContext.breakpointState.watchpoint[index].vr;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Watchpoints);
+    वापस t->tcbArch.tcbContext.breakpointState.watchpoint[सूचकांक].vr;
 }
 
-void writeBcrContext(tcb_t *t, uint16_t index, word_t val)
+व्योम writeBcrContext(tcb_t *t, uint16_t सूचकांक, word_t val)
 {
-    assert(index < seL4_NumExclusiveBreakpoints);
-    t->tcbArch.tcbContext.breakpointState.breakpoint[index].cr = val;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Breakpoints);
+    t->tcbArch.tcbContext.breakpointState.breakpoint[सूचकांक].cr = val;
 }
 
-void writeBvrContext(tcb_t *t, uint16_t index, word_t val)
+व्योम writeBvrContext(tcb_t *t, uint16_t सूचकांक, word_t val)
 {
-    assert(index < seL4_NumExclusiveBreakpoints);
-    t->tcbArch.tcbContext.breakpointState.breakpoint[index].vr = val;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Breakpoints);
+    t->tcbArch.tcbContext.breakpointState.breakpoint[सूचकांक].vr = val;
 }
 
-static void writeWcrContext(tcb_t *t, uint16_t index, word_t val)
+अटल व्योम writeWcrContext(tcb_t *t, uint16_t सूचकांक, word_t val)
 {
-    assert(index < seL4_NumExclusiveWatchpoints);
-    t->tcbArch.tcbContext.breakpointState.watchpoint[index].cr = val;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Watchpoints);
+    t->tcbArch.tcbContext.breakpointState.watchpoint[सूचकांक].cr = val;
 }
 
-static void writeWvrContext(tcb_t *t, uint16_t index, word_t val)
+अटल व्योम writeWvrContext(tcb_t *t, uint16_t सूचकांक, word_t val)
 {
-    assert(index < seL4_NumExclusiveWatchpoints);
-    t->tcbArch.tcbContext.breakpointState.watchpoint[index].vr = val;
+    निश्चित(सूचकांक < se_L4_अंक_Exclusive_Watchpoints);
+    t->tcbArch.tcbContext.breakpointState.watchpoint[सूचकांक].vr = val;
 }
 
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#पूर्ण_अगर /* ARM_BASE_CP14_SAVE_AND_RESTORE */
 
-#ifdef CONFIG_HARDWARE_DEBUG_API
+#अगर_घोषित CONFIG_HARDWARE_DEBUG_API
 
 /** For debugging: prints out the debug register pair values as returned by the
  * coprocessor.
@@ -109,15 +109,15 @@ static void writeWvrContext(tcb_t *t, uint16_t index, word_t val)
  * @param nBp Number of breakpoint reg pairs to print, starting at BP #0.
  * @param nBp Number of watchpoint reg pairs to print, starting at WP #0.
  */
-UNUSED static void dumpBpsAndWpsCp(int nBp, int nWp)
+UNUSED अटल व्योम dumpBpsAndWpsCp(पूर्णांक nBp, पूर्णांक nWp)
 {
-    int i;
+    पूर्णांक i;
 
-    for (i = 0; i < nBp; i++) {
+    क्रम (i = 0; i < nBp; i++) {
         userError("CP BP %d: Bcr %lx, Bvr %lx", i, readBcrCp(i), readBvrCp(i));
     }
 
-    for (i = 0; i < nWp; i++) {
+    क्रम (i = 0; i < nWp; i++) {
         userError("CP WP %d: Wcr %lx, Wvr %lx", i, readWcrCp(i), readWvrCp(i));
     }
 }
@@ -130,15 +130,15 @@ UNUSED static void dumpBpsAndWpsCp(int nBp, int nWp)
  * @param nBp Number of BP regs to print, beginning at BP #0.
  * @param mWp Number of WP regs to print, beginning at WP #0.
  */
-UNUSED static void dumpBpsAndWpsContext(tcb_t *t, int nBp, int nWp)
+UNUSED अटल व्योम dumpBpsAndWpsContext(tcb_t *t, पूर्णांक nBp, पूर्णांक nWp)
 {
-    int i;
+    पूर्णांक i;
 
-    for (i = 0; i < nBp; i++) {
+    क्रम (i = 0; i < nBp; i++) {
         userError("Ctxt BP %d: Bcr %lx, Bvr %lx", i, readBcrContext(t, i), readBvrContext(t, i));
     }
 
-    for (i = 0; i < nWp; i++) {
+    क्रम (i = 0; i < nWp; i++) {
         userError("Ctxt WP %d: Wcr %lx, Wvr %lx", i, readWcrContext(t, i), readWvrContext(t, i));
     }
 }
@@ -167,65 +167,65 @@ UNUSED static void dumpBpsAndWpsContext(tcb_t *t, int nBp, int nWp)
 /** Convert an arch specific encoded watchpoint size back into a simple integer
  * representation.
  */
-static word_t convertArchToSize(word_t archsize)
+अटल word_t convert_Arch_To_आकार(word_t archsize)
 {
-    switch (archsize) {
-    case 0x1:
-        return 1;
-    case 0x3:
-        return 2;
-    case 0xFF:
-        return 8;
-    default:
-        assert(archsize == 0xF);
-        return 4;
+    चयन (archsize) {
+    हाल 0x1:
+        वापस 1;
+    हाल 0x3:
+        वापस 2;
+    हाल 0xFF:
+        वापस 8;
+    शेष:
+        निश्चित(archsize == 0xF);
+        वापस 4;
     }
 }
 
 /** Convert an access perms API value (seL4_BreakOnRead, etc) into the register
  * encoding that matches it.
  */
-static word_t convertAccessToArch(word_t access)
+अटल word_t convertAccessToArch(word_t access)
 {
-    switch (access) {
-    case seL4_BreakOnRead:
-        return DBGWCR_ACCESS_LOAD;
-    case seL4_BreakOnWrite:
-        return DBGWCR_ACCESS_STORE;
-    default:
-        assert(access == seL4_BreakOnReadWrite);
-        return DBGWCR_ACCESS_EITHER;
+    चयन (access) {
+    हाल seL4_BreakOnRead:
+        वापस DBGWCR_ACCESS_LOAD;
+    हाल seL4_BreakOnWrite:
+        वापस DBGWCR_ACCESS_STORE;
+    शेष:
+        निश्चित(access == seL4_BreakOnReadWrite);
+        वापस DBGWCR_ACCESS_EITHER;
     }
 }
 
 /** Convert an arch-specific register encoding back into an API access perms
  * value.
  */
-static word_t convertArchToAccess(word_t archaccess)
+अटल word_t convertArchToAccess(word_t archaccess)
 {
-    switch (archaccess) {
-    case DBGWCR_ACCESS_LOAD:
-        return seL4_BreakOnRead;
-    case DBGWCR_ACCESS_STORE:
-        return seL4_BreakOnWrite;
-    default:
-        assert(archaccess == DBGWCR_ACCESS_EITHER);
-        return seL4_BreakOnReadWrite;
+    चयन (archaccess) {
+    हाल DBGWCR_ACCESS_LOAD:
+        वापस seL4_BreakOnRead;
+    हाल DBGWCR_ACCESS_STORE:
+        वापस seL4_BreakOnWrite;
+    शेष:
+        निश्चित(archaccess == DBGWCR_ACCESS_EITHER);
+        वापस seL4_BreakOnReadWrite;
     }
 }
 
-uint16_t getBpNumFromType(uint16_t bp_num, word_t type)
+uint16_t get_Bp_अंक_From_Type(uint16_t bp_अंक, word_t type)
 {
-    assert(type == seL4_InstructionBreakpoint || type == seL4_DataBreakpoint
+    निश्चित(type == seL4_InstructionBreakpoint || type == se_L4_तथ्य_Breakpoint
            || type == seL4_SingleStep);
 
-    switch (type) {
-    case seL4_InstructionBreakpoint:
-    case seL4_SingleStep:
-        return bp_num;
-    default: /* seL4_DataBreakpoint: */
-        assert(type == seL4_DataBreakpoint);
-        return bp_num + seL4_NumExclusiveBreakpoints;
+    चयन (type) {
+    हाल seL4_InstructionBreakpoint:
+    हाल seL4_SingleStep:
+        वापस bp_अंक;
+    शेष: /* seL4_DataBreakpoint: */
+        निश्चित(type == se_L4_तथ्य_Breakpoint);
+        वापस bp_अंक + se_L4_अंक_Exclusive_Breakpoints;
     }
 }
 
@@ -246,11 +246,11 @@ uint16_t getBpNumFromType(uint16_t bp_num, word_t type)
  * @params vaddr, type, size, rw: seL4 API values for seL4_TCB_SetBreakpoint.
  *         All documented in the seL4 API Manuals.
  */
-void setBreakpoint(tcb_t *t,
-                   uint16_t bp_num,
-                   word_t vaddr, word_t type, word_t size, word_t rw)
+व्योम setBreakpoint(tcb_t *t,
+                   uint16_t bp_अंक,
+                   word_t vaddr, word_t type, word_t आकार, word_t rw)
 {
-    bp_num = convertBpNumToArch(bp_num);
+    bp_अंक = convert_Bp_अंक_To_Arch(bp_अंक);
 
     /* C3.3.4: "A debugger can use either byte address selection or address range
      *  masking, if it is implemented. However, it must not attempt to use both at
@@ -272,38 +272,38 @@ void setBreakpoint(tcb_t *t,
      * Be aware that the processor checks the MASK before the BAS.
      * You must set BAS to 0b1111 for all context match comparisons.
      */
-    if (type == seL4_InstructionBreakpoint) {
+    अगर (type == seL4_InstructionBreakpoint) {
         dbg_bcr_t bcr;
 
-        writeBvrContext(t, bp_num, vaddr);
+        writeBvrContext(t, bp_अंक, vaddr);
 
         /* Preserve reserved bits. */
-        bcr.words[0] = readBcrContext(t, bp_num);
+        bcr.शब्दगण[0] = readBcrContext(t, bp_अंक);
         bcr = dbg_bcr_set_enabled(bcr, 1);
         bcr = dbg_bcr_set_lbn(bcr, 0);
         bcr = dbg_bcr_set_pmc(bcr, DBGBCR_PRIV_USER);
         bcr = dbg_bcr_set_hmc(bcr, 0);
         bcr = dbg_bcr_set_ssc(bcr, 0);
-        bcr = dbg_bcr_set_bas(bcr, convertSizeToArch(4));
+        bcr = dbg_bcr_set_bas(bcr, convert_आकार_To_Arch(4));
         bcr = Arch_setupBcr(bcr, true);
-        writeBcrContext(t, bp_num, bcr.words[0]);
-    } else {
+        writeBcrContext(t, bp_अंक, bcr.शब्दगण[0]);
+    } अन्यथा {
         dbg_wcr_t wcr;
 
-        writeWvrContext(t, bp_num, vaddr);
+        writeWvrContext(t, bp_अंक, vaddr);
 
         /* Preserve reserved bits */
-        wcr.words[0] = readWcrContext(t, bp_num);
+        wcr.शब्दगण[0] = readWcrContext(t, bp_अंक);
         wcr = dbg_wcr_set_enabled(wcr, 1);
         wcr = dbg_wcr_set_pac(wcr, DBGWCR_PRIV_USER);
-        wcr = dbg_wcr_set_bas(wcr, convertSizeToArch(size));
+        wcr = dbg_wcr_set_bas(wcr, convert_आकार_To_Arch(आकार));
         wcr = dbg_wcr_set_lsc(wcr, convertAccessToArch(rw));
         wcr = dbg_wcr_set_watchpointType(wcr, 0);
         wcr = dbg_wcr_set_lbn(wcr, 0);
         wcr = dbg_wcr_set_addressMask(wcr, 0);
         wcr = dbg_wcr_set_hmc(wcr, 0);
         wcr = dbg_wcr_set_ssc(wcr, 0);
-        writeWcrContext(t, bp_num, wcr.words[0]);
+        writeWcrContext(t, bp_अंक, wcr.शब्दगण[0]);
     }
 }
 
@@ -318,34 +318,34 @@ void setBreakpoint(tcb_t *t,
  * @return A struct describing the current configuration of the requested
  *         breakpoint.
  */
-getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
+getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_अंक)
 {
     getBreakpoint_t ret;
 
-    ret.type = getTypeFromBpNum(bp_num);
-    bp_num = convertBpNumToArch(bp_num);
+    ret.type = get_Type_From_Bp_अंक(bp_अंक);
+    bp_अंक = convert_Bp_अंक_To_Arch(bp_अंक);
 
-    if (ret.type == seL4_InstructionBreakpoint) {
+    अगर (ret.type == seL4_InstructionBreakpoint) {
         dbg_bcr_t bcr;
 
-        bcr.words[0] = readBcrContext(t, bp_num);
-        if (Arch_breakpointIsSingleStepping(t, bp_num)) {
+        bcr.शब्दगण[0] = readBcrContext(t, bp_अंक);
+        अगर (Arch_breakpointIsSingleStepping(t, bp_अंक)) {
             ret.type = seL4_SingleStep;
         };
-        ret.size = 0;
+        ret.आकार = 0;
         ret.rw = seL4_BreakOnRead;
-        ret.vaddr = readBvrContext(t, bp_num);
+        ret.vaddr = readBvrContext(t, bp_अंक);
         ret.is_enabled = dbg_bcr_get_enabled(bcr);
-    } else {
+    } अन्यथा {
         dbg_wcr_t wcr;
 
-        wcr.words[0] = readWcrContext(t, bp_num);
-        ret.size = convertArchToSize(dbg_wcr_get_bas(wcr));
+        wcr.शब्दगण[0] = readWcrContext(t, bp_अंक);
+        ret.आकार = convert_Arch_To_आकार(dbg_wcr_get_bas(wcr));
         ret.rw = convertArchToAccess(dbg_wcr_get_lsc(wcr));
-        ret.vaddr = readWvrContext(t, bp_num);
+        ret.vaddr = readWvrContext(t, bp_अंक);
         ret.is_enabled = dbg_wcr_get_enabled(wcr);
     }
-    return ret;
+    वापस ret;
 }
 
 /** Disables and clears the configuration of a hardware breakpoint.
@@ -353,41 +353,41 @@ getBreakpoint_t getBreakpoint(tcb_t *t, uint16_t bp_num)
  * @param at arch_tcb_t holding the reg context for the target thread.
  * @param bp_num The hardware breakpoint you want to disable+clear.
  */
-void unsetBreakpoint(tcb_t *t, uint16_t bp_num)
+व्योम unsetBreakpoint(tcb_t *t, uint16_t bp_अंक)
 {
     word_t type;
 
-    type = getTypeFromBpNum(bp_num);
-    bp_num = convertBpNumToArch(bp_num);
+    type = get_Type_From_Bp_अंक(bp_अंक);
+    bp_अंक = convert_Bp_अंक_To_Arch(bp_अंक);
 
-    if (type == seL4_InstructionBreakpoint) {
+    अगर (type == seL4_InstructionBreakpoint) {
         dbg_bcr_t bcr;
 
-        bcr.words[0] = readBcrContext(t, bp_num);
+        bcr.शब्दगण[0] = readBcrContext(t, bp_अंक);
         bcr = dbg_bcr_set_enabled(bcr, 0);
-        writeBcrContext(t, bp_num, bcr.words[0]);
-        writeBvrContext(t, bp_num, 0);
-    } else {
+        writeBcrContext(t, bp_अंक, bcr.शब्दगण[0]);
+        writeBvrContext(t, bp_अंक, 0);
+    } अन्यथा {
         dbg_wcr_t wcr;
 
-        wcr.words[0] = readWcrContext(t, bp_num);
+        wcr.शब्दगण[0] = readWcrContext(t, bp_अंक);
         wcr = dbg_wcr_set_enabled(wcr, 0);
-        writeWcrContext(t, bp_num, wcr.words[0]);
-        writeWvrContext(t, bp_num, 0);
+        writeWcrContext(t, bp_अंक, wcr.शब्दगण[0]);
+        writeWvrContext(t, bp_अंक, 0);
     }
 }
 
 /** Load an initial, all-disabled setup state for the registers.
  */
-BOOT_CODE void disableAllBpsAndWps(void)
+BOOT_CODE व्योम disableAllBpsAndWps(व्योम)
 {
-    int i;
+    पूर्णांक i;
 
-    for (i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Breakpoints; i++) {
         writeBvrCp(i, 0);
         writeBcrCp(i, readBcrCp(i) & ~DBGBCR_ENABLE);
     }
-    for (i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Watchpoints; i++) {
         writeWvrCp(i, 0);
         writeWcrCp(i, readWcrCp(i) & ~DBGWCR_ENABLE);
     }
@@ -416,57 +416,57 @@ BOOT_CODE void disableAllBpsAndWps(void)
  *         successfully detected which debug register triggered the exception.
  *         "Bp_num" will be negative otherwise.
  */
-int getAndResetActiveBreakpoint(word_t vaddr, word_t reason)
+पूर्णांक getAndResetActiveBreakpoint(word_t vaddr, word_t reason)
 {
     word_t align_mask;
-    int i, ret = -1;
+    पूर्णांक i, ret = -1;
 
-    if (reason == seL4_InstructionBreakpoint) {
-        for (i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    अगर (reason == seL4_InstructionBreakpoint) {
+        क्रम (i = 0; i < se_L4_अंक_Exclusive_Breakpoints; i++) {
             dbg_bcr_t bcr;
             word_t bvr = readBvrCp(i);
 
-            bcr.words[0] = readBcrCp(i);
+            bcr.शब्दगण[0] = readBcrCp(i);
             /* The actual trigger address may be an unaligned sub-byte of the
              * range, which means it's not guaranteed to match the aligned value
              * that was programmed into the address register.
              */
-            align_mask = convertArchToSize(dbg_bcr_get_bas(bcr));
+            align_mask = convert_Arch_To_आकार(dbg_bcr_get_bas(bcr));
             align_mask = ~(align_mask - 1);
 
-            if (bvr != (vaddr & align_mask) || !dbg_bcr_get_enabled(bcr)) {
-                continue;
+            अगर (bvr != (vaddr & align_mask) || !dbg_bcr_get_enabled(bcr)) {
+                जारी;
             }
 
             ret = i;
-            return ret;
+            वापस ret;
         }
     }
 
-    if (reason == seL4_DataBreakpoint) {
-        for (i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    अगर (reason == se_L4_तथ्य_Breakpoint) {
+        क्रम (i = 0; i < se_L4_अंक_Exclusive_Watchpoints; i++) {
             dbg_wcr_t wcr;
             word_t wvr = readWvrCp(i);
 
-            wcr.words[0] = readWcrCp(i);
-            align_mask = convertArchToSize(dbg_wcr_get_bas(wcr));
+            wcr.शब्दगण[0] = readWcrCp(i);
+            align_mask = convert_Arch_To_आकार(dbg_wcr_get_bas(wcr));
             align_mask = ~(align_mask - 1);
 
-            if (wvr != (vaddr & align_mask) || !dbg_wcr_get_enabled(wcr)) {
-                continue;
+            अगर (wvr != (vaddr & align_mask) || !dbg_wcr_get_enabled(wcr)) {
+                जारी;
             }
 
             ret = i;
-            return ret;
+            वापस ret;
         }
     }
 
-    return ret;
+    वापस ret;
 }
 
-#endif /* CONFIG_HARDWARE_DEBUG_API */
+#पूर्ण_अगर /* CONFIG_HARDWARE_DEBUG_API */
 
-#ifdef ARM_BASE_CP14_SAVE_AND_RESTORE
+#अगर_घोषित ARM_BASE_CP14_SAVE_AND_RESTORE
 
 /** Mirrors Arch_initFpuContext.
  *
@@ -475,14 +475,14 @@ int getAndResetActiveBreakpoint(word_t vaddr, word_t reason)
  * cached in RAM in API calls, rather than retrieving the values from the
  * coprocessor.
  */
-void Arch_initBreakpointContext(user_context_t *uc)
+व्योम Arch_initBreakpointContext(user_context_t *uc)
 {
     uc->breakpointState = armKSNullBreakpointState;
 }
 
-void loadAllDisabledBreakpointState(void)
+व्योम loadAllDisabledBreakpointState(व्योम)
 {
-    int i;
+    पूर्णांक i;
 
     /* We basically just want to read-modify-write each reg to ensure its
      * "ENABLE" bit is clear. We did preload the register context with the
@@ -494,10 +494,10 @@ void loadAllDisabledBreakpointState(void)
      * I suspect that reading from RAM is faster than reading from the
      * coprocessor, but I can't be sure.
      */
-    for (i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Breakpoints; i++) {
         writeBcrCp(i, readBcrCp(i) & ~DBGBCR_ENABLE);
     }
-    for (i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Watchpoints; i++) {
         writeWcrCp(i, readWcrCp(i) & ~DBGWCR_ENABLE);
     }
 }
@@ -520,52 +520,52 @@ void loadAllDisabledBreakpointState(void)
  * we just set the "used_breakpoints_bf" bitfield to all 1s in
  * associateVcpu.
  */
-void saveAllBreakpointState(tcb_t *t)
+व्योम saveAllBreakpointState(tcb_t *t)
 {
-    int i;
+    पूर्णांक i;
 
-    assert(t != NULL);
+    निश्चित(t != शून्य);
 
-    for (i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Breakpoints; i++) {
         writeBvrContext(t, i, readBvrCp(i));
         writeBcrContext(t, i, readBcrCp(i));
     }
 
-    for (i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Watchpoints; i++) {
         writeWvrContext(t, i, readWvrCp(i));
         writeWcrContext(t, i, readWcrCp(i));
     }
 }
 
-#ifdef ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_THREADS
-void Arch_debugAssociateVCPUTCB(tcb_t *t)
+#अगर_घोषित ARM_HYP_CP14_SAVE_AND_RESTORE_VCPU_THREADS
+व्योम Arch_debugAssociateVCPUTCB(tcb_t *t)
 {
     /* Don't attempt to shift beyond end of word. */
-    assert(seL4_NumHWBreakpoints < sizeof(word_t) * 8);
+    निश्चित(se_L4_अंक_HWBreakpoints < माप(word_t) * 8);
 
     /* Set all the bits to 1, so loadBreakpointState() will
      * restore all the debug regs unconditionally.
      */
-    t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf = MASK(seL4_NumHWBreakpoints);
+    t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf = MASK(se_L4_अंक_HWBreakpoints);
 }
 
-void Arch_debugDissociateVCPUTCB(tcb_t *t)
+व्योम Arch_debugDissociateVCPUTCB(tcb_t *t)
 {
     t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf = 0;
 }
-#endif
+#पूर्ण_अगर
 
-static void loadBreakpointState(tcb_t *t)
+अटल व्योम loadBreakpointState(tcb_t *t)
 {
-    int i;
+    पूर्णांक i;
 
-    assert(t != NULL);
+    निश्चित(t != शून्य);
 
-    for (i = 0; i < seL4_NumExclusiveBreakpoints; i++) {
-        if (t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf & BIT(i)) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Breakpoints; i++) {
+        अगर (t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf & BIT(i)) {
             writeBvrCp(i, readBvrContext(t, i));
             writeBcrCp(i, readBcrContext(t, i));
-        } else {
+        } अन्यथा {
             /* If the thread isn't using the BP, then just load
              * a default "disabled" state.
              */
@@ -573,12 +573,12 @@ static void loadBreakpointState(tcb_t *t)
         }
     }
 
-    for (i = 0; i < seL4_NumExclusiveWatchpoints; i++) {
-        if (t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf &
-            BIT(i + seL4_NumExclusiveBreakpoints)) {
+    क्रम (i = 0; i < se_L4_अंक_Exclusive_Watchpoints; i++) {
+        अगर (t->tcbArch.tcbContext.breakpointState.used_breakpoints_bf &
+            BIT(i + se_L4_अंक_Exclusive_Breakpoints)) {
             writeWvrCp(i, readWvrContext(t, i));
             writeWcrCp(i, readWcrContext(t, i));
-        } else {
+        } अन्यथा {
             writeWcrCp(i, readWcrCp(i) & ~DBGWCR_ENABLE);
         }
     }
@@ -588,13 +588,13 @@ static void loadBreakpointState(tcb_t *t)
  *
  * Mirrors the idea of restore_user_context.
  */
-void restore_user_debug_context(tcb_t *target_thread)
+व्योम restore_user_debug_context(tcb_t *target_thread)
 {
-    assert(target_thread != NULL);
+    निश्चित(target_thread != शून्य);
 
-    if (target_thread->tcbArch.tcbContext.breakpointState.used_breakpoints_bf == 0) {
+    अगर (target_thread->tcbArch.tcbContext.breakpointState.used_breakpoints_bf == 0) {
         loadAllDisabledBreakpointState();
-    } else {
+    } अन्यथा {
         loadBreakpointState(target_thread);
     }
 
@@ -607,9 +607,9 @@ void restore_user_debug_context(tcb_t *target_thread)
      * So we don't need to execute ISB here because we're about to RFE.
      */
 
-#ifdef CONFIG_ARCH_AARCH64
+#अगर_घोषित CONFIG_ARCH_AARCH64
     aarch64_restore_user_debug_context(target_thread);
-#endif /* CONFIG_ARCH_ARCH64 */
+#पूर्ण_अगर /* CONFIG_ARCH_ARCH64 */
 }
 
-#endif /* ARM_BASE_CP14_SAVE_AND_RESTORE */
+#पूर्ण_अगर /* ARM_BASE_CP14_SAVE_AND_RESTORE */
