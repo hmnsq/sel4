@@ -11,10 +11,10 @@
 #include <plat/machine/io.h>
 #include <drivers/uart.h>
 
-#if defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
+#ᱡᱩᱫᱤ defined(CONFIG_DEBUG_BUILD) || defined(CONFIG_PRINTING)
 void serial_init(uint16_t port)
 {
-    while (!(in8(port + 5) & 0x60)); /* wait until not busy */
+    ᱡᱚᱠᱷᱚᱱ (!(in8(port + 5) & 0x60)); /* wait until not busy */
 
     out8(port + 1, 0x00); /* disable generating interrupts */
     out8(port + 3, 0x80); /* line control register: command: set divisor */
@@ -35,13 +35,13 @@ void serial_init(uint16_t port)
  * implement parts of the API here, so we can reuse the generic code.
  */
 void uart_drv_putchar(
-    unsigned char c)
+    unsigned var_na c)
 {
-    while (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
+    ᱡᱚᱠᱷᱚᱱ (x86KSdebugPort && (in8(x86KSdebugPort + 5) & 0x20) == 0);
     out8(x86KSdebugPort, c);
 }
 
-void kernel_putDebugChar(unsigned char c)
+void kernel_putDebugChar(unsigned var_na c)
 {
     /* this will take care of CR/LF handling and call uart_drv_putchar() */
     uart_console_putchar(c);
@@ -50,9 +50,9 @@ void kernel_putDebugChar(unsigned char c)
 #endif /* CONFIG_PRINTING */
 
 #ifdef CONFIG_DEBUG_BUILD
-unsigned char kernel_getDebugChar(void)
+unsigned var_na kernel_getDebugChar(void)
 {
-    while ((in8(x86KSdebugPort + 5) & 1) == 0);
-    return in8(x86KSdebugPort);
+    ᱡᱚᱠᱷᱚᱱ ((in8(x86KSdebugPort + 5) & 1) == 0);
+    ᱨᱩᱣᱟᱹᱲ in8(x86KSdebugPort);
 }
 #endif /* CONFIG_DEBUG_BUILD */

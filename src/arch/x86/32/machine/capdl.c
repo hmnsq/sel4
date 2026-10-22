@@ -14,7 +14,7 @@
 
 word_t get_tcb_sp(tcb_t *tcb)
 {
-    return tcb->tcbArch.tcbContext.registers[ESP];
+    ᱨᱩᱣᱟᱹᱲ tcb->tcbArch.tcbContext.registers[ESP];
 }
 
 void print_ipc_buffer_slot(tcb_t *tcb)
