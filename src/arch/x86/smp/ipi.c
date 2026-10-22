@@ -4,60 +4,60 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <mode/smp/ipi.h>
-#include <smp/ipi.h>
-#include <smp/lock.h>
+#ضمن <config.h>
+#ضمن <mode/smp/ipi.h>
+#ضمن <smp/ipi.h>
+#ضمن <smp/lock.h>
 
 #ifdef ENABLE_SMP_SUPPORT
 
-void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
+فراغ handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg2, bool_t irqPath)
 {
     /* we gets spurious irq_remote_call_ipi calls, e.g. when handling IPI
      * in lock while hardware IPI is pending. Guard against spurious IPIs! */
-    if (clh_is_ipi_pending(getCurrentCPUIndex())) {
-        switch (call) {
-        case IpiRemoteCall_Stall:
+    𐡄𐡍 (clh_is_ipi_pending(getCurrentCPUIndex())) {
+        بدل (call) {
+        حالة IpiRemoteCall_Stall:
             ipiStallCoreCallback(irqPath);
-            break;
+            اكسر;
 
-        case IpiRemoteCall_InvalidatePageStructureCacheASID:
+        حالة IpiRemoteCall_InvalidatePageStructureCacheASID:
             invalidateLocalPageStructureCacheASID(arg0, arg1);
-            break;
+            اكسر;
 
-        case IpiRemoteCall_InvalidateTranslationSingle:
+        حالة IpiRemoteCall_InvalidateTranslationSingle:
             invalidateLocalTranslationSingle(arg0);
-            break;
+            اكسر;
 
-        case IpiRemoteCall_InvalidateTranslationSingleASID:
+        حالة IpiRemoteCall_InvalidateTranslationSingleASID:
             invalidateLocalTranslationSingleASID(arg0, arg1);
-            break;
+            اكسر;
 
-        case IpiRemoteCall_InvalidateTranslationAll:
+        حالة IpiRemoteCall_InvalidateTranslationAll:
             invalidateLocalTranslationAll();
-            break;
+            اكسر;
 
-        case IpiRemoteCall_switchFpuOwner:
+        حالة IpiRemoteCall_switchFpuOwner:
             switchLocalFpuOwner((tcb_t *)arg0);
-            break;
+            اكسر;
 
 #ifdef CONFIG_VTX
-        case IpiRemoteCall_ClearCurrentVCPU:
+        حالة IpiRemoteCall_ClearCurrentVCPU:
             clearCurrentVCPU();
-            break;
-        case IpiRemoteCall_VMCheckBoundNotification: {
+            اكسر;
+        حالة IpiRemoteCall_VMCheckBoundNotification: {
             tcb_t *tcb = (tcb_t *)arg0;
 
             /* For a running VM notifications are already checked by handleVmexit */
-            if (tcb != NODE_STATE(ksCurThread)) {
+            𐡄𐡍 (tcb != NODE_STATE(ksCurThread)) {
                 VMCheckBoundNotification(tcb);
             }
-            break;
+            اكسر;
         }
 #endif
-        default:
+        افتراضي:
             Mode_handleRemoteCall((IpiModeRemoteCall_t)call, arg0, arg1, arg2);
-            break;
+            اكسر;
         }
 
         big_kernel_lock.node[getCurrentCPUIndex()].ipi = 0;
@@ -69,27 +69,27 @@ void handleRemoteCall(IpiRemoteCall_t call, word_t arg0, word_t arg1, word_t arg
 compile_assert(invalid_number_of_supported_nodes, CONFIG_MAX_NUM_NODES <= wordBits);
 
 #ifdef CONFIG_USE_LOGICAL_IDS
-static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
+ساكن فراغ x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
 {
     word_t nr_target_clusters = 0;
     word_t target_clusters[CONFIG_MAX_NUM_NODES];
 
-    do {
-        int core = wordBits - 1 - clzl(mask);
+    𐡏𐡁𐡃 {
+        صحيح core = wordBits - 1 - clzl(mask);
         target_clusters[nr_target_clusters] = 0;
 
         /* get mask of all cores in bitmask which are in same cluster as 'core' */
         word_t sub_mask = mask & cpu_mapping.other_indexes_in_cluster[core];
         target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[core];
-        if (isBlocking) {
+        𐡄𐡍 (isBlocking) {
             big_kernel_lock.node[core].ipi = 1;
         }
 
         /* check if there is any other core in this cluster */
-        while (sub_mask) {
-            int index = wordBits - 1 - clzl(sub_mask);
+        طالما (sub_mask) {
+            صحيح index = wordBits - 1 - clzl(sub_mask);
             target_clusters[nr_target_clusters] |= cpu_mapping.index_to_logical_id[index];
-            if (isBlocking) {
+            𐡄𐡍 (isBlocking) {
                 big_kernel_lock.node[index].ipi = 1;
             }
             sub_mask &= ~BIT(index);
@@ -97,23 +97,23 @@ static void x86_ipi_send_mask(interrupt_t ipi, word_t mask, bool_t isBlocking)
 
         mask &= ~(cpu_mapping.other_indexes_in_cluster[core] | BIT(core));
         nr_target_clusters++;
-    } while (mask != 0);
+    } طالما (mask != 0);
 
     /* broadcast IPIs to clusters... */
     IPI_ICR_BARRIER;
-    for (int i = 0; i < nr_target_clusters; i++) {
+    لكل (صحيح i = 0; i < nr_target_clusters; i++) {
         apic_send_ipi_cluster(ipi, target_clusters[i]);
     }
 }
 #endif /* CONFIG_USE_LOGICAL_IDS */
 
-void ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
+فراغ ipi_send_mask(irq_t ipi, word_t mask, bool_t isBlocking)
 {
     interrupt_t interrupt_ipi = ipi + IRQ_INT_OFFSET;
 
 #ifdef CONFIG_USE_LOGICAL_IDS
     x86_ipi_send_mask(interrupt_ipi, mask, isBlocking);
-#else
+#وإلا
     generic_ipi_send_mask(interrupt_ipi, mask, isBlocking);
 #endif /* CONFIG_USE_LOGICAL_IDS */
 }

@@ -5,11 +5,11 @@
  */
 
 /* A9 MPCORE private timer */
-#include <machine/timer.h>
-#include <arch/machine/timer.h>
-#include <drivers/timer/arm_priv.h>
+#ضمن <machine/timer.h>
+#ضمن <arch/machine/timer.h>
+#ضمن <drivers/timer/arm_priv.h>
 
-timer_t *const priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
+timer_t *ثابت priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
 
 #define TMR_CTRL_ENABLE      BIT(0)
 #define TMR_CTRL_AUTORELOAD  BIT(1)
@@ -22,7 +22,7 @@ timer_t *const priv_timer = (timer_t *) ARM_MP_PRIV_TIMER_PPTR;
 #define PRESCALE ((TIMER_RELOAD) >> TIMER_COUNT_BITS)
 #define TMR_LOAD ((TIMER_RELOAD) / (PRESCALE + 1))
 
-BOOT_CODE void initTimer(void)
+BOOT_CODE فراغ initTimer(فراغ)
 {
     /* reset */
     priv_timer->ctrl = 0;

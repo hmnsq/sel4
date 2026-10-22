@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <machine/io.h>
-#include <arch/machine.h>
-#include <arch/kernel/apic.h>
-#include <linker.h>
-#include <plat/machine/devices.h>
-#include <plat/machine/pit.h>
+#ضمن <config.h>
+#ضمن <machine/io.h>
+#ضمن <arch/machine.h>
+#ضمن <arch/kernel/apic.h>
+#ضمن <linker.h>
+#ضمن <plat/machine/devices.h>
+#ضمن <plat/machine/pit.h>
 
 #define CPUID_TSC_DEADLINE_BIT 24u
 #define APIC_TIMER_MODE_ONE_SHOT 0
 #define APIC_TIMER_MODE_TSC_DEADLINE  2
 
-static BOOT_CODE uint32_t apic_measure_freq(void)
+ساكن BOOT_CODE uint32_t apic_measure_freq(فراغ)
 {
     pit_init();
     /* wait for 1st PIT wraparound */
@@ -30,15 +30,15 @@ static BOOT_CODE uint32_t apic_measure_freq(void)
     pit_wait_wraparound();
 
     /* calculate APIC/bus cycles per ms = frequency in kHz */
-    return (0xffffffff - apic_read_reg(APIC_TIMER_CURRENT)) / PIT_WRAPAROUND_MS;
+    أرجع (0xffffffff - apic_read_reg(APIC_TIMER_CURRENT)) / PIT_WRAPAROUND_MS;
 }
 
-BOOT_CODE paddr_t apic_get_base_paddr(void)
+BOOT_CODE paddr_t apic_get_base_paddr(فراغ)
 {
     apic_base_msr_t apic_base_msr;
 
     apic_base_msr.words[0] = x86_rdmsr_low(IA32_APIC_BASE_MSR);
-    return apic_base_msr_get_base_addr(apic_base_msr);
+    أرجع apic_base_msr_get_base_addr(apic_base_msr);
 }
 
 BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
@@ -47,8 +47,8 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
     uint32_t num_lvt_entries;
     uint32_t apic_khz;
 
-    if (!apic_enable()) {
-        return false;
+    𐡄𐡍 (!apic_enable()) {
+        أرجع false;
     }
 
 #ifdef CONFIG_KERNEL_MCS
@@ -57,27 +57,27 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 
     /* can we use tsc deadline mode? */
     uint32_t cpuid = x86_cpuid_ecx(0x1, 0x0);
-    if (!(cpuid & BIT(CPUID_TSC_DEADLINE_BIT))) {
+    𐡄𐡍 (!(cpuid & BIT(CPUID_TSC_DEADLINE_BIT))) {
         apic_khz = apic_measure_freq();
         x86KSapicRatio = div64((uint64_t)x86KStscMhz * 1000llu, apic_khz);
         printf("Apic Khz %lu, TSC Mhz %lu, ratio %lu\n", (long) apic_khz, (long) x86KStscMhz, (long) x86KSapicRatio);
-    } else {
+    } وإلا {
         // use tsc deadline mode
         x86KSapicRatio = 0;
     }
-#else
+#وإلا
     apic_khz = apic_measure_freq();
 #endif
     apic_version.words[0] = apic_read_reg(APIC_VERSION);
 
     /* check for correct version (both APIC and x2APIC): 0x1X */
-    if (apic_version_get_version(apic_version) >> 4 != 1) {
+    𐡄𐡍 (apic_version_get_version(apic_version) >> 4 != 1) {
         printf("APIC: apic_version must be 0x1X\n");
-        return false;
+        أرجع false;
     }
 
 #ifdef CONFIG_KERNEL_MCS
-    if (x86KSapicRatio != 0) {
+    𐡄𐡍 (x86KSapicRatio != 0) {
         /* initialise APIC timer */
         apic_write_reg(APIC_TIMER_DIVIDE, 0xb); /* divisor = 1 */
     }
@@ -85,10 +85,10 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 
     /* check for correct number of LVT entries */
     num_lvt_entries = apic_version_get_max_lvt_entry(apic_version) + 1;
-    if (num_lvt_entries < 3) {
+    𐡄𐡍 (num_lvt_entries < 3) {
         printf("APIC: number of LVT entries: %d\n", num_lvt_entries);
         printf("APIC: number of LVT entries must be >= 3\n");
-        return false;
+        أرجع false;
     }
 
 #ifndef CONFIG_KERNEL_MCS
@@ -141,7 +141,7 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
 #ifdef CONFIG_KERNEL_MCS
     uint32_t timer_mode = x86KSapicRatio == 0 ? APIC_TIMER_MODE_TSC_DEADLINE :
                           APIC_TIMER_MODE_ONE_SHOT;
-#else
+#وإلا
     uint32_t timer_mode = 1;
 #endif
     apic_write_reg(
@@ -168,10 +168,10 @@ BOOT_CODE bool_t apic_init(bool_t mask_legacy_irqs)
     printf("APIC: LVT_PERF_CNTR=0x%x\n", apic_read_reg(APIC_LVT_PERF_CNTR));
     printf("APIC: LVT_THERMAL=0x%x\n", apic_read_reg(APIC_LVT_THERMAL));
     */
-    return true;
+    أرجع true;
 }
 
-void apic_ack_active_interrupt(void)
+فراغ apic_ack_active_interrupt(فراغ)
 {
     apic_write_reg(APIC_EOI, 0);
 }

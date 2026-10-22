@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <linker.h>
-#include <machine/io.h>
-#include <plat/machine/pit.h>
+#ضمن <linker.h>
+#ضمن <machine/io.h>
+#ضمن <plat/machine/pit.h>
 
 /* PIT (i8253) registers */
 #define PIT_MODE 0x43
@@ -15,7 +15,7 @@
 /* Count frequency in Hz */
 #define PIT_HZ 1193182
 
-BOOT_CODE void pit_init(void)
+BOOT_CODE فراغ pit_init(فراغ)
 {
     uint16_t divisor = (PIT_HZ * PIT_WRAPAROUND_MS) / 1000;
 
@@ -24,7 +24,7 @@ BOOT_CODE void pit_init(void)
     out8(PIT_CH0, divisor >> 8);   /* Set high byte of divisor */
 }
 
-BOOT_CODE void pit_wait_wraparound(void)
+BOOT_CODE فراغ pit_wait_wraparound(فراغ)
 {
     uint16_t count;
     uint16_t count_old;
@@ -34,7 +34,7 @@ BOOT_CODE void pit_wait_wraparound(void)
     count |= (in8(PIT_CH0) << 8);
     count_old = count;
 
-    while (count <= count_old) {
+    طالما (count <= count_old) {
         count_old = count;
         out8(PIT_MODE, 0x00);
         count = in8(PIT_CH0);
