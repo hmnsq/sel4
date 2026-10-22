@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
-#include <api/debug.h>
-#include <types.h>
-#include <plat/machine.h>
-#include <model/statedata.h>
-#include <model/smp.h>
-#include <object/structures.h>
-#include <object/tcb.h>
-#include <benchmark/benchmark_track.h>
+#ضمن <config.h>
+#ضمن <api/debug.h>
+#ضمن <types.h>
+#ضمن <plat/machine.h>
+#ضمن <model/statedata.h>
+#ضمن <model/smp.h>
+#ضمن <object/structures.h>
+#ضمن <object/tcb.h>
+#ضمن <benchmark/benchmark_track.h>
 
 /* Collective cpu states, including both pre core architecture dependant and independent data */
 SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES]);
@@ -78,7 +78,7 @@ irq_state_t intStateIRQTable[INT_STATE_ARRAY_SIZE];
 /* CNode containing interrupt handler endpoints - like all seL4 objects, this CNode needs to be
  * of a size that is a power of 2 and aligned to its size. */
 cte_t intStateIRQNode[BIT(IRQ_CNODE_SLOT_BITS)] ALIGN(BIT(IRQ_CNODE_SLOT_BITS + seL4_SlotBits));
-compile_assert(irqCNodeSize, sizeof(intStateIRQNode) >= ((INT_STATE_ARRAY_SIZE) *sizeof(cte_t)));
+compile_assert(irqCNodeSize, حجم(intStateIRQNode) >= ((INT_STATE_ARRAY_SIZE) *حجم(cte_t)));
 
 /* Currently active domain */
 dom_t ksCurDomain;
@@ -94,14 +94,14 @@ word_t ksDomScheduleIdx;
 word_t ksDomScheduleStart;
 
 /* Idle thread. */
-SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(seL4_TCBBits));
+SECTION("._idle_thread") حرف ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(seL4_TCBBits));
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */
-char ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
+حرف ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
 #endif
 
-#if (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)
+#אם (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)
 kernel_entry_t ksKernelEntry;
 #endif /* DEBUG */
 

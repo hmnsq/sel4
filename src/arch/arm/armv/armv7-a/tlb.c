@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <arch/machine/hardware.h>
+#ضمن <arch/machine/hardware.h>
 
-#if defined(CONFIG_ARM_HAS_TLB_LOCK)
+#אם defined(CONFIG_ARM_HAS_TLB_LOCK)
 
-void lockTLBEntry(vptr_t vaddr)
+فراغ lockTLBEntry(vptr_t vaddr)
 {
-    int n = armKSTlbLockCount;
-    int x, y;
+    صحيح n = armKSTlbLockCount;
+    صحيح x, y;
 
     /* tlbLockCount is used only in this function, which is called at most 2 times for unicore
        platforms (and we only have unicore A8 platforms). */
-    assert(armKSTlbLockCount < 2);
+    أكد(armKSTlbLockCount < 2);
     /* Since asserts are off in release mode, we enforce the bound on tlbLockCount manually, so we
        don't have to verify calling context. We need the bound to be sure the bit operations below
        are not undefined behaviour. We leave the assert in, because we want to know about it when
        the calling context ever changes. */
-    if (armKSTlbLockCount >= 2) {
-        return;
+    אם (armKSTlbLockCount >= 2) {
+        החזר;
     }
 
     armKSTlbLockCount++;
@@ -36,10 +36,10 @@ void lockTLBEntry(vptr_t vaddr)
     lockTLBEntryCritical(vaddr, x, y);
 }
 
-#else
+#אחרת
 
 /* We don't currently support TLB locking for other processors. */
-void lockTLBEntry(vptr_t vaddr)
+فراغ lockTLBEntry(vptr_t vaddr)
 {
 
 }

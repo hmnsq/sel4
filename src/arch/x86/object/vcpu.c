@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <config.h>
+#ضمن <config.h>
 
 #ifdef CONFIG_VTX
 
-#include <types.h>
-#include <machine/io.h>
-#include <api/failures.h>
-#include <api/syscall.h>
-#include <kernel/thread.h>
-#include <object/objecttype.h>
-#include <arch/machine/cpu_registers.h>
-#include <arch/model/statedata.h>
-#include <arch/object/vcpu.h>
-#include <arch/object/ioport.h>
-#include <util.h>
-#include <sel4/arch/vmenter.h>
+#ضمن <types.h>
+#ضمن <machine/io.h>
+#ضمن <api/failures.h>
+#ضمن <api/syscall.h>
+#ضمن <kernel/thread.h>
+#ضمن <object/objecttype.h>
+#ضمن <arch/machine/cpu_registers.h>
+#ضمن <arch/model/statedata.h>
+#ضمن <arch/object/vcpu.h>
+#ضمن <arch/object/ioport.h>
+#ضمن <util.h>
+#ضمن <sel4/arch/vmenter.h>
 
 #define VMX_EXIT_QUAL_TYPE_MOV_CR 0
 #define VMX_EXIT_QUAL_TYPE_CLTS 2
 #define VMX_EXIT_QUAL_TYPE_LMSW 3
 
-const vcpu_gp_register_t crExitRegs[] = {
+ثابت vcpu_gp_register_t crExitRegs[] = {
     VCPU_EAX, VCPU_ECX, VCPU_EDX, VCPU_EBX, VCPU_ESP, VCPU_EBP, VCPU_ESI, VCPU_EDI,
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
     VCPU_R8, VCPU_R9, VCPU_R10, VCPU_R11, VCPU_R12, VCPU_R13, VCPU_R14, VCPU_R15,
@@ -34,75 +34,75 @@ const vcpu_gp_register_t crExitRegs[] = {
 
 #define MSR_BITMAP_MASK(x) ((x) & 0x1fff)
 
-typedef struct msr_bitmap {
-    word_t bitmap[0x2000 / sizeof(word_t) / 8];
+تعريفنوع بنية msr_bitmap {
+    word_t bitmap[0x2000 / حجم(word_t) / 8];
 } msr_bitmap_t;
 
-typedef struct msr_bitmaps {
+تعريفنوع بنية msr_bitmaps {
     msr_bitmap_t low_msr_read;
     msr_bitmap_t high_msr_read;
     msr_bitmap_t low_msr_write;
     msr_bitmap_t high_msr_write;
 } msr_bitmaps_t;
 
-static msr_bitmaps_t msr_bitmap_region ALIGN(BIT(seL4_PageBits));
+ساكن msr_bitmaps_t msr_bitmap_region ALIGN(BIT(seL4_PageBits));
 
-static char null_ept_space[BIT(seL4_PageBits)] ALIGN(BIT(seL4_PageBits));
+ساكن حرف null_ept_space[BIT(seL4_PageBits)] ALIGN(BIT(seL4_PageBits));
 
 /* Cached value of the hardware defined vmcs revision */
-static uint32_t vmcs_revision;
+ساكن uint32_t vmcs_revision;
 
 /* Cached value of the VPID capability MSR */
-static vmx_ept_vpid_cap_msr_t vpid_capability;
+ساكن vmx_ept_vpid_cap_msr_t vpid_capability;
 
 /* Cache the values that we calculated for bits that need to be set high
  * and low in various vmcs fields */
-static uint32_t pin_control_high;
-static uint32_t pin_control_low;
-static uint32_t primary_control_high;
-static uint32_t primary_control_low;
-static uint32_t secondary_control_high;
-static uint32_t secondary_control_low;
-static uint32_t entry_control_high;
-static uint32_t entry_control_low;
-static uint32_t exit_control_high;
-static uint32_t exit_control_low;
-static uint32_t cr0_high;
-static uint32_t cr0_low;
-static uint32_t cr4_high;
-static uint32_t cr4_low;
+ساكن uint32_t pin_control_high;
+ساكن uint32_t pin_control_low;
+ساكن uint32_t primary_control_high;
+ساكن uint32_t primary_control_low;
+ساكن uint32_t secondary_control_high;
+ساكن uint32_t secondary_control_low;
+ساكن uint32_t entry_control_high;
+ساكن uint32_t entry_control_low;
+ساكن uint32_t exit_control_high;
+ساكن uint32_t exit_control_low;
+ساكن uint32_t cr0_high;
+ساكن uint32_t cr0_low;
+ساكن uint32_t cr4_high;
+ساكن uint32_t cr4_low;
 
 /* these flags indicate the presence of specific VT-x features. These features
  * are checked for at boot time and are constant from then on */
-static bool_t vmx_feature_vpid;
-static bool_t vmx_feature_load_perf_global_ctrl;
-static bool_t vmx_feature_ack_on_exit;
+ساكن bool_t vmx_feature_vpid;
+ساكن bool_t vmx_feature_load_perf_global_ctrl;
+ساكن bool_t vmx_feature_ack_on_exit;
 
-static vcpu_t *x86KSVPIDTable[VPID_LAST + 1];
-static vpid_t x86KSNextVPID = VPID_FIRST;
+ساكن vcpu_t *x86KSVPIDTable[VPID_LAST + 1];
+ساكن vpid_t x86KSNextVPID = VPID_FIRST;
 
-static void releaseVPID(vpid_t vpid);
+ساكن فراغ releaseVPID(vpid_t vpid);
 
-static inline bool_t vmxon(paddr_t vmxon_region)
+ساكن مضمن bool_t vmxon(paddr_t vmxon_region)
 {
     uint8_t error;
     /* vmxon requires a 64bit memory address, so perform a
      * cast here to guarantee this on 32-bit platforms */
     uint64_t vmxonreg = vmxon_region;
-    asm volatile(
+    asm متطاير(
         "vmxon %1; setnae %0"
         : "=q"(error)
         : "m"(vmxonreg)
         : "memory", "cc"
     );
-    return !!error;
+    החזר !!error;
 }
 
-static void vmclear(void *vmcs_ptr)
+ساكن فراغ vmclear(فراغ *vmcs_ptr)
 {
     uint64_t physical_address;
-    physical_address = pptr_to_paddr((void *)vmcs_ptr);
-    asm volatile(
+    physical_address = pptr_to_paddr((فراغ *)vmcs_ptr);
+    asm متطاير(
         "vmclear %0"
         :
         : "m"(physical_address)
@@ -110,26 +110,26 @@ static void vmclear(void *vmcs_ptr)
     );
 }
 
-void clearCurrentVCPU(void)
+فراغ clearCurrentVCPU(فراغ)
 {
     vcpu_t *vcpu = ARCH_NODE_STATE(x86KSCurrentVCPU);
-    if (vcpu) {
+    אם (vcpu) {
         vmclear(vcpu);
         vcpu->launched = false;
-        ARCH_NODE_STATE(x86KSCurrentVCPU) = NULL;
-        if (vcpu->fpu_active && vcpu->vcpuTCB) {
+        ARCH_NODE_STATE(x86KSCurrentVCPU) = عدم;
+        אם (vcpu->fpu_active && vcpu->vcpuTCB) {
             fpuRelease(vcpu->vcpuTCB);
             vcpu->fpu_active = false;
         }
     }
 }
 
-static void vmptrld(void *vmcs_ptr)
+ساكن فراغ vmptrld(فراغ *vmcs_ptr)
 {
     uint64_t physical_address;
     uint8_t error;
     physical_address = pptr_to_paddr(vmcs_ptr);
-    asm volatile(
+    asm متطاير(
         "vmptrld %1; setna %0"
         : "=q"(error)
         : "m"(physical_address)
@@ -138,11 +138,11 @@ static void vmptrld(void *vmcs_ptr)
     /* The usage of vmptrld should be correct by construction. As there is no
      * capacity to propagate errors where vmptrld is used we will do our best
      * to detect bugs in debug builds by asserting */
-    assert(!error);
+    أكد(!error);
 }
 
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-void vcpu_restore_guest_msrs(vcpu_t *vcpu)
+فراغ vcpu_restore_guest_msrs(vcpu_t *vcpu)
 {
     x86_wrmsr(IA32_STAR_MSR, vcpu->syscall_registers[VCPU_STAR]);
     x86_wrmsr(IA32_LSTAR_MSR, vcpu->syscall_registers[VCPU_LSTAR]);
@@ -150,16 +150,16 @@ void vcpu_restore_guest_msrs(vcpu_t *vcpu)
     x86_wrmsr(IA32_FMASK_MSR, vcpu->syscall_registers[VCPU_SYSCALL_MASK]);
 }
 
-void vcpu_restore_host_msrs(void)
+فراغ vcpu_restore_host_msrs(فراغ)
 {
     init_syscall_msrs();
 }
 #endif
 
-static void switchVCPU(vcpu_t *vcpu)
+ساكن فراغ switchVCPU(vcpu_t *vcpu)
 {
 #ifdef ENABLE_SMP_SUPPORT
-    if (vcpu->last_cpu != getCurrentCPUIndex() && ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
+    אם (vcpu->last_cpu != getCurrentCPUIndex() && ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
         /* vcpu is currently loaded on another core, need to do vmclear on that core */
         doRemoteClearCurrentVCPU(vcpu->last_cpu);
     }
@@ -167,12 +167,12 @@ static void switchVCPU(vcpu_t *vcpu)
     clearCurrentVCPU();
     vmptrld(vcpu);
 #ifdef ENABLE_SMP_SUPPORT
-    if (vcpu->last_cpu != getCurrentCPUIndex()) {
+    אם (vcpu->last_cpu != getCurrentCPUIndex()) {
         /* migrate host state */
         vmwrite(VMX_HOST_TR_BASE, (word_t)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss);
         vmwrite(VMX_HOST_GDTR_BASE, (word_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSgdt);
         vmwrite(VMX_HOST_IDTR_BASE, (word_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt);
-        vmwrite(VMX_HOST_SYSENTER_ESP, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0] +
+        vmwrite(VMX_HOST_SYSENTER_ESP, (uint64_t)(word_t)((حرف *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0] +
                                                           4));
     }
     vcpu->last_cpu = getCurrentCPUIndex();
@@ -180,22 +180,22 @@ static void switchVCPU(vcpu_t *vcpu)
     ARCH_NODE_STATE(x86KSCurrentVCPU) = vcpu;
 }
 
-static void print_bits(word_t bits)
+ساكن فراغ print_bits(word_t bits)
 {
     bool_t first = true;
-    while (bits) {
-        int index = seL4_WordBits - 1 - clzl(bits);
-        if (first) {
+    כלעוד (bits) {
+        صحيح index = seL4_WordBits - 1 - clzl(bits);
+        אם (first) {
             printf("%d", index);
             first = false;
-        } else {
+        } אחרת {
             printf(",%d", index);
         }
         bits &= ~BIT(index);
     }
 }
 
-static bool_t check_fixed_value(word_t val, word_t low, word_t high)
+ساكن bool_t check_fixed_value(word_t val, word_t low, word_t high)
 {
     word_t not_high;
     word_t not_low;
@@ -208,36 +208,36 @@ static bool_t check_fixed_value(word_t val, word_t low, word_t high)
      * and if not each bit set indicates a bit we had
      * failed to set */
     not_high = high & ~(high & val);
-    if (not_high != 0) {
+    אם (not_high != 0) {
         printf("Failed to set bits: ");
         print_bits(not_high);
-        return false;
+        החזר false;
     }
     /* we can do the same thing for finding things
      * that should be low by first inverting */
     not_low = ~low & ~(~low & ~val);
-    if (not_low != 0) {
+    אם (not_low != 0) {
         printf("Incorrectly cleared bits: ");
         print_bits(not_low);
-        return false;
+        החזר false;
     }
-    return true;
+    החזר true;
 }
 
-static bool_t vtx_check_fixed_values(word_t cr0, word_t cr4)
+ساكن bool_t vtx_check_fixed_values(word_t cr0, word_t cr4)
 {
-    if (!check_fixed_value(cr0, cr0_low, cr0_high)) {
+    אם (!check_fixed_value(cr0, cr0_low, cr0_high)) {
         printf(" of CR0\n");
-        return false;
+        החזר false;
     }
-    if (!check_fixed_value(cr4, cr4_low, cr4_high)) {
+    אם (!check_fixed_value(cr4, cr4_low, cr4_high)) {
         printf(" of CR4\n");
-        return false;
+        החזר false;
     }
-    return true;
+    החזר true;
 }
 
-static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
+ساكن bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
 {
     uint32_t pin_control_mask =
         BIT(0) |    //Extern interrupt exiting
@@ -263,12 +263,12 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     uint32_t procbased_ctls;
     uint32_t exit_ctls;
     uint32_t entry_ctls;
-    if (useTrueMsrs) {
+    אם (useTrueMsrs) {
         pinbased_ctls = IA32_VMX_TRUE_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_TRUE_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_TRUE_EXIT_CTLS_MSR;
         entry_ctls = IA32_VMX_TRUE_ENTRY_CTLS_MSR;
-    } else {
+    } אחרת {
         pinbased_ctls = IA32_VMX_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_EXIT_CTLS_MSR;
@@ -301,33 +301,33 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
      * > If this control is 1, CR0.PE and CR0.PG may be 0 in VMX non-root operation (even if the capability
      * > MSR IA32_VMX_CR0_FIXED0 reports otherwise). Such processors allow guest software to run in
      * > unpaged protected mode or in real-address mode. */
-    if (secondary_control_low & BIT(7)) {
+    אם (secondary_control_low & BIT(7)) {
         cr0_high &= ~(CR0_PE | CR0_PG);
     }
 
     /* Check for VPID support */
-    if (!(secondary_control_low & BIT(5))) {
+    אם (!(secondary_control_low & BIT(5))) {
         vmx_feature_vpid = 0;
         printf("vt-x: VPIDs are not supported. Expect performance degradation\n");
-    } else {
+    } אחרת {
         vmx_feature_vpid = 1;
         secondary_control_mask |= BIT(5);
     }
 
     /* Check for load perf global control */
-    if (!(exit_control_low & BIT(12))) {
+    אם (!(exit_control_low & BIT(12))) {
         vmx_feature_load_perf_global_ctrl = 0;
         printf("vt-x: Load IA32_PERF_GLOBAL_CONTROL not supported. Hardware debugging may not work\n");
-    } else {
+    } אחרת {
         vmx_feature_load_perf_global_ctrl = 1;
         exit_control_mask |= BIT(12);
     }
 
     /* Check for external interrupt exiting */
-    if (!(exit_control_low & BIT(15))) {
+    אם (!(exit_control_low & BIT(15))) {
         vmx_feature_ack_on_exit = 0;
         printf("vt-x: Interrupt ack on exit not supported. Expect performance degradation\n");
-    } else {
+    } אחרת {
         vmx_feature_ack_on_exit = 1;
         exit_control_mask |= BIT(15);
     }
@@ -335,30 +335,30 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     /* See if the hardware requires bits that require to be high to be low */
     uint32_t missing;
     missing = (~pin_control_low) & pin_control_mask;
-    if (missing) {
+    אם (missing) {
         printf("vt-x: Unsupported pin control features %lx\n", (long)missing);
-        return false;
+        החזר false;
     }
     missing = (~primary_control_low) & primary_control_mask;
-    if (missing) {
+    אם (missing) {
         printf("vt-x: Unsupported primary control features %lx\n", (long)missing);
-        return false;
+        החזר false;
     }
     missing = (~secondary_control_low) & secondary_control_mask;
-    if (missing) {
+    אם (missing) {
         printf("vt-x: Unsupported secondary control features %lx\n", (long)missing);
-        return false;
+        החזר false;
     }
     missing = (~exit_control_low) & exit_control_mask;
-    if (missing) {
+    אם (missing) {
         printf("vt-x: Unsupported exit control features %lx\n", (long)missing);
-        return false;
+        החזר false;
     }
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
     missing = (~entry_control_low) & BIT(9);
-    if (missing) {
+    אם (missing) {
         printf("vt-x: CPU does not support 64-bit guests\n");
-        return false;
+        החזר false;
     }
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
@@ -368,21 +368,21 @@ static bool_t BOOT_CODE init_vtx_fixed_values(bool_t useTrueMsrs)
     secondary_control_high |= secondary_control_mask;
     exit_control_high |= exit_control_mask;
 
-    return true;
+    החזר true;
 }
 
-static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
+ساكن bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
 {
     uint32_t pinbased_ctls;
     uint32_t procbased_ctls;
     uint32_t exit_ctls;
     uint32_t entry_ctls;
-    if (useTrueMsrs) {
+    אם (useTrueMsrs) {
         pinbased_ctls = IA32_VMX_TRUE_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_TRUE_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_TRUE_EXIT_CTLS_MSR;
         entry_ctls = IA32_VMX_TRUE_ENTRY_CTLS_MSR;
-    } else {
+    } אחרת {
         pinbased_ctls = IA32_VMX_PINBASED_CTLS_MSR;
         procbased_ctls = IA32_VMX_PROCBASED_CTLS_MSR;
         exit_ctls = IA32_VMX_EXIT_CTLS_MSR;
@@ -405,7 +405,7 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
     uint32_t local_cr4_low = x86_rdmsr_low(IA32_VMX_CR4_FIXED1_MSR);
 
     /* See "init_vtx_fixed_values" */
-    if (local_secondary_control_low & BIT(7)) {
+    אם (local_secondary_control_low & BIT(7)) {
         local_cr0_high &= ~(CR0_PE | CR0_PG);
     }
 
@@ -416,7 +416,7 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
      * be high that this core requires to be low. This can be checked with
      * '~local_low & high == 0'
      */
-    return
+    החזר
         (local_pin_control_high & pin_control_high) == local_pin_control_high &&
         (~local_pin_control_low & pin_control_high) == 0 &&
         (local_primary_control_high & primary_control_high) == local_primary_control_high &&
@@ -433,16 +433,16 @@ static bool_t BOOT_CODE check_vtx_fixed_values(bool_t useTrueMsrs)
         local_cr4_low == cr4_low;
 }
 
-static inline uint32_t applyFixedBits(uint32_t original, uint32_t high, uint32_t low)
+ساكن مضمن uint32_t applyFixedBits(uint32_t original, uint32_t high, uint32_t low)
 {
     original |= high;
     original &= low;
-    return original;
+    החזר original;
 }
 
-void vcpu_init(vcpu_t *vcpu)
+فراغ vcpu_init(vcpu_t *vcpu)
 {
-    vcpu->vcpuTCB = NULL;
+    vcpu->vcpuTCB = عدم;
     vcpu->launched = false;
     vcpu->fpu_active = false;
     vcpu->fpuState = x86KSnullFpuState;
@@ -465,7 +465,7 @@ void vcpu_init(vcpu_t *vcpu)
     // By default we will disable performance counters when we come out
     // of a VM. When performance counters are supported this host state
     // needs to be updated on VM entry
-    if (vmx_feature_load_perf_global_ctrl) {
+    אם (vmx_feature_load_perf_global_ctrl) {
         vmwrite(VMX_HOST_PERF_GLOBAL_CTRL, 0);
     }
     vmwrite(VMX_HOST_CR0, read_cr0());
@@ -477,8 +477,8 @@ void vcpu_init(vcpu_t *vcpu)
     vmwrite(VMX_HOST_IDTR_BASE, (word_t)x86KSGlobalState[CURRENT_CPU_INDEX()].x86KSidt);
     vmwrite(VMX_HOST_SYSENTER_CS, (word_t)SEL_CS_0);
     vmwrite(VMX_HOST_SYSENTER_EIP, (word_t)&handle_syscall);
-    if (!config_set(CONFIG_HARDWARE_DEBUG_API)) {
-        vmwrite(VMX_HOST_SYSENTER_ESP, (uint64_t)(word_t)((char *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0] +
+    אם (!config_set(CONFIG_HARDWARE_DEBUG_API)) {
+        vmwrite(VMX_HOST_SYSENTER_ESP, (uint64_t)(word_t)((حرف *)&x86KSGlobalState[CURRENT_CPU_INDEX()].x86KStss.tss.words[0] +
                                                           4));
     }
     /* Set host SP to point just beyond the first field to be stored on exit. */
@@ -521,186 +521,186 @@ void vcpu_init(vcpu_t *vcpu)
 
     memset(vcpu->io, ~(word_t)0, VCPU_IOBITMAP_SIZE);
     vmwrite(VMX_CONTROL_IOA_ADDRESS, pptr_to_paddr(vcpu->io));
-    vmwrite(VMX_CONTROL_IOB_ADDRESS, pptr_to_paddr((char *)vcpu->io + (VCPU_IOBITMAP_SIZE / 2)));
+    vmwrite(VMX_CONTROL_IOB_ADDRESS, pptr_to_paddr((حرف *)vcpu->io + (VCPU_IOBITMAP_SIZE / 2)));
 }
 
-static void dissociateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
+ساكن فراغ dissociateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
 {
-    assert(tcb->tcbArch.tcbVCPU == vcpu);
-    assert(vcpu->vcpuTCB == tcb);
+    أكد(tcb->tcbArch.tcbVCPU == vcpu);
+    أكد(vcpu->vcpuTCB == tcb);
     fpuRelease(tcb);
     vcpu->fpu_active = false;
-    tcb->tcbArch.tcbVCPU = NULL;
-    vcpu->vcpuTCB = NULL;
+    tcb->tcbArch.tcbVCPU = عدم;
+    vcpu->vcpuTCB = عدم;
 }
 
-void vcpu_finalise(vcpu_t *vcpu)
+فراغ vcpu_finalise(vcpu_t *vcpu)
 {
-    if (ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
+    אם (ARCH_NODE_STATE_ON_CORE(x86KSCurrentVCPU, vcpu->last_cpu) == vcpu) {
 #ifdef ENABLE_SMP_SUPPORT
-        if (vcpu->last_cpu != getCurrentCPUIndex()) {
+        אם (vcpu->last_cpu != getCurrentCPUIndex()) {
             doRemoteClearCurrentVCPU(vcpu->last_cpu);
-        } else
+        } אחרת
 #endif /* ENABLE_SMP_SUPPORT */
         {
             clearCurrentVCPU();
         }
     }
-    if (vcpu->vcpuTCB) {
+    אם (vcpu->vcpuTCB) {
         dissociateVcpuTcb(vcpu->vcpuTCB, vcpu);
     }
-    if (vcpu->vpid != VPID_INVALID) {
+    אם (vcpu->vpid != VPID_INVALID) {
         releaseVPID(vcpu->vpid);
     }
 }
 
-static void associateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
+ساكن فراغ associateVcpuTcb(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (tcb->tcbArch.tcbVCPU) {
+    אם (tcb->tcbArch.tcbVCPU) {
         dissociateVcpuTcb(tcb, tcb->tcbArch.tcbVCPU);
     }
-    if (vcpu->vcpuTCB) {
+    אם (vcpu->vcpuTCB) {
         dissociateVcpuTcb(vcpu->vcpuTCB, vcpu);
     }
     vcpu->vcpuTCB = tcb;
     tcb->tcbArch.tcbVCPU = vcpu;
 }
 
-static exception_t invokeVCPUWriteRegisters(vcpu_t *vcpu, word_t *buffer)
+ساكن exception_t invokeVCPUWriteRegisters(vcpu_t *vcpu, word_t *buffer)
 {
-    int i;
-    for (i = 0; i < n_vcpu_gp_register; i++) {
+    صحيح i;
+    עבור (i = 0; i < n_vcpu_gp_register; i++) {
         vcpu->gp_registers[i] = getSyscallArg(i, buffer);
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeVCPUWriteRegisters(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeVCPUWriteRegisters(cap_t cap, word_t length, word_t *buffer)
 {
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-    if (length < 15) {
-#else
-    if (length < 7) {
+    אם (length < 15) {
+#אחרת
+    אם (length < 7) {
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
         userError("VCPU WriteRegisters: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeVCPUWriteRegisters(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer);
+    החזר invokeVCPUWriteRegisters(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer);
 }
 
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-static exception_t invokeWriteMSR(vcpu_t *vcpu, word_t *buffer, word_t field, word_t value)
+ساكن exception_t invokeWriteMSR(vcpu_t *vcpu, word_t *buffer, word_t field, word_t value)
 {
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
-    switch (field) {
-    case IA32_LSTAR_MSR:
+    بدل (field) {
+    حالة IA32_LSTAR_MSR:
         vcpu->syscall_registers[VCPU_LSTAR] = value;
-        break;
-    case IA32_STAR_MSR:
+        اكسر;
+    حالة IA32_STAR_MSR:
         vcpu->syscall_registers[VCPU_STAR] = value;
-        break;
-    case IA32_CSTAR_MSR:
+        اكسر;
+    حالة IA32_CSTAR_MSR:
         vcpu->syscall_registers[VCPU_CSTAR] = value;
-        break;
-    case IA32_FMASK_MSR:
+        اكسر;
+    حالة IA32_FMASK_MSR:
         vcpu->syscall_registers[VCPU_SYSCALL_MASK] = value;
-        break;
+        اكسر;
     }
     setMR(thread, buffer, 0, value);
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeVCPUWriteMSR(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeVCPUWriteMSR(cap_t cap, word_t length, word_t *buffer)
 {
     word_t field;
     word_t value;
 
-    if (length < 2) {
+    אם (length < 2) {
         userError("VCPU WriteMSR: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
     field = getSyscallArg(0, buffer);
     value = getSyscallArg(1, buffer);
-    switch (field) {
-    case IA32_LSTAR_MSR:
-    case IA32_STAR_MSR:
-    case IA32_CSTAR_MSR:
-    case IA32_FMASK_MSR:
-        break;
-    default:
+    بدل (field) {
+    حالة IA32_LSTAR_MSR:
+    حالة IA32_STAR_MSR:
+    حالة IA32_CSTAR_MSR:
+    حالة IA32_FMASK_MSR:
+        اكسر;
+    افتراضي:
         userError("VCPU WriteMSR: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeWriteMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer, field, value);
+    החזר invokeWriteMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), buffer, field, value);
 }
 
-static exception_t invokeReadMSR(vcpu_t *vcpu, word_t field, word_t *buffer)
+ساكن exception_t invokeReadMSR(vcpu_t *vcpu, word_t field, word_t *buffer)
 {
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
 
     word_t value = 0;
 
-    switch (field) {
-    case IA32_LSTAR_MSR:
+    بدل (field) {
+    حالة IA32_LSTAR_MSR:
         value = vcpu->syscall_registers[VCPU_LSTAR];
-        break;
-    case IA32_STAR_MSR:
+        اكسر;
+    حالة IA32_STAR_MSR:
         value = vcpu->syscall_registers[VCPU_STAR];
-        break;
-    case IA32_CSTAR_MSR:
+        اكسر;
+    حالة IA32_CSTAR_MSR:
         value = vcpu->syscall_registers[VCPU_CSTAR];
-        break;
-    case IA32_FMASK_MSR:
+        اكسر;
+    حالة IA32_FMASK_MSR:
         value = vcpu->syscall_registers[VCPU_SYSCALL_MASK];
-        break;
-    case IA32_VMX_MISC_MSR:
+        اكسر;
+    حالة IA32_VMX_MISC_MSR:
         value = x86_rdmsr(field);
-        break;
+        اكسر;
     }
 
     setMR(thread, buffer, 0, value);
     setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                     seL4_MessageInfo_new(0, 0, 0, 1)));
     setThreadState(thread, ThreadState_Restart);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeVCPUReadMSR(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeVCPUReadMSR(cap_t cap, word_t length, word_t *buffer)
 {
-    if (length < 1) {
+    אם (length < 1) {
         userError("VCPU ReadMSR: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
     word_t field = getSyscallArg(0, buffer);
-    switch (field) {
-    case IA32_LSTAR_MSR:
-    case IA32_STAR_MSR:
-    case IA32_CSTAR_MSR:
-    case IA32_FMASK_MSR:
-    case IA32_VMX_MISC_MSR:
-        break;
-    default:
+    بدل (field) {
+    حالة IA32_LSTAR_MSR:
+    حالة IA32_STAR_MSR:
+    حالة IA32_CSTAR_MSR:
+    حالة IA32_FMASK_MSR:
+    حالة IA32_VMX_MISC_MSR:
+        اكسر;
+    افتراضي:
         userError("VCPU ReadMSR: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeReadMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, buffer);
+    החזר invokeReadMSR(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, buffer);
 }
 #endif  /* CONFIG_X86_64_VTX_64BIT_GUESTS */
 
-static exception_t invokeEnableIOPort(vcpu_t *vcpu, cte_t *slot, cap_t cap, uint16_t low, uint16_t high)
+ساكن exception_t invokeEnableIOPort(vcpu_t *vcpu, cte_t *slot, cap_t cap, uint16_t low, uint16_t high)
 {
     /* remove any existing io ports from this cap */
     clearVPIDIOPortMappings(cap_io_port_cap_get_capIOPortVPID(cap),
@@ -712,67 +712,67 @@ static exception_t invokeEnableIOPort(vcpu_t *vcpu, cte_t *slot, cap_t cap, uint
     cap = cap_io_port_cap_set_capIOPortVPID(cap, vcpu->vpid);
     slot->cap = cap;
     setIOPortMask(vcpu->io, low, high, false);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeEnableIOPort(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeEnableIOPort(cap_t cap, word_t length, word_t *buffer)
 {
     vcpu_t *vcpu;
     cap_t ioCap;
     cte_t *ioSlot;
     uint16_t low, high;
 
-    if (length < 2) {
+    אם (length < 2) {
         userError("VCPU EnableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    אם (current_extra_caps.excaprefs[0] == عدم) {
         userError("VCPU EnableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
     ioSlot = current_extra_caps.excaprefs[0];
     ioCap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(ioCap) != cap_io_port_cap) {
+    אם (cap_get_capType(ioCap) != cap_io_port_cap) {
         userError("VCPU EnableIOPort: IOPort cap is not a IOPort cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
     low = getSyscallArg(0, buffer);
     high = getSyscallArg(1, buffer);
 
-    if (low < cap_io_port_cap_get_capIOPortFirstPort(ioCap) || high > cap_io_port_cap_get_capIOPortLastPort(ioCap)) {
+    אם (low < cap_io_port_cap_get_capIOPortFirstPort(ioCap) || high > cap_io_port_cap_get_capIOPortLastPort(ioCap)) {
         userError("VCPU EnableIOPort: Requested range not valid for given IOPort cap");
         current_syscall_error.type = seL4_InvalidArgument;
         current_syscall_error.invalidArgumentNumber = 0;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return invokeEnableIOPort(vcpu, ioSlot, ioCap, low, high);
+    החזר invokeEnableIOPort(vcpu, ioSlot, ioCap, low, high);
 }
 
-static exception_t invokeDisableIOPort(vcpu_t *vcpu, uint16_t low, uint16_t high)
+ساكن exception_t invokeDisableIOPort(vcpu_t *vcpu, uint16_t low, uint16_t high)
 {
     setIOPortMask(vcpu->io, low, high, true);
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
 {
     vcpu_t *vcpu;
     uint16_t low, high;
 
-    if (length < 2) {
+    אם (length < 2) {
         userError("VCPU DisableIOPort: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
     low = getSyscallArg(0, buffer);
@@ -780,322 +780,322 @@ static exception_t decodeDisableIOPort(cap_t cap, word_t length, word_t *buffer)
 
     vcpu = VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap));
 
-    return invokeDisableIOPort(vcpu, low, high);
+    החזר invokeDisableIOPort(vcpu, low, high);
 }
 
-static exception_t invokeWriteVMCS(vcpu_t *vcpu, bool_t call, word_t *buffer, word_t field, word_t value)
+ساكن exception_t invokeWriteVMCS(vcpu_t *vcpu, bool_t call, word_t *buffer, word_t field, word_t value)
 {
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
 
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
-    switch (field) {
-    case VMX_CONTROL_EXCEPTION_BITMAP:
+    بدل (field) {
+    حالة VMX_CONTROL_EXCEPTION_BITMAP:
         vcpu->exception_bitmap = vcpu->cached_exception_bitmap = value;
-        break;
-    case VMX_GUEST_CR0:
+        اكسر;
+    حالة VMX_GUEST_CR0:
         vcpu->cr0 = vcpu->cached_cr0 = value;
-        break;
-    case VMX_CONTROL_CR0_MASK:
+        اكسر;
+    حالة VMX_CONTROL_CR0_MASK:
         vcpu->cr0_mask = vcpu->cached_cr0_mask = value;
-        break;
-    case VMX_CONTROL_CR0_READ_SHADOW:
+        اكسر;
+    حالة VMX_CONTROL_CR0_READ_SHADOW:
         vcpu->cr0_shadow = vcpu->cached_cr0_shadow = value;
-        break;
+        اكسر;
     }
     vmwrite(field, value);
 
-    if (call) {
+    אם (call) {
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
+        unsigned صحيح length = setMR(thread, buffer, 0, value);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeWriteVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
+ساكن exception_t decodeWriteVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
 {
     word_t field;
     word_t value;
 
-    if (length < 2) {
+    אם (length < 2) {
         userError("VCPU WriteVMCS: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
     field = getSyscallArg(0, buffer);
     value = getSyscallArg(1, buffer);
-    switch (field) {
-    case VMX_GUEST_RIP:
-    case VMX_GUEST_RSP:
-    case VMX_GUEST_ES_SELECTOR:
-    case VMX_GUEST_CS_SELECTOR:
-    case VMX_GUEST_SS_SELECTOR:
-    case VMX_GUEST_DS_SELECTOR:
-    case VMX_GUEST_FS_SELECTOR:
-    case VMX_GUEST_GS_SELECTOR:
-    case VMX_GUEST_LDTR_SELECTOR:
-    case VMX_GUEST_TR_SELECTOR:
-    case VMX_GUEST_DEBUGCTRL:
-    case VMX_GUEST_PAT:
-    case VMX_GUEST_EFER:
-    case VMX_GUEST_PERF_GLOBAL_CTRL:
-    case VMX_GUEST_PDPTE0:
-    case VMX_GUEST_PDPTE1:
-    case VMX_GUEST_PDPTE2:
-    case VMX_GUEST_PDPTE3:
-    case VMX_GUEST_ES_LIMIT:
-    case VMX_GUEST_CS_LIMIT:
-    case VMX_GUEST_SS_LIMIT:
-    case VMX_GUEST_DS_LIMIT:
-    case VMX_GUEST_FS_LIMIT:
-    case VMX_GUEST_GS_LIMIT:
-    case VMX_GUEST_LDTR_LIMIT:
-    case VMX_GUEST_TR_LIMIT:
-    case VMX_GUEST_GDTR_LIMIT:
-    case VMX_GUEST_IDTR_LIMIT:
-    case VMX_GUEST_ES_ACCESS_RIGHTS:
-    case VMX_GUEST_CS_ACCESS_RIGHTS:
-    case VMX_GUEST_SS_ACCESS_RIGHTS:
-    case VMX_GUEST_DS_ACCESS_RIGHTS:
-    case VMX_GUEST_FS_ACCESS_RIGHTS:
-    case VMX_GUEST_GS_ACCESS_RIGHTS:
-    case VMX_GUEST_LDTR_ACCESS_RIGHTS:
-    case VMX_GUEST_TR_ACCESS_RIGHTS:
-    case VMX_GUEST_INTERRUPTABILITY:
-    case VMX_GUEST_ACTIVITY:
-    case VMX_GUEST_SMBASE:
-    case VMX_GUEST_SYSENTER_CS:
-    case VMX_GUEST_PREEMPTION_TIMER_VALUE:
-    case VMX_GUEST_ES_BASE:
-    case VMX_GUEST_CS_BASE:
-    case VMX_GUEST_SS_BASE:
-    case VMX_GUEST_DS_BASE:
-    case VMX_GUEST_FS_BASE:
-    case VMX_GUEST_GS_BASE:
-    case VMX_GUEST_LDTR_BASE:
-    case VMX_GUEST_TR_BASE:
-    case VMX_GUEST_GDTR_BASE:
-    case VMX_GUEST_IDTR_BASE:
-    case VMX_GUEST_DR7:
-    case VMX_GUEST_RFLAGS:
-    case VMX_GUEST_PENDING_DEBUG_EXCEPTIONS:
-    case VMX_GUEST_SYSENTER_ESP:
-    case VMX_GUEST_SYSENTER_EIP:
-    case VMX_CONTROL_CR0_MASK:
-    case VMX_CONTROL_CR4_MASK:
-    case VMX_CONTROL_CR0_READ_SHADOW:
-    case VMX_CONTROL_CR4_READ_SHADOW:
-    case VMX_GUEST_CR3:
-    case VMX_CONTROL_EXCEPTION_BITMAP:
-    case VMX_CONTROL_ENTRY_INTERRUPTION_INFO:
-    case VMX_CONTROL_ENTRY_EXCEPTION_ERROR_CODE:
-        break;
-    case VMX_CONTROL_PIN_EXECUTION_CONTROLS:
+    بدل (field) {
+    حالة VMX_GUEST_RIP:
+    حالة VMX_GUEST_RSP:
+    حالة VMX_GUEST_ES_SELECTOR:
+    حالة VMX_GUEST_CS_SELECTOR:
+    حالة VMX_GUEST_SS_SELECTOR:
+    حالة VMX_GUEST_DS_SELECTOR:
+    حالة VMX_GUEST_FS_SELECTOR:
+    حالة VMX_GUEST_GS_SELECTOR:
+    حالة VMX_GUEST_LDTR_SELECTOR:
+    حالة VMX_GUEST_TR_SELECTOR:
+    حالة VMX_GUEST_DEBUGCTRL:
+    حالة VMX_GUEST_PAT:
+    حالة VMX_GUEST_EFER:
+    حالة VMX_GUEST_PERF_GLOBAL_CTRL:
+    حالة VMX_GUEST_PDPTE0:
+    حالة VMX_GUEST_PDPTE1:
+    حالة VMX_GUEST_PDPTE2:
+    حالة VMX_GUEST_PDPTE3:
+    حالة VMX_GUEST_ES_LIMIT:
+    حالة VMX_GUEST_CS_LIMIT:
+    حالة VMX_GUEST_SS_LIMIT:
+    حالة VMX_GUEST_DS_LIMIT:
+    حالة VMX_GUEST_FS_LIMIT:
+    حالة VMX_GUEST_GS_LIMIT:
+    حالة VMX_GUEST_LDTR_LIMIT:
+    حالة VMX_GUEST_TR_LIMIT:
+    حالة VMX_GUEST_GDTR_LIMIT:
+    حالة VMX_GUEST_IDTR_LIMIT:
+    حالة VMX_GUEST_ES_ACCESS_RIGHTS:
+    حالة VMX_GUEST_CS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_SS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_DS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_FS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_GS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_LDTR_ACCESS_RIGHTS:
+    حالة VMX_GUEST_TR_ACCESS_RIGHTS:
+    حالة VMX_GUEST_INTERRUPTABILITY:
+    حالة VMX_GUEST_ACTIVITY:
+    حالة VMX_GUEST_SMBASE:
+    حالة VMX_GUEST_SYSENTER_CS:
+    حالة VMX_GUEST_PREEMPTION_TIMER_VALUE:
+    حالة VMX_GUEST_ES_BASE:
+    حالة VMX_GUEST_CS_BASE:
+    حالة VMX_GUEST_SS_BASE:
+    حالة VMX_GUEST_DS_BASE:
+    حالة VMX_GUEST_FS_BASE:
+    حالة VMX_GUEST_GS_BASE:
+    حالة VMX_GUEST_LDTR_BASE:
+    حالة VMX_GUEST_TR_BASE:
+    حالة VMX_GUEST_GDTR_BASE:
+    حالة VMX_GUEST_IDTR_BASE:
+    حالة VMX_GUEST_DR7:
+    حالة VMX_GUEST_RFLAGS:
+    حالة VMX_GUEST_PENDING_DEBUG_EXCEPTIONS:
+    حالة VMX_GUEST_SYSENTER_ESP:
+    حالة VMX_GUEST_SYSENTER_EIP:
+    حالة VMX_CONTROL_CR0_MASK:
+    حالة VMX_CONTROL_CR4_MASK:
+    حالة VMX_CONTROL_CR0_READ_SHADOW:
+    حالة VMX_CONTROL_CR4_READ_SHADOW:
+    حالة VMX_GUEST_CR3:
+    حالة VMX_CONTROL_EXCEPTION_BITMAP:
+    حالة VMX_CONTROL_ENTRY_INTERRUPTION_INFO:
+    حالة VMX_CONTROL_ENTRY_EXCEPTION_ERROR_CODE:
+        اكسر;
+    حالة VMX_CONTROL_PIN_EXECUTION_CONTROLS:
         value = applyFixedBits(value, pin_control_high, pin_control_low);
-        break;
-    case VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS:
+        اكسر;
+    حالة VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS:
         value = applyFixedBits(value, primary_control_high, primary_control_low);
-        break;
-    case VMX_CONTROL_SECONDARY_PROCESSOR_CONTROLS:
+        اكسر;
+    حالة VMX_CONTROL_SECONDARY_PROCESSOR_CONTROLS:
         value = applyFixedBits(value, secondary_control_high, secondary_control_low);
-        break;
-    case VMX_CONTROL_ENTRY_CONTROLS:
+        اكسر;
+    حالة VMX_CONTROL_ENTRY_CONTROLS:
         value = applyFixedBits(value, entry_control_high, entry_control_low);
-        break;
-    case VMX_CONTROL_EXIT_CONTROLS:
+        اكسر;
+    حالة VMX_CONTROL_EXIT_CONTROLS:
         value = applyFixedBits(value, exit_control_high, exit_control_low);
-        break;
-    case VMX_GUEST_CR0:
+        اكسر;
+    حالة VMX_GUEST_CR0:
         value = applyFixedBits(value, cr0_high, cr0_low);
-        break;
-    case VMX_GUEST_CR4:
+        اكسر;
+    حالة VMX_GUEST_CR4:
         value = applyFixedBits(value, cr4_high, cr4_low);
-        break;
-    default:
+        اكسر;
+    افتراضي:
         userError("VCPU WriteVMCS: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeWriteVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), call, buffer, field, value);
+    החזר invokeWriteVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), call, buffer, field, value);
 }
 
-static word_t readVMCSField(vcpu_t *vcpu, word_t field)
+ساكن word_t readVMCSField(vcpu_t *vcpu, word_t field)
 {
-    switch (field) {
-    case VMX_CONTROL_EXCEPTION_BITMAP:
-        return vcpu->exception_bitmap;
-    case VMX_GUEST_CR0:
-        return vcpu->cr0;
-    case VMX_CONTROL_CR0_MASK:
-        return vcpu->cr0_mask;
-    case VMX_CONTROL_CR0_READ_SHADOW:
-        return vcpu->cr0_shadow;
+    بدل (field) {
+    حالة VMX_CONTROL_EXCEPTION_BITMAP:
+        החזר vcpu->exception_bitmap;
+    حالة VMX_GUEST_CR0:
+        החזר vcpu->cr0;
+    حالة VMX_CONTROL_CR0_MASK:
+        החזר vcpu->cr0_mask;
+    حالة VMX_CONTROL_CR0_READ_SHADOW:
+        החזר vcpu->cr0_shadow;
     }
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
-    return vmread(field);
+    החזר vmread(field);
 }
 
-static exception_t invokeReadVMCS(vcpu_t *vcpu, word_t field, bool_t call, word_t *buffer)
+ساكن exception_t invokeReadVMCS(vcpu_t *vcpu, word_t field, bool_t call, word_t *buffer)
 {
     tcb_t *thread;
     thread = NODE_STATE(ksCurThread);
     word_t value = readVMCSField(vcpu, field);
-    if (call) {
+    אם (call) {
         setRegister(thread, badgeRegister, 0);
-        unsigned int length = setMR(thread, buffer, 0, value);
+        unsigned صحيح length = setMR(thread, buffer, 0, value);
         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
                         seL4_MessageInfo_new(0, 0, 0, length)));
     }
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Running);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeReadVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
+ساكن exception_t decodeReadVMCS(cap_t cap, word_t length, bool_t call, word_t *buffer)
 {
-    if (length < 1) {
+    אם (length < 1) {
         userError("VCPU ReadVMCS: Not enough arguments.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
     word_t field = getSyscallArg(0, buffer);
-    switch (field) {
-    case VMX_GUEST_RIP:
-    case VMX_GUEST_RSP:
-    case VMX_GUEST_ES_SELECTOR:
-    case VMX_GUEST_CS_SELECTOR:
-    case VMX_GUEST_SS_SELECTOR:
-    case VMX_GUEST_DS_SELECTOR:
-    case VMX_GUEST_FS_SELECTOR:
-    case VMX_GUEST_GS_SELECTOR:
-    case VMX_GUEST_LDTR_SELECTOR:
-    case VMX_GUEST_TR_SELECTOR:
-    case VMX_GUEST_DEBUGCTRL:
-    case VMX_GUEST_PAT:
-    case VMX_GUEST_EFER:
-    case VMX_GUEST_PERF_GLOBAL_CTRL:
-    case VMX_GUEST_PDPTE0:
-    case VMX_GUEST_PDPTE1:
-    case VMX_GUEST_PDPTE2:
-    case VMX_GUEST_PDPTE3:
-    case VMX_GUEST_ES_LIMIT:
-    case VMX_GUEST_CS_LIMIT:
-    case VMX_GUEST_SS_LIMIT:
-    case VMX_GUEST_DS_LIMIT:
-    case VMX_GUEST_FS_LIMIT:
-    case VMX_GUEST_GS_LIMIT:
-    case VMX_GUEST_LDTR_LIMIT:
-    case VMX_GUEST_TR_LIMIT:
-    case VMX_GUEST_GDTR_LIMIT:
-    case VMX_GUEST_IDTR_LIMIT:
-    case VMX_GUEST_ES_ACCESS_RIGHTS:
-    case VMX_GUEST_CS_ACCESS_RIGHTS:
-    case VMX_GUEST_SS_ACCESS_RIGHTS:
-    case VMX_GUEST_DS_ACCESS_RIGHTS:
-    case VMX_GUEST_FS_ACCESS_RIGHTS:
-    case VMX_GUEST_GS_ACCESS_RIGHTS:
-    case VMX_GUEST_LDTR_ACCESS_RIGHTS:
-    case VMX_GUEST_TR_ACCESS_RIGHTS:
-    case VMX_GUEST_INTERRUPTABILITY:
-    case VMX_GUEST_ACTIVITY:
-    case VMX_GUEST_SMBASE:
-    case VMX_GUEST_SYSENTER_CS:
-    case VMX_GUEST_PREEMPTION_TIMER_VALUE:
-    case VMX_GUEST_ES_BASE:
-    case VMX_GUEST_CS_BASE:
-    case VMX_GUEST_SS_BASE:
-    case VMX_GUEST_DS_BASE:
-    case VMX_GUEST_FS_BASE:
-    case VMX_GUEST_GS_BASE:
-    case VMX_GUEST_LDTR_BASE:
-    case VMX_GUEST_TR_BASE:
-    case VMX_GUEST_GDTR_BASE:
-    case VMX_GUEST_IDTR_BASE:
-    case VMX_GUEST_DR7:
-    case VMX_GUEST_RFLAGS:
-    case VMX_GUEST_PENDING_DEBUG_EXCEPTIONS:
-    case VMX_GUEST_SYSENTER_ESP:
-    case VMX_GUEST_SYSENTER_EIP:
-    case VMX_CONTROL_CR0_MASK:
-    case VMX_CONTROL_CR4_MASK:
-    case VMX_CONTROL_CR0_READ_SHADOW:
-    case VMX_CONTROL_CR4_READ_SHADOW:
-    case VMX_DATA_INSTRUCTION_ERROR:
-    case VMX_DATA_EXIT_INTERRUPT_INFO:
-    case VMX_DATA_EXIT_INTERRUPT_ERROR:
-    case VMX_DATA_IDT_VECTOR_INFO:
-    case VMX_DATA_IDT_VECTOR_ERROR:
-    case VMX_DATA_EXIT_INSTRUCTION_LENGTH:
-    case VMX_DATA_EXIT_INSTRUCTION_INFO:
-    case VMX_DATA_GUEST_PHYSICAL:
-    case VMX_DATA_IO_RCX:
-    case VMX_DATA_IO_RSI:
-    case VMX_DATA_IO_RDI:
-    case VMX_DATA_IO_RIP:
-    case VMX_DATA_GUEST_LINEAR_ADDRESS:
-    case VMX_CONTROL_ENTRY_INTERRUPTION_INFO:
-    case VMX_CONTROL_PIN_EXECUTION_CONTROLS:
-    case VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS:
-    case VMX_CONTROL_SECONDARY_PROCESSOR_CONTROLS:
-    case VMX_CONTROL_EXCEPTION_BITMAP:
-    case VMX_CONTROL_ENTRY_CONTROLS:
-    case VMX_CONTROL_EXIT_CONTROLS:
-    case VMX_GUEST_CR0:
-    case VMX_GUEST_CR3:
-    case VMX_GUEST_CR4:
-        break;
-    default:
+    بدل (field) {
+    حالة VMX_GUEST_RIP:
+    حالة VMX_GUEST_RSP:
+    حالة VMX_GUEST_ES_SELECTOR:
+    حالة VMX_GUEST_CS_SELECTOR:
+    حالة VMX_GUEST_SS_SELECTOR:
+    حالة VMX_GUEST_DS_SELECTOR:
+    حالة VMX_GUEST_FS_SELECTOR:
+    حالة VMX_GUEST_GS_SELECTOR:
+    حالة VMX_GUEST_LDTR_SELECTOR:
+    حالة VMX_GUEST_TR_SELECTOR:
+    حالة VMX_GUEST_DEBUGCTRL:
+    حالة VMX_GUEST_PAT:
+    حالة VMX_GUEST_EFER:
+    حالة VMX_GUEST_PERF_GLOBAL_CTRL:
+    حالة VMX_GUEST_PDPTE0:
+    حالة VMX_GUEST_PDPTE1:
+    حالة VMX_GUEST_PDPTE2:
+    حالة VMX_GUEST_PDPTE3:
+    حالة VMX_GUEST_ES_LIMIT:
+    حالة VMX_GUEST_CS_LIMIT:
+    حالة VMX_GUEST_SS_LIMIT:
+    حالة VMX_GUEST_DS_LIMIT:
+    حالة VMX_GUEST_FS_LIMIT:
+    حالة VMX_GUEST_GS_LIMIT:
+    حالة VMX_GUEST_LDTR_LIMIT:
+    حالة VMX_GUEST_TR_LIMIT:
+    حالة VMX_GUEST_GDTR_LIMIT:
+    حالة VMX_GUEST_IDTR_LIMIT:
+    حالة VMX_GUEST_ES_ACCESS_RIGHTS:
+    حالة VMX_GUEST_CS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_SS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_DS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_FS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_GS_ACCESS_RIGHTS:
+    حالة VMX_GUEST_LDTR_ACCESS_RIGHTS:
+    حالة VMX_GUEST_TR_ACCESS_RIGHTS:
+    حالة VMX_GUEST_INTERRUPTABILITY:
+    حالة VMX_GUEST_ACTIVITY:
+    حالة VMX_GUEST_SMBASE:
+    حالة VMX_GUEST_SYSENTER_CS:
+    حالة VMX_GUEST_PREEMPTION_TIMER_VALUE:
+    حالة VMX_GUEST_ES_BASE:
+    حالة VMX_GUEST_CS_BASE:
+    حالة VMX_GUEST_SS_BASE:
+    حالة VMX_GUEST_DS_BASE:
+    حالة VMX_GUEST_FS_BASE:
+    حالة VMX_GUEST_GS_BASE:
+    حالة VMX_GUEST_LDTR_BASE:
+    حالة VMX_GUEST_TR_BASE:
+    حالة VMX_GUEST_GDTR_BASE:
+    حالة VMX_GUEST_IDTR_BASE:
+    حالة VMX_GUEST_DR7:
+    حالة VMX_GUEST_RFLAGS:
+    حالة VMX_GUEST_PENDING_DEBUG_EXCEPTIONS:
+    حالة VMX_GUEST_SYSENTER_ESP:
+    حالة VMX_GUEST_SYSENTER_EIP:
+    حالة VMX_CONTROL_CR0_MASK:
+    حالة VMX_CONTROL_CR4_MASK:
+    حالة VMX_CONTROL_CR0_READ_SHADOW:
+    حالة VMX_CONTROL_CR4_READ_SHADOW:
+    حالة VMX_DATA_INSTRUCTION_ERROR:
+    حالة VMX_DATA_EXIT_INTERRUPT_INFO:
+    حالة VMX_DATA_EXIT_INTERRUPT_ERROR:
+    حالة VMX_DATA_IDT_VECTOR_INFO:
+    حالة VMX_DATA_IDT_VECTOR_ERROR:
+    حالة VMX_DATA_EXIT_INSTRUCTION_LENGTH:
+    حالة VMX_DATA_EXIT_INSTRUCTION_INFO:
+    حالة VMX_DATA_GUEST_PHYSICAL:
+    حالة VMX_DATA_IO_RCX:
+    حالة VMX_DATA_IO_RSI:
+    حالة VMX_DATA_IO_RDI:
+    حالة VMX_DATA_IO_RIP:
+    حالة VMX_DATA_GUEST_LINEAR_ADDRESS:
+    حالة VMX_CONTROL_ENTRY_INTERRUPTION_INFO:
+    حالة VMX_CONTROL_PIN_EXECUTION_CONTROLS:
+    حالة VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS:
+    حالة VMX_CONTROL_SECONDARY_PROCESSOR_CONTROLS:
+    حالة VMX_CONTROL_EXCEPTION_BITMAP:
+    حالة VMX_CONTROL_ENTRY_CONTROLS:
+    حالة VMX_CONTROL_EXIT_CONTROLS:
+    حالة VMX_GUEST_CR0:
+    حالة VMX_GUEST_CR3:
+    حالة VMX_GUEST_CR4:
+        اكسر;
+    افتراضي:
         userError("VCPU ReadVMCS: Invalid field %lx.", (long)field);
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
-    return invokeReadVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call, buffer);
+    החזר invokeReadVMCS(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), field, call, buffer);
 }
 
-static exception_t invokeSetTCB(vcpu_t *vcpu, tcb_t *tcb)
+ساكن exception_t invokeSetTCB(vcpu_t *vcpu, tcb_t *tcb)
 {
     associateVcpuTcb(tcb, vcpu);
 
     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-static exception_t decodeSetTCB(cap_t cap, word_t length, word_t *buffer)
+ساكن exception_t decodeSetTCB(cap_t cap, word_t length, word_t *buffer)
 {
     cap_t tcbCap;
-    if (current_extra_caps.excaprefs[0] == NULL) {
+    אם (current_extra_caps.excaprefs[0] == عدم) {
         userError("VCPU SetTCB: Truncated message.");
         current_syscall_error.type = seL4_TruncatedMessage;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
     tcbCap  = current_extra_caps.excaprefs[0]->cap;
 
-    if (cap_get_capType(tcbCap) != cap_thread_cap) {
+    אם (cap_get_capType(tcbCap) != cap_thread_cap) {
         userError("TCB cap is not a TCB cap.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 
-    return invokeSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
+    החזר invokeSetTCB(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)), TCB_PTR(cap_thread_cap_get_capTCBPtr(tcbCap)));
 }
 
-void vcpu_update_state_sysvmenter(vcpu_t *vcpu)
+فراغ vcpu_update_state_sysvmenter(vcpu_t *vcpu)
 {
     word_t *buffer;
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
     buffer = lookupIPCBuffer(false, NODE_STATE(ksCurThread));
-    if (!buffer) {
+    אם (!buffer) {
         userError("No IPC buffer.");
-        return;
+        החזר;
     }
     vmwrite(VMX_GUEST_RIP, getSyscallArg(0, buffer));
     vmwrite(VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, applyFixedBits(getSyscallArg(1, buffer), primary_control_high,
@@ -1103,7 +1103,7 @@ void vcpu_update_state_sysvmenter(vcpu_t *vcpu)
     vmwrite(VMX_CONTROL_ENTRY_INTERRUPTION_INFO, getSyscallArg(2, buffer));
 }
 
-void vcpu_sysvmenter_reply_to_user(tcb_t *tcb)
+فراغ vcpu_sysvmenter_reply_to_user(tcb_t *tcb)
 {
     word_t *buffer;
     vcpu_t *vcpu;
@@ -1111,9 +1111,9 @@ void vcpu_sysvmenter_reply_to_user(tcb_t *tcb)
     buffer = lookupIPCBuffer(true, tcb);
     vcpu = tcb->tcbArch.tcbVCPU;
 
-    assert(vcpu);
+    أكد(vcpu);
 
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != vcpu) {
         switchVCPU(vcpu);
     }
 
@@ -1135,51 +1135,51 @@ exception_t decodeX86VCPUInvocation(
     word_t *buffer
 )
 {
-    switch (invLabel) {
-    case X86VCPUSetTCB:
-        return decodeSetTCB(cap, length, buffer);
-    case X86VCPUReadVMCS:
-        return decodeReadVMCS(cap, length, call, buffer);
-    case X86VCPUWriteVMCS:
-        return decodeWriteVMCS(cap, length, call, buffer);
-    case X86VCPUEnableIOPort:
-        return decodeEnableIOPort(cap, length, buffer);
-    case X86VCPUDisableIOPort:
-        return decodeDisableIOPort(cap, length, buffer);
-    case X86VCPUWriteRegisters:
-        return decodeVCPUWriteRegisters(cap, length, buffer);
+    بدل (invLabel) {
+    حالة X86VCPUSetTCB:
+        החזר decodeSetTCB(cap, length, buffer);
+    حالة X86VCPUReadVMCS:
+        החזר decodeReadVMCS(cap, length, call, buffer);
+    حالة X86VCPUWriteVMCS:
+        החזר decodeWriteVMCS(cap, length, call, buffer);
+    حالة X86VCPUEnableIOPort:
+        החזר decodeEnableIOPort(cap, length, buffer);
+    حالة X86VCPUDisableIOPort:
+        החזר decodeDisableIOPort(cap, length, buffer);
+    حالة X86VCPUWriteRegisters:
+        החזר decodeVCPUWriteRegisters(cap, length, buffer);
 #ifdef CONFIG_X86_64_VTX_64BIT_GUESTS
-    case X86VCPUWriteMSR:
-        return decodeVCPUWriteMSR(cap, length, buffer);
-    case X86VCPUReadMSR:
-        return decodeVCPUReadMSR(cap, length, buffer);
+    حالة X86VCPUWriteMSR:
+        החזר decodeVCPUWriteMSR(cap, length, buffer);
+    حالة X86VCPUReadMSR:
+        החזר decodeVCPUReadMSR(cap, length, buffer);
 #endif /* CONFIG_X86_64_VTX_64BIT_GUESTS */
-    default:
+    افتراضي:
         userError("VCPU: Illegal operation.");
         current_syscall_error.type = seL4_IllegalOperation;
-        return EXCEPTION_SYSCALL_ERROR;
+        החזר EXCEPTION_SYSCALL_ERROR;
     }
 }
 
-static bool_t is_vtx_supported(void)
+ساكن bool_t is_vtx_supported(فراغ)
 {
     /* check for VMX support in CPUID
      * see section 23.7 of Volume 3 of the Intel manual */
-    return !!(x86_cpuid_ecx(0x1, 0) & BIT(5));
+    החזר !!(x86_cpuid_ecx(0x1, 0) & BIT(5));
 }
 
-static inline void clear_bit(word_t *bitmap, word_t bit)
+ساكن مضمن فراغ clear_bit(word_t *bitmap, word_t bit)
 {
-    int index = bit / (sizeof(word_t) * 8);
-    int offset = bit % (sizeof(word_t) * 8);
+    صحيح index = bit / (حجم(word_t) * 8);
+    صحيح offset = bit % (حجم(word_t) * 8);
     bitmap[index] &= ~BIT(offset);
 }
 
-BOOT_CODE bool_t vtx_init(void)
+BOOT_CODE bool_t vtx_init(فراغ)
 {
-    if (!is_vtx_supported()) {
+    אם (!is_vtx_supported()) {
         printf("vt-x: not supported\n");
-        return false;
+        החזר false;
     }
     vmx_basic_msr_t vmx_basic;
     feature_control_msr_t feature_control;
@@ -1187,46 +1187,46 @@ BOOT_CODE bool_t vtx_init(void)
     vmx_basic.words[1] = x86_rdmsr_high(IA32_VMX_BASIC_MSR);
     vmcs_revision = vmx_basic_msr_get_vmcs_revision(vmx_basic);
     feature_control.words[0] = x86_rdmsr_low(IA32_FEATURE_CONTROL_MSR);
-    if (!feature_control_msr_get_vmx_outside_smx(feature_control)) {
+    אם (!feature_control_msr_get_vmx_outside_smx(feature_control)) {
         /* enable if the MSR is not locked */
-        if (feature_control_msr_get_lock(feature_control)) {
+        אם (feature_control_msr_get_lock(feature_control)) {
             printf("vt-x: feature locked\n");
-            return false;
+            החזר false;
         }
         feature_control = feature_control_msr_set_vmx_outside_smx(feature_control, 1);
         x86_wrmsr_parts(IA32_FEATURE_CONTROL_MSR, x86_rdmsr_high(IA32_FEATURE_CONTROL_MSR), feature_control.words[0]);
     }
     /* make sure the msr is locked */
-    if (!feature_control_msr_get_lock(feature_control)) {
+    אם (!feature_control_msr_get_lock(feature_control)) {
         feature_control = feature_control_msr_set_lock(feature_control, 1);
         x86_wrmsr_parts(IA32_FEATURE_CONTROL_MSR, x86_rdmsr_high(IA32_FEATURE_CONTROL_MSR), feature_control.words[0]);
     }
     /* Initialize the fixed values only on the boot core. All other cores
      * will just check that the fixed values are valid */
-    if (CURRENT_CPU_INDEX() == 0) {
-        if (!init_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
+    אם (CURRENT_CPU_INDEX() == 0) {
+        אם (!init_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
             printf("vt-x: lack of required features\n");
-            return false;
+            החזר false;
         }
     }
-    if (!check_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
+    אם (!check_vtx_fixed_values(vmx_basic_msr_get_true_msrs(vmx_basic))) {
         printf("vt-x: cores have inconsistent features\n");
-        return false;
+        החזר false;
     }
     write_cr4(read_cr4() | CR4_VMXE);
     /* we are required to set the VMCS region in the VMXON region */
-    struct vmxon_region *vmxon_kptr = &ARCH_NODE_STATE(x86KSVMXOnRegion);
+    بنية vmxon_region *vmxon_kptr = &ARCH_NODE_STATE(x86KSVMXOnRegion);
     vmxon_kptr->revision = vmcs_revision;
     /* Before calling vmxon, we must check that CR0 and CR4 are not set to values
      * that are unsupported by vt-x */
-    if (!vtx_check_fixed_values(read_cr0(), read_cr4())) {
-        return false;
+    אם (!vtx_check_fixed_values(read_cr0(), read_cr4())) {
+        החזר false;
     }
-    if (vmxon(kpptr_to_paddr(vmxon_kptr))) {
+    אם (vmxon(kpptr_to_paddr(vmxon_kptr))) {
         printf("vt-x: vmxon failure\n");
-        return false;
+        החזר false;
     }
-    memset(&msr_bitmap_region, ~0, sizeof(msr_bitmap_region));
+    memset(&msr_bitmap_region, ~0, حجم(msr_bitmap_region));
     /* Set sysenter MSRs to writeable and readable. These are all low msrs */
     clear_bit(msr_bitmap_region.low_msr_read.bitmap, IA32_SYSENTER_CS_MSR);
     clear_bit(msr_bitmap_region.low_msr_read.bitmap, IA32_SYSENTER_ESP_MSR);
@@ -1250,22 +1250,22 @@ BOOT_CODE bool_t vtx_init(void)
     vpid_capability.words[1] = x86_rdmsr_high(IA32_VMX_EPT_VPID_CAP_MSR);
 
     /* check for supported EPT features */
-    if (!vmx_ept_vpid_cap_msr_get_ept_wb(vpid_capability)) {
+    אם (!vmx_ept_vpid_cap_msr_get_ept_wb(vpid_capability)) {
         printf("vt-x: Expected wb attribute for EPT paging structure\n");
-        return false;
+        החזר false;
     }
-    if (!vmx_ept_vpid_cap_msr_get_ept_2m(vpid_capability)) {
+    אם (!vmx_ept_vpid_cap_msr_get_ept_2m(vpid_capability)) {
         printf("vt-x: Expected supported for 2m pages\n");
-        return false;
+        החזר false;
     }
 
-    return true;
+    החזר true;
 }
 
-static void setMRs_vmexit(uint32_t reason, word_t qualification)
+ساكن فراغ setMRs_vmexit(uint32_t reason, word_t qualification)
 {
     word_t *buffer;
-    int i;
+    صحيح i;
 
     buffer = lookupIPCBuffer(true, NODE_STATE(ksCurThread));
 
@@ -1283,13 +1283,13 @@ static void setMRs_vmexit(uint32_t reason, word_t qualification)
     setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_GUEST_INT_MR, vmread(VMX_GUEST_INTERRUPTABILITY));
     setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_CR3_MR, vmread(VMX_GUEST_CR3));
 
-    for (i = 0; i < n_vcpu_gp_register; i++) {
+    עבור (i = 0; i < n_vcpu_gp_register; i++) {
         setMR(NODE_STATE(ksCurThread), buffer, SEL4_VMENTER_FAULT_EAX + i,
               NODE_STATE(ksCurThread)->tcbArch.tcbVCPU->gp_registers[i]);
     }
 }
 
-static void handleVmxFault(uint32_t reason, word_t qualification)
+ساكن فراغ handleVmxFault(uint32_t reason, word_t qualification)
 {
     /* Indicate that we are returning the from VMEnter with a fault */
     setRegister(NODE_STATE(ksCurThread), msgInfoRegister, SEL4_VMENTER_RESULT_FAULT);
@@ -1304,10 +1304,10 @@ static void handleVmxFault(uint32_t reason, word_t qualification)
     activateThread();
 }
 
-static inline void finishVmexitSaving(void)
+ساكن مضمن فراغ finishVmexitSaving(فراغ)
 {
     vcpu_t *vcpu = ARCH_NODE_STATE(x86KSCurrentVCPU);
-    assert(vcpu == NODE_STATE(ksCurThread)->tcbArch.tcbVCPU);
+    أكد(vcpu == NODE_STATE(ksCurThread)->tcbArch.tcbVCPU);
     vcpu->launched = true;
     /* Update our cache of what is in the vmcs. This is the only value
      * that we cache that can be modified by the guest during execution */
@@ -1315,7 +1315,7 @@ static inline void finishVmexitSaving(void)
     vcpu->cr0 = vcpu->cached_cr0;
 }
 
-exception_t handleVmexit(void)
+exception_t handleVmexit(فراغ)
 {
     uint32_t interrupt;
     /* qualification is host width, reason is defined as being 32 bit */
@@ -1327,13 +1327,13 @@ exception_t handleVmexit(void)
 #endif
     /* the basic exit reason is the bottom 16 bits of the exit reason field */
     reason = vmread(VMX_DATA_EXIT_REASON) & MASK(16);
-    if (reason == EXTERNAL_INTERRUPT) {
+    אם (reason == EXTERNAL_INTERRUPT) {
         NODE_LOCK_IRQ;
-        if (vmx_feature_ack_on_exit) {
+        אם (vmx_feature_ack_on_exit) {
             interrupt = vmread(VMX_DATA_EXIT_INTERRUPT_INFO) & 0xff;
             ARCH_NODE_STATE(x86KScurInterrupt) = interrupt;
             handleInterruptEntry();
-        } else {
+        } אחרת {
             /* poll for the pending irq. We will then handle it once we return back
              * up to restore_user_context */
             receivePendingIRQ();
@@ -1341,53 +1341,53 @@ exception_t handleVmexit(void)
 #ifdef ENABLE_SMP_SUPPORT
         VMCheckBoundNotification(NODE_STATE(ksCurThread));
 #endif
-        return EXCEPTION_NONE;
+        החזר EXCEPTION_NONE;
     }
 
     NODE_LOCK_SYS;
 
-    switch (reason) {
-    case EXCEPTION_OR_NMI:
-    case MOV_DR:
-    case TASK_SWITCH:
-    case CONTROL_REGISTER:
-    case IO:
-    case MWAIT:
-    case SIPI:
-    case INVLPG:
-    case INVEPT:
-    case INVVPID:
-    case VMCLEAR:
-    case VMPTRLD:
-    case VMPTRST:
-    case VMREAD:
-    case VMWRITE:
-    case VMXON:
-    case EPT_VIOLATION:
-    case GDTR_OR_IDTR:
-    case LDTR_OR_TR:
-    case TPR_BELOW_THRESHOLD:
-    case APIC_ACCESS:
+    بدل (reason) {
+    حالة EXCEPTION_OR_NMI:
+    حالة MOV_DR:
+    حالة TASK_SWITCH:
+    حالة CONTROL_REGISTER:
+    حالة IO:
+    حالة MWAIT:
+    حالة SIPI:
+    حالة INVLPG:
+    حالة INVEPT:
+    حالة INVVPID:
+    حالة VMCLEAR:
+    حالة VMPTRLD:
+    حالة VMPTRST:
+    حالة VMREAD:
+    حالة VMWRITE:
+    حالة VMXON:
+    حالة EPT_VIOLATION:
+    حالة GDTR_OR_IDTR:
+    حالة LDTR_OR_TR:
+    حالة TPR_BELOW_THRESHOLD:
+    حالة APIC_ACCESS:
         qualification = vmread(VMX_DATA_EXIT_QUALIFICATION);
-        break;
-    default:
+        اكسر;
+    افتراضي:
         qualification = 0;
     }
 
     handleVmxFault(reason, qualification);
 
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
-exception_t handleVmEntryFail(void)
+exception_t handleVmEntryFail(فراغ)
 {
     handleVmxFault(-1, -1);
 
-    return EXCEPTION_NONE;
+    החזר EXCEPTION_NONE;
 }
 
 #ifdef ENABLE_SMP_SUPPORT
-void VMCheckBoundNotification(tcb_t *tcb)
+فراغ VMCheckBoundNotification(tcb_t *tcb)
 {
     /* We want to check if the VM we are currently running has received
      * a message on its bound notification object. This check is done
@@ -1395,9 +1395,9 @@ void VMCheckBoundNotification(tcb_t *tcb)
      * be running a VM and another core may have placed a message on the
      * endpoint
      */
-    assert(tcb->tcbAffinity == getCurrentCPUIndex());
+    أكد(tcb->tcbAffinity == getCurrentCPUIndex());
     notification_t *ntfnPtr = tcb->tcbBoundNotification;
-    if (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM
+    אם (thread_state_ptr_get_tsType(&tcb->tcbState) == ThreadState_RunningVM
         && ntfnPtr && notification_ptr_get_state(ntfnPtr) == NtfnState_Active) {
 
         word_t badge = notification_ptr_get_ntfnMsgIdentifier(ntfnPtr);
@@ -1409,42 +1409,42 @@ void VMCheckBoundNotification(tcb_t *tcb)
          * had to switch the active VMCS. As a result we might as well try and
          * run this tcb if it is permitted instead of switching VMCS contexts
          * back and forth */
-        if (tcb != NODE_STATE(ksCurThread)) {
+        אם (tcb != NODE_STATE(ksCurThread)) {
             possibleSwitchTo(tcb);
         }
     }
 }
 #endif /* ENABLE_SMP_SUPPORT */
 
-static void invvpid_context(uint16_t vpid)
+ساكن فراغ invvpid_context(uint16_t vpid)
 {
-    struct {
+    بنية {
         uint64_t vpid : 16;
         uint64_t rsvd : 48;
         uint64_t address;
     } PACKED operand = {vpid, 0, 0};
-    asm volatile("invvpid %0, %1" :: "m"(operand), "r"((word_t)1) : "cc");
+    asm متطاير("invvpid %0, %1" :: "m"(operand), "r"((word_t)1) : "cc");
 }
 
-static void setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
+ساكن فراغ setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
 {
     paddr_t ept_root;
-    if (cap_get_capType(vmxSpace) != cap_ept_pml4_cap ||
+    אם (cap_get_capType(vmxSpace) != cap_ept_pml4_cap ||
         !cap_ept_pml4_cap_get_capPML4IsMapped(vmxSpace)) {
         ept_root = kpptr_to_paddr(null_ept_space);
-    } else {
+    } אחרת {
         findEPTForASID_ret_t find_ret;
         ept_pml4e_t *pml4;
 
         pml4 = (ept_pml4e_t *)cap_ept_pml4_cap_get_capPML4BasePtr(vmxSpace);
         find_ret = findEPTForASID(cap_ept_pml4_cap_get_capPML4MappedASID(vmxSpace));
-        if (find_ret.status != EXCEPTION_NONE || find_ret.ept != pml4) {
+        אם (find_ret.status != EXCEPTION_NONE || find_ret.ept != pml4) {
             ept_root = kpptr_to_paddr(null_ept_space);
-        } else {
+        } אחרת {
             ept_root = pptr_to_paddr(pml4);
         }
     }
-    if (ept_root != vcpu->last_ept_root) {
+    אם (ept_root != vcpu->last_ept_root) {
         vcpu->last_ept_root = ept_root;
         vmx_eptp_t eptp = vmx_eptp_new(
                               ept_root,       /* paddr of ept */
@@ -1453,81 +1453,81 @@ static void setEPTRoot(cap_t vmxSpace, vcpu_t *vcpu)
                               6               /* write back memory type */
                           );
         vmwrite(VMX_CONTROL_EPT_POINTER, eptp.words[0]);
-        assert(vcpu->vpid != VPID_INVALID);
-        if (vmx_feature_vpid) {
+        أكد(vcpu->vpid != VPID_INVALID);
+        אם (vmx_feature_vpid) {
             invvpid_context(vcpu->vpid);
         }
     }
 }
 
-void clearVPIDIOPortMappings(vpid_t vpid, uint16_t first, uint16_t last)
+فراغ clearVPIDIOPortMappings(vpid_t vpid, uint16_t first, uint16_t last)
 {
-    if (vpid == VPID_INVALID) {
-        return;
+    אם (vpid == VPID_INVALID) {
+        החזר;
     }
     vcpu_t *vcpu = x86KSVPIDTable[vpid];
-    if (vcpu == NULL) {
-        return;
+    אם (vcpu == عدم) {
+        החזר;
     }
-    assert(vcpu->vpid == vpid);
+    أكد(vcpu->vpid == vpid);
     setIOPortMask(vcpu->io, first, last, true);
 }
 
-static inline vpid_t nextVPID(vpid_t vpid)
+ساكن مضمن vpid_t nextVPID(vpid_t vpid)
 {
-    if (vpid == VPID_LAST) {
-        return VPID_FIRST;
-    } else {
-        return vpid + 1;
+    אם (vpid == VPID_LAST) {
+        החזר VPID_FIRST;
+    } אחרת {
+        החזר vpid + 1;
     }
 }
 
-static void invalidateVPID(vpid_t vpid)
+ساكن فراغ invalidateVPID(vpid_t vpid)
 {
     vcpu_t *vcpu = x86KSVPIDTable[vpid];
     /* clear the IO bitmap as when we sever the VPID assignment we lose
      * the ability for the references in IO port capabilities to invalidate */
-    memset(vcpu->io, ~0, sizeof(vcpu->io));
+    memset(vcpu->io, ~0, حجم(vcpu->io));
     /* invalidate the VPID context */
-    if (vmx_feature_vpid) {
+    אם (vmx_feature_vpid) {
         invvpid_context(vpid);
     }
 }
 
 /** Disassociate a VPID from its VCPU */
-static void releaseVPID(vpid_t vpid)
+ساكن فراغ releaseVPID(vpid_t vpid)
 {
     vcpu_t *vcpu = x86KSVPIDTable[vpid];
 
     invalidateVPID(vpid);
     vcpu->vpid = VPID_INVALID;
-    x86KSVPIDTable[vpid] = NULL;
+    x86KSVPIDTable[vpid] = عدم;
 }
 
-static vpid_t findFreeVPID(void)
+ساكن vpid_t findFreeVPID(فراغ)
 {
     vpid_t vpid;
 
     vpid = x86KSNextVPID;
-    do {
-        if (x86KSVPIDTable[vpid] == NULL) {
-            return vpid;
+    עשה {
+        אם (x86KSVPIDTable[vpid] == عدم) {
+            החזר vpid;
         }
         vpid = nextVPID(vpid);
-    } while (vpid != x86KSNextVPID);
+    } כלעוד (vpid != x86KSNextVPID);
 
     /* Forcibly take the next VPID */
     vpid = x86KSNextVPID;
     releaseVPID(vpid);
 
     x86KSNextVPID = nextVPID(x86KSNextVPID);
-    return vpid;
+    החזר vpid;
 }
 
-static void storeVPID(vcpu_t *vcpu, vpid_t vpid)
+ساكن فراغ storeVPID(vcpu_t *vcpu, vpid_t vpid)
 {
-    assert(x86KSVPIDTable[vpid] == NULL);
-    assert(vcpu->vpid == VPID_INVALID);
+    أكد(x86KSVPIDTable[vpid] == عدم);
+    أكد(vcpu->vpid == VPID_INVALID);
     x86KSVPIDTable[vpid] = vcpu;
     vcpu->vpid = vpid;
 }
@@ -1540,88 +1540,88 @@ static void storeVPID(vcpu_t *vcpu, vpid_t vpid)
  * point to our TCB. saveFpuState and loadFpuState check fpu_active and
  * do the right thing depending on the current FPU user.
  */
-void vcpu_fpu_to_guest(tcb_t *tcb, vcpu_t *vcpu)
+فراغ vcpu_fpu_to_guest(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (nativeThreadUsingFPU(tcb)) {
+    אם (nativeThreadUsingFPU(tcb)) {
         /* Make sure FPU is enabled */
         enableFpu();
-        if (!vcpu->fpu_active) {
+        אם (!vcpu->fpu_active) {
             /* Host was using the FPU, switch to guest FPU state */
             saveFpuState(tcb);
             vcpu->fpu_active = true;
             loadFpuState(tcb);
         }
-    } else {
+    } אחרת {
         /* Someone else used the FPU, load guest's FPU state */
         vcpu->fpu_active = true;
         switchLocalFpuOwner(tcb);
     }
 }
 
-void vcpu_fpu_to_host(tcb_t *tcb, vcpu_t *vcpu)
+فراغ vcpu_fpu_to_host(tcb_t *tcb, vcpu_t *vcpu)
 {
-    if (tcb->tcbFlags & seL4_TCBFlag_fpuDisabled) {
+    אם (tcb->tcbFlags & seL4_TCBFlag_fpuDisabled) {
         /* FPU may have been enabled for the guest, but host isn't allowed to use it */
         disableFpu();
-    } else if (nativeThreadUsingFPU(tcb) && vcpu->fpu_active) {
+    } אחרת אם (nativeThreadUsingFPU(tcb) && vcpu->fpu_active) {
         /* Guest was using the FPU, switch to host FPU state */
         saveFpuState(tcb);
         vcpu->fpu_active = false;
         loadFpuState(tcb);
-    } else if (!nativeThreadUsingFPU(tcb)) {
+    } אחרת אם (!nativeThreadUsingFPU(tcb)) {
         /* Handle corner cases like dissociated vcpu */
         switchLocalFpuOwner(tcb);
     }
 }
 
-void restoreVMCS(void)
+فراغ restoreVMCS(فراغ)
 {
     tcb_t *cur_thread = NODE_STATE(ksCurThread);
     vcpu_t *expected_vmcs = cur_thread->tcbArch.tcbVCPU;
 
     /* Check that the right VMCS is active and current. */
-    if (ARCH_NODE_STATE(x86KSCurrentVCPU) != expected_vmcs) {
+    אם (ARCH_NODE_STATE(x86KSCurrentVCPU) != expected_vmcs) {
         switchVCPU(expected_vmcs);
     }
 
 #ifndef CONFIG_KERNEL_SKIM_WINDOW
-    if (getCurrentCR3().words[0] != expected_vmcs->last_host_cr3) {
+    אם (getCurrentCR3().words[0] != expected_vmcs->last_host_cr3) {
         expected_vmcs->last_host_cr3 = getCurrentCR3().words[0];
         vmwrite(VMX_HOST_CR3, getCurrentCR3().words[0]);
     }
 #endif
-    if (expected_vmcs->vpid == VPID_INVALID) {
+    אם (expected_vmcs->vpid == VPID_INVALID) {
         vpid_t vpid = findFreeVPID();
         storeVPID(expected_vmcs, vpid);
-        if (vmx_feature_vpid) {
+        אם (vmx_feature_vpid) {
             vmwrite(VMX_CONTROL_VPID, vpid);
         }
     }
     setEPTRoot(TCB_PTR_CTE_PTR(cur_thread, tcbArchEPTRoot)->cap, expected_vmcs);
 }
 
-void invept(ept_pml4e_t *ept_pml4)
+فراغ invept(ept_pml4e_t *ept_pml4)
 {
-    if (vmx_ept_vpid_cap_msr_get_invept(vpid_capability)) {
-        struct {
+    אם (vmx_ept_vpid_cap_msr_get_invept(vpid_capability)) {
+        بنية {
             uint64_t parts[2];
         } address;
         word_t type;
-        if (vmx_ept_vpid_cap_msr_get_invept_single_context(vpid_capability)) {
+        אם (vmx_ept_vpid_cap_msr_get_invept_single_context(vpid_capability)) {
             type = 1;
-        } else if (vmx_ept_vpid_cap_msr_get_invept_all_context(vpid_capability)) {
+        } אחרת אם (vmx_ept_vpid_cap_msr_get_invept_all_context(vpid_capability)) {
             type = 2;
-        } else {
+        } אחרת {
             /* hardware claims to support invept yet provides us with no actual
              * invept mechanism. This is probably impossible, but just silently
              * ignore if it happens */
             userError("Hardware claimed to support invept, yet provided no mechanism");
-            return;
+            החזר;
         }
 
-        address.parts[0] = pptr_to_paddr((void *)ept_pml4);
+        address.parts[0] = pptr_to_paddr((فراغ *)ept_pml4);
         address.parts[1] = 0;
-        asm volatile(
+        asm متطاير(
             "invept %0, %1"
             :
             : "m"(address),  "r"(type)
